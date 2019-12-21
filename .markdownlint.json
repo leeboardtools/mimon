@@ -1,0 +1,6 @@
+{
+    "blanks-around-headings": { "lines_below": 0 },
+    "no-multiple-blanks": false,
+    "line-length": false,
+    "ol-prefix": false
+}
