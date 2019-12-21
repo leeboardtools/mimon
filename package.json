@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "bootstrap": "^4.4.1",
+    "deep-equal": "^2.0.1",
     "electron-squirrel-startup": "^1.0.0",
     "jquery": "^3.4.1",
     "popper.js": "^1.16.0"
@@ -73,7 +74,8 @@
     "jsdoc": "^3.6.3",
     "react": "^16.12.0",
     "react-app-polyfill": "^1.0.5",
-    "react-dom": "^16.12.0"
+    "react-dom": "^16.12.0",
+    "regenerator-runtime": "^0.13.3"
   },
   "jest": {
     "collectCoverageFrom": [
@@ -83,7 +85,9 @@
     "setupFiles": [
       "react-app-polyfill/jsdom"
     ],
-    "setupFilesAfterEnv": [],
+    "setupFilesAfterEnv": [
+      "./src/setupTests.js"
+    ],
     "testMatch": [
       "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
       "<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"
