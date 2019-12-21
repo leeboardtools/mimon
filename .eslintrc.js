@@ -73,6 +73,7 @@ module.exports = {
         "no-new": "error",
         "no-new-func": "error",
         "no-new-object": "error",
+        "no-unused-vars": ["error", { "args": "none" }],
         "no-whitespace-before-property": "error",
         "object-property-newline": ["error", {"allowAllPropertiesOnSameLine": true}],
         "semi-spacing": "error",
