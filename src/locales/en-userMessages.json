@@ -1,0 +1,24 @@
+{
+    "AccountCategory-ASSET": "Asset",
+    "AccountCategory-LIABILITY": "Liability",
+    "AccountCategory-INCOME": "Income",
+    "AccountCategory-EXPENSE": "Expense",
+    "AccountCategory-EQUITY": "Equity",
+
+    "AccountType-ASSET": "Asset",
+    "AccountType-BANK": "Bank Account",
+    "AccountType-BROKERAGE": "Brokerage",
+    "AccountType-CASH": "Cash",
+    "AccountType-MUTUAL_FUND": "Mutual Fund",
+    "AccountType-PROPERTY": "Property",
+    "AccountType-SECURITY": "Security",
+    "AccountType-LIABILITY": "Liability",
+    "AccountType-CREDIT_CARD": "Credit Card",
+    "AccountType-LOAN": "Loan",
+    "AccountType-MORTGAGE": "Mortgage",
+    "AccountType-INCOME": "Income",
+    "AccountType-EXPENSE": "Expense",
+    "AccountType-EQUITY": "Equity",
+    "AccountType-OPENING_BALANCE": "Opening Balance",
+    
+}

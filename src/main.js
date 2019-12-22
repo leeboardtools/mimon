@@ -1,5 +1,9 @@
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
-const { app, BrowserWindow } = require('electron');
+import { MenuManagerMain } from './util/MenuManagerMain';
+// import 'regenerator-runtime/runtime';
+
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+
 const path = require('path');
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
@@ -12,9 +16,38 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
     app.quit();
 }
 
+
+
+ipcMain.on('sync-get-main-setup', (event, arg) => {
+    event.returnValue = {
+        isDevMode: isDevMode,
+    };
+});
+
+
+ipcMain.on('showOpenDialog', (event, options) => {
+    try {
+        const result = dialog.showOpenDialog(mainWindow, options);
+        mainWindow.webContents.send('showOpenDialog-result', result);
+    }
+    catch (err) {
+        mainWindow.webContents.send('showOpenDialog-result', err);
+    }
+});
+
+
+ipcMain.on('setMainTitle', (event, title) => {
+    title = title || app.getName();
+    mainWindow.setTitle(title);
+});
+
+
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
+// eslint-disable-next-line no-unused-vars
+let menuManager;
 
 const createWindow = () => {
     // Create the browser window.
@@ -29,6 +62,8 @@ const createWindow = () => {
     // and load the index.html of the app.
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
+    menuManager = new MenuManagerMain();
+
     if (isDevMode) {
     // Open the DevTools.
         mainWindow.webContents.openDevTools();
@@ -40,6 +75,7 @@ const createWindow = () => {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
         mainWindow = null;
+        menuManager = null;
     });
 };
 

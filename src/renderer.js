@@ -1,8 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import 'regenerator-runtime/runtime';
 
 const render = () => {
-    const App = require('./App').default;
+    const App = require('./ui/App').default;
     ReactDOM.render(<App />, document.getElementById('App'));
 };
 
