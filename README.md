@@ -7,7 +7,7 @@ I had been using [jGnash](https://sourceforge.net/projects/jgnash/), which is gr
 The project was created from my boilerplate [new_electron_react_bootstrap](<https://github.com/leeboardtools/new_electron_react_bootstrap).>
 
 ## Atrributions
-This project incorporates the following (I may have missed some projects):
+This project incorporates the following (I may have missed some projects, especially build related dependencies):
 
 - [Electron](https://electronjs.org/)
 - [Electron Forge 5.x](https://github.com/electron-userland/electron-forge/tree/5.x)
