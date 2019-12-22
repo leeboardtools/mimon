@@ -3,5 +3,6 @@
     "blanks-around-lists": false,
     "no-multiple-blanks": false,
     "line-length": false,
+    "ul-indent": { "indent": 4},
     "ol-prefix": false
 }
