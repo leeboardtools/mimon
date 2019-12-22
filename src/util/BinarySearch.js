@@ -80,7 +80,7 @@ export function bSearch(array, value, compare) {
         var high = lastIndex;
         while ((high - low) > 1) {
             var mid = (low + high) >> 1;
-            if (compare(value, array[mid], array, value) < 0) {
+            if (compare(value, array[mid], array, mid) < 0) {
                 high = mid;
             }
             else {
