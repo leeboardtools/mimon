@@ -29,6 +29,13 @@ test('Ratio', () => {
     expect(numG).toEqual(-11);
     expect(denG).toEqual(1);
 
+    
+    // JSON handling.
+    const gJSON = g.toJSON();
+    const h = new Ratio(gJSON);
+    expect(h.getNumerators()).toEqual([ 10, 11, -33 ]);
+    expect(h.getDenominators()).toEqual([ 11, 10, 3 ]);
+
 
     // Demonstrate that this is actually useful...
     const ten_three = 1000000000. / 3.;
@@ -50,4 +57,22 @@ test('Ratio', () => {
 
     const p1_m2 = p1.multiply(m2);
     expect(p1_m2.toValue()).toBe(-100000000);
+
+
+    // Some special case constructors.
+    const noDen = new Ratio(123);
+    expect(noDen.getNumerators()).toEqual([123]);
+    expect(noDen.getDenominators()).toEqual([1]);
+
+    const noDenArray = new Ratio([123, 456]);
+    expect(noDenArray.getNumerators()).toEqual([123, 456]);
+    expect(noDenArray.getDenominators()).toEqual([1, 1]);
+
+    const ab = new Ratio([a, b]);
+    expect(ab.getNumerators()).toEqual(c.getNumerators());
+    expect(ab.getDenominators()).toEqual(c.getDenominators());
+
+    const ab_args = new Ratio(a, b);
+    expect(ab_args.getNumerators()).toEqual(c.getNumerators());
+    expect(ab_args.getDenominators()).toEqual(c.getDenominators());
 });
