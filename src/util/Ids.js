@@ -125,15 +125,22 @@ export class IdGenerator {
     getNextLocalId() { return this._nextLocalId; }
 
     /**
-     * @returns {Id}    The new id.
+     * @returns {Id~Options}    The new id.
      */
-    newId() {
+    newIdOptions() {
         const localId = this._nextLocalId;
         ++this._nextLocalId;
-        return new Id({
+        return {
             localId: localId,
             uuid: uuidv1(),
-        });
+        };
+    }
+
+    /**
+     * @returns {Id}    The new id.
+     */
+    newIdInstance() {
+        return new Id(this.newIdOptions());
     }
 
 

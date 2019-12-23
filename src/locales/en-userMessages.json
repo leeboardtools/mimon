@@ -9,9 +9,10 @@
     "AccountType-BANK": "Bank Account",
     "AccountType-BROKERAGE": "Brokerage",
     "AccountType-CASH": "Cash",
-    "AccountType-MUTUAL_FUND": "Mutual Fund",
-    "AccountType-PROPERTY": "Property",
     "AccountType-SECURITY": "Security",
+    "AccountType-MUTUAL_FUND": "Mutual Fund",
+    "AccountType-REAL_ESTATE": "Real Estate",
+    "AccountType-PROPERTY": "Property",
     "AccountType-LIABILITY": "Liability",
     "AccountType-CREDIT_CARD": "Credit Card",
     "AccountType-LOAN": "Loan",
@@ -20,5 +21,24 @@
     "AccountType-EXPENSE": "Expense",
     "AccountType-EQUITY": "Equity",
     "AccountType-OPENING_BALANCE": "Opening Balance",
-    
+ 
+    "Account-Root_Assets_name": "Assets",
+    "Account-Root_Assets_desc": "Top Level Asset Account",
+    "Account-Root_Liabilities_name": "Liabilities",
+    "Account-Root_Liabilities_desc": "Top Level Liability Account",
+    "Account-Root_Income_name": "Income",
+    "Account-Root_Income_desc": "Top Level Income Account",
+    "Account-Root_Expenses_name": "Expenses",
+    "Account-Root_Expenses_desc": "Top Level Expense Account",
+    "Account-Root_Equity_name": "Equity",
+    "Account-Root_Equity_desc": "Top Level Equity Account",
+    "Account-Opening_Balances_name": "Opening Balances",
+    "Account-Opening_Balances_desc": "Account of opening balances of all other accounts",
+
+
+    "PricedItemType-CURRENCY": "Currency",
+    "PricedItemType-SECURITY": "Security",
+    "PricedItemType-MUTUAL_FUND": "Mutual Fund",
+    "PricedItemType-REAL_ESTATE": "Real Estate",
+    "PricedItemType-PROPERTY": "Property"
 }

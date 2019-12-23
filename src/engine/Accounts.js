@@ -1,4 +1,5 @@
 import { userMsg } from '../util/UserMessages';
+import { IdGenerator } from '../util/Ids';
 import { PricedItemType } from './PricedItems';
 
 
@@ -60,8 +61,8 @@ export function accountCategory(ref) {
  * @property {AccountTypeDef}   CASH    For straight cash.
  * @property {AccountTypeDef}   SECURITY    For a specific security.
  * @property {AccountTypeDef}   MUTUAL_FUND For a mutual fund account.
- * @property {AccountTypeDef}   PROPERTY    For specific piece of property.
  * @property {AccountTypeDef}   REAL_ESTATE For a specific piece of real estate.
+ * @property {AccountTypeDef}   PROPERTY    For specific piece of property.
  *
  * @property {AccountTypeDef}   LAIBILITY   All purpose liability account.
  * @property {AccountTypeDef}   CREDIT_CARD For credit cards.
@@ -82,8 +83,8 @@ export const AccountType = {
     CASH: { name: 'CASH', category: AccountCategory.ASSET, pricedItemType: PricedItemType.CURRENCY, },
     SECURITY: { name: 'SECURITY', category: AccountCategory.ASSET, pricedItemType: PricedItemType.SECURITY, hasLots: true, },
     MUTUAL_FUND: { name: 'MUTUAL_FUND', category: AccountCategory.ASSET, pricedItemType: PricedItemType.MUTUAL_FUND, hasLots: true, hasChecks: true, },
-    PROPERTY: { name: 'PROPERTY', category: AccountCategory.ASSET, pricedItemType: PricedItemType.PROPERTY, hasLots: true, },
     REAL_ESTATE: { name: 'REAL_ESTATE', category: AccountCategory.ASSET, pricedItemType: PricedItemType.REAL_ESTATE, hasLots: true, },
+    PROPERTY: { name: 'PROPERTY', category: AccountCategory.ASSET, pricedItemType: PricedItemType.PROPERTY, hasLots: true, },
 
     LIABILITY: { name: 'LIABILITY', category: AccountCategory.LIABILITY, pricedItemType: PricedItemType.CURRENCY, },
     CREDIT_CARD: { name: 'CREDIT_CARD', category: AccountCategory.LIABILITY, pricedItemType: PricedItemType.CURRENCY, hasChecks: true, },
@@ -176,7 +177,136 @@ export function loadAccountsUserMessages() {
 
 export class AccountManager {
 
-    constructor() {
+    constructor(accountingSystem) {
+        this._accountingSystem = accountingSystem;
+        
+        this._idGenerator = new IdGenerator();
+
+        this._accountsByLocalId = new Map();
+        this._accountsByUUId = new Map();
+
+        const pricedItemManager = accountingSystem.getPricedItemManager();
+        const currencyPricedItemLocalId = pricedItemManager.getCurrencyPricedItemLocalId(accountingSystem.getBaseCurrency());
+
+        this._rootAssetAccountId = this._idGenerator.newIdOptions();
+        this._rootAssetAccount = this._addAccount(this._rootAssetAccountId, {
+            type: AccountType.ASSET,
+            pricedItemLocalId: currencyPricedItemLocalId, 
+            name: userMsg('Account-Root_Assets_name'),
+            description: userMsg('Account-Root_Assets_desc'),
+        });
+
+        this._rootLiabilityAccountId = this._idGenerator.newIdOptions();
+        this._rootLiabilityAccount = this._addAccount(this._rootLiabilityAccountId, {
+            type: AccountType.LIABILITY,
+            pricedItemLocalId: currencyPricedItemLocalId, 
+            name: userMsg('Account-Root_Liabilities_name'),
+            description: userMsg('Account-Root_Liabilities_desc'),
+        });
+
+        this._rootIncomeAccountId = this._idGenerator.newIdOptions();
+        this._rootIncomeAccount = this._addAccount(this._rootIncomeAccountId, {
+            type: AccountType.INCOME,
+            pricedItemLocalId: currencyPricedItemLocalId, 
+            name: userMsg('Account-Root_Income_name'),
+            description: userMsg('Account-Root_Income_desc'),
+        });
+
+        this._rootExpenseAccountId = this._idGenerator.newIdOptions();
+        this._rootExpenseAccount = this._addAccount(this._rootExpenseAccountId, {
+            type: AccountType.EXPENSE,
+            pricedItemLocalId: currencyPricedItemLocalId, 
+            name: userMsg('Account-Root_Expense_name'),
+            description: userMsg('Account-Root_Expense_desc'),
+        });
+
+        this._rootEquityAccountId = this._idGenerator.newIdOptions();
+        this._rootEquityAccount = this._addAccount(this._rootEquityAccountId, {
+            type: AccountType.EQUITY,
+            pricedItemLocalId: currencyPricedItemLocalId, 
+            name: userMsg('Account-Root_Equity_name'),
+            description: userMsg('Account-Root_Equity_desc'),
+        });
+
+        this._openingBalancesAccountId = this._idGenerator.newIdOptions();
+        this._openingBalancesAccount = this._addAccount(this._openingBalancesAccountId, 
+            {
+                type: AccountType.OPENING_BALANCE,
+                pricedItemLocalId: currencyPricedItemLocalId, 
+                name: userMsg('Account-Opening_Balances_name'),
+                description: userMsg('Account-Opening_Balances_desc'),
+            },
+            this._rootEquityAccount);
+
+
     }
 
+    getAccountingSystem() { return this._accountingSystem; }
+
+
+    getRootAssetAccountLocalId() { return this._rootAssetAccountId.localId; }
+    getRootAssetAccount() { return Object.assign({}, this._rootAssetAccount); }
+
+    getRootLiabilityAccountLocalId() { return this._rootLiabilityAccountId.localId; }
+    getRootLiabilityAccount() { return Object.assign({}, this._rootLiabilityAccount); }
+
+    getRootIncomeAccountLocalId() { return this._rootIncomeAccountId.localId; }
+    getRootIncomeAccount() { return Object.assign({}, this._rootIncomeAccount); }
+
+    getRootExpenseAccountLocalId() { return this._rootExpenseAccountId.localId; }
+    getRootExpenseAccount() { return Object.assign({}, this._rootExpenseAccount); }
+
+    getRootEquityAccountLocalId() { return this._rootEquityAccountId.localId; }
+    getRootEquityAccount() { return Object.assign({}, this._rootEquityAccount); }
+
+    getOpeningBalancesAccountLocalId() { return this._openingBalancesAccountId.localId; }
+    getOpeningBalancesAccount() { return Object.assign({}, this._openingBalancesAccount); }
+
+
+    getAccount(ref) {
+        let account;
+        if (typeof ref === 'number') {
+            account = this._accountsByLocalId.get(ref);
+        }
+        else {
+            if (ref.uuid) {
+                ref = ref.uuid;
+            }
+            account = this._accountsByUUId.get(ref);
+        }
+
+        return (account) ? Object.assign({}, account) : undefined;
+    }
+
+
+
+    _addAccount(id, account, parentAccount) {
+        account = Object.assign({}, account, { id: id });
+        if (typeof account.type !== 'string') {
+            account.type = account.type.name;
+        }
+        account.childAccountLocalIds = account.childAccountLocalIds || [];
+
+        this._accountsByLocalId.set(id.localId, account);
+        this._accountsByUUId.set(id.uuid, account);
+
+        if (parentAccount) {
+            parentAccount.childAccountLocalIds.push(id.localId);
+        }
+
+        return account;
+    }
+
+
+    addAccount(parentAccountLocalId, account) {
+
+    }
+
+    removeAccount(accountLocalId) {
+
+    }
+
+    modifyAccount(accountLocalId, accountUpdates) {
+
+    }
 }

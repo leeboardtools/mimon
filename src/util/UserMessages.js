@@ -32,6 +32,8 @@ async function tryLocalePathName(prefix, parts) {
  * @returns {string}    The path name that was actually loaded.
  */
 export async function loadLocaleMsgsFile(locale, pathName) {
+    locale = locale || 'en';
+    
     const parts = path.parse(pathName);
 
     let result;
