@@ -1,5 +1,5 @@
 import * as A from './Accounts';
-import { AccountingSystem } from './AccountingSystem';
+import * as ASTH from './AccountingSystemTestHelpers';
 import * as ATH from './AccountTestHelpers';
 import { YMDDate } from '../util/YMDDate';
 
@@ -133,8 +133,8 @@ test('Account-Data Items', () => {
 //
 //---------------------------------------------------------
 //
-test('AccountManager-rootAccounts', () => {
-    const accountingSystem = new AccountingSystem();
+test('AccountManager-rootAccounts', async () => {
+    const accountingSystem = await ASTH.asyncCreateAccountingSystem();
     const accountManager = accountingSystem.getAccountManager();
     expect(accountManager).not.toBeUndefined();
 

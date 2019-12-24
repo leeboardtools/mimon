@@ -1,7 +1,7 @@
 import { userMsg } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
 import { getCurrencyCode, getCurrency } from '../util/Currency';
-import { getQuantityDefinition } from '../util/Quantities';
+import { getQuantityDefinition, getQuantityDefinitionName } from '../util/Quantities';
 
 /**
  * @typedef {object}    PricedItemTypeDef
@@ -90,8 +90,8 @@ export function getPricedItemDataItem(pricedItem) {
         if (typeof pricedItem.type !== 'string') {
             const pricedItemDataItem = Object.assign({}, pricedItem);
             pricedItemDataItem.type = pricedItem.type.name;
-            pricedItemDataItem.currency = pricedItem.currency.getCode();
-            pricedItemDataItem.quantityDefinition = pricedItem.quantityDefinition.getName();
+            pricedItemDataItem.currency = getCurrencyCode(pricedItem.currency);
+            pricedItemDataItem.quantityDefinition = getQuantityDefinitionName(pricedItem.quantityDefinition);
             return pricedItemDataItem;
         }
     }
@@ -100,43 +100,81 @@ export function getPricedItemDataItem(pricedItem) {
 }
 
 
+
 /**
  * Manages {@link PricedItemDataItem}s.
  */
 export class PricedItemManager {
-    constructor(accountingSystem) {
+
+    /**
+     * @typedef {object} PricedItemManager~Options
+     * @property {PricedItemsHandler}    handler
+     * @property {NumericIdGenerator~Options}   idGenerator
+     */
+
+    /**
+     * 
+     * @param {AccountingSystem} accountingSystem 
+     * @param {PricedItemManager~Options} options 
+     */
+    
+    constructor(accountingSystem, options) {
         this._accountingSystem = accountingSystem;
+        this._handler = options.handler;
         
-        this._idGenerator = new NumericIdGenerator();
+        this._idGenerator = new NumericIdGenerator(options.idGenerator);
 
         this._currencyPricedItemIdsByCurrency = new Map();
         this._pricedItemsById = new Map();
 
-        this._currencyUSDPricedItemId = this._idGenerator.generateId();
-        this._currencyUSDPricedItem = this._addPricedItem(this._currencyUSDPricedItemId, {
-            type: PricedItemType.CURRENCY,
-            currency: 'USD',
+        const pricedItems = this._handler.getPricedItems();
+        pricedItems.forEach((pricedItem) => {
+            this._pricedItemsById.set(pricedItem.id, pricedItem);
+            if (pricedItem.type === PricedItemType.CURRENCY.name) {
+                this._currencyPricedItemIdsByCurrency.set(pricedItem.currency, pricedItem);
+            }
         });
+    }
 
-        this._currencyEURPricedItemId = this._idGenerator.generateId();
-        this._currencyEURPricedItem = this._addPricedItem(this._currencyEURPricedItemId, {
-            type: PricedItemType.CURRENCY,
-            currency: 'EUR',
-        });
 
-        this._baseCurrency = accountingSystem.getBaseCurrency();
-        this._currencyBasedPricedItemId = this._currencyPricedItemIdsByCurrency.get(this._baseCurrency);
-        if (!this._currencyBasedPricedItemId) {
+    async asyncSetupForUse() {
+        let usdPricedItem = this._currencyPricedItemIdsByCurrency.get('USD');
+        if (!usdPricedItem) {
             const id = this._idGenerator.generateId();
-            this._addPricedItem(id, {
+            usdPricedItem = await this._asyncAddPricedItem(id, {
+                type: PricedItemType.CURRENCY,
+                currency: 'USD',
+            });
+        }
+        this._currencyUSDPricedItemId = usdPricedItem.id;
+        this._currencyUSDPricedItem = usdPricedItem;
+
+
+        let eurPricedItem = this._currencyPricedItemIdsByCurrency.get('EUR');
+        if (!eurPricedItem) {
+            const id = this._idGenerator.generateId();
+            eurPricedItem = await this._asyncAddPricedItem(id, {
+                type: PricedItemType.CURRENCY,
+                currency: 'EUR',
+            });
+        }
+        this._currencyEURPricedItemId = eurPricedItem.id;
+        this._currencyEURPricedItem = eurPricedItem;
+
+
+        this._baseCurrency = this._accountingSystem.getBaseCurrency();
+        let baseCurrencyPricedItem = this._currencyPricedItemIdsByCurrency.get(this._baseCurrency);
+        if (!baseCurrencyPricedItem) {
+            const id = this._idGenerator.generateId();
+            baseCurrencyPricedItem = await this._asyncAddPricedItem(id, {
                 type: PricedItemType.CURRENCY,
                 currency: this._baseCurrency,
             });
-
-            this._currencyBasedPricedItemId = id;
         }
-        this._currencyBasePricedItem = this._pricedItemsById.get(this._currencyBasedPricedItemId);
+        this._currencyBasePricedItemId = baseCurrencyPricedItem.id;
+        this._currencyBasePricedItem = baseCurrencyPricedItem;
     }
+
 
     getAccountingSystem() { return this._accountingSystem; }
 
@@ -149,7 +187,7 @@ export class PricedItemManager {
     /**
      * @returns {number}    The id of the base currency priced item.
      */
-    getCurrencyBasePricedItemId() { return this._currencyBasedPricedItemId; }
+    getCurrencyBasePricedItemId() { return this._currencyBasePricedItemId; }
 
     /**
      * @returns {PricedItemDataItem}    The priced item for the base currency.
@@ -180,11 +218,14 @@ export class PricedItemManager {
 
     
 
-    _addPricedItem(id, pricedItem) {
+    async _asyncAddPricedItem(id, pricedItem) {
         const item = Object.assign({}, pricedItem, { id: id });
+
+        await this._handler.asyncAddPricedItem(item);
 
         this._pricedItemsById.set(id, item);
 
+        pricedItem = getPricedItemDataItem(pricedItem);
         if (pricedItemType(pricedItem.type) === PricedItemType.CURRENCY) {
             this._currencyPricedItemIdsByCurrency.set(item.currency, id);
         }
@@ -226,4 +267,77 @@ export class PricedItemManager {
         return this.getPricedItem(this.getCurrencyPricedItemId(currency));
     }
 
+}
+
+
+/**
+ * @interface
+ * Handler interface implemented by {@link AccountingFile} implementations to interact with the {@link PricedItemManager}.
+ */
+export class PricedItemsHandler {
+    /**
+     * Retrieves an array containing all the priced items. The priced items are presumed
+     * to already be loaded when the {@link PricedItemManager} is constructed.
+     * @returns {PricedItemDataItem[]}
+     */
+    getPricedItems() {
+        throw Error('PricedItemsHandler.getPricedItems() abstract method!');
+    }
+
+    /**
+     * Adds a new priced item.
+     * @param {PricedItemDataItem} pricedItemDataItem 
+     */
+    async asyncAddPricedItem(pricedItemDataItem) {
+        throw Error('PricedItemsHandler.addpricedItem() abstract method!');
+    }
+
+    /**
+     * Modifies an existing priced item.
+     * @param {PricedItemDataItem} pricedItemDataItem 
+     */
+    async asyncModifyPricedItem(pricedItemDataItem) {
+        throw Error('PricedItemsHandler.modifyPricedItem() abstract method!');
+    }
+
+    /**
+     * Removes an existing priced item.
+     * @param {number} id 
+     */
+    async asyncRemovePricedItem(id) {
+        throw Error('PricedItemsHandler.removePricedItem() abstract method!');
+    }
+}
+
+/**
+ * Simple in-memory implementation of {@link PricedItemsHandler}
+ */
+export class InMemoryPricedItemsHandler extends PricedItemsHandler {
+    constructor(pricedItems) {
+        super();
+
+        this._pricedItemsById = new Map();
+
+        if (pricedItems) {
+            pricedItems.forEach((pricedItem) => {
+                this._pricedItemsById.set(pricedItem.id, pricedItem);
+            });
+        }
+    }
+
+    getPricedItems() {
+        return Array.from(this._pricedItemsById.values());
+    }
+
+    async asyncAddPricedItem(pricedItemDataItem) {
+        this._pricedItemsById.set(pricedItemDataItem.id, pricedItemDataItem);
+    }
+
+    async asyncModifyPricedItem(pricedItemDataItem) {
+        this._pricedItemsById.set(pricedItemDataItem.id, pricedItemDataItem);
+    }
+
+    async asyncRemovePricedItem(id) {
+        this._pricedItemsById.delete(id);
+    }
 }

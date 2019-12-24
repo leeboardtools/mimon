@@ -230,6 +230,7 @@ export function getAccountStateDataItem(accountState) {
 /**
  * @typedef {object} AccountDataItem
  * @property {number}   id  The account's id.
+ * @property {string}   [refId] Optional user reference id.
  * @property {string}   type    The name property of one of {@link AccountType}.
  * @property {number}   pricedItemId   The local id of the priced item the account represents.
  * @property {string}   [name]  The name of the account.
@@ -240,6 +241,7 @@ export function getAccountStateDataItem(accountState) {
 /**
  * @typedef {object} AccountData
  * @property {number}   id  The account's id.
+ * @property {string}   [refId] Optional user reference id.
  * @property {AccountType}  type    The account's type.
  * @property {number}   pricedItemId   The local id of the priced item the account represents.
  * @property {string}   [name]  The name of the account.
@@ -286,69 +288,112 @@ export function getAccountDataItem(account) {
  */
 export class AccountManager {
 
-    constructor(accountingSystem) {
+    constructor(accountingSystem, options) {
         this._accountingSystem = accountingSystem;
+        this._handler = options.handler;
         
-        this._idGenerator = new NumericIdGenerator();
+        this._idGenerator = new NumericIdGenerator(options.idGenerator);
 
         this._accountsById = new Map();
+        this._accountsByRefId = new Map();
 
+        const accounts = this._handler.getAccounts();
+        accounts.forEach((account) => {
+            this._accountsById.set(account.id, account);
+
+            if (account.refId) {
+                this._accountsByRefId.set(account.refId, account);
+            }
+        });
+
+        this._rootAssetAccountId = options.rootAssetAccountId;
+        this._rootAssetAccount = this._accountsById.get(this._rootAssetAccountId);
+
+        this._rootLiabilityAccountId = options.rootLiabilityAccountId;
+        this._rootLiabilityAccount = this._accountsById.get(this._rootLiabilityAccountId);
+
+        this._rootIncomeAccountId = options.rootIncomeAccountId;
+        this._rootIncomeAccount = this._accountsById.get(this._rootIncomeAccountId);
+
+        this._rootExpenseAccountId = options.rootExpenseAccountId;
+        this._rootExpenseAccount = this._accountsById.get(this._rootExpenseAccountId);
+
+        this._rootEquityAccountId = options.rootEquityAccountId;
+        this._rootEquityAccountId = this._accountsById.get(this._rootEquityAccountId);
+
+        this._openingBalancesAccountId = options.openingBalanceAccountId;
+        this._openingBalancesAccount = this._accountsById.get(this._openingBalancesAccountId);
+    }
+
+    async asyncSetupForUse() {
+        const accountingSystem = this._accountingSystem;
         const pricedItemManager = accountingSystem.getPricedItemManager();
         const currencyPricedItemId = pricedItemManager.getCurrencyPricedItemId(accountingSystem.getBaseCurrency());
 
-        this._rootAssetAccountId = this._idGenerator.generateId();
-        this._rootAssetAccount = this._addAccount(this._rootAssetAccountId, {
-            type: AccountType.ASSET,
-            pricedItemId: currencyPricedItemId, 
-            name: userMsg('Account-Root_Assets_name'),
-            description: userMsg('Account-Root_Assets_desc'),
-        });
-
-        this._rootLiabilityAccountId = this._idGenerator.generateId();
-        this._rootLiabilityAccount = this._addAccount(this._rootLiabilityAccountId, {
-            type: AccountType.LIABILITY,
-            pricedItemId: currencyPricedItemId, 
-            name: userMsg('Account-Root_Liabilities_name'),
-            description: userMsg('Account-Root_Liabilities_desc'),
-        });
-
-        this._rootIncomeAccountId = this._idGenerator.generateId();
-        this._rootIncomeAccount = this._addAccount(this._rootIncomeAccountId, {
-            type: AccountType.INCOME,
-            pricedItemId: currencyPricedItemId, 
-            name: userMsg('Account-Root_Income_name'),
-            description: userMsg('Account-Root_Income_desc'),
-        });
-
-        this._rootExpenseAccountId = this._idGenerator.generateId();
-        this._rootExpenseAccount = this._addAccount(this._rootExpenseAccountId, {
-            type: AccountType.EXPENSE,
-            pricedItemId: currencyPricedItemId, 
-            name: userMsg('Account-Root_Expense_name'),
-            description: userMsg('Account-Root_Expense_desc'),
-        });
-
-        this._rootEquityAccountId = this._idGenerator.generateId();
-        this._rootEquityAccount = this._addAccount(this._rootEquityAccountId, {
-            type: AccountType.EQUITY,
-            pricedItemId: currencyPricedItemId, 
-            name: userMsg('Account-Root_Equity_name'),
-            description: userMsg('Account-Root_Equity_desc'),
-        });
-
-        this._openingBalancesAccountId = this._idGenerator.generateId();
-        this._openingBalancesAccount = this._addAccount(this._openingBalancesAccountId, 
-            {
-                type: AccountType.OPENING_BALANCE,
+        if (!this._rootAssetAccount) {
+            this._rootAssetAccountId = this._idGenerator.generateId();
+            this._rootAssetAccount = await this._asyncAddAccount(this._rootAssetAccountId, {
+                type: AccountType.ASSET,
                 pricedItemId: currencyPricedItemId, 
-                name: userMsg('Account-Opening_Balances_name'),
-                description: userMsg('Account-Opening_Balances_desc'),
-            },
-            this._rootEquityAccount);
+                name: userMsg('Account-Root_Assets_name'),
+                description: userMsg('Account-Root_Assets_desc'),
+            });
+        }
+        
+        if (!this._rootLiabilityAccount) {
+            this._rootLiabilityAccountId = this._idGenerator.generateId();
+            this._rootLiabilityAccount = await this._asyncAddAccount(this._rootLiabilityAccountId, {
+                type: AccountType.LIABILITY,
+                pricedItemId: currencyPricedItemId, 
+                name: userMsg('Account-Root_Liabilities_name'),
+                description: userMsg('Account-Root_Liabilities_desc'),
+            });
+        }
 
+        if (!this._rootIncomeAccount) {
+            this._rootIncomeAccountId = this._idGenerator.generateId();
+            this._rootIncomeAccount = await this._asyncAddAccount(this._rootIncomeAccountId, {
+                type: AccountType.INCOME,
+                pricedItemId: currencyPricedItemId, 
+                name: userMsg('Account-Root_Income_name'),
+                description: userMsg('Account-Root_Income_desc'),
+            });
+        }
 
+        if (!this._rootExpenseAccount) {
+            this._rootExpenseAccountId = this._idGenerator.generateId();
+            this._rootExpenseAccount = await this._asyncAddAccount(this._rootExpenseAccountId, {
+                type: AccountType.EXPENSE,
+                pricedItemId: currencyPricedItemId, 
+                name: userMsg('Account-Root_Expense_name'),
+                description: userMsg('Account-Root_Expense_desc'),
+            });
+        }
+
+        if (!this._rootEquityAccount) {
+            this._rootEquityAccountId = this._idGenerator.generateId();
+            this._rootEquityAccount = await this._asyncAddAccount(this._rootEquityAccountId, {
+                type: AccountType.EQUITY,
+                pricedItemId: currencyPricedItemId, 
+                name: userMsg('Account-Root_Equity_name'),
+                description: userMsg('Account-Root_Equity_desc'),
+            });
+        }
+
+        if (!this._openingBalancesAccount) {
+            this._openingBalancesAccountId = this._idGenerator.generateId();
+            this._openingBalancesAccount = await this._asyncAddAccount(this._openingBalancesAccountId, 
+                {
+                    type: AccountType.OPENING_BALANCE,
+                    pricedItemId: currencyPricedItemId, 
+                    name: userMsg('Account-Opening_Balances_name'),
+                    description: userMsg('Account-Opening_Balances_desc'),
+                },
+                this._rootEquityAccount);
+        }
     }
 
+    
     getAccountingSystem() { return this._accountingSystem; }
 
 
@@ -371,32 +416,38 @@ export class AccountManager {
     getOpeningBalancesAccount() { return Object.assign({}, this._openingBalancesAccount); }
 
 
-    getAccount(ref) {
-        let account;
-        if (typeof ref === 'number') {
-            account = this._accountsById.get(ref);
-        }
-        else {
-            if (ref.uuid) {
-                ref = ref.uuid;
-            }
-            account = this._accountsByUUId.get(ref);
-        }
-
+    /**
+     * Retrieves the account with a given id.
+     * @param {number} id
+     * @returns {(AccountDataItem|undefined)}
+     */
+    getAccount(id) {
+        const account = this._accountsById.get(id);
         return (account) ? Object.assign({}, account) : undefined;
     }
 
 
+    /**
+     * Retrieves the account with a given refId.
+     * @param {string} refId
+     * @returns {(AccountDataItem|undefined)}
+     */
+    getAccountWithRefId(refId) {
+        const account = this._accountsByRefId.get(refId);
+        return (account) ? Object.assign({}, account) : undefined;
+    }
 
-    _addAccount(id, account, parentAccount) {
+
+    async _asyncAddAccount(id, account, parentAccount) {
         account = Object.assign({}, account, { id: id });
         if (typeof account.type !== 'string') {
             account.type = account.type.name;
         }
         account.childAccountIds = account.childAccountIds || [];
 
-        this._accountsById.set(id, account);
+        await this._handler.asyncAddAccount(account);
 
+        this._accountsById.set(id, account);
         if (parentAccount) {
             parentAccount.childAccountIds.push(id);
         }
@@ -405,15 +456,88 @@ export class AccountManager {
     }
 
 
-    addAccount(parentAccountId, account) {
+    async asyncAaddAccount(parentAccountId, account) {
 
     }
 
-    removeAccount(accountId) {
+    async asyncRemoveAccount(accountId) {
 
     }
 
-    modifyAccount(accountId, accountUpdates) {
+    async asyncModifyAccount(accountId, accountUpdates) {
 
+    }
+}
+
+
+/**
+ * @interface
+ * Handler interface implemented by {@link AccountingFile} implementations to interact with the {@link AccountManager}.
+ */
+export class AccountsHandler {
+    /**
+     * Retrieves an array containing all the priced items. The priced items are presumed
+     * to already be loaded when the {@link AccountManager} is constructed.
+     * @returns {AccountDataItem[]}
+     */
+    getAccounts() {
+        throw Error('AccountsHandler.getAccounts() abstract method!');
+    }
+
+    /**
+     * Adds a new priced item.
+     * @param {AccountDataItem} pricedItemDataItem 
+     */
+    async asyncAddAccount(pricedItemDataItem) {
+        throw Error('AccountsHandler.addpricedItem() abstract method!');
+    }
+
+    /**
+     * Modifies an existing priced item.
+     * @param {AccountDataItem} pricedItemDataItem 
+     */
+    async asyncModifyAccount(pricedItemDataItem) {
+        throw Error('AccountsHandler.modifyAccount() abstract method!');
+    }
+
+    /**
+     * Removes an existing priced item.
+     * @param {number} id 
+     */
+    async asyncRemoveAccount(id) {
+        throw Error('AccountsHandler.removeAccount() abstract method!');
+    }
+}
+
+/**
+ * Simple in-memory implementation of {@link AccountsHandler}
+ */
+export class InMemoryAccountsHandler extends AccountsHandler {
+    constructor(accounts) {
+        super();
+
+        this._accountsById = new Map();
+
+        if (accounts) {
+            accounts.forEach((pricedItem) => {
+                this._accountsById.set(pricedItem.id, pricedItem);
+            });
+        }
+    }
+
+    getAccounts() {
+        return Array.from(this._accountsById.values());
+    }
+
+    async asyncAddAccount(pricedItemDataItem) {
+        this._accountsById.set(pricedItemDataItem.id, pricedItemDataItem);
+    }
+
+    async asyncModifyAccount(pricedItemDataItem) {
+        this._accountsById.set(pricedItemDataItem.id, pricedItemDataItem);
+    }
+
+    async asyncRemoveAccount(id) {
+        this._accountsById.delete(id);
     }
 }

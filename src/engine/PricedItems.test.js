@@ -1,5 +1,5 @@
 import * as PI from './PricedItems';
-import { AccountingSystem } from './AccountingSystem';
+import * as ASTH from './AccountingSystemTestHelpers';
 import { Currencies } from '../util/Currency';
 import { getDecimalDefinition } from '../util/Quantities';
 
@@ -72,8 +72,8 @@ test('PricedItem-Data Items', () => {
 //
 //---------------------------------------------------------
 //
-test('PricedItemManager-currencies', () => {
-    const accountingSystem = new AccountingSystem({ baseCurrency: 'JPY' });
+test('PricedItemManager-currencies', async () => {
+    const accountingSystem = await ASTH.asyncCreateAccountingSystem({ baseCurrency: 'JPY' });
     expect(accountingSystem.getBaseCurrency()).toEqual('JPY');
 
     const manager = accountingSystem.getPricedItemManager();

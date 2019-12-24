@@ -8,6 +8,10 @@ export class TransactionManager {
         this._idGenerator = new IdGenerator();
     }
 
+    async asyncSetupForUse() {
+        
+    }
+    
     getAccountingSystem() { return this._accountingSystem; }
     
 }

@@ -58,6 +58,22 @@ There are actually two forms of most data items. The first form has properties t
 
 Of all the data items, Transactions and Prices have the potential of have a large quantity of the data items. As such the AccountingFile interface supports asynchronous loading of those data items. This requires that retrieval of transactions and prices be done via async functions.
 
+### File Storage System
+The underlying file storage system is for the most part transparent outside the engine. However, there are several presumptions about the file system:
+- Any actions that involve adding, modifying, or removing data items are immediately saved.
+- Any actions that involve adding, modifying, or removing data items are asynchronous.
+
+All file system implementations extend the [AccountingFile](#accountingfile) class.
+
+The base file system is folder based and consists of a number of GZipped JSON files in a common folder. These files include:
+- A Ledger File - this holds all the [Account](#account), and [PricedItem](#priceditem) data items.
+- Several Journal Files - these are for the transactions. There is a summary file and then for each year a separate file containing the transactions belonging to that year.
+- Several Prices Files - these are for the prices. Similar to the Journal Files, there is a summary file and then for each year a separate file containing the prices belong to that year.
+
+To handle retrieving and saving data items between a file system and the engine, the various data item managers ([AccountManager](#accountmanager), [TransactionManager](#transactionmanager), etc) will employ a handler object. File system implementations will implement the different handler objects.
+
+When an accounting file is first created or opened, it creates the [AccountingSystem](#accountingsystem) represented by the file. When it does, it passes in the various handlers to the accounting system's constructor, which then passes them on to the various managers.
+
 
 ## Entities and Objects
 

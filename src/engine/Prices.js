@@ -3,6 +3,10 @@ export class PriceManager {
         this._accountingSystem = accountingSystem;
     }
 
+    async asyncSetupForUse() {
+        
+    }
+
     getAccountingSystem() { return this._accountingSystem; }
 
 }

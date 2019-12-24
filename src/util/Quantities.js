@@ -930,3 +930,12 @@ export function getQuantityDefinition(name) {
     }
 }
 
+/**
+ * Retrieves the name from a {@link QuantityDefinition} if the argument is a {@link QuantityDefinition}, otherwise returns
+ * the argument.
+ * @param {(string|QuantityDefinition)} definition 
+ * @returns {string}
+ */
+export function getQuantityDefinitionName(definition) {
+    return ((definition === undefined) || (typeof definition === 'string')) ? definition : definition.getName();
+}
