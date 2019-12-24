@@ -7,7 +7,7 @@ import { PriceManager } from './Prices';
 export class AccountingSystem {
     constructor(options) {
         options = options || {};
-        
+
         this._baseCurrency = options.baseCurrency || 'USD';
 
         // Needs to come before the account manager...
@@ -27,4 +27,6 @@ export class AccountingSystem {
     getTransactionManager() { return this._transactionManager; }
 
     getBaseCurrency() { return this._baseCurrency; }
+
+
 }

@@ -1,6 +1,8 @@
 import { userMsg } from '../util/UserMessages';
-import { IdGenerator } from '../util/Ids';
+import { NumericIdGenerator } from '../util/NumericIds';
+import { YMDDate } from '../util/YMDDate';
 import { PricedItemType } from './PricedItems';
+import { getLots, getLotDataItems } from './Lots';
 
 
 /**
@@ -173,66 +175,172 @@ export function loadAccountsUserMessages() {
 }
 
 
+/**
+ * @typedef {object} AccountStateDataItem
+ * @property {string}   ymdDate The date this state represented as a {@link YMDDate} string.
+ * @property {number}   quantityBaseValue   The base value of the quantity of the state. The applicable 
+ * quantity definition is found in the account's priced item's quantityDefinition.
+ * @property {LotDataItem[]}    [lots]    For accounts that use lots, the array of the lot data items.
+ */
+
+/**
+ * @typedef {object} AccountState
+ * @property {YMDDate}  ymdDate The date this state represents.
+ * @property {number}   quantityBaseValue   The base value of the quantity of the state. The applicable 
+ * quantity definition is found in the account's priced item's quantityDefinition.
+ * @property {Lot[]}    [lots]  For accounts that use lots, the array of the lots.
+ */
+
+/**
+ * Retrieves an {@link AccountState} representation of a {@link AccountStateDataItem} object.
+ * @param {(AccountStateDataItem|AccountState)} accountStateDataItem 
+ * @returns {AccountState}
+ */
+export function getAccountState(accountStateDataItem) {
+    if (accountStateDataItem) {
+        if (typeof accountStateDataItem.ymdDate === 'string') {
+            return {
+                ymdDate: new YMDDate(accountStateDataItem.ymdDate),
+                quantityBaseValue: accountStateDataItem.quantityBaseValue,
+                lots: getLots(accountStateDataItem.lots),
+            };
+        }
+    }
+    return accountStateDataItem;
+}
+
+/**
+ * Retrieves an {@link AccountStateDataItem} representation of a {@link AccountState} object.
+ * @param {(AccountState|AccountStateDataItem)} accountState 
+ */
+export function getAccountStateDataItem(accountState) {
+    if (accountState) {
+        if (typeof accountState.ymdDate !== 'string') {
+            return {
+                ymdDate: accountState.ymdDate.toString(),
+                quantityBaseValue: accountState.quantityBaseValue,
+                lots: getLotDataItems(accountState.lots),
+            };
+        }
+    }
+    return accountState;
+}
 
 
+/**
+ * @typedef {object} AccountDataItem
+ * @property {number}   id  The account's id.
+ * @property {string}   type    The name property of one of {@link AccountType}.
+ * @property {number}   pricedItemId   The local id of the priced item the account represents.
+ * @property {string}   [name]  The name of the account.
+ * @property {string}   [description]   The description of the account.
+ * @property {AccountStateDataItem} accountState The current account state
+ */
+
+/**
+ * @typedef {object} AccountData
+ * @property {number}   id  The account's id.
+ * @property {AccountType}  type    The account's type.
+ * @property {number}   pricedItemId   The local id of the priced item the account represents.
+ * @property {string}   [name]  The name of the account.
+ * @property {string}   [description]   The description of the account.
+ * @property {AccountState} accountState The current account state
+ */
+
+/**
+ * Retrieves an {@link Account} representation of an {@link AccountDataItem}.
+ * @param {(AccountDataItem|Account)} accountDataItem 
+ * @returns {Account}
+ */
+export function getAccount(accountDataItem) {
+    if (accountDataItem) {
+        if (typeof accountDataItem.accountState.ymdDate === 'string') {
+            const account = Object.assign({}, accountDataItem);
+            account.type = AccountType[accountDataItem.type];
+            account.accountState = getAccountState(accountDataItem.accountState);
+            return account;
+        }
+    }
+    return accountDataItem;
+}
+
+/**
+ * Retrieves an {@link AccountDataItem} representation of an {@link Account}.
+ * @param {(Account|AccountDataItem)} account 
+ */
+export function getAccountDataItem(account) {
+    if (account) {
+        if (typeof account.accountState.ymdDate !== 'string') {
+            const accountDataItem = Object.assign({}, account);
+            accountDataItem.type = account.type.name;
+            accountDataItem.accountState = getAccountStateDataItem(account.accountState);
+            return accountDataItem;
+        }
+    }
+    return account;
+}
+
+
+/**
+ * Manages {@link Account}s.
+ */
 export class AccountManager {
 
     constructor(accountingSystem) {
         this._accountingSystem = accountingSystem;
         
-        this._idGenerator = new IdGenerator();
+        this._idGenerator = new NumericIdGenerator();
 
-        this._accountsByLocalId = new Map();
-        this._accountsByUUId = new Map();
+        this._accountsById = new Map();
 
         const pricedItemManager = accountingSystem.getPricedItemManager();
-        const currencyPricedItemLocalId = pricedItemManager.getCurrencyPricedItemLocalId(accountingSystem.getBaseCurrency());
+        const currencyPricedItemId = pricedItemManager.getCurrencyPricedItemId(accountingSystem.getBaseCurrency());
 
-        this._rootAssetAccountId = this._idGenerator.newIdOptions();
+        this._rootAssetAccountId = this._idGenerator.generateId();
         this._rootAssetAccount = this._addAccount(this._rootAssetAccountId, {
             type: AccountType.ASSET,
-            pricedItemLocalId: currencyPricedItemLocalId, 
+            pricedItemId: currencyPricedItemId, 
             name: userMsg('Account-Root_Assets_name'),
             description: userMsg('Account-Root_Assets_desc'),
         });
 
-        this._rootLiabilityAccountId = this._idGenerator.newIdOptions();
+        this._rootLiabilityAccountId = this._idGenerator.generateId();
         this._rootLiabilityAccount = this._addAccount(this._rootLiabilityAccountId, {
             type: AccountType.LIABILITY,
-            pricedItemLocalId: currencyPricedItemLocalId, 
+            pricedItemId: currencyPricedItemId, 
             name: userMsg('Account-Root_Liabilities_name'),
             description: userMsg('Account-Root_Liabilities_desc'),
         });
 
-        this._rootIncomeAccountId = this._idGenerator.newIdOptions();
+        this._rootIncomeAccountId = this._idGenerator.generateId();
         this._rootIncomeAccount = this._addAccount(this._rootIncomeAccountId, {
             type: AccountType.INCOME,
-            pricedItemLocalId: currencyPricedItemLocalId, 
+            pricedItemId: currencyPricedItemId, 
             name: userMsg('Account-Root_Income_name'),
             description: userMsg('Account-Root_Income_desc'),
         });
 
-        this._rootExpenseAccountId = this._idGenerator.newIdOptions();
+        this._rootExpenseAccountId = this._idGenerator.generateId();
         this._rootExpenseAccount = this._addAccount(this._rootExpenseAccountId, {
             type: AccountType.EXPENSE,
-            pricedItemLocalId: currencyPricedItemLocalId, 
+            pricedItemId: currencyPricedItemId, 
             name: userMsg('Account-Root_Expense_name'),
             description: userMsg('Account-Root_Expense_desc'),
         });
 
-        this._rootEquityAccountId = this._idGenerator.newIdOptions();
+        this._rootEquityAccountId = this._idGenerator.generateId();
         this._rootEquityAccount = this._addAccount(this._rootEquityAccountId, {
             type: AccountType.EQUITY,
-            pricedItemLocalId: currencyPricedItemLocalId, 
+            pricedItemId: currencyPricedItemId, 
             name: userMsg('Account-Root_Equity_name'),
             description: userMsg('Account-Root_Equity_desc'),
         });
 
-        this._openingBalancesAccountId = this._idGenerator.newIdOptions();
+        this._openingBalancesAccountId = this._idGenerator.generateId();
         this._openingBalancesAccount = this._addAccount(this._openingBalancesAccountId, 
             {
                 type: AccountType.OPENING_BALANCE,
-                pricedItemLocalId: currencyPricedItemLocalId, 
+                pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Opening_Balances_name'),
                 description: userMsg('Account-Opening_Balances_desc'),
             },
@@ -244,29 +352,29 @@ export class AccountManager {
     getAccountingSystem() { return this._accountingSystem; }
 
 
-    getRootAssetAccountLocalId() { return this._rootAssetAccountId.localId; }
+    getRootAssetAccountId() { return this._rootAssetAccountId; }
     getRootAssetAccount() { return Object.assign({}, this._rootAssetAccount); }
 
-    getRootLiabilityAccountLocalId() { return this._rootLiabilityAccountId.localId; }
+    getRootLiabilityAccountId() { return this._rootLiabilityAccountId; }
     getRootLiabilityAccount() { return Object.assign({}, this._rootLiabilityAccount); }
 
-    getRootIncomeAccountLocalId() { return this._rootIncomeAccountId.localId; }
+    getRootIncomeAccountId() { return this._rootIncomeAccountId; }
     getRootIncomeAccount() { return Object.assign({}, this._rootIncomeAccount); }
 
-    getRootExpenseAccountLocalId() { return this._rootExpenseAccountId.localId; }
+    getRootExpenseAccountId() { return this._rootExpenseAccountId; }
     getRootExpenseAccount() { return Object.assign({}, this._rootExpenseAccount); }
 
-    getRootEquityAccountLocalId() { return this._rootEquityAccountId.localId; }
+    getRootEquityAccountId() { return this._rootEquityAccountId; }
     getRootEquityAccount() { return Object.assign({}, this._rootEquityAccount); }
 
-    getOpeningBalancesAccountLocalId() { return this._openingBalancesAccountId.localId; }
+    getOpeningBalancesAccountId() { return this._openingBalancesAccountId; }
     getOpeningBalancesAccount() { return Object.assign({}, this._openingBalancesAccount); }
 
 
     getAccount(ref) {
         let account;
         if (typeof ref === 'number') {
-            account = this._accountsByLocalId.get(ref);
+            account = this._accountsById.get(ref);
         }
         else {
             if (ref.uuid) {
@@ -285,28 +393,27 @@ export class AccountManager {
         if (typeof account.type !== 'string') {
             account.type = account.type.name;
         }
-        account.childAccountLocalIds = account.childAccountLocalIds || [];
+        account.childAccountIds = account.childAccountIds || [];
 
-        this._accountsByLocalId.set(id.localId, account);
-        this._accountsByUUId.set(id.uuid, account);
+        this._accountsById.set(id, account);
 
         if (parentAccount) {
-            parentAccount.childAccountLocalIds.push(id.localId);
+            parentAccount.childAccountIds.push(id);
         }
 
         return account;
     }
 
 
-    addAccount(parentAccountLocalId, account) {
+    addAccount(parentAccountId, account) {
 
     }
 
-    removeAccount(accountLocalId) {
+    removeAccount(accountId) {
 
     }
 
-    modifyAccount(accountLocalId, accountUpdates) {
+    modifyAccount(accountId, accountUpdates) {
 
     }
 }

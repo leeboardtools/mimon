@@ -1,7 +1,7 @@
 
 export function expectAccount(account, ref) {
     if (ref.localId) {
-        expect(account.id.localId).toEqual(ref.localId);
+        expect(account.id).toEqual(ref.id);
     }
 
     if (ref.type) {
