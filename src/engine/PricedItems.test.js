@@ -1,4 +1,5 @@
 import * as PI from './PricedItems';
+import { AccountingSystem } from './AccountingSystem';
 import { Currencies } from '../util/Currency';
 import { getDecimalDefinition } from '../util/Quantities';
 
@@ -65,4 +66,34 @@ test('PricedItem-Data Items', () => {
     };
     testPricedItemDataItem(propertyPricedItem);
 
+});
+
+
+//
+//---------------------------------------------------------
+//
+test('PricedItemManager-currencies', () => {
+    const accountingSystem = new AccountingSystem({ baseCurrency: 'JPY' });
+    expect(accountingSystem.getBaseCurrency()).toEqual('JPY');
+
+    const manager = accountingSystem.getPricedItemManager();
+    expect(manager.getBaseCurrency()).toEqual(accountingSystem.getBaseCurrency());
+
+    const baseCurrencyPricedItem = manager.getCurrencyBasePricedItem();
+    expect(baseCurrencyPricedItem.currency).toEqual(manager.getBaseCurrency());
+    
+    expect(manager.getPricedItem(manager.getCurrencyBasePricedItemId())).toEqual(baseCurrencyPricedItem);
+    expect(manager.getCurrencyPricedItem(manager.getBaseCurrency())).toEqual(baseCurrencyPricedItem);
+    expect(baseCurrencyPricedItem.id).toEqual(manager.getCurrencyBasePricedItemId());
+
+    
+    const usdPricedItem = manager.getCurrencyPricedItem('USD');
+    expect(usdPricedItem.currency).toEqual('USD');
+    expect(usdPricedItem).toEqual(manager.getCurrencyUSDPricedItem());
+    expect(usdPricedItem.id).toEqual(manager.getCurrencyUSDPricedItemId());
+
+    const eurPricedItem = manager.getCurrencyPricedItem('EUR');
+    expect(eurPricedItem.currency).toEqual('EUR');
+    expect(eurPricedItem).toEqual(manager.getCurrencyEURPricedItem());
+    expect(eurPricedItem.id).toEqual(manager.getCurrencyEURPricedItemId());
 });

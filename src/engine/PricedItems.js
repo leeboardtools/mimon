@@ -1,6 +1,6 @@
 import { userMsg } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
-import { Currencies } from '../util/Currency';
+import { getCurrencyCode, getCurrency } from '../util/Currency';
 import { getQuantityDefinition } from '../util/Quantities';
 
 /**
@@ -26,7 +26,7 @@ export const PricedItemType = {
 };
 
 /**
- * @param {{string|PricedItemTypeDef}} ref 
+ * @param {(string|PricedItemTypeDef)} ref 
  * @returns {PricedItemTypeDef} Returns the {@link PricedItemTypeDef} represented by ref.
  */
 export function pricedItemType(ref) {
@@ -63,7 +63,7 @@ export function loadPricedItemUserMessages() {
 
 /**
  * Retrieves a {@link PricedItem} representation of a {@link PricedItemDataItem}.
- * @param {(PricedItemData|PricedItem)} pricedItemDataItem 
+ * @param {(PricedItemDataItem|PricedItem)} pricedItemDataItem 
  * @returns {PricedItem}
  */
 export function getPricedItem(pricedItemDataItem) {
@@ -71,7 +71,7 @@ export function getPricedItem(pricedItemDataItem) {
         if (typeof pricedItemDataItem.type === 'string') {
             const pricedItem = Object.assign({}, pricedItemDataItem);
             pricedItem.type = PricedItemType[pricedItem.type];
-            pricedItem.currency = Currencies[pricedItem.currency];
+            pricedItem.currency = getCurrency(pricedItem.currency);
             pricedItem.quantityDefinition = getQuantityDefinition(pricedItem.quantityDefinition);
             return pricedItem;
         }
@@ -82,8 +82,8 @@ export function getPricedItem(pricedItemDataItem) {
 
 /**
  * Retrieves a {@link PricedItemDataItem} representation of a {@link PricedItem}.
- * @param {(PricedItem|PricedItemData)} pricedItem 
- * @returns {PricedItemData}
+ * @param {(PricedItem|PricedItemDataItem)} pricedItem 
+ * @returns {PricedItemDataItem}
  */
 export function getPricedItemDataItem(pricedItem) {
     if (pricedItem) {
@@ -101,7 +101,7 @@ export function getPricedItemDataItem(pricedItem) {
 
 
 /**
- * Manages {@link PricedItemData}s.
+ * Manages {@link PricedItemDataItem}s.
  */
 export class PricedItemManager {
     constructor(accountingSystem) {
@@ -141,16 +141,41 @@ export class PricedItemManager {
     getAccountingSystem() { return this._accountingSystem; }
 
 
+    /**
+     * @returns {Currency}  The base currency, from {@link AccountingSystem#getBaseCurrency}.
+     */
     getBaseCurrency() { return this._baseCurrency; }
+
+    /**
+     * @returns {number}    The id of the base currency priced item.
+     */
     getCurrencyBasePricedItemId() { return this._currencyBasedPricedItemId; }
+
+    /**
+     * @returns {PricedItemDataItem}    The priced item for the base currency.
+     */
     getCurrencyBasePricedItem() { return this._currencyBasePricedItem; }
 
 
+    /**
+     * @returns {number}    The id of the priced item for the USD currency.
+     */
     getCurrencyUSDPricedItemId() { return this._currencyUSDPricedItemId; }
+
+    /**
+     * @returns {PricedItemDataItem}    The priced item for the USD currency.
+     */
     getCurrencyUSDPricedItem() { return Object.assign({}, this._currencyUSDPricedItem); }
 
 
+    /**
+     * @returns {number}    The id of the priced item for the EUR currency.
+     */
     getCurrencyEURPricedItemId() { return this._currencyEURPricedItemId; }
+
+    /**
+     * @returns {PricedItemDataItem}    The priced item for the EUR currency.
+     */
     getCurrencyEURPricedItem() { return Object.assign({}, this._currencyEURPricedItem); }
 
     
@@ -171,16 +196,33 @@ export class PricedItemManager {
         return this._pricedItemsById.get(ref);
     }
 
+    /**
+     * 
+     * @param {number} ref The id of the priced item to retrieve.
+     * @returns {(PricedItemDataItem|undefined)}    A copy of the priced item's data.
+     */
     getPricedItem(ref) {
         const pricedItem = this._getPricedItem(ref);
         return (pricedItem) ? Object.assign({}, pricedItem) : undefined;
     }
 
+    /**
+     * Retrieves the priced item for a currency.
+     * @param {(string|Currency)} currency Either a currency code or a {@link Currency}.
+     * @returns {number}
+     */
     getCurrencyPricedItemId(currency) {
+        currency = getCurrencyCode(currency);
         return this._currencyPricedItemIdsByCurrency.get(currency);
     }
 
+    /**
+     * Retrieves a copy of the priced item data item for a currency.
+     * @param {(string|Currency)} currency Either a currency code or a {@link Currency}.
+     * @returns {PricedItemDataItem}
+     */
     getCurrencyPricedItem(currency) {
+        currency = getCurrencyCode(currency);
         return this.getPricedItem(this.getCurrencyPricedItemId(currency));
     }
 

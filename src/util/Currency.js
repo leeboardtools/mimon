@@ -367,5 +367,24 @@ export function currencyFromJSON(json) {
 }
 
 
+/**
+ * Retrieves a currency code from either a currency code or a {@link Currency}.
+ * @param {(string|Currency)} currency 
+ * @returns {string}
+ */
+export function getCurrencyCode(currency) {
+    return ((currency === undefined) || (typeof currency === 'string')) ? currency : currency.getCode();
+}
+
+/**
+ * Retrieves a {@link Currency} from a code or a {@link Currency},
+ * @param {(string|Currency)} code 
+ * @returns {Currency}
+ */
+export function getCurrency(code) {
+    return ((code !== undefined) && (typeof code === 'string')) ? Currencies[code] : code;
+}
+
+
 export const USD = Currencies.USD;
 export const EUR = Currencies.EUR;
