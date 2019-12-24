@@ -16,7 +16,8 @@ export class Quantity {
      * @typedef {object} Quantity~Options
      * @property {number}   numberValue    The number value to be converted to the base value.
      * @property {number}   baseValue   The base value, this is rounded to an integer. This takes precedence over numberValue.
-     * @property {QuantityDefinition}   definition  The quantity definition.
+     * @property {QuantityDefinition|string}   definition  The quantity definition. If a string then {@link getQuantityDefinition} is called
+     * to retrieve the definition associated with the string.
      */
     constructor(options) {
         if (options instanceof Quantity) {
@@ -147,7 +148,7 @@ export class Quantity {
      * @returns {number}    The number representation of the quantity, this is most likely not exact.
      */
     toNumber() {
-        return this._definition.toNumber(this);
+        return this._definition.baseValueToNumber(this._baseValue);
     }
 
     /**
@@ -156,7 +157,7 @@ export class Quantity {
      * @returns {Quantity}
      */
     fromNumber(number) {
-        return this._definition.fromNumber(number);
+        return this._definition.quantityFromNumber(number);
     }
 
 
@@ -165,7 +166,7 @@ export class Quantity {
      * via {@link Quantity#fromValueText} if the definition is the same.
      */
     toValueText() {
-        return this._definition.toValueText(this);
+        return this._definition.baseValueToValueText(this._baseValue);
     }
 
     /**
@@ -341,7 +342,9 @@ export class Quantity {
         else if (!Array.isArray(args)) {
             return this.subdivide(Array.prototype.slice.call(arguments));
         }
-        return this._definition.subdivideQuantity(this, args);
+
+        const baseValues = this._definition.subdivideBaseValue(this._baseValue, args);
+        return baseValues.map((baseValue) => new Quantity({ baseValue: baseValue, definition: this._definition }));
     }
 }
 
@@ -355,52 +358,20 @@ const registeredDefinitions = new Map();
  * being called is the definition of the quantity.
  * @interface
  */
-export class QuantityDefinition {
+class QuantityDefinition {
     static fromOptions(options) {
-        return (options instanceof QuantityDefinition) ? options : QuantityDefinition.definitionFromJSON(options);
+        return (options instanceof QuantityDefinition) ? options : getQuantityDefinition(options);
     }
 
 
     /**
-     * @returns {string}    The name, which should normally be the class name, to associate the particular quantity definition implementation
-     * with a callback handler for working with JSON.
+     * The name of the quantity definition. The name is based upon the quantity definition's properties.
+     * Calling {@link getQuantityDefinition} with a given name will return an instance of the appropriate quantity
+     * definition. These instances are shared.
+     * @returns {string}
      */
-    getJSONName() {
-        throw Error('QuantityDefinition::getJSONName() - Abstract method!');
-    }
-
-    /**
-     * @callback QuantityDefinition~creatorCallback
-     * @param {string} name The name that was registered for the callback.
-     * @param {object} json The JSON object to be processed.
-     * @returns {QuantityDefinition}    The quantity definition represented by the json object.
-     */
-
-    /**
-     * Registers a callback function for creating a particular {@link QuantityDefinition} object from a JSON object.
-     * This uses the name returend by the object's {@link QuantityDefinition~getJSONName} to associate the object
-     * with a given callback.
-     * @param {string} name The name returned by the definition's {@link QuantityDefinition~getJSONName} method.
-     * @param {QuantityDefinition~creatorCallback} creatorCallback The callback function.
-     */
-    static registerDefinitionJSONHandler(name, creatorCallback) {
-        registeredDefinitions.set(name, creatorCallback);
-    }
-
-    definitionToJSON() {
-        return {
-            name: this.getJSONName(),
-            value: this.toJSON(),
-        };
-    }
-
-    static definitionFromJSON(json) {
-        if (json) {
-            const callback = registeredDefinitions.get(json.name);
-            if (callback) {
-                return callback(json.name, json.value);
-            }
-        }
+    getName() {
+        throw Error('QuantityDefinition::getName() - Abstract method!');
     }
 
 
@@ -417,21 +388,11 @@ export class QuantityDefinition {
     }
 
     /**
-     * Returns the representative numerical value of a quantity.
-     * @abstract
-     * @param {Quantity} quantity The quantity of interest.
-     * @returns {number}
-     */
-    toNumber(quantity) {
-        throw Error('QuantityDefinition::toNumber() - Abstract method!');
-    }
-
-    /**
      * Creates a {@link Quantity} with this as its definition that's the closest representation of a number.
      * @param {number} number The number of interest.
      * @returns {Quantity}
      */
-    fromNumber(number) {
+    quantityFromNumber(number) {
         return new Quantity({
             numberValue: number,
             definition: this,
@@ -451,6 +412,16 @@ export class QuantityDefinition {
     }
 
     /**
+     * Returns the representative numerical value of a base value.
+     * @abstract
+     * @param {number} baseValue
+     * @returns {number}
+     */
+    baseValueToNumber(baseValue) {
+        throw Error('QuantityDefinition::baseValueToNumber() - Abstract method!');
+    }
+
+    /**
      * Converts a number value to a base value.
      * @param {number} number The number value.
      * @returns {number}    The base value equivalent, which is an integer.
@@ -462,15 +433,15 @@ export class QuantityDefinition {
     /**
      * Returns a text representation of the numerical value of a quantity. The text represntation can be
      * parsed back via {@link QuantityDefinition#fromValueText} into an equivalent quantity.
-     * @param {Quantity} quantity The quantity of interest.
+     * @param {number} baseValue
      * @returns {string}
      */
-    toValueText(quantity) {
-        throw Error('QuantityDefinition::toValueText() - Abstract method!');
+    baseValueToValueText(baseValue) {
+        throw Error('QuantityDefinition::baseValueToValueText() - Abstract method!');
     }
 
     /**
-     * Parses a value text string generated by {@link Quantity#toValueText} back into a {@link Quantity}.
+     * Parses a value text string generated by {@link Quantity#baseValueToValueText} back into a {@link Quantity}.
      * @param {string} valueText The value text to parse.
      * @returns {Quantity#ParseResult|undefined}    The parse result, <code>undefined</code> if valueText could not be parsed.
      */
@@ -523,19 +494,21 @@ export class QuantityDefinition {
      * Subdivides a quantity into several quantities according to a set of proportions.
      * Note that the final quantity is adjusted as necessary so that the sum of all the sub-divided quantities
      * is the same as the original quantity.
+     * @param {number} baseValue
      * @param {(number[]|...number)} args An array containing the proportions to allocate to each subdivided quantity.
      * The total number of subdivided quantities is the number of proportion values, each subdivided quantity is approximately
      * proportion[i] / proportionSum of the original value, with the exception of the final subdivided quantity, which is always
      * set so that the sum of all the subdivided quantities equals this quantity.
-     * @returns {Quantity[]}    The array of the subdivided quantities, all the quantities have this as their definition.
+     * @returns {number[]}    The array of the subdivided base values.
     */
-    subdivideQuantity(quantity, portions) {
-        throw Error('QuantityDefinition::subdivideQuantity() - Abstract method!');
+    subdivideBaseValue(baseValue, portions) {
+        throw Error('QuantityDefinition::subdivideBaseValue() - Abstract method!');
     }
 
     isSameDefinition(other) {
         throw Error('QuantityDefinition::isSameDefinition() - Abstract method!');
     }
+
 }
 
 
@@ -550,10 +523,10 @@ const ZERO_CHAR_CODE = '0'.charCodeAt(0);
  * setting the number of decimal places to -2 has the effect of making quantities be in terms of hundreds. That is, there will
  * always be two zeros before the decimal point for non-zero values. Note that for 0 this would result in a valueText of '000'.
  * <p>
- * DecimalDefinitions are immutable.
+ * DecimalDefinitions are immutable. DecimalDefinitions are created by calling {@link getDecimalDefinition}.
  * @class
  */
-export class DecimalDefinition extends QuantityDefinition {
+class DecimalDefinition extends QuantityDefinition {
     /**
      * @typedef {object}    DecimalDefinition~Options   The options for the constructor.
      * @property {number}   decimalPlaces   The number of digits after the decimal point. If negative then represents
@@ -580,6 +553,11 @@ export class DecimalDefinition extends QuantityDefinition {
         this._decimalPlaces = Math.round(options.decimalPlaces || 0);
         this._groupMark = options.groupMark;
 
+        this._name = 'DecimalDefinition_' + this._decimalPlaces;
+        if (this._groupMark) {
+            this._name += '_' + this._groupMark;
+        }
+
         // We need to use numerator and denominator values so the multiplication/division
         // is always done with an integer, this avoids roundoff errors with decimal arithmetic.
         if (this._decimalPlaces >= 0) {
@@ -592,6 +570,34 @@ export class DecimalDefinition extends QuantityDefinition {
         }
     }
 
+    getName() {
+        return this._name;
+    }
+
+    static fromName(name) {
+        const prefix = 'DecimalDefinition_';
+        if (!name.startsWith(prefix)) {
+            return;
+        }
+
+        let decimalPlacesEnd = name.indexOf('_', prefix.length);
+        if (decimalPlacesEnd < 0) {
+            decimalPlacesEnd = name.length;
+        }
+
+        const decimalPlaces = parseInt(name.substring(prefix.length, decimalPlacesEnd));
+        if (isNaN(decimalPlaces)) {
+            return;
+        }
+
+        let groupMark;
+        if (decimalPlacesEnd < name.length) {
+            groupMark = name.substring(decimalPlacesEnd + 1);
+        }
+
+        return new DecimalDefinition({ deicmalPlaces: decimalPlaces, groupMark: groupMark });
+    }
+
     toJSON(arg) {
         const json = {
             decimalPlaces: this._decimalPlaces,
@@ -602,7 +608,6 @@ export class DecimalDefinition extends QuantityDefinition {
         return json;
     }
 
-    getJSONName() { return 'DecimalDefinition'; }
 
 
     /**
@@ -610,6 +615,13 @@ export class DecimalDefinition extends QuantityDefinition {
      */
     getDecimalPlaces() {
         return this._decimalPlaces;
+    }
+
+    /**
+     * @returns {string|undefined}  The mark used to dilineate groups of thousands.    
+     */
+    getGroupMark() {
+        return this._groupMark;
     }
 
 
@@ -621,8 +633,7 @@ export class DecimalDefinition extends QuantityDefinition {
     }
 
 
-    toNumber(quantity) {
-        const baseValue = (typeof quantity === 'number') ? quantity : quantity.getBaseValue();
+    baseValueToNumber(baseValue) {
         return baseValue * this._numPow10 / this._denPow10;
     }
 
@@ -632,14 +643,14 @@ export class DecimalDefinition extends QuantityDefinition {
     }
 
 
-    toValueText(quantity) {
-        let text = quantity.getBaseValue().toString();
+    baseValueToValueText(baseValue) {
+        let text = baseValue.toString();
         if (!this._decimalPlaces) {
             return text;
         }
 
         let sign;
-        if (quantity.getBaseValue() < 0.0) {
+        if (baseValue < 0.0) {
             text = text.slice(1);
             sign = '-';
         }
@@ -740,13 +751,13 @@ export class DecimalDefinition extends QuantityDefinition {
         value *= sign;
 
         const result = {
-            quantity: this.fromNumber(value),
+            quantity: this.quantityFromNumber(value),
         };
 
         const fullDecimalPlaces = i - 1 - decimalIndex;
         if (fullDecimalPlaces > this._decimalPlaces) {
             const fullDefinition = new DecimalDefinition(fullDecimalPlaces);
-            result.fullQuantity = fullDefinition.fromNumber(value);
+            result.fullQuantity = fullDefinition.quantityFromNumber(value);
         }
         else {
             result.fullQuantity = result.quantity;
@@ -760,13 +771,13 @@ export class DecimalDefinition extends QuantityDefinition {
 
     changeQuantityDefinition(quantity) {
         if (typeof quantity === 'number') {
-            return this.fromNumber(quantity);
+            return this.quantityFromNumber(quantity);
         }
 
         const compare = this.compareDefinitionResolution(quantity.getDefinition());
         if (compare < 0) {
             // We're losing resolution...
-            return this.fromNumber(quantity.toNumber());
+            return this.quantityFromNumber(quantity.toNumber());
         }
         else if (compare > 0) {
             const baseValue = quantity.getBaseValue() * Math.pow(10, (this._decimalPlaces - quantity.getDefinition()._decimalPlaces));
@@ -844,61 +855,28 @@ export class DecimalDefinition extends QuantityDefinition {
     }
 
 
-    subdivideQuantity(quantity, proportions) {
+    subdivideBaseValue(baseValue, proportions) {
         if (!proportions || (proportions.length <= 1)) {
-            return [this.changeQuantityDefinition(quantity)];
+            return [baseValue];
         }
 
         let sum = 0;
         proportions.forEach((value) => { sum += value; });
 
-        const originalValue = quantity.toNumber();
+        const originalValue = this.baseValueToNumber(baseValue);
         let baseValueSum = 0;
         const result = [];
         const end = proportions.length - 1;
         for (let i = 0; i < end; ++i) {
-            const newQuantity = this.fromNumber(originalValue * proportions[i] / sum);
-            result.push(newQuantity);
-            baseValueSum += newQuantity.getBaseValue();
+            const subBaseValue = this.numberToBaseValue(originalValue * proportions[i] / sum);
+            result.push(subBaseValue);
+            baseValueSum += subBaseValue;
         }
 
         // Last quantity cleans things up.
-        quantity = this.changeQuantityDefinition(quantity);
-        result.push(new Quantity({
-            baseValue: quantity.getBaseValue() - baseValueSum,
-            definition: this,
-        }));
+        result.push(baseValue - baseValueSum);
 
         return result;
-    }
-
-
-    /**
-     * Registers a simple processor supporting DecimalDefinition objects in a {@link JSONObjectProcessor}.
-     * Note that if you extend DecimalDefinition, and have separate JSON object processing for that class,
-     * you should set a <code>_jsonNoDecimalDefinition</code> property to <code>true</code> in that class.
-     * @param {JSONProcessor} jsonProcessor The JSON object processor.
-     */
-    static registerWithJSONObjectProcessor(jsonProcessor, definitionLibrary) {
-        jsonProcessor.addSimpleObjectProcessor({
-            name: 'DecimalDefinition',
-            isForObject: (object) => object instanceof DecimalDefinition && !object._jsonNoDecimalDefinition,
-            fromJSON: (json) => {
-                if (definitionLibrary) {
-                    const definition = definitionLibrary.definitionFromOptions(json);
-                    if (definition) {
-                        return definition;
-                    }
-                }
-                return new DecimalDefinition(json);
-            },
-            toJSON: (object) => {
-                if (definitionLibrary) {
-                    return definitionLibrary.definitionToOptions(object);
-                }
-                return object.toJSON();
-            }
-        });
     }
 
 
@@ -916,61 +894,39 @@ export class DecimalDefinition extends QuantityDefinition {
     }
 }
 
-QuantityDefinition.registerDefinitionJSONHandler('DecimalDefinition', (name, json) => {
-    return new DecimalDefinition(json);
-});
 
+/**
+ * Retrieves a {@link DecimalDefinition}. Any given set of options always returns the same quantity definition object.
+ * @param {DecimalDefinition~Options} options 
+ * @returns {DecimalDefinition}
+ */
+export function getDecimalDefinition(options) {
+    const definition = new DecimalDefinition(options);
+    const name = definition.getName();
+    const existingDefinition = registeredDefinitions.get(name);
+    if (!existingDefinition) {
+        registeredDefinitions.set(name, definition);
+        return definition;
+    }
+    return existingDefinition;
+}
 
-export class QuantityDefinitionLibrary {
-    constructor() {
-        this._definitionsByName = new Map();
-        this._namesByDefinitions = new Map();
+/**
+ * Retrieves a {@link QuantityDefinition} object whose {@link QuantityDefinition~getName} would match a given name.
+ * For any given name the same quantity definition object is returned.
+ * @param {string} name 
+ * @returns {QuantityDefinition}
+ */
+export function getQuantityDefinition(name) {
+    const existingDefinition = registeredDefinitions.get(name);
+    if (existingDefinition) {
+        return existingDefinition;
     }
 
-    definitionFromOptions(options) {
-        if (typeof options === 'string') {
-            return this.getDefinition(options);
-        }
-        return QuantityDefinition.fromOptions(options);
-    }
-
-    definitionToOptions(definition) {
-        if (definition) {
-            const name = this.getName(definition);
-            if (name) {
-                return name;
-            }
-            return definition.toJSON();
-        }
-    }
-
-    addDefinition(name, definition) {
-        this._definitionsByName.set(name, definition);
-        this._namesByDefinitions.set(definition, name);
-    }
-
-    deleteDefinition(definition) {
-        const name = this._namesByDefinitions.get(definition);
-        if (name) {
-            this._definitionsByName.delete(name);
-            this._namesByDefinitions.delete(definition);
-        }
-    }
-
-    deleteName(name) {
-        const definition = this._definitionsByName.get(name);
-        if (definition) {
-            this._definitionsByName.delete(name);
-            this._namesByDefinitions.delete(definition);
-        }
-    }
-
-    getDefinition(name) {
-        return this._definitionsByName.get(name);
-    }
-
-    getName(definition) {
-        return this._namesByDefinitions.get(definition);
+    const decimalDefinition = DecimalDefinition.fromName(name);
+    if (decimalDefinition) {
+        registeredDefinitions.set(name, decimalDefinition);
+        return decimalDefinition;
     }
 }
 
