@@ -1,4 +1,4 @@
-import { Quantity, DecimalDefinition } from './Quantities';
+import { Quantity, getDecimalDefinition } from './Quantities';
 
 /**
  * Class defining individual currency properties. Currency objects normally should be accessed via
@@ -6,12 +6,8 @@ import { Quantity, DecimalDefinition } from './Quantities';
  * Currency objects are immutable.
  * @class
  */
-export class Currency extends DecimalDefinition {
+export class Currency {
     constructor(options) {
-        super(options);
-
-        this._jsonNoDecimalDefinition = true;
-
         this._code = options.code;
         this._numericCode = options.numericCode;
         this._name = options.name;
@@ -23,6 +19,8 @@ export class Currency extends DecimalDefinition {
             Object.assign(formatOptions, options.valueToStringOptions);
         }
         this._valueToStringFormat = new Intl.NumberFormat(options.locale, formatOptions);
+
+        this._decimalPlaces = options.decimalPlaces;
 
         this._valueScale = 1.0;
         for (let i = 0; i < this._decimalPlaces; ++i) {
@@ -51,6 +49,8 @@ export class Currency extends DecimalDefinition {
         });
 
         this._plusSign = this._plusSign || '+';
+
+        this._quantityDefinition = getDecimalDefinition({ decimalPlaces: this._decimalPlaces, groupMark: this._groupMark });
     }
 
 
@@ -185,87 +185,6 @@ export class Currency extends DecimalDefinition {
      */
     baseValueToNoCurrencyString(value) {
         return this.formatBaseValueWithParts(value, ['currency']);
-    }
-
-
-    // From QuantityDefinition
-    toValueText(quantity) {
-        return this.baseValueToString(quantity.toNumber());
-    }
-
-    // From QuantityDefinition
-    fromValueText(valueText) {
-        try {
-            const value = this.baseValueFromString(valueText);
-            return this.fromNumber(value);
-        }
-        catch (e) {
-            return undefined;
-        }
-    }
-
-
-    _checkAddSubtractQuantities(quantities, errMsg) {
-        for (let i = 0; i < quantities.length; ++i) {
-            const quantity = quantities[i];
-            if (!(quantity instanceof Quantity)) {
-                throw Error(errMsg);
-            }
-            if (quantity.getDefinition().getCode() !== this.getCode()) {
-                throw Error(errMsg);
-            }
-        }
-    }
-
-    // From QuantityDefinition
-    addQuantities(quantities) {
-        // Can only add quantities that all have the same currency.
-        this._checkAddSubtractQuantities(quantities, 'Quantities with currencies can only be added to quantities of the same currency.');
-        super.addQuantities(quantities);
-    }
-
-    // From QuantityDefinition
-    subtractQuantities(quantities) {
-        // Can only subtract quantities that all have the same currency.
-        this._checkAddSubtractQuantities(quantities, 'Quantities with currencies can only be added to quantities of the same currency.');
-        super.subtractQuantities(quantities);
-    }
-
-    // From QuantityDefinition
-    multiplyQuantities(quantities) {
-        // We only allow one quantity with currency in the multplication, and it must match this currency.
-        let isCurrencyQuantity;
-        quantities.forEach((quantity) => {
-            if (quantity instanceof Quantity) {
-                const definition = quantity.getDefinition();
-                if (definition instanceof Currency) {
-                    if (isCurrencyQuantity) {
-                        throw Error('Quantities with currencies can only be multiplied by scalar values/quantities.');
-                    }
-                    isCurrencyQuantity = true;
-                    if (definition.getCode() !== this.getCode()) {
-                        throw Error('The quantity of a currency being multiplied must match the currency doing the multiplication.');
-                    }
-                }
-            }
-        });
-        super.multiplyQuantities(quantities);
-    }
-
-
-    /**
-     * Registers a simple processor supporting Currency objects in a {@link JSONObjectProcessor}.
-     * Note that if you extend Currency, and have separate JSON object processing for that class,
-     * you should set a <code>_jsonNoCurrency</code> property to <code>true</code> in that class.
-     * @param {JSONProcessor} jsonProcessor The JSON object processor.
-     */
-    static registerWithJSONObjectProcessor(jsonProcessor) {
-        jsonProcessor.addSimpleObjectProcessor({
-            name: 'Currency',
-            isForObject: (object) => object instanceof Currency && !object._jsonNoCurrency,
-            fromJSON: (json) => Currencies[json],
-            toJSON: (object) => object.getCode(),
-        });
     }
 }
 
