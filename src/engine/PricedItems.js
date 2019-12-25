@@ -461,7 +461,7 @@ export class PricedItemManager {
         }
 
         if (validateOnly) {
-            return;
+            return newPricedItem;
         }
 
         await this._handler.asyncModifyPricedItem(newPricedItem);

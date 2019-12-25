@@ -49,6 +49,7 @@
     "AccountManager-no_change_root_account_parent": "The top level accounts cannot be assigned as a child account.",
     "AccountManager-no_change_opening_balances_account_type": "The opening balances account's type cannot be changed.",
     "AccountManager-no_change_opening_balances_account_parent": "The opening balances account's parent cannot be changed.",
+    "AccountManager-parent_is_child": "The new parent account is a child of the account.",
     "AccountManager-invalid_pricedItem_type_for_type": ["The priced item must be of type '", "' for '", "' accounts."],
     "AccountManager-no_change_category": "Account categories cannot be changed.",
     "AccountManager-no_change_pricedItem_types": "The account type cannot be changed to a type with a different priced item type.",

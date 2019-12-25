@@ -95,6 +95,7 @@ test('Account-Data Items', () => {
     };    
     testAccountDataItem(lotsAccount);
 
+
     lotsAccount.type = A.AccountType.MUTUAL_FUND;
     testAccountDataItem(lotsAccount);
 
@@ -129,6 +130,23 @@ test('Account-Data Items', () => {
     plainAccount.type = A.AccountType.OPENING_BALANCE;
     testAccountDataItem(plainAccount);
 
+
+    const lotsAccountDataItem = A.getAccountDataItem(lotsAccount);
+    const deepCopyDataItem = A.deepCopyAccount(lotsAccountDataItem);
+    expect(deepCopyDataItem).toEqual(lotsAccountDataItem);
+
+    for (let i = 0; i < deepCopyDataItem.accountState.lots.length; ++i) {
+        expect(deepCopyDataItem.accountState.lots[i]).not.toBe(lotsAccountDataItem.accountState.lots[i]);
+    }
+
+    const lotsAccount2 = A.getAccount(lotsAccount);
+    const deepCopyAccount2 = A.deepCopyAccount(lotsAccount2);
+    expect(deepCopyAccount2).toEqual(lotsAccount2);
+
+    expect(deepCopyAccount2.accountState.ymdDate).not.toBe(lotsAccount2.accountState.ymdDate);
+    for (let i = 0; i < deepCopyAccount2.accountState.lots.length; ++i) {
+        expect(deepCopyAccount2.accountState.lots[i]).not.toBe(lotsAccount2.accountState.lots[i]);
+    }
 });
 
 
@@ -598,4 +616,100 @@ test('AccountManager-add', async () => {
     };
     // Can only have one opening balances account.
     await expect(accountManager.asyncAddAccount(openingBalancesOptionsA)).rejects.toThrow();
+});
+
+
+
+//
+//---------------------------------------------------------
+//
+test('AccountManager-modify', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    const { accountingSystem } = sys;
+    const accountManager = accountingSystem.getAccountManager();
+
+    let account;
+
+    // Change account state.
+    const stateA = { ymdDate: '2019-09-21', quantityBaseValue: 1000 };
+    const changesA = { id: sys.checkingId, accountState: stateA };
+    [account] = await accountManager.asyncModifyAccount(changesA);
+    ATH.expectAccount(account, changesA);
+
+    account = accountManager.getAccountDataItemWithId(sys.checkingId);
+    ATH.expectAccount(account, changesA);
+
+    // Make sure it was a deep copy
+    const stateB = { ymdDate: '2012-03-45', quantityBaseValue: 1000, };
+    changesA.accountState = stateB;
+    const changesB = { id: sys.checkingId, accountState: stateA };
+    ATH.expectAccount(account, changesB);
+
+
+    // Move IRA to fixed assets.
+    const iraMove = { id: sys.iraId, parentAccountId: sys.fixedAssetsId };
+    await accountManager.asyncModifyAccount(iraMove, true);
+
+    // Just did a validate only, so account parent should still be investmentsId.
+    account = accountManager.getAccountDataItemWithId(sys.iraId);
+    expect(account.parentAccountId).toEqual(sys.investmentsId);
+
+    // Moving to liabilities should fail.
+    await expect(accountManager.asyncModifyAccount({ id: sys.iraId, parentAccountId: sys.loansId })).rejects.toThrow();
+
+    // Now for the actual move...
+    [account] = await accountManager.asyncModifyAccount(iraMove);
+    expect(account.parentAccountId).toEqual(sys.fixedAssetsId);
+
+    // Now a child of fixedAssetsId
+    account = accountManager.getAccountDataItemWithId(sys.fixedAssetsId);
+    expect(account.childAccountIds).toEqual(expect.arrayContaining([sys.iraId]));
+
+    // And not investmentsId
+    account = accountManager.getAccountDataItemWithId(sys.investmentsId);
+    expect(account.childAccountIds).not.toEqual(expect.arrayContaining([sys.iraId]));
+
+
+    // Can't move root account.
+    await expect(accountManager.asyncModifyAccount({ id: accountManager.getRootAssetAccountId(), parentAccountId: sys.fixedAssetsId })).rejects.toThrow();
+
+    // Can't move to a descendant.
+    await expect(accountManager.asyncModifyAccount({ id: sys.investmentsId, parentAccountId: sys.brokerageAId })).rejects.toThrow();
+
+
+    // Change type.
+    const changeCheckingType = { id: sys.checkingId, type: A.AccountType.BROKERAGE };
+    [account] = await accountManager.asyncModifyAccount(changeCheckingType);
+    ATH.expectAccount(account, changeCheckingType);
+
+    await accountManager.asyncModifyAccount({ id: sys.checkingId, type: A.AccountType.BANK });
+
+    // Can't change to an expense account.
+    await expect(accountManager.asyncModifyAccount({ id: sys.checkingId, type: A.AccountType.EXPENSE })).rejects.toThrow();
+
+
+    // Can't change something with lots to something without lots.
+    await expect(accountManager.asyncModifyAccount({ id: sys.aaplBrokerageAId, type: A.AccountType.BROKERAGE })).rejects.toThrow();
+    await expect(accountManager.asyncModifyAccount({ id: sys.brokerageAId, type: A.AccountType.SECURITY })).rejects.toThrow();
+
+
+    // Check refId.
+    await accountManager.asyncModifyAccount({ id: sys.checkingId, refId: '1234', });
+    account = accountManager.getAccountDataItemWithId(sys.checkingId);
+    expect(account.refId).toEqual('1234');
+
+    expect(accountManager.getAccountDataItemWithRefId('1234')).toEqual(account);
+
+    [account] = await accountManager.asyncModifyAccount({ id: sys.checkingId, refId: '9', });
+    expect(accountManager.getAccountDataItemWithRefId('1234')).toBeUndefined();
+
+    expect(accountManager.getAccountDataItemWithRefId('9')).toEqual(account);
+
+    // No duplicate refIds.
+    await expect(accountManager.asyncModifyAccount({ id: sys.savingsId, refId: '9'})).rejects.toThrow();
+
+    await accountManager.asyncModifyAccount({ id: sys.savingsId, refId: '8'});
+    account = accountManager.getAccountDataItemWithRefId('8');
+    expect(account.id).toEqual(sys.savingsId);
+
 });

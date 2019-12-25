@@ -3,6 +3,7 @@ import { NumericIdGenerator } from '../util/NumericIds';
 import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 import { PricedItemType, getPricedItemType } from './PricedItems';
 import { getLots, getLotDataItems } from './Lots';
+import deepEqual from 'deep-equal';
 
 
 /**
@@ -212,7 +213,8 @@ function createAccountStateDataItemForType(type, ymdDate) {
  */
 
 /**
- * Retrieves an {@link AccountState} representation of a {@link AccountStateDataItem} object.
+ * Retrieves an {@link AccountState} representation of a {@link AccountStateDataItem} object, avoids copying if the arg
+ * is already an {@link AccountState}
  * @param {(AccountStateDataItem|AccountState)} accountStateDataItem 
  * @returns {AccountState}
  */
@@ -233,7 +235,8 @@ export function getAccountState(accountStateDataItem) {
 }
 
 /**
- * Retrieves an {@link AccountStateDataItem} representation of a {@link AccountState} object.
+ * Retrieves an {@link AccountStateDataItem} representation of a {@link AccountState} object, avoids copying if the arg
+ * is already an {@link AccountStateDataItem}
  * @param {(AccountState|AccountStateDataItem)} accountState 
  */
 export function getAccountStateDataItem(accountState) {
@@ -278,7 +281,8 @@ export function getAccountStateDataItem(accountState) {
  */
 
 /**
- * Retrieves an {@link Account} representation of an {@link AccountDataItem}.
+ * Retrieves an {@link Account} representation of an {@link AccountDataItem}, avoids copying if the arg
+ * is already an {@link Account}
  * @param {(AccountDataItem|Account)} accountDataItem 
  * @returns {Account}
  */
@@ -298,7 +302,8 @@ export function getAccount(accountDataItem) {
 }
 
 /**
- * Retrieves an {@link AccountDataItem} representation of an {@link Account}.
+ * Retrieves an {@link AccountDataItem} representation of an {@link Account}, avoids copying if the arg
+ * is already an {@link AccountDataItem}
  * @param {(Account|AccountDataItem)} account 
  */
 export function getAccountDataItem(account) {
@@ -314,6 +319,32 @@ export function getAccountDataItem(account) {
         }
     }
     return account;
+}
+
+/**
+ * Performs a deep copy of either an {@link Account} or an {@link AccountDataItem}
+ * @param {{Account|AccountDataItem}} account 
+ * @returns {(Account|AccountDataItem)}
+ */
+export function deepCopyAccount(account) {
+    const accountDataItem = getAccountDataItem(account);
+    if (accountDataItem === account) {
+        account = getAccount(accountDataItem);
+        return getAccountDataItem(account);
+    }
+    else {
+        return getAccount(accountDataItem);
+    }
+}
+
+
+/**
+ * Retrieves the id from an account reference, which may be an id already, an {@link Account}, or an {@link AccountDataItem}
+ * @param {(Account|AccountDataItem|number)} ref 
+ * @returns {number}
+ */
+export function getAccountId(ref) {
+    return (ref !== undefined) ? ((typeof ref === 'number') ? ref : ref.id) : undefined;
 }
 
 
@@ -472,6 +503,29 @@ export class AccountManager {
     }
 
 
+    /**
+     * Determines if an account is a child of another account.
+     * @param {(Account|AccountDataItem|number)} test A reference to the account to be tested.
+     * @param {(Account|AccountDataItem|number)} ref A reference to the account to be tested against.
+     * @returns {boolean}   <code>true</code> if the account with id testId is a child of the account with id refId.
+     */
+    isAccountChildOfAccount(test, ref) {
+        const testId = getAccountId(test);
+        const refId = getAccountId(ref);
+
+        let accountDataItem = this.getAccountDataItemWithId(testId);
+        while (accountDataItem) {
+            if (accountDataItem.parentAccountId === refId) {
+                return true;
+            }
+
+            accountDataItem = this.getAccountDataItemWithId(accountDataItem.parentAccountId);
+        }
+
+        return false;
+    }
+
+
     async _asyncAddAccount(account, parentAccount) {
         account = getAccountDataItem(account);
         
@@ -556,6 +610,13 @@ export class AccountManager {
             throw userError('AccountManager-parent_account_invalid', accountDataItem.parentAccountId);
         }
 
+        if (accountDataItem.accountState) {
+            console.debug('Ignoring accountState');
+        }
+        if (accountDataItem.childAccountIds && accountDataItem.childAccountIds.length) {
+            console.debug('Ignoring childAccountIds');
+        }
+
         // Create an empty account state appropriate for the account.
         const type = getAccountType(accountDataItem.type);
         accountDataItem.accountState = createAccountStateDataItemForType(type, initialYMDDate);
@@ -570,7 +631,8 @@ export class AccountManager {
             return;
         }
 
-        return this._asyncAddAccount(accountDataItem, parentAccountDataItem);
+        const newAccountDataItem = await this._asyncAddAccount(accountDataItem, parentAccountDataItem);
+        return Object.assign({}, newAccountDataItem);
     }
 
 
@@ -649,7 +711,9 @@ export class AccountManager {
      * @param {(Account|AccountDataItem)} account The account id is required. Only specified properties are modified, with restrictions on the
      * type and priced item accounts.
      * @param {boolean} validateOnly 
-     * @returns {AccountDataItem}
+     * @returns {AccountDataItem[]|undefined} If the account is modified, returns an array whose first element is the new account data item
+     * and whose second element is the old account item data. Otherwise <code>undefined</code> is returned (which happens if account does not actually
+     * change anything).
      */
     async asyncModifyAccount(account, validateOnly) {
         const { id } = account;
@@ -658,7 +722,7 @@ export class AccountManager {
             throw userError('AccountManager-modify_no_id', id);
         }
 
-        const newAccountDataItem = Object.assign({}, oldAccountDataItem, account);
+        const newAccountDataItem = getAccountDataItem(deepCopyAccount(Object.assign({}, oldAccountDataItem, account)));
 
         // Can't change the type nor parent of the root and opening balance accounts.
         const oldParentAccountId = oldAccountDataItem.parentAccountId;
@@ -688,6 +752,11 @@ export class AccountManager {
             }
 
             if (newParentAccountId !== oldParentAccountId) {
+                // Make sure the new parent is not a child of the account.
+                if (this.isAccountChildOfAccount(newParentAccountId, id)) {
+                    throw userError('AccountManager-parent_is_child');
+                }
+
                 oldParentAccountDataItem = this.getAccountDataItemWithId(oldParentAccountId);
                 if (!oldParentAccountDataItem) {
                     throw userError('AccountManager-parent_account_invalid', oldParentAccountId);
@@ -704,6 +773,7 @@ export class AccountManager {
                 oldParentAccountDataItem = newParentAccountDataItem;
             }
         }
+
 
         const oldType = getAccountType(oldAccountDataItem.type);
         const newType = getAccountType(newAccountDataItem.type);
@@ -726,6 +796,10 @@ export class AccountManager {
         }
 
         if (validateOnly) {
+            return newAccountDataItem;
+        }
+
+        if (deepEqual(newAccountDataItem, oldAccountDataItem)) {
             return;
         }
 
@@ -738,6 +812,8 @@ export class AccountManager {
         }
 
         await this._handler.asyncUpdateAccountDataItems(updatedAccountPairs);
+        
+        this._accountsById.set(id, newAccountDataItem);
 
         if (oldAccountDataItem.refId !== newAccountDataItem.refId) {
             if (oldAccountDataItem.refId) {
@@ -747,6 +823,8 @@ export class AccountManager {
         if (newAccountDataItem.refId) {
             this._accountsByRefId.set(newAccountDataItem.refId, newAccountDataItem);
         }
+
+        return [Object.assign({}, newAccountDataItem), oldAccountDataItem];
     }
 }
 
