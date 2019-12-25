@@ -197,7 +197,7 @@ export class PricedItemManager {
 
 
     async asyncSetupForUse() {
-        let usdPricedItem = this.getCurrencyPricedItem('USD');
+        let usdPricedItem = this.getCurrencyPricedItemDataItemWithId('USD');
         if (!usdPricedItem) {
             usdPricedItem = await this.asyncAddCurrencyPricedItem('USD');
         }
@@ -206,7 +206,7 @@ export class PricedItemManager {
         this._requiredCurrencyPricedItemIds.add(usdPricedItem.id);
 
 
-        let eurPricedItem = this.getCurrencyPricedItem('EUR');
+        let eurPricedItem = this.getCurrencyPricedItemDataItemWithId('EUR');
         if (!eurPricedItem) {
             eurPricedItem = await this.asyncAddCurrencyPricedItem('EUR');
         }
@@ -216,7 +216,7 @@ export class PricedItemManager {
 
 
         this._baseCurrency = this._accountingSystem.getBaseCurrency();
-        let baseCurrencyPricedItem = this.getCurrencyPricedItem(this._baseCurrency);
+        let baseCurrencyPricedItem = this.getCurrencyPricedItemDataItemWithId(this._baseCurrency);
         if (!baseCurrencyPricedItem) {
             baseCurrencyPricedItem = await this.asyncAddCurrencyPricedItem(this._baseCurrency);
         }
@@ -304,11 +304,11 @@ export class PricedItemManager {
 
     /**
      * 
-     * @param {number} ref The id of the priced item to retrieve.
+     * @param {number} id The id of the priced item to retrieve.
      * @returns {(PricedItemDataItem|undefined)}    A copy of the priced item's data.
      */
-    getPricedItem(ref) {
-        const pricedItem = this._getPricedItem(ref);
+    getPricedItemDataItemWithId(id) {
+        const pricedItem = this._getPricedItem(id);
         return (pricedItem) ? Object.assign({}, pricedItem) : undefined;
     }
 
@@ -342,8 +342,8 @@ export class PricedItemManager {
      * <code>undefined</code> the currency's quantity definition is used.
      * @returns {PricedItemDataItem}
      */
-    getCurrencyPricedItem(currency, quantityDefinition) {
-        return this.getPricedItem(this.getCurrencyPricedItemId(currency, quantityDefinition));
+    getCurrencyPricedItemDataItemWithId(currency, quantityDefinition) {
+        return this.getPricedItemDataItemWithId(this.getCurrencyPricedItemId(currency, quantityDefinition));
     }
 
 
@@ -366,6 +366,7 @@ export class PricedItemManager {
      * @param {(PricedItem|PricedItemDataItem)} pricedItem 
      * @param {boolean} validateOnly 
      * @returns {PricedItemDataItem} Note that this object will not be the same as the pricedItem arg.
+     * @throws {Error}
      */
     async asyncAddPricedItem(pricedItem, validateOnly) {
         let pricedItemDataItem = getPricedItemDataItem(pricedItem);
@@ -379,9 +380,11 @@ export class PricedItemManager {
             throw userError('PricedItemManager-invalid_currency', pricedItemDataItem.currency);
         }
 
-        const error = type.validateFunc(this, pricedItemDataItem);
-        if (error) {
-            throw error;
+        if (type.validateFunc) {
+            const error = type.validateFunc(this, pricedItemDataItem);
+            if (error) {
+                throw error;
+            }
         }
 
         if (!getQuantityDefinition(pricedItemDataItem.quantityDefinition)) {
@@ -400,6 +403,7 @@ export class PricedItemManager {
      * @param {number} id 
      * @param {boolean} validateOnly 
      * @returns {PricedItemDataItem}    The priced item that was removed.
+     * @throws {Error}
      */
     async asyncRemovePricedItem(id, validateOnly) {
         if (this._requiredCurrencyPricedItemIds.has(id)) {
@@ -433,6 +437,7 @@ export class PricedItemManager {
      * @param {(PricedItemData|PricedItem)} pricedItem The new priced item properties. The id property is required. For all other
      * properties, if the property is not included in pricedItem, the property will not be changed.
      * @param {boolean} validateOnly 
+     * @throws {Error}
      */
     async asyncModifyPricedItem(pricedItem, validateOnly) {
         const id = pricedItem.id;
