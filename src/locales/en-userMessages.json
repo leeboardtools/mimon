@@ -40,5 +40,16 @@
     "PricedItemType-SECURITY": "Security",
     "PricedItemType-MUTUAL_FUND": "Mutual Fund",
     "PricedItemType-REAL_ESTATE": "Real Estate",
-    "PricedItemType-PROPERTY": "Property"
+    "PricedItemType-PROPERTY": "Property",
+
+    "PricedItemManager-invalid_currency": ["The currency code '", "' is not a supported currency code."],
+    "PricedItemManager-invalid_type": ["The priced item type '", "' is not supported."],
+    "PricedItemManager-quantity_definition_missing": "The priced item is missing a valid quantity definition.",
+    "PricedItemManager-currency_already_exists": ["There is already a currency entry for '", "'."],
+    "PricedItemManager-remove_required_currency": "The priced item is a required currency priced item and cannot be removed.",
+    "PricedItemManager-remove_no_id": ["The priced item cannot be deleted. An item with id '", "' was not found."],
+    "PricedItemManager-modify_no_id": ["The priced item could not be modified. An item with id '", "' was not found."],
+    "PricedItemManager-modify_type_change": "The priced item could not be modified. The type cannot be changed.",
+
+    "": ""
 }

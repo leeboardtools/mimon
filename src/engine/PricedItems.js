@@ -2,6 +2,7 @@ import { userMsg } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
 import { getCurrencyCode, getCurrency } from '../util/Currency';
 import { getQuantityDefinition, getQuantityDefinitionName } from '../util/Quantities';
+import { userError } from '../util/UserMessages';
 
 /**
  * @typedef {object}    PricedItemTypeDef
@@ -13,17 +14,52 @@ import { getQuantityDefinition, getQuantityDefinitionName } from '../util/Quanti
  * The priced item classes.
  * @readonly
  * @enum {PricedItemTypeDef}
+ * @property {PricedItemTypeDef}  CURRENCY
  * @property {PricedItemTypeDef}  SECURITY
+ * @property {PricedItemTypeDef}  MUTUAL_FUND
  * @property {PricedItemTypeDef}  REAL_ESTATE
+ * @property {PricedItemTypeDef}  PROPERTY
  */
 export const PricedItemType = {
-    CURRENCY: { name: 'CURRENCY', },
-    SECURITY: { name: 'SECURITY', hasTickerSymbol: true },
-    MUTUAL_FUND: { name: 'MUTUAL_FUND', hasTickerSymbol: true },
-    REAL_ESTATE: { name: 'REAL_ESTATE', },
-    PROPERTY: { name: 'PROPERTY', },
+    CURRENCY: { name: 'CURRENCY', validateFunc: validateCurrencyDataItem },
+    SECURITY: { name: 'SECURITY', validateFunc: validateSecurityDataItem, hasTickerSymbol: true },
+    MUTUAL_FUND: { name: 'MUTUAL_FUND', validateFunc: validateMutualFundDataItem, hasTickerSymbol: true },
+    REAL_ESTATE: { name: 'REAL_ESTATE', validateFunc: validateRealEstateDataItem, },
+    PROPERTY: { name: 'PROPERTY', validateFunc: validatePropertyDataItem, },
     // COLLECTIBLE: { name: 'COLLECTIBLE', },
 };
+
+function validateCurrencyDataItem(manager, item, isModify) {
+    if (!item.quantityDefinition) {
+        const currency = getCurrency(item.currency);
+        item.quantityDefinition = getQuantityDefinitionName(currency.getQuantityDefinition());
+    }
+
+    const currencyName = manager._getCurrencyName(item.currency, item.quantityDefinition);
+    const existingId = manager._currencyPricedItemIdsByCurrency.get(currencyName);
+    if (existingId) {
+        if (!isModify || (existingId !== item.id)) {
+            return userError('PricedItemManager-currency_already_exists', item.currency);
+        }
+    }
+}
+
+function validateSecurityDataItem(manager, item, isModify) {
+
+}
+
+function validateMutualFundDataItem(manager, item, isModify) {
+
+}
+
+function validateRealEstateDataItem(manager, item, isModify) {
+
+}
+
+function validatePropertyDataItem(manager, item, isModify) {
+
+}
+
 
 /**
  * @param {(string|PricedItemTypeDef)} ref 
@@ -31,6 +67,14 @@ export const PricedItemType = {
  */
 export function pricedItemType(ref) {
     return (typeof ref === 'string') ? PricedItemType[ref] : ref;
+}
+
+/**
+ * @param {(string|PricedItemType)} type 
+ * @returns {string}
+ */
+export function getPricedItemName(type) {
+    return ((type === undefined) || (typeof type === 'string')) ? type : type.name;
 }
 
 
@@ -68,9 +112,11 @@ export function loadPricedItemUserMessages() {
  */
 export function getPricedItem(pricedItemDataItem) {
     if (pricedItemDataItem) {
-        if (typeof pricedItemDataItem.type === 'string') {
+        if ((typeof pricedItemDataItem.type === 'string')
+         || (typeof pricedItemDataItem.currency === 'string')
+         || (typeof pricedItemDataItem.quantityDefinition === 'string')) {
             const pricedItem = Object.assign({}, pricedItemDataItem);
-            pricedItem.type = PricedItemType[pricedItem.type];
+            pricedItem.type = pricedItemType(pricedItem.type);
             pricedItem.currency = getCurrency(pricedItem.currency);
             pricedItem.quantityDefinition = getQuantityDefinition(pricedItem.quantityDefinition);
             return pricedItem;
@@ -87,9 +133,11 @@ export function getPricedItem(pricedItemDataItem) {
  */
 export function getPricedItemDataItem(pricedItem) {
     if (pricedItem) {
-        if (typeof pricedItem.type !== 'string') {
+        if ((typeof pricedItem.type !== 'string')
+         || (typeof pricedItem.currency !== 'string')
+         || (typeof pricedItem.quantityDefinition !== 'string')) {
             const pricedItemDataItem = Object.assign({}, pricedItem);
-            pricedItemDataItem.type = pricedItem.type.name;
+            pricedItemDataItem.type = getPricedItemName(pricedItem.type);
             pricedItemDataItem.currency = getCurrencyCode(pricedItem.currency);
             pricedItemDataItem.quantityDefinition = getQuantityDefinitionName(pricedItem.quantityDefinition);
             return pricedItemDataItem;
@@ -103,6 +151,8 @@ export function getPricedItemDataItem(pricedItem) {
 
 /**
  * Manages {@link PricedItemDataItem}s.
+ * <p>
+ * Note that priced items with the PricedItemType.CURRENCY are restricted to only one priced item per currency.
  */
 export class PricedItemManager {
 
@@ -126,53 +176,46 @@ export class PricedItemManager {
 
         this._currencyPricedItemIdsByCurrency = new Map();
         this._pricedItemsById = new Map();
+        this._requiredCurrencyPricedItemIds = new Set();
 
         const pricedItems = this._handler.getPricedItems();
         pricedItems.forEach((pricedItem) => {
             this._pricedItemsById.set(pricedItem.id, pricedItem);
             if (pricedItem.type === PricedItemType.CURRENCY.name) {
-                this._currencyPricedItemIdsByCurrency.set(pricedItem.currency, pricedItem);
+                const currencyName = this._getCurrencyName(pricedItem.currency, pricedItem.quantityDefinition);
+                this._currencyPricedItemIdsByCurrency.set(currencyName, pricedItem);
             }
         });
     }
 
 
     async asyncSetupForUse() {
-        let usdPricedItem = this._currencyPricedItemIdsByCurrency.get('USD');
+        let usdPricedItem = this.getCurrencyPricedItem('USD');
         if (!usdPricedItem) {
-            const id = this._idGenerator.generateId();
-            usdPricedItem = await this._asyncAddPricedItem(id, {
-                type: PricedItemType.CURRENCY,
-                currency: 'USD',
-            });
+            usdPricedItem = await this.asyncAddCurrencyPricedItem('USD');
         }
         this._currencyUSDPricedItemId = usdPricedItem.id;
         this._currencyUSDPricedItem = usdPricedItem;
+        this._requiredCurrencyPricedItemIds.add(usdPricedItem.id);
 
 
-        let eurPricedItem = this._currencyPricedItemIdsByCurrency.get('EUR');
+        let eurPricedItem = this.getCurrencyPricedItem('EUR');
         if (!eurPricedItem) {
-            const id = this._idGenerator.generateId();
-            eurPricedItem = await this._asyncAddPricedItem(id, {
-                type: PricedItemType.CURRENCY,
-                currency: 'EUR',
-            });
+            eurPricedItem = await this.asyncAddCurrencyPricedItem('EUR');
         }
         this._currencyEURPricedItemId = eurPricedItem.id;
         this._currencyEURPricedItem = eurPricedItem;
+        this._requiredCurrencyPricedItemIds.add(eurPricedItem.id);
 
 
         this._baseCurrency = this._accountingSystem.getBaseCurrency();
-        let baseCurrencyPricedItem = this._currencyPricedItemIdsByCurrency.get(this._baseCurrency);
+        let baseCurrencyPricedItem = this.getCurrencyPricedItem(this._baseCurrency);
         if (!baseCurrencyPricedItem) {
-            const id = this._idGenerator.generateId();
-            baseCurrencyPricedItem = await this._asyncAddPricedItem(id, {
-                type: PricedItemType.CURRENCY,
-                currency: this._baseCurrency,
-            });
+            baseCurrencyPricedItem = await this.asyncAddCurrencyPricedItem(this._baseCurrency);
         }
         this._currencyBasePricedItemId = baseCurrencyPricedItem.id;
         this._currencyBasePricedItem = baseCurrencyPricedItem;
+        this._requiredCurrencyPricedItemIds.add(baseCurrencyPricedItem.id);
     }
 
 
@@ -218,24 +261,39 @@ export class PricedItemManager {
 
     
 
-    async _asyncAddPricedItem(id, pricedItem) {
-        const item = Object.assign({}, pricedItem, { id: id });
-
-        await this._handler.asyncAddPricedItem(item);
-
-        this._pricedItemsById.set(id, item);
-
+    async _asyncAddPricedItem(pricedItem) {
         pricedItem = getPricedItemDataItem(pricedItem);
+
+        const pricedItemData = Object.assign({}, pricedItem);
+        
+        const id = this._idGenerator.generateId();
+        pricedItemData.id = id;
+        const idGeneratorState = this._idGenerator.toJSON();
+
+        await this._handler.asyncAddPricedItem(pricedItemData, idGeneratorState);
+
+        this._pricedItemsById.set(id, pricedItemData);
+
         if (pricedItemType(pricedItem.type) === PricedItemType.CURRENCY) {
-            this._currencyPricedItemIdsByCurrency.set(item.currency, id);
+            const currencyName = this._getCurrencyName(pricedItemData.currency, pricedItemData.quantityDefinition);
+            this._currencyPricedItemIdsByCurrency.set(currencyName, id);
         }
 
-        return item;
+        return pricedItemData;
     }
 
-    _getPricedItem(ref) {
-        return this._pricedItemsById.get(ref);
+    _getPricedItem(id) {
+        return this._pricedItemsById.get(id);
     }
+
+
+    /**
+     * @returns {number[]}  Array containing the ids of all the priced items.
+     */
+    getPricedItemIds() {
+        return Array.from(this._pricedItemsById.keys());
+    }
+
 
     /**
      * 
@@ -247,32 +305,174 @@ export class PricedItemManager {
         return (pricedItem) ? Object.assign({}, pricedItem) : undefined;
     }
 
+    _getCurrencyName(currency, quantityDefinition) {
+        const code = getCurrencyCode(currency);
+        if (!quantityDefinition) {
+            currency = getCurrency(code);
+            quantityDefinition = currency.getQuantityDefinition();
+        }
+
+        const definitionName = getQuantityDefinitionName(quantityDefinition);
+        return code + '_' + definitionName;
+    }
+
     /**
      * Retrieves the priced item for a currency.
      * @param {(string|Currency)} currency Either a currency code or a {@link Currency}.
+     * @param {(string|QuantityDefinition)} [quantityDefinition]    Optional quantity definition, if
+     * <code>undefined</code> the currency's quantity definition is used.
      * @returns {number}
      */
-    getCurrencyPricedItemId(currency) {
-        currency = getCurrencyCode(currency);
-        return this._currencyPricedItemIdsByCurrency.get(currency);
+    getCurrencyPricedItemId(currency, quantityDefinition) {
+        const currencyName = this._getCurrencyName(currency, quantityDefinition);
+        return this._currencyPricedItemIdsByCurrency.get(currencyName);
     }
 
     /**
      * Retrieves a copy of the priced item data item for a currency.
      * @param {(string|Currency)} currency Either a currency code or a {@link Currency}.
+     * @param {(string|QuantityDefinition)} [quantityDefinition]    Optional quantity definition, if
+     * <code>undefined</code> the currency's quantity definition is used.
      * @returns {PricedItemDataItem}
      */
-    getCurrencyPricedItem(currency) {
-        currency = getCurrencyCode(currency);
-        return this.getPricedItem(this.getCurrencyPricedItemId(currency));
+    getCurrencyPricedItem(currency, quantityDefinition) {
+        return this.getPricedItem(this.getCurrencyPricedItemId(currency, quantityDefinition));
     }
 
+
+    /**
+     * Adds a priced item representing a currency.
+     * @param {(string|Currency)} currency 
+     * @param {boolean} validateOnly 
+     * @param {PricedItemDataItem} options 
+     */
+    async asyncAddCurrencyPricedItem(currency, validateOnly, options) {
+        const pricedItem = Object.assign({}, options);
+        pricedItem.type = PricedItemType.CURRENCY;
+        pricedItem.currency = currency;
+
+        return this.asyncAddPricedItem(pricedItem, validateOnly);
+    }
+
+    /**
+     * Adds a priced item.
+     * @param {(PricedItem|PricedItemDataItem)} pricedItem 
+     * @param {boolean} validateOnly 
+     * @returns {PricedItemDataItem} Note that this object will not be the same as the pricedItem arg.
+     */
+    async asyncAddPricedItem(pricedItem, validateOnly) {
+        let pricedItemDataItem = getPricedItemDataItem(pricedItem);
+        const type = pricedItemType(pricedItemDataItem.type);
+        if (!type) {
+            throw userError('PricedItemManager-invalid_type', pricedItemDataItem.type);
+        }
+
+        const currency = getCurrency(pricedItemDataItem.currency);
+        if (!currency) {
+            throw userError('PricedItemManager-invalid_currency', pricedItemDataItem.currency);
+        }
+
+        const error = type.validateFunc(this, pricedItemDataItem);
+        if (error) {
+            throw error;
+        }
+
+        if (!getQuantityDefinition(pricedItemDataItem.quantityDefinition)) {
+            throw userError('PricedItemManager-quantity_definition_missing');
+        }
+
+        if (validateOnly) {
+            return;
+        }
+
+        return this._asyncAddPricedItem(pricedItemDataItem);
+    }
+
+    /**
+     * Removes a priced item.
+     * @param {number} id 
+     * @param {boolean} validateOnly 
+     * @returns {PricedItemDataItem}    The priced item that was removed.
+     */
+    async asyncRemovePricedItem(id, validateOnly) {
+        if (this._requiredCurrencyPricedItemIds.has(id)) {
+            throw userError('PricedItemManager-remove_required_currency');
+        }
+
+        const pricedItem = this._pricedItemsById.get(id);
+        if (!pricedItem) {
+            throw userError('PricedItemManager-remove_no_id', id);
+        }
+
+        if (validateOnly) {
+            return;
+        }
+
+        const type = pricedItemType(pricedItem.type);
+        if (type === PricedItemType.CURRENCY) {
+            const currencyName = this._getCurrencyName(pricedItem.currency, pricedItem.quantityDefinition);
+            this._currencyPricedItemIdsByCurrency.delete(currencyName);
+        }
+
+        this._pricedItemsById.delete(id);
+
+        await this._handler.asyncRemovePricedItem(id);
+
+        return pricedItem;
+    }
+
+    /**
+     * Modifies an existing priced item. The type cannot be modified.
+     * @param {(PricedItemData|PricedItem)} pricedItem The new priced item properties. The id property is required. For all other
+     * properties, if the property is not included in pricedItem, the property will not be changed.
+     * @param {boolean} validateOnly 
+     */
+    async asyncModifyPricedItem(pricedItem, validateOnly) {
+        const id = pricedItem.id;
+
+        const oldPricedItem = this._pricedItemsById.get(id);
+        if (!oldPricedItem) {
+            throw userError('PricedItemManager-modify_no_id', id);
+        }
+
+        let newPricedItem = Object.assign({}, oldPricedItem, pricedItem);
+        newPricedItem = getPricedItemDataItem(newPricedItem);
+
+        if (newPricedItem.type !== oldPricedItem.type) {
+            throw userError('PricedItemManager-modify_type_change');
+        }
+
+        const type = pricedItemType(newPricedItem.type);
+        const error = type.validateFunc(this, newPricedItem, true);
+        if (error) {
+            throw error;
+        }
+
+        if (validateOnly) {
+            return;
+        }
+
+        await this._handler.asyncModifyPricedItem(newPricedItem);
+        this._pricedItemsById.set(id, newPricedItem);
+
+        if (type === PricedItemType.CURRENCY) {
+            const oldCurrencyName = this._getCurrencyName(oldPricedItem.currency, oldPricedItem.quantityDefinition);
+            const newCurrencyName = this._getCurrencyName(newPricedItem.currency, newPricedItem.quantityDefinition);
+            
+            if (oldCurrencyName !== newCurrencyName) {
+                this._currencyPricedItemIdsByCurrency.delete(oldCurrencyName);
+                this._currencyPricedItemIdsByCurrency.set(newCurrencyName, id);
+            }
+        }
+
+        return newPricedItem;
+    }
 }
 
 
 /**
- * @interface
  * Handler interface implemented by {@link AccountingFile} implementations to interact with the {@link PricedItemManager}.
+ * @interface
  */
 export class PricedItemsHandler {
     /**
@@ -287,8 +487,9 @@ export class PricedItemsHandler {
     /**
      * Adds a new priced item.
      * @param {PricedItemDataItem} pricedItemDataItem 
+     * @param {NumericIdGenerator~Options}  idGeneratorState    The current state of the id generator.
      */
-    async asyncAddPricedItem(pricedItemDataItem) {
+    async asyncAddPricedItem(pricedItemDataItem, idGeneratorState) {
         throw Error('PricedItemsHandler.addpricedItem() abstract method!');
     }
 
@@ -308,6 +509,7 @@ export class PricedItemsHandler {
         throw Error('PricedItemsHandler.removePricedItem() abstract method!');
     }
 }
+
 
 /**
  * Simple in-memory implementation of {@link PricedItemsHandler}
@@ -329,7 +531,7 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
         return Array.from(this._pricedItemsById.values());
     }
 
-    async asyncAddPricedItem(pricedItemDataItem) {
+    async asyncAddPricedItem(pricedItemDataItem, idGeneratorState) {
         this._pricedItemsById.set(pricedItemDataItem.id, pricedItemDataItem);
     }
 

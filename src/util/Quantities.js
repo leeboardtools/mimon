@@ -914,10 +914,14 @@ export function getDecimalDefinition(options) {
 /**
  * Retrieves a {@link QuantityDefinition} object whose {@link QuantityDefinition~getName} would match a given name.
  * For any given name the same quantity definition object is returned.
- * @param {string} name 
+ * @param {(string|QuantityDefinition)} name 
  * @returns {QuantityDefinition}
  */
 export function getQuantityDefinition(name) {
+    if (name instanceof QuantityDefinition) {
+        return name;
+    }
+
     const existingDefinition = registeredDefinitions.get(name);
     if (existingDefinition) {
         return existingDefinition;

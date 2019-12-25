@@ -1,4 +1,4 @@
-import { Quantity, getDecimalDefinition } from './Quantities';
+import { getDecimalDefinition } from './Quantities';
 
 /**
  * Class defining individual currency properties. Currency objects normally should be accessed via
@@ -58,10 +58,25 @@ export class Currency {
         return (options instanceof Currency) ? options : currencyFromJSON(options);
     }
 
-
+    /**
+     * @returns {string}    The 3 letter ISO 4217 currency code.
+     */
     getCode() { return this._code; }
+
+    /**
+     * @returns {number}    The 3 digit ISO 4217 currency code.
+     */
     getNumericCode() { return this._numericCode; }
+
+    /**
+     * @returns {string}    The descriptive name of the currency.
+     */
     getName() { return this._name; }
+
+    /**
+     * @returns {QuantityDefinition}    The quantity definition for representing cash.
+     */
+    getQuantityDefinition() { return this._quantityDefinition; }
 
 
     /**
