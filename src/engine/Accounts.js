@@ -1,6 +1,6 @@
 import { userMsg } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
-import { YMDDate } from '../util/YMDDate';
+import { getYMDDate, getYMDDateString } from '../util/YMDDate';
 import { PricedItemType } from './PricedItems';
 import { getLots, getLotDataItems } from './Lots';
 
@@ -105,8 +105,12 @@ export const AccountType = {
  * @param {(string|AccountTypeDef)} ref 
  * @returns {AccountTypeDef}    Returns the {@link AccountTypeDef} represented by ref.
  */
-export function accountType(ref) {
+export function getAccountType(ref) {
     return (typeof ref === 'string') ? AccountType[ref] : ref;
+}
+
+export function getAccountTypeName(type) {
+    return ((type === undefined) || (typeof type === 'string')) ? type : type.name;
 }
 
 
@@ -198,11 +202,14 @@ export function loadAccountsUserMessages() {
  */
 export function getAccountState(accountStateDataItem) {
     if (accountStateDataItem) {
-        if (typeof accountStateDataItem.ymdDate === 'string') {
+        const ymdDate = getYMDDate(accountStateDataItem.ymdDate);
+        const lots = getLots(accountStateDataItem.lots);
+        if ((ymdDate !== accountStateDataItem.ymdDate)
+         || (lots !== accountStateDataItem.lots)) {
             return {
-                ymdDate: new YMDDate(accountStateDataItem.ymdDate),
+                ymdDate: ymdDate,
                 quantityBaseValue: accountStateDataItem.quantityBaseValue,
-                lots: getLots(accountStateDataItem.lots),
+                lots: lots,
             };
         }
     }
@@ -215,11 +222,14 @@ export function getAccountState(accountStateDataItem) {
  */
 export function getAccountStateDataItem(accountState) {
     if (accountState) {
-        if (typeof accountState.ymdDate !== 'string') {
+        const ymdDateString = getYMDDateString(accountState.ymdDate);
+        const lotDataItems = getLotDataItems(accountState.lots);
+        if ((ymdDateString !== accountState.ymdDate)
+         || (lotDataItems !== accountState.lots)) {
             return {
-                ymdDate: accountState.ymdDate.toString(),
+                ymdDate: ymdDateString,
                 quantityBaseValue: accountState.quantityBaseValue,
-                lots: getLotDataItems(accountState.lots),
+                lots: lotDataItems,
             };
         }
     }
@@ -256,10 +266,13 @@ export function getAccountStateDataItem(accountState) {
  */
 export function getAccount(accountDataItem) {
     if (accountDataItem) {
-        if (typeof accountDataItem.accountState.ymdDate === 'string') {
+        const type = getAccountType(accountDataItem.type);
+        const accountState = getAccountState(accountDataItem.accountState);
+        if ((type !== accountDataItem.type)
+         || (accountState !== accountDataItem.accountState)) {
             const account = Object.assign({}, accountDataItem);
-            account.type = AccountType[accountDataItem.type];
-            account.accountState = getAccountState(accountDataItem.accountState);
+            account.type = type;
+            account.accountState = accountState;
             return account;
         }
     }
@@ -272,10 +285,13 @@ export function getAccount(accountDataItem) {
  */
 export function getAccountDataItem(account) {
     if (account) {
-        if (typeof account.accountState.ymdDate !== 'string') {
+        const typeName = getAccountTypeName(account.type);
+        const accountStateDataItem = getAccountStateDataItem(account.accountState);
+        if ((typeName !== account.type)
+         || (accountStateDataItem !== account.accountState)) {
             const accountDataItem = Object.assign({}, account);
-            accountDataItem.type = account.type.name;
-            accountDataItem.accountState = getAccountStateDataItem(account.accountState);
+            accountDataItem.type = typeName;
+            accountDataItem.accountState = accountStateDataItem;
             return accountDataItem;
         }
     }
@@ -456,15 +472,15 @@ export class AccountManager {
     }
 
 
-    async asyncAaddAccount(parentAccountId, account) {
+    async asyncAddAccount(parentAccountId, account, validateOnly) {
 
     }
 
-    async asyncRemoveAccount(accountId) {
+    async asyncRemoveAccount(accountId, validateOnly) {
 
     }
 
-    async asyncModifyAccount(accountId, accountUpdates) {
+    async asyncModifyAccount(account, validateOnly) {
 
     }
 }

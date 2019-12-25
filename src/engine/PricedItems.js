@@ -65,7 +65,7 @@ function validatePropertyDataItem(manager, item, isModify) {
  * @param {(string|PricedItemTypeDef)} ref 
  * @returns {PricedItemTypeDef} Returns the {@link PricedItemTypeDef} represented by ref.
  */
-export function pricedItemType(ref) {
+export function getPricedItemType(ref) {
     return (typeof ref === 'string') ? PricedItemType[ref] : ref;
 }
 
@@ -73,7 +73,7 @@ export function pricedItemType(ref) {
  * @param {(string|PricedItemType)} type 
  * @returns {string}
  */
-export function getPricedItemName(type) {
+export function getPricedItemTypeName(type) {
     return ((type === undefined) || (typeof type === 'string')) ? type : type.name;
 }
 
@@ -112,13 +112,17 @@ export function loadPricedItemUserMessages() {
  */
 export function getPricedItem(pricedItemDataItem) {
     if (pricedItemDataItem) {
-        if ((typeof pricedItemDataItem.type === 'string')
-         || (typeof pricedItemDataItem.currency === 'string')
-         || (typeof pricedItemDataItem.quantityDefinition === 'string')) {
+        const type = getPricedItemType(pricedItemDataItem.type);
+        const currency = getCurrency(pricedItemDataItem.currency);
+        const quantityDefinition = getQuantityDefinition(pricedItemDataItem.quantityDefinition);
+        if ((type !== pricedItemDataItem.type)
+         || (currency !== pricedItemDataItem.currency)
+         || (quantityDefinition !== pricedItemDataItem.quantityDefinition)) {
+            // We're using Object.assign() to create a copy just in case there are other properties.
             const pricedItem = Object.assign({}, pricedItemDataItem);
-            pricedItem.type = pricedItemType(pricedItem.type);
-            pricedItem.currency = getCurrency(pricedItem.currency);
-            pricedItem.quantityDefinition = getQuantityDefinition(pricedItem.quantityDefinition);
+            pricedItem.type = type;
+            pricedItem.currency = currency;
+            pricedItem.quantityDefinition = quantityDefinition;
             return pricedItem;
         }
     }
@@ -133,13 +137,16 @@ export function getPricedItem(pricedItemDataItem) {
  */
 export function getPricedItemDataItem(pricedItem) {
     if (pricedItem) {
-        if ((typeof pricedItem.type !== 'string')
-         || (typeof pricedItem.currency !== 'string')
-         || (typeof pricedItem.quantityDefinition !== 'string')) {
+        const typeName = getPricedItemTypeName(pricedItem.type);
+        const currencyCode = getCurrencyCode(pricedItem.currency);
+        const quantityDefinitionName = getQuantityDefinitionName(pricedItem.quantityDefinition);
+        if ((typeName !== pricedItem.type)
+         || (currencyCode !== pricedItem.currency)
+         || (quantityDefinitionName !== pricedItem.quantityDefinition)) {
             const pricedItemDataItem = Object.assign({}, pricedItem);
-            pricedItemDataItem.type = getPricedItemName(pricedItem.type);
-            pricedItemDataItem.currency = getCurrencyCode(pricedItem.currency);
-            pricedItemDataItem.quantityDefinition = getQuantityDefinitionName(pricedItem.quantityDefinition);
+            pricedItemDataItem.type = typeName;
+            pricedItemDataItem.currency = currencyCode;
+            pricedItemDataItem.quantityDefinition = quantityDefinitionName;
             return pricedItemDataItem;
         }
     }
@@ -274,7 +281,7 @@ export class PricedItemManager {
 
         this._pricedItemsById.set(id, pricedItemData);
 
-        if (pricedItemType(pricedItem.type) === PricedItemType.CURRENCY) {
+        if (getPricedItemType(pricedItem.type) === PricedItemType.CURRENCY) {
             const currencyName = this._getCurrencyName(pricedItemData.currency, pricedItemData.quantityDefinition);
             this._currencyPricedItemIdsByCurrency.set(currencyName, id);
         }
@@ -362,7 +369,7 @@ export class PricedItemManager {
      */
     async asyncAddPricedItem(pricedItem, validateOnly) {
         let pricedItemDataItem = getPricedItemDataItem(pricedItem);
-        const type = pricedItemType(pricedItemDataItem.type);
+        const type = getPricedItemType(pricedItemDataItem.type);
         if (!type) {
             throw userError('PricedItemManager-invalid_type', pricedItemDataItem.type);
         }
@@ -408,7 +415,7 @@ export class PricedItemManager {
             return;
         }
 
-        const type = pricedItemType(pricedItem.type);
+        const type = getPricedItemType(pricedItem.type);
         if (type === PricedItemType.CURRENCY) {
             const currencyName = this._getCurrencyName(pricedItem.currency, pricedItem.quantityDefinition);
             this._currencyPricedItemIdsByCurrency.delete(currencyName);
@@ -442,7 +449,7 @@ export class PricedItemManager {
             throw userError('PricedItemManager-modify_type_change');
         }
 
-        const type = pricedItemType(newPricedItem.type);
+        const type = getPricedItemType(newPricedItem.type);
         const error = type.validateFunc(this, newPricedItem, true);
         if (error) {
             throw error;
