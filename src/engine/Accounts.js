@@ -1,7 +1,7 @@
-import { userMsg } from '../util/UserMessages';
+import { userMsg, userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
-import { getYMDDate, getYMDDateString } from '../util/YMDDate';
-import { PricedItemType } from './PricedItems';
+import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
+import { PricedItemType, getPricedItemType } from './PricedItems';
 import { getLots, getLotDataItems } from './Lots';
 
 
@@ -48,7 +48,6 @@ export function accountCategory(ref) {
  * @property {string}   description The user description of the account class.
  * @property {boolean}  [hasLots=false] If <code>true</code> the account uses {@link Lot}s.
  * @property {boolean}  [isSingleton=false] If <code>true</code> only one instance of this type should be created.
- * @property {boolean}  [noDelete=false]    If <code>true</code> accounts of this type are not removable.
  * @property {AccountTypeDef[]} allowedChildTypes   Array containing the account types allowed for child accounts.
  * @property {PricedItemType}   pricedItemType  The type of priced items this supports.
  */
@@ -97,7 +96,7 @@ export const AccountType = {
     EXPENSE: { name: 'EXPENSE', category: AccountCategory.EXPENSE, pricedItemType: PricedItemType.CURRENCY, },
 
     EQUITY: { name: 'EQUITY', category: AccountCategory.EQUITY, pricedItemType: PricedItemType.CURRENCY, },
-    OPENING_BALANCE: { name: 'OPENING_BALANCE', category: AccountCategory.EQUITY, pricedItemType: PricedItemType.CURRENCY, isSingleton: true, noDelete: true, },
+    OPENING_BALANCE: { name: 'OPENING_BALANCE', category: AccountCategory.EQUITY, pricedItemType: PricedItemType.CURRENCY, isSingleton: true, },
 };
 
 
@@ -120,6 +119,7 @@ AccountType.ASSET.allowedChildTypes = [
     AccountType.BROKERAGE,
     AccountType.CASH,
     AccountType.MUTUAL_FUND,
+    AccountType.REAL_ESTATE,
     AccountType.PROPERTY,
     AccountType.SECURITY,
 ];
@@ -128,6 +128,8 @@ AccountType.BANK.allowedChildTypes = [];
 
 AccountType.BROKERAGE.allowedChildTypes = [
     AccountType.SECURITY,
+    AccountType.MUTUAL_FUND,
+    AccountType.PROPERTY,
 ];
 
 AccountType.CASH.allowedChildTypes = [];
@@ -135,6 +137,8 @@ AccountType.CASH.allowedChildTypes = [];
 AccountType.MUTUAL_FUND.allowedChildTypes = [
     AccountType.SECURITY,
 ];
+
+AccountType.REAL_ESTATE.allowedChildTypes = [];
 
 AccountType.PROPERTY.allowedChildTypes = [];
 
@@ -178,6 +182,18 @@ export function loadAccountsUserMessages() {
     }
 }
 
+
+function createAccountStateDataItemForType(type, ymdDate) {
+    const accountState = {
+        ymdDate: getYMDDateString(ymdDate) || getYMDDateString(new YMDDate()),
+        quantityBaseValue: 0,
+    };
+
+    if (type.hasLots) {
+        accountState.lots = [];
+    }
+    return accountState;
+}
 
 /**
  * @typedef {object} AccountStateDataItem
@@ -240,7 +256,8 @@ export function getAccountStateDataItem(accountState) {
 /**
  * @typedef {object} AccountDataItem
  * @property {number}   id  The account's id.
- * @property {string}   [refId] Optional user reference id.
+ * @property {string}   [refId] Optional user reference id, these must be unique.
+ * @property {number}   parentAccountId The account id of the parent account.
  * @property {string}   type    The name property of one of {@link AccountType}.
  * @property {number}   pricedItemId   The local id of the priced item the account represents.
  * @property {string}   [name]  The name of the account.
@@ -251,7 +268,8 @@ export function getAccountStateDataItem(accountState) {
 /**
  * @typedef {object} AccountData
  * @property {number}   id  The account's id.
- * @property {string}   [refId] Optional user reference id.
+ * @property {string}   [refId] Optional user reference id, these must be unique.
+ * @property {number}   parentAccountId The account id of the parent account.
  * @property {AccountType}  type    The account's type.
  * @property {number}   pricedItemId   The local id of the priced item the account represents.
  * @property {string}   [name]  The name of the account.
@@ -404,7 +422,7 @@ export class AccountManager {
                     name: userMsg('Account-Opening_Balances_name'),
                     description: userMsg('Account-Opening_Balances_desc'),
                 },
-                this._rootEquityAccountId);
+                this._rootEquityAccount);
             this._openingBalancesAccountId = this._openingBalancesAccount.id;
         }
     }
@@ -437,7 +455,7 @@ export class AccountManager {
      * @param {number} id
      * @returns {(AccountDataItem|undefined)}
      */
-    getAccount(id) {
+    getAccountDataItemWithId(id) {
         const account = this._accountsById.get(id);
         return (account) ? Object.assign({}, account) : undefined;
     }
@@ -448,61 +466,298 @@ export class AccountManager {
      * @param {string} refId
      * @returns {(AccountDataItem|undefined)}
      */
-    getAccountWithRefId(refId) {
+    getAccountDataItemWithRefId(refId) {
         const account = this._accountsByRefId.get(refId);
         return (account) ? Object.assign({}, account) : undefined;
     }
 
 
-    async _asyncAddAccount(account, parentAccountId) {
+    async _asyncAddAccount(account, parentAccount) {
         account = getAccountDataItem(account);
         
-        const accountItemData = Object.assign({}, account);        
-        accountItemData.childAccountIds = accountItemData.childAccountIds || [];
+        const accountDataItem = Object.assign({}, account);        
+        accountDataItem.childAccountIds = accountDataItem.childAccountIds || [];
 
         const id = this._idGenerator.generateId();
-        accountItemData.id = id;
+        accountDataItem.id = id;
         const idGeneratorState = this._idGenerator.toJSON();
         
-        await this._handler.asyncAddAccount(accountItemData, idGeneratorState);
+        await this._handler.asyncAddAccountDataItem(accountDataItem, idGeneratorState);
 
-        this._accountsById.set(id, accountItemData);
-        if (parentAccountId) {
-            const parentAccount = this._accountsById.get(parentAccountId);
-            if (parentAccount) {
-                parentAccount.childAccountIds.push(id);
+        this._accountsById.set(id, accountDataItem);
+        if (parentAccount) {
+            parentAccount.childAccountIds.push(id);
+        }
+
+        if (accountDataItem.refId) {
+            this._accountsByRefId.set(accountDataItem.refId, accountDataItem);
+        }
+
+        return accountDataItem;
+    }
+
+
+    _validateAccountBasics(accountDataItem, parentAccountDataItem, isModify) {
+        const type = getAccountType(accountDataItem.type);
+        if (!type) {
+            return userError('AccountManager-type_invalid', type);
+        }
+        if (type.isSingleton) {
+            return userError('AccountManager-singleton_in_use', type.name);
+        }
+
+        // Make sure our type is valid for the parent.
+        if (parentAccountDataItem) {
+            const parentType = getAccountType(parentAccountDataItem.type);
+            if (!parentType.allowedChildTypes.includes(type)) {
+                return userError('AccountManager-type_not_allowed_for_parent', getAccountTypeName(type), getAccountTypeName(parentAccountDataItem.type));
             }
         }
 
-        if (accountItemData.refId) {
-            this._accountsByRefId.set(accountItemData.refId, accountItemData);
+        if (accountDataItem.refId) {
+            const refIdAccount = this._accountsByRefId.get(accountDataItem.refId);
+            if (refIdAccount) {
+                return userError('AccountManager-duplicate_ref_id', accountDataItem.refId);
+            }
         }
 
-        return accountItemData;
+        const pricedItem = this._accountingSystem.getPricedItemManager().getPricedItemDataItemWithId(accountDataItem.pricedItemId);
+        if (!pricedItem) {
+            return userError('AccountMaanger-invalid_pricedItem_id', accountDataItem.pricedItemId);
+        }
+
+        const pricedItemType = getPricedItemType(pricedItem.type);
+        if (pricedItemType !== type.pricedItemType) {
+            return userError('AccountManager-invalid_pricedItem_type_for_type', pricedItemType.name, type.name);
+        }
+
+        if (type.validateFunc) {
+            const error = type.validateFunc(this, accountDataItem, isModify);
+            if (error) {
+                return error;
+            }
+        }
     }
 
 
-    async asyncAddAccount(parentAccountId, account, validateOnly) {
+    /**
+     * Adds a new account.
+     * @param {(Account|AccountDataItem)} account   The account to add. Note that the accountState and childAccountIds properties are ignored.
+     * @param {(YMDDate|string)} [initialYMDDate]   The date to assign to the account state.
+     * @param {boolean} validateOnly 
+     * @returns {AccountDataItem}
+     * @throws {Error}
+     */
+    async asyncAddAccount(account, initialYMDDate, validateOnly) {
+        const accountDataItem = Object.assign({}, getAccountDataItem(account));
 
+        const parentAccountDataItem = this.getAccountDataItemWithId(accountDataItem.parentAccountId);
+        if (!parentAccountDataItem) {
+            throw userError('AccountManager-parent_account_invalid', accountDataItem.parentAccountId);
+        }
+
+        // Create an empty account state appropriate for the account.
+        const type = getAccountType(accountDataItem.type);
+        accountDataItem.accountState = createAccountStateDataItemForType(type, initialYMDDate);
+        accountDataItem.childAccountIds = [];
+
+        const error = this._validateAccountBasics(accountDataItem, parentAccountDataItem, false);
+        if (error) {
+            throw error;
+        }
+
+        if (validateOnly) {
+            return;
+        }
+
+        return this._asyncAddAccount(accountDataItem, parentAccountDataItem);
     }
 
+
+    /**
+     * Removes an account. Root accounts and the opening balances account cannot be removed.
+     * @param {number} accountId 
+     * @param {boolean} validateOnly 
+     * @returns {AccountDataItem}
+     */
     async asyncRemoveAccount(accountId, validateOnly) {
+        const accountDataItem = this.getAccountDataItemWithId(accountId);
+        if (!accountDataItem) {
+            throw userError('AccountManager-remove_account_id_not_found', accountId);
+        }
 
+        if (!accountDataItem.parentAccountId) {
+            throw userError('AccountManager-no_delete_root_accounts');
+        }
+        if (accountId === this._openingBalancesAccountId) {
+            throw userError('AccountManager-no_delete_opening_balances_account');
+        }
+
+        const { parentAccountId } = accountDataItem;
+        const parentAccountDataItem = this.getAccountDataItemWithId(parentAccountId);
+        if (!parentAccountDataItem) {
+            throw userError('AccountManager-remove_parent_account_not_found', accountDataItem.parentAccountId);
+        }
+        const parentType = getAccountType(parentAccountDataItem.type);
+
+        // Make sure all the child accounts are compatible with the parent account.
+        const { childAccountIds } = accountDataItem;
+        const childAccountDataItems = [];
+        for (let i = childAccountIds.length - 1; i >= 0; --i) {
+            const childId = childAccountIds[i];
+            const childAccountDataItem = this.getAccountDataItemWithId(childId);
+            if (childAccountDataItem) {
+                const childType = getAccountType(childAccountDataItem.type);
+                if (!parentType.allowedChildTypes.includes(childType)) {
+                    throw userError('AccountManager-child_not_compatible', childType.name, parentType.name);
+                }
+            }
+
+            parentAccountDataItem.childAccountIds.push(childId);
+            childAccountDataItem.parentAccountId = parentAccountId;
+            childAccountDataItems.push(childAccountDataItem);
+        }
+
+        if (validateOnly) {
+            return;
+        }
+
+        const updatedAccountPairs = [];
+        updatedAccountPairs.push([accountId]);
+
+        updatedAccountPairs.push([parentAccountId, parentAccountDataItem]);
+        childAccountDataItems.forEach((dataItem) => {
+            updatedAccountPairs.push([dataItem.id, dataItem]);
+        });
+
+        await this._handler.asyncUpdateAccountDataItems(updatedAccountPairs);
+
+        this._accountsById.set(parentAccountId, parentAccountDataItem);
+        childAccountDataItems.forEach((dataItem) => {
+            this._accountsById.set(dataItem.id, dataItem);
+        });
+
+        if (accountDataItem.refId) {
+            this._accountsByRefId.delete(accountDataItem.refId);
+        }
+
+        return accountDataItem;
     }
 
+    /**
+     * Modifies an account.
+     * @param {(Account|AccountDataItem)} account The account id is required. Only specified properties are modified, with restrictions on the
+     * type and priced item accounts.
+     * @param {boolean} validateOnly 
+     * @returns {AccountDataItem}
+     */
     async asyncModifyAccount(account, validateOnly) {
+        const { id } = account;
+        const oldAccountDataItem = this.getAccountDataItemWithId(id);
+        if (!oldAccountDataItem) {
+            throw userError('AccountManager-modify_no_id', id);
+        }
 
+        const newAccountDataItem = Object.assign({}, oldAccountDataItem, account);
+
+        // Can't change the type nor parent of the root and opening balance accounts.
+        const oldParentAccountId = oldAccountDataItem.parentAccountId;
+        const newParentAccountId = newAccountDataItem.parentAccountId;
+        let newParentAccountDataItem;
+        let oldParentAccountDataItem;
+        if (!oldAccountDataItem.parentAccountId) {
+            if (newAccountDataItem.type !== oldAccountDataItem.type) {
+                throw userError('AccountManager-no_change_root_account_type');
+            }
+            if (newAccountDataItem.parentAccountId) {
+                throw userError('AccountManager-no_change_root_account_parent');
+            }
+        }
+        else if (account.id === this._openingBalancesAccountId) {
+            if (newAccountDataItem.type !== oldAccountDataItem.type) {
+                throw userError('AccountManager-no_change_opening_balances_account_type');
+            }
+            if (newAccountDataItem.parentAccountId !== oldAccountDataItem.parentAccountId) {
+                throw userError('AccountManager-no_change_opening_balances_account_parent');
+            }
+        }
+        else {
+            newParentAccountDataItem = this.getAccountDataItemWithId(newParentAccountId);
+            if (!newParentAccountDataItem) {
+                throw userError('AccountManager-parent_account_invalid', newParentAccountId);
+            }
+
+            if (newParentAccountId !== oldParentAccountId) {
+                oldParentAccountDataItem = this.getAccountDataItemWithId(oldParentAccountId);
+                if (!oldParentAccountDataItem) {
+                    throw userError('AccountManager-parent_account_invalid', oldParentAccountId);
+                }
+
+                const index = oldParentAccountDataItem.childAccountIds.indexOf(id);
+                if (index >= 0) {
+                    oldParentAccountDataItem.childAccountIds.splice(index, 1);
+                }
+
+                newParentAccountDataItem.childAccountIds.push(id);
+            }
+            else {
+                oldParentAccountDataItem = newParentAccountDataItem;
+            }
+        }
+
+        const oldType = getAccountType(oldAccountDataItem.type);
+        const newType = getAccountType(newAccountDataItem.type);
+        if (oldType !== newType) {
+            if (newType) {
+                // We'll let _validateAccountBasics() handle the invalid type case.
+                if (oldType.category !== newType.category) {
+                    throw userError('AccountManager-no_change_category');
+                }
+
+                if (oldType.pricedItemType !== newType.pricedItemType) {
+                    throw userError('AccountManager-no_change_pricedItem_types');
+                }
+            }
+        }
+
+        const error = this._validateAccountBasics(newAccountDataItem, newParentAccountDataItem, false);
+        if (error) {
+            throw error;
+        }
+
+        if (validateOnly) {
+            return;
+        }
+
+        const updatedAccountPairs = [];
+        updatedAccountPairs.push([newAccountDataItem.id, newAccountDataItem]);
+
+        if (newParentAccountId !== oldParentAccountId) {
+            updatedAccountPairs.push([oldParentAccountDataItem.id, oldParentAccountDataItem]);
+            updatedAccountPairs.push([newParentAccountId, newParentAccountDataItem]);
+        }
+
+        await this._handler.asyncUpdateAccountDataItems(updatedAccountPairs);
+
+        if (oldAccountDataItem.refId !== newAccountDataItem.refId) {
+            if (oldAccountDataItem.refId) {
+                this._accountsByRefId.delete(oldAccountDataItem.refId);
+            }
+        }
+        if (newAccountDataItem.refId) {
+            this._accountsByRefId.set(newAccountDataItem.refId, newAccountDataItem);
+        }
     }
 }
 
 
 /**
- * @interface
  * Handler interface implemented by {@link AccountingFile} implementations to interact with the {@link AccountManager}.
+ * @interface
  */
 export class AccountsHandler {
     /**
-     * Retrieves an array containing all the priced items. The priced items are presumed
+     * Retrieves an array containing all the accounts. The accounts are presumed
      * to already be loaded when the {@link AccountManager} is constructed.
      * @returns {AccountDataItem[]}
      */
@@ -510,30 +765,28 @@ export class AccountsHandler {
         throw Error('AccountsHandler.getAccounts() abstract method!');
     }
 
+
     /**
-     * Adds a new priced item.
-     * @param {AccountDataItem} pricedItemDataItem 
+     * Adds a new account. It's separate from {@link AccountsHandler#asyncUpdateAccountDataItems} because we want to pass
+     * in the id generator's state.
+     * @param {AccountDataItem} accountDataItem 
      * @param {NumericIdGenerator~Options}  idGeneratorState    The current state of the id generator.
      */
-    async asyncAddAccount(pricedItemDataItem, idGeneratorState) {
-        throw Error('AccountsHandler.addpricedItem() abstract method!');
+    async asyncAddAccountDataItem(accountDataItem, idGeneratorState) {
+        throw Error('AccountsHandler.asyncAddAccountDataItem() abstract method!');
     }
 
-    /**
-     * Modifies an existing priced item.
-     * @param {AccountDataItem} pricedItemDataItem 
-     */
-    async asyncModifyAccount(pricedItemDataItem) {
-        throw Error('AccountsHandler.modifyAccount() abstract method!');
-    }
 
     /**
-     * Removes an existing priced item.
-     * @param {number} id 
+     * Main function for updating the account data items. We use a single function for both modify and delete because
+     * modifying or deleting one account may affect other accounts, so those accounts must also be deleted at the same time.
+     * @param {*} accountIdAndDataItemPairs Array of one or two element sub-arrays. The first element is the account id.
+     * For new or modified accounts, the second element is the new account item data. For accounts to be deleted, this is empty.
      */
-    async asyncRemoveAccount(id) {
-        throw Error('AccountsHandler.removeAccount() abstract method!');
+    async asyncUpdateAccountDataItems(accountIdAndDataItemPairs) {
+        throw Error('AccountsHandler.asyncUpdateAccountDataItems() abstract method!');
     }
+
 }
 
 /**
@@ -556,15 +809,19 @@ export class InMemoryAccountsHandler extends AccountsHandler {
         return Array.from(this._accountsById.values());
     }
 
-    async asyncAddAccount(pricedItemDataItem, idGeneratorState) {
-        this._accountsById.set(pricedItemDataItem.id, pricedItemDataItem);
+    async asyncAddAccountDataItem(accountDataItem, idGeneratorState) {
+        this._accountsById.set(accountDataItem.id, accountDataItem);
     }
 
-    async asyncModifyAccount(pricedItemDataItem) {
-        this._accountsById.set(pricedItemDataItem.id, pricedItemDataItem);
+    async asyncUpdateAccountDataItems(accountIdAndDataItemPairs) {
+        accountIdAndDataItemPairs.forEach(([id, accountDataItem]) => {
+            if (!accountDataItem) {
+                this._accountsById.delete(id);
+            }
+            else {
+                this._accountsById.set(id, accountDataItem);
+            }
+        });
     }
 
-    async asyncRemoveAccount(id) {
-        this._accountsById.delete(id);
-    }
 }
