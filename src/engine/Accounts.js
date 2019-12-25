@@ -347,65 +347,65 @@ export class AccountManager {
         const currencyPricedItemId = pricedItemManager.getCurrencyPricedItemId(accountingSystem.getBaseCurrency());
 
         if (!this._rootAssetAccount) {
-            this._rootAssetAccountId = this._idGenerator.generateId();
-            this._rootAssetAccount = await this._asyncAddAccount(this._rootAssetAccountId, {
+            this._rootAssetAccount = await this._asyncAddAccount({
                 type: AccountType.ASSET,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Assets_name'),
                 description: userMsg('Account-Root_Assets_desc'),
             });
+            this._rootAssetAccountId = this._rootAssetAccount.id;
         }
         
         if (!this._rootLiabilityAccount) {
-            this._rootLiabilityAccountId = this._idGenerator.generateId();
-            this._rootLiabilityAccount = await this._asyncAddAccount(this._rootLiabilityAccountId, {
+            this._rootLiabilityAccount = await this._asyncAddAccount({
                 type: AccountType.LIABILITY,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Liabilities_name'),
                 description: userMsg('Account-Root_Liabilities_desc'),
             });
+            this._rootLiabilityAccountId = this._rootLiabilityAccount.id;
         }
 
         if (!this._rootIncomeAccount) {
-            this._rootIncomeAccountId = this._idGenerator.generateId();
-            this._rootIncomeAccount = await this._asyncAddAccount(this._rootIncomeAccountId, {
+            this._rootIncomeAccount = await this._asyncAddAccount({
                 type: AccountType.INCOME,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Income_name'),
                 description: userMsg('Account-Root_Income_desc'),
             });
+            this._rootIncomeAccountId = this._rootIncomeAccount.id;
         }
 
         if (!this._rootExpenseAccount) {
-            this._rootExpenseAccountId = this._idGenerator.generateId();
-            this._rootExpenseAccount = await this._asyncAddAccount(this._rootExpenseAccountId, {
+            this._rootExpenseAccount = await this._asyncAddAccount({
                 type: AccountType.EXPENSE,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Expense_name'),
                 description: userMsg('Account-Root_Expense_desc'),
             });
+            this._rootExpenseAccountId = this._rootExpenseAccount.id;
         }
 
         if (!this._rootEquityAccount) {
-            this._rootEquityAccountId = this._idGenerator.generateId();
-            this._rootEquityAccount = await this._asyncAddAccount(this._rootEquityAccountId, {
+            this._rootEquityAccount = await this._asyncAddAccount({
                 type: AccountType.EQUITY,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Equity_name'),
                 description: userMsg('Account-Root_Equity_desc'),
             });
+            this._rootEquityAccountId = this._rootEquityAccount.id;
         }
 
         if (!this._openingBalancesAccount) {
-            this._openingBalancesAccountId = this._idGenerator.generateId();
-            this._openingBalancesAccount = await this._asyncAddAccount(this._openingBalancesAccountId, 
+            this._openingBalancesAccount = await this._asyncAddAccount(
                 {
                     type: AccountType.OPENING_BALANCE,
                     pricedItemId: currencyPricedItemId, 
                     name: userMsg('Account-Opening_Balances_name'),
                     description: userMsg('Account-Opening_Balances_desc'),
                 },
-                this._rootEquityAccount);
+                this._rootEquityAccountId);
+            this._openingBalancesAccountId = this._openingBalancesAccount.id;
         }
     }
 
@@ -454,21 +454,31 @@ export class AccountManager {
     }
 
 
-    async _asyncAddAccount(id, account, parentAccount) {
-        account = Object.assign({}, account, { id: id });
-        if (typeof account.type !== 'string') {
-            account.type = account.type.name;
+    async _asyncAddAccount(account, parentAccountId) {
+        account = getAccountDataItem(account);
+        
+        const accountItemData = Object.assign({}, account);        
+        accountItemData.childAccountIds = accountItemData.childAccountIds || [];
+
+        const id = this._idGenerator.generateId();
+        accountItemData.id = id;
+        const idGeneratorState = this._idGenerator.toJSON();
+        
+        await this._handler.asyncAddAccount(accountItemData, idGeneratorState);
+
+        this._accountsById.set(id, accountItemData);
+        if (parentAccountId) {
+            const parentAccount = this._accountsById.get(parentAccountId);
+            if (parentAccount) {
+                parentAccount.childAccountIds.push(id);
+            }
         }
-        account.childAccountIds = account.childAccountIds || [];
 
-        await this._handler.asyncAddAccount(account);
-
-        this._accountsById.set(id, account);
-        if (parentAccount) {
-            parentAccount.childAccountIds.push(id);
+        if (accountItemData.refId) {
+            this._accountsByRefId.set(accountItemData.refId, accountItemData);
         }
 
-        return account;
+        return accountItemData;
     }
 
 
@@ -503,8 +513,9 @@ export class AccountsHandler {
     /**
      * Adds a new priced item.
      * @param {AccountDataItem} pricedItemDataItem 
+     * @param {NumericIdGenerator~Options}  idGeneratorState    The current state of the id generator.
      */
-    async asyncAddAccount(pricedItemDataItem) {
+    async asyncAddAccount(pricedItemDataItem, idGeneratorState) {
         throw Error('AccountsHandler.addpricedItem() abstract method!');
     }
 
@@ -545,7 +556,7 @@ export class InMemoryAccountsHandler extends AccountsHandler {
         return Array.from(this._accountsById.values());
     }
 
-    async asyncAddAccount(pricedItemDataItem) {
+    async asyncAddAccount(pricedItemDataItem, idGeneratorState) {
         this._accountsById.set(pricedItemDataItem.id, pricedItemDataItem);
     }
 
