@@ -267,3 +267,22 @@ export class YMDDate {
         return [b, a];
     }
 }
+
+
+/**
+ * Returns either the arg if the arg is a {@link YMDDate} or converts the arg to a {@link YMDDate}.
+ * @param {(string|YMDDate)} date 
+ * @returns {YMDDate}
+ */
+export function getYMDDate(date) {
+    return (date instanceof YMDDate) ? date : new YMDDate(date);
+}
+
+/**
+ * Returns either the arg if the arg is not a {@link YMDDate} or returns the result of {@link YMDDate#toString} if it is.
+ * @param {(YMDDate|string)} date 
+ * @returns {string}
+ */
+export function getYMDDateString(date) {
+    return (date instanceof YMDDate) ? date.toString() : date;
+}
