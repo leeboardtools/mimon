@@ -904,9 +904,10 @@ export class AccountsHandler {
     /**
      * Main function for updating the account data items. We use a single function for both modify and delete because
      * modifying or deleting one account may affect other accounts, so those accounts must also be deleted at the same time.
-     * @param {*} accountIdAndDataItemPairs Array of one or two element sub-arrays. The first element is the account id.
-     * For new or modified accounts, the second element is the new account item data. For accounts to be deleted, this is empty.
-     * @param {NumericIdGenerator~Options}  idGeneratorState    The current state of the id generator.
+     * @param {*} accountIdAndDataItemPairs Array of one or two element sub-arrays. The first element of each sub-array is the account id.
+     * For new or modified accounts, the second element is the new data item. For accounts to be deleted, this is <code>undefined</code>.
+     * @param {NumericIdGenerator~Options|undefined}  idGeneratorState    The current state of the id generator, if <code>undefined</code>
+     * the generator state hasn't changed.
      */
     async asyncUpdateAccountDataItems(accountIdAndDataItemPairs, idGeneratorState) {
         throw Error('AccountsHandler.asyncUpdateAccountDataItems() abstract method!');

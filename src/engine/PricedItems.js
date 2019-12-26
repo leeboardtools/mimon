@@ -277,7 +277,8 @@ export class PricedItemManager {
         pricedItemData.id = id;
         const idGeneratorState = this._idGenerator.toJSON();
 
-        await this._handler.asyncAddPricedItem(pricedItemData, idGeneratorState);
+        const updatedDataItems = [[id, pricedItemData]];
+        await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems, idGeneratorState);
 
         this._pricedItemsById.set(id, pricedItemData);
 
@@ -427,7 +428,8 @@ export class PricedItemManager {
 
         this._pricedItemsById.delete(id);
 
-        await this._handler.asyncRemovePricedItem(id);
+        const updatedDataItems = [[id]];
+        await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems);
 
         return pricedItem;
     }
@@ -464,7 +466,10 @@ export class PricedItemManager {
             return newPricedItem;
         }
 
-        await this._handler.asyncModifyPricedItem(newPricedItem);
+        const updatedDataItems = [[id, newPricedItem]];
+
+        await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems);
+
         this._pricedItemsById.set(id, newPricedItem);
 
         if (type === PricedItemType.CURRENCY) {
@@ -496,30 +501,18 @@ export class PricedItemsHandler {
         throw Error('PricedItemsHandler.getPricedItems() abstract method!');
     }
 
-    /**
-     * Adds a new priced item.
-     * @param {PricedItemDataItem} pricedItemDataItem 
-     * @param {NumericIdGenerator~Options}  idGeneratorState    The current state of the id generator.
-     */
-    async asyncAddPricedItem(pricedItemDataItem, idGeneratorState) {
-        throw Error('PricedItemsHandler.addpricedItem() abstract method!');
-    }
 
     /**
-     * Modifies an existing priced item.
-     * @param {PricedItemDataItem} pricedItemDataItem 
+     * Main function for updating the priced item data items.
+     * @param {*} idPricedItemDataItemPairs Array of one or two element sub-arrays. The first element of each sub-array is the priced item id.
+     * For new or modified priced items, the second element is the new data item. For priced items to be deleted, this is <code>undefined</code>.
+     * @param {NumericIdGenerator~Options|undefined}  idGeneratorState    The current state of the id generator, if <code>undefined</code>
+     * the generator state hasn't changed.
      */
-    async asyncModifyPricedItem(pricedItemDataItem) {
+    async asyncUpdatePricedItemDataItems(idPricedItemDataItemPairs, idGeneratorState) {
         throw Error('PricedItemsHandler.modifyPricedItem() abstract method!');
     }
 
-    /**
-     * Removes an existing priced item.
-     * @param {number} id 
-     */
-    async asyncRemovePricedItem(id) {
-        throw Error('PricedItemsHandler.removePricedItem() abstract method!');
-    }
 }
 
 
@@ -543,15 +536,15 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
         return Array.from(this._pricedItemsById.values());
     }
 
-    async asyncAddPricedItem(pricedItemDataItem, idGeneratorState) {
-        this._pricedItemsById.set(pricedItemDataItem.id, pricedItemDataItem);
+    async asyncUpdatePricedItemDataItems(idPricedItemDataItemPairs, idGeneratorState) {
+        idPricedItemDataItemPairs.forEach(([id, pricedItemDataItem]) => {
+            if (!pricedItemDataItem) {
+                this._pricedItemsById.delete(id);
+            }
+            else {
+                this._pricedItemsById.set(id, pricedItemDataItem);
+            }
+        });
     }
 
-    async asyncModifyPricedItem(pricedItemDataItem) {
-        this._pricedItemsById.set(pricedItemDataItem.id, pricedItemDataItem);
-    }
-
-    async asyncRemovePricedItem(id) {
-        this._pricedItemsById.delete(id);
-    }
 }
