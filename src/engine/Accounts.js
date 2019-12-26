@@ -448,12 +448,12 @@ export class AccountManager {
         if (!this._openingBalancesAccount) {
             this._openingBalancesAccount = await this._asyncAddAccount(
                 {
+                    parentAccountId: this._rootEquityAccountId,
                     type: AccountType.OPENING_BALANCE,
                     pricedItemId: currencyPricedItemId, 
                     name: userMsg('Account-Opening_Balances_name'),
                     description: userMsg('Account-Opening_Balances_desc'),
-                },
-                this._rootEquityAccount);
+                });
             this._openingBalancesAccountId = this._openingBalancesAccount.id;
         }
     }
@@ -526,7 +526,7 @@ export class AccountManager {
     }
 
 
-    async _asyncAddAccount(account, parentAccount) {
+    async _asyncAddAccount(account) {
         account = getAccountDataItem(account);
         
         const accountDataItem = Object.assign({}, account);        
@@ -535,17 +535,40 @@ export class AccountManager {
         const id = this._idGenerator.generateId();
         accountDataItem.id = id;
         const idGeneratorState = this._idGenerator.toJSON();
-        
-        await this._handler.asyncAddAccountDataItem(accountDataItem, idGeneratorState);
 
-        this._accountsById.set(id, accountDataItem);
-        if (parentAccount) {
-            parentAccount.childAccountIds.push(id);
+        const updatedAccountEntries = [];
+        updatedAccountEntries.push([id, accountDataItem]);
+
+        if (accountDataItem.parentAccountId) {
+            const parentAccountDataItem = this.getAccountDataItemWithId(accountDataItem.parentAccountId);
+            parentAccountDataItem.childAccountIds.push(id);
+
+            updatedAccountEntries.push([account.parentAccountId, parentAccountDataItem]);
         }
 
-        if (accountDataItem.refId) {
-            this._accountsByRefId.set(accountDataItem.refId, accountDataItem);
-        }
+        // Gotta move any specified child accounts.
+        accountDataItem.childAccountIds.forEach((childId) => {
+            const childAccountDataItem = this.getAccountDataItemWithId(childId);
+
+            const { parentAccountId } = childAccountDataItem;
+            const parentAccountDataItem = this.getAccountDataItemWithId(parentAccountId);
+            const index = parentAccountDataItem.childAccountIds.indexOf(childId);
+            parentAccountDataItem.childAccountIds.splice(index, 1);
+            updatedAccountEntries.push([parentAccountId, parentAccountDataItem]);
+
+            childAccountDataItem.parentAccountId = id;
+            updatedAccountEntries.push([childId, childAccountDataItem]);
+        });
+
+
+        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries, idGeneratorState);
+
+        updatedAccountEntries.forEach(([id, accountDataItem]) => {
+            this._accountsById.set(id, accountDataItem);
+            if (accountDataItem.refId) {
+                this._accountsByRefId.set(accountDataItem.refId, accountDataItem);
+            }
+        });
 
         return accountDataItem;
     }
@@ -596,10 +619,10 @@ export class AccountManager {
 
     /**
      * Adds a new account.
-     * @param {(Account|AccountDataItem)} account   The account to add. Note that the accountState and childAccountIds properties are ignored.
+     * @param {(Account|AccountDataItem)} account   The account to add.
      * @param {(YMDDate|string)} [initialYMDDate]   The date to assign to the account state.
      * @param {boolean} validateOnly 
-     * @returns {AccountDataItem}
+     * @returns {AccountDataItem}   The newly added account's data item.
      * @throws {Error}
      */
     async asyncAddAccount(account, initialYMDDate, validateOnly) {
@@ -610,17 +633,31 @@ export class AccountManager {
             throw userError('AccountManager-parent_account_invalid', accountDataItem.parentAccountId);
         }
 
-        if (accountDataItem.accountState) {
-            console.debug('Ignoring accountState');
-        }
-        if (accountDataItem.childAccountIds && accountDataItem.childAccountIds.length) {
-            console.debug('Ignoring childAccountIds');
-        }
-
+        
         // Create an empty account state appropriate for the account.
         const type = getAccountType(accountDataItem.type);
-        accountDataItem.accountState = createAccountStateDataItemForType(type, initialYMDDate);
-        accountDataItem.childAccountIds = [];
+        accountDataItem.accountState = accountDataItem.accountState || createAccountStateDataItemForType(type, initialYMDDate);
+
+        
+        if (accountDataItem.childAccountIds) {
+            // Verify that all the accounts in childAccountIds can be moved to this account's type.
+            const { childAccountIds } = accountDataItem;
+            for (let i = childAccountIds.length - 1; i >= 0; --i) {
+                const childId = childAccountIds[i];
+                const childAccount = this.getAccountDataItemWithId(childId);
+                if (!childAccount) {
+                    throw userError('AccountManager-child_account_invalid', childId);
+                }
+                const childType = getAccountType(childAccount.type);
+                if (!type.allowedChildTypes.includes(childType)) {
+                    throw userError('AccountManager-child_incompatible', childId, childType.name, type.name);
+                }
+            }
+        }
+        else {
+            accountDataItem.childAccountIds = [];
+        }
+
 
         const error = this._validateAccountBasics(accountDataItem, parentAccountDataItem, false);
         if (error) {
@@ -631,7 +668,7 @@ export class AccountManager {
             return;
         }
 
-        const newAccountDataItem = await this._asyncAddAccount(accountDataItem, parentAccountDataItem);
+        const newAccountDataItem = await this._asyncAddAccount(accountDataItem);
         return Object.assign({}, newAccountDataItem);
     }
 
@@ -640,7 +677,8 @@ export class AccountManager {
      * Removes an account. Root accounts and the opening balances account cannot be removed.
      * @param {number} accountId 
      * @param {boolean} validateOnly 
-     * @returns {AccountDataItem}
+     * @returns {AccountDataItem}   The removed account data item.
+     * @throws {Error}
      */
     async asyncRemoveAccount(accountId, validateOnly) {
         const accountDataItem = this.getAccountDataItemWithId(accountId);
@@ -680,28 +718,31 @@ export class AccountManager {
             childAccountDataItems.push(childAccountDataItem);
         }
 
+        parentAccountDataItem.childAccountIds.splice(parentAccountDataItem.childAccountIds.indexOf(accountId), 1);
+
         if (validateOnly) {
             return;
         }
 
-        const updatedAccountPairs = [];
-        updatedAccountPairs.push([accountId]);
+        const updatedAccountEntries = [];
+        updatedAccountEntries.push([accountId]);
 
-        updatedAccountPairs.push([parentAccountId, parentAccountDataItem]);
+        updatedAccountEntries.push([parentAccountId, parentAccountDataItem]);
         childAccountDataItems.forEach((dataItem) => {
-            updatedAccountPairs.push([dataItem.id, dataItem]);
+            updatedAccountEntries.push([dataItem.id, dataItem]);
         });
 
-        await this._handler.asyncUpdateAccountDataItems(updatedAccountPairs);
+        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries);
 
-        this._accountsById.set(parentAccountId, parentAccountDataItem);
-        childAccountDataItems.forEach((dataItem) => {
-            this._accountsById.set(dataItem.id, dataItem);
+        updatedAccountEntries.forEach(([id, accountDataItem]) => {
+            if (!accountDataItem) {
+                return;
+            }
+            this._accountsById.set(id, accountDataItem);
+            if (accountDataItem.refId) {
+                this._accountsByRefId.set(accountDataItem.refId, accountDataItem);
+            }
         });
-
-        if (accountDataItem.refId) {
-            this._accountsByRefId.delete(accountDataItem.refId);
-        }
 
         return accountDataItem;
     }
@@ -709,11 +750,12 @@ export class AccountManager {
     /**
      * Modifies an account.
      * @param {(Account|AccountDataItem)} account The account id is required. Only specified properties are modified, with restrictions on the
-     * type and priced item accounts.
+     * type and priced item accounts. Note that the childAccountIds can only be shuffled about, the accounts in the list cannot be changed.
      * @param {boolean} validateOnly 
      * @returns {AccountDataItem[]|undefined} If the account is modified, returns an array whose first element is the new account data item
      * and whose second element is the old account item data. Otherwise <code>undefined</code> is returned (which happens if account does not actually
      * change anything).
+     * @throws {Error}
      */
     async asyncModifyAccount(account, validateOnly) {
         const { id } = account;
@@ -790,28 +832,39 @@ export class AccountManager {
             }
         }
 
+        if (account.childAccountIds) {
+            if (oldAccountDataItem.childAccountIds.length !== account.childAccountIds.length) {
+                throw userError('AccountManager-no_change_child_ids');
+            }
+            const existingIds = new Set(oldAccountDataItem.childAccountIds);
+            account.childAccountIds.forEach((id) => existingIds.delete(id));
+            if (existingIds.size) {
+                throw userError('AccountManager-no_change_child_ids');
+            }
+        }
+
         const error = this._validateAccountBasics(newAccountDataItem, newParentAccountDataItem, false);
         if (error) {
             throw error;
         }
 
         if (validateOnly) {
-            return newAccountDataItem;
+            return;
         }
 
         if (deepEqual(newAccountDataItem, oldAccountDataItem)) {
             return;
         }
 
-        const updatedAccountPairs = [];
-        updatedAccountPairs.push([newAccountDataItem.id, newAccountDataItem]);
+        const updatedAccountEntries = [];
+        updatedAccountEntries.push([newAccountDataItem.id, newAccountDataItem]);
 
         if (newParentAccountId !== oldParentAccountId) {
-            updatedAccountPairs.push([oldParentAccountDataItem.id, oldParentAccountDataItem]);
-            updatedAccountPairs.push([newParentAccountId, newParentAccountDataItem]);
+            updatedAccountEntries.push([oldParentAccountDataItem.id, oldParentAccountDataItem]);
+            updatedAccountEntries.push([newParentAccountId, newParentAccountDataItem]);
         }
 
-        await this._handler.asyncUpdateAccountDataItems(updatedAccountPairs);
+        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries);
         
         this._accountsById.set(id, newAccountDataItem);
 
@@ -820,9 +873,13 @@ export class AccountManager {
                 this._accountsByRefId.delete(oldAccountDataItem.refId);
             }
         }
-        if (newAccountDataItem.refId) {
-            this._accountsByRefId.set(newAccountDataItem.refId, newAccountDataItem);
-        }
+
+        updatedAccountEntries.forEach(([id, accountDataItem]) => {
+            this._accountsById.set(id, accountDataItem);
+            if (accountDataItem.refId) {
+                this._accountsByRefId.set(accountDataItem.refId, accountDataItem);
+            }
+        });
 
         return [Object.assign({}, newAccountDataItem), oldAccountDataItem];
     }
@@ -860,8 +917,9 @@ export class AccountsHandler {
      * modifying or deleting one account may affect other accounts, so those accounts must also be deleted at the same time.
      * @param {*} accountIdAndDataItemPairs Array of one or two element sub-arrays. The first element is the account id.
      * For new or modified accounts, the second element is the new account item data. For accounts to be deleted, this is empty.
+     * @param {NumericIdGenerator~Options}  idGeneratorState    The current state of the id generator.
      */
-    async asyncUpdateAccountDataItems(accountIdAndDataItemPairs) {
+    async asyncUpdateAccountDataItems(accountIdAndDataItemPairs, idGeneratorState) {
         throw Error('AccountsHandler.asyncUpdateAccountDataItems() abstract method!');
     }
 
@@ -891,7 +949,7 @@ export class InMemoryAccountsHandler extends AccountsHandler {
         this._accountsById.set(accountDataItem.id, accountDataItem);
     }
 
-    async asyncUpdateAccountDataItems(accountIdAndDataItemPairs) {
+    async asyncUpdateAccountDataItems(accountIdAndDataItemPairs, idGeneratorState) {
         accountIdAndDataItemPairs.forEach(([id, accountDataItem]) => {
             if (!accountDataItem) {
                 this._accountsById.delete(id);

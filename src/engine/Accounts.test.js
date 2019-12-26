@@ -639,6 +639,9 @@ test('AccountManager-modify', async () => {
     account = accountManager.getAccountDataItemWithId(sys.checkingId);
     ATH.expectAccount(account, changesA);
 
+    // No change:
+    expect(await accountManager.asyncModifyAccount(changesA)).toBeUndefined();
+
     // Make sure it was a deep copy
     const stateB = { ymdDate: '2012-03-45', quantityBaseValue: 1000, };
     changesA.accountState = stateB;
@@ -676,6 +679,9 @@ test('AccountManager-modify', async () => {
     // Can't move to a descendant.
     await expect(accountManager.asyncModifyAccount({ id: sys.investmentsId, parentAccountId: sys.brokerageAId })).rejects.toThrow();
 
+    // Can't move to an account that doesn't accept children.
+    await expect(accountManager.asyncModifyAccount({ id: sys.brokerageAId, parentAccountId: sys.savingsId})).rejects.toThrow();
+
 
     // Change type.
     const changeCheckingType = { id: sys.checkingId, type: A.AccountType.BROKERAGE };
@@ -712,4 +718,47 @@ test('AccountManager-modify', async () => {
     account = accountManager.getAccountDataItemWithRefId('8');
     expect(account.id).toEqual(sys.savingsId);
 
+});
+
+
+
+//
+//---------------------------------------------------------
+//
+test('AccountManager-removeAccount', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    const { accountingSystem } = sys;
+    const accountManager = accountingSystem.getAccountManager();
+
+    // Can't delete the required accounts:
+    await expect(accountManager.asyncRemoveAccount(accountManager.getRootAssetAccountId())).rejects.toThrow();
+    await expect(accountManager.asyncRemoveAccount(accountManager.getRootLiabilityAccountId())).rejects.toThrow();
+    await expect(accountManager.asyncRemoveAccount(accountManager.getRootIncomeAccountId())).rejects.toThrow();
+    await expect(accountManager.asyncRemoveAccount(accountManager.getRootExpenseAccountId())).rejects.toThrow();
+    await expect(accountManager.asyncRemoveAccount(accountManager.getRootEquityAccountId())).rejects.toThrow();
+    await expect(accountManager.asyncRemoveAccount(accountManager.getOpeningBalancesAccountId())).rejects.toThrow();
+
+    const originalAccount = accountManager.getAccountDataItemWithId(sys.iraId);
+
+    let account;
+    account = await accountManager.asyncRemoveAccount(sys.iraId);
+    expect(account).toEqual(originalAccount);
+
+    let parentAccount = accountManager.getAccountDataItemWithId(account.parentAccountId);
+    expect(parentAccount.childAccountIds).not.toEqual(expect.arrayContaining([sys.iraId]));
+    expect(parentAccount.childAccountIds).toEqual(expect.arrayContaining([sys.aaplIRAId, sys.tibexIRAId]));
+    
+    const aaplIRA = accountManager.getAccountDataItemWithId(sys.aaplIRAId);
+    expect(aaplIRA.parentAccountId).toEqual(parentAccount.id);
+
+
+    // We should be able to add back the account.
+    account = await accountManager.asyncAddAccount(account);
+    const newIRAId = account.id;
+    parentAccount = accountManager.getAccountDataItemWithId(sys.investmentsId);
+    expect(parentAccount.childAccountIds).toEqual(expect.arrayContaining([newIRAId]));
+    expect(parentAccount.childAccountIds).not.toEqual(expect.arrayContaining([sys.aaplIRAId, sys.tibexIRAId]));
+
+    expect(accountManager.getAccountDataItemWithId(sys.aaplIRAId).parentAccountId).toEqual(newIRAId);
+    expect(accountManager.getAccountDataItemWithId(sys.tibexIRAId).parentAccountId).toEqual(newIRAId);
 });
