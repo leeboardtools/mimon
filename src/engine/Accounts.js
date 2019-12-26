@@ -284,13 +284,15 @@ export function getAccountStateDataItem(accountState) {
  * Retrieves an {@link Account} representation of an {@link AccountDataItem}, avoids copying if the arg
  * is already an {@link Account}
  * @param {(AccountDataItem|Account)} accountDataItem 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
  * @returns {Account}
  */
-export function getAccount(accountDataItem) {
+export function getAccount(accountDataItem, alwaysCopy) {
     if (accountDataItem) {
         const type = getAccountType(accountDataItem.type);
         const accountState = getAccountState(accountDataItem.accountState);
-        if ((type !== accountDataItem.type)
+        if (alwaysCopy
+         || (type !== accountDataItem.type)
          || (accountState !== accountDataItem.accountState)) {
             const account = Object.assign({}, accountDataItem);
             account.type = type;
@@ -305,12 +307,14 @@ export function getAccount(accountDataItem) {
  * Retrieves an {@link AccountDataItem} representation of an {@link Account}, avoids copying if the arg
  * is already an {@link AccountDataItem}
  * @param {(Account|AccountDataItem)} account 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
  */
-export function getAccountDataItem(account) {
+export function getAccountDataItem(account, alwaysCopy) {
     if (account) {
         const typeName = getAccountTypeName(account.type);
         const accountStateDataItem = getAccountStateDataItem(account.accountState);
-        if ((typeName !== account.type)
+        if (alwaysCopy
+         || (typeName !== account.type)
          || (accountStateDataItem !== account.accountState)) {
             const accountDataItem = Object.assign({}, account);
             accountDataItem.type = typeName;

@@ -108,14 +108,16 @@ export function loadPricedItemUserMessages() {
 /**
  * Retrieves a {@link PricedItem} representation of a {@link PricedItemDataItem}.
  * @param {(PricedItemDataItem|PricedItem)} pricedItemDataItem 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
  * @returns {PricedItem}
  */
-export function getPricedItem(pricedItemDataItem) {
+export function getPricedItem(pricedItemDataItem, alwaysCopy) {
     if (pricedItemDataItem) {
         const type = getPricedItemType(pricedItemDataItem.type);
         const currency = getCurrency(pricedItemDataItem.currency);
         const quantityDefinition = getQuantityDefinition(pricedItemDataItem.quantityDefinition);
-        if ((type !== pricedItemDataItem.type)
+        if (alwaysCopy
+         || (type !== pricedItemDataItem.type)
          || (currency !== pricedItemDataItem.currency)
          || (quantityDefinition !== pricedItemDataItem.quantityDefinition)) {
             // We're using Object.assign() to create a copy just in case there are other properties.
@@ -133,14 +135,16 @@ export function getPricedItem(pricedItemDataItem) {
 /**
  * Retrieves a {@link PricedItemDataItem} representation of a {@link PricedItem}.
  * @param {(PricedItem|PricedItemDataItem)} pricedItem 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
  * @returns {PricedItemDataItem}
  */
-export function getPricedItemDataItem(pricedItem) {
+export function getPricedItemDataItem(pricedItem, alwaysCopy) {
     if (pricedItem) {
         const typeName = getPricedItemTypeName(pricedItem.type);
         const currencyCode = getCurrencyCode(pricedItem.currency);
         const quantityDefinitionName = getQuantityDefinitionName(pricedItem.quantityDefinition);
-        if ((typeName !== pricedItem.type)
+        if (alwaysCopy
+         || (typeName !== pricedItem.type)
          || (currencyCode !== pricedItem.currency)
          || (quantityDefinitionName !== pricedItem.quantityDefinition)) {
             const pricedItemDataItem = Object.assign({}, pricedItem);
