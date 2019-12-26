@@ -902,17 +902,6 @@ export class AccountsHandler {
 
 
     /**
-     * Adds a new account. It's separate from {@link AccountsHandler#asyncUpdateAccountDataItems} because we want to pass
-     * in the id generator's state.
-     * @param {AccountDataItem} accountDataItem 
-     * @param {NumericIdGenerator~Options}  idGeneratorState    The current state of the id generator.
-     */
-    async asyncAddAccountDataItem(accountDataItem, idGeneratorState) {
-        throw Error('AccountsHandler.asyncAddAccountDataItem() abstract method!');
-    }
-
-
-    /**
      * Main function for updating the account data items. We use a single function for both modify and delete because
      * modifying or deleting one account may affect other accounts, so those accounts must also be deleted at the same time.
      * @param {*} accountIdAndDataItemPairs Array of one or two element sub-arrays. The first element is the account id.
@@ -945,9 +934,6 @@ export class InMemoryAccountsHandler extends AccountsHandler {
         return Array.from(this._accountsById.values());
     }
 
-    async asyncAddAccountDataItem(accountDataItem, idGeneratorState) {
-        this._accountsById.set(accountDataItem.id, accountDataItem);
-    }
 
     async asyncUpdateAccountDataItems(accountIdAndDataItemPairs, idGeneratorState) {
         accountIdAndDataItemPairs.forEach(([id, accountDataItem]) => {
