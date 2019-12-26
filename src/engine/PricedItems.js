@@ -179,7 +179,7 @@ export class PricedItemManager {
         this._accountingSystem = accountingSystem;
         this._handler = options.handler;
         
-        this._idGenerator = new NumericIdGenerator(options.idGenerator);
+        this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorState());
 
         this._currencyPricedItemIdsByCurrency = new Map();
         this._pricedItemsById = new Map();
@@ -501,6 +501,13 @@ export class PricedItemsHandler {
         throw Error('PricedItemsHandler.getPricedItems() abstract method!');
     }
 
+    /**
+     * @returns {NumericIdGenerator~Options}    The id generator options for initializing the id generator.
+     */
+    getIdGeneratorState() {
+        throw Error('PricedItemsHandler.getIdGeneratorState() abstract method!');
+    }
+
 
     /**
      * Main function for updating the priced item data items.
@@ -536,6 +543,10 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
         return Array.from(this._pricedItemsById.values());
     }
 
+    getIdGeneratorState() {
+        return this._idGeneratorState;
+    }
+
     async asyncUpdatePricedItemDataItems(idPricedItemDataItemPairs, idGeneratorState) {
         idPricedItemDataItemPairs.forEach(([id, pricedItemDataItem]) => {
             if (!pricedItemDataItem) {
@@ -545,6 +556,10 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
                 this._pricedItemsById.set(id, pricedItemDataItem);
             }
         });
+
+        if (idGeneratorState) {
+            this._idGeneratorState = idGeneratorState;
+        }
     }
 
 }

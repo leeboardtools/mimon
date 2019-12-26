@@ -353,11 +353,15 @@ export function getAccountId(ref) {
  */
 export class AccountManager {
 
+    /**
+     * @typedef {object}    AccountManager~Options
+     * @property {NumericIdGenerator~Options}   [idGenerator]   The id generator state to restore to.
+     */
     constructor(accountingSystem, options) {
         this._accountingSystem = accountingSystem;
         this._handler = options.handler;
         
-        this._idGenerator = new NumericIdGenerator(options.idGenerator);
+        this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorState());
 
         this._accountsById = new Map();
         this._accountsByRefId = new Map();
@@ -900,6 +904,13 @@ export class AccountsHandler {
         throw Error('AccountsHandler.getAccounts() abstract method!');
     }
 
+    /**
+     * @returns {NumericIdGenerator~Options}    The id generator options for initializing the id generator.
+     */
+    getIdGeneratorState() {
+        throw Error('AccountsHandler.getIdGeneratorState() abstract method!');
+    }
+
 
     /**
      * Main function for updating the account data items. We use a single function for both modify and delete because
@@ -935,6 +946,10 @@ export class InMemoryAccountsHandler extends AccountsHandler {
         return Array.from(this._accountsById.values());
     }
 
+    getIdGeneratorState() {
+        return this._idGeneratorState;
+    }
+
 
     async asyncUpdateAccountDataItems(accountIdAndDataItemPairs, idGeneratorState) {
         accountIdAndDataItemPairs.forEach(([id, accountDataItem]) => {
@@ -945,6 +960,10 @@ export class InMemoryAccountsHandler extends AccountsHandler {
                 this._accountsById.set(id, accountDataItem);
             }
         });
+
+        if (idGeneratorState) {
+            this._idGeneratorState = idGeneratorState;
+        }
     }
 
 }
