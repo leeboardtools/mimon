@@ -371,7 +371,7 @@ class QuantityDefinition {
      * @returns {string}
      */
     getName() {
-        throw Error('QuantityDefinition::getName() - Abstract method!');
+        throw Error('QuantityDefinition.getName() - Abstract method!');
     }
 
 
@@ -384,7 +384,7 @@ class QuantityDefinition {
      * @throws An exception if otherDefinition is not compatible with this definition.
      */
     compareDefinitionResolution(otherDefinition) {
-        throw Error('QuantityDefinition::compareDefinitionResolution() - Abstract method!');
+        throw Error('QuantityDefinition.compareDefinitionResolution() - Abstract method!');
     }
 
     /**
@@ -418,7 +418,7 @@ class QuantityDefinition {
      * @returns {number}
      */
     baseValueToNumber(baseValue) {
-        throw Error('QuantityDefinition::baseValueToNumber() - Abstract method!');
+        throw Error('QuantityDefinition.baseValueToNumber() - Abstract method!');
     }
 
     /**
@@ -427,7 +427,7 @@ class QuantityDefinition {
      * @returns {number}    The base value equivalent, which is an integer.
      */
     numberToBaseValue(number) {
-        throw Error('QuantityDefinition::numberToBaseValue() - Abstract method!');
+        throw Error('QuantityDefinition.numberToBaseValue() - Abstract method!');
     }
 
     /**
@@ -437,7 +437,7 @@ class QuantityDefinition {
      * @returns {string}
      */
     baseValueToValueText(baseValue) {
-        throw Error('QuantityDefinition::baseValueToValueText() - Abstract method!');
+        throw Error('QuantityDefinition.baseValueToValueText() - Abstract method!');
     }
 
     /**
@@ -446,7 +446,7 @@ class QuantityDefinition {
      * @returns {Quantity#ParseResult|undefined}    The parse result, <code>undefined</code> if valueText could not be parsed.
      */
     fromValueText(quantity) {
-        throw Error('QuantityDefinition::fromValueText() - Abstract method!');
+        throw Error('QuantityDefinition.fromValueText() - Abstract method!');
     }
 
     /**
@@ -455,7 +455,7 @@ class QuantityDefinition {
      * @returns {Quantity}  The resulting quantity, it has this as its definition.
      */
     addQuantities(quantities) {
-        throw Error('QuantityDefinition::addQuantities() - Abstract method!');
+        throw Error('QuantityDefinition.addQuantities() - Abstract method!');
     }
 
     /**
@@ -464,7 +464,7 @@ class QuantityDefinition {
      * @returns {Quantity}  The resulting quantity, it has this as its definition.
      */
     subtractQuantities(quantities) {
-        throw Error('QuantityDefinition::subtractQuantities() - Abstract method!');
+        throw Error('QuantityDefinition.subtractQuantities() - Abstract method!');
     }
 
     /**
@@ -473,7 +473,7 @@ class QuantityDefinition {
      * @returns {Quantity}  The negated quantity, it has this as its definition.
      */
     negateQuantity(quantity) {
-        throw Error('QuantityDefinition::negatetQuantity() - Abstract method!');
+        throw Error('QuantityDefinition.negatetQuantity() - Abstract method!');
     }
 
 
@@ -485,7 +485,7 @@ class QuantityDefinition {
      * @returns {Quantity}  The product of the quantities, it has this as its definition.
      */
     multiplyQuantities(quantities) {
-        throw Error('QuantityDefinition::multiplyQuantities() - Abstract method!');
+        throw Error('QuantityDefinition.multiplyQuantities() - Abstract method!');
     }
 
 
@@ -502,11 +502,11 @@ class QuantityDefinition {
      * @returns {number[]}    The array of the subdivided base values.
     */
     subdivideBaseValue(baseValue, portions) {
-        throw Error('QuantityDefinition::subdivideBaseValue() - Abstract method!');
+        throw Error('QuantityDefinition.subdivideBaseValue() - Abstract method!');
     }
 
     isSameDefinition(other) {
-        throw Error('QuantityDefinition::isSameDefinition() - Abstract method!');
+        throw Error('QuantityDefinition.isSameDefinition() - Abstract method!');
     }
 
 }

@@ -15,6 +15,11 @@ function testLotDataItems(lot) {
     expect(L.getLot(lot) === lot).toBeTruthy();
 }
 
+
+
+//
+//---------------------------------------------------------
+//
 test('Lot-Data Items', () => {
     const lotA = {
         purchaseYMDDate: new YMDDate(2019, 10, 11),
