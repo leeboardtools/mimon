@@ -909,7 +909,7 @@ export class EntryHandler {
      * @returns {object}    The entry key associated with entry.
      */
     getEntryKeyFromEntry(entry) {
-        throw Error('EntryHandler::getEntryKeyFromEntry: Abstract Method!');
+        throw Error('EntryHandler.getEntryKeyFromEntry: Abstract Method!');
     }
 
     /**
@@ -919,7 +919,7 @@ export class EntryHandler {
      * @param {object}  summaryInfo The summary info.
      */
     async writeSummaryFile(entryGroupFiles, pathName, summaryInfo) {
-        throw Error('EntryHandler::writeSummaryFile: Abstract Method!');
+        throw Error('EntryHandler.writeSummaryFile: Abstract Method!');
     }
 
 
@@ -930,7 +930,7 @@ export class EntryHandler {
      * @returns {EntryGroupFiles~SummaryInfo}   The summary information.
      */
     async readSummaryFile(entryGroupFiles, pathName) {
-        throw Error('EntryHandler::readSummaryFile: Abstract Method!');
+        throw Error('EntryHandler.readSummaryFile: Abstract Method!');
     }
 
 
@@ -941,7 +941,7 @@ export class EntryHandler {
      * @param {string} pathName The full path name of the entry group file.
      */
     async writeEntriesForGroup(groupKey, entries, pathName) {
-        throw Error('EntryHandler::writeEntriesForGroup: Abstract Method!');
+        throw Error('EntryHandler.writeEntriesForGroup: Abstract Method!');
     }
 
     /**
@@ -953,7 +953,7 @@ export class EntryHandler {
      * @returns {object[]}  An array containing the entries of the entry group from the file.
      */
     async loadEntriesForGroup(groupKey, pathName) {
-        throw Error('EntryHandler::loadEntriesForGroup: Abstract Method!');
+        throw Error('EntryHandler.loadEntriesForGroup: Abstract Method!');
     }
 
 
@@ -965,7 +965,7 @@ export class EntryHandler {
      * @returns {boolean}   <code>true</code> if entryA is the same as entryB.
      */
     areEntriesTheSame(entryA, entryB) {
-        throw Error('EntryHandler::areEntriesTheSame: Abstract Method!');
+        throw Error('EntryHandler.areEntriesTheSame: Abstract Method!');
     }
 
 }
