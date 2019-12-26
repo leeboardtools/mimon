@@ -12,7 +12,10 @@ export class SortedArray {
      */
     /**
      * @typedef {object}    SortedArray~Options
-     * @property {boolean}  [allowDuplicates=false]  If <code>true</code> duplicate values are allowed.
+     * @property {string}  [duplicates=undefined]  How to handle duplicates, allowed values are:
+     * <li>'ignore' (the default, {@link SortedArray#add} returns -1 for duplicates
+     * <li>'allow'
+     * <li>'replace' Existing values are replaced.
      * @property {object[]} [initialValues] Optional initial values for the array. These will be sorted.
      * @property {SortedArray~KeyCallback}  [keyCallback]   Optional callback for retrieving a key from an array value.
      */
@@ -26,12 +29,12 @@ export class SortedArray {
         options = options || {};
 
         this._compare = compare;
-        this._allowDuplicates = options.allowDuplicates;
+        this._duplicates = options.duplicates || 'ignore';
         this._keyCallback = options.keyCallback || ((value) => value);
 
         if (options.initialValues) {
             this._array = Array.from(options.initialValues).sort();
-            if (!this._allowDuplicates) {
+            if (this._duplicates !== 'allow') {
                 // We need to make sure there aren't any duplicates...
                 for (let i = 1; i < this._array.length;) {
                     const key = this._keyCallback(this._array[i - 1]);
@@ -65,9 +68,9 @@ export class SortedArray {
     getCompare() { return this._compare; }
 
     /**
-     * @returns {boolean}   <code>true</code> if duplicate values are allowed in the array.
+     * @returns {string}   The duplicates setting, one of 'ignore', 'allow', or 'replace'
      */
-    isAllowDuplicates() { return this._allowDuplicates; }
+    duplicates() { return this._duplicates; }
 
     /**
      * Retrieves the value at a given index.
@@ -135,8 +138,13 @@ export class SortedArray {
         else if (index < this._array.length) {
             value = this._keyCallback(value);
             if (!this._compare(value, this._array[index])) {
-                if (!this._allowDuplicates) {
+                switch (this._duplicates) {
+                case 'ignore':
                     return -1;
+                    
+                case 'replace':
+                    this._array[index] = value;
+                    return index;
                 }
             }
             else {

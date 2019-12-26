@@ -44,7 +44,7 @@ test('SortedArray', () => {
 
 
     const arrayDupl = new SortedArray(letterCompare, {
-        allowDuplicates: true,
+        duplicates: 'allow',
         initialValues: ['abc', 'def', 'yyy', 'abc'],
     });
     expect(arrayDupl.getValues()).toEqual(['abc', 'abc', 'def', 'yyy']);
