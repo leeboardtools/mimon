@@ -39,6 +39,15 @@ export function getLot(lotDataItem, alwaysCopy) {
     return lotDataItem;
 }
 
+
+function checkFirstDefinedEntry(array, callback) {
+    for (let i = 0; i < array.length; ++i) {
+        if ((array[i] !== undefined) && (array[i] !== null)) {
+            return callback(i);
+        }
+    }
+}
+
 /**
  * Array version of {@link getLot}.
  * @param {(LotDataItem[]|Lot[])} lotDataItems 
@@ -48,7 +57,7 @@ export function getLot(lotDataItem, alwaysCopy) {
 export function getLots(lotDataItems, alwaysCopy) {
     if (lotDataItems) {
         if (alwaysCopy
-         || ((lotDataItems.length && (getLot(lotDataItems[0]) !== lotDataItems[0])))) {
+         || checkFirstDefinedEntry(lotDataItems, (i) => (getLot(lotDataItems[i]) !== lotDataItems[i]))) {
             return lotDataItems.map((lotDataItem) => getLot(lotDataItem, alwaysCopy));
         }
     }
@@ -82,7 +91,7 @@ export function getLotDataItem(lot, alwaysCopy) {
 export function getLotDataItems(lots, alwaysCopy) {
     if (lots) {
         if (alwaysCopy
-         || (lots.length && (getLotDataItem(lots[0]) !== lots[0]))) {
+         || checkFirstDefinedEntry(lots, (i) => (getLotDataItem(lots[i]) !== lots[i]))) {
             return lots.map((lot) => getLotDataItem(lot, alwaysCopy));
         }
     }
