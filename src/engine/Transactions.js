@@ -55,7 +55,7 @@ export function getReconcileStateName(ref) {
 export function getLotChangeDataItems(lotChanges, alwaysCopy) {
     if (lotChanges) {
         if (alwaysCopy 
-         || (lotChanges.length && (getLotDataItems(lotChanges[0]) !== lotChanges))) {
+         || (lotChanges.length && (getLotDataItems(lotChanges[0]) !== lotChanges[0]))) {
             return lotChanges.map((lotChange) => getLotDataItems(lotChange));
         }
     }
