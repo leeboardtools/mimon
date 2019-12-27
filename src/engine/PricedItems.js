@@ -85,6 +85,43 @@ export function loadPricedItemUserMessages() {
 }
 
 
+
+/**
+ * @typedef PricedItemOnlineUpdateTypeDef
+ * @property {string}   name
+ * @property {boolean}  hasUpdate
+ */
+
+/**
+ * The types of online updating.
+ * @readonly
+ * @enum {PricedItemOnlineUpdateTypeDef}
+ * @property {PricedItemOnlineUpdateTypeDef}    NONE
+ * @property {PricedItemOnlineUpdateTypeDef}    YAHOO_FINANCE
+ */
+export const PricedItemOnlineUpdateType = {
+    NONE: { name: 'NONE', hasUpdate: false, },
+    YAHOO_FINANCE: { name: 'YAHOO_FINANCE', hasUpdate: true, },
+};
+
+
+/**
+ * @param {(string|PricedItemOnlineUpdateTypeDef)} ref 
+ * @returns {PricedItemTypeDef} Returns the {@link PricedItemTypeDef} represented by ref.
+ */
+export function getPricedItemOnlineUpdateType(ref) {
+    return (typeof ref === 'string') ? PricedItemOnlineUpdateType[ref] : ref;
+}
+
+/**
+ * @param {(string|PricedItemOnlineUpdateType)} type 
+ * @returns {string}
+ */
+export function getPricedItemOnlineUpdateTypeName(type) {
+    return ((type === undefined) || (typeof type === 'string')) ? type : type.name;
+}
+
+
 /**
  * @typedef {object} PricedItemDataItem
  * @property {number}   id  The priced item's id.
@@ -93,6 +130,7 @@ export function loadPricedItemUserMessages() {
  * @property {string}   quantityDefinition  The name of the {@link QuantityDefinition} defining quantities of the priced item.
  * @property {string}   [name]  The user supplied name of the priced item.
  * @property {string}   [description]   The user supplied description of the priced item.
+ * @property {string}   [onlineUpdateType]  The online update type, only for priced item types that have hasTickerSymbol.
  */
 
 /**
@@ -103,6 +141,7 @@ export function loadPricedItemUserMessages() {
  * @property {QuantityDefinition}   quantityDefinition  The quantity definition defining the priced item's quantities.
  * @property {string}   [name]  The user supplied name of the priced item.
  * @property {string}   [description]   The user supplied description of the priced item.
+ * @property {PricedItemOnlineUpdateType}   [onlineUpdateType]  The online update type, only for priced item types that have hasTickerSymbol.
  */
 
 /**
@@ -116,15 +155,18 @@ export function getPricedItem(pricedItemDataItem, alwaysCopy) {
         const type = getPricedItemType(pricedItemDataItem.type);
         const currency = getCurrency(pricedItemDataItem.currency);
         const quantityDefinition = getQuantityDefinition(pricedItemDataItem.quantityDefinition);
+        const onlineUpdateType = getPricedItemOnlineUpdateType(pricedItemDataItem.onlineUpdateType);
         if (alwaysCopy
          || (type !== pricedItemDataItem.type)
          || (currency !== pricedItemDataItem.currency)
-         || (quantityDefinition !== pricedItemDataItem.quantityDefinition)) {
+         || (quantityDefinition !== pricedItemDataItem.quantityDefinition)
+         || (onlineUpdateType !== pricedItemDataItem.onlineUpdateType)) {
             // We're using Object.assign() to create a copy just in case there are other properties.
             const pricedItem = Object.assign({}, pricedItemDataItem);
             pricedItem.type = type;
             pricedItem.currency = currency;
             pricedItem.quantityDefinition = quantityDefinition;
+            pricedItem.onlineUpdateType = onlineUpdateType;
             return pricedItem;
         }
     }
@@ -143,14 +185,17 @@ export function getPricedItemDataItem(pricedItem, alwaysCopy) {
         const typeName = getPricedItemTypeName(pricedItem.type);
         const currencyCode = getCurrencyCode(pricedItem.currency);
         const quantityDefinitionName = getQuantityDefinitionName(pricedItem.quantityDefinition);
+        const onlineUpdateTypeName = getPricedItemOnlineUpdateTypeName(pricedItem.onlineUpdateType);
         if (alwaysCopy
          || (typeName !== pricedItem.type)
          || (currencyCode !== pricedItem.currency)
-         || (quantityDefinitionName !== pricedItem.quantityDefinition)) {
+         || (quantityDefinitionName !== pricedItem.quantityDefinition)
+         || (onlineUpdateTypeName !== pricedItem.onlineUpdateType)) {
             const pricedItemDataItem = Object.assign({}, pricedItem);
             pricedItemDataItem.type = typeName;
             pricedItemDataItem.currency = currencyCode;
             pricedItemDataItem.quantityDefinition = quantityDefinitionName;
+            pricedItemDataItem.onlineUpdateType = onlineUpdateTypeName;
             return pricedItemDataItem;
         }
     }
@@ -317,6 +362,21 @@ export class PricedItemManager {
         return (pricedItem) ? Object.assign({}, pricedItem) : undefined;
     }
 
+
+    /**
+     * Resolves an argument into a {@link PricedItem}. The argument may be the id of a priced item,
+     * a {@link PricedItemDataItem}, a {@link PricedItem}, or <code>undefined</code>.
+     * @param {(number|PricedItemDataItem|PricedItem)} ref 
+     * @returns {PricedItem|undefined}
+     */
+    resolveRefToPricedItem(ref) {
+        if (typeof ref === 'number') {
+            ref = this.getPricedItemDataItemWithId(ref);
+        }
+        return getPricedItem(ref);
+    }
+
+
     _getCurrencyName(currency, quantityDefinition) {
         const code = getCurrencyCode(currency);
         if (!quantityDefinition) {
@@ -461,9 +521,11 @@ export class PricedItemManager {
         }
 
         const type = getPricedItemType(newPricedItem.type);
-        const error = type.validateFunc(this, newPricedItem, true);
-        if (error) {
-            throw error;
+        if (type.validateFunc) {
+            const error = type.validateFunc(this, newPricedItem, true);
+            if (error) {
+                throw error;
+            }
         }
 
         if (validateOnly) {
