@@ -1,4 +1,4 @@
-import { YMDDate } from '../util/YMDDate';
+import { getYMDDate, getYMDDateString } from '../util/YMDDate';
 
 /**
  * @typedef {object} LotDataItem
@@ -24,13 +24,15 @@ import { YMDDate } from '../util/YMDDate';
 /**
  * Retrieves a {@link Lot} representation of a {@link LotDataItem}
  * @param {(LotDataItem|Lot)} lotDataItem 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
  * @returns {Lot}
  */
-export function getLot(lotDataItem) {
+export function getLot(lotDataItem, alwaysCopy) {
     if (lotDataItem) {
-        if (typeof lotDataItem.purchaseYMDDate === 'string') {
+        const purchaseYMDDate = getYMDDate(lotDataItem.purchaseYMDDate);
+        if (alwaysCopy || (purchaseYMDDate !== lotDataItem.purchaseYMDDate)) {
             const lot = Object.assign({}, lotDataItem);
-            lot.purchaseYMDDate = new YMDDate(lotDataItem.purchaseYMDDate);
+            lot.purchaseYMDDate = purchaseYMDDate;
             return lot;
         }
     }
@@ -40,12 +42,14 @@ export function getLot(lotDataItem) {
 /**
  * Array version of {@link getLot}.
  * @param {(LotDataItem[]|Lot[])} lotDataItems 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new array with new object will always be created.
  * @returns {Lot[]}
  */
-export function getLots(lotDataItems) {
-    if (lotDataItems && lotDataItems.length) {
-        if (typeof lotDataItems[0].purchaseYMDDate === 'string') {
-            return lotDataItems.map((lotDataItem) => getLot(lotDataItem));
+export function getLots(lotDataItems, alwaysCopy) {
+    if (lotDataItems) {
+        if (alwaysCopy
+         || ((lotDataItems.length && (getLot(lotDataItems[0]) !== lotDataItems[0])))) {
+            return lotDataItems.map((lotDataItem) => getLot(lotDataItem, alwaysCopy));
         }
     }
     return lotDataItems;
@@ -54,13 +58,15 @@ export function getLots(lotDataItems) {
 /**
  * Retrieves a {@link LotDataItem} representation of a {@link Lot}.
  * @param {(Lot|LotDataItem)} lot 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
  * @returns {LotDataItem}
  */
-export function getLotDataItem(lot) {
+export function getLotDataItem(lot, alwaysCopy) {
     if (lot) {
-        if (typeof lot.purchaseYMDDate !== 'string') {
+        const purchaseYMDDateString = getYMDDateString(lot.purchaseYMDDate);
+        if (alwaysCopy || (purchaseYMDDateString !== lot.purchaseYMDDate)) {
             const lotDataItem = Object.assign({}, lot);
-            lotDataItem.purchaseYMDDate = lot.purchaseYMDDate.toString();
+            lotDataItem.purchaseYMDDate = purchaseYMDDateString;
             return lotDataItem;
         }
     }
@@ -70,12 +76,14 @@ export function getLotDataItem(lot) {
 /**
  * Array version of {@link getLotDataItem}
  * @param {(Lot[]|LotDataItem[])} lots 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new array with new objects will always be created.
  * @returns {LotDataItem[]}
  */
-export function getLotDataItems(lots) {
-    if (lots && lots.length) {
-        if (typeof lots[0].purchaseYMDDate !== 'string') {
-            return lots.map((lot) => getLotDataItem(lot));
+export function getLotDataItems(lots, alwaysCopy) {
+    if (lots) {
+        if (alwaysCopy
+         || (lots.length && (getLotDataItem(lots[0]) !== lots[0]))) {
+            return lots.map((lot) => getLotDataItem(lot, alwaysCopy));
         }
     }
     return lots;

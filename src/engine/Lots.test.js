@@ -47,6 +47,14 @@ test('Lot-Data Items', () => {
     const lotsBack = L.getLots(jsonDataItems);
     expect(lotsBack).toEqual(lots);
 
-    expect(L.getLotDataItems(lotDataItems, true) === lotDataItems).toBeTruthy();
+    expect(L.getLotDataItems(lotDataItems) === lotDataItems).toBeTruthy();
     expect(L.getLots(lots) === lots).toBeTruthy();
+
+
+    // Test alwaysCopy
+    expect(L.getLotDataItems(lotDataItems, true) === lotDataItems).toBeFalsy();
+    expect(L.getLotDataItems(lotDataItems, true)).toEqual(lotDataItems);
+
+    expect(L.getLots(lots, true) === lots).toBeFalsy();
+    expect(L.getLots(lots, true)).toEqual(lots);
 });
