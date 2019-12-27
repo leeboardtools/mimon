@@ -5,6 +5,7 @@ import * as A from './Accounts';
 import * as PI from './PricedItems';
 import { getDecimalDefinition } from '../util/Quantities';
 import { InMemoryPricesHandler } from './Prices';
+import { InMemoryTransactionsHandler } from './Transactions';
 
 
 //
@@ -26,7 +27,7 @@ export async function asyncCreateAccountingSystem(options) {
             },
 
             transactionManager: {
-
+                handler: new InMemoryTransactionsHandler(),
             },
         },
         options);

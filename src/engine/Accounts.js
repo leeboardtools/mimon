@@ -308,6 +308,7 @@ export function getAccount(accountDataItem, alwaysCopy) {
  * is already an {@link AccountDataItem}
  * @param {(Account|AccountDataItem)} account 
  * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @returns {AccountDataItem}
  */
 export function getAccountDataItem(account, alwaysCopy) {
     if (account) {
@@ -326,9 +327,9 @@ export function getAccountDataItem(account, alwaysCopy) {
 }
 
 /**
- * Performs a deep copy of either an {@link Account} or an {@link AccountDataItem}
- * @param {{Account|AccountDataItem}} account 
- * @returns {(Account|AccountDataItem)}
+ * Performs a deep copy of either an {@link Account} or an {@link AccountDataItem}.
+ * @param {(Account|AccountDataItem)} account 
+ * @returns {(Account|AccountDataItem)} The type returned is the same as the arg.
  */
 export function deepCopyAccount(account) {
     const accountDataItem = getAccountDataItem(account);

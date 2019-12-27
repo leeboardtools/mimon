@@ -75,5 +75,11 @@
     "PricedItemManager-modify_no_id": ["The priced item could not be modified. An item with id '", "' was not found."],
     "PricedItemManager-modify_type_change": "The priced item could not be modified. The type cannot be changed.",
 
+
+    "ReconcileState-NOT_RECONCILED": "Not reconciled",
+    "ReconcileState-PENDING": "Pending",
+    "ReconcileState-RECONCILED": "Reconciled",
+    
+
     "": ""
 }

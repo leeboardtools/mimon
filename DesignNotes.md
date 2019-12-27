@@ -120,12 +120,12 @@ The main transaction data item. A transaction has the following properties:
 - [YMDDate](#ymddate)
 - Description (optional)
 - Memo (optional)
-- [AccountEntry](#accountentry)[]
+- [Split](#split)[]
 
 Transactions are managed by a [TransactionManager](#transactionmanager)
 
 
-### AccountEntry
+### Split
 The data item used to define the involvement of an account in a transaction. In any one transaction there may be multiple entries referring to the same account. Entries have the following properties:
 - AccountId
 - quantity (probably a raw quantity value as opposed to a [Quantity](#quantity) object)
@@ -144,7 +144,7 @@ The data item used to define a loat. A lot has the following properties:
 - Quantity (probably a raw quantity value as opposed to a [Quantity](#quantity) object)
 - CostBasis (probably a raw quantity value as opposed to a [Quantity](#quantity) object)
 
-Lots are not manaaged, they are stored directly in AccountEntry and AccountState data items.
+Lots are not manaaged, they are stored directly in [Split](#split) and [AccountState](#accountstate) data items.
 
 
 ### PricedItem

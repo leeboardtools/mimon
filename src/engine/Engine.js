@@ -4,7 +4,7 @@ import { setUserSettingsPathName } from '../util/UserSettings';
 //import { AccountingSystem } from './AccountingSystem';
 import { loadAccountsUserMessages } from './Accounts';
 import { loadPricedItemUserMessages } from './PricedItems';
-//import { loadTransactionsUserMessages } from './Transactions';
+import { loadTransactionsUserMessages } from './Transactions';
 //import { loadPricesUserMessages } from './Prices';
 
 const path = require('path');
@@ -31,7 +31,7 @@ export async function initializeEngine(settingsPathName) {
 
     loadAccountsUserMessages();
     loadPricedItemUserMessages();
-    //loadTransactionsUserMessages();
+    loadTransactionsUserMessages();
     //loadPricesUserMessages();
 
     //fileFactories.push(new JSONGzipAccountingFileFactory());
