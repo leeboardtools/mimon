@@ -16,5 +16,6 @@ This project incorporates the following (I may have missed some projects, especi
 - [ESLint](https://eslint.org/)
 - [Bootstrap](https://getbootstrap.com/)
 - [deep-equal](https://www.npmjs.com/package/deep-equal) for performing deep object comparisons.
+- [Node yahoo-finance](https://www.npmjs.com/package/yahoo-finance) for retrieving stock quotes from Yahoo.
 - [uuid](https://github.com/kelektiv/node-uuid#readme) for generating UUIDs.
 
