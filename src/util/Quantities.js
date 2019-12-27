@@ -431,6 +431,15 @@ class QuantityDefinition {
     }
 
     /**
+     * Converts a number to the base value and then back, effectively cleaning it up.
+     * @param {number} number 
+     * @returns {number}
+     */
+    cleanupNumber(number) {
+        return this.baseValueToNumber(this.numberToBaseValue(number));
+    }
+
+    /**
      * Returns a text representation of the numerical value of a quantity. The text represntation can be
      * parsed back via {@link QuantityDefinition#fromValueText} into an equivalent quantity.
      * @param {number} baseValue
