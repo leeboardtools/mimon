@@ -366,7 +366,7 @@ export class AccountManager {
         this._accountingSystem = accountingSystem;
         this._handler = options.handler;
         
-        this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorState());
+        this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorOptions());
 
         this._accountsById = new Map();
         this._accountsByRefId = new Map();
@@ -543,7 +543,7 @@ export class AccountManager {
 
         const id = this._idGenerator.generateId();
         accountDataItem.id = id;
-        const idGeneratorState = this._idGenerator.toJSON();
+        const idGeneratorOptions = this._idGenerator.toJSON();
 
         const updatedAccountEntries = [];
         updatedAccountEntries.push([id, accountDataItem]);
@@ -570,7 +570,7 @@ export class AccountManager {
         });
 
 
-        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries, idGeneratorState);
+        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries, idGeneratorOptions);
 
         updatedAccountEntries.forEach(([id, accountDataItem]) => {
             this._accountsById.set(id, accountDataItem);
@@ -912,8 +912,8 @@ export class AccountsHandler {
     /**
      * @returns {NumericIdGenerator~Options}    The id generator options for initializing the id generator.
      */
-    getIdGeneratorState() {
-        throw Error('AccountsHandler.getIdGeneratorState() abstract method!');
+    getIdGeneratorOptions() {
+        throw Error('AccountsHandler.getIdGeneratorOptions() abstract method!');
     }
 
 
@@ -922,10 +922,10 @@ export class AccountsHandler {
      * modifying or deleting one account may affect other accounts, so those accounts must also be deleted at the same time.
      * @param {*} accountIdAndDataItemPairs Array of one or two element sub-arrays. The first element of each sub-array is the account id.
      * For new or modified accounts, the second element is the new data item. For accounts to be deleted, this is <code>undefined</code>.
-     * @param {NumericIdGenerator~Options|undefined}  idGeneratorState    The current state of the id generator, if <code>undefined</code>
+     * @param {NumericIdGenerator~Options|undefined}  idGeneratorOptions    The current state of the id generator, if <code>undefined</code>
      * the generator state hasn't changed.
      */
-    async asyncUpdateAccountDataItems(accountIdAndDataItemPairs, idGeneratorState) {
+    async asyncUpdateAccountDataItems(accountIdAndDataItemPairs, idGeneratorOptions) {
         throw Error('AccountsHandler.asyncUpdateAccountDataItems() abstract method!');
     }
 
@@ -951,12 +951,12 @@ export class InMemoryAccountsHandler extends AccountsHandler {
         return Array.from(this._accountsById.values());
     }
 
-    getIdGeneratorState() {
-        return this._idGeneratorState;
+    getIdGeneratorOptions() {
+        return this._idGeneratorOptions;
     }
 
 
-    async asyncUpdateAccountDataItems(accountIdAndDataItemPairs, idGeneratorState) {
+    async asyncUpdateAccountDataItems(accountIdAndDataItemPairs, idGeneratorOptions) {
         accountIdAndDataItemPairs.forEach(([id, accountDataItem]) => {
             if (!accountDataItem) {
                 this._accountsById.delete(id);
@@ -966,8 +966,8 @@ export class InMemoryAccountsHandler extends AccountsHandler {
             }
         });
 
-        if (idGeneratorState) {
-            this._idGeneratorState = idGeneratorState;
+        if (idGeneratorOptions) {
+            this._idGeneratorOptions = idGeneratorOptions;
         }
     }
 

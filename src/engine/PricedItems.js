@@ -228,7 +228,7 @@ export class PricedItemManager {
         this._accountingSystem = accountingSystem;
         this._handler = options.handler;
         
-        this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorState());
+        this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorOptions());
 
         this._currencyPricedItemIdsByCurrency = new Map();
         this._pricedItemsById = new Map();
@@ -324,10 +324,10 @@ export class PricedItemManager {
         
         const id = this._idGenerator.generateId();
         pricedItemData.id = id;
-        const idGeneratorState = this._idGenerator.toJSON();
+        const idGeneratorOptions = this._idGenerator.toJSON();
 
         const updatedDataItems = [[id, pricedItemData]];
-        await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems, idGeneratorState);
+        await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems, idGeneratorOptions);
 
         this._pricedItemsById.set(id, pricedItemData);
 
@@ -570,8 +570,8 @@ export class PricedItemsHandler {
     /**
      * @returns {NumericIdGenerator~Options}    The id generator options for initializing the id generator.
      */
-    getIdGeneratorState() {
-        throw Error('PricedItemsHandler.getIdGeneratorState() abstract method!');
+    getIdGeneratorOptions() {
+        throw Error('PricedItemsHandler.getIdGeneratorOptions() abstract method!');
     }
 
 
@@ -579,10 +579,10 @@ export class PricedItemsHandler {
      * Main function for updating the priced item data items.
      * @param {*} idPricedItemDataItemPairs Array of one or two element sub-arrays. The first element of each sub-array is the priced item id.
      * For new or modified priced items, the second element is the new data item. For priced items to be deleted, this is <code>undefined</code>.
-     * @param {NumericIdGenerator~Options|undefined}  idGeneratorState    The current state of the id generator, if <code>undefined</code>
+     * @param {NumericIdGenerator~Options|undefined}  idGeneratorOptions    The current state of the id generator, if <code>undefined</code>
      * the generator state hasn't changed.
      */
-    async asyncUpdatePricedItemDataItems(idPricedItemDataItemPairs, idGeneratorState) {
+    async asyncUpdatePricedItemDataItems(idPricedItemDataItemPairs, idGeneratorOptions) {
         throw Error('PricedItemsHandler.modifyPricedItem() abstract method!');
     }
 
@@ -609,11 +609,11 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
         return Array.from(this._pricedItemsById.values());
     }
 
-    getIdGeneratorState() {
-        return this._idGeneratorState;
+    getIdGeneratorOptions() {
+        return this._idGeneratorOptions;
     }
 
-    async asyncUpdatePricedItemDataItems(idPricedItemDataItemPairs, idGeneratorState) {
+    async asyncUpdatePricedItemDataItems(idPricedItemDataItemPairs, idGeneratorOptions) {
         idPricedItemDataItemPairs.forEach(([id, pricedItemDataItem]) => {
             if (!pricedItemDataItem) {
                 this._pricedItemsById.delete(id);
@@ -623,8 +623,8 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
             }
         });
 
-        if (idGeneratorState) {
-            this._idGeneratorState = idGeneratorState;
+        if (idGeneratorOptions) {
+            this._idGeneratorOptions = idGeneratorOptions;
         }
     }
 
