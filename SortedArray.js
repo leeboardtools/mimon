@@ -22,10 +22,20 @@ export class SortedArray {
 
     /**
      * @constructor
-     * @param {bSearchCompare} compare The binary search comparison function.
+     * @param {(bSearchCompare|SortedArray)} compare The binary search comparison function. This may also be a {@link SortedArray},
+     * in which case a shallow copy of the sorted array is made and the options arg is ignored.
      * @param {SortedArray~Options} [options]
      */
     constructor(compare, options) {
+        if (compare instanceof SortedArray) {
+            const other = compare;
+            this._compare = other._compare;
+            this._duplicates = other._duplicates;
+            this._keyCallback = other._keyCallback;
+            this._array = Array.from(other._array);
+            return;
+        }
+
         options = options || {};
 
         this._compare = compare;
