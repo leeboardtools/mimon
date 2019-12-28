@@ -56,4 +56,9 @@ test('SortedArray', () => {
     expect(arrayDupl.indexLE('def')).toEqual(1);
     expect(arrayDupl.indexGE('def')).toEqual(2);
     expect(arrayDupl.indexGE('deg')).toEqual(3);
+
+
+    
+    const arrayClone = new SortedArray(arrayDupl);
+    expect(arrayClone).toEqual(arrayDupl);
 });
