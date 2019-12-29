@@ -79,7 +79,17 @@
     "ReconcileState-NOT_RECONCILED": "Not reconciled",
     "ReconcileState-PENDING": "Pending",
     "ReconcileState-RECONCILED": "Reconciled",
-    
+
+    "TransactionManager-date_required": "Transactions must have a date.",
+    "TransactionManager~need_at_least_2_splits": "Transactions must have at least two split entries.",
+    "TransactionManager~split_account_not_found": ["An account with id '", "' was not found."],
+    "TransactionManager~split_priced_item_not_found": ["The priced item with id '", "', for account with id '", "', was not found."],
+    "TransactionManager~split_needs_currency_price": ["The split with currency '", "' requires a price in USD."],
+    "TransactionManager~splits_dont_add_up": ["The splits do not add up, there is a difference of ", "."],
+    "TransactionManager~split_needs_lots": ["Splits for accounts of type '", "' require lots."],
+    "TransactionManager-split_lot_not_in_account": ["The split's lot to change '", "' was not found in the account's list of lots."],
+    "TransactionManager-remove_invalid_id": ["A transaction with id '", "' was not found."],
+    "TransactionManager~modify_id_not_found": ["A transaction with id '", "' was not found."],
 
     "": ""
 }

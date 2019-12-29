@@ -417,6 +417,8 @@ export class PricedItemManager {
      * @param {(string|Currency)} currency 
      * @param {boolean} validateOnly 
      * @param {PricedItemDataItem} options 
+     * @returns {PricedItemDataItem}
+     * @throws {Error}
      */
     async asyncAddCurrencyPricedItem(currency, validateOnly, options) {
         const pricedItem = Object.assign({}, options);

@@ -4,7 +4,10 @@ import { getLotDataItems, getLots } from './Lots';
 import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 import { SortedArray } from '../util/SortedArray';
 import { doSetsHaveSameElements } from '../util/DoSetsHaveSameElements';
-
+import * as A from './Accounts';
+import * as PI from './PricedItems';
+import { getCurrency } from '../util/Currency';
+import { getRatio, getRatioJSON } from '../util/Ratios';
 
 
 /**
@@ -87,6 +90,8 @@ export function getLotChanges(lotChangeDataItems, alwaysCopy) {
  * @property {string}   reconcileState  The name property of the {@link ReconcileState} of the row.
  * @property {number}   accountId   The account to which the row applies.
  * @property {number}   quantityBaseValue   The base value for the amount to apply to the account.
+ * @property {number|number[]} [currencyToUSDRatio]  Only required if there is a currency conversion between the items in the split
+ * and this split's currency is not USD, this is either the price, or a numerator/denominator pair for the price {@link Ratio}.
  * @property {LotDataItem[][]}    [lotChanges]    Array of two element sub-arrays. The first element of each sub-array
  * represents the new state of the lot, the second element is the existing state of the lot. If a new lot is
  * being added the second element will be <code>undefined</code>. If a lot is being removed, the first
@@ -101,7 +106,9 @@ export function getLotChanges(lotChangeDataItems, alwaysCopy) {
  * @property {ReconcileState}   reconcileState  The {@link ReconcileState} of the row.
  * @property {number}   accountId   The account to which the row applies.
  * @property {number}   quantityBaseValue   The base value for the amount to apply to the account.
- * @property {Lot[][]}    [lots]    Array of two element sub-arrays. The first element of each sub-array
+ * @property {Ratio}    [currencyToUSDRatio]  Only required if there is a currency conversion between the items in the split
+ * and this split's currency is not USD, this is the {@Ratio} representing the currency price in USD.
+ * @property {Lot[][]}    [lotChanges]    Array of two element sub-arrays. The first element of each sub-array
  * represents the new state of the lot, the second element is the existing state of the lot. If a new lot is
  * being added the second element will be <code>undefined</code>. If a lot is being removed, the first
  * element will be <code>undefined</code>
@@ -121,12 +128,15 @@ export function getSplitDataItem(split, alwaysCopy) {
     if (split) {
         const reconcileStateName = getReconcileStateName(split.reconcileState);
         const lotChangeDataItems = getLotChangeDataItems(split.lotChanges, alwaysCopy);
+        const currencyToUSDRatioJSON = getRatioJSON(split.currencyToUSDRatio);
         if (alwaysCopy
          || (reconcileStateName !== split.reconcileState)
-         || (lotChangeDataItems !== split.lotChanges)) {
+         || (lotChangeDataItems !== split.lotChanges)
+         || (currencyToUSDRatioJSON !== split.currencyToUSDRatio)) {
             const splitDataItem = Object.assign({}, split);
             splitDataItem.reconcileState = reconcileStateName;
             splitDataItem.lotChanges = lotChangeDataItems;
+            splitDataItem.currencyToUSDRatio = currencyToUSDRatioJSON;
             return splitDataItem;
         }
     }
@@ -145,12 +155,15 @@ export function getSplit(splitDataItem, alwaysCopy) {
     if (splitDataItem) {
         const reconcileState = getReconcileState(splitDataItem.reconcileState);
         const lotChanges = getLotChanges(splitDataItem.lotChanges, alwaysCopy);
+        const currencyToUSDRatio = getRatio(splitDataItem.currencyToUSDRatio);
         if (alwaysCopy
          || (reconcileState !== splitDataItem.reconcileState)
-         || (lotChanges !== splitDataItem.lotChanges)) {
+         || (lotChanges !== splitDataItem.lotChanges)
+         || (currencyToUSDRatio !== splitDataItem.currencyToUSDRatio)) {
             const split = Object.assign({}, splitDataItem);
             split.reconcileState = reconcileState;
             split.lotChanges = lotChanges;
+            split.currencyToUSDRatio = currencyToUSDRatio;
             return split;
         }
     }
@@ -279,6 +292,8 @@ export class TransactionManager {
         this._handler = options.handler;
         
         this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorOptions());
+
+        this._transactionIds = new Set(this._handler.getTransactionIds());
     }
 
     async asyncSetupForUse() {
@@ -326,14 +341,134 @@ export class TransactionManager {
      * then an array is returned, any ids that did not have a transaction have their corresponding element set to
      * <code>undefined</code>.
      */
-    async asyncGetTransactionDataItemWithIds(ids) {
+    async asyncGetTransactionDataItemsWithIds(ids) {
         if (!Array.isArray(ids)) {
-            const result = await this.asyncGetTransactionDataItemWithIds([ids]);
+            const result = await this.asyncGetTransactionDataItemsWithIds([ids]);
             return (result) ? result[0] : result;
         }
 
-        return this._handler.asyncGetTransactionDataItemWithIds(ids);
+        return this._handler.asyncGetTransactionDataItemsWithIds(ids);
     }
+
+
+    /**
+     * Validates an array of splits.
+     * @param {Split[]|SplitDataItem[]} splits 
+     * @param {boolean} isModify    If <code>true</code> the splits are for a transaction modify, and any lot changes
+     * will not be verified against the account's currenty state.
+     * @returns {Error|undefined}   Returns an Error if invalid, <code>undefined</code> if valid.
+     */
+    validateSplits(splits, isModify) {
+        if (!splits || (splits.length < 2)) {
+            return userError('TransactionManager~need_at_least_2_splits');
+        }
+
+        // We need to ensure that the sum of the values of the splits add up.
+
+        const accountManager = this._accountingSystem.getAccountManager();
+        const pricedItemManager = this._accountingSystem.getPricedItemManager();
+
+        let creditSumBaseValue = 0;
+        let activeCurrency;
+
+        const splitCurrencies = [];
+        const splitCreditBaseValues = [];
+        let isCurrencyExchange = false;
+
+        splits.forEach((split) => {
+            const accountDataItem = accountManager.getAccountDataItemWithId(split.accountId);
+            const account = A.getAccount(accountDataItem);
+            if (!account) {
+                return userError('TransactionManager~split_account_not_found', split.accountId);
+            }
+
+            const pricedItem = PI.getPricedItem(pricedItemManager.getPricedItemDataItemWithId(account.pricedItemId));
+            if (!pricedItem) {
+                return userError('TransactionManager~split_priced_item_not_found', account.pricedItemId, account.id);
+            }
+
+            const currency = getCurrency(pricedItem.currency);
+            if (!activeCurrency) {
+                activeCurrency = currency;
+            }
+
+            const { creditSign } = account.type.category;
+            const creditBaseValue = creditSign * split.quantityBaseValue;
+
+            splitCurrencies.push(currency);
+            splitCreditBaseValues.push(creditBaseValue);
+
+            isCurrencyExchange = isCurrencyExchange || (currency !== activeCurrency);
+
+
+            if (account.type.hasLots) {
+                if (!split.lotChanges && creditBaseValue) {
+                    return userError('TransactionManager~split_needs_lots', account.type.name);
+                }
+
+                if (!isModify) {
+                    // Make sure any lots to be changed are in fact in the account.
+                    const accountLotStrings = [];
+                    accountDataItem.accountState.lots.forEach((lotDataItem) => {
+                        accountLotStrings.push(JSON.stringify(lotDataItem));
+                    });
+
+                    const { lotChanges } = getSplitDataItem(split);
+                    for (let i = 0; i < lotChanges.length; ++i) {
+                        const lotToChange = lotChanges[i][1];
+                        if (lotToChange) {
+                            const lotString = JSON.stringify(lotToChange);
+                            if (!accountLotStrings.includes(lotString)) {
+                                return userError('TransactionManager-split_lot_not_in_account', lotString);
+                            }
+                        }
+                    }
+                }
+            }
+
+            creditSumBaseValue += creditBaseValue;
+        });
+
+        if (isCurrencyExchange) {
+            // Gotta do this all over, validating the currency prices...
+            const usdCurrency = getCurrency('USD');
+            creditSumBaseValue = 0;
+
+            for (let i = 0; i < splits.length; ++i) {
+                const split = getSplit(splits[i]);
+                const currency = splitCurrencies[i];
+                let creditBaseValue = splitCreditBaseValues[i];
+
+                if (currency !== usdCurrency) {
+                    if (!split.currencyToUSDRatio) {
+                        return userError('TransactionManager~split_needs_currency_price', currency);
+                    }
+                    creditBaseValue = split.currencyToUSDRatio.inverse().applyToNumber(creditBaseValue);
+                }
+
+                creditSumBaseValue += creditBaseValue;
+            }
+        }
+
+        if (creditSumBaseValue !== 0) {
+            activeCurrency = activeCurrency || getCurrency(this._accountingSystem.getBaseCurrency());
+            const excessAmount = activeCurrency.baseValueToString(creditSumBaseValue);
+            return userError('TransactionManager~splits_dont_add_up', excessAmount);
+        }
+    }
+
+
+    _validateTransactionBasics(transactionDataItem, isModify) {
+        if (!transactionDataItem.ymdDate) {
+            return userError('TransactionManager-date_required');
+        }
+
+        const splitsError = this.validateSplits(transactionDataItem.splits, isModify);
+        if (splitsError) {
+            return splitsError;
+        }
+    }
+
 
     /**
      * Adds one or more transactions.
@@ -347,6 +482,39 @@ export class TransactionManager {
         if (!Array.isArray(transactions)) {
             const result = await this.asyncAddTransactions([transactions], validateOnly);
             return result[0];
+        }
+
+        const transactionDataItems = transactions.map((transaction) => getTransactionDataItem(transaction, true));
+        for (let i = 0; i < transactionDataItems.length; ++i) {
+            const error = this._validateTransactionBasics(transactionDataItems[i]);
+            if (error) {
+                throw error;
+            }
+        }
+
+        if (validateOnly) {
+            return transactionDataItems;
+        }
+
+        const idGeneratorOriginal = this._idGenerator.toJSON();
+        try {
+            const transactionIdAndDataItemPairs = [];
+            transactionDataItems.forEach((transactionDataItem) => {
+                const id = this._idGenerator.generateId();
+                transactionDataItem.id = id;
+                transactionIdAndDataItemPairs.push([id, transactionDataItem]);
+            });
+
+            await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs, this._idGenerator.toJSON());
+
+            transactionDataItems.forEach((transactionDataItem) => {
+                this._transactionIds.add(transactionDataItem.id);
+            });
+            return transactionDataItems;
+        }
+        catch (e) {
+            this._idGenerator.fromJSON(idGeneratorOriginal);
+            throw e;
         }
     }
 
@@ -363,7 +531,29 @@ export class TransactionManager {
             const result = await this.asyncRemoveTransactions([transactionIds], validateOnly);
             return result[0];
         }
+
+        const transactionDataItems = await this._handler.asyncGetTransactionDataItemsWithIds(transactionIds);
+        for (let i = transactionDataItems.length - 1; i >= 0; --i) {
+            if (!transactionDataItems[i]) {
+                throw userError('TransactionManager-remove_invalid_id', transactionIds[i]);
+            }
+            transactionDataItems[i] = getTransactionDataItem(transactionDataItems[i], true);
+        }
+
+        if (validateOnly) {
+            return transactionDataItems;
+        }
+
+        const transactionIdAndDataItemPairs = [];
+        transactionIds.forEach((id) => transactionIdAndDataItemPairs.push([id]));
+
+        await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs);
+
+        transactionIds.forEach((id) => this._transactionIds.delete(id));
+
+        return transactionDataItems;
     }
+
 
     /**
      * Modifies one or more transactions.
@@ -378,20 +568,34 @@ export class TransactionManager {
             const result = await this.asyncModifyTransactions([transactions], validateOnly);
             return result[0];
         }
-    }
 
-    async _asyncUpdateTransactions(transactionIdAndDataItemPairs, idGeneratorOptions) {
-        transactionIdAndDataItemPairs.forEach((pair) => {
-            pair[1] = getTransactionDataItem(pair[1]);
-        });
-
-        const result = await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs, idGeneratorOptions);
-        if (result) {
-            for (let i = result.length - 1; i >= 0; --i) {
-                result[i] = getTransactionDataItem(result[i], true);
+        const transactionIds = transactions.map((transaction) => transaction.id);
+        const oldDataItems = await this._handler.asyncGetTransactionDataItemsWithIds(transactionIds);
+        const newDataItems = [];
+        const transactionIdAndDataItemPairs = [];
+        for (let i = 0; i < transactionIds.length; ++i) {
+            const id = transactionIds[i];
+            if (!oldDataItems[i]) {
+                throw userError('TransactionManager~modify_id_not_found', id);
             }
+
+            const newDataItem = Object.assign({}, oldDataItems[i], getTransactionDataItem(transactions[i]));
+            const error = this._validateTransactionBasics(newDataItem, true);
+            if (error) {
+                throw error;
+            }
+
+            newDataItems.push(newDataItem);
+            transactionIdAndDataItemPairs.push([id, newDataItem]);
         }
-        return result;
+
+        if (validateOnly) {
+            return newDataItems;
+        }
+
+        await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs);
+
+        return newDataItems;
     }
 }
 
@@ -408,6 +612,14 @@ export class TransactionsHandler {
     getIdGeneratorOptions() {
         throw Error('TransactionsHandler.getIdGeneratorOptions() abstract method!');
     }
+
+    /**
+     * @returns {number[]}  An array containing all the transaction ids.
+     */
+    getTransactionIds() {
+        throw Error('TransactionsHandler.getTransactionsId() abstract method!');
+    }
+
     
     /**
      * Retrieves the earliest and latest date of either all the transactions or all the transactions that
@@ -437,8 +649,8 @@ export class TransactionsHandler {
      * @param {number[]} ids 
      * @returns {TransactionDataItem[]}
      */
-    async asyncGetTransactionDataItemWithIds(ids) {
-        throw Error('TransactionHandler.asyncGetTransactionDataItemWithIds() abstract method!');
+    async asyncGetTransactionDataItemsWithIds(ids) {
+        throw Error('TransactionHandler.asyncGetTransactionDataItemsWithIds() abstract method!');
     }
 
 
@@ -479,7 +691,7 @@ function entryFromJSON(json) {
         ymdDate: getYMDDate(json.ymdDate),
         id: json.id,
         accountIds: new Set(json.accountIds),
-    }
+    };
 }
 
 
@@ -569,6 +781,10 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         });
     }
 
+    getTransactionIds() {
+        return Array.from(this._entriesById.keys());
+    }
+
     async asyncGetTransactionDateRange(accountId) {
         const sortedEntries = (accountId) ? this._sortedEntriesByAccountId.get(accountId) : this._ymdDateSortedEntries;
         if (sortedEntries && sortedEntries.length) {
@@ -582,16 +798,13 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
             const indexA = sortedEntries.indexGE({ ymdDate: ymdDateA, id: 0 });
             const indexB = sortedEntries.indexLE({ ymdDate: ymdDateB, id: Number.MAX_VALUE });
             const ids = sortedEntries.getValues().slice(indexA, indexB + 1).map((entry) => entry.id);
-            return this.asyncGetTransactionDataItemWithIds(ids);
+            return this.asyncGetTransactionDataItemsWithIds(ids);
         }
 
         return [];
     }
 
     async asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs, idGeneratorOptions) {
-        // Create updated sortedEntriesByAccountId and sortedEntries objects.
-        // Write out everything.
-        // Update _sortedEntriesByAccountId and _sortedEntries.
         const entryChanges = [];
         transactionIdAndDataItemPairs.forEach(([id, dataItem]) => {
             const oldEntry = this._entriesById.get(id);
@@ -735,7 +948,7 @@ export class InMemoryTransactionsHandler extends TransactionsHandlerImplBase {
         return this._idGeneratorOptions;
     }
 
-    async asyncGetTransactionDataItemWithIds(ids) {
+    async asyncGetTransactionDataItemsWithIds(ids) {
         const result = [];
         ids.forEach((id) => {
             const pair = this._dataItemEntryPairsById.get(id);
