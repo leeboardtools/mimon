@@ -234,7 +234,7 @@ export class PricedItemManager {
         this._pricedItemsById = new Map();
         this._requiredCurrencyPricedItemIds = new Set();
 
-        const pricedItems = this._handler.getPricedItems();
+        const pricedItems = this._handler.getPricedItemDataItems();
         pricedItems.forEach((pricedItem) => {
             this._pricedItemsById.set(pricedItem.id, pricedItem);
             if (pricedItem.type === PricedItemType.CURRENCY.name) {
@@ -563,8 +563,8 @@ export class PricedItemsHandler {
      * to already be loaded when the {@link PricedItemManager} is constructed.
      * @returns {PricedItemDataItem[]}
      */
-    getPricedItems() {
-        throw Error('PricedItemsHandler.getPricedItems() abstract method!');
+    getPricedItemDataItems() {
+        throw Error('PricedItemsHandler.getPricedItemDataItems() abstract method!');
     }
 
     /**
@@ -596,17 +596,34 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
     constructor(pricedItems) {
         super();
 
-        this._pricedItemsById = new Map();
+        this._pricedItemDataItemsById = new Map();
 
         if (pricedItems) {
             pricedItems.forEach((pricedItem) => {
-                this._pricedItemsById.set(pricedItem.id, pricedItem);
+                this._pricedItemDataItemsById.set(pricedItem.id, pricedItem);
             });
         }
     }
 
-    getPricedItems() {
-        return Array.from(this._pricedItemsById.values());
+    toJSON() {
+        return {
+            idGeneratorOptions: this._idGeneratorOptions,
+            pricedItems: Array.from(this._pricedItemDataItemsById.values()),
+        };
+    }
+
+    fromJSON(json) {
+        this._idGeneratorOptions = json.idGeneratorOptions;
+
+        this._pricedItemDataItemsById.clear();
+        json.pricedItems.forEach((pricedItemDataItem) => {
+            this._pricedItemDataItemsById.set(pricedItemDataItem.id, pricedItemDataItem);
+        });
+    }
+
+
+    getPricedItemDataItems() {
+        return Array.from(this._pricedItemDataItemsById.values());
     }
 
     getIdGeneratorOptions() {
@@ -616,10 +633,10 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
     async asyncUpdatePricedItemDataItems(idPricedItemDataItemPairs, idGeneratorOptions) {
         idPricedItemDataItemPairs.forEach(([id, pricedItemDataItem]) => {
             if (!pricedItemDataItem) {
-                this._pricedItemsById.delete(id);
+                this._pricedItemDataItemsById.delete(id);
             }
             else {
-                this._pricedItemsById.set(id, pricedItemDataItem);
+                this._pricedItemDataItemsById.set(id, pricedItemDataItem);
             }
         });
 

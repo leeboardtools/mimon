@@ -761,4 +761,19 @@ test('AccountManager-removeAccount', async () => {
 
     expect(accountManager.getAccountDataItemWithId(sys.aaplIRAId).parentAccountId).toEqual(newIRAId);
     expect(accountManager.getAccountDataItemWithId(sys.tibexIRAId).parentAccountId).toEqual(newIRAId);
+
+
+    //
+    // Test JSON.
+    const handlerA = accountManager._handler;
+    const jsonString = JSON.stringify(handlerA);
+    const json = JSON.parse(jsonString);
+    const handlerB = new A.InMemoryAccountsHandler();
+    handlerB.fromJSON(json);
+
+    expect(handlerB.getIdGeneratorOptions()).toEqual(handlerA.getIdGeneratorOptions());
+
+    const accountDataItemsA = Array.from(handlerA.getAccountDataItems()).sort();
+    const accountDataItemsB = Array.from(handlerB.getAccountDataItems()).sort();
+    expect(accountDataItemsB).toEqual(accountDataItemsA);
 });

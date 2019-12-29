@@ -224,4 +224,32 @@ test('PriceManager', async () => {
     expect(await manager.asyncRemovePricesInDateRange(2, '2018-12-24')).toEqual([]);
 
     expect(await manager.asyncGetPriceDateRange(2)).toEqual([new YMDDate('2018-01-25'), new YMDDate('2018-12-23')]);
+
+
+    //
+    // Test JSON:
+    const handlerA = manager._handler;
+    const jsonString = JSON.stringify(handlerA);
+    const json = JSON.parse(jsonString);
+
+    const handlerB = new P.InMemoryPricesHandler();
+    expect(handlerB._sortedPricesByPricedItemId).not.toEqual(handlerA._sortedPricesByPricedItemId);
+
+    handlerB.fromJSON(json);
+
+    const itemsA = Array.from(handlerA._sortedPricesByPricedItemId.entries()).sort((a, b) => a[0] - b[0]);
+    const itemsB = Array.from(handlerB._sortedPricesByPricedItemId.entries()).sort((a, b) => a[0] - b[0]);
+    itemsA.forEach((pair) => {
+        pair[1] = pair[1].toJSON();
+    });
+    itemsB.forEach((pair) => {
+        pair[1] = pair[1].toJSON();
+    });
+    const xA = JSON.stringify(itemsA);
+    const xB = JSON.stringify(itemsB);
+    expect(xB).toEqual(xA);
+
+
+
+    expect(itemsB).toEqual(itemsA);
 });

@@ -62,6 +62,10 @@ export class SortedArray {
         }
     }
 
+    toJSON() {
+        return this._array;
+    }
+
     /**
      * @returns {number}    The number of elements in the array.
      */

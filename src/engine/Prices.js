@@ -197,6 +197,19 @@ export class InMemoryPricesHandler extends PricesHandler {
         this._sortedPricesByPricedItemId = new Map();
     }
 
+    toJSON() {
+        return {
+            pricedItemIdAndPrices: Array.from(this._sortedPricesByPricedItemId.entries()),
+        };
+    }
+
+    fromJSON(json) {
+        this._sortedPricesByPricedItemId.clear();
+        json.pricedItemIdAndPrices.forEach(([pricedItemId, priceDataItems]) => {
+            this._asyncAddPriceDataItems(pricedItemId, priceDataItems);
+        });
+    }
+
     async asyncGetPriceDateRange(pricedItemId) {
         const entry = this._sortedPricesByPricedItemId.get(pricedItemId);
         if (entry && entry.length > 0) {
@@ -214,7 +227,7 @@ export class InMemoryPricesHandler extends PricesHandler {
         return [];
     }
 
-    async asyncAddPriceDataItems(pricedItemId, priceDataItems) {
+    _asyncAddPriceDataItems(pricedItemId, priceDataItems) {
         let entry = this._sortedPricesByPricedItemId.get(pricedItemId);
         if (!entry) {
             entry = new SortedArray((a, b) => YMDDate.compare(a.ymdDate, b.ymdDate), { duplicates: 'replace' });
@@ -227,6 +240,11 @@ export class InMemoryPricesHandler extends PricesHandler {
         });
 
         return priceDataItems;
+    }
+
+
+    async asyncAddPriceDataItems(pricedItemId, priceDataItems) {
+        return this._asyncAddPriceDataItems(pricedItemId, priceDataItems);
     }
 
     async asyncRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB) {

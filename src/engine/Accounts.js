@@ -371,7 +371,7 @@ export class AccountManager {
         this._accountsById = new Map();
         this._accountsByRefId = new Map();
 
-        const accounts = this._handler.getAccounts();
+        const accounts = this._handler.getAccountDataItems();
         accounts.forEach((account) => {
             this._accountsById.set(account.id, account);
 
@@ -901,12 +901,12 @@ export class AccountManager {
  */
 export class AccountsHandler {
     /**
-     * Retrieves an array containing all the accounts. The accounts are presumed
+     * Retrieves an array containing all the account data items. The accounts are presumed
      * to already be loaded when the {@link AccountManager} is constructed.
      * @returns {AccountDataItem[]}
      */
-    getAccounts() {
-        throw Error('AccountsHandler.getAccounts() abstract method!');
+    getAccountDataItems() {
+        throw Error('AccountsHandler.getAccountDataItems() abstract method!');
     }
 
     /**
@@ -938,17 +938,33 @@ export class InMemoryAccountsHandler extends AccountsHandler {
     constructor(accounts) {
         super();
 
-        this._accountsById = new Map();
+        this._accountDataItemsById = new Map();
 
         if (accounts) {
             accounts.forEach((pricedItem) => {
-                this._accountsById.set(pricedItem.id, pricedItem);
+                this._accountDataItemsById.set(pricedItem.id, pricedItem);
             });
         }
     }
 
-    getAccounts() {
-        return Array.from(this._accountsById.values());
+    toJSON() {
+        return {
+            idGeneratorOptions: this._idGeneratorOptions,
+            accounts: Array.from(this._accountDataItemsById.values()),
+        };
+    }
+
+    fromJSON(json) {
+        this._idGeneratorOptions = json.idGeneratorOptions;
+
+        this._accountDataItemsById.clear();
+        json.accounts.forEach((accountDataItem) => {
+            this._accountDataItemsById.set(accountDataItem.id, accountDataItem);
+        });
+    }
+
+    getAccountDataItems() {
+        return Array.from(this._accountDataItemsById.values());
     }
 
     getIdGeneratorOptions() {
@@ -959,10 +975,10 @@ export class InMemoryAccountsHandler extends AccountsHandler {
     async asyncUpdateAccountDataItems(accountIdAndDataItemPairs, idGeneratorOptions) {
         accountIdAndDataItemPairs.forEach(([id, accountDataItem]) => {
             if (!accountDataItem) {
-                this._accountsById.delete(id);
+                this._accountDataItemsById.delete(id);
             }
             else {
-                this._accountsById.set(id, accountDataItem);
+                this._accountDataItemsById.set(id, accountDataItem);
             }
         });
 

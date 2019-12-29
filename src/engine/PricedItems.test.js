@@ -195,4 +195,19 @@ test('PricedItemManager-other types', async () => {
     const optionsB1 = Object.assign({}, optionsB, changeB1);
     const itemB1 = await manager.asyncModifyPricedItem(changeB1);
     expectPricedItemToMatch(itemB1, optionsB1);
+
+
+
+    // Test JSON
+    const handlerA = manager._handler;
+    const jsonString = JSON.stringify(handlerA);
+    const json = JSON.parse(jsonString);
+    const handlerB = new PI.InMemoryPricedItemsHandler();
+    handlerB.fromJSON(json);
+
+    expect(handlerB.getIdGeneratorOptions()).toEqual(handlerA.getIdGeneratorOptions());
+
+    const pricedItemsA = Array.from(handlerA.getPricedItemDataItems()).sort();
+    const pricedItemsB = Array.from(handlerB.getPricedItemDataItems()).sort();
+    expect(pricedItemsB).toEqual(pricedItemsA);
 });
