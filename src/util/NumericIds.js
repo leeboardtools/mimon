@@ -19,14 +19,8 @@ export class NumericIdGenerator {
         return { lastId: this._lastId, };
     }
 
-    /**
-     * Converts a JSON object compatible with {@link NumericIdGenerator~toJSON()} to a
-     * {@link NumericIdGenerator}.
-     * @param {object} json The JSON object to convert.
-     * @returns {(NumericIdGenerator|undefined)}    Returns <code>undefined</code> if json is <code>undefined</code>.
-     */
-    static fromJSON(json) {
-        return (json) ? new NumericIdGenerator(json) : undefined;
+    fromJSON(json) {
+        this._lastId = (json && json.lastId) ? json.lastId : 0;
     }
 
     /**
