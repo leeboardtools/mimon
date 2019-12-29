@@ -122,6 +122,18 @@ export class PriceManager {
 
 
     /**
+     * Retrieves the price data item for a priced item that is on or closest to but after a particular date.
+     * @param {number} pricedItemId 
+     * @param {YMDDate|string} ymdDate 
+     * @returns {PriceDataItem|undefined}
+     */
+    async asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
+        ymdDate = getYMDDate(ymdDate);
+        return this._handler.asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, ymdDate);
+    }
+
+
+    /**
      * Adds prices for a priced item. Existing prices with the same dates are replaced.
      * @param {number} pricedItemId 
      * @param {(Price|PriceDataItem|Price[]|PriceDataItem[])} prices 
@@ -185,6 +197,16 @@ export class PricesHandler {
      */
     async asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
         throw Error('PricesHandler.asyncGetPriceDataItemOnOrClosestBefore() abstract method!');
+    }
+
+    /**
+     * Retrieves the price data item for a priced item that is on or closest to but after a particular date.
+     * @param {number} pricedItemId 
+     * @param {YMDDate|string} ymdDate 
+     * @returns {PriceDataItem|undefined}
+     */
+    async asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
+        throw Error('PricesHandler.asyncGetPriceDataItemOnOrClosestAfter() abstract method!');
     }
 
 
@@ -254,6 +276,14 @@ export class InMemoryPricesHandler extends PricesHandler {
         const entry = this._sortedPricesByPricedItemId.get(pricedItemId);
         if (entry && entry.length > 0) {
             const index = entry.indexLE({ ymdDate: ymdDate });
+            return getPriceDataItem(entry.at(index));
+        }
+    }
+
+    async asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
+        const entry = this._sortedPricesByPricedItemId.get(pricedItemId);
+        if (entry && entry.length > 0) {
+            const index = entry.indexGE({ ymdDate: ymdDate });
             return getPriceDataItem(entry.at(index));
         }
     }

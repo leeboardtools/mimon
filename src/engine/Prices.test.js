@@ -198,9 +198,25 @@ test('PriceManager', async () => {
 
     //
     // On or before
+    expect(await manager.asyncGetPriceDataItemOnOrClosestBefore(1, '2017-04-04')).toBeUndefined();
+    expect(await manager.asyncGetPriceDataItemOnOrClosestBefore(1, '2017-04-05')).toEqual({ ymdDate: '2017-04-05', close: 98.75, open: 87.65, });
     expect(await manager.asyncGetPriceDataItemOnOrClosestBefore(1, '2018-04-06')).toEqual({ ymdDate: '2018-04-06', close: 91.09, open: 89.98, });
     expect(await manager.asyncGetPriceDataItemOnOrClosestBefore(1, '2018-04-07')).toEqual({ ymdDate: '2018-04-07', close: 91.19, open: 89.91, });
     expect(await manager.asyncGetPriceDataItemOnOrClosestBefore(1, '2018-04-08')).toEqual({ ymdDate: '2018-04-07', close: 91.19, open: 89.91, });
+    expect(await manager.asyncGetPriceDataItemOnOrClosestBefore(1, '2018-12-24')).toEqual({ ymdDate: '2018-12-24', close: 123.32});
+    expect(await manager.asyncGetPriceDataItemOnOrClosestBefore(1, '2018-12-25')).toEqual({ ymdDate: '2018-12-24', close: 123.32});
+
+
+    //
+    // On or after
+    expect(await manager.asyncGetPriceDataItemOnOrClosestAfter(1, '2017-04-04')).toEqual({ ymdDate: '2017-04-05', close: 98.75, open: 87.65, });
+    expect(await manager.asyncGetPriceDataItemOnOrClosestAfter(1, '2017-04-05')).toEqual({ ymdDate: '2017-04-05', close: 98.75, open: 87.65, });
+    expect(await manager.asyncGetPriceDataItemOnOrClosestAfter(1, '2018-04-06')).toEqual({ ymdDate: '2018-04-06', close: 91.09, open: 89.98, });
+    expect(await manager.asyncGetPriceDataItemOnOrClosestAfter(1, '2018-04-07')).toEqual({ ymdDate: '2018-04-07', close: 91.19, open: 89.91, });
+    expect(await manager.asyncGetPriceDataItemOnOrClosestAfter(1, '2018-04-08')).toEqual({ ymdDate: '2018-12-21', close: 123.45 });
+    expect(await manager.asyncGetPriceDataItemOnOrClosestAfter(1, '2018-12-24')).toEqual({ ymdDate: '2018-12-24', close: 123.32});
+    expect(await manager.asyncGetPriceDataItemOnOrClosestAfter(1, '2018-12-25')).toBeUndefined();
+
 
     // Prices for priced item 2 are:
     //  { ymdDate: '2018-01-23', close: 123.45 },
