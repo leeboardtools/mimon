@@ -135,8 +135,12 @@ export function getSplitDataItem(split, alwaysCopy) {
          || (currencyToUSDRatioJSON !== split.currencyToUSDRatio)) {
             const splitDataItem = Object.assign({}, split);
             splitDataItem.reconcileState = reconcileStateName;
-            splitDataItem.lotChanges = lotChangeDataItems;
-            splitDataItem.currencyToUSDRatio = currencyToUSDRatioJSON;
+            if (lotChangeDataItems) {
+                splitDataItem.lotChanges = lotChangeDataItems;
+            }
+            if (currencyToUSDRatioJSON) {
+                splitDataItem.currencyToUSDRatio = currencyToUSDRatioJSON;
+            }
             return splitDataItem;
         }
     }
@@ -162,8 +166,12 @@ export function getSplit(splitDataItem, alwaysCopy) {
          || (currencyToUSDRatio !== splitDataItem.currencyToUSDRatio)) {
             const split = Object.assign({}, splitDataItem);
             split.reconcileState = reconcileState;
-            split.lotChanges = lotChanges;
-            split.currencyToUSDRatio = currencyToUSDRatio;
+            if (lotChanges) {
+                split.lotChanges = lotChanges;
+            }
+            if (currencyToUSDRatio) {
+                split.currencyToUSDRatio = currencyToUSDRatio;
+            }
             return split;
         }
     }
@@ -309,6 +317,14 @@ export class TransactionManager {
         return YMDDate.orderYMDDatePair(ymdDateA, ymdDateB);
     }
     
+
+    /**
+     * @returns {number[]}  Array of all the transaction ids.
+     */
+    getTransactionIds() {
+        return Array.from(this._handler.getTransactionIds());
+    }
+
 
     /**
      * Retrieves the dates of the earliest and latest transactions, optionally restricted to only the transactions
@@ -952,7 +968,7 @@ export class InMemoryTransactionsHandler extends TransactionsHandlerImplBase {
         const result = [];
         ids.forEach((id) => {
             const pair = this._dataItemEntryPairsById.get(id);
-            result.push(pair[0]);
+            result.push((pair) ? pair[0] : undefined);
         });
         return result;
     }

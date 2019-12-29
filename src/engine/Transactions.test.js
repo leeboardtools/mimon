@@ -455,3 +455,242 @@ test('TransactionManager-validateSplits', async () => {
         { accountId: jpyCashAccountDataItem.id, quantityBaseValue: -1000, currencyToUSDRatio: new Ratio(100, 2000)},
     ])).toBeUndefined();
 });
+
+
+
+//
+//---------------------------------------------------------
+//
+test('TransactionManager-add_modify', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    const { accountingSystem } = sys;
+    const manager = accountingSystem.getTransactionManager();
+
+    const settingsA = {
+        ymdDate: '2019-10-05',
+        splits: [
+            { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 10000, },
+            { accountId: sys.checkingId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: -10000, },
+        ]
+    };
+    const transactionA = await manager.asyncAddTransactions(settingsA);
+    settingsA.id = transactionA.id;
+    expect(transactionA).toEqual(settingsA);
+    expect(await manager.asyncGetTransactionDataItemssInDateRange(0, '2019-10-05')).toEqual([settingsA]);
+    expect(await manager.asyncGetTransactionDataItemssInDateRange(0, '2019-10-04')).toEqual([]);
+    expect(await manager.asyncGetTransactionDataItemssInDateRange(0, '2019-10-06')).toEqual([]);
+    expect(await manager.asyncGetTransactionDataItemssInDateRange(sys.cashId, '2019-10-05')).toEqual([settingsA]);
+    expect(await manager.asyncGetTransactionDateRange(sys.cashId)).toEqual([new YMDDate('2019-10-05'), new YMDDate('2019-10-05')]);
+    expect(await manager.asyncGetTransactionDateRange(sys.checkingId)).toEqual([new YMDDate('2019-10-05'), new YMDDate('2019-10-05')]);
+
+    const settingsB = {
+        ymdDate: '2019-10-10',
+        splits: [
+            { accountId: sys.brokerageAId, reconcileState: T.ReconcileState.RECONCILED.name, quantityBaseValue: 1000000, },
+            { accountId: sys.checkingId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -1000000, },
+        ]
+    };
+
+    const lotC1 = { purchaseYMDDate: '2019-10-11', quantityBaseValue: 12345, costBasisBaseValue: 98765 };
+    const lotC2 = { purchaseYMDDate: '2019-10-12', quantityBaseValue: 98765, costBasisBaseValue: 44455 };
+    const settingsC = {
+        ymdDate: '2019-10-11',
+        splits: [
+            { accountId: sys.brokerageAId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -500000, },
+            { accountId: sys.aaplBrokerageA, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 500000, lotChanges: [[lotC1], [lotC2]]},
+        ]
+    };
+    const [ transactionB, transactionC ] = await manager.asyncAddTransactions([settingsB, settingsC]);
+    settingsB.id = transactionB.id;
+    settingsC.id = transactionC.id;
+    expect(transactionB).toEqual(settingsB);
+    expect(transactionC).toEqual(settingsC);
+
+
+    const settingsD = {
+        ymdDate: '2019-10-20',
+        splits: [
+            { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 20000, },
+            { accountId: sys.checkingId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: -20000, },
+        ]
+    };
+    const transactionD = await manager.asyncAddTransactions(settingsD);
+    settingsD.id = transactionD.id;
+    expect(transactionD).toEqual(settingsD);
+
+
+    const settingsE = {
+        ymdDate: '2019-10-15',
+        splits: [
+            { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 25000, },
+            { accountId: sys.checkingId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: -25000, },
+        ]
+    };
+
+    // Check validate only.
+    const validateE = await manager.asyncAddTransactions(settingsE, true);
+    expect(validateE).toEqual(settingsE);
+    expect(await manager.asyncGetTransactionDataItemssInDateRange(sys.checkingId, '2019-10-15')).toEqual([]);
+
+    await expect(manager.asyncAddTransactions({ splits: []})).rejects.toThrow();
+
+
+    const transactionE = await manager.asyncAddTransactions(settingsE);
+    settingsE.id = transactionE.id;
+    expect(transactionE).toEqual(settingsE);
+
+    expect(await manager.asyncGetTransactionDataItemssInDateRange(sys.checkingId, '2019-10-15', '2019-10-20')).toEqual([
+        transactionE,
+        transactionD,
+    ]);
+    expect(await manager.asyncGetTransactionDateRange(sys.checkingId)).toEqual([new YMDDate('2019-10-05'), new YMDDate('2019-10-20')]);
+
+
+    const settingsF = Object.assign({}, settingsE);
+    const transactionF = await manager.asyncAddTransactions(settingsF);
+    settingsF.id = transactionF.id;
+    expect(transactionF).toEqual(settingsF);
+
+    const resultEF = await manager.asyncGetTransactionDataItemssInDateRange(sys.cashId, '2019-10-15');
+    expect(resultEF).toEqual(expect.arrayContaining([settingsF, settingsE]));
+
+
+    const changesF1 = { id: settingsF.id, description: 'This is description F1', memo: 'This is memo F1', };
+    const settingsF1 = Object.assign({}, settingsF, changesF1);
+    const transactionF1 = await manager.asyncModifyTransactions(changesF1);
+    expect(transactionF1).toEqual(settingsF1);
+
+
+    const changesD1 = {
+        id: settingsD.id,
+        ymdDate: '2019-04-05',
+        splits: [
+            { accountId: sys.brokerageAId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 50000, },
+            { accountId: sys.checkingId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: -50000, },
+        ]
+    };
+    const settingsD1 = Object.assign({}, settingsD, changesD1);
+    
+    const changesE1 = {
+        id: settingsE.id,
+        splits: [
+            { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 25000, },
+            { accountId: sys.checkingId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -25000, },
+        ]
+    };
+    const settingsE1 = Object.assign({}, settingsE, changesE1);
+    const resultDE1 = await manager.asyncModifyTransactions([changesD1, changesE1]);
+    expect(resultDE1).toEqual(expect.arrayContaining([settingsD1, settingsE1]));
+
+    expect(await manager.asyncGetTransactionDateRange(sys.checkingId)).toEqual([ new YMDDate('2019-04-05'), new YMDDate('2019-10-15')]);
+
+
+    // Change validate:
+    await expect(manager.asyncModifyTransactions({id: settingsD.id, splits: []})).rejects.toThrow();
+
+    const changesE2 = {
+        id: settingsE.id,
+        ymdDate: '2019-10-25',
+    };
+    const settingsE2 = Object.assign({}, settingsE1, changesE2);
+    const resultE2 = await manager.asyncModifyTransactions(changesE2, true);
+    expect(resultE2).toEqual(settingsE2);
+    expect(await manager.asyncGetTransactionDataItemsWithIds(settingsE.id)).toEqual(settingsE1);
+
+
+    const settingsG = {
+        ymdDate: '2019-10-20',
+        description: 'This is settings G',
+        splits: [
+            { accountId: sys.checkingId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 55000, },
+            { accountId: sys.salaryId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 100000, },
+            { accountId: sys.federalTaxesId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 20000, },
+            { accountId: sys.stateTaxesId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 10000, },
+            { accountId: sys.medicareTaxesId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 10000, },
+            { accountId: sys.healthInsuranceId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 5000, },
+        ],
+    };
+    const transactionG = await manager.asyncAddTransactions(settingsG);
+    settingsG.id = transactionG.id;
+    expect(transactionG).toEqual(settingsG);
+
+    expect(await manager.asyncGetTransactionDateRange(sys.checkingId)).toEqual([ new YMDDate('2019-04-05'), new YMDDate('2019-10-20')]);
+});
+
+test('TransactionManager~remove', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    const { accountingSystem } = sys;
+    const manager = accountingSystem.getTransactionManager();
+
+    const settingsA = {
+        ymdDate: '2019-10-05',
+        splits: [
+            { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 10000, },
+            { accountId: sys.checkingId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: -10000, },
+        ]
+    };
+    const settingsB = {
+        ymdDate: '2019-10-15',
+        splits: [
+            { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -1000, },
+            { accountId: sys.groceriesId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: 1000, },
+        ]
+    };
+    const settingsC = {
+        ymdDate: '2019-10-10',
+        splits: [
+            { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -2000, },
+            { accountId: sys.householdId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: 2000, },
+        ]
+    };
+    const settingsD = {
+        ymdDate: '2019-10-10',
+        splits: [
+            { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -3000, },
+            { accountId: sys.householdId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: 3000, },
+        ]
+    };
+    const settingsE = {
+        ymdDate: '2019-10-05',
+        splits: [
+            { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -4000, },
+            { accountId: sys.miscId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: 4000, },
+        ]
+    };
+    const resultABCDE = await manager.asyncAddTransactions([settingsA, settingsB, settingsC, settingsD, settingsE ]);
+    settingsA.id = resultABCDE[0].id;
+    settingsB.id = resultABCDE[1].id;
+    settingsC.id = resultABCDE[2].id;
+    settingsD.id = resultABCDE[3].id;
+    settingsE.id = resultABCDE[4].id;
+    expect(resultABCDE).toEqual([settingsA, settingsB, settingsC, settingsD, settingsE ]);
+
+
+    expect(manager.getTransactionIds()).toEqual(expect.arrayContaining([settingsA.id, settingsB.id, settingsC.id, settingsD.id, settingsE.id]));
+    expect(manager.getTransactionIds().length).toEqual(5);
+
+    
+    await expect(manager.asyncRemoveTransactions(-123)).rejects.toThrow();
+    expect(await manager.asyncGetTransactionDateRange(sys.householdId)).toEqual([new YMDDate(settingsD.ymdDate), new YMDDate(settingsD.ymdDate)]);
+
+    const removeD = await manager.asyncRemoveTransactions(settingsD.id);
+    expect(removeD).toEqual(settingsD);
+    expect(await manager.asyncGetTransactionDataItemsWithIds(settingsD.id)).toBeUndefined();
+
+    const removedAE = await manager.asyncRemoveTransactions([settingsA.id, settingsE.id]);
+    expect(removedAE).toEqual([settingsA, settingsE]);
+    expect(await manager.asyncGetTransactionDataItemsWithIds(settingsA.id)).toBeUndefined();
+    expect(await manager.asyncGetTransactionDataItemsWithIds(settingsE.id)).toBeUndefined();
+
+    expect(await manager.asyncGetTransactionDateRange(sys.cashId)).toEqual([new YMDDate(settingsC.ymdDate), new YMDDate(settingsB.ymdDate)]);
+    expect(await manager.asyncGetTransactionDateRange(sys.groceriesId)).toEqual([new YMDDate(settingsB.ymdDate), new YMDDate(settingsB.ymdDate)]);
+
+    expect(manager.getTransactionIds()).toEqual(expect.arrayContaining([settingsC.id, settingsB.id]));
+    expect(manager.getTransactionIds().length).toEqual(2);
+
+
+    const addedAE = await manager.asyncAddTransactions(removedAE);
+    settingsA.id = addedAE[0].id;
+    settingsE.id = addedAE[1].id;
+    expect(addedAE).toEqual([settingsA, settingsE]);
+});
