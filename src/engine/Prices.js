@@ -108,6 +108,19 @@ export class PriceManager {
         return result.map((price) => getPriceDataItem(price, true));
     }
 
+
+    /**
+     * Retrieves the price data item for a priced item that is on or closest to but before a particular date.
+     * @param {number} pricedItemId 
+     * @param {YMDDate|string} ymdDate 
+     * @returns {PriceDataItem|undefined}
+     */
+    async asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
+        ymdDate = getYMDDate(ymdDate);
+        return this._handler.asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, ymdDate);
+    }
+
+
     /**
      * Adds prices for a priced item. Existing prices with the same dates are replaced.
      * @param {number} pricedItemId 
@@ -162,6 +175,16 @@ export class PricesHandler {
      */
     async asyncGetPriceDataItemsInDateRange(pricedItemId, ymdDateA, ymdDateB) {
         throw Error('PricesHandler.asyncGetPriceDataItemsInDateRange() abstract method!');
+    }
+
+    /**
+     * Retrieves the price data item for a priced item that is on or closest to but before a particular date.
+     * @param {number} pricedItemId 
+     * @param {YMDDate|string} ymdDate 
+     * @returns {PriceDataItem|undefined}
+     */
+    async asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
+        throw Error('PricesHandler.asyncGetPriceDataItemOnOrClosestBefore() abstract method!');
     }
 
 
@@ -225,6 +248,14 @@ export class InMemoryPricesHandler extends PricesHandler {
             return entry.getValues().slice(indexA, indexB + 1).map((value) => getPriceDataItem(value));
         }
         return [];
+    }
+
+    async asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
+        const entry = this._sortedPricesByPricedItemId.get(pricedItemId);
+        if (entry && entry.length > 0) {
+            const index = entry.indexLE({ ymdDate: ymdDate });
+            return getPriceDataItem(entry.at(index));
+        }
     }
 
     _asyncAddPriceDataItems(pricedItemId, priceDataItems) {

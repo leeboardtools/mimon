@@ -196,6 +196,12 @@ test('PriceManager', async () => {
     ]);
     expect(await manager.asyncGetPriceDataItemsInDateRange(1, '2018-12-25')).toEqual([]);
 
+    //
+    // On or before
+    expect(await manager.asyncGetPriceDataItemOnOrClosestBefore(1, '2018-04-06')).toEqual({ ymdDate: '2018-04-06', close: 91.09, open: 89.98, });
+    expect(await manager.asyncGetPriceDataItemOnOrClosestBefore(1, '2018-04-07')).toEqual({ ymdDate: '2018-04-07', close: 91.19, open: 89.91, });
+    expect(await manager.asyncGetPriceDataItemOnOrClosestBefore(1, '2018-04-08')).toEqual({ ymdDate: '2018-04-07', close: 91.19, open: 89.91, });
+
     // Prices for priced item 2 are:
     //  { ymdDate: '2018-01-23', close: 123.45 },
     //  { ymdDate: '2018-01-24', close: 124.45 },
