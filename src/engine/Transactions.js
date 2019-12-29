@@ -50,6 +50,17 @@ export function getReconcileStateName(ref) {
 }
 
 
+export function loadTransactionsUserMessages() {
+    for (const reconcileState of Object.values(ReconcileState)) {
+        reconcileState.description = userMsg('ReconcileState-' + reconcileState.name);
+    }
+/*    for (const type of Object.values(TransactionType)) {
+        type.description = userMsg('TransactionType-' + type.name);
+    }
+*/
+}
+
+
 /**
  * Retrieves a {@link LotDataItem} representation of a lot change array of {@link Lot}s, avoids copying if the arg
  * is already an {@link LotDataItem}.
@@ -61,7 +72,7 @@ export function getLotChangeDataItems(lotChanges, alwaysCopy) {
     if (lotChanges) {
         if (alwaysCopy 
          || (lotChanges.length && (getLotDataItems(lotChanges[0]) !== lotChanges[0]))) {
-            return lotChanges.map((lotChange) => getLotDataItems(lotChange));
+            return lotChanges.map((lotChange) => getLotDataItems(lotChange, alwaysCopy));
         }
     }
     return lotChanges;
@@ -79,7 +90,7 @@ export function getLotChanges(lotChangeDataItems, alwaysCopy) {
     if (lotChangeDataItems) {
         if (alwaysCopy
          || (lotChangeDataItems.length && (getLots(lotChangeDataItems[0]) !== lotChangeDataItems[0]))) {
-            return lotChangeDataItems.map((lotChangeDataItem) => getLots(lotChangeDataItem));
+            return lotChangeDataItems.map((lotChangeDataItem) => getLots(lotChangeDataItem, alwaysCopy));
         }
     }
     return lotChangeDataItems;
@@ -279,14 +290,20 @@ export function getTransaction(transactionDataItem, alwaysCopy) {
 }
 
 
-export function loadTransactionsUserMessages() {
-    for (const reconcileState of Object.values(ReconcileState)) {
-        reconcileState.description = userMsg('ReconcileState-' + reconcileState.name);
+/**
+ * Performs a deep copy of either an {@link Transaction} or an {@link TransactionDataItem}.
+ * @param {(Transaction|TransactionDataItem)} transaction 
+ * @returns {(Transaction|TransactionDataItem)} The type returned is the same as the arg.
+ */
+export function deepCopyTransaction(transaction) {
+    const transactionDataItem = getTransactionDataItem(transaction);
+    if (transactionDataItem === transaction) {
+        transaction = getTransaction(transactionDataItem, true);
+        return getTransactionDataItem(transaction, true);
     }
-/*    for (const type of Object.values(TransactionType)) {
-        type.description = userMsg('TransactionType-' + type.name);
+    else {
+        return getTransaction(transactionDataItem, true);
     }
-*/
 }
 
 

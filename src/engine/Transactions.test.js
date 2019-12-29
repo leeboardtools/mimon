@@ -191,6 +191,60 @@ test('Transaction-Data Items', () => {
         description: 'A description',
         memo: 'A memo',
     });
+
+
+    //
+    // Test deepCopyTransaction()
+    const settingsX = {
+        ymdDate: new YMDDate('2019-10-11'),
+        splits: [
+            {
+                reconcileState: T.ReconcileState.NOT_RECONCILED,
+                accountId: 1,
+                quantityBaseValue: 1234,
+                description: 'Hello',
+                memo: 'I am a memo'
+            },
+            {
+                reconcileState: T.ReconcileState.RECONCILED,
+                accountId: 2,
+                currencyToUSDRatio: new Ratio(100, 200),
+                quantityBaseValue: -1234,
+            },
+            {
+                reconcileState: T.ReconcileState.PENDING,
+                accountId: 10,
+                quantityBaseValue: -1234,
+                lotChanges: [
+                    [
+                        { purchaseYMDDate: new YMDDate('2019-01-23'), quantityBaseValue: 12345, costBasisBaseValue: 98765 },
+                        { purchaseYMDDate: new YMDDate('2019-01-24'), quantityBaseValue: 98765, costBasisBaseValue: 44455 },
+                    ],
+                ],
+            },
+        ],
+        description: 'A description',
+        memo: 'A memo',
+    };
+    const settingsXDataItem = T.getTransactionDataItem(settingsX);
+    const deepCopyDataItem = T.deepCopyTransaction(settingsXDataItem);
+    expect(deepCopyDataItem).toEqual(settingsXDataItem);
+    expect(deepCopyDataItem.splits).not.toBe(settingsXDataItem.splits);
+
+    const testDataItemSplits2 = deepCopyDataItem.splits[2];
+    const refDataItemSplits2 = settingsXDataItem.splits[2];
+    expect(testDataItemSplits2.lotChanges).not.toBe(refDataItemSplits2.lotChanges);
+    expect(testDataItemSplits2.lotChanges[0]).not.toBe(refDataItemSplits2.lotChanges[0]);
+
+    const ref = T.getTransaction(settingsXDataItem);
+    const deepCopy = T.deepCopyTransaction(ref);
+    expect(deepCopy).toEqual(ref);
+    expect(deepCopy.splits).not.toBe(ref.splits);
+
+    const testSplits2 = deepCopy.splits[2];
+    const refSplits2 = ref.splits[2];
+    expect(testSplits2.lotChanges).not.toBe(refSplits2.lotChanges);
+    expect(testSplits2.lotChanges[0]).not.toBe(refSplits2.lotChanges[0]);
 });
 
 
