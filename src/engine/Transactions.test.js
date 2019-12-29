@@ -188,3 +188,149 @@ test('Transaction-Data Items', () => {
         memo: 'A memo',
     });
 });
+
+
+
+//
+//---------------------------------------------------------
+//
+test('TransactionHandlerImplBase', async () => {
+    const handlerA = new T.InMemoryTransactionsHandler();
+
+    expect(await handlerA.asyncGetTransactionDateRange()).toBeUndefined();
+    expect(await handlerA.asyncGetTransactionDateRange(1)).toBeUndefined();
+    expect(await handlerA.asyncGetTransactionDataItemssInDateRange(1, new YMDDate('2018-01-01'), new YMDDate('2018-01-01'))).toEqual([]);
+
+    let result;
+
+    const transaction1 = {
+        id: 1,
+        ymdDate: '2018-01-01',
+        splits: [
+            { reconcileState: 'NOT_RECONCILED', accountId: 11, quantityBaseValue: 1000, },
+            { reconcileState: 'NOT_RECONCILED', accountId: 12, quantityBaseValue: -1000, },
+        ]
+    };
+    const transaction2 = {
+        id: 2,
+        ymdDate: '2018-01-01',
+        splits: [
+            { reconcileState: 'NOT_RECONCILED', accountId: 11, quantityBaseValue: 1000, },
+            { reconcileState: 'NOT_RECONCILED', accountId: 13, quantityBaseValue: -1000, },
+        ]
+    };
+    const transaction3 = {
+        id: 3,
+        ymdDate: '2018-12-31',
+        splits: [
+            { reconcileState: 'NOT_RECONCILED', accountId: 11, quantityBaseValue: 2000, },
+            { reconcileState: 'RECONCILED', accountId: 12, quantityBaseValue: -2000, },
+        ]
+    };
+    const transaction4 = {
+        id: 4,
+        ymdDate: '2017-01-01',
+        splits: [
+            { reconcileState: 'NOT_RECONCILED', accountId: 11, quantityBaseValue: 3000, },
+            { reconcileState: 'NOT_RECONCILED', accountId: 12, quantityBaseValue: -3000, },
+        ]
+    };
+    const transaction5 = {
+        id: 5,
+        ymdDate: '2017-12-31',
+        splits: [
+            { reconcileState: 'PENDING', accountId: 12, quantityBaseValue: 4000, },
+            { reconcileState: 'NOT_RECONCILED', accountId: 13, quantityBaseValue: -4000, },
+        ]
+    };
+
+    result = await handlerA.asyncUpdateTransactionDataItems([
+        [1, transaction1],
+        [2, transaction2],
+        [3, transaction3],
+        [4, transaction4],
+        [5, transaction5],
+    ],
+    {
+        lastId: 123,
+    });
+    expect(result).toEqual([ transaction1, transaction2, transaction3, transaction4, transaction5]);
+
+    expect(await handlerA.asyncGetTransactionDateRange()).toEqual([new YMDDate('2017-01-01'), new YMDDate('2018-12-31')]);
+    expect(await handlerA.asyncGetTransactionDateRange(13)).toEqual([new YMDDate('2017-12-31'), new YMDDate('2018-01-01')]);
+
+    result = await handlerA.asyncGetTransactionDataItemssInDateRange(0, new YMDDate('2017-12-31'), new YMDDate('2018-12-31'));
+    expect(result).toEqual([
+        transaction5,
+        transaction1,
+        transaction2,
+        transaction3,
+    ]);
+
+
+    //
+    // Change account id...
+    const change3A = {
+        id: 3,
+        splits: [
+            { reconcileState: 'NOT_RECONCILED', accountId: 11, quantityBaseValue: 2000, },
+            { reconcileState: 'RECONCILED', accountId: 13, quantityBaseValue: -2000, },
+        ]
+    };
+    const transaction3A = Object.assign({}, transaction3, change3A);
+    result = await handlerA.asyncUpdateTransactionDataItems([
+        [3, change3A],
+    ]);
+    expect(result).toEqual([ transaction3A ]);
+
+    result = await handlerA.asyncGetTransactionDataItemssInDateRange(13, new YMDDate('2018-01-01'), new YMDDate('2018-12-31'));
+    expect(result).toEqual([transaction2, transaction3A]);
+
+
+    //
+    // Change date
+    const change4A = {
+        id: 4,
+        ymdDate: '2017-07-04',
+    };
+    const transaction4A = Object.assign({}, transaction4, change4A);
+    result = await handlerA.asyncUpdateTransactionDataItems([
+        [4, change4A],
+    ]);
+    expect(result).toEqual([transaction4A]);
+
+    expect(await handlerA.asyncGetTransactionDateRange()).toEqual([new YMDDate('2017-07-04'), new YMDDate('2018-12-31')]);
+
+    result = await handlerA.asyncGetTransactionDataItemssInDateRange(12, new YMDDate('2017-01-01'), new YMDDate('2017-12-31'));
+    expect(result).toEqual([transaction4A, transaction5]);
+
+
+    //
+    // Remove
+    result = await handlerA.asyncUpdateTransactionDataItems([
+        [1, ],
+    ]);
+    expect(result).toEqual([transaction1]);
+
+    result = await handlerA.asyncGetTransactionDataItemssInDateRange(11, new YMDDate('2018-01-01'), new YMDDate('2018-01-01'));
+    expect(result).toEqual([transaction2]);
+
+
+    //
+    // JSON
+    const handlerB = new T.InMemoryTransactionsHandler();
+    const jsonString = JSON.stringify(handlerA.toJSON());
+    const json = JSON.parse(jsonString);
+
+    handlerB.fromJSON(json);
+
+    expect(await handlerB.asyncGetTransactionDateRange()).toEqual([new YMDDate('2017-07-04'), new YMDDate('2018-12-31')]);
+
+    result = await handlerB.asyncGetTransactionDataItemssInDateRange(12, new YMDDate('2017-01-01'), new YMDDate('2017-12-31'));
+    expect(result).toEqual([transaction4A, transaction5]);
+
+    result = await handlerB.asyncGetTransactionDataItemssInDateRange(11, new YMDDate('2018-01-01'), new YMDDate('2018-01-01'));
+    expect(result).toEqual([transaction2]);
+
+    expect(handlerB.getIdGeneratorOptions()).toEqual({ lastId: 123, });
+});
