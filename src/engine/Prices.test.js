@@ -239,17 +239,14 @@ test('PriceManager', async () => {
 
     const itemsA = Array.from(handlerA._sortedPricesByPricedItemId.entries()).sort((a, b) => a[0] - b[0]);
     const itemsB = Array.from(handlerB._sortedPricesByPricedItemId.entries()).sort((a, b) => a[0] - b[0]);
+
+    // expect.toEqual() doesn't like comparing SortedArrays...
     itemsA.forEach((pair) => {
         pair[1] = pair[1].toJSON();
     });
     itemsB.forEach((pair) => {
         pair[1] = pair[1].toJSON();
     });
-    const xA = JSON.stringify(itemsA);
-    const xB = JSON.stringify(itemsB);
-    expect(xB).toEqual(xA);
-
-
 
     expect(itemsB).toEqual(itemsA);
 });
