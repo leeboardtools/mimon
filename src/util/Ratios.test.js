@@ -1,4 +1,4 @@
-import { Ratio } from './Ratios';
+import { Ratio, getRatio, getRatioJSON } from './Ratios';
 
 test('Ratio', () => {
     const a = new Ratio(10, 11);
@@ -36,6 +36,12 @@ test('Ratio', () => {
     expect(h.getNumerators()).toEqual([ 10, 11, -33 ]);
     expect(h.getDenominators()).toEqual([ 11, 10, 3 ]);
 
+    expect(getRatioJSON(gJSON)).toBe(gJSON);
+    expect(getRatio(g)).toBe(g);
+
+    expect(getRatioJSON(g)).toEqual(gJSON);
+    expect(getRatio(gJSON)).toEqual(g);
+
 
     // Demonstrate that this is actually useful...
     const ten_three = 1000000000. / 3.;
@@ -51,6 +57,7 @@ test('Ratio', () => {
     const p2 = new Ratio(3, 10);
     const p1_p2 = p1.multiply(p2);
     expect(p1_p2.toValue()).toBe(100000000);
+    expect(p1_p2.applyToNumber(2)).toBe(200000000);
 
     const m1_p2 = m1.multiply(p2);
     expect(m1_p2.toValue()).toBe(-100000000);
@@ -75,4 +82,6 @@ test('Ratio', () => {
     const ab_args = new Ratio(a, b);
     expect(ab_args.getNumerators()).toEqual(c.getNumerators());
     expect(ab_args.getDenominators()).toEqual(c.getDenominators());
+
+
 });

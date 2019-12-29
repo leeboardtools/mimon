@@ -178,4 +178,39 @@ export class Ratio {
         // We do the equality test so that 0 / 0 and inf / inf are 1.
         return (numerator === denominator) ? 1 : (numerator / denominator);
     }
+
+    /**
+     * Applies the ratio to a number.
+     * @param {number} number 
+     * @returns {number}
+     */
+    applyToNumber(number) {
+        const [ numerator, denominator ] = this.getReducedNumeratorDenominator();
+
+        // We do the equality test so that 0 / 0 and inf / inf are 1.
+        return (numerator === denominator) ? number : (number * numerator / denominator);
+    }
+}
+
+
+/**
+ * Retrieves a {@link Ratio} representing a given arg, returning the arg if it is in fact a {@link Ratio}.
+ * @param {*} ratio 
+ * @returns {Ratio|undefined|null}
+ */
+export function getRatio(ratio) {
+    if ((ratio !== undefined) && (ratio !== null)) {
+        return (ratio instanceof Ratio) ? ratio : new Ratio(ratio);
+    }
+    return ratio;
+}
+
+/**
+ * Retrieves a {@link Ratio~JSON} representing a given arg, calling {@link Ratio#toJSON} if the arg is a {@link Ratio},
+ * returning the arg otherwise.
+ * @param {*} ratio 
+ * @returns {Ratio~JSON|undefined|null}
+ */
+export function getRatioJSON(ratio) {
+    return (ratio instanceof Ratio) ? ratio.toJSON() : ratio;
 }
