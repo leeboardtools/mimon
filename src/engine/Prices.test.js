@@ -137,13 +137,24 @@ test('PriceManager', async () => {
     expect(await manager.asyncAddPrices(1, priceDataItemA)).toEqual([priceDataItemA]);
     expect(await manager.asyncGetPriceDataItemsInDateRange(1, '2018-01-23')).toEqual([priceDataItemA]);
 
+
+    let addEventArg;
+    let removeEventArg;
+    manager.on('pricesAdd', (arg) => addEventArg = arg);
+    manager.on('pricesRemove', (arg) => removeEventArg = arg);
+
     // Mixed array of price data items.
     const priceDataItemsB = [
         { ymdDate: '2018-12-23', close: 1234.56 },
         { ymdDate: '2018-12-21', close: 12.21 },
         { ymdDate: '2018-12-24', close: 123.32},
     ];
-    expect(await manager.asyncAddPrices(1, priceDataItemsB)).toEqual(priceDataItemsB);
+    const result = await manager.asyncAddPrices(1, priceDataItemsB);
+    expect(result).toEqual(priceDataItemsB);
+
+    // Test pricesAdd event
+    expect(addEventArg).toEqual({ newPriceDataItems: result });
+    expect(addEventArg.newPriceDataItems).toEqual(result);
 
     // Mixed array of price items.
     const pricesC = [
@@ -236,11 +247,16 @@ test('PriceManager', async () => {
     expect(await manager.asyncRemovePricesInDateRange(1, '2018-12-23')).toEqual([{ ymdDate: '2018-12-23', close: 1234.56 }, ]);
     expect(await manager.asyncGetPriceDataItemsInDateRange(1, '2018-12-23')).toEqual([]);
 
-    expect(await manager.asyncRemovePricesInDateRange(2, '2018-01-24', '2018-01-22')).toEqual([
+    const removeResult = await manager.asyncRemovePricesInDateRange(2, '2018-01-24', '2018-01-22');
+    expect(removeResult).toEqual([
         { ymdDate: '2018-01-23', close: 123.45 },
         { ymdDate: '2018-01-24', close: 124.45 },
     ]);
     expect(await manager.asyncGetPriceDataItemsInDateRange(2, '2018-01-24', '2018-01-22')).toEqual([]);
+
+    // pricesRemove event test
+    expect(removeEventArg).toEqual({ removedPriceDataItems: removeResult });
+    expect(removeEventArg.removedPriceDataItems).toBe(removeResult);
 
     expect(await manager.asyncRemovePricesInDateRange(2, '2018-12-24')).toEqual([ { ymdDate: '2018-12-24', close: 76.54 }, ]);
     expect(await manager.asyncRemovePricesInDateRange(2, '2018-12-24')).toEqual([]);

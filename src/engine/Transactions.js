@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { userMsg, userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
 import { getLotDataItems, getLots } from './Lots';
@@ -311,8 +312,10 @@ export function deepCopyTransaction(transaction) {
 /**
  * Manager for {@link Transaction}s
  */
-export class TransactionManager {
+export class TransactionManager extends EventEmitter {
     constructor(accountingSystem, options) {
+        super(options);
+
         this._accountingSystem = accountingSystem;
         this._handler = options.handler;
         
@@ -502,6 +505,14 @@ export class TransactionManager {
         }
     }
 
+    /**
+     * Fired by {@link TransactionManager#asyncAddTransactions} after the transactions have been added.
+     * @event TransactionManager~transactionsAdd
+     * @type {object}
+     * @property {TransactionDataItem[]}    newTransactionDataItems The array of newly added transaction data items
+     * being returned from the call to {@link TransactionManager#asyncAddTransactions}.
+     */
+
 
     /**
      * Adds one or more transactions.
@@ -510,6 +521,7 @@ export class TransactionManager {
      * @returns {TransactionDataItem|TransactionDataItem[]} If transactions is an array then an array containing the 
      * added data items is returned, otherwise a single data item is returned.
      * @throws Error
+     * @fires {TransactionManager~transactionsAdd}
      */
     async asyncAddTransactions(transactions, validateOnly) {
         if (!Array.isArray(transactions)) {
@@ -517,7 +529,7 @@ export class TransactionManager {
             return result[0];
         }
 
-        const transactionDataItems = transactions.map((transaction) => getTransactionDataItem(transaction, true));
+        let transactionDataItems = transactions.map((transaction) => getTransactionDataItem(transaction, true));
         for (let i = 0; i < transactionDataItems.length; ++i) {
             const error = this._validateTransactionBasics(transactionDataItems[i]);
             if (error) {
@@ -543,6 +555,10 @@ export class TransactionManager {
             transactionDataItems.forEach((transactionDataItem) => {
                 this._transactionIds.add(transactionDataItem.id);
             });
+
+            transactionDataItems = transactionDataItems.map((dataItem) => getTransactionDataItem(dataItem, true));
+
+            this.emit('transactionsAdd', { newTransactionDataItems: transactionDataItems });
             return transactionDataItems;
         }
         catch (e) {
@@ -551,6 +567,15 @@ export class TransactionManager {
         }
     }
 
+
+    /**
+     * Fired by {@link TransactionManager#asyncRemoveTransactions} after the transactions have been removed.
+     * @event TransactionManager~transactionsRemove
+     * @type {object}
+     * @property {TransactionDataItem[]}    removedTransactionDataItems The array of removed transaction data items
+     * being returned by the call to {@link TransactionManager#asyncRemoveTransactions}.
+     */
+
     /**
      * Removes one or more transactions.
      * @param {number|number[]} transactionIds 
@@ -558,6 +583,7 @@ export class TransactionManager {
      * @returns {TransactionDataItem|TransactionDataItem[]} If transactions is an array then an array containing the 
      * removed data items is returned, otherwise a single data item is returned.
      * @throws Error
+     * @fires {TransactionManager~transactionsRemove}
      */
     async asyncRemoveTransactions(transactionIds, validateOnly) {
         if (!Array.isArray(transactionIds)) {
@@ -584,8 +610,19 @@ export class TransactionManager {
 
         transactionIds.forEach((id) => this._transactionIds.delete(id));
 
+        this.emit('transactionsRemove', { removedTransactionDataItems: transactionDataItems });
         return transactionDataItems;
     }
+
+
+    /**
+     * Fired by {@link TransactionManager#asyncModifyTransactions} after all the submitted transactions have
+     * been modified.
+     * @event TransactionManager~transactionsModify
+     * @type {object}
+     * @property {TransactionDataItem[]}    newTransactionDataItems Array of the updated transaction data items.
+     * @property {TransactionDataItem[]}    oldTransactionDataItems Array fo the old transaction data items.
+     */
 
 
     /**
@@ -595,6 +632,7 @@ export class TransactionManager {
      * @returns {TransactionDataItem|TransactionDataItem[]} If transactions is an array then an array containing the 
      * modified data items is returned, otherwise a single data item is returned.
      * @throws Error
+     * @fires {TransactionManager~modifyTransaction}
      */
     async asyncModifyTransactions(transactions, validateOnly) {
         if (!Array.isArray(transactions)) {
@@ -604,7 +642,7 @@ export class TransactionManager {
 
         const transactionIds = transactions.map((transaction) => transaction.id);
         const oldDataItems = await this._handler.asyncGetTransactionDataItemsWithIds(transactionIds);
-        const newDataItems = [];
+        let newDataItems = [];
         const transactionIdAndDataItemPairs = [];
         for (let i = 0; i < transactionIds.length; ++i) {
             const id = transactionIds[i];
@@ -628,6 +666,12 @@ export class TransactionManager {
 
         await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs);
 
+        newDataItems = newDataItems.map((dataItem) => getTransactionDataItem(dataItem, true));
+
+        this.emit('transactionsModify', {
+            newTransactionDataItems: newDataItems,
+            oldTransactionDataItems: oldDataItems,
+        });
         return newDataItems;
     }
 }

@@ -1,8 +1,10 @@
+import { EventEmitter } from 'events';
 import { userMsg } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
 import { getCurrencyCode, getCurrency } from '../util/Currency';
 import { getQuantityDefinition, getQuantityDefinitionName } from '../util/Quantities';
 import { userError } from '../util/UserMessages';
+import { getPriceDataItem } from './Prices';
 
 /**
  * @typedef {object}    PricedItemTypeDef
@@ -210,7 +212,7 @@ export function getPricedItemDataItem(pricedItem, alwaysCopy) {
  * <p>
  * Note that priced items with the PricedItemType.CURRENCY are restricted to only one priced item per currency.
  */
-export class PricedItemManager {
+export class PricedItemManager extends EventEmitter {
 
     /**
      * @typedef {object} PricedItemManager~Options
@@ -225,6 +227,8 @@ export class PricedItemManager {
      */
     
     constructor(accountingSystem, options) {
+        super(options);
+
         this._accountingSystem = accountingSystem;
         this._handler = options.handler;
         
@@ -419,6 +423,7 @@ export class PricedItemManager {
      * @param {PricedItemDataItem} options 
      * @returns {PricedItemDataItem}
      * @throws {Error}
+     * @fires {PricedItemManager~pricedItemAdd}
      */
     async asyncAddCurrencyPricedItem(currency, validateOnly, options) {
         const pricedItem = Object.assign({}, options);
@@ -429,11 +434,20 @@ export class PricedItemManager {
     }
 
     /**
+     * Fired by {@link PricedItemManager#asyncAddPricedItem} and {@link PricedItemManager#asyncAddCurrencyPricedItem} after the priced
+     * item has been added.
+     * @event PricedItemManager~pricedItemAdd
+     * @type {object}
+     * @property {PricedItemData}   newPricedItemData   The priced item data item being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
+     */
+
+    /**
      * Adds a priced item.
      * @param {(PricedItem|PricedItemDataItem)} pricedItem 
      * @param {boolean} validateOnly 
      * @returns {PricedItemDataItem} Note that this object will not be the same as the pricedItem arg.
      * @throws {Error}
+     * @fires {PricedItemManager~pricedItemAdd}
      */
     async asyncAddPricedItem(pricedItem, validateOnly) {
         let pricedItemDataItem = getPricedItemDataItem(pricedItem);
@@ -462,8 +476,18 @@ export class PricedItemManager {
             return;
         }
 
-        return this._asyncAddPricedItem(pricedItemDataItem);
+        pricedItemDataItem = await this._asyncAddPricedItem(pricedItemDataItem);
+        pricedItemDataItem = getPriceDataItem(pricedItemDataItem, true);
+        this.emit('pricedItemAdd', { newPricedItemDataItem: pricedItemDataItem, });
+        return pricedItemDataItem;
     }
+
+    /**
+     * Fired by {@link PricedItemManager#asyncRemovedPricedItem} after a priced item has been removed.
+     * @event PricedItemManager~pricedItemRemove
+     * @type {object}
+     * @property {PricedItemData}   removedPricedItemData   The priced item data item being returned by the {@link PricedItemManager#asyncRemovePricedItem} call.
+     */
 
     /**
      * Removes a priced item.
@@ -471,6 +495,7 @@ export class PricedItemManager {
      * @param {boolean} validateOnly 
      * @returns {PricedItemDataItem}    The priced item that was removed.
      * @throws {Error}
+     * @fires {PricedItemManager~pricedItemRemove}
      */
     async asyncRemovePricedItem(id, validateOnly) {
         if (this._requiredCurrencyPricedItemIds.has(id)) {
@@ -497,8 +522,17 @@ export class PricedItemManager {
         const updatedDataItems = [[id]];
         await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems);
 
+        this.emit('pricedItemRemove', { removedPricedItemDataItem: pricedItem });
         return pricedItem;
     }
+
+    /**
+     * Fired by {@link PricedItemManager#asyncModifyPricedItem} after the priced item has been modified.
+     * @event PricedItemManager~pricedItemModify
+     * @type {object}
+     * @property {PricedItemData}   newPricedItemDataItem   The new priced item data item being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
+     * @property {PricedItemData}   oldPricedItemDataItem   The old priced item data item being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
+     */
 
     /**
      * Modifies an existing priced item. The type cannot be modified.
@@ -506,6 +540,7 @@ export class PricedItemManager {
      * properties, if the property is not included in pricedItem, the property will not be changed.
      * @param {boolean} validateOnly 
      * @throws {Error}
+     * @fires {PricedItemManager~pricedItemModify}
      */
     async asyncModifyPricedItem(pricedItem, validateOnly) {
         const id = pricedItem.id;
@@ -550,7 +585,9 @@ export class PricedItemManager {
             }
         }
 
-        return newPricedItem;
+        newPricedItem = Object.assign({}, newPricedItem);
+        this.emit('pricedItemModify', { newPricedItemDataItem: newPricedItem, oldPricedItemDataItem: oldPricedItem });
+        return [ newPricedItem, oldPricedItem ];
     }
 }
 
@@ -585,7 +622,7 @@ export class PricedItemsHandler {
      * the generator state hasn't changed.
      */
     async asyncUpdatePricedItemDataItems(idPricedItemDataItemPairs, idGeneratorOptions) {
-        throw Error('PricedItemsHandler.modifyPricedItem() abstract method!');
+        throw Error('PricedItemsHandler.pricedItemModify() abstract method!');
     }
 
 }

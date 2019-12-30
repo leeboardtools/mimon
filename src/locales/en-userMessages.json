@@ -35,6 +35,9 @@
     "Account-Opening_Balances_name": "Opening Balances",
     "Account-Opening_Balances_desc": "Account of opening balances of all other accounts",
 
+    "AccountState-add_split_lot_not_found": ["The lot '", "' is not part of the account's state."],
+    "AccountState-remove_split_lot_not_found": ["The lot '", "' is not part of the account's later state."],
+
     "AccountManager-type_invalid": ["The account type '", "' is not supported."],
     "AccountManager-duplicate_ref_id": ["There is already an account with reference id '", "'."],
     "AccountManager-parent_account_invalid": ["A parent account with id '", "' was not found."],

@@ -666,6 +666,11 @@ test('AccountManager-add', async () => {
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([equityA.id]));
 
 
+    let eventArgs;
+    accountManager.on('accountAdd', (args) => {
+        eventArgs = args;
+    });
+
     const equityOptionsB = {
         parentAccountId: equityA.id,
         type: A.AccountType.EQUITY,
@@ -679,6 +684,9 @@ test('AccountManager-add', async () => {
     accountDataItem = accountManager.getAccountDataItemWithId(equityA.id);
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([equityB.id]));
 
+    // accountNew event test.
+    expect(eventArgs).toEqual({ newAccountDataItem: equityB });
+    expect(eventArgs.newAccountDataItem).toBe(equityB);
 
     //
     // OPENING_BALANCE
@@ -704,6 +712,7 @@ test('AccountManager-modify', async () => {
     const accountManager = accountingSystem.getAccountManager();
 
     let account;
+    let oldAccount;
 
     // Change account state.
     const stateA = { ymdDate: '2019-09-21', quantityBaseValue: 1000 };
@@ -735,9 +744,21 @@ test('AccountManager-modify', async () => {
     // Moving to liabilities should fail.
     await expect(accountManager.asyncModifyAccount({ id: sys.iraId, parentAccountId: sys.loansId })).rejects.toThrow();
 
+
+    let eventArgs;
+    accountManager.on('accountModify', (args) => {
+        eventArgs = args;
+    });
+
     // Now for the actual move...
-    [account] = await accountManager.asyncModifyAccount(iraMove);
+    [account, oldAccount] = await accountManager.asyncModifyAccount(iraMove);
     expect(account.parentAccountId).toEqual(sys.fixedAssetsId);
+
+    // accountModify event test
+    expect(eventArgs).toEqual({ newAccountDataItem: account, oldAccountDataItem: oldAccount, });
+    expect(eventArgs.newAccountDataItem).toBe(account);
+    expect(eventArgs.oldAccountDataItem).toBe(oldAccount);
+
 
     // Now a child of fixedAssetsId
     account = accountManager.getAccountDataItemWithId(sys.fixedAssetsId);
@@ -815,9 +836,20 @@ test('AccountManager-removeAccount', async () => {
 
     const originalAccount = accountManager.getAccountDataItemWithId(sys.iraId);
 
+
+    let eventArgs;
+    accountManager.on('accountRemove', (args) => {
+        eventArgs = args;
+    });
+
     let account;
     account = await accountManager.asyncRemoveAccount(sys.iraId);
     expect(account).toEqual(originalAccount);
+
+    // accountRemove event test.
+    expect(eventArgs).toEqual({ removedAccountDataItem: account });
+    expect(eventArgs.removedAccountDataItem).toBe(account);
+
 
     let parentAccount = accountManager.getAccountDataItemWithId(account.parentAccountId);
     expect(parentAccount.childAccountIds).not.toEqual(expect.arrayContaining([sys.iraId]));

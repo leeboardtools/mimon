@@ -545,6 +545,9 @@ test('TransactionManager-add_modify', async () => {
         ]
     };
 
+    let addEventArgs;
+    manager.on('transactionsAdd', (arg) => addEventArgs = arg);
+
     const lotC1 = { purchaseYMDDate: '2019-10-11', quantityBaseValue: 12345, costBasisBaseValue: 98765 };
     const lotC2 = { purchaseYMDDate: '2019-10-12', quantityBaseValue: 98765, costBasisBaseValue: 44455 };
     const settingsC = {
@@ -554,11 +557,17 @@ test('TransactionManager-add_modify', async () => {
             { accountId: sys.aaplBrokerageA, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 500000, lotChanges: [[lotC1], [lotC2]]},
         ]
     };
-    const [ transactionB, transactionC ] = await manager.asyncAddTransactions([settingsB, settingsC]);
+    const result = await manager.asyncAddTransactions([settingsB, settingsC]);
+    const [ transactionB, transactionC ] = result;
     settingsB.id = transactionB.id;
     settingsC.id = transactionC.id;
     expect(transactionB).toEqual(settingsB);
     expect(transactionC).toEqual(settingsC);
+
+
+    // transactionsAdd event test
+    expect(addEventArgs).toEqual({ newTransactionDataItems: result });
+    expect(addEventArgs.newTransactionDataItems).toBe(result);
 
 
     const settingsD = {
@@ -624,7 +633,10 @@ test('TransactionManager-add_modify', async () => {
         ]
     };
     const settingsD1 = Object.assign({}, settingsD, changesD1);
-    
+
+    let modifyEventArg;
+    manager.on('transactionsModify', (arg) => modifyEventArg = arg);
+
     const changesE1 = {
         id: settingsE.id,
         splits: [
@@ -637,6 +649,10 @@ test('TransactionManager-add_modify', async () => {
     expect(resultDE1).toEqual(expect.arrayContaining([settingsD1, settingsE1]));
 
     expect(await manager.asyncGetTransactionDateRange(sys.checkingId)).toEqual([ new YMDDate('2019-04-05'), new YMDDate('2019-10-15')]);
+
+    // transactionsModify event test
+    expect(modifyEventArg).toEqual({ newTransactionDataItems: resultDE1, oldTransactionDataItems: [ settingsD, settingsE ]});
+    expect(modifyEventArg.newTransactionDataItems).toBe(resultDE1);
 
 
     // Change validate:
@@ -731,10 +747,17 @@ test('TransactionManager~remove', async () => {
     expect(removeD).toEqual(settingsD);
     expect(await manager.asyncGetTransactionDataItemsWithIds(settingsD.id)).toBeUndefined();
 
+    let removeEventArg;
+    manager.on('transactionsRemove', (arg) => removeEventArg = arg);
+
     const removedAE = await manager.asyncRemoveTransactions([settingsA.id, settingsE.id]);
     expect(removedAE).toEqual([settingsA, settingsE]);
     expect(await manager.asyncGetTransactionDataItemsWithIds(settingsA.id)).toBeUndefined();
     expect(await manager.asyncGetTransactionDataItemsWithIds(settingsE.id)).toBeUndefined();
+
+    // transactionsRemove event test
+    expect(removeEventArg).toEqual({ removedTransactionDataItems: removedAE });
+    expect(removeEventArg.removedTransactionDataItems).toBe(removedAE);
 
     expect(await manager.asyncGetTransactionDateRange(sys.cashId)).toEqual([new YMDDate(settingsC.ymdDate), new YMDDate(settingsB.ymdDate)]);
     expect(await manager.asyncGetTransactionDateRange(sys.groceriesId)).toEqual([new YMDDate(settingsB.ymdDate), new YMDDate(settingsB.ymdDate)]);

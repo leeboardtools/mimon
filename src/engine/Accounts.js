@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { userMsg, userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
 import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
@@ -430,13 +431,15 @@ export function getAccountId(ref) {
 /**
  * Manages {@link Account}s.
  */
-export class AccountManager {
+export class AccountManager extends EventEmitter {
 
     /**
      * @typedef {object}    AccountManager~Options
      * @property {NumericIdGenerator~Options}   [idGenerator]   The id generator state to restore to.
      */
     constructor(accountingSystem, options) {
+        super(options);
+
         this._accountingSystem = accountingSystem;
         this._handler = options.handler;
         
@@ -701,12 +704,21 @@ export class AccountManager {
 
 
     /**
+     * Fired by {@link AccountManager#asyncAddAccount} after an account has been added.
+     * @event AccountManager~accountAdd
+     * @type {object}
+     * @property {AccountDataItem}  newAccountDataItem  The account data item being returned by the {@link AccountManager#asyncAddAccount} call.
+     */
+
+
+    /**
      * Adds a new account.
      * @param {(Account|AccountDataItem)} account   The account to add.
      * @param {(YMDDate|string)} [initialYMDDate]   The date to assign to the account state.
      * @param {boolean} validateOnly 
      * @returns {AccountDataItem}   The newly added account's data item.
      * @throws {Error}
+     * @fires {AccountManager~accountAdd}
      */
     async asyncAddAccount(account, initialYMDDate, validateOnly) {
         const accountDataItem = Object.assign({}, getAccountDataItem(account));
@@ -752,9 +764,20 @@ export class AccountManager {
         }
 
         const newAccountDataItem = await this._asyncAddAccount(accountDataItem);
-        return Object.assign({}, newAccountDataItem);
+        const result = Object.assign({}, newAccountDataItem);
+
+        this.emit('accountAdd', { newAccountDataItem: result });
+        return result;
     }
 
+
+
+    /**
+     * Fired by {@link AccountManager#asyncRemoveAccount} after an account has been removed.
+     * @event AccountManager~accountRemove
+     * @type {object}
+     * @property {AccountDataItem}  removedAccountDataItem  The account data item that was removed.
+     */
 
     /**
      * Removes an account. Root accounts and the opening balances account cannot be removed.
@@ -762,6 +785,7 @@ export class AccountManager {
      * @param {boolean} validateOnly 
      * @returns {AccountDataItem}   The removed account data item.
      * @throws {Error}
+     * @fires {AccountManager~accountRemove}
      */
     async asyncRemoveAccount(accountId, validateOnly) {
         const accountDataItem = this.getAccountDataItemWithId(accountId);
@@ -827,8 +851,19 @@ export class AccountManager {
             }
         });
 
+        this.emit('accountRemove', { removedAccountDataItem: accountDataItem });
+
         return accountDataItem;
     }
+
+
+    /**
+     * Fired by {@link AccountManager#asyncModifyAccount} after an account has been modified.
+     * @event AccountManager~accountModify
+     * @type {object}
+     * @property {AccountDataItem}  newAccountDataItem  The new account data item returned by the call to {@link AccountManager~asyncModifyAccount}.
+     * @property {AccountDataItem}  oldAccountDataItem  The old account data item returned by the call to {@link AccountManager~asyncModifyAccount}.
+     */
 
     /**
      * Modifies an account.
@@ -839,6 +874,7 @@ export class AccountManager {
      * and whose second element is the old account item data. Otherwise <code>undefined</code> is returned (which happens if account does not actually
      * change anything).
      * @throws {Error}
+     * @fires {AccountManager~accountModify}
      */
     async asyncModifyAccount(account, validateOnly) {
         const { id } = account;
@@ -964,7 +1000,14 @@ export class AccountManager {
             }
         });
 
-        return [Object.assign({}, newAccountDataItem), oldAccountDataItem];
+        const result = [Object.assign({}, newAccountDataItem), oldAccountDataItem];
+        
+        this.emit('accountModify', {
+            newAccountDataItem: result[0],
+            oldAccountDataItem: result[1],
+        });
+
+        return result;
     }
 }
 

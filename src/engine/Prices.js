@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 import { SortedArray } from '../util/SortedArray';
 
@@ -68,8 +69,10 @@ export function getPriceDataItem(price, alwaysCopy) {
 /**
  * Manages {@link Price}s.
  */
-export class PriceManager {
+export class PriceManager extends EventEmitter {
     constructor(accountingSystem, options) {
+        super(options);
+
         this._accountingSystem = accountingSystem;
         this._handler = options.handler;
     }
@@ -134,9 +137,19 @@ export class PriceManager {
 
 
     /**
+     * Fired by {@link PriceManager#asyncAddPrices} after the prices have been added.
+     * @event PriceManager~pricesAdd
+     * @type {object}
+     * @property {PriceDataItem[]}  newPriceDataItems   Array of the newly added price data items being returned
+     * by the call to {@link PriceManager#asyncAddPrices}.
+     */
+
+    /**
      * Adds prices for a priced item. Existing prices with the same dates are replaced.
      * @param {number} pricedItemId 
      * @param {(Price|PriceDataItem|Price[]|PriceDataItem[])} prices 
+     * @returns {PriceDataItem[]}   An array of the newly added prices.
+     * @fires {PriceManager~pricesAdd}
      */
     async asyncAddPrices(pricedItemId, prices) {
         if (!Array.isArray(prices)) {
@@ -144,8 +157,20 @@ export class PriceManager {
         }
         const priceDataItems = prices.map((price) => getPriceDataItem(price, true));
 
-        return this._handler.asyncAddPriceDataItems(pricedItemId, priceDataItems);
+        const result = (await this._handler.asyncAddPriceDataItems(pricedItemId, priceDataItems)).map(
+            (priceDataItem) => getPriceDataItem(priceDataItem, true));
+
+        this.emit('pricesAdd', { newPriceDataItems: result });
+        return result;
     }
+
+    /**
+     * Fired by {@link PriceManager#asyncRemovePrices} after the prices have been removed.
+     * @event PriceManager~pricesRemove
+     * @type {object}
+     * @property {PriceDataItem[]}  removedPriceDataItems   Array of the removed price data items being returned
+     * by the call to {@link PriceManager#asyncRemovePrices}.
+     */
 
     /**
      * Removes prices for a priced item that are within a date range.
@@ -153,10 +178,13 @@ export class PriceManager {
      * @param {(YMDDate|string)} ymdDateA 
      * @param {(YMDDate|string)} [ymdDateB=ymdDateA]
      * @returns {PriceDataItem[]}   The prices that were removed.
+     * @fires {PriceManager~pricesRemove}
      */
     async asyncRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB) {
         [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
-        return this._handler.asyncRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB);
+        const prices = await this._handler.asyncRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB);
+        this.emit('pricesRemove', { removedPriceDataItems: prices });
+        return prices;
     }
 
 
@@ -214,6 +242,7 @@ export class PricesHandler {
      * Adds prices for a priced item. Existing prices with the same dates are replaced.
      * @param {number} pricedItemId 
      * @param {PriceDataItem[]} prices 
+     * @returns {PriceDataItem[]}   An array of the newly added prices.
      */
     async asyncAddPriceDataItems(pricedItemId, priceDataItems) {
         throw Error('PricesHandler.asyncAddPriceDataItems() abstract method!');
