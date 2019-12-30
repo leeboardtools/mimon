@@ -2,7 +2,8 @@ import { userMsg, userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
 import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 import { PricedItemType, getPricedItemType } from './PricedItems';
-import { getLots, getLotDataItems } from './Lots';
+import { getSplitDataItem } from './Transactions';
+import { getLots, getLotDataItems, getLotDataItem } from './Lots';
 import deepEqual from 'deep-equal';
 
 
@@ -253,6 +254,79 @@ export function getAccountStateDataItem(accountState) {
         }
     }
     return accountState;
+}
+
+
+function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) {
+    const accountStateDataItem = getAccountStateDataItem(accountState, true);
+    split = getSplitDataItem(split);
+
+    accountStateDataItem.ymdDate = getYMDDateString(ymdDate) || accountStateDataItem.ymdDate;
+    accountStateDataItem.quantityBaseValue += sign * split.quantityBaseValue;
+
+    if (split.lotChanges) {
+        const { lots } = accountStateDataItem;
+        split.lotChanges.forEach(([newLot, oldLot]) => {
+            if (sign < 0) {
+                [ newLot, oldLot ] = [ oldLot, newLot ];
+            }
+
+            if (oldLot) {
+                // Look for the old lot.
+                const lotString = JSON.stringify(oldLot);
+                let i = 0;
+                for (i = 0; i < lots.length; ++i) {
+                    if (lotString === JSON.stringify(lots[i])) {
+                        break;
+                    }
+                }
+
+                if (i >= lots.length) {
+                    throw Error('AccountState-add_split_lot_not_found', lotString);
+                }
+                if (newLot) {
+                    lots.splice(i, 1, getLotDataItem(newLot, true));
+                }
+                else {
+                    lots.splice(i, 1);
+                }
+            }
+            else {
+                lots.push(getLotDataItem(newLot, true));
+            }
+        });
+    }
+
+    return accountStateDataItem;
+}
+
+
+/**
+ * Returns a new account state data item that reflects the application of a {@link Split}
+ * to the account state. The only validation performed is a check for lots being modified
+ * or removed being in the account state.
+ * @param {AccountState|AccountStateDataItem} accountState 
+ * @param {Split|SplitDataItem} split 
+ * @returns {AccountStateDataItem}
+ * @throws {Error}
+ */
+export function addSplitToAccountStateDataItem(accountState, split, ymdDate) {
+    return adjustAccountStateDataItemForSplit(accountState, split, ymdDate, 1);
+}
+
+
+/**
+ * Returns a new account state data item that reflects the removal of a {@link Split}
+ * from the account state. This is the opposite of {@link addSplitToAccountStateDataItem}.
+ * The only validation performed is a check for lots being modified or removed being in 
+ * the account state.
+ * @param {AccountState|AccountStateDataItem} accountState 
+ * @param {Split|SplitDataItem} split 
+ * @returns {AccountStateDataItem}
+ * @throws {Error}
+ */
+export function removeSplitFromAccountStateDataItem(accountState, split, ymdDate) {
+    return adjustAccountStateDataItemForSplit(accountState, split, ymdDate, -1);
 }
 
 
