@@ -55,13 +55,15 @@ export class YMDDate {
 
     _setFromParts(year, month, dom) {
         this._date = new Date();
-        this._date.setUTCFullYear(year);
-        this._date.setUTCMonth(month);
-        this._date.setUTCDate(dom);
+
+        // NOTE: Set the year last, or if you're using this on New Year' Eve, the date will come out wrong!
         this._date.setUTCHours(0);
         this._date.setUTCMinutes(0);
         this._date.setUTCSeconds(0);
         this._date.setUTCMilliseconds(0);
+        this._date.setUTCDate(dom);
+        this._date.setUTCMonth(month);
+        this._date.setUTCFullYear(year);
     }
 
     _parseDateString(string) {
