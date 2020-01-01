@@ -1,4 +1,4 @@
-import { YMDDate } from './YMDDate';
+import { YMDDate, getYMDDate } from './YMDDate';
 
 function expectODate(oDate, year, month, dom) {
     expect(oDate.getFullYear()).toEqual(year);
@@ -49,6 +49,22 @@ test('YMDDate', () => {
     const dateE = dateD.addDays(-29);
     expect(dateE).toEqual(dateB);
 });
+
+
+//
+//-----------------------------------------------
+//
+test('YMDDate-quarter', () => {
+    expect(getYMDDate('2019-01-01').getCalendarQuarter()).toEqual(1);
+    expect(getYMDDate('2019-03-31').getCalendarQuarter()).toEqual(1);
+    expect(getYMDDate('2019-04-01').getCalendarQuarter()).toEqual(2);
+    expect(getYMDDate('2019-06-30').getCalendarQuarter()).toEqual(2);
+    expect(getYMDDate('2019-07-01').getCalendarQuarter()).toEqual(3);
+    expect(getYMDDate('2019-09-30').getCalendarQuarter()).toEqual(3);
+    expect(getYMDDate('2019-10-01').getCalendarQuarter()).toEqual(4);
+    expect(getYMDDate('2019-12-31').getCalendarQuarter()).toEqual(4);
+});
+
 
 //
 //-----------------------------------------------

@@ -198,6 +198,15 @@ export class YMDDate {
     }
 
 
+
+    /**
+     * @returns {number}    The one based quarter to which the date belongs, Q1 is Jan-Feb-Mar.
+     */
+    getCalendarQuarter() {
+        return Math.floor(this._date.getUTCMonth() / 3) + 1;
+    }
+
+
     /**
      * Creates a new date only object a given number of days away from this date.
      * @param {number} days The number of days to add.
