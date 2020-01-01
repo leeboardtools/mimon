@@ -10,7 +10,7 @@ export class StringReadable extends Readable {
         options = options || {};
 
         this._maxChunkSize = options.maxChunkSize || 1000;
-        this._string = string || "";
+        this._string = string || '';
         this._pos = 0;
     }
 
@@ -124,7 +124,7 @@ export function readFromFileHandle(fileHandle) {
 export function readFromReadStream(readStream) {
     return new Promise((resolve, reject) => {
         const gunzip = zlib.createGunzip();
-        let json = "";
+        let json = '';
 
         readStream.pipe(gunzip)
             .on('error', (err) => {

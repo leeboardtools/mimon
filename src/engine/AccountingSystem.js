@@ -1,11 +1,16 @@
+import { EventEmitter } from 'events';
 import { AccountManager } from './Accounts';
 import { PricedItemManager } from './PricedItems';
 import { TransactionManager } from './Transactions';
 import { PriceManager } from './Prices';
 
-
-export class AccountingSystem {
+/**
+ * The main interface object from the engine, this provides access to the various managers.
+ */
+export class AccountingSystem extends EventEmitter {
     constructor(options) {
+        super(options);
+
         options = options || {};
 
         this._baseCurrency = options.baseCurrency || 'USD';
