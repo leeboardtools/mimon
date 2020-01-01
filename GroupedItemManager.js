@@ -232,12 +232,6 @@ export class GroupedItemManager {
                 }
             }
         }
-
-
-        if (!this._noCache) {
-            // TODO: Update the cache!
-            this.flushCache();
-        }
     }
 
 
@@ -276,5 +270,92 @@ export class GroupedItemManager {
             }
         }
 
+    }
+}
+
+
+/**
+ * Object that can be used to store items for use with {@link GroupedItemManager}, providing the async callbacks 
+ * for the GroupedItemManager.
+ * <p>
+ * This handles the storage of items in a group, with an optional callback for loading items when a group is
+ * first created.
+ */
+export class ItemGroups {
+    constructor(options) {
+        options = options || {};
+
+        this._asyncLoadGroupItems = options.asyncLoadGroupItems;
+        this._itemGroups = new Map();
+
+        this.asyncRetrieveItemsFromGroup = this.asyncRetrieveItemsFromGroup.bind(this);
+        this.asyncUpdateItemsInGroup = this.asyncUpdateItemsInGroup.bind(this);
+    }
+
+    /**
+     * @typedef {object} ItemGroups~GroupItems
+     * @property {Map}  itemsByIds  Map whose keys are ids and values are the items.
+     * @property {number}   lastChangeId    Id that's incremented every time there's a change
+     * made to an item in the group.
+     */
+
+    /**
+     * @returns {Map<*,ItemGroups~GroupItems}   The key is the group key.
+     */
+    getItemGroups() { return this._itemGroups; }
+
+
+    async _loadNewGroupItems(groupKey, alwaysCreate) {
+        const groupItems = {
+            itemsByIds: new Map(),
+            lastChangeId: 0,
+        };
+        if (this._asyncLoadGroupItems) {
+            await this._asyncLoadGroupItems(groupKey, groupItems);
+        }
+        else if (!alwaysCreate) {
+            return;
+        }
+
+        this._itemGroups.set(groupKey, groupItems);
+        return groupItems;
+    }
+
+    async asyncRetrieveItemsFromGroup(groupKey, ids) {
+        let groupItems = this._itemGroups.get(groupKey);
+        if (!groupItems) {
+            groupItems = await this._loadNewGroupItems(groupKey);
+        }
+        if (!groupItems) {
+            return [];
+        }
+        const { itemsByIds } = groupItems;
+
+        const items = [];
+        for (let i = 0; i < ids.length; ++i) {
+            items[i] = itemsByIds.get(ids[i]);
+        }
+        return items;
+    }
+
+
+    async asyncUpdateItemsInGroup(groupKey, itemUpdates) {
+        let groupItems = this._itemGroups.get(groupKey);
+        if (!groupItems) {
+            groupItems = await this._loadNewGroupItems(groupKey, true);
+        }
+
+        const { itemsByIds } = groupItems;
+
+        itemUpdates.forEach((itemUpdate) => {
+            const [ id, item ] = itemUpdate;
+            if (item) {
+                itemsByIds.set(id, item);
+            }
+            else {
+                itemsByIds.delete(id);
+            }
+            ++groupItems.lastChangeId;
+        });
     }
 }
