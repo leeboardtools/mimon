@@ -956,6 +956,15 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         return result;
     }
 
+    /**
+     * 
+     * @param {Array} entryDataItemUpdates  Array of three element sub-arrays, the first element of the sub-array
+     * is the new {@link TransactionsHandlerImplBase~Entry}, the second element the old {@link TransactionsHandlerImplBase~Entry},
+     * the last element the data item.
+     * @param {*} idGeneratorOptions 
+     * @returns {TransactionDataItem[]} Array containing the updated data items for new and modified transactions,
+     * or the old data items for removed transactions.
+     */
     async asyncUpdateTransactionDataItemsAndEntries(entryDataItemUpdates, idGeneratorOptions) {
         throw Error('TransactionHandlerImplBase.asyncUpdateTransactionDataItemsAndEntries() abstract method!');
     }
@@ -1052,7 +1061,7 @@ export class InMemoryTransactionsHandler extends TransactionsHandlerImplBase {
             else {
                 // Delete.
                 this._dataItemEntryPairsById.delete(id);
-                result.push(getTransactionDataItem(pair[0], true));
+                result.push(getTransactionDataItem(pair[0]));
             }
         });
 
