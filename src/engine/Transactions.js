@@ -320,8 +320,6 @@ export class TransactionManager extends EventEmitter {
         this._handler = options.handler;
         
         this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorOptions());
-
-        this._transactionIds = new Set(this._handler.getTransactionIds());
     }
 
     async asyncSetupForUse() {
@@ -552,10 +550,6 @@ export class TransactionManager extends EventEmitter {
 
             await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs, this._idGenerator.toJSON());
 
-            transactionDataItems.forEach((transactionDataItem) => {
-                this._transactionIds.add(transactionDataItem.id);
-            });
-
             transactionDataItems = transactionDataItems.map((dataItem) => getTransactionDataItem(dataItem, true));
 
             this.emit('transactionsAdd', { newTransactionDataItems: transactionDataItems });
@@ -607,8 +601,6 @@ export class TransactionManager extends EventEmitter {
         transactionIds.forEach((id) => transactionIdAndDataItemPairs.push([id]));
 
         await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs);
-
-        transactionIds.forEach((id) => this._transactionIds.delete(id));
 
         this.emit('transactionsRemove', { removedTransactionDataItems: transactionDataItems });
         return transactionDataItems;
@@ -981,7 +973,13 @@ export class InMemoryTransactionsHandler extends TransactionsHandlerImplBase {
 
         options = options || {};
         this._idGeneratorOptions = options.idGeneratorOptions;
+
+        this._lastChangeId = 0;
     }
+
+    getLastChangeId() { return this._lastChangeId; }
+
+    markChanged() { ++this._lastChangeId; }
 
 
     /**
@@ -1018,6 +1016,8 @@ export class InMemoryTransactionsHandler extends TransactionsHandlerImplBase {
             const entry = this._entriesById.get(id);
             this._dataItemEntryPairsById.set(id, [dataItem, entry]);
         });
+
+        this.markChanged();
     }
 
 
@@ -1055,6 +1055,8 @@ export class InMemoryTransactionsHandler extends TransactionsHandlerImplBase {
                 result.push(getTransactionDataItem(pair[0], true));
             }
         });
+
+        this.markChanged();
 
         return result;
     }

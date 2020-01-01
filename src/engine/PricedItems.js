@@ -642,7 +642,13 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
                 this._pricedItemDataItemsById.set(pricedItem.id, pricedItem);
             });
         }
+
+        this._lastChangeId = 0;
     }
+
+    getLastChangeId() { return this._lastChangeId; }
+
+    markChanged() { ++this._lastChangeId; }
 
     toJSON() {
         return {
@@ -658,6 +664,8 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
         json.pricedItems.forEach((pricedItemDataItem) => {
             this._pricedItemDataItemsById.set(pricedItemDataItem.id, pricedItemDataItem);
         });
+
+        this.markChanged();
     }
 
 
@@ -682,6 +690,8 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
         if (idGeneratorOptions) {
             this._idGeneratorOptions = idGeneratorOptions;
         }
+
+        this.markChanged();
     }
 
 }

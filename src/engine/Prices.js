@@ -269,7 +269,15 @@ export class InMemoryPricesHandler extends PricesHandler {
     constructor() {
         super();
         this._sortedPricesByPricedItemId = new Map();
+
+        this._lastChangeId = 0;
     }
+
+
+    getLastChangeId() { return this._lastChangeId; }
+
+    markChanged() { ++this._lastChangeId; }
+
 
     toJSON() {
         return {
@@ -282,6 +290,8 @@ export class InMemoryPricesHandler extends PricesHandler {
         json.pricedItemIdAndPrices.forEach(([pricedItemId, priceDataItems]) => {
             this._asyncAddPriceDataItems(pricedItemId, priceDataItems);
         });
+
+        this.markChanged();
     }
 
     async asyncGetPriceDateRange(pricedItemId) {
@@ -329,6 +339,8 @@ export class InMemoryPricesHandler extends PricesHandler {
             entry.add(getPrice(priceDataItem, true));
         });
 
+        this.markChanged();
+
         return priceDataItems;
     }
 
@@ -349,6 +361,9 @@ export class InMemoryPricesHandler extends PricesHandler {
             if (!entry.length) {
                 this._sortedPricesByPricedItemId.delete(pricedItemId);
             }
+
+            this.markChanged();
+            
             return removedPrices.map((value) => getPriceDataItem(value));
         }
 

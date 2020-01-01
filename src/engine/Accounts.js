@@ -1062,7 +1062,13 @@ export class InMemoryAccountsHandler extends AccountsHandler {
                 this._accountDataItemsById.set(pricedItem.id, pricedItem);
             });
         }
+
+        this._lastChangeId = 0;
     }
+
+    getLastChangeId() { return this._lastChangeId; }
+
+    markChanged() { ++this._lastChangeId; }
 
     toJSON() {
         return {
@@ -1078,6 +1084,8 @@ export class InMemoryAccountsHandler extends AccountsHandler {
         json.accounts.forEach((accountDataItem) => {
             this._accountDataItemsById.set(accountDataItem.id, accountDataItem);
         });
+
+        this.markChanged();
     }
 
     getAccountDataItems() {
@@ -1102,6 +1110,8 @@ export class InMemoryAccountsHandler extends AccountsHandler {
         if (idGeneratorOptions) {
             this._idGeneratorOptions = idGeneratorOptions;
         }
+        
+        this.markChanged();
     }
 
 }
