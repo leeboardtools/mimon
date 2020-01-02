@@ -43,7 +43,7 @@
     "AccountManager-parent_account_invalid": ["A parent account with id '", "' was not found."],
     "AccountManager-child_account_invalid": ["A child account with id '", "' was not found."],
     "AccountManager-child_incompatible": ["The account with id '", "' cannot be a child of the new account. The account type '", "' is not compatible with '", "'."],
-    "AccountMaanger-invalid_pricedItem_id": ["A priced item with id '", "' was not found."],
+    "AccountManager-invalid_pricedItem_id": ["A priced item with id '", "' was not found."],
     "AccountManager-singleton_in_use": ["There can only be one account of type '", "'."],
     "AccountManager-type_not_allowed_for_parent": ["Accounts of type '", "' cannot be child accounts of accounts of type '", "'."],
     "AccountManager-remove_account_id_not_found": ["The account cannot be deleted. An account with id '", "' was not found."],
@@ -93,6 +93,16 @@
     "TransactionManager-split_lot_not_in_account": ["The split's lot to change '", "' was not found in the account's list of lots."],
     "TransactionManager-remove_invalid_id": ["A transaction with id '", "' was not found."],
     "TransactionManager~modify_id_not_found": ["A transaction with id '", "' was not found."],
+
+
+    "JSONGzipAccountingFile-dir_not_empty": ["The folder '", "' must be empty in order to create a new accounting file system there."],
+    "JSONGzipAccountingFile-ledger_tag_missing": ["The file '", "' is not a valid MiMon ledger file, the tag is incorrect or missing."],
+    "JSONGzipAccountingFile-accountsHandler_tag_missing": ["The file '", "' is not a valid MiMon ledger file, the accountsHandler section is missing."],
+    "JSONGzipAccountingFile-pricedItemsHandler_tag_missing": ["The file '", "' is not a valid MiMon ledger file, the pricedItemsHandler section is missing."],
+    "JSONGzipAccountingFile-journal_summary_tag_missing": ["The file '", "' is not a valid MiMon journal file, the tag is incorrect or missing,"],
+    "JSONGzipAccountingFile-transactionsHandler_tag_missing": ["The file '", "' is not a valid MiMon journal file, the transactions handler section is missing,"],
+    "JSONGzipAccountingFile-journal_transactions_tag_missing": ["The file '", "' is not a valid MiMon journal transactions file, the tag is incorrect or missing,"],
+    "JSONGzipAccountingFile-journal_transactions_missing": ["The file '", "' is not a valid MiMon journal transactions file, the transactions section is missing,"],
 
     "": ""
 }

@@ -439,7 +439,7 @@ test('TransactionManager-validateSplits', async () => {
 
     const accountManager = accountingSystem.getAccountManager();
     await accountManager.asyncModifyAccount({
-        id: sys.aaplBrokerageA,
+        id: sys.aaplBrokerageAId,
         accountState: {
             ymdDate: new YMDDate('2019-10-01'),
             lots: [lotA, lotB],
@@ -450,21 +450,21 @@ test('TransactionManager-validateSplits', async () => {
     const lotD = { purchaseYMDDate: new YMDDate('2019-10-12'), quantityBaseValue: 44444, costBasisBaseValue: 4444 };
     expect(manager.validateSplits([
         { accountId: sys.brokerageAId, quantityBaseValue: -70000, },
-        { accountId: sys.aaplBrokerageA, quantityBaseValue: 70000, lotChanges: [[lotC]], },
+        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, lotChanges: [[lotC]], },
     ])).toBeUndefined();
 
     expect(manager.validateSplits([
         { accountId: sys.brokerageAId, quantityBaseValue: -70000, },
-        { accountId: sys.aaplBrokerageA, quantityBaseValue: 70000, lotChanges: [[lotC, lotA]], },
+        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, lotChanges: [[lotC, lotA]], },
     ])).toBeUndefined();
     expect(manager.validateSplits([
         { accountId: sys.brokerageAId, quantityBaseValue: -70000, },
-        { accountId: sys.aaplBrokerageA, quantityBaseValue: 70000, lotChanges: [[lotD, lotC]], },
+        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, lotChanges: [[lotD, lotC]], },
     ])).toBeInstanceOf(Error);
 
     expect(manager.validateSplits([
         { accountId: sys.brokerageAId, quantityBaseValue: -70000, },
-        { accountId: sys.aaplBrokerageA, quantityBaseValue: 70000, },
+        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, },
     ])).toBeInstanceOf(Error);
 
 
@@ -554,7 +554,7 @@ test('TransactionManager-add_modify', async () => {
         ymdDate: '2019-10-11',
         splits: [
             { accountId: sys.brokerageAId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -500000, },
-            { accountId: sys.aaplBrokerageA, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 500000, lotChanges: [[lotC1], [lotC2]]},
+            { accountId: sys.aaplBrokerageAId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 500000, lotChanges: [[lotC1], [lotC2]]},
         ]
     };
     const result = await manager.asyncAddTransactions([settingsB, settingsC]);

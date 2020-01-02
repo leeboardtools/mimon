@@ -52,13 +52,13 @@ export async function asyncCreateAccountingSystem(options) {
 //
 //      -investmentsId
 //          -brokerageAId
-//              -aaplBrokerageA
-//              -msftBrokerageA
-//              -mmmBrokerageA
+//              -aaplBrokerageAId
+//              -msftBrokerageAId
+//              -mmmBrokerageAId
 //
 //          -brokerageBId
-//              -ibmBrokerageB
-//              -vwusxBrokerageB
+//              -ibmBrokerageBId
+//              -vwusxBrokerageBId
 //
 //          -iraId
 //              -aaplIRAId
@@ -116,6 +116,10 @@ export async function asyncCreateAccountingSystem(options) {
 //
 export async function asyncCreateBasicAccountingSystem(options) {
     const accountingSystem = await asyncCreateAccountingSystem(options);
+    return asyncSetupBasicAccounts(accountingSystem);
+}
+
+export async function asyncSetupBasicAccounts(accountingSystem) {
     const accountManager = accountingSystem.getAccountManager();
     const pricedItemManager = accountingSystem.getPricedItemManager();
 
@@ -208,17 +212,17 @@ export async function asyncCreateBasicAccountingSystem(options) {
         initialYMDDate
     )).id;
 
-    sys.aaplBrokerageA = (await accountManager.asyncAddAccount(
+    sys.aaplBrokerageAId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.brokerageAId, type: A.AccountType.SECURITY, pricedItemId: sys.aaplPricedItemId, name: 'AAPL', },
         initialYMDDate
     )).id;
 
-    sys.msftBrokerageA = (await accountManager.asyncAddAccount(
+    sys.msftBrokerageAId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.brokerageAId, type: A.AccountType.SECURITY, pricedItemId: sys.msftPricedItemId, name: 'MSFT', },
         initialYMDDate
     )).id;
 
-    sys.mmmBrokerageA = (await accountManager.asyncAddAccount(
+    sys.mmmBrokerageAId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.brokerageAId, type: A.AccountType.SECURITY, pricedItemId: sys.mmmPricedItemId, name: 'MMM', },
         initialYMDDate
     )).id;
@@ -229,12 +233,12 @@ export async function asyncCreateBasicAccountingSystem(options) {
         initialYMDDate
     )).id;
 
-    sys.ibmBrokerageB = (await accountManager.asyncAddAccount(
+    sys.ibmBrokerageBId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.brokerageBId, type: A.AccountType.SECURITY, pricedItemId: sys.ibmPricedItemId, name: 'IBM', },
         initialYMDDate
     )).id;
 
-    sys.vwusxBrokerageB = (await accountManager.asyncAddAccount(
+    sys.vwusxBrokerageBId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.brokerageBId, type: A.AccountType.MUTUAL_FUND, pricedItemId: sys.vwusxPricedItemId, name: 'Vanguard VWUSX', },
         initialYMDDate
     )).id;

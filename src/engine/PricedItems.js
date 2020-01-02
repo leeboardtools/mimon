@@ -243,14 +243,14 @@ export class PricedItemManager extends EventEmitter {
             this._pricedItemsById.set(pricedItem.id, pricedItem);
             if (pricedItem.type === PricedItemType.CURRENCY.name) {
                 const currencyName = this._getCurrencyName(pricedItem.currency, pricedItem.quantityDefinition);
-                this._currencyPricedItemIdsByCurrency.set(currencyName, pricedItem);
+                this._currencyPricedItemIdsByCurrency.set(currencyName, pricedItem.id);
             }
         });
     }
 
 
     async asyncSetupForUse() {
-        let usdPricedItem = this.getCurrencyPricedItemDataItemWithId('USD');
+        let usdPricedItem = this.getCurrencyPricedItemDataItem('USD');
         if (!usdPricedItem) {
             usdPricedItem = await this.asyncAddCurrencyPricedItem('USD');
         }
@@ -259,7 +259,7 @@ export class PricedItemManager extends EventEmitter {
         this._requiredCurrencyPricedItemIds.add(usdPricedItem.id);
 
 
-        let eurPricedItem = this.getCurrencyPricedItemDataItemWithId('EUR');
+        let eurPricedItem = this.getCurrencyPricedItemDataItem('EUR');
         if (!eurPricedItem) {
             eurPricedItem = await this.asyncAddCurrencyPricedItem('EUR');
         }
@@ -269,7 +269,7 @@ export class PricedItemManager extends EventEmitter {
 
 
         this._baseCurrency = this._accountingSystem.getBaseCurrency();
-        let baseCurrencyPricedItem = this.getCurrencyPricedItemDataItemWithId(this._baseCurrency);
+        let baseCurrencyPricedItem = this.getCurrencyPricedItemDataItem(this._baseCurrency);
         if (!baseCurrencyPricedItem) {
             baseCurrencyPricedItem = await this.asyncAddCurrencyPricedItem(this._baseCurrency);
         }
@@ -411,7 +411,7 @@ export class PricedItemManager extends EventEmitter {
      * <code>undefined</code> the currency's quantity definition is used.
      * @returns {PricedItemDataItem}
      */
-    getCurrencyPricedItemDataItemWithId(currency, quantityDefinition) {
+    getCurrencyPricedItemDataItem(currency, quantityDefinition) {
         return this.getPricedItemDataItemWithId(this.getCurrencyPricedItemId(currency, quantityDefinition));
     }
 

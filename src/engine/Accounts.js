@@ -457,22 +457,24 @@ export class AccountManager extends EventEmitter {
             }
         });
 
-        this._rootAssetAccountId = options.rootAssetAccountId;
+        const baseOptions = this._handler.getBaseOptions() || {};
+
+        this._rootAssetAccountId = baseOptions.rootAssetAccountId;
         this._rootAssetAccount = this._accountsById.get(this._rootAssetAccountId);
 
-        this._rootLiabilityAccountId = options.rootLiabilityAccountId;
+        this._rootLiabilityAccountId = baseOptions.rootLiabilityAccountId;
         this._rootLiabilityAccount = this._accountsById.get(this._rootLiabilityAccountId);
 
-        this._rootIncomeAccountId = options.rootIncomeAccountId;
+        this._rootIncomeAccountId = baseOptions.rootIncomeAccountId;
         this._rootIncomeAccount = this._accountsById.get(this._rootIncomeAccountId);
 
-        this._rootExpenseAccountId = options.rootExpenseAccountId;
+        this._rootExpenseAccountId = baseOptions.rootExpenseAccountId;
         this._rootExpenseAccount = this._accountsById.get(this._rootExpenseAccountId);
 
-        this._rootEquityAccountId = options.rootEquityAccountId;
-        this._rootEquityAccountId = this._accountsById.get(this._rootEquityAccountId);
+        this._rootEquityAccountId = baseOptions.rootEquityAccountId;
+        this._rootEquityAccount = this._accountsById.get(this._rootEquityAccountId);
 
-        this._openingBalancesAccountId = options.openingBalanceAccountId;
+        this._openingBalancesAccountId = baseOptions.openingBalancesAccountId;
         this._openingBalancesAccount = this._accountsById.get(this._openingBalancesAccountId);
     }
 
@@ -542,6 +544,15 @@ export class AccountManager extends EventEmitter {
                 });
             this._openingBalancesAccountId = this._openingBalancesAccount.id;
         }
+
+        this._handler.setBaseOptions({
+            rootAssetAccountId: this._rootAssetAccountId,
+            rootLiabilityAccountId: this._rootLiabilityAccountId,
+            rootIncomeAccountId: this._rootIncomeAccountId,
+            rootExpenseAccountId: this._rootExpenseAccountId,
+            rootEquityAccountId: this._rootEquityAccountId,
+            openingBalancesAccountId: this._openingBalancesAccountId,
+        });
     }
 
     
@@ -686,7 +697,7 @@ export class AccountManager extends EventEmitter {
 
         const pricedItem = this._accountingSystem.getPricedItemManager().getPricedItemDataItemWithId(accountDataItem.pricedItemId);
         if (!pricedItem) {
-            return userError('AccountMaanger-invalid_pricedItem_id', accountDataItem.pricedItemId);
+            return userError('AccountManager-invalid_pricedItem_id', accountDataItem.pricedItemId);
         }
 
         const pricedItemType = getPricedItemType(pricedItem.type);
@@ -1035,6 +1046,22 @@ export class AccountsHandler {
 
 
     /**
+     * Called by {@link AccountManager#asyncSetupForUse} to save the base options of the account manager.
+     * @param {object} options The options, a JSON-able object.
+     */
+    setBaseOptions(options) {
+        throw Error('AccountsHandler.setBaseOptiosn() abstract method!');
+    }
+
+    /**
+     * @returns {object}    The base options object passed to {@link AccountsHandler#setBaseOptinos}.
+     */
+    getBaseOptions() {
+        throw Error('AccountsHandler.getBaseOptions() abstract method!');
+    }
+
+
+    /**
      * Main function for updating the account data items. We use a single function for both modify and delete because
      * modifying or deleting one account may affect other accounts, so those accounts must also be deleted at the same time.
      * @param {*} accountIdAndDataItemPairs Array of one or two element sub-arrays. The first element of each sub-array is the account id.
@@ -1074,6 +1101,7 @@ export class InMemoryAccountsHandler extends AccountsHandler {
         return {
             idGeneratorOptions: this._idGeneratorOptions,
             accounts: Array.from(this._accountDataItemsById.values()),
+            baseOptions: this._baseOptions,
         };
     }
 
@@ -1085,6 +1113,8 @@ export class InMemoryAccountsHandler extends AccountsHandler {
             this._accountDataItemsById.set(accountDataItem.id, accountDataItem);
         });
 
+        this._baseOptions = json.baseOptions;
+
         this.markChanged();
     }
 
@@ -1094,6 +1124,15 @@ export class InMemoryAccountsHandler extends AccountsHandler {
 
     getIdGeneratorOptions() {
         return this._idGeneratorOptions;
+    }
+
+    setBaseOptions(options) {
+        this._baseOptions = options;
+        this.markChanged();
+    }
+
+    getBaseOptions() {
+        return this._baseOptions;
     }
 
 
