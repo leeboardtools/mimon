@@ -300,7 +300,7 @@ export class ItemGroups {
      */
 
     /**
-     * @returns {Map<*,ItemGroups~GroupItems}   The key is the group key.
+     * @returns {Map<*,ItemGroups~GroupItems>}   The key is the group key.
      */
     getItemGroups() { return this._itemGroups; }
 
