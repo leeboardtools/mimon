@@ -1,7 +1,9 @@
-import { createDir, cleanupDir, expectFileToBe } from '../util/FileTestHelpers';
+import { createDir, cleanupDir } from '../util/FileTestHelpers';
 import { JSONGzipAccountingFileFactory } from './JSONGzipAccountingFile';
 import * as A from './Accounts';
+import * as PI from './PricedItems';
 import * as ASTH from './AccountingSystemTestHelpers';
+import { getDecimalDefinition } from '../util/Quantities';
 
 const path = require('path');
 
@@ -17,12 +19,13 @@ test('JSONGzipAccountingFile-simple', async () => {
         const file1 = await factory.asyncCreateFile(pathName1);
         const accountingSystem1 = file1.getAccountingSystem();
 
-        const sys = ASTH.asyncSetupBasicAccounts(accountingSystem1);
+        const sys = await ASTH.asyncSetupBasicAccounts(accountingSystem1);
 
         const accountManager1 = accountingSystem1.getAccountManager();
 
         // Assets
         const checking = accountManager1.getAccountDataItemWithId(sys.checkingId);
+
         const brokerageA = accountManager1.getAccountDataItemWithId(sys.brokerageAId);
         const aaplBrokerageA = accountManager1.getAccountDataItemWithId(sys.aaplBrokerageAId);
 
@@ -36,11 +39,22 @@ test('JSONGzipAccountingFile-simple', async () => {
         const groceries = accountManager1.getAccountDataItemWithId(sys.groceriesId);
         const federalTaxes = accountManager1.getAccountDataItemWithId(sys.federalTaxesId);
 
+        // Gonna remove this later to make sure remove works fine.
+        const newAccountA = await accountManager1.asyncAddAccount({
+            parentAccountId: sys.currentAssetsId, type: A.AccountType.BANK, pricedItemId: checking.pricedItemId, name: 'New Account A'
+        });
+
+
         // Priced items
         const pricedItemManager1 = accountingSystem1.getPricedItemManager();
 
         const aaplPricedItem = pricedItemManager1.getPricedItemDataItemWithId(sys.aaplPricedItemId);
         const housePricedItem = pricedItemManager1.getPricedItemDataItemWithId(sys.housePricedItemId);
+
+        const newPricedItemA = await pricedItemManager1.asyncAddPricedItem({
+            type: PI.PricedItemType.PROPERTY, currency: 'USD', name: 'PricedItemA', quantityDefinition: getDecimalDefinition(-4),
+        });
+
 
         await file1.asyncWriteFile();
         await file1.asyncCloseFile();
@@ -61,12 +75,31 @@ test('JSONGzipAccountingFile-simple', async () => {
         expect(accountManager2.getAccountDataItemWithId(sys.groceriesId)).toEqual(groceries);
         expect(accountManager2.getAccountDataItemWithId(sys.federalTaxesId)).toEqual(federalTaxes);
 
-
         const pricedItemManager2 = accountingSystem2.getPricedItemManager();
         expect(pricedItemManager2.getPricedItemDataItemWithId(sys.aaplPricedItemId)).toEqual(aaplPricedItem);
         expect(pricedItemManager2.getPricedItemDataItemWithId(sys.housePricedItemId)).toEqual(housePricedItem);
 
+        expect(accountManager2.getAccountDataItemWithId(newAccountA.id)).toEqual(newAccountA);
+        await accountManager2.asyncRemoveAccount(newAccountA.id);
+        expect(accountManager2.getAccountDataItemWithId(newAccountA.id)).toBeUndefined();
+
+        expect(pricedItemManager2.getPricedItemDataItemWithId(newPricedItemA.id)).toEqual(newPricedItemA);
+        await pricedItemManager2.asyncRemovePricedItem(newPricedItemA.id);
+        expect(pricedItemManager2.getPricedItemDataItemWithId(newPricedItemA.id)).toBeUndefined();
+
+        await file2.asyncWriteFile();
         await file2.asyncCloseFile();
+
+
+        const file3 = await factory.asyncOpenFile(pathName1);
+        const accountingSystem3 = file3.getAccountingSystem();
+        const accountManager3 = accountingSystem3.getAccountManager();
+        expect(accountManager3.getAccountDataItemWithId(newAccountA.id)).toBeUndefined();
+
+        const pricedItemManager3 = accountingSystem3.getPricedItemManager();
+        expect(pricedItemManager3.getPricedItemDataItemWithId(newPricedItemA.id)).toBeUndefined();
+
+        await file3.asyncCloseFile();
     }
     finally {
         // await cleanupDir(baseDir);
