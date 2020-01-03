@@ -862,6 +862,11 @@ export class AccountManager extends EventEmitter {
             }
         });
 
+        this._accountsById.delete(accountId);
+        if (accountDataItem.refId) {
+            this._accountsByRefId.delete(accountDataItem.refId);
+        }
+
         this.emit('accountRemove', { removedAccountDataItem: accountDataItem });
 
         return accountDataItem;
