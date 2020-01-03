@@ -19,7 +19,11 @@ test('JSONGzipAccountingFile-simple', async () => {
         const file1 = await factory.asyncCreateFile(pathName1);
         const accountingSystem1 = file1.getAccountingSystem();
 
+        expect(file1.isModified()).toBeFalsy();
+
         const sys = await ASTH.asyncSetupBasicAccounts(accountingSystem1);
+
+        expect(file1.isModified()).toBeTruthy();
 
         const accountManager1 = accountingSystem1.getAccountManager();
 
@@ -57,10 +61,14 @@ test('JSONGzipAccountingFile-simple', async () => {
 
 
         await file1.asyncWriteFile();
+        expect(file1.isModified()).toBeFalsy();
+
         await file1.asyncCloseFile();
 
 
         const file2 = await factory.asyncOpenFile(pathName1);
+        expect(file2.isModified()).toBeFalsy();
+
         const accountingSystem2 = file2.getAccountingSystem();
         const accountManager2 = accountingSystem2.getAccountManager();
 
@@ -87,7 +95,11 @@ test('JSONGzipAccountingFile-simple', async () => {
         await pricedItemManager2.asyncRemovePricedItem(newPricedItemA.id);
         expect(pricedItemManager2.getPricedItemDataItemWithId(newPricedItemA.id)).toBeUndefined();
 
+        expect(file2.isModified()).toBeTruthy();
+
         await file2.asyncWriteFile();
+        expect(file2.isModified()).toBeFalsy();
+        
         await file2.asyncCloseFile();
 
 

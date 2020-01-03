@@ -221,6 +221,8 @@ class JSONGzipLedgerFile {
 
         this._accountsHandler = accountingFile._accountsHandler;
         this._pricedItemsHandler = accountingFile._pricedItemsHandler;
+
+        this._accountingSystemOptions = {};
     }
 
     static buildLedgerPathName(pathName) {
@@ -239,6 +241,10 @@ class JSONGzipLedgerFile {
     }
 
 
+    getAccountingSystemOptions() {
+        return this._accountingSystemOptions;
+    }
+
     async asyncRead() {
         const pathName = this._pathName;
         const json = await JGZ.readFromFile(pathName);
@@ -256,6 +262,8 @@ class JSONGzipLedgerFile {
         this._accountsHandler.fromJSON(json.accountsHandler);
         this._pricedItemsHandler.fromJSON(json.pricedItemsHandler);
 
+        this._accountingSystemOptions = json.accountingSystemOptions;
+
         this.cleanIsModified();
 
         return json.stateId;
@@ -269,6 +277,7 @@ class JSONGzipLedgerFile {
             stateId: stateId,
             accountsHandler: this._accountsHandler.toJSON(),
             pricedItemsHandler: this._pricedItemsHandler.toJSON(),
+            accountingSystemOptions: this._accountingFile.getAccountingSystem().getOptions(),
         };
 
         // Write out the file...
@@ -460,6 +469,7 @@ class JSONGzipPriceFiles {
 
     async asyncRead() {
 
+        this.cleanIsModified();
     }
 
     async asyncCreateWriteFileActions(stateId) {
@@ -494,6 +504,7 @@ class JSONGzipHistoryFiles {
 
     async asyncRead() {
 
+        this.cleanIsModified();
     }
 
     async asyncCreateWriteFileActions(stateId) {
@@ -532,12 +543,16 @@ class JSONGzipAccountingFile extends AccountingFile {
 
 
     async _asyncSetupAccountingSystem() {
-        this._accountingSystem = new AccountingSystem({
-            accountManager: { handler: this._accountsHandler },
-            pricedItemManager: { handler: this._pricedItemsHandler },
-            priceManager: { handler: this._pricesHandler },
-            transactionManager: { handler: this._transactionsHandler },
-        });
+        const options = Object.assign({}, 
+            this._ledgerFile.getAccountingSystemOptions(), 
+            {
+                accountManager: { handler: this._accountsHandler },
+                pricedItemManager: { handler: this._pricedItemsHandler },
+                priceManager: { handler: this._pricesHandler },
+                transactionManager: { handler: this._transactionsHandler },
+            });
+
+        this._accountingSystem = new AccountingSystem(options);
 
         this._accountingSystem.getAccountManager().isDebug = this.isDebug;
 
@@ -549,14 +564,17 @@ class JSONGzipAccountingFile extends AccountingFile {
     }
 
     async asyncReadFile() {
-        this.isDebug = true;
-
         this._stateId = await this._ledgerFile.asyncRead();
         await this._journalFiles.asyncRead();
         await this._priceFiles.asyncRead();
         await this._historyFiles.asyncRead();
 
         await this._asyncSetupAccountingSystem();
+
+        this._ledgerFile.cleanIsModified();
+        this._journalFiles.cleanIsModified();
+        this._priceFiles.cleanIsModified();
+        this._historyFiles.cleanIsModified();
     }
 
 

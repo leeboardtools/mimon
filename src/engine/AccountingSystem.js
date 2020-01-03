@@ -44,4 +44,10 @@ export class AccountingSystem extends EventEmitter {
     getBaseCurrency() { return this._baseCurrency; }
 
 
+    getOptions() {
+        return {
+            baseCurrency: this._baseCurrency,
+        };
+    }
+
 }
