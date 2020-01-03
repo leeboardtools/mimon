@@ -1,4 +1,4 @@
-import { loadLocaleMsgsFile, userError } from '../util/UserMessages';
+import { loadLocaleMsgsFile } from '../util/UserMessages';
 import { setUserSettingsPathName } from '../util/UserSettings';
 //import { JSONGzipAccountingFileFactory } from './JSONGzipAccountingFile';
 //import { AccountingSystem } from './AccountingSystem';

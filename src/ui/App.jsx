@@ -1,3 +1,6 @@
+// TEMP!!!
+/* eslint-disable no-unused-vars */
+
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as Engine from '../engine/Engine';
@@ -82,7 +85,7 @@ function AppOpenScreen(props) {
     return (
         <div>
             <h2>LBMiMon</h2>
-            <h4>LeeboardTools' Personal Money Manager</h4>
+            <h4>LeeboardTools&apos; Personal Money Manager</h4>
             <div className="container">
                 <div className="row">
                     <div className="col"> </div>

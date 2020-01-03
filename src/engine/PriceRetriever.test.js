@@ -1,3 +1,6 @@
+// TEMP!!!
+/* eslint-disable no-unused-vars */
+
 import { asyncUpdatePricedItemPrices, setIsElectron, asyncGetUpdatedPricedItemPrices } from './PriceRetriever';
 import { PricedItemType } from './Prices';
 //import * as PTH from './PricesTestHelpers';

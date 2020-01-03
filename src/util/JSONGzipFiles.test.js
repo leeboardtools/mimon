@@ -1,6 +1,6 @@
-import { cleanupDir } from './FileTestHelpers'
+import { cleanupDir } from './FileTestHelpers';
 
-import * as JSONGzip from './JSONGzipFiles'
+import * as JSONGzip from './JSONGzipFiles';
 
 const os = require('os');
 const path = require('path');
@@ -11,7 +11,9 @@ async function createDir(dir) {
     try {
         await fsPromises.mkdir(baseDir);
     }
-    catch (e) {}
+    catch (e) {
+        // Do nothing
+    }
     return baseDir;
 }
 

@@ -372,7 +372,7 @@ class JSONGzipJournalFiles {
             tag: JOURNAL_TRANSACTIONS_TAG,
             fileVersion: '1.0',
             transactions: Array.from(groupItems.itemsById.values()),
-        }
+        };
 
         // Write out the file...
         await JGZ.writeToFile(json, pathName);
@@ -647,6 +647,7 @@ export class JSONGzipAccountingFileFactory extends AccountingFileFactory {
         }
         return pathName;
     }
+
 
     /**
      * Called to retrieve an array of Electron [FileFilter]{@link https://electronjs.org/docs/api/structures/file-filter} objects

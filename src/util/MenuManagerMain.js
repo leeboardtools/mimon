@@ -41,7 +41,7 @@ class MenuHandler {
                 itemTemplate.overrideRole = itemTemplate.overrideRole || itemTemplate.role;
 
                 if (!menuItem.role) {
-                    menuItem.click = (event, focusedWindow, focusedWebContents) => { this._handleMenuClick(event, focusedWindow, focusedWebContents, idRenderer) };
+                    menuItem.click = (event, focusedWindow, focusedWebContents) => { this._handleMenuClick(event, focusedWindow, focusedWebContents, idRenderer); };
                 }
 
                 menuItemEntries.push({
@@ -260,5 +260,5 @@ export class MenuManagerMain {
     handleMenuClick(event, focusedWindow, focusedWebContents, id) {
         focusedWebContents.send('MenuManager-menuClick', id);
     }
-};
+}
 
