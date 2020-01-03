@@ -13,7 +13,7 @@ export function toCleanJSON(json) {
         }
     }
     return cleanJSON;
-};
+}
 
 
 /**

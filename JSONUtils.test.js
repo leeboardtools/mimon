@@ -1,18 +1,18 @@
-import * as JSONUtils from './JSONUtils'
+import * as JSONUtils from './JSONUtils';
 
 test('JSONUtils.toCleanJSON', () => {
     const a = {
-        a: "Abc",
+        a: 'Abc',
         b: undefined,
-        c: "Def",
+        c: 'Def',
         d: 0,
         e: null,
         f: 123,
     };
     const cleanA = JSONUtils.toCleanJSON(a);
     expect(cleanA).toEqual({
-        a: "Abc",
-        c: "Def",
+        a: 'Abc',
+        c: 'Def',
         d: 0,
         e: null,
         f: 123,
