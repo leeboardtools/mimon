@@ -52,7 +52,7 @@ When a transaction involves accounts whose underlying quantities represented are
 
 Prices are represented by [Price](#price) data items. A Price has a date stamp and a value. Prices may also have additional items, depending on what the price represents. For example, stock prices may include opening and closing prices.
 
-To handle the references of different data items to other data items, the engine identifies the major data items with numeric ids generated via [NumericIdGenerators](#numericidgenerator). Generated ids are unique amongst a particular type of data items. For example, accounts will all have unique ids, managed by the account manager, while transactions will have their own set of unique ids, managed by the transaction manager.(
+To handle the references of different data items to other data items, the engine identifies the major data items with numeric ids generated via [NumericIdGenerators](#numericidgenerator). Generated ids are unique amongst a particular type of data items. For example, accounts will all have unique ids, managed by the account manager, while transactions will have their own set of unique ids, managed by the transaction manager.
 
 There are actually two forms of most data items. The first form has properties that are objects, such as [Currencies](#currency), [QuantityDefinitions](#quantitydefinition), and [YMDDates](#ymddate). The second form is pure primitive data, and as such can be directly converted to and from JSON strings. The various data items have simple conversion functions for converting between the two.
 
@@ -65,14 +65,19 @@ The underlying file storage system is for the most part transparent outside the 
 
 All file system implementations extend the [AccountingFile](#accountingfile) class.
 
-The base file system is folder based and consists of a number of GZipped JSON files in a common folder. These files include:
+The base file system is folder based and consists of a number of Gzipped JSON files in a common folder. These files include:
 - A Ledger File - this holds all the [Account](#account), and [PricedItem](#priceditem) data items.
 - Several Journal Files - these are for the transactions. There is a summary file and then for each year a separate file containing the transactions belonging to that year.
 - Several Prices Files - these are for the prices. Similar to the Journal Files, there is a summary file and then for each year a separate file containing the prices belong to that year.
 
-To handle retrieving and saving data items between a file system and the engine, the various data item managers ([AccountManager](#accountmanager), [TransactionManager](#transactionmanager), etc) will employ a handler object. File system implementations will implement the different handler objects.
+To handle retrieving and saving data items between a file system and the engine, the various data item managers ([AccountManager](#accountmanager), [TransactionManager](#transactionmanager), etc) employ a handler object. File system implementations will implement the different handler objects.
 
 When an accounting file is first created or opened, it creates the [AccountingSystem](#accountingsystem) represented by the file. When it does, it passes in the various handlers to the accounting system's constructor, which then passes them on to the various managers.
+
+Since both [AccountManager](#accountmanager) and [PricedItemManager](#priceditemmanager) have predefined objects (the root accounts for AccountManager, the USD, EUR, and accounting system's base currency for PriceManager), these managers retrieve from their handlers the list of accounts/priced items when the managers are constructed. This means that when opening an existing file, the handlers must be pre-loaded before the accounting system can be created.
+
+[TransactionManager](#transactionmanager) and [PriceManager](#pricemanager) on the other hand don't have predefined objects, they work directly with the handlers 
+so don't really need pre-loading.
 
 
 ## Entities and Objects
@@ -107,7 +112,7 @@ Some account types:
 #### AccountState
 Represents the quantity state of an account at a particular date. An account state has the following properties:
 - [YMDDate](#ymddate)
-- quantity (this will probably be a raw quantity value, as opposed to a Quantity object)
+- quantityBaseValue This represents the quantity of the priced item's currency.
 - [Lots](#lot) (only for accounts that support lots)
 
 
@@ -128,8 +133,8 @@ Transactions are managed by a [TransactionManager](#transactionmanager)
 ### Split
 The data item used to define the involvement of an account in a transaction. In any one transaction there may be multiple entries referring to the same account. Entries have the following properties:
 - AccountId
-- quantity (probably a raw quantity value as opposed to a [Quantity](#quantity) object)
-- Lot[][] (only for entries referring to accounts that have lots)
+- quantityBaseValue
+- LotChanges[][] (only for entries referring to accounts that have lots)
 - ReconciledState
 
 
@@ -141,8 +146,8 @@ Manages all the transactions in an accounting system.
 The data item used to define a loat. A lot has the following properties:
 - PurcaseDate
 - Description (optional)
-- Quantity (probably a raw quantity value as opposed to a [Quantity](#quantity) object)
-- CostBasis (probably a raw quantity value as opposed to a [Quantity](#quantity) object)
+- quantityBaseValue
+- CostBasisBaseValue
 
 Lots are not manaaged, they are stored directly in [Split](#split) and [AccountState](#accountstate) data items.
 
@@ -221,4 +226,8 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
 
 
 ## TODOs
-Update notes above regarding use of Quantity objects.
+- Add test transactions to AccountingSystemTestHelpers.js, then test transactions in JSONGzipAccountingFile.test.js
+- Add validation of splits against the account state in TransactionManager.
+    - Not sure how this would work for non-current transactions with lots.
+    Would need to validate against the account state rewound to the transaction before the desired transaction.
+    - Should process asyncAddTransactions in date order, oldest to newest.
