@@ -964,4 +964,38 @@ test('Transactions-lotTransactions', async () => {
     currentQuantityBaseValue -= sellCaQuantityBaseValue;
     expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
         { ymdDate: settingsG.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotCa, lotE]});
+    
+
+    //
+    // Test sameDayOrder for multiple same day transactions affecting the same lots.
+    // The buy
+    const lotF = { purchaseYMDDate: '2010-12-23', quantityBaseValue: 22222, costBasisBaseValue: 11111 };
+    const settingsH = {
+        ymdDate: '2010-12-23',
+        sameDayOrder: 0,
+        splits: [
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotF.costBasisBaseValue, },
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotF.costBasisBaseValue, lotChanges: [[lotF, ]]},
+        ],
+    };
+
+    // The partial sell
+    const sellFaQuantityBaseValue = 1234;
+    const lotFa = { purchaseYMDDate: '2010-12-23', quantityBaseValue: 11111, costBasisBaseValue: 1212 };
+    const settingsI = {
+        ymdDate: '2010-12-23',
+        sameDayOrder: 1,
+        splits: [
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: sellFaQuantityBaseValue, },
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -sellFaQuantityBaseValue, lotChanges: [[lotFa, lotF ]]},
+        ],
+    };
+    const [ transI, transH ] = await transactionManager.asyncAddTransactions([settingsI, settingsH]);
+    settingsH.id = transH.id;
+    settingsI.id = transI.id;
+
+    currentQuantityBaseValue += lotF.costBasisBaseValue;
+    currentQuantityBaseValue -= sellFaQuantityBaseValue;
+    expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
+        { ymdDate: settingsI.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotCa, lotE, lotFa]});
 });

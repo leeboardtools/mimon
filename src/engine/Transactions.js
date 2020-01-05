@@ -265,7 +265,11 @@ export function getSplits(splitDataItems, alwaysCopy) {
 
 /**
  * @typedef {object}    TransactionDataItem
+ * @property {number}   id
  * @property {string}   ymdDate The transaction's date.
+ * @property {number}   [sameDayOrder]    Optional, used to order transactions that fall on the same day,
+ * the lower the value the earlier in the day the transaction is ordered. If not given then it is treated as
+ * -{@link Number#MAX_VALUE}.
  * @property {SplitDataItem[]}   splits
  * @property {string}   [description]
  * @property {string}   [memo]  
@@ -274,7 +278,11 @@ export function getSplits(splitDataItems, alwaysCopy) {
 
 /**
  * @typedef {object}    Transaction
+ * @property {number}   id
  * @property {YMDDate}  ymdDate The transaction's date.
+ * @property {number}   [sameDayOrder]    Optional, used to order transactions that fall on the same day,
+ * the lower the value the earlier in the day the transaction is ordered. If not given then it is treated as
+ * -{@link Number#MAX_VALUE}.
  * @property {Split[]}  splits
  * @property {string}   [description]
  * @property {string}   [memo]  
@@ -433,9 +441,12 @@ export class TransactionManager extends EventEmitter {
      * @param {Split[]|SplitDataItem[]} splits 
      * @param {boolean} isModify    If <code>true</code> the splits are for a transaction modify, and any lot changes
      * will not be verified against the account's currenty state.
+     * @param {Map<number,AccountState>|Map<number,AccountStateDataItem>}   [accountStatesById] If specified, the account states
+     * to use for validating the individual splits, in particular the lot changes. The account states are updated
+     * with the lot changes.
      * @returns {Error|undefined}   Returns an Error if invalid, <code>undefined</code> if valid.
      */
-    validateSplits(splits, isModify) {
+    validateSplits(splits, isModify, accountStatesById) {
         if (!splits || (splits.length < 2)) {
             return userError('TransactionManager~need_at_least_2_splits');
         }
@@ -452,7 +463,9 @@ export class TransactionManager extends EventEmitter {
         const splitCreditBaseValues = [];
         let isCurrencyExchange = false;
 
-        splits.forEach((split) => {
+        for (let i = 0; i < splits.length; ++i) {
+            const split = splits[i];
+
             const accountDataItem = accountManager.getAccountDataItemWithId(split.accountId);
             const account = A.getAccount(accountDataItem);
             if (!account) {
@@ -483,10 +496,20 @@ export class TransactionManager extends EventEmitter {
                     return userError('TransactionManager~split_needs_lots', account.type.name);
                 }
 
-                if (!isModify) {
+                let accountStateDataItem;
+                if (accountStatesById) {
+                    accountStateDataItem = accountStatesById.get(account.id);
+                }
+                if (!accountStateDataItem) {
+                    if (!isModify) {
+                        accountStateDataItem = accountDataItem.accountState;
+                    }
+                }
+
+                if (accountStateDataItem) {
                     // Make sure any lots to be changed are in fact in the account.
                     const accountLotStrings = [];
-                    accountDataItem.accountState.lots.forEach((lotDataItem) => {
+                    accountStateDataItem.lots.forEach((lotDataItem) => {
                         accountLotStrings.push(JSON.stringify(lotDataItem));
                     });
 
@@ -500,11 +523,15 @@ export class TransactionManager extends EventEmitter {
                             }
                         }
                     }
+
+                    if (accountStatesById) {
+                        accountStatesById.set(account.id, A.addSplitToAccountStateDataItem(accountStateDataItem, split));
+                    }
                 }
             }
 
             creditSumBaseValue += creditBaseValue;
-        });
+        }
 
         if (isCurrencyExchange) {
             // Gotta do this all over, validating the currency prices...
@@ -535,12 +562,12 @@ export class TransactionManager extends EventEmitter {
     }
 
 
-    _validateTransactionBasics(transactionDataItem, isModify) {
+    _validateTransactionBasics(transactionDataItem, isModify, accountStatesById) {
         if (!transactionDataItem.ymdDate) {
             return userError('TransactionManager-date_required');
         }
 
-        const splitsError = this.validateSplits(transactionDataItem.splits, isModify);
+        const splitsError = this.validateSplits(transactionDataItem.splits, isModify, accountStatesById);
         if (splitsError) {
             return splitsError;
         }
@@ -571,8 +598,24 @@ export class TransactionManager extends EventEmitter {
         }
 
         let transactionDataItems = transactions.map((transaction) => getTransactionDataItem(transaction, true));
+
+        // Sort the transactions.
+        const sortedTransactionIndices = new SortedArray(compareEntryByYMDDateThenId, { duplicates: 'allow'});
         for (let i = 0; i < transactionDataItems.length; ++i) {
-            const error = this._validateTransactionBasics(transactionDataItems[i]);
+            const transaction = transactionDataItems[i];
+            sortedTransactionIndices.add({ ymdDate: getYMDDate(transaction.ymdDate), sameDayOrder: transaction.sameDayOrder, index: i});
+        }
+
+        const sortedIndices = [];
+        const sortedTransactionDataItems = [];
+        sortedTransactionIndices.forEach((entry) => {
+            sortedIndices.push(entry.index);
+            sortedTransactionDataItems.push(transactionDataItems[entry.index]);
+        });
+
+        const accountStatesById = new Map();
+        for (let i = 0; i < transactionDataItems.length; ++i) {
+            const error = this._validateTransactionBasics(sortedTransactionDataItems[i], false, accountStatesById);
             if (error) {
                 throw error;
             }
@@ -585,7 +628,7 @@ export class TransactionManager extends EventEmitter {
         const idGeneratorOriginal = this._idGenerator.toJSON();
         try {
             const transactionIdAndDataItemPairs = [];
-            transactionDataItems.forEach((transactionDataItem) => {
+            sortedTransactionDataItems.forEach((transactionDataItem) => {
                 const id = this._idGenerator.generateId();
                 transactionDataItem.id = id;
                 transactionIdAndDataItemPairs.push([id, transactionDataItem]);
@@ -596,9 +639,8 @@ export class TransactionManager extends EventEmitter {
             transactionDataItems = transactionDataItems.map((dataItem) => getTransactionDataItem(dataItem, true));
 
             try {
-                const sortedDataItems = Array.from(transactionDataItems).sort((a, b) => a.ymdDate.localeCompare(b.ymdDate));
                 const transactionChanges = [];
-                sortedDataItems.forEach((dataItem) => transactionChanges.push([ dataItem ]));
+                sortedTransactionDataItems.forEach((dataItem) => transactionChanges.push([ dataItem ]));
 
                 await this._accountingSystem.getAccountManager().asyncUpdateAccountStatesFromTransactionChanges(transactionChanges);
             }
@@ -606,7 +648,7 @@ export class TransactionManager extends EventEmitter {
                 // Gotta remove the items we just added.
                 console.log('Account state updating from adding transactions failed, reverting transaction changes.');
                 const transactionIdAndDataItemPairs = [];
-                transactionDataItems.forEach((dataItem) => transactionIdAndDataItemPairs.push([dataItem.id]));
+                sortedTransactionDataItems.forEach((dataItem) => transactionIdAndDataItemPairs.push([dataItem.id]));
         
                 await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs);
         
@@ -844,6 +886,13 @@ function compareEntryByYMDDateThenId(a, b) {
     if (result) {
         return result;
     }
+
+    const aSameDayOrder = ((a.sameDayOrder !== undefined) && (a.sameDayOrder !== null)) ? a.sameDayOrder : -Number.MAX_VALUE;
+    const bSameDayOrder = ((b.sameDayOrder !== undefined) && (b.sameDayOrder !== null)) ? b.sameDayOrder : -Number.MAX_VALUE;
+    if (aSameDayOrder !== bSameDayOrder) {
+        return aSameDayOrder - bSameDayOrder;
+    }
+
     return a.id - b.id;
 }
 

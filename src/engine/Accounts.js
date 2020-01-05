@@ -219,13 +219,15 @@ function createAccountStateDataItemForType(type, ymdDate) {
  * Retrieves an {@link AccountState} representation of a {@link AccountStateDataItem} object, avoids copying if the arg
  * is already an {@link AccountState}
  * @param {(AccountStateDataItem|AccountState)} accountStateDataItem 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
  * @returns {AccountState}
  */
-export function getAccountState(accountStateDataItem) {
+export function getAccountState(accountStateDataItem, alwaysCopy) {
     if (accountStateDataItem) {
         const ymdDate = getYMDDate(accountStateDataItem.ymdDate);
-        const lots = getLots(accountStateDataItem.lots);
-        if ((ymdDate !== accountStateDataItem.ymdDate)
+        const lots = getLots(accountStateDataItem.lots, alwaysCopy);
+        if (alwaysCopy 
+         || (ymdDate !== accountStateDataItem.ymdDate)
          || (lots !== accountStateDataItem.lots)) {
             return {
                 ymdDate: ymdDate,
@@ -241,12 +243,15 @@ export function getAccountState(accountStateDataItem) {
  * Retrieves an {@link AccountStateDataItem} representation of a {@link AccountState} object, avoids copying if the arg
  * is already an {@link AccountStateDataItem}
  * @param {(AccountState|AccountStateDataItem)} accountState 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @returns {AccountStateDataItem}
  */
-export function getAccountStateDataItem(accountState) {
+export function getAccountStateDataItem(accountState, alwaysCopy) {
     if (accountState) {
         const ymdDateString = getYMDDateString(accountState.ymdDate);
-        const lotDataItems = getLotDataItems(accountState.lots);
-        if ((ymdDateString !== accountState.ymdDate)
+        const lotDataItems = getLotDataItems(accountState.lots, alwaysCopy);
+        if (alwaysCopy 
+         || (ymdDateString !== accountState.ymdDate)
          || (lotDataItems !== accountState.lots)) {
             return {
                 ymdDate: ymdDateString,
