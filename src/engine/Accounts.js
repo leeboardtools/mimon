@@ -3,9 +3,10 @@ import { userMsg, userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
 import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 import { PricedItemType, getPricedItemType } from './PricedItems';
-import { getSplitDataItem } from './Transactions';
+import { getFullSplitDataItem } from './Transactions';
 import { getLots, getLotDataItems, getLotDataItem } from './Lots';
 import deepEqual from 'deep-equal';
+import { SortedArray } from '../util/SortedArray';
 
 
 /**
@@ -258,9 +259,50 @@ export function getAccountStateDataItem(accountState) {
 }
 
 
+/**
+ * Retrieves an {@link AccountStateDataItem} that has any missing required properties filled in with
+ * default values.
+ * @param {AccountState|AccountStateDataItem} accountState 
+ * @param {boolean} hasLots 
+ * @returns {AccountStateDataItem}
+ */
+export function getFullAccountStateDataItem(accountState, hasLots) {
+    accountState = getAccountStateDataItem(accountState, true);
+    if (accountState) {
+        accountState.quantityBaseValue = accountState.quantityBaseValue || 0;
+        if (hasLots && !accountState.lots) {
+            accountState.lots = [];
+        }
+    }
+
+    return accountState;
+}
+
+
+/**
+ * Retrieves an {@link AccountState} that has any missing required properties filled in with
+ * default values.
+ * @param {AccountState|AccountStateDataItem} accountState 
+ * @param {boolean} hasLots 
+ * @returns {AccountState}
+ */
+export function getFullAccountState(accountState, hasLots) {
+    accountState = getAccountState(accountState, true);
+    if (accountState) {
+        accountState.quantityBaseValue = accountState.quantityBaseValue || 0;
+        if (hasLots && !accountState.lots) {
+            accountState.lots = [];
+        }
+    }
+
+    return accountState;
+}
+
+
+
 function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) {
-    const accountStateDataItem = getAccountStateDataItem(accountState, true);
-    split = getSplitDataItem(split);
+    const accountStateDataItem = getFullAccountStateDataItem(accountState, split.lotChanges && split.lotChanges.length);
+    split = getFullSplitDataItem(split);
 
     accountStateDataItem.ymdDate = getYMDDateString(ymdDate) || accountStateDataItem.ymdDate;
     accountStateDataItem.quantityBaseValue += sign * split.quantityBaseValue;
@@ -329,6 +371,217 @@ export function addSplitToAccountStateDataItem(accountState, split, ymdDate) {
 export function removeSplitFromAccountStateDataItem(accountState, split, ymdDate) {
     return adjustAccountStateDataItemForSplit(accountState, split, ymdDate, -1);
 }
+
+
+function isSplitDataItemInSplitDataItems(splitDataItem, splitDataItems) {
+    if (splitDataItems) {
+        for (let i = splitDataItems.length - 1; i >= 0; --i) {
+            if (deepEqual(splitDataItem, splitDataItems[i])) {
+                return true;
+            }
+        }
+    }
+}
+
+export let isDebug;
+
+class AccountStateUpdateEntry {
+    constructor() {
+        this._splitEntries = new Map();
+    }
+
+    getTransactionKey(transaction) {
+        return transaction.ymdDate + '_' + transaction.id;
+    }
+
+    getSplitKey(transaction, split) {
+        return this.getTransactionKey(transaction) + '_' + JSON.stringify(split);
+    }
+
+    addSplitEntry(transaction, split) {
+        const key = this.getTransactionKey(transaction);
+        let entry = this._splitEntries.get(key);
+        if (!entry) {
+            entry = {
+                ymdDate: transaction.ymdDate,
+                splitChanges: [],
+            };
+            this._splitEntries.set(key, entry);
+        }
+        return entry;
+    }
+
+    addAccountStateUpdateRemoveSplitEntry(transaction, split) {
+        this.addSplitEntry(transaction, split).splitChanges.push([undefined, [transaction, split]]);
+    }
+
+    addAccountStateUpdateAddSplitEntry(transaction, split) {
+        this.addSplitEntry(transaction, split).splitChanges.push([[transaction, split], undefined]);
+    }
+
+
+    async asyncGenerateAccountStateUpdateForLots(accountingSystem, accountDataItem, accountStateDataItem) {
+        // Since we're dealing with lots, we need to unwind the account state to the oldest transaction
+        // we have, then work our way back.
+        const sortedSplitEntries = Array.from(this._splitEntries.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+        const splitEntryValues = sortedSplitEntries.map((entry) => entry[1]);
+        // splitEntryValues is [{ ymdDate, splitChanges }]
+
+        const accountId = accountDataItem.id;
+
+        // We want all transactions between the current date and the oldest date we have, inclusive.
+        const transactionManager = accountingSystem.getTransactionManager();
+
+        const earliestYMDDate = splitEntryValues[0].ymdDate;
+        const latestYMDDate = getLaterYMDDate(accountStateDataItem.ymdDate, splitEntryValues[splitEntryValues.length - 1].ymdDate);
+        const currentTransactions = await transactionManager.asyncGetTransactionDataItemssInDateRange(accountId,
+            earliestYMDDate, latestYMDDate);
+
+        const addedSplits = new Set();
+        const splitsToRemove = new SortedArray((a, b) => a[0].localeCompare(b[0]));
+        splitEntryValues.forEach((splitEntry) => {
+            splitEntry.splitChanges.forEach((entry) => {
+                const [ addEntry, removeEntry ] = entry;
+                if (addEntry) {
+                    const [ transaction, split, ] = addEntry;
+                    addedSplits.add(this.getSplitKey(transaction, split));
+                }
+                if (removeEntry) {
+                    const [ transaction, split, ] = removeEntry;
+                    splitsToRemove.add([this.getSplitKey(transaction, split), [ transaction, split]]);
+                }
+            });
+        });
+
+        const splitsToAdd = [];
+        currentTransactions.forEach((transaction) => {
+            transaction.splits.forEach((split) => {
+                if (split.accountId === accountId) {
+                    splitsToAdd.push(split);
+                    const splitKey = this.getSplitKey(transaction, split);
+                    if (!addedSplits.has(splitKey)) {
+                        splitsToRemove.add([splitKey, [transaction, split]]);
+                    }
+                }
+            });
+        });
+
+        // splitsToRemove is sorted by date-transaction id - split contents.
+        // We just remove those splits.
+        const toRemove = splitsToRemove.getValues();
+        for (let i = toRemove.length - 1; i >= 0; --i) {
+            const [, splitEntry ] = toRemove[i];
+            const [ , split ] = splitEntry;
+
+            if (isDebug) {
+                console.log('remove acctStte: ' + JSON.stringify(accountStateDataItem));
+                console.log('remove Split: ' + JSON.stringify(split));
+            }
+
+            accountStateDataItem = removeSplitFromAccountStateDataItem(accountStateDataItem, split);
+        }
+
+        // Now add back all the current transaction splits...
+        splitsToAdd.forEach((split) => {
+            if (isDebug) {
+                console.log('add acctState: ' + JSON.stringify(accountStateDataItem));
+                console.log('add Split: ' + JSON.stringify(split));
+            }
+            accountStateDataItem = addSplitToAccountStateDataItem(accountStateDataItem, split);
+        });
+
+        if (currentTransactions.length > 0) {
+            accountStateDataItem.ymdDate = getLaterYMDDate(accountStateDataItem.ymdDate, currentTransactions[currentTransactions.length - 1].ymdDate);
+        }
+
+        if (isDebug) {
+            console.log('final acctState: ' + JSON.stringify(accountStateDataItem));
+        }
+
+        return accountStateDataItem;
+    }
+    
+
+    generateAccountStateUpdatePlain(accountingSystem, accountDataItem, accountStateDataItem) {
+        this._splitEntries.forEach((splitEntryArray) => {
+            splitEntryArray.splitChanges.forEach((splitEntry) => {
+                const [ addEntry, removeEntry ] = splitEntry;
+                if (addEntry) {
+                    const [ transaction, split, ] = addEntry;
+                    const ymdDate = getLaterYMDDate(accountStateDataItem.ymdDate, transaction.ymdDate);
+                    accountStateDataItem = addSplitToAccountStateDataItem(accountStateDataItem, split, ymdDate);
+                }
+                if (removeEntry) {
+                    const [ , split, ] = removeEntry;
+                    accountStateDataItem = removeSplitFromAccountStateDataItem(accountStateDataItem, split, accountStateDataItem.ymdDate);
+                }
+            });
+        });
+        return accountStateDataItem;
+    }
+}
+
+
+function addAccountStateUpdateAccountEntry(entriesById, split) {
+    let entry = entriesById.get(split.accountId);
+    if (!entry) {
+        entry = new AccountStateUpdateEntry();
+        entriesById.set(split.accountId, entry);
+    }
+    return entry;
+}
+
+
+export function getLaterYMDDate(a, b) {
+    if (a === b) {
+        return a;
+    }
+    else if (!a) {
+        return b;
+    }
+    else if (!b) {
+        return a;
+    }
+
+    if (typeof a === 'string') {
+        b = getYMDDateString(b);
+        return a.localeCompare(b) > 0 ? a : b;
+    }
+    else {
+        b = getYMDDate(b);
+        return YMDDate.compare(a, b) > 0 ? a : b;
+    }
+}
+
+
+
+async function asyncProcessAccountStateUpdateAccountEntries(accountManager, entriesById) {
+    const accountingSystem = accountManager._accountingSystem;
+    const accountsById = accountManager._accountsById;
+
+    const accountUpdates = [];
+    const allEntries = Array.from(entriesById.entries());
+    for (let i = 0; i < allEntries.length; ++i) {
+        const accountId = allEntries[i][0];
+        const entry = allEntries[i][1];
+
+        const accountDataItem = accountsById.get(accountId);
+        let accountStateDataItem = accountDataItem.accountState || getFullAccountStateDataItem({}, accountDataItem.hasLots);
+
+        const type = getAccountType(accountDataItem.type);
+        if (type.hasLots) {
+            accountStateDataItem = await entry.asyncGenerateAccountStateUpdateForLots(accountingSystem, accountDataItem, accountStateDataItem);
+        }
+        else {
+            accountStateDataItem = entry.generateAccountStateUpdatePlain(accountingSystem, accountDataItem, accountStateDataItem);
+        }
+
+        accountUpdates.push({ id: accountId, accountState: accountStateDataItem });
+    }
+
+    return accountUpdates;
+}
+
 
 
 /**
@@ -676,7 +929,7 @@ export class AccountManager extends EventEmitter {
         if (!type) {
             return userError('AccountManager-type_invalid', type);
         }
-        if (type.isSingleton) {
+        if (!isModify && type.isSingleton) {
             return userError('AccountManager-singleton_in_use', type.name);
         }
 
@@ -978,7 +1231,7 @@ export class AccountManager extends EventEmitter {
             }
         }
 
-        const error = this._validateAccountBasics(newAccountDataItem, newParentAccountDataItem, false);
+        const error = this._validateAccountBasics(newAccountDataItem, newParentAccountDataItem, true);
         if (error) {
             throw error;
         }
@@ -1025,6 +1278,69 @@ export class AccountManager extends EventEmitter {
 
         return result;
     }
+
+
+    /**
+     * Called only by {@link TransactionManager} whenever transactions are added, removed, or modified, updates
+     * the account states of any affected transactions.
+     * @param {TransactionDataItem[][]} transactionDataItemChanges  Array of one or two element sub-arrays, the first element
+     * of each sub-array is the new transaction data item, <code>undefined</code> for transactions being removed, the second
+     * element is the old transaction data item, <code>undefined</code> for transactions being added.
+     */
+    async asyncUpdateAccountStatesFromTransactionChanges(transactionDataItemChanges) {
+        // This needs to revert on failure.
+        // Build a list of all the accounts that are being updated, and add the split changes to the accounts
+        // as we come across them.
+        // In the end, apply all the splits to each account state in reverse order.
+        const entriesById = new Map();
+        transactionDataItemChanges.forEach(([newTransaction, oldTransaction]) => {
+            const oldSplits = (oldTransaction) ? oldTransaction.splits : undefined;
+            const newSplits = (newTransaction) ? newTransaction.splits : undefined;
+            if (oldSplits) {
+                oldSplits.forEach((split) => {
+                    if (!isSplitDataItemInSplitDataItems(split, newSplits)) {
+                        addAccountStateUpdateAccountEntry(entriesById, split).addAccountStateUpdateRemoveSplitEntry(oldTransaction, split);
+                    }
+                });
+            }
+            if (newSplits) {
+                newSplits.forEach((split) => {
+                    if (!isSplitDataItemInSplitDataItems(split, oldSplits)) {
+                        addAccountStateUpdateAccountEntry(entriesById, split).addAccountStateUpdateAddSplitEntry(newTransaction, split);
+                    }
+                });
+            }
+        });
+
+        isDebug = this.isDebug;
+
+        const accountUpdates = await asyncProcessAccountStateUpdateAccountEntries(this, entriesById);
+        const oldUpdatedAccounts = [];
+        try {
+            for (let i = 0; i < accountUpdates.length; ++i) {
+                const result = await this.asyncModifyAccount(accountUpdates[i]);
+                if (result) {
+                    oldUpdatedAccounts.push(result[1]);
+                }
+            }
+        }
+        catch (e) {
+            console.error('Update of account states from transaction changes failed, reverting changes.');
+            // Unwind...
+            for (let i = oldUpdatedAccounts.length - 1; i >= 0; --i) {
+                try {
+                    await this.asyncModifyAccount(oldUpdatedAccounts[i]);
+                }
+                catch (e) {
+                    // Not much we can do but slog on...
+                    console.error('Failed unwinding account modification for account id ' + oldUpdatedAccounts[i].id);
+                }
+            }
+
+            throw e;
+        }
+    }
+
 }
 
 

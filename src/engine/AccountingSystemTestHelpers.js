@@ -3,6 +3,7 @@ import { InMemoryPricedItemsHandler } from './PricedItems';
 import { InMemoryAccountsHandler } from './Accounts';
 import * as A from './Accounts';
 import * as PI from './PricedItems';
+import * as T from './Transactions';
 import { getDecimalDefinition } from '../util/Quantities';
 import { InMemoryPricesHandler } from './Prices';
 import { InMemoryTransactionsHandler } from './Transactions';
@@ -114,11 +115,20 @@ export async function asyncCreateAccountingSystem(options) {
 //          -phoneId
 //          -internetId
 //
+
+
+//
+//---------------------------------------------------------
+//
 export async function asyncCreateBasicAccountingSystem(options) {
     const accountingSystem = await asyncCreateAccountingSystem(options);
     return asyncSetupBasicAccounts(accountingSystem);
 }
 
+
+//
+//---------------------------------------------------------
+//
 export async function asyncSetupBasicAccounts(accountingSystem) {
     const accountManager = accountingSystem.getAccountManager();
     const pricedItemManager = accountingSystem.getPricedItemManager();
@@ -131,6 +141,7 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
 
     // Add a whole bunch of accounts.
     const initialYMDDate = '2000-01-23';
+    sys.initialYMDDate = initialYMDDate;
 
     //
     // Assets
@@ -454,4 +465,55 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
 
 
     return sys;
+}
+
+
+//
+//---------------------------------------------------------
+//
+export async function asyncAddOpeningBalances(sys) {
+    const { accountingSystem, initialYMDDate } = sys;
+    const transactionManager = accountingSystem.getTransactionManager();
+
+    const openingBalancesId = accountingSystem.getAccountManager().getOpeningBalancesAccountId();
+
+    sys.checkingOBQuantityBaseValue = 100000;
+    sys.cashOBQuantityBaseValue = 5000;
+    sys.brokerageAOBQuantityBaseValue = 1000000;
+    sys.brokerageBOBQuantityBaseValue = 2000000;
+    sys.iraOBQuantityBaseValue = 3000000;
+
+    await transactionManager.asyncAddTransaction([
+        { ymdDate: initialYMDDate, 
+            splits: [
+                { accountId: sys.checkingId, quantityBaseValue: sys.checkingOBQuantityBaseValue, },
+                { accountId: openingBalancesId, quantityBaseValue: sys.checkingOBQuantityBaseValue, },
+            ], 
+        },
+        { ymdDate: initialYMDDate, 
+            splits: [
+                { accountId: sys.cashId, quantityBaseValue: sys.cashOBQuantityBaseValue, },
+                { accountId: openingBalancesId, quantityBaseValue: sys.cashOBQuantityBaseValue, },
+            ], 
+        },
+        { ymdDate: initialYMDDate, 
+            splits: [
+                { accountId: sys.brokerageAId, quantityBaseValue: sys.brokerageAOBQuantityBaseValue, },
+                { accountId: openingBalancesId, quantityBaseValue: sys.brokerageAOBQuantityBaseValue, },
+            ], 
+        },
+        { ymdDate: initialYMDDate, 
+            splits: [
+                { accountId: sys.brokerageBId, quantityBaseValue: sys.brokerageBOBQuantityBaseValue, },
+                { accountId: openingBalancesId, quantityBaseValue: sys.brokerageBOBQuantityBaseValue, },
+            ], 
+        },
+        { ymdDate: initialYMDDate, 
+            splits: [
+                { accountId: sys.iraId, quantityBaseValue: sys.iraOBQuantityBaseValue, },
+                { accountId: openingBalancesId, quantityBaseValue: sys.iraOBQuantityBaseValue, },
+            ], 
+        },
+
+    ]);
 }

@@ -192,6 +192,44 @@ export function getSplit(splitDataItem, alwaysCopy) {
 
 
 /**
+ * Retrieves a {@link SplitDataItem} that has missing properties set to defaults.
+ * @param {Split|SplitDataItem} split 
+ * @returns {SplitDataItem}
+ */
+export function getFullSplitDataItem(split) {
+    split = getSplitDataItem(split, true);
+    if (split) {
+        if ((split.reconcileState === undefined) || (split.reconcileState === null)) {
+            split.reconcileState = ReconcileState.NOT_RECONCILED.name;
+        }
+        if ((split.quantityBaseValue === undefined) || (split.quantityBaseValue === null)) {
+            split.quantityBaseValue = 0;
+        }
+    }
+    return split;
+}
+
+
+/**
+ * Retrieves a {@link Split} that has missing properties set to defaults.
+ * @param {Split|SplitDataItem} split 
+ * @returns {Split}
+ */
+export function getFullSplit(split) {
+    split = getSplit(split, true);
+    if (split) {
+        if ((split.reconcileState === undefined) || (split.reconcileState === null)) {
+            split.reconcileState = ReconcileState.NOT_RECONCILED;
+        }
+        if ((split.quantityBaseValue === undefined) || (split.quantityBaseValue === null)) {
+            split.quantityBaseValue = 0;
+        }
+    }
+    return split;
+}
+
+
+/**
  * Array version of {@link getSplitDataItem}
  * @param {(Split[]|SplitDataItem[])} splits
  * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
@@ -320,6 +358,10 @@ export class TransactionManager extends EventEmitter {
         this._handler = options.handler;
         
         this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorOptions());
+
+        this.asyncAddTransaction = this.asyncAddTransactions;
+        this.asyncRemoveTransaction = this.asyncRemoveTransactions;
+        this.asyncModifyTransaction = this.asyncModifyTransactions;
     }
 
     async asyncSetupForUse() {
@@ -361,6 +403,7 @@ export class TransactionManager extends EventEmitter {
      * @param {(number|undefined)} accountId If defined only transactions that refer to this account id are considered.
      * @param {(YMDDate|string)} ymdDateA   One end of the data range, inclusive.
      * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date range, inclusive.
+     * @returns {TransactionDataItem[]} An array containing the transaction data items, sorted from earliest to latest date.
      */
     async asyncGetTransactionDataItemssInDateRange(accountId, ymdDateA, ymdDateB) {
         [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
@@ -552,6 +595,24 @@ export class TransactionManager extends EventEmitter {
 
             transactionDataItems = transactionDataItems.map((dataItem) => getTransactionDataItem(dataItem, true));
 
+            try {
+                const sortedDataItems = Array.from(transactionDataItems).sort((a, b) => a.ymdDate.localeCompare(b.ymdDate));
+                const transactionChanges = [];
+                sortedDataItems.forEach((dataItem) => transactionChanges.push([ dataItem ]));
+
+                await this._accountingSystem.getAccountManager().asyncUpdateAccountStatesFromTransactionChanges(transactionChanges);
+            }
+            catch (e) {
+                // Gotta remove the items we just added.
+                console.log('Account state updating from adding transactions failed, reverting transaction changes.');
+                const transactionIdAndDataItemPairs = [];
+                transactionDataItems.forEach((dataItem) => transactionIdAndDataItemPairs.push([dataItem.id]));
+        
+                await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs);
+        
+                throw e;
+            }
+
             this.emit('transactionsAdd', { newTransactionDataItems: transactionDataItems });
             return transactionDataItems;
         }
@@ -601,6 +662,26 @@ export class TransactionManager extends EventEmitter {
         transactionIds.forEach((id) => transactionIdAndDataItemPairs.push([id]));
 
         await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs);
+
+        try {
+            const sortedDataItems = Array.from(transactionDataItems).sort((a, b) => b.ymdDate.localeCompare(a.ymdDate));
+            const transactionChanges = [];
+            sortedDataItems.forEach((dataItem) => transactionChanges.push([undefined, dataItem]));
+
+            await this._accountingSystem.getAccountManager().asyncUpdateAccountStatesFromTransactionChanges(transactionChanges);
+        }
+        catch (e) {
+            console.log('Account state updating from removing transactions failed, reverting transaction changes.');
+
+            // Gotta add back all the data items we removed.
+            const restoreIdAndDataItemPairs = [];
+            for (let i = transactionDataItems.length - 1; i >= 0; --i) {
+                const dataItem = transactionDataItems[i];
+                restoreIdAndDataItemPairs.push([dataItem.id, dataItem]);
+            }
+            await this._handler.asyncUpdateTransactionDataItems(restoreIdAndDataItemPairs);
+            throw e;
+        }
 
         this.emit('transactionsRemove', { removedTransactionDataItems: transactionDataItems });
         return transactionDataItems;
@@ -659,6 +740,25 @@ export class TransactionManager extends EventEmitter {
         await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs);
 
         newDataItems = newDataItems.map((dataItem) => getTransactionDataItem(dataItem, true));
+
+        try {
+            const transactionChanges = [];
+            for (let i = 0; i < newDataItems.length; ++i) {
+                transactionChanges.push([newDataItems[i], oldDataItems[i]]);
+            }
+            await this._accountingSystem.getAccountManager().asyncUpdateAccountStatesFromTransactionChanges(transactionChanges);
+        }
+        catch (e) {
+            console.log('Account state updating from modifying transactions failed, reverting transaction changes.');
+            const restoreIdAndDataItemPairs = [];
+            for (let i = oldDataItems.length - 1; i >= 0; --i) {
+                const dataItem = oldDataItems[i];
+                restoreIdAndDataItemPairs.push([ dataItem.id, dataItem]);
+            }
+            await this._handler.asyncUpdateTransactionDataItems(restoreIdAndDataItemPairs);
+
+            throw e;
+        }
 
         this.emit('transactionsModify', {
             newTransactionDataItems: newDataItems,

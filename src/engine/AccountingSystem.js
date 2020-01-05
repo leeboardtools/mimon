@@ -33,17 +33,39 @@ export class AccountingSystem extends EventEmitter {
         await this._transactionManager.asyncSetupForUse();
     }
 
+    /**
+     * @returns {AccountManager}
+     */
     getAccountManager() { return this._accountManager; }
 
+    /**
+     * @returns {PricedItemManager}
+     */
     getPricedItemManager() { return this._pricedItemManager; }
 
+    /**
+     * @returns {PriceManager}
+     */
     getPriceManager() { return this._priceManager; }
 
+    /**
+     * @returns {TransactionManager}
+     */
     getTransactionManager() { return this._transactionManager; }
 
+    /**
+     * @return {string} The 3 letter currency code for the base currency. The base currency is used whenever an
+     * exchange rate is needed.
+     */
     getBaseCurrency() { return this._baseCurrency; }
 
 
+    /**
+     * Returns an data object that can be JSON.stringify()'d out that contains options for the accounting system.
+     * The object can be passed to the constructor (the handlers must still be set) to restore
+     * the options.
+     * @returns {object}
+     */
     getOptions() {
         return {
             baseCurrency: this._baseCurrency,
