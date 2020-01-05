@@ -16,7 +16,7 @@ export const SimplePrimes = [
 ];
 
 /**
- * @typedef {object} reductToSimplPrimes_Result
+ * @typedef {object} reduceToSimplPrimes_Result
  * @property {number}   sign    The sign of the overall value, 1 or -1.
  * @property {number}   remainder   Any remainder that wasn't converted into primes.
  * @property {Map<number,number>}   primes  Map whose keys are the prime numbers and values are the power to which the prime is raised.
@@ -25,7 +25,7 @@ export const SimplePrimes = [
 /**
  * Reduces a number to a list of prime numbers.
  * @param {number|number[]} number May be an array, in which case the elements are presumed to be multipled by each other.
- * @returns {reductToSimplPrimes_Result}
+ * @returns {reduceToSimplPrimes_Result}
  */
 export function reduceToSimplePrimes(number) {
     if (Array.isArray(number)) {
