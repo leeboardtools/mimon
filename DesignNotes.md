@@ -227,7 +227,8 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
 
 ## TODOs
 - Add test transactions to AccountingSystemTestHelpers.js, then test transactions in JSONGzipAccountingFile.test.js
-- Add validation of splits against the account state in TransactionManager.
-    - Not sure how this would work for non-current transactions with lots.
-    Would need to validate against the account state rewound to the transaction before the desired transaction.
-    - Should process asyncAddTransactions in date order, oldest to newest.
+
+- Need to add lot validation for modify transactions.
+    - This could be a little challenging.
+        - If it's just a change in lot quantities, then it's probably fine.
+        - If it's a change in lots, then need to unwind account state.
