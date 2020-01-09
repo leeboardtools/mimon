@@ -97,3 +97,18 @@ export function getLotDataItems(lots, alwaysCopy) {
     }
     return lots;
 }
+
+/**
+ * Returns a string representation of a {@link Lot} or {@link LotDataItem}. The string representation has
+ * the properties in a fixed order, unlike JSON.stringify().
+ * @param {Lot|LotDataItem} lot 
+ * @returns {string}
+ */
+export function getLotString(lot) {
+    const lotDataItem = getLotDataItem(lot);
+    let string = lotDataItem.purchaseYMDDate + '_' + lotDataItem.quantityBaseValue + '_' + lotDataItem.costBasisBaseValue;
+    if (lotDataItem.description) {
+        string += '_' + lotDataItem.description;
+    }
+    return string;
+}

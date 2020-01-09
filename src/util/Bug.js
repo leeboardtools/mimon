@@ -16,7 +16,7 @@ export class BugException {
  * @param {string} msg 
  * @throws {BugException}
  */
-export function Bug(msg) {
+export function bug(msg) {
     console.log('BUG: ' + msg);
     return new BugException(msg);
 }

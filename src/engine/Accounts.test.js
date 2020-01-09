@@ -102,7 +102,7 @@ test('AccountState-add_remove_split', () => {
     expect(testD).toEqual({
         ymdDate: '2019-03-31',
         quantityBaseValue: -100000 + 100 + 300 + 200,
-        lots: [ lotA1, lotD ],
+        lots: [ lotD, lotA1 ],
     });
 
     const revTestD = A.removeSplitFromAccountStateDataItem(testD, splitD);
@@ -746,7 +746,7 @@ test('AccountManager-modify', async () => {
 
 
     let eventArgs;
-    accountManager.on('accountModify', (args) => {
+    accountManager.on('accountsModify', (args) => {
         eventArgs = args;
     });
 
@@ -754,10 +754,10 @@ test('AccountManager-modify', async () => {
     [account, oldAccount] = await accountManager.asyncModifyAccount(iraMove);
     expect(account.parentAccountId).toEqual(sys.fixedAssetsId);
 
-    // accountModify event test
-    expect(eventArgs).toEqual({ newAccountDataItem: account, oldAccountDataItem: oldAccount, });
-    expect(eventArgs.newAccountDataItem).toBe(account);
-    expect(eventArgs.oldAccountDataItem).toBe(oldAccount);
+    // accountsModify event test
+    expect(eventArgs).toEqual({ newAccountDataItems: [account], oldAccountDataItems: [oldAccount], });
+    expect(eventArgs.newAccountDataItems[0]).toBe(account);
+    expect(eventArgs.oldAccountDataItems[0]).toBe(oldAccount);
 
 
     // Now a child of fixedAssetsId

@@ -93,6 +93,10 @@
     "TransactionManager-split_lot_not_in_account": ["The split's lot to change '", "' was not found in the account's list of lots."],
     "TransactionManager-remove_invalid_id": ["A transaction with id '", "' was not found."],
     "TransactionManager~modify_id_not_found": ["A transaction with id '", "' was not found."],
+    "TransactionManager-account_state_update_invalid_transaction_id": 
+        ["Could not determine the account state for a transaction, the transaction with id '", "' was not found."],
+    "TransactionManager-account_state_update_account_invalid":
+        ["Could not determine the account state for a transaction, the account with id '", "' was not found."],
 
 
     "JSONGzipAccountingFile-dir_not_empty": ["The folder '", "' must be empty in order to create a new accounting file system there."],

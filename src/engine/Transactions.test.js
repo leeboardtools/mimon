@@ -391,8 +391,6 @@ test('TransactionHandlerImplBase', async () => {
     expect(result).toEqual([transaction2]);
 
     expect(handlerB.getIdGeneratorOptions()).toEqual({ lastId: 123, });
-
-    expect(handlerB.getTransactionIds()).toEqual(handlerA.getTransactionIds());
 });
 
 
@@ -741,9 +739,6 @@ test('TransactionManager~remove', async () => {
     expect(resultABCDE).toEqual([settingsA, settingsB, settingsC, settingsD, settingsE ]);
 
 
-    expect(manager.getTransactionIds()).toEqual(expect.arrayContaining([settingsA.id, settingsB.id, settingsC.id, settingsD.id, settingsE.id]));
-    expect(manager.getTransactionIds().length).toEqual(5);
-
     
     await expect(manager.asyncRemoveTransactions(-123)).rejects.toThrow();
     expect(await manager.asyncGetTransactionDateRange(sys.householdId)).toEqual([new YMDDate(settingsD.ymdDate), new YMDDate(settingsD.ymdDate)]);
@@ -766,9 +761,6 @@ test('TransactionManager~remove', async () => {
 
     expect(await manager.asyncGetTransactionDateRange(sys.cashId)).toEqual([new YMDDate(settingsC.ymdDate), new YMDDate(settingsB.ymdDate)]);
     expect(await manager.asyncGetTransactionDateRange(sys.groceriesId)).toEqual([new YMDDate(settingsB.ymdDate), new YMDDate(settingsB.ymdDate)]);
-
-    expect(manager.getTransactionIds()).toEqual(expect.arrayContaining([settingsC.id, settingsB.id]));
-    expect(manager.getTransactionIds().length).toEqual(2);
 
 
     const addedAE = await manager.asyncAddTransactions(removedAE);
@@ -905,6 +897,7 @@ test('Transactions-lotTransactions', async () => {
     expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
         { ymdDate: settingsE.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotB2, lotDa, lotC, lotE]});
 
+
     const lotDb = { purchaseYMDDate: '2010-10-31', quantityBaseValue: 9999, costBasisBaseValue: 8888, };
     const settingsDb = {
         id: transD.id,
@@ -916,7 +909,7 @@ test('Transactions-lotTransactions', async () => {
     };
     await transactionManager.asyncModifyTransactions(settingsDb);
     expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
-        { ymdDate: settingsE.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotB2, lotDb, lotC, lotE]});
+        { ymdDate: settingsE.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotB2, lotC, lotDb, lotE]});
 
 
 
@@ -965,7 +958,6 @@ test('Transactions-lotTransactions', async () => {
     expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
         { ymdDate: settingsG.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotCa, lotE]});
     
-
     //
     // Test sameDayOrder for multiple same day transactions affecting the same lots.
     // The buy

@@ -4,7 +4,7 @@ import { NumericIdGenerator } from '../util/NumericIds';
 import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 import { PricedItemType, getPricedItemType } from './PricedItems';
 import { getFullSplitDataItem } from './Transactions';
-import { getLots, getLotDataItems, getLotDataItem } from './Lots';
+import { getLots, getLotDataItems, getLotString } from './Lots';
 import deepEqual from 'deep-equal';
 import { SortedArray } from '../util/SortedArray';
 
@@ -314,6 +314,11 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) 
 
     if (split.lotChanges) {
         const { lots } = accountStateDataItem;
+        const sortedLots = new SortedArray((a, b) => a[0].localeCompare(b[0]), { duplicates: 'allow' });
+        lots.forEach((lot) => {
+            sortedLots.add([getLotString(lot), lot]);
+        });
+
         split.lotChanges.forEach(([newLot, oldLot]) => {
             if (sign < 0) {
                 [ newLot, oldLot ] = [ oldLot, newLot ];
@@ -321,27 +326,21 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) 
 
             if (oldLot) {
                 // Look for the old lot.
-                const lotString = JSON.stringify(oldLot);
-                let i = 0;
-                for (i = 0; i < lots.length; ++i) {
-                    if (lotString === JSON.stringify(lots[i])) {
-                        break;
-                    }
-                }
-
-                if (i >= lots.length) {
+                const lotString = getLotString(oldLot);
+                const index = sortedLots.indexOf([lotString, oldLot]);
+                if (index < 0) {
                     throw Error('AccountState-add_split_lot_not_found', lotString);
                 }
-                if (newLot) {
-                    lots.splice(i, 1, getLotDataItem(newLot, true));
-                }
-                else {
-                    lots.splice(i, 1);
-                }
+                sortedLots.deleteIndex(index);
             }
-            else {
-                lots.push(getLotDataItem(newLot, true));
+            if (newLot) {
+                sortedLots.add([getLotString(newLot), newLot]);
             }
+        });
+
+        lots.length = 0;
+        sortedLots.forEach(([, lot]) => {
+            lots.push(lot);
         });
     }
 
@@ -378,164 +377,6 @@ export function removeSplitFromAccountStateDataItem(accountState, split, ymdDate
 }
 
 
-function isSplitDataItemInSplitDataItems(splitDataItem, splitDataItems) {
-    if (splitDataItems) {
-        for (let i = splitDataItems.length - 1; i >= 0; --i) {
-            if (deepEqual(splitDataItem, splitDataItems[i])) {
-                return true;
-            }
-        }
-    }
-}
-
-export let isDebug;
-
-class AccountStateUpdateEntry {
-    constructor() {
-        this._splitEntries = new Map();
-    }
-
-    getTransactionKey(transaction) {
-        return transaction.ymdDate + '_' + transaction.id;
-    }
-
-    getSplitKey(transaction, split) {
-        return this.getTransactionKey(transaction) + '_' + JSON.stringify(split);
-    }
-
-    addSplitEntry(transaction, split) {
-        const key = this.getTransactionKey(transaction);
-        let entry = this._splitEntries.get(key);
-        if (!entry) {
-            entry = {
-                ymdDate: transaction.ymdDate,
-                splitChanges: [],
-            };
-            this._splitEntries.set(key, entry);
-        }
-        return entry;
-    }
-
-    addAccountStateUpdateRemoveSplitEntry(transaction, split) {
-        this.addSplitEntry(transaction, split).splitChanges.push([undefined, [transaction, split]]);
-    }
-
-    addAccountStateUpdateAddSplitEntry(transaction, split) {
-        this.addSplitEntry(transaction, split).splitChanges.push([[transaction, split], undefined]);
-    }
-
-
-    async asyncGenerateAccountStateUpdateForLots(accountingSystem, accountDataItem, accountStateDataItem) {
-        // Since we're dealing with lots, we need to unwind the account state to the oldest transaction
-        // we have, then work our way back.
-        const sortedSplitEntries = Array.from(this._splitEntries.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-        const splitEntryValues = sortedSplitEntries.map((entry) => entry[1]);
-        // splitEntryValues is [{ ymdDate, splitChanges }]
-
-        const accountId = accountDataItem.id;
-
-        // We want all transactions between the current date and the oldest date we have, inclusive.
-        const transactionManager = accountingSystem.getTransactionManager();
-
-        const earliestYMDDate = splitEntryValues[0].ymdDate;
-        const latestYMDDate = getLaterYMDDate(accountStateDataItem.ymdDate, splitEntryValues[splitEntryValues.length - 1].ymdDate);
-        const currentTransactions = await transactionManager.asyncGetTransactionDataItemssInDateRange(accountId,
-            earliestYMDDate, latestYMDDate);
-
-        const addedSplits = new Set();
-        const splitsToRemove = new SortedArray((a, b) => a[0].localeCompare(b[0]));
-        splitEntryValues.forEach((splitEntry) => {
-            splitEntry.splitChanges.forEach((entry) => {
-                const [ addEntry, removeEntry ] = entry;
-                if (addEntry) {
-                    const [ transaction, split, ] = addEntry;
-                    addedSplits.add(this.getSplitKey(transaction, split));
-                }
-                if (removeEntry) {
-                    const [ transaction, split, ] = removeEntry;
-                    splitsToRemove.add([this.getSplitKey(transaction, split), [ transaction, split]]);
-                }
-            });
-        });
-
-        const splitsToAdd = [];
-        currentTransactions.forEach((transaction) => {
-            transaction.splits.forEach((split) => {
-                if (split.accountId === accountId) {
-                    splitsToAdd.push(split);
-                    const splitKey = this.getSplitKey(transaction, split);
-                    if (!addedSplits.has(splitKey)) {
-                        splitsToRemove.add([splitKey, [transaction, split]]);
-                    }
-                }
-            });
-        });
-
-        // splitsToRemove is sorted by date-transaction id - split contents.
-        // We just remove those splits.
-        const toRemove = splitsToRemove.getValues();
-        for (let i = toRemove.length - 1; i >= 0; --i) {
-            const [, splitEntry ] = toRemove[i];
-            const [ , split ] = splitEntry;
-
-            if (isDebug) {
-                console.log('remove acctStte: ' + JSON.stringify(accountStateDataItem));
-                console.log('remove Split: ' + JSON.stringify(split));
-            }
-
-            accountStateDataItem = removeSplitFromAccountStateDataItem(accountStateDataItem, split);
-        }
-
-        // Now add back all the current transaction splits...
-        splitsToAdd.forEach((split) => {
-            if (isDebug) {
-                console.log('add acctState: ' + JSON.stringify(accountStateDataItem));
-                console.log('add Split: ' + JSON.stringify(split));
-            }
-            accountStateDataItem = addSplitToAccountStateDataItem(accountStateDataItem, split);
-        });
-
-        if (currentTransactions.length > 0) {
-            accountStateDataItem.ymdDate = getLaterYMDDate(accountStateDataItem.ymdDate, currentTransactions[currentTransactions.length - 1].ymdDate);
-        }
-
-        if (isDebug) {
-            console.log('final acctState: ' + JSON.stringify(accountStateDataItem));
-        }
-
-        return accountStateDataItem;
-    }
-    
-
-    generateAccountStateUpdatePlain(accountingSystem, accountDataItem, accountStateDataItem) {
-        this._splitEntries.forEach((splitEntryArray) => {
-            splitEntryArray.splitChanges.forEach((splitEntry) => {
-                const [ addEntry, removeEntry ] = splitEntry;
-                if (addEntry) {
-                    const [ transaction, split, ] = addEntry;
-                    const ymdDate = getLaterYMDDate(accountStateDataItem.ymdDate, transaction.ymdDate);
-                    accountStateDataItem = addSplitToAccountStateDataItem(accountStateDataItem, split, ymdDate);
-                }
-                if (removeEntry) {
-                    const [ , split, ] = removeEntry;
-                    accountStateDataItem = removeSplitFromAccountStateDataItem(accountStateDataItem, split, accountStateDataItem.ymdDate);
-                }
-            });
-        });
-        return accountStateDataItem;
-    }
-}
-
-
-function addAccountStateUpdateAccountEntry(entriesById, split) {
-    let entry = entriesById.get(split.accountId);
-    if (!entry) {
-        entry = new AccountStateUpdateEntry();
-        entriesById.set(split.accountId, entry);
-    }
-    return entry;
-}
-
 
 export function getLaterYMDDate(a, b) {
     if (a === b) {
@@ -556,35 +397,6 @@ export function getLaterYMDDate(a, b) {
         b = getYMDDate(b);
         return YMDDate.compare(a, b) > 0 ? a : b;
     }
-}
-
-
-
-async function asyncProcessAccountStateUpdateAccountEntries(accountManager, entriesById) {
-    const accountingSystem = accountManager._accountingSystem;
-    const accountsById = accountManager._accountsById;
-
-    const accountUpdates = [];
-    const allEntries = Array.from(entriesById.entries());
-    for (let i = 0; i < allEntries.length; ++i) {
-        const accountId = allEntries[i][0];
-        const entry = allEntries[i][1];
-
-        const accountDataItem = accountsById.get(accountId);
-        let accountStateDataItem = accountDataItem.accountState || getFullAccountStateDataItem({}, accountDataItem.hasLots);
-
-        const type = getAccountType(accountDataItem.type);
-        if (type.hasLots) {
-            accountStateDataItem = await entry.asyncGenerateAccountStateUpdateForLots(accountingSystem, accountDataItem, accountStateDataItem);
-        }
-        else {
-            accountStateDataItem = entry.generateAccountStateUpdatePlain(accountingSystem, accountDataItem, accountStateDataItem);
-        }
-
-        accountUpdates.push({ id: accountId, accountState: accountStateDataItem });
-    }
-
-    return accountUpdates;
 }
 
 
@@ -884,7 +696,10 @@ export class AccountManager extends EventEmitter {
     async _asyncAddAccount(account) {
         account = getAccountDataItem(account);
         
-        const accountDataItem = Object.assign({}, account);        
+        const accountDataItem = Object.assign({}, account);
+
+        const type = getAccountType(accountDataItem.type);
+        accountDataItem.accountState = getFullAccountStateDataItem(accountDataItem.accountState || {}, type.hasLots);
         accountDataItem.childAccountIds = accountDataItem.childAccountIds || [];
 
         const id = this._idGenerator.generateId();
@@ -1133,10 +948,10 @@ export class AccountManager extends EventEmitter {
 
     /**
      * Fired by {@link AccountManager#asyncModifyAccount} after an account has been modified.
-     * @event AccountManager~accountModify
+     * @event AccountManager~accountsModify
      * @type {object}
-     * @property {AccountDataItem}  newAccountDataItem  The new account data item returned by the call to {@link AccountManager~asyncModifyAccount}.
-     * @property {AccountDataItem}  oldAccountDataItem  The old account data item returned by the call to {@link AccountManager~asyncModifyAccount}.
+     * @property {AccountDataItem[]}  newAccountDataItems  Array of the new account data items.
+     * @property {AccountDataItem[]}  oldAccountDataItems  Array of the old account data items.
      */
 
     /**
@@ -1148,7 +963,7 @@ export class AccountManager extends EventEmitter {
      * and whose second element is the old account item data. Otherwise <code>undefined</code> is returned (which happens if account does not actually
      * change anything).
      * @throws {Error}
-     * @fires {AccountManager~accountModify}
+     * @fires {AccountManager~accountsModify}
      */
     async asyncModifyAccount(account, validateOnly) {
         const { id } = account;
@@ -1276,9 +1091,9 @@ export class AccountManager extends EventEmitter {
 
         const result = [Object.assign({}, newAccountDataItem), oldAccountDataItem];
         
-        this.emit('accountModify', {
-            newAccountDataItem: result[0],
-            oldAccountDataItem: result[1],
+        this.emit('accountsModify', {
+            newAccountDataItems: [result[0]],
+            oldAccountDataItems: [result[1]],
         });
 
         return result;
@@ -1286,64 +1101,45 @@ export class AccountManager extends EventEmitter {
 
 
     /**
-     * Called only by {@link TransactionManager} whenever transactions are added, removed, or modified, updates
-     * the account states of any affected transactions.
-     * @param {TransactionDataItem[][]} transactionDataItemChanges  Array of one or two element sub-arrays, the first element
-     * of each sub-array is the new transaction data item, <code>undefined</code> for transactions being removed, the second
-     * element is the old transaction data item, <code>undefined</code> for transactions being added.
+     * Called only by {@link TransactionManager} to update the account states of one or more accounts.
+     * This does not do any validation.
+     * @param {Array[][]} accountIdAccountStates Array of two element sub-arrays, the first element is the account id,
+     * the second element is the new account state.
      */
-    async asyncUpdateAccountStatesFromTransactionChanges(transactionDataItemChanges) {
-        // This needs to revert on failure.
-        // Build a list of all the accounts that are being updated, and add the split changes to the accounts
-        // as we come across them.
-        // In the end, apply all the splits to each account state in reverse order.
-        const entriesById = new Map();
-        transactionDataItemChanges.forEach(([newTransaction, oldTransaction]) => {
-            const oldSplits = (oldTransaction) ? oldTransaction.splits : undefined;
-            const newSplits = (newTransaction) ? newTransaction.splits : undefined;
-            if (oldSplits) {
-                oldSplits.forEach((split) => {
-                    if (!isSplitDataItemInSplitDataItems(split, newSplits)) {
-                        addAccountStateUpdateAccountEntry(entriesById, split).addAccountStateUpdateRemoveSplitEntry(oldTransaction, split);
-                    }
-                });
+    async asyncUpdateAccountStates(accountIdAccountStates) {
+        const updatedAccountEntries = [];
+        const oldAccountDataItems = [];
+        const newAccountDataItems = [];
+        accountIdAccountStates.forEach(([accountId, accountState]) => {
+            const oldAccountDataItem = this.getAccountDataItemWithId(accountId);
+            if (!oldAccountDataItem) {
+                throw userError('AccountManager-modify_no_id', accountId);
             }
-            if (newSplits) {
-                newSplits.forEach((split) => {
-                    if (!isSplitDataItemInSplitDataItems(split, oldSplits)) {
-                        addAccountStateUpdateAccountEntry(entriesById, split).addAccountStateUpdateAddSplitEntry(newTransaction, split);
-                    }
-                });
+            const newAccountDataItem = Object.assign({}, oldAccountDataItem);
+            newAccountDataItem.accountState = getAccountStateDataItem(accountState, true);
+
+            updatedAccountEntries.push([
+                accountId,
+                newAccountDataItem,
+            ]);
+
+            oldAccountDataItems.push(oldAccountDataItem);
+            newAccountDataItems.push(newAccountDataItem);
+        });
+
+        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries);
+
+        newAccountDataItems.forEach((dataItem) => {
+            this._accountsById.set(dataItem.id, dataItem);
+            if (dataItem.refId) {
+                this._accountsByRefId.set(dataItem.refId, dataItem);
             }
         });
 
-        isDebug = this.isDebug;
-
-        const accountUpdates = await asyncProcessAccountStateUpdateAccountEntries(this, entriesById);
-        const oldUpdatedAccounts = [];
-        try {
-            for (let i = 0; i < accountUpdates.length; ++i) {
-                const result = await this.asyncModifyAccount(accountUpdates[i]);
-                if (result) {
-                    oldUpdatedAccounts.push(result[1]);
-                }
-            }
-        }
-        catch (e) {
-            console.error('Update of account states from transaction changes failed, reverting changes.');
-            // Unwind...
-            for (let i = oldUpdatedAccounts.length - 1; i >= 0; --i) {
-                try {
-                    await this.asyncModifyAccount(oldUpdatedAccounts[i]);
-                }
-                catch (e) {
-                    // Not much we can do but slog on...
-                    console.error('Failed unwinding account modification for account id ' + oldUpdatedAccounts[i].id);
-                }
-            }
-
-            throw e;
-        }
+        this.emit('accountsModify', {
+            newAccountDataItems: newAccountDataItems,
+            oldAccountDataItems: oldAccountDataItems,
+        });
     }
 
 }

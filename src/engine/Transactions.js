@@ -9,6 +9,7 @@ import * as A from './Accounts';
 import * as PI from './PricedItems';
 import { getCurrency } from '../util/Currency';
 import { getRatio, getRatioJSON } from '../util/Ratios';
+import { bSearch } from '../util/BinarySearch';
 
 
 /**
@@ -354,11 +355,169 @@ export function deepCopyTransaction(transaction) {
 }
 
 
+class AccountStatesUpdater {
+    constructor(manager) {
+        this.manager = manager;
+        this.accountManager = manager._accountingSystem.getAccountManager();
+
+        this._accountSplitsToProcess = new Map();   
+        this._accountStatesById = new Map();
+    }
+
+
+    async asyncGetAccountAndSplitsEntries(split) {
+        const { accountId } = split;
+        const accountEntry = await this.manager._asyncLoadAccountEntry(accountId);
+        let splitsEntry = this._accountSplitsToProcess.get(accountId);
+        if (!splitsEntry) {
+            const accountDataItem = this.accountManager.getAccountDataItemWithId(accountId);
+            const type = A.getAccountType(accountDataItem.type);
+            splitsEntry = {
+                accountEntry: accountEntry,
+                sortedIndicesAndSplits: new SortedArray((a, b) => a[0] - b[0], { duplicates: 'allow'}),
+                hasLots: type.hasLots,
+                accountState: accountDataItem.accountState,
+                basicSplitsToAdd: [],
+                basicSplitsToRemove: [],
+            };
+            this._accountSplitsToProcess.set(accountId, splitsEntry);
+        }
+
+        return [accountEntry, splitsEntry];
+    }
+
+
+    async asyncAddTransactionUpdate(existingTransactionDataItem, newTransactionDataItem) {
+        const { splits } = existingTransactionDataItem;
+        const transactionId = existingTransactionDataItem.id;
+        for (let i = splits.length - 1; i >= 0; --i) {
+            const split = splits[i];
+            const [accountEntry, splitsEntry] = await this.asyncGetAccountAndSplitsEntries(split);
+
+            const index = accountEntry.indicesById.get(transactionId);
+            splitsEntry.sortedIndicesAndSplits.add([index, split, transactionId, ]);
+
+            if (!accountEntry.hasLots) {
+                splitsEntry.basicSplitsToRemove.push(split);
+            }
+        }
+
+        if (newTransactionDataItem) {
+            const newYMDDate = getYMDDate(newYMDDate);
+            const { splits } = newTransactionDataItem;
+            for (let i = 0; i < splits.length; ++i) {
+                const split = splits[i];
+                const [accountEntry, splitsEntry] = await this.asyncGetAccountAndSplitsEntries(split);
+                const { transactionIdsAndYMDDates } = accountEntry;
+
+                let index = bSearch(transactionIdsAndYMDDates, newYMDDate, (value, arrayValue) => YMDDate.compare(value, arrayValue[1]));
+                if (index >= 0) {
+                    if (!YMDDate.compare(newYMDDate, transactionIdsAndYMDDates[index][1])) {
+                        --index;
+                    }
+                }
+
+                splitsEntry.sortedIndicesAndSplits.add([index ]);
+                if (!accountEntry.hasLots) {
+                    splitsEntry.basicSplitsToAdd.push(split);
+                }
+            }
+        }
+    }
+
+
+    async asyncRemoveTransactions() {
+        const toProcess = Array.from(this._accountSplitsToProcess.entries());
+        for (let i = 0; i < toProcess.length; ++i) {
+            const [ accountId, splitsEntry ] = toProcess[i];
+            const { accountEntry, sortedIndicesAndSplits, hasLots } = splitsEntry;
+            const { transactionIdsAndYMDDates } = accountEntry;
+            let { accountState } = splitsEntry;
+
+            if (hasLots) {
+                // We rewind to the oldest transaction being removed/modified, we'll add back everything once the
+                // transactions are updated.
+                const [ , , transactionId ] = sortedIndicesAndSplits.at(0);
+
+                accountState = (await this.manager._asyncLoadAccountStateDataItemsToBeforeTransactionId(accountId, transactionId))[0];
+            }
+            else {
+                // No lots, we can just subtract/add the splits from the current state.
+                const { basicSplitsToRemove } = splitsEntry;
+                basicSplitsToRemove.forEach((split) => {
+                    accountState = A.removeSplitFromAccountStateDataItem(accountState, split, accountState.ymdDate);
+                });
+            }
+
+            // We need to flush the accountEntry up to the removed transaction...
+            const index = sortedIndicesAndSplits.at(0)[0];
+            for (let i = transactionIdsAndYMDDates.length - 1; i >= index; --i) {
+                const transactionId = transactionIdsAndYMDDates[i][0];
+                accountEntry.accountStatesById.delete(transactionId);
+            }
+            accountEntry.accountStatesByOrder.length = index;
+            accountEntry.transactionIdsAndYMDDates = undefined;
+
+            this._accountStatesById.set(accountId, accountState);
+        }
+    }
+    
+
+    async asyncUpdateAccountStates() {
+        // Now update the account states from the current transactions.
+        const toProcess = Array.from(this._accountSplitsToProcess.entries());
+        for (let i = 0; i < toProcess.length; ++i) {
+            const [ accountId, splitsEntry ] = toProcess[i];
+
+            const { sortedIndicesAndSplits, hasLots } = splitsEntry;
+            let { accountState } = splitsEntry;
+
+            const accountEntry = await this.manager._asyncLoadAccountEntry(accountId);
+            const { transactionIdsAndYMDDates } = accountEntry;
+
+            if (hasLots) {
+                // index was the position of the oldest deleted/modified transaction, it's now
+                // the position of the first transaction to start with.
+                const [ index, , ] = sortedIndicesAndSplits.at(0);
+
+                accountState = this._accountStatesById.get(accountId);
+
+                for (let i = index; i < transactionIdsAndYMDDates.length; ++i) {
+                    const [ transactionId, ] = transactionIdsAndYMDDates[i];
+                
+                    const transactionDataItem = await this.manager.asyncGetTransactionDataItemsWithIds(transactionId);
+                    transactionDataItem.splits.forEach((split) => {
+                        if (split.accountId === accountId) {
+                            accountState = A.addSplitToAccountStateDataItem(accountState, split, transactionDataItem.ymdDate);
+                        }
+                    });
+                }
+
+                this._accountStatesById.set(accountId, accountState);
+            }
+            else {
+                if (transactionIdsAndYMDDates.length) {
+                    const { basicSplitsToAdd } = splitsEntry;                
+                    const [, ymdDate] = transactionIdsAndYMDDates[transactionIdsAndYMDDates.length - 1];
+                    basicSplitsToAdd.forEach((split) => {
+                        accountState = A.addSplitToAccountStateDataItem(accountState, split, ymdDate);
+                    });
+                }
+            }
+        }
+
+        // We need to clear out the cached account states and also update the account states.
+        const accountIdAccountStates = Array.from(this._accountStatesById.entries());
+        await this.accountManager.asyncUpdateAccountStates(accountIdAccountStates);
+    }
+}
+
 
 /**
  * Manager for {@link Transaction}s
  */
 export class TransactionManager extends EventEmitter {
+
     constructor(accountingSystem, options) {
         super(options);
 
@@ -370,6 +529,8 @@ export class TransactionManager extends EventEmitter {
         this.asyncAddTransaction = this.asyncAddTransactions;
         this.asyncRemoveTransaction = this.asyncRemoveTransactions;
         this.asyncModifyTransaction = this.asyncModifyTransactions;
+
+        this._entriesByAccountId = new Map();
     }
 
     async asyncSetupForUse() {
@@ -383,14 +544,6 @@ export class TransactionManager extends EventEmitter {
         ymdDateA = (ymdDateA !== undefined) ? getYMDDate(ymdDateA) : ymdDateA;
         ymdDateB = (ymdDateB !== undefined) ? getYMDDate(ymdDateB) : ymdDateB;
         return YMDDate.orderYMDDatePair(ymdDateA, ymdDateB);
-    }
-    
-
-    /**
-     * @returns {number[]}  Array of all the transaction ids.
-     */
-    getTransactionIds() {
-        return Array.from(this._handler.getTransactionIds());
     }
 
 
@@ -433,6 +586,129 @@ export class TransactionManager extends EventEmitter {
         }
 
         return this._handler.asyncGetTransactionDataItemsWithIds(ids);
+    }
+
+    /**
+     * @typedef {object}    TransactionManager~AccountEntry
+     * @private
+     * @property {Map<number, AccountStateDataItem>} accountStatesByTransactionId
+     * @property {AccountStateDataItem[]}   accountStatesByOrder    The ordering here matches the ordering of 
+     * the arrays returned by {@link TransactionHandler#asyncGetSortedIdsAndDatesForAccount}.
+     */
+    async _asyncLoadAccountEntry(accountId) {
+        const accountDataItem = this._accountingSystem.getAccountManager().getAccountDataItemWithId(accountId);
+        if (!accountDataItem) {
+            throw userError('TransactionManager-account_state_update_account_invalid', accountId);
+        }
+
+        let accountEntry = this._entriesByAccountId.get(accountId);
+        if (!accountEntry) {
+            accountEntry = {
+                accountStatesById: new Map(),
+                accountStatesByOrder: [],
+            };
+            this._entriesByAccountId.set(accountId, accountEntry);
+        }
+
+        if (!accountEntry.transactionIdsAndYMDDates) {
+            const transactionIdsAndYMDDates = await this._handler.asyncGetSortedIdsAndDatesForAccount(accountId);
+            const indicesById = new Map();
+            for (let i = transactionIdsAndYMDDates.length - 1; i >= 0; --i) {
+                indicesById.set(transactionIdsAndYMDDates[i][0], i);
+            }
+            accountEntry.transactionIdsAndYMDDates = transactionIdsAndYMDDates;
+            accountEntry.indicesById = indicesById;
+        }
+
+        return accountEntry;
+    }
+
+    async _asyncLoadAccountStateDataItemsToBeforeTransactionId(accountId, transactionId) {
+        const accountEntry = await this._asyncLoadAccountEntry(accountId);
+        let accountStateDataItems = accountEntry.accountStatesById.get(transactionId);
+        if (!accountStateDataItems) {
+            const accountDataItem = this._accountingSystem.getAccountManager().getAccountDataItemWithId(accountId);
+            let workingAccountState = accountDataItem.accountState;
+
+            const { transactionIdsAndYMDDates, accountStatesByOrder, accountStatesById } = accountEntry;
+            for (let i = transactionIdsAndYMDDates.length - 1; i >= 0; --i) {
+                const id = transactionIdsAndYMDDates[i][0];
+                if (accountStatesByOrder[i]) {
+                    accountStateDataItems = accountStatesByOrder[i];
+                }
+                else {
+                    let ymdDate = getYMDDateString(transactionIdsAndYMDDates[i][1]);
+                    const transaction = await this.asyncGetTransactionDataItemsWithIds(id);
+                    if (!transaction) {
+                        console.log('Uh-oh: ' + id);
+                    }
+
+                    const { splits } = transaction;
+
+                    const newAccountStateDataItems = [];
+                    for (let s = splits.length - 1; s >= 0; --s) {
+                        const split = splits[s];
+                        if (split.accountId === accountId) {
+                            workingAccountState = A.removeSplitFromAccountStateDataItem(workingAccountState, split, ymdDate);
+                            newAccountStateDataItems.push(workingAccountState);
+                        }
+                    }
+
+                    if (i > 0) {
+                        newAccountStateDataItems[0].ymdDate = getYMDDateString(transactionIdsAndYMDDates[i - 1][1]);
+                    }
+                    accountStatesByOrder[i] = newAccountStateDataItems;
+                    accountStateDataItems = newAccountStateDataItems;
+                    accountStatesById.set(id, newAccountStateDataItems);
+                }
+
+                if (id === transactionId) {
+                    break;
+                }
+            }
+        }
+
+        return accountStateDataItems;
+    }
+
+
+    /**
+     * Retrieves the account state data item immediately after a transaction has been applied
+     * to the account.
+     * @param {number} accountId 
+     * @param {number} transactionId 
+     * @returns {AccountStateDataItem[]}    An array containing the account states immediatel after
+     * a transaction has been applied. Multiple account states are returned if there are multiple
+     * splits referring to the account. The referring split at index closest to zero is at the first index.
+     */
+    async asyncGetAccountStateDataItemsAfterTransaction(accountId, transactionId) {
+        const accountEntry = await this._asyncLoadAccountEntry(accountId);
+        const { transactionIdsAndYMDDates, indicesById } = accountEntry;
+        if (transactionIdsAndYMDDates.length) {
+            const index = indicesById.get(transactionId);
+            if (index === transactionIdsAndYMDDates.length - 1) {
+                const account = this._accountingSystem.getAccountManager().getAccountDataItemWithId(accountId);
+                return account.accountState;
+            }
+
+            transactionId = transactionIdsAndYMDDates[index + 1][0]; 
+        }
+
+        return this._asyncLoadAccountStateDataItemsToBeforeTransactionId(accountId, transactionId);
+    }
+
+
+    /**
+     * Retrieves the account state data item immediately before a transaction has been applied
+     * to the account.
+     * @param {number} accountId 
+     * @param {number} transactionId 
+     * @returns {AccountStateDataItem[]}    An array containing the account states immediately before
+     * a transaction is applied. Multiple account states are returned if there are multiple
+     * splits referring to the account. The referring split at index closest to zero is at the first index.
+     */
+    async asyncGetAccountStateDataItemsBeforeTransaction(accountId, transactionId) {
+        return this._asyncLoadAccountStateDataItemsToBeforeTransactionId(accountId, transactionId);
     }
 
 
@@ -614,7 +890,7 @@ export class TransactionManager extends EventEmitter {
         });
 
         const accountStatesById = new Map();
-        for (let i = 0; i < transactionDataItems.length; ++i) {
+        for (let i = 0; i < sortedTransactionDataItems.length; ++i) {
             const error = this._validateTransactionBasics(sortedTransactionDataItems[i], false, accountStatesById);
             if (error) {
                 throw error;
@@ -627,11 +903,22 @@ export class TransactionManager extends EventEmitter {
 
         const idGeneratorOriginal = this._idGenerator.toJSON();
         try {
+
+            const accountStatesByAccountId = new Map();
+            const accountManager = this._accountingSystem.getAccountManager();
+
             const transactionIdAndDataItemPairs = [];
             sortedTransactionDataItems.forEach((transactionDataItem) => {
                 const id = this._idGenerator.generateId();
                 transactionDataItem.id = id;
                 transactionIdAndDataItemPairs.push([id, transactionDataItem]);
+
+                transactionDataItem.splits.forEach((split) => {
+                    if (!accountStatesByAccountId.has(split.accountId)) {
+                        const accountDataItem = accountManager.getAccountDataItemWithId(split.accountId);
+                        accountStatesByAccountId.set(split.accountId, accountDataItem.accountState);
+                    }
+                });
             });
 
             await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs, this._idGenerator.toJSON());
@@ -639,10 +926,18 @@ export class TransactionManager extends EventEmitter {
             transactionDataItems = transactionDataItems.map((dataItem) => getTransactionDataItem(dataItem, true));
 
             try {
-                const transactionChanges = [];
-                sortedTransactionDataItems.forEach((dataItem) => transactionChanges.push([ dataItem ]));
+                // Now apply the transactions to the account states.
+                sortedTransactionDataItems.forEach((transactionDataItem) => {
+                    transactionDataItem.splits.forEach((split) => {
+                        let accountState = accountStatesByAccountId.get(split.accountId);
+                        accountState = A.addSplitToAccountStateDataItem(accountState, split, transactionDataItem.ymdDate);
+                        accountStatesByAccountId.set(split.accountId, accountState);
+                    });
+                });
 
-                await this._accountingSystem.getAccountManager().asyncUpdateAccountStatesFromTransactionChanges(transactionChanges);
+                const accountIdAccountStates = Array.from(accountStatesByAccountId.entries());
+
+                await accountManager.asyncUpdateAccountStates(accountIdAccountStates);
             }
             catch (e) {
                 // Gotta remove the items we just added.
@@ -663,6 +958,7 @@ export class TransactionManager extends EventEmitter {
             throw e;
         }
     }
+    
 
 
     /**
@@ -701,19 +997,26 @@ export class TransactionManager extends EventEmitter {
         }
 
         const transactionIdAndDataItemPairs = [];
-        transactionIds.forEach((id) => transactionIdAndDataItemPairs.push([id]));
+
+        const stateUpdater = new AccountStatesUpdater(this);
+
+        for (let t = 0; t < transactionDataItems.length; ++t) {
+            const dataItem = transactionDataItems[t];
+
+            transactionIdAndDataItemPairs.push([dataItem.id]);
+
+            await stateUpdater.asyncAddTransactionUpdate(dataItem);
+        }
+
+        await stateUpdater.asyncRemoveTransactions();
 
         await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs);
 
         try {
-            const sortedDataItems = Array.from(transactionDataItems).sort((a, b) => b.ymdDate.localeCompare(a.ymdDate));
-            const transactionChanges = [];
-            sortedDataItems.forEach((dataItem) => transactionChanges.push([undefined, dataItem]));
-
-            await this._accountingSystem.getAccountManager().asyncUpdateAccountStatesFromTransactionChanges(transactionChanges);
+            await stateUpdater.asyncUpdateAccountStates();
         }
         catch (e) {
-            console.log('Account state updating from removing transactions failed, reverting transaction changes.');
+            console.error('Account state updating from removing transactions failed, reverting transaction changes.');
 
             // Gotta add back all the data items we removed.
             const restoreIdAndDataItemPairs = [];
@@ -755,10 +1058,15 @@ export class TransactionManager extends EventEmitter {
             return result[0];
         }
 
+        this._handler.isDebug = this.isDebug;
+
         const transactionIds = transactions.map((transaction) => transaction.id);
         const oldDataItems = await this._handler.asyncGetTransactionDataItemsWithIds(transactionIds);
+
+        const accountManager = this._accountingSystem.getAccountManager();
+
+        let hasLots;
         let newDataItems = [];
-        const transactionIdAndDataItemPairs = [];
         for (let i = 0; i < transactionIds.length; ++i) {
             const id = transactionIds[i];
             if (!oldDataItems[i]) {
@@ -766,29 +1074,51 @@ export class TransactionManager extends EventEmitter {
             }
 
             const newDataItem = Object.assign({}, oldDataItems[i], getTransactionDataItem(transactions[i]));
+            newDataItems.push(newDataItem);
+
+            if (!hasLots) {
+                newDataItem.splits.forEach((split) => {
+                    const account = accountManager.getAccountDataItemWithId(split.accountId);
+                    if (account) {
+                        const type = A.getAccountType(account.type);
+                        if (type && type.hasLots) {
+                            hasLots = true;
+                        }
+                    }
+                });
+            }
+        }
+
+        for (let i = 0; i < transactionIds.length; ++i) {
+            const newDataItem = newDataItems[i];
             const error = this._validateTransactionBasics(newDataItem, true);
             if (error) {
                 throw error;
             }
-
-            newDataItems.push(newDataItem);
-            transactionIdAndDataItemPairs.push([id, newDataItem]);
         }
 
         if (validateOnly) {
             return newDataItems;
         }
 
+        const transactionIdAndDataItemPairs = [];
+
+        const stateUpdater = new AccountStatesUpdater(this);
+
+        for (let i = 0; i < transactionIds.length; ++i) {
+            transactionIdAndDataItemPairs.push([transactionIds[i], newDataItems[i]]);
+
+            await stateUpdater.asyncAddTransactionUpdate(oldDataItems[i], newDataItems[i]);
+        }
+
+        await stateUpdater.asyncRemoveTransactions();
+
         await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs);
 
         newDataItems = newDataItems.map((dataItem) => getTransactionDataItem(dataItem, true));
 
         try {
-            const transactionChanges = [];
-            for (let i = 0; i < newDataItems.length; ++i) {
-                transactionChanges.push([newDataItems[i], oldDataItems[i]]);
-            }
-            await this._accountingSystem.getAccountManager().asyncUpdateAccountStatesFromTransactionChanges(transactionChanges);
+            await stateUpdater.asyncUpdateAccountStates();
         }
         catch (e) {
             console.log('Account state updating from modifying transactions failed, reverting transaction changes.');
@@ -824,12 +1154,6 @@ export class TransactionsHandler {
         throw Error('TransactionsHandler.getIdGeneratorOptions() abstract method!');
     }
 
-    /**
-     * @returns {number[]}  An array containing all the transaction ids.
-     */
-    getTransactionIds() {
-        throw Error('TransactionsHandler.getTransactionsId() abstract method!');
-    }
 
     
     /**
@@ -864,6 +1188,16 @@ export class TransactionsHandler {
         throw Error('TransactionHandler.asyncGetTransactionDataItemsWithIds() abstract method!');
     }
 
+
+    /**
+     * Retrieves an array containing two element sub-arrays, the first element being the transaction id
+     * and the second element the date.
+     * @param {number} accountId If defined only transactions that refer to the account with this id are retrieved.
+     * @returns {Array} The array of two element sub-arrays. The array is sorted by date from oldest to newest.
+     */
+    async asyncGetSortedIdsAndDatesForAccount(accountId) {
+        throw Error('TransactionHandler.asyncGetSortedIdsAndDatesForAccount() abstract method!');
+    }
 
 
     /**
@@ -943,7 +1277,7 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         this._sortedEntriesByAccountId = new Map();
 
         // Sorted array of entries sorted by ymdDate then id.
-        this._ymdDateSortedEntries = new SortedArray(compareEntryByYMDDateThenId, { duplicates: 'allow'});
+        this._ymdDateSortedEntries = new SortedArray(compareEntryByYMDDateThenId);
     }
 
 
@@ -994,14 +1328,17 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         oldEntry.accountIds.forEach((accountId) => {
             const sortedEntries = this._sortedEntriesByAccountId.get(accountId);
             if (sortedEntries) {
-                sortedEntries.delete(oldEntry);
+                const wasDeleted = sortedEntries.delete(oldEntry);
+                if (!wasDeleted) {
+                    console.log('uh-oh: ' + JSON.stringify(oldEntry));
+                    console.log('sortedEntries: ' + JSON.stringify(sortedEntries.getValues()));
+                    console.log('entriesById: ' + JSON.stringify(Array.from(this._entriesById.entries())));
+                    throw Error('Stop!');
+                }
             }
         });
     }
 
-    getTransactionIds() {
-        return Array.from(this._entriesById.keys());
-    }
 
     async asyncGetTransactionDateRange(accountId) {
         const sortedEntries = (accountId) ? this._sortedEntriesByAccountId.get(accountId) : this._ymdDateSortedEntries;
@@ -1020,6 +1357,18 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         }
 
         return [];
+    }
+
+    async asyncGetSortedIdsAndDatesForAccount(accountId) {
+        const result = [];
+        const sortedEntries = (accountId) ? this._sortedEntriesByAccountId.get(accountId) : this._ymdDateSortedEntries;
+        if (sortedEntries) {
+            sortedEntries.forEach((entry) => {
+                result.push([ entry.id, entry.ymdDate ]);
+            });
+        }
+
+        return result;
     }
 
     async asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs, idGeneratorOptions) {
@@ -1070,20 +1419,22 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         entryChanges.forEach(([newEntry, oldEntry]) => {
             if (!newEntry) {
                 // Delete
-                this._entriesById.delete(oldEntry.id);
                 this._ymdDateSortedEntries.delete(oldEntry);
                 this._removeEntryFromSortedEntriesByAccountId(oldEntry);
+                this._entriesById.delete(oldEntry.id);
             }
             else {
                 let accountIdsUnchanged;
                 if (oldEntry) {
                     // Modify
+                    let isDateChange;
                     if (YMDDate.compare(oldEntry.ymdDate, newEntry.ymdDate)) {
                         this._ymdDateSortedEntries.delete(oldEntry);
+                        isDateChange = true;
                     }
 
                     // This test is safe, earlier we checked for account id changes...
-                    if (newEntry.accountIds !== oldEntry.accountIds) {
+                    if ((newEntry.accountIds !== oldEntry.accountIds) || isDateChange) {
                         this._removeEntryFromSortedEntriesByAccountId(oldEntry);
                     }
                     else {
