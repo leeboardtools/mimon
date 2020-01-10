@@ -377,30 +377,6 @@ export function removeSplitFromAccountStateDataItem(accountState, split, ymdDate
 }
 
 
-
-export function getLaterYMDDate(a, b) {
-    if (a === b) {
-        return a;
-    }
-    else if (!a) {
-        return b;
-    }
-    else if (!b) {
-        return a;
-    }
-
-    if (typeof a === 'string') {
-        b = getYMDDateString(b);
-        return a.localeCompare(b) > 0 ? a : b;
-    }
-    else {
-        b = getYMDDate(b);
-        return YMDDate.compare(a, b) > 0 ? a : b;
-    }
-}
-
-
-
 /**
  * @typedef {object} AccountDataItem
  * @property {number}   id  The account's id.
