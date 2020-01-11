@@ -329,7 +329,7 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) 
                 const lotString = getLotString(oldLot);
                 const index = sortedLots.indexOf([lotString, oldLot]);
                 if (index < 0) {
-                    throw Error('AccountState-add_split_lot_not_found', lotString);
+                    throw userError('AccountState-add_split_lot_not_found', lotString);
                 }
                 sortedLots.deleteIndex(index);
             }
