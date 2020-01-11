@@ -355,6 +355,9 @@ export function deepCopyTransaction(transaction) {
 }
 
 
+//
+//---------------------------------------------------------
+//
 class AccountStatesUpdater {
     constructor(manager) {
         this.manager = manager;
@@ -362,6 +365,7 @@ class AccountStatesUpdater {
 
         this._accountSplitsToProcess = new Map();   
         this._accountStatesByTransactionId = new Map();
+        this._newTransactionDataItemsById = new Map();
     }
 
 
@@ -379,6 +383,7 @@ class AccountStatesUpdater {
                 accountState: accountDataItem.accountState,
                 basicSplitsToAdd: [],
                 basicSplitsToRemove: [],
+                lotSplitsToAdd: [],
             };
             this._accountSplitsToProcess.set(accountId, splitsEntry);
         }
@@ -419,8 +424,60 @@ class AccountStatesUpdater {
                 }
 
                 splitsEntry.sortedIndices.add(index);
-                if (!accountEntry.hasLots) {
+                if (accountEntry.hasLots) {
+                    splitsEntry.lotSplitsToAdd.push(split);
+                }
+                else {
                     splitsEntry.basicSplitsToAdd.push(split);
+                }
+            }
+
+            this._newTransactionDataItemsById.set(newTransactionDataItem.id, newTransactionDataItem);
+        }
+    }
+
+
+    async asyncValidateTransactions() {
+        const toProcess = Array.from(this._accountSplitsToProcess.entries());
+        for (let i = 0; i < toProcess.length; ++i) {
+            const [ accountId, splitsEntry ] = toProcess[i];
+            const { accountEntry, sortedIndices, hasLots } = splitsEntry;
+            const { transactionIdsAndYMDDates } = accountEntry;
+            let { accountState } = splitsEntry;
+            const index = sortedIndices.at(0);
+
+            if (hasLots) {
+                // We rewind to the oldest transaction being removed/modified, we'll add back everything once the
+                // transactions are updated.
+                const transactionId = transactionIdsAndYMDDates[index][0];
+                const accountStates = (await this.manager._asyncLoadAccountStateDataItemsToBeforeTransactionId(accountId, transactionId));
+                accountState = accountStates[accountStates.length - 1];
+
+                // Now we need to update the transactions and add them back.
+                const transactionIds = [];
+                for (let i = index; i < transactionIdsAndYMDDates.length; ++i) {
+                    const id = transactionIdsAndYMDDates[i][0];
+                    if (id !== transactionId) {
+                        transactionIds.push(id);
+                    }
+                }
+
+                let transactionDataItems = await this.manager.asyncGetTransactionDataItemsWithIds(transactionIds);
+                const newTransactionDataItem = this._newTransactionDataItemsById.get(transactionId);
+                if (newTransactionDataItem) {
+                    const sortedDataItems = new SortedArray(compareEntryByYMDDateThenId, { initialValues: transactionDataItems });
+                    sortedDataItems.add(newTransactionDataItem);
+                    transactionDataItems = sortedDataItems.getValues();
+                }
+
+                for (let i = 0; i < transactionDataItems.length; ++i) {
+                    const { splits } = transactionDataItems[i];
+                    splits.forEach((split) => {
+                        if (splits.accountId === accountId) {
+                            // This will throw an exception if the account state is not valid.
+                            accountState = A.addSplitToAccountStateDataItem(accountState, split, accountState.ymdDate);
+                        }
+                    });
                 }
             }
         }
@@ -988,13 +1045,19 @@ export class TransactionManager extends EventEmitter {
             return result[0];
         }
 
+        const stateUpdater = new AccountStatesUpdater(this);
+
         const transactionDataItems = await this._handler.asyncGetTransactionDataItemsWithIds(transactionIds);
         for (let i = transactionDataItems.length - 1; i >= 0; --i) {
             if (!transactionDataItems[i]) {
                 throw userError('TransactionManager-remove_invalid_id', transactionIds[i]);
             }
             transactionDataItems[i] = getTransactionDataItem(transactionDataItems[i], true);
+
+            await stateUpdater.asyncAddTransactionUpdate(transactionDataItems[i]);
         }
+
+        await stateUpdater.asyncValidateTransactions();
 
         if (validateOnly) {
             return transactionDataItems;
@@ -1002,14 +1065,10 @@ export class TransactionManager extends EventEmitter {
 
         const transactionIdAndDataItemPairs = [];
 
-        const stateUpdater = new AccountStatesUpdater(this);
-
         for (let t = 0; t < transactionDataItems.length; ++t) {
             const dataItem = transactionDataItems[t];
 
             transactionIdAndDataItemPairs.push([dataItem.id]);
-
-            await stateUpdater.asyncAddTransactionUpdate(dataItem);
         }
 
         await stateUpdater.asyncRemoveTransactions();
@@ -1093,13 +1152,19 @@ export class TransactionManager extends EventEmitter {
             }
         }
 
+        const stateUpdater = new AccountStatesUpdater(this);
+
         for (let i = 0; i < transactionIds.length; ++i) {
             const newDataItem = newDataItems[i];
             const error = this._validateTransactionBasics(newDataItem, true);
             if (error) {
                 throw error;
             }
+
+            await stateUpdater.asyncAddTransactionUpdate(oldDataItems[i], newDataItem);
         }
+
+        await stateUpdater.asyncValidateTransactions();
 
         if (validateOnly) {
             return newDataItems;
@@ -1107,12 +1172,8 @@ export class TransactionManager extends EventEmitter {
 
         const transactionIdAndDataItemPairs = [];
 
-        const stateUpdater = new AccountStatesUpdater(this);
-
         for (let i = 0; i < transactionIds.length; ++i) {
             transactionIdAndDataItemPairs.push([transactionIds[i], newDataItems[i]]);
-
-            await stateUpdater.asyncAddTransactionUpdate(oldDataItems[i], newDataItems[i]);
         }
 
         await stateUpdater.asyncRemoveTransactions();
@@ -1220,7 +1281,13 @@ export class TransactionsHandler {
 
 
 function compareEntryByYMDDateThenId(a, b) {
-    const result = YMDDate.compare(a.ymdDate, b.ymdDate);
+    let result;
+    if (typeof a.ymdDate === 'string') {
+        result = a.ymdDate.localeCompare(b.ymdDate);
+    }
+    else {
+        result = YMDDate.compare(a.ymdDate, b.ymdDate);
+    }
     if (result) {
         return result;
     }
