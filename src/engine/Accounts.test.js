@@ -210,18 +210,9 @@ test('Account-Data Items', () => {
     const deepCopyDataItem = A.deepCopyAccount(lotsAccountDataItem);
     expect(deepCopyDataItem).toEqual(lotsAccountDataItem);
 
-    for (let i = 0; i < deepCopyDataItem.accountState.lots.length; ++i) {
-        expect(deepCopyDataItem.accountState.lots[i]).not.toBe(lotsAccountDataItem.accountState.lots[i]);
-    }
-
     const lotsAccount2 = A.getAccount(lotsAccount);
     const deepCopyAccount2 = A.deepCopyAccount(lotsAccount2);
     expect(deepCopyAccount2).toEqual(lotsAccount2);
-
-    expect(deepCopyAccount2.accountState.ymdDate).not.toBe(lotsAccount2.accountState.ymdDate);
-    for (let i = 0; i < deepCopyAccount2.accountState.lots.length; ++i) {
-        expect(deepCopyAccount2.accountState.lots[i]).not.toBe(lotsAccount2.accountState.lots[i]);
-    }
 });
 
 
@@ -353,7 +344,6 @@ test('AccountManager-add', async () => {
     };
     const assetA = await accountManager.asyncAddAccount(assetOptionsA);
     ATH.expectAccount(assetA, assetOptionsA);
-    expect(assetA.accountState.lots).toBeUndefined();
 
     expect(accountManager.getRootAssetAccount().childAccountIds.includes(assetA.id)).toBeTruthy();
 
@@ -369,7 +359,6 @@ test('AccountManager-add', async () => {
     };
     const bankA = await accountManager.asyncAddAccount(bankOptionsA);
     ATH.expectAccount(bankA, bankOptionsA);
-    expect(bankA.accountState.lots).toBeUndefined();
 
     accountDataItem = accountManager.getAccountDataItemWithId(assetA.id);
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([bankA.id]));
@@ -386,7 +375,6 @@ test('AccountManager-add', async () => {
     };
     const cashA = await accountManager.asyncAddAccount(cashOptionsA);
     ATH.expectAccount(cashA, cashOptionsA);
-    expect(cashA.accountState.lots).toBeUndefined();
 
     accountDataItem = accountManager.getAccountDataItemWithId(assetA.id);
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([cashA.id]));
@@ -403,7 +391,6 @@ test('AccountManager-add', async () => {
     };
     const brokerageA = await accountManager.asyncAddAccount(brokerageOptionsA);
     ATH.expectAccount(brokerageA, brokerageOptionsA);
-    expect(brokerageA.accountState.lots).toBeUndefined();
 
     accountDataItem = accountManager.getAccountDataItemWithId(assetA.id);
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([brokerageA.id]));
@@ -425,7 +412,6 @@ test('AccountManager-add', async () => {
     securityOptionsA.pricedItemId = securityPricedItemA.id;
     const securityA = await accountManager.asyncAddAccount(securityOptionsA);
     ATH.expectAccount(securityA, securityOptionsA);
-    expect(securityA.accountState.lots).toEqual([]);
 
     accountDataItem = accountManager.getAccountDataItemWithId(brokerageA.id);
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([securityA.id]));
@@ -453,7 +439,6 @@ test('AccountManager-add', async () => {
 
     const mutualFundA = await accountManager.asyncAddAccount(mutualFundOptionsA);
     ATH.expectAccount(mutualFundA, mutualFundOptionsA);
-    expect(mutualFundA.accountState.lots).toEqual([]);
 
 
     //
@@ -472,7 +457,6 @@ test('AccountManager-add', async () => {
 
     const realEstateA = await accountManager.asyncAddAccount(realEstateOptionsA);
     ATH.expectAccount(realEstateA, realEstateOptionsA);
-    expect(realEstateA.accountState.lots).toEqual([]);
 
 
     //
@@ -491,7 +475,6 @@ test('AccountManager-add', async () => {
 
     const propertyA = await accountManager.asyncAddAccount(propertyOptionsA);
     ATH.expectAccount(propertyA, propertyOptionsA);
-    expect(propertyA.accountState.lots).toEqual([]);
 
 
     //
@@ -509,7 +492,6 @@ test('AccountManager-add', async () => {
 
     const liabilityA = await accountManager.asyncAddAccount(liabilityOptionsA);
     ATH.expectAccount(liabilityA, liabilityOptionsA);
-    expect(liabilityA.accountState.lots).toBeUndefined();
 
 
     //
@@ -527,7 +509,6 @@ test('AccountManager-add', async () => {
 
     const creditCardA = await accountManager.asyncAddAccount(creditCardOptionsA);
     ATH.expectAccount(creditCardA, creditCardOptionsA);
-    expect(creditCardA.accountState.lots).toBeUndefined();
     
     accountDataItem = accountManager.getAccountDataItemWithId(liabilityA.id);
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([creditCardA.id]));
@@ -548,7 +529,6 @@ test('AccountManager-add', async () => {
 
     const loanA = await accountManager.asyncAddAccount(loanOptionsA);
     ATH.expectAccount(loanA, loanOptionsA);
-    expect(loanA.accountState.lots).toBeUndefined();
     
     accountDataItem = accountManager.getAccountDataItemWithId(liabilityA.id);
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([loanA.id]));
@@ -569,7 +549,6 @@ test('AccountManager-add', async () => {
 
     const mortgageA = await accountManager.asyncAddAccount(mortgageOptionsA);
     ATH.expectAccount(mortgageA, mortgageOptionsA);
-    expect(mortgageA.accountState.lots).toBeUndefined();
     
     accountDataItem = accountManager.getAccountDataItemWithId(liabilityA.id);
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([mortgageA.id]));
@@ -590,7 +569,6 @@ test('AccountManager-add', async () => {
 
     const incomeA = await accountManager.asyncAddAccount(incomeOptionsA);
     ATH.expectAccount(incomeA, incomeOptionsA);
-    expect(incomeA.accountState.lots).toBeUndefined();
     
     accountDataItem = accountManager.getRootIncomeAccount();
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([incomeA.id]));
@@ -604,7 +582,6 @@ test('AccountManager-add', async () => {
     };
     const incomeB = await accountManager.asyncAddAccount(incomeOptionsB);
     ATH.expectAccount(incomeB, incomeOptionsB);
-    expect(incomeB.accountState.lots).toBeUndefined();
     
     accountDataItem = accountManager.getAccountDataItemWithId(incomeA.id);
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([incomeB.id]));
@@ -625,7 +602,6 @@ test('AccountManager-add', async () => {
 
     const expenseA = await accountManager.asyncAddAccount(expenseOptionsA);
     ATH.expectAccount(expenseA, expenseOptionsA);
-    expect(expenseA.accountState.lots).toBeUndefined();
     
     accountDataItem = accountManager.getRootExpenseAccount();
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([expenseA.id]));
@@ -639,7 +615,6 @@ test('AccountManager-add', async () => {
     };
     const expenseB = await accountManager.asyncAddAccount(expenseOptionsB);
     ATH.expectAccount(expenseB, expenseOptionsB);
-    expect(expenseB.accountState.lots).toBeUndefined();
     
     accountDataItem = accountManager.getAccountDataItemWithId(expenseA.id);
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([expenseB.id]));
@@ -660,7 +635,6 @@ test('AccountManager-add', async () => {
 
     const equityA = await accountManager.asyncAddAccount(equityOptionsA);
     ATH.expectAccount(equityA, equityOptionsA);
-    expect(equityA.accountState.lots).toBeUndefined();
     
     accountDataItem = accountManager.getRootEquityAccount();
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([equityA.id]));
@@ -679,7 +653,6 @@ test('AccountManager-add', async () => {
     };
     const equityB = await accountManager.asyncAddAccount(equityOptionsB);
     ATH.expectAccount(equityB, equityOptionsB);
-    expect(equityB.accountState.lots).toBeUndefined();
     
     accountDataItem = accountManager.getAccountDataItemWithId(equityA.id);
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([equityB.id]));
@@ -713,24 +686,6 @@ test('AccountManager-modify', async () => {
 
     let account;
     let oldAccount;
-
-    // Change account state.
-    const stateA = { ymdDate: '2019-09-21', quantityBaseValue: 1000 };
-    const changesA = { id: sys.checkingId, accountState: stateA };
-    [account] = await accountManager.asyncModifyAccount(changesA);
-    ATH.expectAccount(account, changesA);
-
-    account = accountManager.getAccountDataItemWithId(sys.checkingId);
-    ATH.expectAccount(account, changesA);
-
-    // No change:
-    expect(await accountManager.asyncModifyAccount(changesA)).toBeUndefined();
-
-    // Make sure it was a deep copy
-    const stateB = { ymdDate: '2012-03-45', quantityBaseValue: 1000, };
-    changesA.accountState = stateB;
-    const changesB = { id: sys.checkingId, accountState: stateA };
-    ATH.expectAccount(account, changesB);
 
 
     // Move IRA to fixed assets.

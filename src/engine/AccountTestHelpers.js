@@ -43,7 +43,4 @@ export function expectAccount(account, ref) {
         expect(account.childAccountLocalIds).toEqual(ref.childAccountLocalIds);
     }
 
-    if (ref.accountState) {
-        expectAccountState(account.accountState, ref.accountState);
-    }
 }

@@ -733,6 +733,26 @@ export class TransactionManager extends EventEmitter {
     }
 
 
+    async asyncGetAccountStatesAtDate(accountId, ymdDate) {
+        const accountEntry = await this._asyncLoadAccountEntry(accountId);
+        const { transactionIdsAndYMDDates } = accountEntry;
+
+        // TEST!!!
+        if (!transactionIdsAndYMDDates || !transactionIdsAndYMDDates.length) {
+            const accountDataItem = this._accountingSystem.getAccountManager().getAccountDataItemWithId(accountId);
+            return [accountDataItem.accountState];
+        }
+        if (!ymdDate) {
+            const accountDataItem = this._accountingSystem.getAccountManager().getAccountDataItemWithId(accountId);
+            return [accountDataItem.accountState];
+        }
+    }
+
+    async asyncGetCurrentAccountState(accountId) {
+        return (await this.asyncGetAccountStatesAtDate(accountId))[0];
+    }
+
+
     /**
      * Retrieves the account state data item immediately after a transaction has been applied
      * to the account.
@@ -978,6 +998,10 @@ export class TransactionManager extends EventEmitter {
                     if (!accountStatesByAccountId.has(split.accountId)) {
                         const accountDataItem = accountManager.getAccountDataItemWithId(split.accountId);
                         accountStatesByAccountId.set(split.accountId, accountDataItem.accountState);
+                    }
+                    let accountEntry = this._entriesByAccountId.get(split.accountId);
+                    if (accountEntry) {
+                        accountEntry.transactionIdsAndYMDDates = undefined;
                     }
                 });
             });

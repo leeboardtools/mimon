@@ -778,13 +778,11 @@ test('Transactions-openingBalances', async () => {
     await ASTH.asyncAddOpeningBalances(sys);
 
     const { accountingSystem, initialYMDDate } = sys;
-    const accountManager = accountingSystem.getAccountManager();
+    const manager = accountingSystem.getTransactionManager();
 
-    const checkingOB = accountManager.getAccountDataItemWithId(sys.checkingId);
-    expect(checkingOB.accountState).toEqual({ ymdDate: initialYMDDate, quantityBaseValue: sys.checkingOBQuantityBaseValue, });
+    expect(await manager.asyncGetCurrentAccountState(sys.checkingId)).toEqual({ ymdDate: initialYMDDate, quantityBaseValue: sys.checkingOBQuantityBaseValue, });
 
-    const cashOB = accountManager.getAccountDataItemWithId(sys.cashId);
-    expect(cashOB.accountState).toEqual({ ymdDate: initialYMDDate, quantityBaseValue: sys.cashOBQuantityBaseValue, });
+    expect(await manager.asyncGetCurrentAccountState(sys.cashId)).toEqual({ ymdDate: initialYMDDate, quantityBaseValue: sys.cashOBQuantityBaseValue, });
 });
 
 
@@ -796,14 +794,11 @@ test('Transactions-lotTransactions', async () => {
 
     const { accountingSystem, initialYMDDate } = sys;
     const transactionManager = accountingSystem.getTransactionManager();
-    const accountManager = accountingSystem.getAccountManager();
 
     const brokerageId = sys.brokerageAId;
     const aaplId = sys.aaplBrokerageAId;
-    let accountItemData;
 
-    accountItemData = accountManager.getAccountDataItemWithId(aaplId);
-    expect(accountItemData.accountState).toEqual({ ymdDate: initialYMDDate, quantityBaseValue: 0, lots: [] });
+    expect(await transactionManager.asyncGetCurrentAccountState(aaplId)).toEqual({ ymdDate: initialYMDDate, quantityBaseValue: 0, lots: [] });
 
     const lotA = { purchaseYMDDate: '2010-09-21', quantityBaseValue: 12345, costBasisBaseValue: 98765 };
 
@@ -819,7 +814,7 @@ test('Transactions-lotTransactions', async () => {
     expect(transA).toEqual(settingsA);
 
     let currentQuantityBaseValue = lotA.costBasisBaseValue;
-    expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
+    expect(await transactionManager.asyncGetCurrentAccountState(aaplId)).toEqual(
         { ymdDate: settingsA.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA]});
 
 
@@ -848,8 +843,10 @@ test('Transactions-lotTransactions', async () => {
 
     currentQuantityBaseValue += lotB1.costBasisBaseValue + lotB2.costBasisBaseValue;
     currentQuantityBaseValue += lotC.costBasisBaseValue;
-    expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
+    expect(await transactionManager.asyncGetCurrentAccountState(aaplId)).toEqual(
         { ymdDate: settingsC.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotB2, lotC]});
+    
+    await transactionManager.asyncGetCurrentAccountState(aaplId);
 
 
     //
@@ -877,7 +874,7 @@ test('Transactions-lotTransactions', async () => {
 
     currentQuantityBaseValue += lotD.costBasisBaseValue;
     currentQuantityBaseValue += lotE.costBasisBaseValue;
-    expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
+    expect(await transactionManager.asyncGetCurrentAccountState(aaplId)).toEqual(
         { ymdDate: settingsE.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotB2, lotD, lotC, lotE]});
 
 
@@ -891,10 +888,12 @@ test('Transactions-lotTransactions', async () => {
             { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotDa.costBasisBaseValue, lotChanges: [[lotDa, ]]},
         ]
     };
+    transactionManager.isDebug = true;
+
     await transactionManager.asyncModifyTransactions(settingsDa);
 
     currentQuantityBaseValue += lotDa.costBasisBaseValue - lotD.costBasisBaseValue;
-    expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
+    expect(await transactionManager.asyncGetCurrentAccountState(aaplId)).toEqual(
         { ymdDate: settingsE.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotB2, lotDa, lotC, lotE]});
 
 
@@ -908,7 +907,7 @@ test('Transactions-lotTransactions', async () => {
         ]
     };
     await transactionManager.asyncModifyTransactions(settingsDb);
-    expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
+    expect(await transactionManager.asyncGetCurrentAccountState(aaplId)).toEqual(
         { ymdDate: settingsE.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotB2, lotC, lotDb, lotE]});
 
 
@@ -917,7 +916,7 @@ test('Transactions-lotTransactions', async () => {
     await transactionManager.asyncRemoveTransactions(transD.id);
 
     currentQuantityBaseValue -= lotDb.costBasisBaseValue;
-    expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
+    expect(await transactionManager.asyncGetCurrentAccountState(aaplId)).toEqual(
         { ymdDate: settingsE.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotB2, lotC, lotE]});
     
 
@@ -937,7 +936,7 @@ test('Transactions-lotTransactions', async () => {
     settingsF.id = transF.id;
 
     currentQuantityBaseValue -= sellB2QuantitytBaseValue;
-    expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
+    expect(await transactionManager.asyncGetCurrentAccountState(aaplId)).toEqual(
         { ymdDate: settingsF.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotC, lotE]});
 
     
@@ -955,7 +954,7 @@ test('Transactions-lotTransactions', async () => {
     settingsG.id = transG.id;
 
     currentQuantityBaseValue -= sellCaQuantityBaseValue;
-    expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
+    expect(await transactionManager.asyncGetCurrentAccountState(aaplId)).toEqual(
         { ymdDate: settingsG.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotCa, lotE]});
     
     //
@@ -988,8 +987,9 @@ test('Transactions-lotTransactions', async () => {
 
     currentQuantityBaseValue += lotF.costBasisBaseValue;
     currentQuantityBaseValue -= sellFaQuantityBaseValue;
-    expect(accountManager.getAccountDataItemWithId(aaplId).accountState).toEqual(
+    expect(await transactionManager.asyncGetCurrentAccountState(aaplId)).toEqual(
         { ymdDate: settingsI.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotCa, lotE, lotFa]});
+
 });
 
 
@@ -1002,7 +1002,6 @@ test('Transactions-accountStateUpdates', async () => {
 
     const { accountingSystem, initialYMDDate } = sys;
     const transactionManager = accountingSystem.getTransactionManager();
-    const accountManager = accountingSystem.getAccountManager();
 
     const settingsA = { 
         ymdDate: '2010-01-01', 
@@ -1105,14 +1104,10 @@ test('Transactions-lotValidation', async () => {
 
     const { accountingSystem, initialYMDDate } = sys;
     const transactionManager = accountingSystem.getTransactionManager();
-    const accountManager = accountingSystem.getAccountManager();
 
     const brokerageId = sys.brokerageAId;
     const aaplId = sys.aaplBrokerageAId;
-    let accountItemData;
-
-    accountItemData = accountManager.getAccountDataItemWithId(aaplId);
-    expect(accountItemData.accountState).toEqual({ ymdDate: initialYMDDate, quantityBaseValue: 0, lots: [] });
+    expect(await transactionManager.asyncGetCurrentAccountState(aaplId)).toEqual({ ymdDate: initialYMDDate, quantityBaseValue: 0, lots: [] });
 
     const lotA = { purchaseYMDDate: '2010-09-21', quantityBaseValue: 11111, costBasisBaseValue: 22222 };
     const lotB = { purchaseYMDDate: '2010-10-21', quantityBaseValue: 33333, costBasisBaseValue: 44444 };
