@@ -624,7 +624,7 @@ class AccountStatesUpdater {
             const { accountEntry } = processor;
 
             accountEntry.sortedTransactionKeys = undefined;
-            accountEntry.transactionIdsAndYMDDates = undefined;
+            //accountEntry.transactionIdsAndYMDDates = undefined;
 
             // TODO: We can do better than just flushing these caches...
             accountEntry.accountStatesByOrder.length = Math.max(processor.oldestIndex, 0);
@@ -716,9 +716,8 @@ export class TransactionManager extends EventEmitter {
      * @private
      * @property {Map<number, AccountStateDataItem>} accountStatesByTransactionId
      * @property {AccountStateDataItem[]}   accountStatesByOrder    The ordering here matches the ordering of 
-     * the arrays returned by {@link TransactionHandler#asyncGetSortedIdsAndDatesForAccount}.
+     * the arrays returned by {@link TransactionHandler#asyncGetAccountSortedTransactionKeys}.
      * @property {TransactionKey[]} sortedTransactionKeys   The result from {@link TransactionHandler#asyncGetAccountSortedTransactionKeys}.
-     * @property {Array}    transactionIdsAndYMDDates   The result from {@link TransactionHandler#asyncGetSortedIdsAndDatesForAccount}
      */
     
     async _asyncLoadAccountEntry(accountId) {
@@ -737,16 +736,12 @@ export class TransactionManager extends EventEmitter {
         }
 
         if (!accountEntry.sortedTransactionKeys) {
-            accountEntry.sortedTransactionKeys = await this._handler.asyncGetAccountSortedTransactionKeys(accountId);
-        }
-
-        if (!accountEntry.transactionIdsAndYMDDates) {
-            const transactionIdsAndYMDDates = await this._handler.asyncGetSortedIdsAndDatesForAccount(accountId);
+            const sortedTransactionKeys = await this._handler.asyncGetAccountSortedTransactionKeys(accountId);
+            accountEntry.sortedTransactionKeys = sortedTransactionKeys;
             const indicesByTransactionId = new Map();
-            for (let i = transactionIdsAndYMDDates.length - 1; i >= 0; --i) {
-                indicesByTransactionId.set(transactionIdsAndYMDDates[i][0], i);
+            for (let i = sortedTransactionKeys.length - 1; i >= 0; --i) {
+                indicesByTransactionId.set(sortedTransactionKeys[i].id, i);
             }
-            accountEntry.transactionIdsAndYMDDates = transactionIdsAndYMDDates;
             accountEntry.indicesByTransactionId = indicesByTransactionId;
         }
 
@@ -760,15 +755,15 @@ export class TransactionManager extends EventEmitter {
         if (!accountStateDataItems) {
             let workingAccountState = this.getCurrentAccountStateDataItem(accountId);
 
-            const { transactionIdsAndYMDDates, accountStatesByOrder, accountStatesByTransactionId } = accountEntry;
-            for (let i = transactionIdsAndYMDDates.length - 1; i >= 0; --i) {
-                const id = transactionIdsAndYMDDates[i][0];
+            const { sortedTransactionKeys, accountStatesByOrder, accountStatesByTransactionId } = accountEntry;
+            for (let i = sortedTransactionKeys.length - 1; i >= 0; --i) {
+                const { id } = sortedTransactionKeys[i];
                 if (accountStatesByOrder[i]) {                    
                     accountStateDataItems = accountStatesByOrder[i];
                     workingAccountState = accountStateDataItems[accountStateDataItems.length - 1];
                 }
                 else {
-                    let ymdDate = getYMDDateString(transactionIdsAndYMDDates[i][1]);
+                    let ymdDate = getYMDDateString(sortedTransactionKeys[i].ymdDate);
                     const transaction = await this.asyncGetTransactionDataItemsWithIds(id);
                     const { splits } = transaction;
 
@@ -782,7 +777,7 @@ export class TransactionManager extends EventEmitter {
                     }
 
                     if (i > 0) {
-                        newAccountStateDataItems[0].ymdDate = getYMDDateString(transactionIdsAndYMDDates[i - 1][1]);
+                        newAccountStateDataItems[0].ymdDate = getYMDDateString(sortedTransactionKeys[i - 1].ymdDate);
                     }
                     accountStatesByOrder[i] = newAccountStateDataItems;
                     accountStateDataItems = newAccountStateDataItems;
@@ -798,22 +793,6 @@ export class TransactionManager extends EventEmitter {
         return accountStateDataItems;
     }
 
-    /*
-    async asyncGetAccountStatesAtDate(accountId, ymdDate) {
-        const accountEntry = await this._asyncLoadAccountEntry(accountId);
-        const { transactionIdsAndYMDDates } = accountEntry;
-
-        // TEST!!!
-        if (!transactionIdsAndYMDDates || !transactionIdsAndYMDDates.length) {
-            const accountDataItem = this._accountingSystem.getAccountManager().getAccountDataItemWithId(accountId);
-            return [accountDataItem.accountState];
-        }
-        if (!ymdDate) {
-            const accountDataItem = this._accountingSystem.getAccountManager().getAccountDataItemWithId(accountId);
-            return [accountDataItem.accountState];
-        }
-    }
-    */
 
     /**
      * Returns the current account state data item for an account. This is the account state after the newest
@@ -844,14 +823,14 @@ export class TransactionManager extends EventEmitter {
      */
     async asyncGetAccountStateDataItemsAfterTransaction(accountId, transactionId) {
         const accountEntry = await this._asyncLoadAccountEntry(accountId);
-        const { transactionIdsAndYMDDates, indicesByTransactionId } = accountEntry;
-        if (transactionIdsAndYMDDates.length) {
+        const { sortedTransactionKeys, indicesByTransactionId } = accountEntry;
+        if (sortedTransactionKeys.length) {
             const index = indicesByTransactionId.get(transactionId);
-            if (index === transactionIdsAndYMDDates.length - 1) {
+            if (index === sortedTransactionKeys.length - 1) {
                 return [this.getCurrentAccountStateDataItem(accountId)];
             }
 
-            transactionId = transactionIdsAndYMDDates[index + 1][0]; 
+            transactionId = sortedTransactionKeys[index + 1].id; 
         }
 
         return this._asyncLoadAccountStateDataItemsToBeforeTransactionId(accountId, transactionId);
@@ -1213,7 +1192,6 @@ export class TransactionManager extends EventEmitter {
             }
         }
 
-        //const stateUpdaterOld = new AccountStatesUpdater(this);
         const stateUpdater = new AccountStatesUpdater(this);
 
         for (let i = 0; i < transactionIds.length; ++i) {
@@ -1317,18 +1295,6 @@ export class TransactionsHandler {
      */
     async asyncGetAccountSortedTransactionKeys(accountId) {
         throw Error('TransactionHandler.asyncGetAccountSortedTransactionKeys() abstract method!');
-    }
-
-
-    /**
-     * Retrieves an array containing two element sub-arrays, the first element being the transaction id
-     * and the second element the date.
-     * @param {number} accountId If defined only transactions that refer to the account with this id are retrieved.
-     * @returns {Array} The array of three element sub-arrays. THe first element is the transaction id, the second
-     * element is the date, and the third element is the sameDayOrder property. The array is sorted by date from oldest to newest.
-     */
-    async asyncGetSortedIdsAndDatesForAccount(accountId) {
-        throw Error('TransactionHandler.asyncGetSortedIdsAndDatesForAccount() abstract method!');
     }
 
 
@@ -1516,19 +1482,6 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         else {
             return [];
         }
-    }
-    
-
-    async asyncGetSortedIdsAndDatesForAccount(accountId) {
-        const result = [];
-        const sortedEntries = (accountId) ? this._sortedEntriesByAccountId.get(accountId) : this._ymdDateSortedEntries;
-        if (sortedEntries) {
-            sortedEntries.forEach((entry) => {
-                result.push([ entry.id, entry.ymdDate ]);
-            });
-        }
-
-        return result;
     }
 
     async asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs, accountStateUpdates, idGeneratorOptions) {
