@@ -426,13 +426,10 @@ class AccountStatesUpdater {
             let processor = this._accountProcessorsByAccountIds.get(accountId);
             if (!processor) {
                 const accountEntry = await this._manager._asyncLoadAccountEntry(accountId);
-                const account = this._accountManager.getAccountDataItemWithId(accountId);
-                const { hasLots } = A.getAccountType(account.type);
-                const { sortedTransactionKeys } = accountEntry;
+                const { sortedTransactionKeys, hasLots } = accountEntry;
 
                 processor = {
                     accountId: accountId,
-                    hasLots: hasLots,
                     accountEntry: accountEntry,
                     updatedSortedTransctionEntries: new SortedArray((a, b) => compareTransactionKeys(a[0], b[0])),
                 };
@@ -453,7 +450,7 @@ class AccountStatesUpdater {
                 this._accountProcessorsByAccountIds.set(accountId, processor);
             }
 
-            const { updatedSortedTransctionEntries, hasLots } = processor;
+            const { updatedSortedTransctionEntries } = processor;
             if (isNewDataItem) {
                 // Stick the new data item into the list.
                 let newTransactionEntry = newTransactionEntriesByAccountId.get(accountId);
@@ -491,7 +488,7 @@ class AccountStatesUpdater {
                 processor.oldestIndex = index;
             }
 
-            if (!hasLots) {
+            if (!accountEntry.hasLots) {
                 if (isNewDataItem) {
                     processor.newSplitDataItems.push(split);
                 }
@@ -520,8 +517,9 @@ class AccountStatesUpdater {
         const accountProcessors = Array.from(this._accountProcessorsByAccountIds.values());
         for (let i = accountProcessors.length - 1; i >= 0; --i) {
             const processor = accountProcessors[i];
-            const { accountId, hasLots } = processor;
+            const { accountId } = processor;
             const { accountEntry, updatedSortedTransctionEntries } = processor;
+            const { hasLots } = accountEntry;
             let accountState;
 
             let ymdDate;
@@ -542,18 +540,10 @@ class AccountStatesUpdater {
                 const { sortedTransactionKeys } = accountEntry;
                 const { oldestIndex } = processor;
 
-                if (this._manager.isDebug) {
-                    console.log('index: ' + processor.oldestIndex);
-                    console.log('updatedSortedTransactionEntries: ' + JSON.stringify(updatedSortedTransctionEntries.getValues()));
-                }
-
                 if (sortedTransactionKeys.length) {
                     const transactionId = sortedTransactionKeys[oldestIndex].id;
                     const accountStates = (await this._manager._asyncLoadAccountStateDataItemsToBeforeTransactionId(accountId, transactionId));
                     accountState = accountStates[accountStates.length - 1];
-                    if (this._manager.isDebug) {
-                        console.log('accountStates: ' + JSON.stringify(accountStates));
-                    }
                 }
                 else {
                     accountState = { lots: [] };
@@ -563,35 +553,21 @@ class AccountStatesUpdater {
                 for (let i = oldestIndex; i < updatedSortedTransctionEntries.length; ++i) {
                     const [transactionKey, newSplits] = updatedSortedTransctionEntries.at(i);
 
-                    if (this._manager.isDebug) {
-                        console.log('start AccountState: ' + JSON.stringify(accountState));
-                    }
-                    
                     const { id } = transactionKey;
                     if (!newSplits) {
                         const transactionDataItem = await this._manager.asyncGetTransactionDataItemsWithIds(id);
                         const { splits } = transactionDataItem;
                         splits.forEach((split) => {
                             if (split.accountId === accountId) {
-                                if (this._manager.isDebug) {
-                                    console.log('existingSplit: ' + id + ' ' + JSON.stringify(split));
-                                }
                                 accountState = AS.addSplitToAccountStateDataItem(accountState, split, ymdDate);                                
                             }
                         });
                     }
                     else {
                         newSplits.forEach((newSplit) => {
-                            if (this._manager.isDebug) {
-                                console.log('new Split: ' + id + ' ' + JSON.stringify(newSplit));
-                            }
                             accountState = AS.addSplitToAccountStateDataItem(accountState, newSplit, ymdDate);                                
                         });
                     }
-                }
-
-                if (this._manager.isDebug) {
-                    console.log('endState: ' + JSON.stringify(accountState));
                 }
             }
             else {
@@ -624,7 +600,6 @@ class AccountStatesUpdater {
             const { accountEntry } = processor;
 
             accountEntry.sortedTransactionKeys = undefined;
-            //accountEntry.transactionIdsAndYMDDates = undefined;
 
             // TODO: We can do better than just flushing these caches...
             accountEntry.accountStatesByOrder.length = Math.max(processor.oldestIndex, 0);
@@ -680,6 +655,7 @@ export class TransactionManager extends EventEmitter {
         return this._handler.asyncGetTransactionDateRange(accountId);
     }
 
+
     /**
      * Retrieves the transactions within a date range, optionally restricted to only the transactions that refer to
      * a specified account.
@@ -692,6 +668,7 @@ export class TransactionManager extends EventEmitter {
         [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
         return this._handler.asyncGetTransactionDataItemssInDateRange(accountId, ymdDateA, ymdDateB);
     }
+
 
     /**
      * Retrieves transaction data items by id number.
@@ -714,12 +691,14 @@ export class TransactionManager extends EventEmitter {
     /**
      * @typedef {object}    TransactionManager~AccountEntry
      * @private
+     * @property {boolean}  hasLots
      * @property {Map<number, AccountStateDataItem>} accountStatesByTransactionId
      * @property {AccountStateDataItem[]}   accountStatesByOrder    The ordering here matches the ordering of 
      * the arrays returned by {@link TransactionHandler#asyncGetAccountSortedTransactionKeys}.
      * @property {TransactionKey[]} sortedTransactionKeys   The result from {@link TransactionHandler#asyncGetAccountSortedTransactionKeys}.
      */
     
+
     async _asyncLoadAccountEntry(accountId) {
         const accountDataItem = this._accountingSystem.getAccountManager().getAccountDataItemWithId(accountId);
         if (!accountDataItem) {
@@ -728,7 +707,9 @@ export class TransactionManager extends EventEmitter {
 
         let accountEntry = this._accountEntriesByAccountId.get(accountId);
         if (!accountEntry) {
+            const type = A.getAccountType(accountDataItem.type);
             accountEntry = {
+                hasLots: type.hasLots,
                 accountStatesByTransactionId: new Map(),
                 accountStatesByOrder: [],
             };
@@ -747,6 +728,7 @@ export class TransactionManager extends EventEmitter {
 
         return accountEntry;
     }
+
 
     async _asyncLoadAccountStateDataItemsToBeforeTransactionId(accountId, transactionId) {
         const accountEntry = await this._asyncLoadAccountEntry(accountId);
