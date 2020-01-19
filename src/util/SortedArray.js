@@ -5,11 +5,7 @@ import { bSearch } from './BinarySearch';
  * Simple sorted array that uses a comparison function.
  */
 export class SortedArray {
-    /**
-     * @callback SortedArray~KeyCallback
-     * @param {object}  value   The value whose key is desired.
-     * @returns {object}    The key for value.
-     */
+
     /**
      * @typedef {object}    SortedArray~Options
      * @property {string}  [duplicates=undefined]  How to handle duplicates, allowed values are:
@@ -17,7 +13,6 @@ export class SortedArray {
      * <li>'allow'
      * <li>'replace' Existing values are replaced.
      * @property {object[]} [initialValues] Optional initial values for the array. These will be sorted.
-     * @property {SortedArray~KeyCallback}  [keyCallback]   Optional callback for retrieving a key from an array value.
      */
 
     /**
@@ -31,7 +26,6 @@ export class SortedArray {
             const other = compare;
             this._compare = other._compare;
             this._duplicates = other._duplicates;
-            this._keyCallback = other._keyCallback;
             this._array = Array.from(other._array);
             return;
         }
@@ -40,15 +34,13 @@ export class SortedArray {
 
         this._compare = compare;
         this._duplicates = options.duplicates || 'ignore';
-        this._keyCallback = options.keyCallback || ((value) => value);
 
         if (options.initialValues) {
             this._array = Array.from(options.initialValues).sort();
             if (this._duplicates !== 'allow') {
                 // We need to make sure there aren't any duplicates...
                 for (let i = 1; i < this._array.length;) {
-                    const key = this._keyCallback(this._array[i - 1]);
-                    if (!this._compare(key, this._array[i])) {
+                    if (!this._compare(this._array[i - 1], this._array[i])) {
                         this._array.splice(i, 1);
                     }
                     else {
@@ -98,7 +90,6 @@ export class SortedArray {
      * @returns {number}
      */
     indexLE(value) {
-        value = this._keyCallback(value);
         return bSearch(this._array, value, this._compare);
     }
 
@@ -107,7 +98,6 @@ export class SortedArray {
      * @param {object} value
      */
     indexGE(value) {
-        value = this._keyCallback(value);
         let index = bSearch(this._array, value, this._compare);
         if (index < 0) {
             return 0;
@@ -130,7 +120,6 @@ export class SortedArray {
     indexOf(value) {
         const index = this.indexLE(value);
         if ((index >= 0) && (index < this._array.length)) {
-            value = this._keyCallback(value);
             if (!this._compare(value, this._array[index])) {
                 return index;
             }
@@ -150,7 +139,6 @@ export class SortedArray {
             ++index;
         }
         else if (index < this._array.length) {
-            value = this._keyCallback(value);
             if (!this._compare(value, this._array[index])) {
                 switch (this._duplicates) {
                 case 'ignore':
