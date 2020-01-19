@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { userMsg, userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
-import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
+import { getYMDDate, getYMDDateString } from '../util/YMDDate';
 import { PricedItemType, getPricedItemType } from './PricedItems';
 import { getFullSplitDataItem } from './Transactions';
 import { getLots, getLotDataItems, getLotString } from './Lots';
@@ -187,17 +187,6 @@ export function loadAccountsUserMessages() {
 }
 
 
-function createAccountStateDataItemForType(type, ymdDate) {
-    const accountState = {
-        ymdDate: getYMDDateString(ymdDate) || getYMDDateString(new YMDDate()),
-        quantityBaseValue: 0,
-    };
-
-    if (type.hasLots) {
-        accountState.lots = [];
-    }
-    return accountState;
-}
 
 /**
  * @typedef {object} AccountStateDataItem
@@ -386,7 +375,6 @@ export function removeSplitFromAccountStateDataItem(accountState, split, ymdDate
  * @property {number}   pricedItemId   The local id of the priced item the account represents.
  * @property {string}   [name]  The name of the account.
  * @property {string}   [description]   The description of the account.
- * @property {AccountStateDataItem} accountState The current account state
  */
 
 /**
@@ -398,7 +386,6 @@ export function removeSplitFromAccountStateDataItem(accountState, split, ymdDate
  * @property {number}   pricedItemId   The local id of the priced item the account represents.
  * @property {string}   [name]  The name of the account.
  * @property {string}   [description]   The description of the account.
- * @property {AccountState} accountState The current account state
  */
 
 /**
@@ -411,13 +398,10 @@ export function removeSplitFromAccountStateDataItem(accountState, split, ymdDate
 export function getAccount(accountDataItem, alwaysCopy) {
     if (accountDataItem) {
         const type = getAccountType(accountDataItem.type);
-        const accountState = getAccountState(accountDataItem.accountState);
         if (alwaysCopy
-         || (type !== accountDataItem.type)
-         || (accountState !== accountDataItem.accountState)) {
+         || (type !== accountDataItem.type)) {
             const account = Object.assign({}, accountDataItem);
             account.type = type;
-            account.accountState = accountState;
             return account;
         }
     }
@@ -434,13 +418,10 @@ export function getAccount(accountDataItem, alwaysCopy) {
 export function getAccountDataItem(account, alwaysCopy) {
     if (account) {
         const typeName = getAccountTypeName(account.type);
-        const accountStateDataItem = getAccountStateDataItem(account.accountState);
         if (alwaysCopy
-         || (typeName !== account.type)
-         || (accountStateDataItem !== account.accountState)) {
+         || (typeName !== account.type)) {
             const accountDataItem = Object.assign({}, account);
             accountDataItem.type = typeName;
-            accountDataItem.accountState = accountStateDataItem;
             return accountDataItem;
         }
     }
@@ -674,8 +655,6 @@ export class AccountManager extends EventEmitter {
         
         const accountDataItem = Object.assign({}, account);
 
-        const type = getAccountType(accountDataItem.type);
-        accountDataItem.accountState = getFullAccountStateDataItem(accountDataItem.accountState || {}, type.hasLots);
         accountDataItem.childAccountIds = accountDataItem.childAccountIds || [];
 
         const id = this._idGenerator.generateId();
@@ -789,10 +768,7 @@ export class AccountManager extends EventEmitter {
         }
 
         
-        // Create an empty account state appropriate for the account.
         const type = getAccountType(accountDataItem.type);
-        accountDataItem.accountState = accountDataItem.accountState || createAccountStateDataItemForType(type, initialYMDDate);
-
         
         if (accountDataItem.childAccountIds) {
             // Verify that all the accounts in childAccountIds can be moved to this account's type.
@@ -1073,49 +1049,6 @@ export class AccountManager extends EventEmitter {
         });
 
         return result;
-    }
-
-
-    /**
-     * Called only by {@link TransactionManager} to update the account states of one or more accounts.
-     * This does not do any validation.
-     * @param {Array[][]} accountIdAccountStates Array of two element sub-arrays, the first element is the account id,
-     * the second element is the new account state.
-     */
-    async asyncUpdateAccountStates(accountIdAccountStates) {
-        const updatedAccountEntries = [];
-        const oldAccountDataItems = [];
-        const newAccountDataItems = [];
-        accountIdAccountStates.forEach(([accountId, accountState]) => {
-            const oldAccountDataItem = this.getAccountDataItemWithId(accountId);
-            if (!oldAccountDataItem) {
-                throw userError('AccountManager-modify_no_id', accountId);
-            }
-            const newAccountDataItem = Object.assign({}, oldAccountDataItem);
-            newAccountDataItem.accountState = getAccountStateDataItem(accountState, true);
-
-            updatedAccountEntries.push([
-                accountId,
-                newAccountDataItem,
-            ]);
-
-            oldAccountDataItems.push(oldAccountDataItem);
-            newAccountDataItems.push(newAccountDataItem);
-        });
-
-        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries);
-
-        newAccountDataItems.forEach((dataItem) => {
-            this._accountsById.set(dataItem.id, dataItem);
-            if (dataItem.refId) {
-                this._accountsByRefId.set(dataItem.refId, dataItem);
-            }
-        });
-
-        this.emit('accountsModify', {
-            newAccountDataItems: newAccountDataItems,
-            oldAccountDataItems: oldAccountDataItems,
-        });
     }
 
 }

@@ -149,7 +149,44 @@ The data item used to define a loat. A lot has the following properties:
 - quantityBaseValue
 - CostBasisBaseValue
 
-Lots are not manaaged, they are stored directly in [Split](#split) and [AccountState](#accountstate) data items.
+Thinking about this.
+A lot hsa a current state that may change over time. This state includes:
+- [YMDDate](#ymddate)
+- quantityBaseValue
+- costBasisBaseValue
+
+It also has the following more static values:
+- PurchaseDate
+- Description
+
+Whenever a split changes a lot, the change must be reflected in the state of all
+future splits that refer to the lot.
+
+In order to simplify the requirement of keeping things atomic, lot states should
+remain part of the account state. What needs to change is having a lot id.
+
+When a split adds a new lot, a lot id must be generated. The split doesn't have to be
+aware of this, the id is just part of the lot's state.
+
+What's the scenario when a split that created a lot is modified?
+- If the lot goes away, then the lot id becomes invalid.
+- If the lot properties are changed, then the lot properties must be updated.
+- A lot cannot go away if other splits refer to the lot.
+
+AccountStates and Lots
+- AccountState has a list of lot states.
+    - Each lot state consists of the quantityBaseValue and costBasisBaseValue (the date is already part of the account state)
+    - Must also have the lot id.
+
+
+Maybe should separate lots from account state entirely.
+    - The transaction manager would then be responsible for updating the lot states.
+    - This makes lots transportable between accounts.
+    - But an account state would still need to contain the ids of the lots in the account at that state.
+    - Should AccountState actually be part of TransactionManager?
+        - Maybe, as TransactionManager is the one that actively manages the account state anyway.
+        
+
 
 
 ### PricedItem
@@ -164,7 +201,7 @@ PricedItems are managed by a [PricedItemManager](#priceditemmanager)
 
 
 ### PricedItemManager
-Manages all the priced items in an accounting system.
+Manages all the priced items in an accounting system. Also manages lots for each priced item.
 
 
 ### PricedItemType
@@ -229,6 +266,19 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
 - Add test transactions to AccountingSystemTestHelpers.js, then test transactions in JSONGzipAccountingFile.test.js
 
 - Need to add lot validation for modify transactions.
-    - This could be a little challenging.
-        - If it's just a change in lot quantities, then it's probably fine.
-        - If it's a change in lots, then need to unwind account state.
+    - Unwind state to before earlier transaction.
+    - Grab all future transactions.
+    - Replace the appropriate transaction.
+    - Verify all transactions going forward are valid.
+
+- Need to address undoing actions like remove account/transaction. What happens to the id? Do we reassign a new one,
+or do we keep the old one?
+    - This may become a matter of what exactly do we want undo to mean.
+        - Could be a full revert to the particular state of the system (probaly the ideal)
+        - Could be a revert to a similar state of the system.
+        - The advantage of a full revert is that any extemparaneous links, say from a report,
+        will work after the undo.
+
+
+- AccountStateUpdater stuff:
+    - Don't just flush the AccountState caches in AccountStatesUpdater.updateAccountEntries().

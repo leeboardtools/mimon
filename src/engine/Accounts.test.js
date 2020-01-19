@@ -132,16 +132,10 @@ test('AccountState-add_remove_split', () => {
 //---------------------------------------------------------
 //
 test('Account-Data Items', () => {
-    const plainState = {
-        ymdDate: new YMDDate(2019, 3, 4),
-        quantityBaseValue: -4567,
-    };
-
     const plainAccount = {
         id: 123,
         type: A.AccountType.ASSET,
         pricedItemId: 12345,
-        accountState: plainState,
     };
     testAccountDataItem(plainAccount);
 
@@ -154,19 +148,10 @@ test('Account-Data Items', () => {
     plainAccount.type = A.AccountType.CASH;
     testAccountDataItem(plainAccount);
 
-    const lotsState = {
-        ymdDate: new YMDDate(2019, 3, 4),
-        quantityBaseValue: -4567,
-        lots: [
-            { purchaseYMDDate: new YMDDate(2000, 0, 1), quantityBaseValue: 123456, costBasisBaseValue: 7989, }, 
-            { purchaseYMDDate: new YMDDate(2010, 10, 11), quantityBaseValue: 9876, costBasisBaseValue: 456, }, 
-        ],
-    };
     const lotsAccount = {
         id: 1234,
         type: A.AccountType.SECURITY,
         pricedItemId: 1234578,
-        accountState: lotsState,
     };    
     testAccountDataItem(lotsAccount);
 
