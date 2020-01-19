@@ -185,7 +185,7 @@ Maybe should separate lots from account state entirely.
     - But an account state would still need to contain the ids of the lots in the account at that state.
     - Should AccountState actually be part of TransactionManager?
         - Maybe, as TransactionManager is the one that actively manages the account state anyway.
-        
+
 
 
 

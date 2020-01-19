@@ -6,6 +6,7 @@ import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 import { SortedArray } from '../util/SortedArray';
 import { doSetsHaveSameElements } from '../util/DoSetsHaveSameElements';
 import * as A from './Accounts';
+import * as AS from './AccountStates';
 import * as PI from './PricedItems';
 import { getCurrency } from '../util/Currency';
 import { getRatio, getRatioJSON } from '../util/Ratios';
@@ -575,7 +576,7 @@ class AccountStatesUpdater {
                                 if (this._manager.isDebug) {
                                     console.log('existingSplit: ' + id + ' ' + JSON.stringify(split));
                                 }
-                                accountState = A.addSplitToAccountStateDataItem(accountState, split, ymdDate);                                
+                                accountState = AS.addSplitToAccountStateDataItem(accountState, split, ymdDate);                                
                             }
                         });
                     }
@@ -584,7 +585,7 @@ class AccountStatesUpdater {
                             if (this._manager.isDebug) {
                                 console.log('new Split: ' + id + ' ' + JSON.stringify(newSplit));
                             }
-                            accountState = A.addSplitToAccountStateDataItem(accountState, newSplit, ymdDate);                                
+                            accountState = AS.addSplitToAccountStateDataItem(accountState, newSplit, ymdDate);                                
                         });
                     }
                 }
@@ -600,10 +601,10 @@ class AccountStatesUpdater {
                 accountState = this._manager.getCurrentAccountStateDataItem(accountId);
 
                 oldSplitDataItems.forEach((splitDataItem) => {
-                    accountState = A.removeSplitFromAccountStateDataItem(accountState, splitDataItem, ymdDate);
+                    accountState = AS.removeSplitFromAccountStateDataItem(accountState, splitDataItem, ymdDate);
                 });
                 newSplitDataItems.forEach((splitDataItem) => {
-                    accountState = A.addSplitToAccountStateDataItem(accountState, splitDataItem, ymdDate);
+                    accountState = AS.addSplitToAccountStateDataItem(accountState, splitDataItem, ymdDate);
                 });
             }
 
@@ -775,7 +776,7 @@ export class TransactionManager extends EventEmitter {
                     for (let s = splits.length - 1; s >= 0; --s) {
                         const split = splits[s];
                         if (split.accountId === accountId) {
-                            workingAccountState = A.removeSplitFromAccountStateDataItem(workingAccountState, split, ymdDate);
+                            workingAccountState = AS.removeSplitFromAccountStateDataItem(workingAccountState, split, ymdDate);
                             newAccountStateDataItems.push(workingAccountState);
                         }
                     }
@@ -826,7 +827,7 @@ export class TransactionManager extends EventEmitter {
             const accountDataItem = this._accountingSystem.getAccountManager().getAccountDataItemWithId(accountId);
             if (accountDataItem) {
                 const type = A.getAccountType(accountDataItem.type);
-                return A.getFullAccountStateDataItem({ quantityBaseValue: 0 }, type.hasLots);
+                return AS.getFullAccountStateDataItem({ quantityBaseValue: 0 }, type.hasLots);
             }
         }
         return accountStateDataItem;
@@ -960,7 +961,7 @@ export class TransactionManager extends EventEmitter {
                     }
 
                     if (accountStatesByTransactionId) {
-                        accountStatesByTransactionId.set(account.id, A.addSplitToAccountStateDataItem(accountStateDataItem, split));
+                        accountStatesByTransactionId.set(account.id, AS.addSplitToAccountStateDataItem(accountStateDataItem, split));
                     }
                 }
             }
