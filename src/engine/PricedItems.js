@@ -4,7 +4,7 @@ import { NumericIdGenerator } from '../util/NumericIds';
 import { getCurrencyCode, getCurrency } from '../util/Currency';
 import { getQuantityDefinition, getQuantityDefinitionName } from '../util/Quantities';
 import { userError } from '../util/UserMessages';
-import { getPriceDataItem } from './Prices';
+
 
 /**
  * @typedef {object}    PricedItemTypeDef
@@ -477,7 +477,7 @@ export class PricedItemManager extends EventEmitter {
         }
 
         pricedItemDataItem = await this._asyncAddPricedItem(pricedItemDataItem);
-        pricedItemDataItem = getPriceDataItem(pricedItemDataItem, true);
+        pricedItemDataItem = getPricedItemDataItem(pricedItemDataItem, true);
         this.emit('pricedItemAdd', { newPricedItemDataItem: pricedItemDataItem, });
         return pricedItemDataItem;
     }
@@ -486,7 +486,7 @@ export class PricedItemManager extends EventEmitter {
      * Fired by {@link PricedItemManager#asyncRemovedPricedItem} after a priced item has been removed.
      * @event PricedItemManager~pricedItemRemove
      * @type {object}
-     * @property {PricedItemData}   removedPricedItemData   The priced item data item being returned by the {@link PricedItemManager#asyncRemovePricedItem} call.
+     * @property {PricedItemDataItem}   removedPricedItemDataItem   The priced item data item being returned by the {@link PricedItemManager#asyncRemovePricedItem} call.
      */
 
     /**
@@ -530,8 +530,8 @@ export class PricedItemManager extends EventEmitter {
      * Fired by {@link PricedItemManager#asyncModifyPricedItem} after the priced item has been modified.
      * @event PricedItemManager~pricedItemModify
      * @type {object}
-     * @property {PricedItemData}   newPricedItemDataItem   The new priced item data item being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
-     * @property {PricedItemData}   oldPricedItemDataItem   The old priced item data item being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
+     * @property {PricedItemDataItem}   newPricedItemDataItem   The new priced item data item being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
+     * @property {PricedItemDataItem}   oldPricedItemDataItem   The old priced item data item being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
      */
 
     /**
