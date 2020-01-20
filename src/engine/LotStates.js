@@ -56,6 +56,37 @@ export function getLotStateDataItem(lotState, alwaysCopy) {
 }
 
 
+export function getLotStates(lotStateDataItems, alwaysCopy) {
+    if (lotStateDataItems && lotStateDataItems.length) {
+        const lotStates = lotStateDataItems.map((lotStateDataItem) => getLotState(lotStateDataItem, alwaysCopy));
+        if (alwaysCopy) {
+            return lotStates;
+        }
+        for (let i = lotStates.length - 1; i >= 0; --i) {
+            if (lotStates[i] !== lotStateDataItems[i]) {
+                return lotStates;
+            }
+        }
+    }
+    return lotStateDataItems;
+}
+
+export function getLotStateDataItems(lotStates, alwaysCopy) {
+    if (lotStates && lotStates.length) {
+        const lotStateDataItems = lotStates.map((lotState) => getLotStateDataItem(lotState, alwaysCopy));
+        if (alwaysCopy) {
+            return lotStateDataItems;
+        }
+        for (let i = lotStateDataItems.length - 1; i >= 0; --i) {
+            if (lotStateDataItems[i] !== lotStates[i]) {
+                return lotStateDataItems;
+            }
+        }
+    }
+    return lotStates;
+}
+
+
 /**
  * @returns {LotStateDataItem}  An empty lot state data item.
  */
@@ -71,6 +102,7 @@ export function getEmptyLotStateDataItem() {
  * @returns {LotState}  An empty lot state.
  */
 export const getEmptyLotState = getEmptyLotStateDataItem;
+
 
 
 /**
@@ -108,6 +140,7 @@ export function getLotChange(lotChangeDataItem, alwaysCopy) {
  * @returns {LotChangeDataItem}
  */
 export const getLotChangeDataItem = getLotChange;
+
 
 
 function adjustLotStateDataItemForLotChange(lotState, lotChange, ymdDate, sign) {

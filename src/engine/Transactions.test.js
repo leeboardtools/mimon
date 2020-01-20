@@ -3,8 +3,8 @@ import * as ASTH from './AccountingSystemTestHelpers';
 import { YMDDate } from '../util/YMDDate';
 import { Ratio } from '../util/Ratios';
 
-function testLotChangeDataItem(lotChange) {
-    const dataItem = T.getLotChangeDataItems(lotChange);
+function testLotOldChangeDataItem(lotOldChange) {
+    const dataItem = T.getLotOldChangeDataItems(lotOldChange);
     const string = JSON.stringify(dataItem);
     const json = JSON.parse(string);
     for (let i = 0; i < json.length; ++i) {
@@ -22,14 +22,14 @@ function testLotChangeDataItem(lotChange) {
     }
     expect(json).toEqual(dataItem);
 
-    const back = T.getLotChanges(json);
-    expect(back).toEqual(lotChange);
+    const back = T.getLotOldChanges(json);
+    expect(back).toEqual(lotOldChange);
 
-    expect(T.getLotChanges(lotChange) === lotChange).toBeTruthy();
-    expect(T.getLotChangeDataItems(dataItem) === dataItem).toBeTruthy();
+    expect(T.getLotOldChanges(lotOldChange) === lotOldChange).toBeTruthy();
+    expect(T.getLotOldChangeDataItems(dataItem) === dataItem).toBeTruthy();
 
-    expect(T.getLotChanges(lotChange, true) !== lotChange).toBeTruthy();
-    expect(T.getLotChangeDataItems(dataItem, true) !== dataItem).toBeTruthy();
+    expect(T.getLotOldChanges(lotOldChange, true) !== lotOldChange).toBeTruthy();
+    expect(T.getLotOldChangeDataItems(dataItem, true) !== dataItem).toBeTruthy();
 }
 
 
@@ -71,24 +71,24 @@ function testTransactionDataItems(transaction) {
 //---------------------------------------------------------
 //
 test('Transaction-Data Items', () => {
-    testLotChangeDataItem([
+    testLotOldChangeDataItem([
         [
             { purchaseYMDDate: new YMDDate('2019-01-23'), quantityBaseValue: 12345, costBasisBaseValue: 98765 },
         ],
     ]);
-    testLotChangeDataItem([
+    testLotOldChangeDataItem([
         [
             { purchaseYMDDate: new YMDDate('2019-01-23'), quantityBaseValue: 12345, costBasisBaseValue: 98765 },
             { purchaseYMDDate: new YMDDate('2019-01-24'), quantityBaseValue: 98765, costBasisBaseValue: 44455 },
         ],
     ]);
-    testLotChangeDataItem([
+    testLotOldChangeDataItem([
         [
             undefined,
             { purchaseYMDDate: new YMDDate('2019-01-24'), quantityBaseValue: 98765, costBasisBaseValue: 44455 },
         ],
     ]);
-    testLotChangeDataItem([
+    testLotOldChangeDataItem([
         [
             { purchaseYMDDate: new YMDDate('2019-01-23'), quantityBaseValue: 12345, costBasisBaseValue: 98765 },
         ],
@@ -118,7 +118,7 @@ test('Transaction-Data Items', () => {
             description: 'Hello',
             memo: 'I am a memo',
             currencyToUSDRatio: new Ratio(1234, 1),
-            lotChanges: [
+            lotOldChanges: [
                 [
                     { purchaseYMDDate: new YMDDate('2019-01-23'), quantityBaseValue: 12345, costBasisBaseValue: 98765 },
                     { purchaseYMDDate: new YMDDate('2019-01-24'), quantityBaseValue: 98765, costBasisBaseValue: 44455 },
@@ -129,7 +129,7 @@ test('Transaction-Data Items', () => {
             reconcileState: T.ReconcileState.RECONCILED,
             accountId: 10,
             quantityBaseValue: -1234,
-            lotChanges: [
+            lotOldChanges: [
                 [
                     { purchaseYMDDate: new YMDDate('2019-01-23'), quantityBaseValue: 12345, costBasisBaseValue: 98765 },
                     { purchaseYMDDate: new YMDDate('2019-01-24'), quantityBaseValue: 98765, costBasisBaseValue: 44455 },
@@ -179,7 +179,7 @@ test('Transaction-Data Items', () => {
                 reconcileState: T.ReconcileState.PENDING,
                 accountId: 10,
                 quantityBaseValue: -1234,
-                lotChanges: [
+                lotOldChanges: [
                     [
                         { purchaseYMDDate: new YMDDate('2019-01-23'), quantityBaseValue: 12345, costBasisBaseValue: 98765 },
                         { purchaseYMDDate: new YMDDate('2019-01-24'), quantityBaseValue: 98765, costBasisBaseValue: 44455 },
@@ -214,7 +214,7 @@ test('Transaction-Data Items', () => {
                 reconcileState: T.ReconcileState.PENDING,
                 accountId: 10,
                 quantityBaseValue: -1234,
-                lotChanges: [
+                lotOldChanges: [
                     [
                         { purchaseYMDDate: new YMDDate('2019-01-23'), quantityBaseValue: 12345, costBasisBaseValue: 98765 },
                         { purchaseYMDDate: new YMDDate('2019-01-24'), quantityBaseValue: 98765, costBasisBaseValue: 44455 },
@@ -232,8 +232,8 @@ test('Transaction-Data Items', () => {
 
     const testDataItemSplits2 = deepCopyDataItem.splits[2];
     const refDataItemSplits2 = settingsXDataItem.splits[2];
-    expect(testDataItemSplits2.lotChanges).not.toBe(refDataItemSplits2.lotChanges);
-    expect(testDataItemSplits2.lotChanges[0]).not.toBe(refDataItemSplits2.lotChanges[0]);
+    expect(testDataItemSplits2.lotOldChanges).not.toBe(refDataItemSplits2.lotOldChanges);
+    expect(testDataItemSplits2.lotOldChanges[0]).not.toBe(refDataItemSplits2.lotOldChanges[0]);
 
     const ref = T.getTransaction(settingsXDataItem);
     const deepCopy = T.deepCopyTransaction(ref);
@@ -242,8 +242,8 @@ test('Transaction-Data Items', () => {
 
     const testSplits2 = deepCopy.splits[2];
     const refSplits2 = ref.splits[2];
-    expect(testSplits2.lotChanges).not.toBe(refSplits2.lotChanges);
-    expect(testSplits2.lotChanges[0]).not.toBe(refSplits2.lotChanges[0]);
+    expect(testSplits2.lotOldChanges).not.toBe(refSplits2.lotOldChanges);
+    expect(testSplits2.lotOldChanges[0]).not.toBe(refSplits2.lotOldChanges[0]);
 });
 
 
@@ -450,18 +450,18 @@ test('TransactionManager-validateSplits', async () => {
     const lotD = { purchaseYMDDate: new YMDDate('2019-10-12'), quantityBaseValue: 44444, costBasisBaseValue: 4444 };
     expect(manager.validateSplits([
         { accountId: sys.brokerageAId, quantityBaseValue: -70000, },
-        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, lotChanges: [[lotC]], },
+        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, lotOldChanges: [[lotC]], },
     ])).toBeUndefined();
 
     console.log('brokerageAId: ' + sys.brokerageAId);
     console.log('aaplBrokerageAId: ' + sys.aaplBrokerageAId);
     expect(manager.validateSplits([
         { accountId: sys.brokerageAId, quantityBaseValue: -70000, },
-        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, lotChanges: [[lotC, lotA]], },
+        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, lotOldChanges: [[lotC, lotA]], },
     ])).toBeUndefined();
     expect(manager.validateSplits([
         { accountId: sys.brokerageAId, quantityBaseValue: -70000, },
-        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, lotChanges: [[lotD, lotC]], },
+        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, lotOldChanges: [[lotD, lotC]], },
     ])).toBeInstanceOf(Error);
 
     expect(manager.validateSplits([
@@ -557,7 +557,7 @@ test('TransactionManager-add_modify', async () => {
         ymdDate: '2019-10-11',
         splits: [
             { accountId: sys.brokerageAId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -500000, },
-            { accountId: sys.aaplBrokerageAId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 500000, lotChanges: [[lotC1], [lotC2]]},
+            { accountId: sys.aaplBrokerageAId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 500000, lotOldChanges: [[lotC1], [lotC2]]},
         ]
     };
 
@@ -967,7 +967,7 @@ test('Transactions-lotTransactions', async () => {
     const aaplId = sys.aaplBrokerageAId;
 
     expect(transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual(
-        { quantityBaseValue: 0, lots: [] });
+        { quantityBaseValue: 0, lotStates: [], lots: [] });
 
     const lotA = { purchaseYMDDate: '2010-09-21', quantityBaseValue: 12345, costBasisBaseValue: 98765 };
 
@@ -975,7 +975,7 @@ test('Transactions-lotTransactions', async () => {
         ymdDate: lotA.purchaseYMDDate,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -98765, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 98765, lotChanges: [[lotA, ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 98765, lotOldChanges: [[lotA, ]]},
         ],
     };
     const transA = await transactionManager.asyncAddTransaction(settingsA);
@@ -993,8 +993,8 @@ test('Transactions-lotTransactions', async () => {
         ymdDate: lotB1.purchaseYMDDate,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -(lotB1.costBasisBaseValue + lotB2.costBasisBaseValue), },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotB1.costBasisBaseValue, lotChanges: [[lotB1, ]]},
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotB2.costBasisBaseValue, lotChanges: [[lotB2, ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotB1.costBasisBaseValue, lotOldChanges: [[lotB1, ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotB2.costBasisBaseValue, lotOldChanges: [[lotB2, ]]},
         ],
     };
 
@@ -1003,7 +1003,7 @@ test('Transactions-lotTransactions', async () => {
         ymdDate: lotC.purchaseYMDDate,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotC.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotC.costBasisBaseValue, lotChanges: [[lotC, ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotC.costBasisBaseValue, lotOldChanges: [[lotC, ]]},
         ],
     };
     const [ transB, transC ] = await transactionManager.asyncAddTransactions([settingsB, settingsC]);
@@ -1027,7 +1027,7 @@ test('Transactions-lotTransactions', async () => {
         ymdDate: lotD.purchaseYMDDate,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotD.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotD.costBasisBaseValue, lotChanges: [[lotD, ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotD.costBasisBaseValue, lotOldChanges: [[lotD, ]]},
         ],
     };
 
@@ -1036,7 +1036,7 @@ test('Transactions-lotTransactions', async () => {
         ymdDate: lotE.purchaseYMDDate,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotE.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotE.costBasisBaseValue, lotChanges: [[lotE, ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotE.costBasisBaseValue, lotOldChanges: [[lotE, ]]},
         ],
     };
     const [ transE, transD ] = await transactionManager.asyncAddTransactions([settingsE, settingsD ]);
@@ -1062,7 +1062,7 @@ test('Transactions-lotTransactions', async () => {
         id: transD.id,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotDa.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotDa.costBasisBaseValue, lotChanges: [[lotDa, ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotDa.costBasisBaseValue, lotOldChanges: [[lotDa, ]]},
         ]
     };
     await transactionManager.asyncModifyTransactions(settingsDa);
@@ -1078,7 +1078,7 @@ test('Transactions-lotTransactions', async () => {
         ymdDate: lotDb.purchaseYMDDate,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotDb.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotDb.costBasisBaseValue, lotChanges: [[lotDb, ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotDb.costBasisBaseValue, lotOldChanges: [[lotDb, ]]},
         ]
     };
     await transactionManager.asyncModifyTransactions(settingsDb);
@@ -1109,7 +1109,7 @@ test('Transactions-lotTransactions', async () => {
         ymdDate: '2010-12-11',
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: sellB2QuantitytBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -sellB2QuantitytBaseValue, lotChanges: [[undefined, lotB2]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -sellB2QuantitytBaseValue, lotOldChanges: [[undefined, lotB2]]},
         ],
     };
     const transF = await transactionManager.asyncAddTransactions(settingsF);
@@ -1127,7 +1127,7 @@ test('Transactions-lotTransactions', async () => {
         ymdDate: '2010-12-23',
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: sellCaQuantityBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -sellCaQuantityBaseValue, lotChanges: [[lotCa, lotC]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -sellCaQuantityBaseValue, lotOldChanges: [[lotCa, lotC]]},
         ]
     };
     const transG = await transactionManager.asyncAddTransactions(settingsG);
@@ -1146,7 +1146,7 @@ test('Transactions-lotTransactions', async () => {
         sameDayOrder: 0,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotF.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotF.costBasisBaseValue, lotChanges: [[lotF, ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotF.costBasisBaseValue, lotOldChanges: [[lotF, ]]},
         ],
     };
 
@@ -1158,7 +1158,7 @@ test('Transactions-lotTransactions', async () => {
         sameDayOrder: 1,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: sellFaQuantityBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -sellFaQuantityBaseValue, lotChanges: [[lotFa, lotF ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -sellFaQuantityBaseValue, lotOldChanges: [[lotFa, lotF ]]},
         ],
     };
     const [ transI, transH ] = await transactionManager.asyncAddTransactions([settingsI, settingsH]);
@@ -1184,7 +1184,7 @@ test('Transactions-lotValidation', async () => {
 
     const brokerageId = sys.brokerageAId;
     const aaplId = sys.aaplBrokerageAId;
-    expect(await transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual({ ymdDate: undefined, quantityBaseValue: 0, lots: [] });
+    expect(await transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual({ ymdDate: undefined, quantityBaseValue: 0, lotStates: [], lots: [] });
 
     const lotA = { purchaseYMDDate: '2010-09-21', quantityBaseValue: 11111, costBasisBaseValue: 22222 };
     const lotB = { purchaseYMDDate: '2010-10-21', quantityBaseValue: 33333, costBasisBaseValue: 44444 };
@@ -1196,7 +1196,7 @@ test('Transactions-lotValidation', async () => {
         ymdDate: lotA.purchaseYMDDate,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotA.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotA.costBasisBaseValue, lotChanges: [[lotA, ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotA.costBasisBaseValue, lotOldChanges: [[lotA, ]]},
         ],
     };
 
@@ -1204,7 +1204,7 @@ test('Transactions-lotValidation', async () => {
         ymdDate: lotB.purchaseYMDDate,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotB.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotB.costBasisBaseValue, lotChanges: [[lotB, ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotB.costBasisBaseValue, lotOldChanges: [[lotB, ]]},
         ],
     };
 
@@ -1212,7 +1212,7 @@ test('Transactions-lotValidation', async () => {
         ymdDate: lotC.purchaseYMDDate,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotC.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotC.costBasisBaseValue, lotChanges: [[lotC, ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotC.costBasisBaseValue, lotOldChanges: [[lotC, ]]},
         ],
     };
 
@@ -1220,7 +1220,7 @@ test('Transactions-lotValidation', async () => {
         ymdDate: lotD.purchaseYMDDate,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotD.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotD.costBasisBaseValue, lotChanges: [[lotD, ]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotD.costBasisBaseValue, lotOldChanges: [[lotD, ]]},
         ],
     };
 
@@ -1228,7 +1228,7 @@ test('Transactions-lotValidation', async () => {
         ymdDate: lotCa.purchaseYMDDate,
         splits: [
             { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotCa.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotCa.costBasisBaseValue, lotChanges: [[lotCa, lotC]]},
+            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotCa.costBasisBaseValue, lotOldChanges: [[lotCa, lotC]]},
         ],
     };
 
