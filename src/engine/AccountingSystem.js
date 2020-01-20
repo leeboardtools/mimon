@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { AccountManager } from './Accounts';
 import { PricedItemManager } from './PricedItems';
+import { LotManager } from './Lots';
 import { TransactionManager } from './Transactions';
 import { PriceManager } from './Prices';
 
@@ -19,6 +20,8 @@ export class AccountingSystem extends EventEmitter {
         this._pricedItemManager = new PricedItemManager(this, options.pricedItemManager);
 
         this._accountManager = new AccountManager(this, options.accountManager);
+        this._lotManager = new LotManager(this, options.lotManager);
+
         this._priceManager = new PriceManager(this, options.priceManager);
         this._transactionManager = new TransactionManager(this, options.transactionManager);
     }
@@ -30,6 +33,7 @@ export class AccountingSystem extends EventEmitter {
         await this._pricedItemManager.asyncSetupForUse();
         await this._priceManager.asyncSetupForUse();
         await this._accountManager.asyncSetupForUse();
+        await this._lotManager.asyncSetupForUse();
         await this._transactionManager.asyncSetupForUse();
     }
 
@@ -47,6 +51,11 @@ export class AccountingSystem extends EventEmitter {
      * @returns {PriceManager}
      */
     getPriceManager() { return this._priceManager; }
+
+    /**
+     * @returns {LotManager}
+     */
+    getLotManager() { return this._lotManager; }
 
     /**
      * @returns {TransactionManager}

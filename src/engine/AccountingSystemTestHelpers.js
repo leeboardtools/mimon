@@ -1,6 +1,7 @@
 import { AccountingSystem } from './AccountingSystem';
 import { InMemoryPricedItemsHandler } from './PricedItems';
 import { InMemoryAccountsHandler } from './Accounts';
+import { InMemoryLotsHandler } from './Lots';
 import * as A from './Accounts';
 import * as PI from './PricedItems';
 import * as T from './Transactions';
@@ -18,6 +19,9 @@ export async function asyncCreateAccountingSystem(options) {
         {
             accountManager: {
                 handler: new InMemoryAccountsHandler(),
+            },
+            lotManager: {
+                handler: new InMemoryLotsHandler(),
             },
 
             pricedItemManager: {

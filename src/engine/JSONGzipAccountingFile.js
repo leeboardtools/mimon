@@ -4,6 +4,7 @@ import * as JGZ from '../util/JSONGzipFiles';
 import * as FA from '../util/FileActions';
 import { FileBackups } from '../util/FileBackups';
 import { InMemoryAccountsHandler } from './Accounts';
+import { InMemoryLotsHandler } from './Lots';
 import { InMemoryPricedItemsHandler } from './PricedItems';
 import { PricesHandler } from './Prices';
 import { TransactionsHandlerImplBase } from './Transactions';
@@ -60,6 +61,16 @@ const JOURNAL_TRANSACTIONS_TAG = 'mimon-journalTransactions';
  * The accounts handler implementation.
  */
 class JSONGzipAccountsHandler extends InMemoryAccountsHandler {
+    constructor(accountingFile) {
+        super();
+        this._accountingFile = accountingFile;
+    }
+}
+
+/**
+ * The lots handler implementation.
+ */
+class JSONGzipLotsHandler extends InMemoryLotsHandler {
     constructor(accountingFile) {
         super();
         this._accountingFile = accountingFile;
@@ -221,6 +232,7 @@ class JSONGzipLedgerFile {
 
         this._accountsHandler = accountingFile._accountsHandler;
         this._pricedItemsHandler = accountingFile._pricedItemsHandler;
+        this._lotsHandler = accountingFile._lotsHandler;
 
         this._accountingSystemOptions = {};
     }
@@ -233,11 +245,13 @@ class JSONGzipLedgerFile {
     cleanIsModified() {
         this._accountsChangeId = this._accountsHandler.getLastChangeId();
         this._pricedItemsChangeId = this._pricedItemsHandler.getLastChangeId();
+        this._lotsChangeId = this._lotsHandler.getLastChangeId();
     }
 
     isModified() {
         return (this._accountsChangeId !== this._accountsHandler.getLastChangeId())
-            || (this._pricedItemsChangeId !== this._pricedItemsHandler.getLastChangeId());
+            || (this._pricedItemsChangeId !== this._pricedItemsHandler.getLastChangeId())
+            || (this._lotsChangeId !== this._lotsHandler.getLastChangeId());
     }
 
 
@@ -258,9 +272,13 @@ class JSONGzipLedgerFile {
         if (!json.pricedItemsHandler) {
             throw userError('JSONGzipAccountingFile-pricedItemsHandler_tag_missing', pathName);
         }
+        if (!json.lotsHandler) {
+            throw userError('JSONGzipAccountingFile-lotsHandler_tag_missing', pathName);
+        }
 
         this._accountsHandler.fromJSON(json.accountsHandler);
         this._pricedItemsHandler.fromJSON(json.pricedItemsHandler);
+        this._lotsHandler.fromJSON(json.lotsHandler);
 
         this._accountingSystemOptions = json.accountingSystemOptions;
 
@@ -277,6 +295,7 @@ class JSONGzipLedgerFile {
             stateId: stateId,
             accountsHandler: this._accountsHandler.toJSON(),
             pricedItemsHandler: this._pricedItemsHandler.toJSON(),
+            lotsHandler: this._lotsHandler.toJSON(),
             accountingSystemOptions: this._accountingFile.getAccountingSystem().getOptions(),
         };
 
@@ -302,6 +321,7 @@ class JSONGzipLedgerFile {
     async asyncClose() {
         this._accountsHandler = undefined;
         this._pricedItemsHandler = undefined;
+        this._lotsHandler = undefined;
         this._accountingFile = undefined;
     }
 }
@@ -531,6 +551,8 @@ class JSONGzipAccountingFile extends AccountingFile {
         // Set up the accounting system.
         this._accountsHandler = new JSONGzipAccountsHandler(this);
         this._pricedItemsHandler = new JSONGzipPricedItemsHandler(this);
+        this._lotsHandler = new JSONGzipLotsHandler(this);
+
         this._pricesHandler = new JSONGzipPricesHandler(this);
         this._transactionsHandler = new JSONGzipTransactionsHandler(this, 
             async (groupKey, groupItems) => this._journalFiles.asyncLoadGroupTransactions(groupKey, groupItems));
@@ -548,6 +570,7 @@ class JSONGzipAccountingFile extends AccountingFile {
             {
                 accountManager: { handler: this._accountsHandler },
                 pricedItemManager: { handler: this._pricedItemsHandler },
+                lotManager: { handler: this._lotsHandler },
                 priceManager: { handler: this._pricesHandler },
                 transactionManager: { handler: this._transactionsHandler },
             });
@@ -621,6 +644,7 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._accountingSystem = undefined;
         this._accountsHandler = undefined;
         this._pricedItemsHandler = undefined;
+        this._lotsHandler = undefined;
         this._pricesHandler = undefined;
         this._transactionsHandler = undefined;
     }

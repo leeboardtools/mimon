@@ -187,6 +187,8 @@ Maybe should separate lots from account state entirely.
         - Maybe, as TransactionManager is the one that actively manages the account state anyway.
 
 
+AccountStates are read-only, only TransactionManager can update them.
+
 
 
 ### PricedItem
@@ -278,7 +280,37 @@ or do we keep the old one?
         - Could be a revert to a similar state of the system.
         - The advantage of a full revert is that any extemparaneous links, say from a report,
         will work after the undo.
+    - Since the transaction id may end up being used for sorting, we need to keep the old id.
 
+- Lot Management:
+    - The Lot fundamentals:
+        - id
+        - pricedItemId
+        - purchaseYMDDate
+        - description
+    - The Lot state:
+        - ymdDate
+        - quantityBaseValue
+        - costBasisBaseValue
+    
+    - Lots become somewhat like Accounts.
+    - The one big difference is the existence of a lot may be entirely controlled
+    by the transaction manager.
 
-- AccountStateUpdater stuff:
-    - Don't just flush the AccountState caches in AccountStatesUpdater.updateAccountEntries().
+    - So a non-lot split has:
+        - accountId
+        - quantityBaseValue
+    
+    - For a purchase a lot split has:
+        - accountId
+        - quantityBaseValue -> this becomes the costBasisBaseValue
+        - lotId
+        - lotQuantityBaseValue
+        - pricedItemId
+        - Special rule: Can only have one purchase per lot.
+    
+    - For a sale a lot split has:
+        - accountId
+        - quantityBaseValue
+        - lotId
+        - lotQuantityBaseValue - the quantity sold. Can lots go negative? I suppose so.

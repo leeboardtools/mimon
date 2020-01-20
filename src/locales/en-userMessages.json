@@ -63,6 +63,9 @@
     "AccountManager-remove_parent_account_not_found": ["The parent account with id '", "' was not found."],
     "AccountManager-child_not_compatible": ["The account contains a child account of type '", "', which is not allowed in the parent account, which is of type '", "'."],
 
+    "LotManager-remove_no_id": ["The lot cannot be deleted. An item with id '", "' was not found."],
+    "LotManager-modify_no_id": ["The lot could not be modified. An item with id '", "' was not found."],
+
     "PricedItemType-CURRENCY": "Currency",
     "PricedItemType-SECURITY": "Security",
     "PricedItemType-MUTUAL_FUND": "Mutual Fund",
@@ -103,6 +106,7 @@
     "JSONGzipAccountingFile-ledger_tag_missing": ["The file '", "' is not a valid MiMon ledger file, the tag is incorrect or missing."],
     "JSONGzipAccountingFile-accountsHandler_tag_missing": ["The file '", "' is not a valid MiMon ledger file, the accountsHandler section is missing."],
     "JSONGzipAccountingFile-pricedItemsHandler_tag_missing": ["The file '", "' is not a valid MiMon ledger file, the pricedItemsHandler section is missing."],
+    "JSONGzipAccountingFile-lotsHandler_tag_missing": ["The file '", "' is not a valid MiMon ledger file, the lotsHandler section is missing."],
     "JSONGzipAccountingFile-journal_summary_tag_missing": ["The file '", "' is not a valid MiMon journal file, the tag is incorrect or missing,"],
     "JSONGzipAccountingFile-transactionsHandler_tag_missing": ["The file '", "' is not a valid MiMon journal file, the transactions handler section is missing,"],
     "JSONGzipAccountingFile-journal_transactions_tag_missing": ["The file '", "' is not a valid MiMon journal transactions file, the tag is incorrect or missing,"],
