@@ -1121,6 +1121,55 @@ test('Transactions-accountStateUpdates', async () => {
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(sys.checkingId, transA.id)).toEqual(
         [{ ymdDate: initialYMDDate, quantityBaseValue: sys.checkingOBQuantityBaseValue }]);
 
+
+    // TODO:
+    // Test multiple splits to the same account...
+    const settingsE = { 
+        ymdDate: '2010-01-20', 
+        splits: [ 
+            { accountId: sys.checkingId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -500, },
+            { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 1100, },
+            { accountId: sys.checkingId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -600, },
+        ]};
+    const checkingQuantityBaseValueE0 = checkingQuantityBaseValueD + settingsE.splits[0].quantityBaseValue;
+    const checkingQuantityBaseValueE1 = checkingQuantityBaseValueE0 + settingsE.splits[2].quantityBaseValue;
+
+    const settingsF = { 
+        ymdDate: '2010-01-25', 
+        splits: [ 
+            { accountId: sys.checkingId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -200, },
+            { accountId: sys.checkingId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 100, },
+            { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 100, },
+        ]};
+    const checkingQuantityBaseValueF0 = checkingQuantityBaseValueE1 + settingsF.splits[0].quantityBaseValue;
+    const checkingQuantityBaseValueF1 = checkingQuantityBaseValueF0 + settingsF.splits[1].quantityBaseValue;
+
+    const [transE, transF] = await transactionManager.asyncAddTransaction([settingsE, settingsF]);
+
+    //  a: '2010-01-01', -100,  99900
+    //  c: '2010-01-04', -300,  99600
+    //  b: '2010-01-05', -200,  99400
+    //  d: '2010-01-15', -400,  99000
+    //  e[0]: '2010-01-20', -500,
+    //  e[2]: '2010-01-29', -600,
+    //  f[0]: '2010-01-20', -200
+    //  f[1]: '2010-01-20', 100
+    expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(sys.checkingId, transE.id)).toEqual(
+        [{ ymdDate: settingsE.ymdDate, quantityBaseValue: checkingQuantityBaseValueE0 },
+            { ymdDate: settingsE.ymdDate, quantityBaseValue: checkingQuantityBaseValueE1 }]);
+
+    expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(sys.checkingId, transE.id)).toEqual(
+        [{ ymdDate: settingsD.ymdDate, quantityBaseValue: checkingQuantityBaseValueD },
+            { ymdDate: settingsE.ymdDate, quantityBaseValue: checkingQuantityBaseValueE0 }]);
+
+    expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(sys.checkingId, transF.id)).toEqual(
+        [{ ymdDate: settingsF.ymdDate, quantityBaseValue: checkingQuantityBaseValueF0 },
+            { ymdDate: settingsF.ymdDate, quantityBaseValue: checkingQuantityBaseValueF1 }]);
+
+    expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(sys.checkingId, transF.id)).toEqual(
+        [{ ymdDate: settingsE.ymdDate, quantityBaseValue: checkingQuantityBaseValueE1 },
+            { ymdDate: settingsF.ymdDate, quantityBaseValue: checkingQuantityBaseValueF0 }]);
+
 });
 
 

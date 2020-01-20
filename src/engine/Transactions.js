@@ -542,16 +542,22 @@ class AccountStatesUpdater {
 
                 if (sortedTransactionKeys.length) {
                     const transactionId = sortedTransactionKeys[oldestIndex].id;
-                    const accountStates = (await this._manager._asyncLoadAccountStateDataItemsToBeforeTransactionId(accountId, transactionId));
+                    const accountStates = (await this._manager.asyncGetAccountStateDataItemsBeforeTransaction(accountId, transactionId));
                     accountState = accountStates[accountStates.length - 1];
                 }
                 else {
                     accountState = { lots: [] };
                 }
 
+                const newAccountStatesByOrder = accountEntry.accountStatesByOrder.slice(0, oldestIndex);
+                processor.newAccountStatesByOrder = newAccountStatesByOrder;
+
                 // index should also be valid in updatedSortedTransctionEntries, as it is the oldest index, which means it is closest to 0.
                 for (let i = oldestIndex; i < updatedSortedTransctionEntries.length; ++i) {
                     const [transactionKey, newSplits] = updatedSortedTransctionEntries.at(i);
+
+                    const accountStates = [ accountState ];
+                    newAccountStatesByOrder.push(accountStates);
 
                     const { id } = transactionKey;
                     if (!newSplits) {
@@ -559,13 +565,15 @@ class AccountStatesUpdater {
                         const { splits } = transactionDataItem;
                         splits.forEach((split) => {
                             if (split.accountId === accountId) {
-                                accountState = AS.addSplitToAccountStateDataItem(accountState, split, ymdDate);                                
+                                accountState = AS.addSplitToAccountStateDataItem(accountState, split, ymdDate);
+                                accountStates.push(accountState);
                             }
                         });
                     }
                     else {
                         newSplits.forEach((newSplit) => {
-                            accountState = AS.addSplitToAccountStateDataItem(accountState, newSplit, ymdDate);                                
+                            accountState = AS.addSplitToAccountStateDataItem(accountState, newSplit, ymdDate);
+                            accountStates.push(accountState);
                         });
                     }
                 }
@@ -585,8 +593,6 @@ class AccountStatesUpdater {
             }
 
             accountStatesByAccountId.set(accountId, accountState);
-
-            accountEntry.sortedTransactionKeys = undefined;
         }
 
         return accountStatesByAccountId;
@@ -597,12 +603,26 @@ class AccountStatesUpdater {
         const accountProcessors = Array.from(this._accountProcessorsByAccountIds.values());
         for (let i = accountProcessors.length - 1; i >= 0; --i) {
             const processor = accountProcessors[i];
-            const { accountEntry } = processor;
+            const { accountEntry, oldestIndex, newAccountStatesByOrder } = processor;
+            const { sortedTransactionKeys, accountStatesByTransactionId } = accountEntry;
+            if (oldestIndex <= 0) {
+                accountEntry.accountStatesByOrder.length = 0;
+                accountStatesByTransactionId.clear();
+            }
+            else {
+                for (let i = oldestIndex; i < sortedTransactionKeys.length; ++i) {
+                    accountStatesByTransactionId.delete(sortedTransactionKeys[i].id);
+                }
+                if (newAccountStatesByOrder) {
+                    accountEntry.accountStatesByOrder = newAccountStatesByOrder;
+                }
+                else {
+                    accountEntry.accountStatesByOrder.length = Math.max(processor.oldestIndex, 0);
+                }
+            }
 
             accountEntry.sortedTransactionKeys = undefined;
 
-            // TODO: We can do better than just flushing these caches...
-            accountEntry.accountStatesByOrder.length = Math.max(processor.oldestIndex, 0);
             accountEntry.accountStatesByTransactionId.clear();
         }
     }
@@ -690,6 +710,16 @@ export class TransactionManager extends EventEmitter {
 
     /**
      * @typedef {object}    TransactionManager~AccountEntry
+     * accountStatesByTransactionId is the primary account state cache, it contains for each transaction an array with an account state
+     * entry for each split in the transaction that references the account.
+     * <p>
+     * accountStatesByOrder is a secondary cache. It is an array that contains the account state arrays in
+     * accountStatesByTransactionId, except these are ordered to match the ordering of the transaction
+     * keys in {@link TransactionHandler#asyncGetAccountSortedTransactionKeys}.
+     * <p>
+     * The point behind accountStatesByOrder is that it caches account states that have been computed from the newest transaction
+     * down to the last transaction. So if the next older transaction is requested, those account states have already
+     * been computed.
      * @private
      * @property {boolean}  hasLots
      * @property {Map<number, AccountStateDataItem>} accountStatesByTransactionId
@@ -730,7 +760,7 @@ export class TransactionManager extends EventEmitter {
     }
 
 
-    async _asyncLoadAccountStateDataItemsToBeforeTransactionId(accountId, transactionId) {
+    async _asyncLoadAccountStateDataItemsForTransactionId(accountId, transactionId) {
         const accountEntry = await this._asyncLoadAccountEntry(accountId);
         let accountStateDataItems = accountEntry.accountStatesByTransactionId.get(transactionId);
 
@@ -742,14 +772,14 @@ export class TransactionManager extends EventEmitter {
                 const { id } = sortedTransactionKeys[i];
                 if (accountStatesByOrder[i]) {                    
                     accountStateDataItems = accountStatesByOrder[i];
-                    workingAccountState = accountStateDataItems[accountStateDataItems.length - 1];
+                    workingAccountState = accountStateDataItems[0];
                 }
                 else {
                     let ymdDate = getYMDDateString(sortedTransactionKeys[i].ymdDate);
                     const transaction = await this.asyncGetTransactionDataItemsWithIds(id);
                     const { splits } = transaction;
 
-                    const newAccountStateDataItems = [];
+                    const newAccountStateDataItems = [ workingAccountState ];
                     for (let s = splits.length - 1; s >= 0; --s) {
                         const split = splits[s];
                         if (split.accountId === accountId) {
@@ -758,9 +788,15 @@ export class TransactionManager extends EventEmitter {
                         }
                     }
 
+                    newAccountStateDataItems.reverse();
+
                     if (i > 0) {
                         newAccountStateDataItems[0].ymdDate = getYMDDateString(sortedTransactionKeys[i - 1].ymdDate);
                     }
+                    else {
+                        delete newAccountStateDataItems[0].ymdDate;
+                    }
+
                     accountStatesByOrder[i] = newAccountStateDataItems;
                     accountStateDataItems = newAccountStateDataItems;
                     accountStatesByTransactionId.set(id, newAccountStateDataItems);
@@ -785,6 +821,7 @@ export class TransactionManager extends EventEmitter {
     getCurrentAccountStateDataItem(accountId) {
         let accountStateDataItem = this._handler.getCurrentAccountStateDataItem(accountId);
         if (!accountStateDataItem) {
+            // No transactions, let's create an empty account state.
             const accountDataItem = this._accountingSystem.getAccountManager().getAccountDataItemWithId(accountId);
             if (accountDataItem) {
                 const type = A.getAccountType(accountDataItem.type);
@@ -794,6 +831,7 @@ export class TransactionManager extends EventEmitter {
         return accountStateDataItem;
     }
 
+
     /**
      * Retrieves the account state data item immediately after a transaction has been applied
      * to the account.
@@ -801,21 +839,12 @@ export class TransactionManager extends EventEmitter {
      * @param {number} transactionId 
      * @returns {AccountStateDataItem[]}    An array containing the account states immediately after
      * a transaction has been applied. Multiple account states are returned if there are multiple
-     * splits referring to the account. The referring split at index closest to zero is at the first index.
+     * splits referring to the account. The referring split at index closest to zero is at the first index,
+     * the last account state is the account state after the transaction has been fully applied.
      */
     async asyncGetAccountStateDataItemsAfterTransaction(accountId, transactionId) {
-        const accountEntry = await this._asyncLoadAccountEntry(accountId);
-        const { sortedTransactionKeys, indicesByTransactionId } = accountEntry;
-        if (sortedTransactionKeys.length) {
-            const index = indicesByTransactionId.get(transactionId);
-            if (index === sortedTransactionKeys.length - 1) {
-                return [this.getCurrentAccountStateDataItem(accountId)];
-            }
-
-            transactionId = sortedTransactionKeys[index + 1].id; 
-        }
-
-        return this._asyncLoadAccountStateDataItemsToBeforeTransactionId(accountId, transactionId);
+        const accountStateDataItems = await this._asyncLoadAccountStateDataItemsForTransactionId(accountId, transactionId);
+        return accountStateDataItems.slice(1);
     }
 
 
@@ -829,7 +858,8 @@ export class TransactionManager extends EventEmitter {
      * splits referring to the account. The referring split at index closest to zero is at the first index.
      */
     async asyncGetAccountStateDataItemsBeforeTransaction(accountId, transactionId) {
-        return this._asyncLoadAccountStateDataItemsToBeforeTransactionId(accountId, transactionId);
+        const accountStateDataItems = await this._asyncLoadAccountStateDataItemsForTransactionId(accountId, transactionId);
+        return accountStateDataItems.slice(0, accountStateDataItems.length - 1);
     }
 
 
