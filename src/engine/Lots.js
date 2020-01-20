@@ -2,16 +2,46 @@ import { EventEmitter } from 'events';
 import { userMsg, userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
 import { getYMDDate, getYMDDateString } from '../util/YMDDate';
+import { deepEqual } from 'assert';
 
 /**
  * @typedef {object} LotDataItem
- * @property {string}   purchaseYMDDate The purchase date of this lot represented as a {@link YMDDate} string.
- * @property {number}   quantityBaseValue   The base value of the quantity of the lot. The {@link QuantityDefinition} is the quantity
- * definition of the lot of the account the lot belongs to.
- * @property {number}   costBasisBaseValue  The base value of the cost basis of the lot. The {@link QuantityDefinition} and
- * {@link Currency} are from the lot of the account the lot belongs to.
+ * @property {number}   id  The id of the lot in the lot manager.
+ * @property {number}   pricedItemId    The id of the priced item the lot represents.
  * @property {string}   [description]   The description of the lot.
  */
+
+/**
+ * @typedef {object} Lot
+ * @property {number}   id  The id of the lot in the lot manager.
+ * @property {number}   pricedItemId    The id of the priced item the lot represents.
+ * @property {string}   [description]   The description of the lot.
+ */
+
+/**
+ * Retrieves a {@link Lot} representation of a {@link LotDataItem}, avoiding copying if possible.
+ * @param {LotDataItem|Lot} lotDataItem 
+ * @param {boolean} alwaysCopy 
+ * @returns {Lot}
+ */
+export function getLot2(lotDataItem, alwaysCopy) {
+    if (lotDataItem) {
+        if (alwaysCopy) {
+            return Object.assign({}, lotDataItem);
+        }
+    }
+
+    return lotDataItem;
+}
+
+/**
+ * Retrieves a {@link LotDataItem} representation of a {@link Lot}, avoiding copying if possible.
+ * @function
+ * @param {LotDataItem|Lot} lot
+ * @param {boolean} alwaysCopy 
+ * @returns {Lot}
+ */
+export const getLotDataItem2 = getLot2;
 
 
 /**
@@ -30,6 +60,7 @@ import { getYMDDate, getYMDDateString } from '../util/YMDDate';
  * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
  * @returns {Lot}
  */
+// TODELETE
 export function getLot(lotDataItem, alwaysCopy) {
     if (lotDataItem) {
         const purchaseYMDDate = getYMDDate(lotDataItem.purchaseYMDDate);
@@ -43,6 +74,7 @@ export function getLot(lotDataItem, alwaysCopy) {
 }
 
 
+// TODELETE
 function checkFirstDefinedEntry(array, callback) {
     for (let i = 0; i < array.length; ++i) {
         if ((array[i] !== undefined) && (array[i] !== null)) {
@@ -57,6 +89,7 @@ function checkFirstDefinedEntry(array, callback) {
  * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new array with new object will always be created.
  * @returns {Lot[]}
  */
+// TODELETE
 export function getLots(lotDataItems, alwaysCopy) {
     if (lotDataItems) {
         if (alwaysCopy
@@ -73,6 +106,7 @@ export function getLots(lotDataItems, alwaysCopy) {
  * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
  * @returns {LotDataItem}
  */
+// TODELETE
 export function getLotDataItem(lot, alwaysCopy) {
     if (lot) {
         const purchaseYMDDateString = getYMDDateString(lot.purchaseYMDDate);
@@ -91,6 +125,7 @@ export function getLotDataItem(lot, alwaysCopy) {
  * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new array with new objects will always be created.
  * @returns {LotDataItem[]}
  */
+// TODELETE
 export function getLotDataItems(lots, alwaysCopy) {
     if (lots) {
         if (alwaysCopy
@@ -107,6 +142,7 @@ export function getLotDataItems(lots, alwaysCopy) {
  * @param {Lot|LotDataItem} lot 
  * @returns {string}
  */
+// TODELETE
 export function getLotString(lot) {
     const lotDataItem = getLotDataItem(lot);
     let string = lotDataItem.purchaseYMDDate + '_' + lotDataItem.quantityBaseValue + '_' + lotDataItem.costBasisBaseValue;
@@ -129,11 +165,11 @@ export class LotManager extends EventEmitter {
         
         this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorOptions());
 
-        this._lotsById = new Map();
+        this._lotDataItemsById = new Map();
 
-        const lots = this._handler.getLotDataItems();
-        lots.forEach((lot) => {
-            this._lotsById.set(lot.id, lot);
+        const lotDataItems = this._handler.getLotDataItems();
+        lotDataItems.forEach((lotDataItem) => {
+            this._lotDataItemsById.set(lotDataItem.id, lotDataItem);
         });
     }
 
@@ -148,7 +184,7 @@ export class LotManager extends EventEmitter {
      * @returns {number[]}  Array containing the ids of all the lots.
      */
     getLotIds() {
-        return Array.from(this._lotsById.keys());
+        return Array.from(this._lotDataItemsById.keys());
     }
 
 
@@ -158,8 +194,15 @@ export class LotManager extends EventEmitter {
      * @returns {(LotDataItem|undefined)}    A copy of the lot's data.
      */
     getLotDataItemWithId(id) {
-        const lot = this._getLot(id);
-        return (lot) ? Object.assign({}, lot) : undefined;
+        const lotDataItem = this._lotDataItemsById.get(id);
+        return getLotDataItem(lotDataItem, true);
+    }
+
+    _validate(lotDataItem) {
+        const pricedItemManager = this._accountingSystem.getPricedItemManager();
+        if (!pricedItemManager.getPricedItemDataItemWithId(lotDataItem.pricedItemId)) {
+            return userError('LotManager-invalid_pricedItem_id', lotDataItem.pricedItemId);
+        }
     }
 
     /**
@@ -179,16 +222,26 @@ export class LotManager extends EventEmitter {
      * @fires {LotManager~lotAdd}
      */
     async asyncAddLot(lot, validateOnly) {
-        let lotDataItem = getLotDataItem(lot);
+        const lotDataItem = getLotDataItem2(lot, true);
 
-        // TODO: Need validation!
+        const error = this._validate(lotDataItem);
+        if (error) {
+            throw error;
+        }
 
         if (validateOnly) {
             return;
         }
+        
+        const id = this._idGenerator.generateId();
+        lotDataItem.id = id;
+        const idGeneratorOptions = this._idGenerator.toJSON();
 
-        lotDataItem = await this._asyncAddLot(lotDataItem);
-        lotDataItem = getLotDataItem(lotDataItem, true);
+        const updatedDataItems = [[id, lotDataItem]];
+        await this._handler.asyncUpdateLotDataItems(updatedDataItems, idGeneratorOptions);
+
+        this._lotDataItemsById.set(id, lotDataItem);
+
         this.emit('lotAdd', { newLotDataItem: lotDataItem, });
         return lotDataItem;
     }
@@ -210,8 +263,8 @@ export class LotManager extends EventEmitter {
      * @fires {LotManager~lotRemove}
      */
     async asyncRemoveLot(id, validateOnly) {
-        const lot = this._lotsById.get(id);
-        if (!lot) {
+        const lotDataItem = this._lotDataItemsById.get(id);
+        if (!lotDataItem) {
             throw userError('LotManager-remove_no_id', id);
         }
 
@@ -219,13 +272,13 @@ export class LotManager extends EventEmitter {
             return;
         }
 
-        this._lotsById.delete(id);
+        this._lotDataItemsById.delete(id);
 
         const updatedDataItems = [[id]];
         await this._handler.asyncUpdateLotDataItems(updatedDataItems);
 
-        this.emit('lotRemove', { removedLotDataItem: lot });
-        return lot;
+        this.emit('lotRemove', { removedLotDataItem: lotDataItem });
+        return lotDataItem;
     }
 
 
@@ -248,27 +301,32 @@ export class LotManager extends EventEmitter {
     async asyncModifyLot(lot, validateOnly) {
         const id = lot.id;
 
-        const oldLot = this._lotsById.get(id);
-        if (!oldLot) {
+        const oldLotDataItem = this._lotDataItemsById.get(id);
+        if (!oldLotDataItem) {
             throw userError('LotManager-modify_no_id', id);
         }
 
-        let newLot = Object.assign({}, oldLot, lot);
-        newLot = getLotDataItem(newLot);
+        let newLotDataItem = Object.assign({}, oldLotDataItem, lot);
+        newLotDataItem = getLotDataItem2(newLotDataItem);
 
-        if (validateOnly) {
-            return newLot;
+        const error = this._validate(newLotDataItem);
+        if (error) {
+            throw error;
         }
 
-        const updatedDataItems = [[id, newLot]];
+        if (validateOnly) {
+            return newLotDataItem;
+        }
+
+        const updatedDataItems = [[id, newLotDataItem]];
 
         await this._handler.asyncUpdateLotDataItems(updatedDataItems);
 
-        this._lotsById.set(id, newLot);
+        this._lotDataItemsById.set(id, newLotDataItem);
 
-        newLot = Object.assign({}, newLot);
-        this.emit('lotModify', { newLotDataItem: newLot, oldLotDataItem: oldLot });
-        return [ newLot, oldLot ];
+        newLotDataItem = Object.assign({}, newLotDataItem);
+        this.emit('lotModify', { newLotDataItem: newLotDataItem, oldLotDataItem: oldLotDataItem });
+        return [ newLotDataItem, oldLotDataItem ];
     }
 }
 

@@ -38,14 +38,14 @@ test('LotState-add_remove_lotChange', () => {
         costBasisBaseValue: 10000,
     };
     const lotChangeA = { lotId: 1, quantityBaseValue: 100, };
-    const testA = L.addLotChangeToLotStateDataItem(stateA, lotChangeA);
+    const testA = L.addLotChangeToLotStateDataItem(stateA, lotChangeA, stateA.ymdDate);
     expect(testA).toEqual({
         ymdDate: '2019-10-12',
         quantityBaseValue: 100100,
         costBasisBaseValue: 10010,
     });
 
-    const revTestA = L.removeLotChangeFromLotStateDataItem(testA, lotChangeA);
+    const revTestA = L.removeLotChangeFromLotStateDataItem(testA, lotChangeA, stateA.ymdDate);
     expect(revTestA).toEqual(L.getLotStateDataItem(stateA));
 
 
@@ -59,5 +59,21 @@ test('LotState-add_remove_lotChange', () => {
 
     const revTestB = L.removeLotChangeFromLotStateDataItem(testB, lotChangeB, stateA.ymdDate);
     expect(revTestB).toEqual(L.getLotStateDataItem(stateA));
+
+
+    const stateC = L.getEmptyLotState();
+    const lotChangeC = { lotId: 1, quantityBaseValue: 10000, costBasisBaseValue: 1000, };
+    const testC = L.addLotChangeToLotStateDataItem(stateC, lotChangeC, '2010-04-05');
+    expect(testC).toEqual({
+        ymdDate: '2010-04-05',
+        quantityBaseValue: 10000,
+        costBasisBaseValue: 1000,
+    });
+
+    const revTestC = L.removeLotChangeFromLotStateDataItem(testC, lotChangeC);
+    expect(revTestC).toEqual({
+        quantityBaseValue: 0,
+        costBasisBaseValue: 0,
+    });
 
 });

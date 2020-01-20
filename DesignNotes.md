@@ -286,7 +286,6 @@ or do we keep the old one?
     - The Lot fundamentals:
         - id
         - pricedItemId
-        - purchaseYMDDate
         - description
     - The Lot state:
         - ymdDate

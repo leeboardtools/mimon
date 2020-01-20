@@ -27,11 +27,9 @@ export function getLotState(lotStateDataItem, alwaysCopy) {
         const ymdDate = getYMDDate(lotStateDataItem.ymdDate);
         if (alwaysCopy 
          || (ymdDate !== lotStateDataItem.ymdDate)) {
-            return {
-                ymdDate: ymdDate,
-                quantityBaseValue: lotStateDataItem.quantityBaseValue,
-                costBasisBaseValue: lotStateDataItem.costBasisBaseValue,
-            };
+            const lotState = Object.assign({}, lotStateDataItem);
+            lotState.ymdDate = ymdDate;
+            return lotState;
         }
     }
     return lotStateDataItem;
@@ -49,15 +47,30 @@ export function getLotStateDataItem(lotState, alwaysCopy) {
         const ymdDateString = getYMDDateString(lotState.ymdDate);
         if (alwaysCopy 
          || (ymdDateString !== lotState.ymdDate)) {
-            return {
-                ymdDate: ymdDateString,
-                quantityBaseValue: lotState.quantityBaseValue,
-                costBasisBaseValue: lotState.costBasisBaseValue,
-            };
+            const lotStateDataItem = Object.assign({}, lotState);
+            lotStateDataItem.ymdDate = ymdDateString;
+            return lotStateDataItem;
         }
     }
     return lotState;
 }
+
+
+/**
+ * @returns {LotStateDataItem}  An empty lot state data item.
+ */
+export function getEmptyLotStateDataItem() {
+    return {
+        quantityBaseValue: 0,
+        costBasisBaseValue: 0,
+    };
+}
+
+/**
+ * @function
+ * @returns {LotState}  An empty lot state.
+ */
+export const getEmptyLotState = getEmptyLotStateDataItem;
 
 
 /**
@@ -73,6 +86,12 @@ export function getLotStateDataItem(lotState, alwaysCopy) {
  * @property {boolean}  isSplitMerge
  */
 
+/**
+ * 
+ * @param {LotChange|LotChangeDataItem} lotChangeDataItem 
+ * @param {boolean} alwaysCopy 
+ * @returns {LotChange}
+ */
 export function getLotChange(lotChangeDataItem, alwaysCopy) {
     if (lotChangeDataItem) {
         if (alwaysCopy) {
@@ -82,13 +101,19 @@ export function getLotChange(lotChangeDataItem, alwaysCopy) {
     return lotChangeDataItem;
 }
 
+/**
+ * @function
+ * @param {LotChange|LotChangeDataItem} lotChangeDataItem 
+ * @param {boolean} alwaysCopy 
+ * @returns {LotChangeDataItem}
+ */
 export const getLotChangeDataItem = getLotChange;
 
 
 function adjustLotStateDataItemForLotChange(lotState, lotChange, ymdDate, sign) {
     const lotStateDataItem = getLotStateDataItem(lotState, true);
 
-    lotStateDataItem.ymdDate = getYMDDateString(ymdDate) || lotStateDataItem.ymdDate;
+    lotStateDataItem.ymdDate = getYMDDateString(ymdDate);
 
     const oldQuantityBaseValue = lotStateDataItem.quantityBaseValue;
     lotStateDataItem.quantityBaseValue += sign * lotChange.quantityBaseValue;
@@ -97,7 +122,7 @@ function adjustLotStateDataItemForLotChange(lotState, lotChange, ymdDate, sign) 
             lotStateDataItem.costBasisBaseValue = Math.round(lotStateDataItem.quantityBaseValue * lotStateDataItem.costBasisBaseValue / oldQuantityBaseValue);
         }
         else {
-            lotStateDataItem.costBasisBaseValue = lotChange.costBasisBaseValue;
+            lotStateDataItem.costBasisBaseValue = lotChange.costBasisBaseValue || 0;
         }
     }
 
@@ -111,6 +136,8 @@ function adjustLotStateDataItemForLotChange(lotState, lotChange, ymdDate, sign) 
  * or removed being in the lot state.
  * @param {LotState|LotStateDataItem} lotState 
  * @param {LotChange|LotChangeDataItem} lotChange 
+ * @param {YMDDate|string}  ymdDate The date for the lot state, if <code>undefined</code> then
+ * the state's date will be <code>undefined</code>.
  * @returns {LotStateDataItem}
  * @throws {Error}
  */
@@ -124,6 +151,8 @@ export function addLotChangeToLotStateDataItem(lotState, lotChange, ymdDate) {
  * from the lot state. This is the opposite of {@link addLotChangeToLotStateDataItem}.
  * @param {LotState|LotStateDataItem} lotState 
  * @param {LotChange|LotChangeDataItem} lotChange 
+ * @param {YMDDate|string}  ymdDate The date for the lot state, if <code>undefined</code> then
+ * the state's date will be <code>undefined</code>.
  * @returns {LotStateDataItem}
  * @throws {Error}
  */
