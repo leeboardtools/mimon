@@ -96,8 +96,12 @@ export function getFullAccountStateDataItem(accountState, hasLots) {
     accountState = getAccountStateDataItem(accountState, true);
     if (accountState) {
         accountState.quantityBaseValue = accountState.quantityBaseValue || 0;
-        if (hasLots && !accountState.lots) {
+        if (hasLots && !accountState.lotStates) {
             accountState.lotStates = [];
+        }
+
+        // TODELETE
+        if (hasLots && !accountState.lots) {
             accountState.lots = [];
         }
     }
@@ -117,8 +121,12 @@ export function getFullAccountState(accountState, hasLots) {
     accountState = getAccountState(accountState, true);
     if (accountState) {
         accountState.quantityBaseValue = accountState.quantityBaseValue || 0;
-        if (hasLots && !accountState.lots) {
+        if (hasLots && !accountState.lotStates) {
             accountState.lotStates = [];
+        }
+
+        // TODELETE
+        if (hasLots && !accountState.lots) {
             accountState.lots = [];
         }
     }
@@ -129,10 +137,22 @@ export function getFullAccountState(accountState, hasLots) {
 
 
 function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) {
-    const accountStateDataItem = getFullAccountStateDataItem(accountState, split.lotOldChanges && split.lotOldChanges.length);
+    const hasLots = split.lotChanges && split.lotChanges.length;
+    const accountStateDataItem = getFullAccountStateDataItem(accountState, hasLots);
+
+    // TODELETE
+    if (split.lotOldChanges && split.lotOldChanges.length) {
+        accountStateDataItem.lots = accountStateDataItem.lots || [];
+    }
+    else {
+        delete accountStateDataItem.lots;
+    }
+
+
     split = getFullSplitDataItem(split);
 
-    accountStateDataItem.ymdDate = getYMDDateString(ymdDate) || accountStateDataItem.ymdDate;
+    ymdDate = getYMDDateString(ymdDate) || accountStateDataItem.ymdDate;
+    accountStateDataItem.ymdDate = ymdDate;
     accountStateDataItem.quantityBaseValue += sign * split.quantityBaseValue;
 
     const { lotChanges } = split;
@@ -140,7 +160,7 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) 
         const { lotStates } = accountStateDataItem;
         const lotStateDataItemsByLotId = new Map();
         lotStates.forEach((lotState) => {
-            lotStateDataItemsByLotId.set(lotState.id, lotState);
+            lotStateDataItemsByLotId.set(lotState.lotId, lotState);
         });
 
         lotChanges.forEach((lotChange) => {
@@ -149,10 +169,13 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) 
             if (!lotStateDataItem) {
                 // Adding a new lot.
                 lotStateDataItem = LS.getEmptyLotStateDataItem();
+                lotStateDataItem.lotId = lotId;
             }
+
             lotStateDataItem = (sign > 0) 
                 ? LS.addLotChangeToLotStateDataItem(lotStateDataItem, lotChange, ymdDate)
                 : LS.removeLotChangeFromLotStateDataItem(lotStateDataItem, lotChange, ymdDate);
+
             if (lotStateDataItem.quantityBaseValue) {
                 lotStateDataItemsByLotId.set(lotId, lotStateDataItem);
             }

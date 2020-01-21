@@ -94,7 +94,6 @@
     "TransactionManager~split_needs_currency_price": ["The split with currency '", "' requires a price in USD."],
     "TransactionManager~splits_dont_add_up": ["The splits do not add up, there is a difference of ", "."],
     "TransactionManager~split_needs_lots": ["Splits for accounts of type '", "' require lots."],
-    "TransactionManager-split_lot_not_in_account": ["The split's lot to change '", "' was not found in the account's list of lots."],
     "TransactionManager-remove_invalid_id": ["A transaction with id '", "' was not found."],
     "TransactionManager~modify_id_not_found": ["A transaction with id '", "' was not found."],
     "TransactionManager-account_state_update_invalid_transaction_id": 

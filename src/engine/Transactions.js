@@ -107,10 +107,11 @@ export function getLotOldChanges(lotOldChangeDataItems, alwaysCopy) {
  * @property {number}   quantityBaseValue   The base value for the amount to apply to the account.
  * @property {number|number[]} [currencyToUSDRatio]  Only required if there is a currency conversion between the items in the split
  * and this split's currency is not USD, this is either the price, or a numerator/denominator pair for the price {@link Ratio}.
- * @property {LotOldChange[]}  [lotOldChanges2]
+ * @property {LotChangeDataItem[]}  [lotChanges]    Array of changes to any lots.
  * @property {string}   [description]
  * @property {string}   [memo]  
  * 
+ * TODELETE
  * @property {LotDataItem[][]}    [lotOldChanges]    Array of two element sub-arrays. The first element of each sub-array
  * represents the new state of the lot, the second element is the existing state of the lot. If a new lot is
  * being added the second element will be <code>undefined</code>. If a lot is being removed, the first
@@ -125,12 +126,15 @@ export function getLotOldChanges(lotOldChangeDataItems, alwaysCopy) {
  * @property {number}   quantityBaseValue   The base value for the amount to apply to the account.
  * @property {Ratio}    [currencyToUSDRatio]  Only required if there is a currency conversion between the items in the split
  * and this split's currency is not USD, this is the {@Ratio} representing the currency price in USD.
+ * @property {LotChange[]}  [lotChanges]    Array of changes to any lots.
+ * @property {string}   [description]
+ * @property {string}   [memo]  
+ * 
+ * TODELETE
  * @property {Lot[][]}    [lotOldChanges]    Array of two element sub-arrays. The first element of each sub-array
  * represents the new state of the lot, the second element is the existing state of the lot. If a new lot is
  * being added the second element will be <code>undefined</code>. If a lot is being removed, the first
  * element will be <code>undefined</code>
- * @property {string}   [description]
- * @property {string}   [memo]  
  */
 
 
@@ -144,14 +148,19 @@ export function getLotOldChanges(lotOldChangeDataItems, alwaysCopy) {
 export function getSplitDataItem(split, alwaysCopy) {
     if (split) {
         const reconcileStateName = getReconcileStateName(split.reconcileState);
+        const lotChangeDataItems = LS.getLotChangeDataItems(split.lotChanges);
         const lotOldChangeDataItems = getLotOldChangeDataItems(split.lotOldChanges, alwaysCopy);
         const currencyToUSDRatioJSON = getRatioJSON(split.currencyToUSDRatio);
         if (alwaysCopy
          || (reconcileStateName !== split.reconcileState)
+         || (lotChangeDataItems !== split.lotChanges)
          || (lotOldChangeDataItems !== split.lotOldChanges)
          || (currencyToUSDRatioJSON !== split.currencyToUSDRatio)) {
             const splitDataItem = Object.assign({}, split);
             splitDataItem.reconcileState = reconcileStateName;
+            if (lotChangeDataItems) {
+                split.lotChanges = lotChangeDataItems;
+            }
             if (lotOldChangeDataItems) {
                 splitDataItem.lotOldChanges = lotOldChangeDataItems;
             }
@@ -175,14 +184,19 @@ export function getSplitDataItem(split, alwaysCopy) {
 export function getSplit(splitDataItem, alwaysCopy) {
     if (splitDataItem) {
         const reconcileState = getReconcileState(splitDataItem.reconcileState);
+        const lotChanges = LS.getLotChanges(splitDataItem.lotChanges);
         const lotOldChanges = getLotOldChanges(splitDataItem.lotOldChanges, alwaysCopy);
         const currencyToUSDRatio = getRatio(splitDataItem.currencyToUSDRatio);
         if (alwaysCopy
          || (reconcileState !== splitDataItem.reconcileState)
+         || (lotChanges !== splitDataItem.lotChanges)
          || (lotOldChanges !== splitDataItem.lotOldChanges)
          || (currencyToUSDRatio !== splitDataItem.currencyToUSDRatio)) {
             const split = Object.assign({}, splitDataItem);
             split.reconcileState = reconcileState;
+            if (lotChanges) {
+                split.lotChanges = lotChanges;
+            }
             if (lotOldChanges) {
                 split.lotOldChanges = lotOldChanges;
             }
@@ -871,12 +885,9 @@ export class TransactionManager extends EventEmitter {
      * @param {Split[]|SplitDataItem[]} splits 
      * @param {boolean} isModify    If <code>true</code> the splits are for a transaction modify, and any lot changes
      * will not be verified against the account's currenty state.
-     * @param {Map<number,AccountState>|Map<number,AccountStateDataItem>}   [accountStatesByTransactionId] If specified, the account states
-     * to use for validating the individual splits, in particular the lot changes. The account states are updated
-     * with the lot changes.
      * @returns {Error|undefined}   Returns an Error if invalid, <code>undefined</code> if valid.
      */
-    validateSplits(splits, isModify, accountStatesByTransactionId) {
+    validateSplits(splits, isModify) {
         if (!splits || (splits.length < 2)) {
             return userError('TransactionManager~need_at_least_2_splits');
         }
@@ -922,42 +933,15 @@ export class TransactionManager extends EventEmitter {
 
 
             if (account.type.hasLots) {
-                if (!split.lotOldChanges && creditBaseValue) {
+                // TODELETE
+                if (!split.lotChanges && !split.lotOldChanges && creditBaseValue) {
                     return userError('TransactionManager~split_needs_lots', account.type.name);
                 }
 
-                let accountStateDataItem;
-                if (accountStatesByTransactionId) {
-                    accountStateDataItem = accountStatesByTransactionId.get(account.id);
-                }
-                if (!accountStateDataItem) {
-                    if (!isModify) {
-                        accountStateDataItem = this.getCurrentAccountStateDataItem(account.id);
-                    }
-                }
+                // TODO: We need more lot validation here...
+                // Make sure all the lot ids are valid.
+                const lotManager = this._accountingSystem.getLotManager();
 
-                if (accountStateDataItem) {
-                    // Make sure any lots to be changed are in fact in the account.
-                    const accountLotStrings = [];
-                    accountStateDataItem.lots.forEach((lotDataItem) => {
-                        accountLotStrings.push(JSON.stringify(lotDataItem));
-                    });
-
-                    const { lotOldChanges } = getSplitDataItem(split);
-                    for (let i = 0; i < lotOldChanges.length; ++i) {
-                        const lotToChange = lotOldChanges[i][1];
-                        if (lotToChange) {
-                            const lotString = JSON.stringify(lotToChange);
-                            if (!accountLotStrings.includes(lotString)) {
-                                return userError('TransactionManager-split_lot_not_in_account', lotString);
-                            }
-                        }
-                    }
-
-                    if (accountStatesByTransactionId) {
-                        accountStatesByTransactionId.set(account.id, AS.addSplitToAccountStateDataItem(accountStateDataItem, split));
-                    }
-                }
             }
 
             creditSumBaseValue += creditBaseValue;
@@ -992,12 +976,12 @@ export class TransactionManager extends EventEmitter {
     }
 
 
-    _validateTransactionBasics(transactionDataItem, isModify, accountStatesByTransactionId) {
+    _validateTransactionBasics(transactionDataItem, isModify) {
         if (!transactionDataItem.ymdDate) {
             return userError('TransactionManager-date_required');
         }
 
-        const splitsError = this.validateSplits(transactionDataItem.splits, isModify, accountStatesByTransactionId);
+        const splitsError = this.validateSplits(transactionDataItem.splits, isModify);
         if (splitsError) {
             return splitsError;
         }
@@ -1051,9 +1035,8 @@ export class TransactionManager extends EventEmitter {
             sortedTransactionDataItems.push(transactionDataItems[entry.index]);
         });
 
-        const accountStatesByTransactionId = new Map();
         for (let i = 0; i < sortedTransactionDataItems.length; ++i) {
-            const error = this._validateTransactionBasics(sortedTransactionDataItems[i], false, accountStatesByTransactionId);
+            const error = this._validateTransactionBasics(sortedTransactionDataItems[i], false);
             if (error) {
                 throw error;
             }

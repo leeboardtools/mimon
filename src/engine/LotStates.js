@@ -3,6 +3,7 @@ import { getYMDDate, getYMDDateString } from '../util/YMDDate';
 
 /**
  * @typedef {object}    LotStateDataItem
+ * @property {number}   lotId   The id of the lot this state represents.
  * @property {string}   ymdDate The date represented by teh state.
  * @property {number}   quantityBaseValue   The base value of the quantity of the lot state.
  * @property {number}   costBasisBaseValue  The base value of the cost basis of the lot.
@@ -10,6 +11,7 @@ import { getYMDDate, getYMDDateString } from '../util/YMDDate';
 
 /**
  * @typedef {object}    LotState
+ * @property {number}   lotId   The id of the lot this state represents.
  * @property {YMDDate}  ymdDate The date represented by the state.
  * @property {number}   quantityBaseValue   The base value of the quantity of the lot state.
  * @property {number}   costBasisBaseValue  The base value of the cost basis of the lot.
@@ -56,6 +58,13 @@ export function getLotStateDataItem(lotState, alwaysCopy) {
 }
 
 
+
+/**
+ * Array version of {@link getLotState}
+ * @param {(LotState[]|LotStateDataItem[])} lotStateDataItems 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @returns {LotState[]}
+ */
 export function getLotStates(lotStateDataItems, alwaysCopy) {
     if (lotStateDataItems && lotStateDataItems.length) {
         const lotStates = lotStateDataItems.map((lotStateDataItem) => getLotState(lotStateDataItem, alwaysCopy));
@@ -71,6 +80,13 @@ export function getLotStates(lotStateDataItems, alwaysCopy) {
     return lotStateDataItems;
 }
 
+
+/**
+ * Array version of {@link getLotStateDataItem}
+ * @param {(LotState[]|LotStateDataItem[])} lotStates 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @returns {LotStateDataItem[]}
+ */
 export function getLotStateDataItems(lotStates, alwaysCopy) {
     if (lotStates && lotStates.length) {
         const lotStateDataItems = lotStates.map((lotState) => getLotStateDataItem(lotState, alwaysCopy));
@@ -107,14 +123,22 @@ export const getEmptyLotState = getEmptyLotStateDataItem;
 
 /**
  * @typedef {object}    LotChangeDataItem
+ * @property {number}   lotId   The id of the lot this change applies to.
  * @property {number}   quantityBaseValue
+ * @property {number}   [costBasisBaseValue]    This is required for a lot change that represents adding a new lot
+ * and for a lot change representing a sell all (ie the lot has been sold). This is so the initial cost basis
+ * can be set when a lot is added, and the last cost basis can be set when the final sale is removed.
  * @property {boolean}  isSplitMerge
  */
 
 
 /**
  * @typedef {object}    LotChange
+ * @property {number}   lotId   The id of the lot this change applies to.
  * @property {number}   quantityBaseValue
+ * @property {number}   [costBasisBaseValue]    This is required for a lot change that represents adding a new lot
+ * and for a lot change representing a sell all (ie the lot has been sold). This is so the initial cost basis
+ * can be set when a lot is added, and the last cost basis can be set when the final sale is removed.
  * @property {boolean}  isSplitMerge
  */
 
@@ -140,6 +164,38 @@ export function getLotChange(lotChangeDataItem, alwaysCopy) {
  * @returns {LotChangeDataItem}
  */
 export const getLotChangeDataItem = getLotChange;
+
+
+/**
+ * Array version of {@link getLotChange}.
+ * @param {LotChange[]|LotChangeDataItem[]} lotChangeDataItems
+ * @param {boolean} alwaysCopy 
+ * @returns {LotChange[]}
+ */
+export function getLotChanges(lotChangeDataItems, alwaysCopy) {
+    if (lotChangeDataItems && lotChangeDataItems.length) {
+        const lotChanges = lotChangeDataItems.map((lotChangeDataItem) => getLotChange(lotChangeDataItem, alwaysCopy));
+        if (alwaysCopy) {
+            return lotChanges;
+        }
+        for (let i = lotChanges.length - 1; i >= 0; --i) {
+            if (lotChanges[i] !== lotChangeDataItems[i]) {
+                return lotChanges;
+            }
+        }
+    }
+    return lotChangeDataItems;
+}
+
+
+/**
+ * Array version of {@link getLotChangeDataItem}.
+ * @function
+ * @param {LotChange[]|LotChangeDataItem[]} lotChangeDataItems
+ * @param {boolean} alwaysCopy 
+ * @returns {LotChangeDataItem[]}
+ */
+export const getLotChangeDataItems = getLotChanges;
 
 
 
