@@ -66,41 +66,6 @@ export function loadTransactionsUserMessages() {
 
 
 /**
- * Retrieves a {@link LotDataItem} representation of a lot change array of {@link Lot}s, avoids copying if the arg
- * is already an {@link LotDataItem}.
- * @param {(Lot[][]|LotDataItem[][])} lotOldChanges 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
- * @returns {LotDataItem[][]}
- */
-export function getLotOldChangeDataItems(lotOldChanges, alwaysCopy) {
-    if (lotOldChanges) {
-        if (alwaysCopy 
-         || (lotOldChanges.length && (getLotDataItems(lotOldChanges[0]) !== lotOldChanges[0]))) {
-            return lotOldChanges.map((lotOldChange) => getLotDataItems(lotOldChange, alwaysCopy));
-        }
-    }
-    return lotOldChanges;
-}
-
-
-/**
- * Retrieves a {@link Lot} representation of a lot change array of {@link LotDataItem}s, avoids copying if the arg
- * is already an {@link Lot}.
- * @param {(Lot[][]|LotDataItem[][])} account 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
- * @returns {Lot[][]}
- */
-export function getLotOldChanges(lotOldChangeDataItems, alwaysCopy) {
-    if (lotOldChangeDataItems) {
-        if (alwaysCopy
-         || (lotOldChangeDataItems.length && (getLots(lotOldChangeDataItems[0]) !== lotOldChangeDataItems[0]))) {
-            return lotOldChangeDataItems.map((lotOldChangeDataItem) => getLots(lotOldChangeDataItem, alwaysCopy));
-        }
-    }
-    return lotOldChangeDataItems;
-}
-
-/**
  * @typedef {object}    SplitDataItem
  * @property {string}   reconcileState  The name property of the {@link ReconcileState} of the row.
  * @property {number}   accountId   The account to which the row applies.
@@ -110,12 +75,6 @@ export function getLotOldChanges(lotOldChangeDataItems, alwaysCopy) {
  * @property {LotChangeDataItem[]}  [lotChanges]    Array of changes to any lots.
  * @property {string}   [description]
  * @property {string}   [memo]  
- * 
- * TODELETE
- * @property {LotDataItem[][]}    [lotOldChanges]    Array of two element sub-arrays. The first element of each sub-array
- * represents the new state of the lot, the second element is the existing state of the lot. If a new lot is
- * being added the second element will be <code>undefined</code>. If a lot is being removed, the first
- * element will be <code>undefined</code>
  */
 
 
@@ -129,12 +88,6 @@ export function getLotOldChanges(lotOldChangeDataItems, alwaysCopy) {
  * @property {LotChange[]}  [lotChanges]    Array of changes to any lots.
  * @property {string}   [description]
  * @property {string}   [memo]  
- * 
- * TODELETE
- * @property {Lot[][]}    [lotOldChanges]    Array of two element sub-arrays. The first element of each sub-array
- * represents the new state of the lot, the second element is the existing state of the lot. If a new lot is
- * being added the second element will be <code>undefined</code>. If a lot is being removed, the first
- * element will be <code>undefined</code>
  */
 
 
@@ -148,21 +101,16 @@ export function getLotOldChanges(lotOldChangeDataItems, alwaysCopy) {
 export function getSplitDataItem(split, alwaysCopy) {
     if (split) {
         const reconcileStateName = getReconcileStateName(split.reconcileState);
-        const lotChangeDataItems = LS.getLotChangeDataItems(split.lotChanges);
-        const lotOldChangeDataItems = getLotOldChangeDataItems(split.lotOldChanges, alwaysCopy);
+        const lotChangeDataItems = LS.getLotChangeDataItems(split.lotChanges, alwaysCopy);
         const currencyToUSDRatioJSON = getRatioJSON(split.currencyToUSDRatio);
         if (alwaysCopy
          || (reconcileStateName !== split.reconcileState)
          || (lotChangeDataItems !== split.lotChanges)
-         || (lotOldChangeDataItems !== split.lotOldChanges)
          || (currencyToUSDRatioJSON !== split.currencyToUSDRatio)) {
             const splitDataItem = Object.assign({}, split);
             splitDataItem.reconcileState = reconcileStateName;
             if (lotChangeDataItems) {
                 split.lotChanges = lotChangeDataItems;
-            }
-            if (lotOldChangeDataItems) {
-                splitDataItem.lotOldChanges = lotOldChangeDataItems;
             }
             if (currencyToUSDRatioJSON) {
                 splitDataItem.currencyToUSDRatio = currencyToUSDRatioJSON;
@@ -184,21 +132,16 @@ export function getSplitDataItem(split, alwaysCopy) {
 export function getSplit(splitDataItem, alwaysCopy) {
     if (splitDataItem) {
         const reconcileState = getReconcileState(splitDataItem.reconcileState);
-        const lotChanges = LS.getLotChanges(splitDataItem.lotChanges);
-        const lotOldChanges = getLotOldChanges(splitDataItem.lotOldChanges, alwaysCopy);
+        const lotChanges = LS.getLotChanges(splitDataItem.lotChanges, alwaysCopy);
         const currencyToUSDRatio = getRatio(splitDataItem.currencyToUSDRatio);
         if (alwaysCopy
          || (reconcileState !== splitDataItem.reconcileState)
          || (lotChanges !== splitDataItem.lotChanges)
-         || (lotOldChanges !== splitDataItem.lotOldChanges)
          || (currencyToUSDRatio !== splitDataItem.currencyToUSDRatio)) {
             const split = Object.assign({}, splitDataItem);
             split.reconcileState = reconcileState;
             if (lotChanges) {
                 split.lotChanges = lotChanges;
-            }
-            if (lotOldChanges) {
-                split.lotOldChanges = lotOldChanges;
             }
             if (currencyToUSDRatio) {
                 split.currencyToUSDRatio = currencyToUSDRatio;
@@ -933,8 +876,7 @@ export class TransactionManager extends EventEmitter {
 
 
             if (account.type.hasLots) {
-                // TODELETE
-                if (!split.lotChanges && !split.lotOldChanges && creditBaseValue) {
+                if (!split.lotChanges && creditBaseValue) {
                     return userError('TransactionManager~split_needs_lots', account.type.name);
                 }
 
