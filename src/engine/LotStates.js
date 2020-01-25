@@ -4,17 +4,23 @@ import { getYMDDate, getYMDDateString } from '../util/YMDDate';
 /**
  * @typedef {object}    LotStateDataItem
  * @property {number}   lotId   The id of the lot this state represents.
- * @property {string}   ymdDate The date represented by teh state.
  * @property {number}   quantityBaseValue   The base value of the quantity of the lot state.
  * @property {number}   costBasisBaseValue  The base value of the cost basis of the lot.
+ * @property {number[][]}   previousBaseValues  Array containing two element sub-arrays of the previous
+ * lot states, the first element of each sub array is the quantityBaseValue, the second element
+ * is the costBasisBaseValue. This simplifies the unwinding of {@link LotChange}s via
+ * {@link removeLotChangeFromLotStateDataItem}.
  */
 
 /**
  * @typedef {object}    LotState
  * @property {number}   lotId   The id of the lot this state represents.
- * @property {YMDDate}  ymdDate The date represented by the state.
  * @property {number}   quantityBaseValue   The base value of the quantity of the lot state.
  * @property {number}   costBasisBaseValue  The base value of the cost basis of the lot.
+ * @property {number[][]}   previousBaseValues  Array containing two element sub-arrays of the previous
+ * lot states, the first element of each sub array is the quantityBaseValue, the second element
+ * is the costBasisBaseValue. This simplifies the unwinding of {@link LotChange}s via
+ * {@link removeLotChangeFromLotStateDataItem}.
  */
 
 /**
@@ -26,12 +32,8 @@ import { getYMDDate, getYMDDateString } from '../util/YMDDate';
  */
 export function getLotState(lotStateDataItem, alwaysCopy) {
     if (lotStateDataItem) {
-        const ymdDate = getYMDDate(lotStateDataItem.ymdDate);
-        if (alwaysCopy 
-         || (ymdDate !== lotStateDataItem.ymdDate)) {
-            const lotState = Object.assign({}, lotStateDataItem);
-            lotState.ymdDate = ymdDate;
-            return lotState;
+        if (alwaysCopy) {
+            return Object.assign({}, lotStateDataItem);
         }
     }
     return lotStateDataItem;
@@ -44,18 +46,7 @@ export function getLotState(lotStateDataItem, alwaysCopy) {
  * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
  * @returns {LotStateDataItem}
  */
-export function getLotStateDataItem(lotState, alwaysCopy) {
-    if (lotState) {
-        const ymdDateString = getYMDDateString(lotState.ymdDate);
-        if (alwaysCopy 
-         || (ymdDateString !== lotState.ymdDate)) {
-            const lotStateDataItem = Object.assign({}, lotState);
-            lotStateDataItem.ymdDate = ymdDateString;
-            return lotStateDataItem;
-        }
-    }
-    return lotState;
-}
+export const getLotStateDataItem = getLotState;
 
 
 
@@ -110,6 +101,7 @@ export function getEmptyLotStateDataItem() {
     return {
         quantityBaseValue: 0,
         costBasisBaseValue: 0,
+        previousBaseValues: [],
     };
 }
 
@@ -124,22 +116,22 @@ export const getEmptyLotState = getEmptyLotStateDataItem;
 /**
  * @typedef {object}    LotChangeDataItem
  * @property {number}   lotId   The id of the lot this change applies to.
- * @property {number}   quantityBaseValue
- * @property {number}   [costBasisBaseValue]    This is required for a lot change that represents adding a new lot
- * and for a lot change representing a sell all (ie the lot has been sold). This is so the initial cost basis
- * can be set when a lot is added, and the last cost basis can be set when the final sale is removed.
- * @property {boolean}  isSplitMerge
+ * @property {number}   quantityBaseValue   The change in the lot's quantityBaseValue.
+ * @property {number}   [costBasisBaseValue]    If isSplitMerge is <code>true</code> and this is specified, it is the
+ * new cost basis for the lot, if not specified then the cost basis is not changed. If isSplitMerge is <code>false</code>
+ * this if the previous quantityBaseValue is 0 (which normally indicates a new purchase) this is the initial cost basis.
+ * @property {boolean}  [isSplitMerge]  Optional, if <code>true</code> then the lot change is a split or a merge.
  */
 
 
 /**
  * @typedef {object}    LotChange
  * @property {number}   lotId   The id of the lot this change applies to.
- * @property {number}   quantityBaseValue
- * @property {number}   [costBasisBaseValue]    This is required for a lot change that represents adding a new lot
- * and for a lot change representing a sell all (ie the lot has been sold). This is so the initial cost basis
- * can be set when a lot is added, and the last cost basis can be set when the final sale is removed.
- * @property {boolean}  isSplitMerge
+ * @property {number}   quantityBaseValue   The change in the lot's quantityBaseValue.
+ * @property {number}   [costBasisBaseValue]    If isSplitMerge is <code>true</code> and this is specified, it is the
+ * new cost basis for the lot, if not specified then the cost basis is not changed. If isSplitMerge is <code>false</code>
+ * this if the previous quantityBaseValue is 0 (which normally indicates a new purchase) this is the initial cost basis.
+ * @property {boolean}  [isSplitMerge]  Optional, if <code>true</code> then the lot change is a split or a merge.
  */
 
 /**
@@ -199,19 +191,37 @@ export const getLotChangeDataItems = getLotChanges;
 
 
 
-function adjustLotStateDataItemForLotChange(lotState, lotChange, ymdDate, sign) {
+function adjustLotStateDataItemForLotChange(lotState, lotChange, sign) {
     const lotStateDataItem = getLotStateDataItem(lotState, true);
 
-    lotStateDataItem.ymdDate = getYMDDateString(ymdDate);
+    const { previousBaseValues } = lotStateDataItem;
 
-    const oldQuantityBaseValue = lotStateDataItem.quantityBaseValue;
-    lotStateDataItem.quantityBaseValue += sign * lotChange.quantityBaseValue;
-    if (!lotChange.isSplitMerge) {
-        if (oldQuantityBaseValue) {
-            lotStateDataItem.costBasisBaseValue = Math.round(lotStateDataItem.quantityBaseValue * lotStateDataItem.costBasisBaseValue / oldQuantityBaseValue);
+    if (sign > 0) {
+        // add
+        lotStateDataItem.previousBaseValues = previousBaseValues.slice();
+        lotStateDataItem.previousBaseValues.push([ lotStateDataItem.quantityBaseValue, lotStateDataItem.costBasisBaseValue ]);
+
+        const oldQuantityBaseValue = lotStateDataItem.quantityBaseValue;
+        lotStateDataItem.quantityBaseValue += lotChange.quantityBaseValue;
+        if (!lotChange.isSplitMerge) {
+            if (oldQuantityBaseValue) {
+                lotStateDataItem.costBasisBaseValue = Math.round(lotStateDataItem.quantityBaseValue * lotStateDataItem.costBasisBaseValue / oldQuantityBaseValue);
+            }
+            else {
+                lotStateDataItem.costBasisBaseValue = lotChange.costBasisBaseValue || 0;
+            }
         }
         else {
-            lotStateDataItem.costBasisBaseValue = lotChange.costBasisBaseValue || 0;
+            if (lotChange.costBasisBaseValue) {
+                lotStateDataItem.costBasisBaseValue = lotChange.costBasisBaseValue;
+            }
+        }
+    }
+    else {
+        // Just pop the last previous baseValues...
+        if (previousBaseValues.length) {
+            [ lotStateDataItem.quantityBaseValue, lotStateDataItem.costBasisBaseValue ] = previousBaseValues[previousBaseValues.length - 1];
+            lotStateDataItem.previousBaseValues = previousBaseValues.slice(0, previousBaseValues.length - 1);
         }
     }
 
@@ -225,13 +235,11 @@ function adjustLotStateDataItemForLotChange(lotState, lotChange, ymdDate, sign) 
  * or removed being in the lot state.
  * @param {LotState|LotStateDataItem} lotState 
  * @param {LotChange|LotChangeDataItem} lotChange 
- * @param {YMDDate|string}  ymdDate The date for the lot state, if <code>undefined</code> then
- * the state's date will be <code>undefined</code>.
  * @returns {LotStateDataItem}
  * @throws {Error}
  */
-export function addLotChangeToLotStateDataItem(lotState, lotChange, ymdDate) {
-    return adjustLotStateDataItemForLotChange(lotState, lotChange, ymdDate, 1);
+export function addLotChangeToLotStateDataItem(lotState, lotChange) {
+    return adjustLotStateDataItemForLotChange(lotState, lotChange, 1);
 }
 
 
@@ -240,11 +248,9 @@ export function addLotChangeToLotStateDataItem(lotState, lotChange, ymdDate) {
  * from the lot state. This is the opposite of {@link addLotChangeToLotStateDataItem}.
  * @param {LotState|LotStateDataItem} lotState 
  * @param {LotChange|LotChangeDataItem} lotChange 
- * @param {YMDDate|string}  ymdDate The date for the lot state, if <code>undefined</code> then
- * the state's date will be <code>undefined</code>.
  * @returns {LotStateDataItem}
  * @throws {Error}
  */
-export function removeLotChangeFromLotStateDataItem(lotState, lotChange, ymdDate) {
-    return adjustLotStateDataItemForLotChange(lotState, lotChange, ymdDate, -1);
+export function removeLotChangeFromLotStateDataItem(lotState, lotChange) {
+    return adjustLotStateDataItemForLotChange(lotState, lotChange, -1);
 }

@@ -2,6 +2,7 @@ import * as T from './Transactions';
 import * as LS from './LotStates';
 import * as A from './Accounts';
 import * as ASTH from './AccountingSystemTestHelpers';
+import * as ACSTH from './AccountStateTestHelpers';
 import { YMDDate } from '../util/YMDDate';
 import { Ratio } from '../util/Ratios';
 
@@ -406,45 +407,6 @@ test('TransactionManager-validateSplits', async () => {
 
 
     //
-    // Lots check.
-/*    const lotA = { purchaseYMDDate: new YMDDate('2019-01-23'), quantityBaseValue: 12345, costBasisBaseValue: 98765 };
-    const lotB = { purchaseYMDDate: new YMDDate('2019-01-24'), quantityBaseValue: 98765, costBasisBaseValue: 44455 };
-
-
-    // This doesn't work because we're not using Account.accountState anymore...
-    await accountManager.asyncModifyAccount({
-        id: sys.aaplBrokerageAId,
-        accountState: {
-            ymdDate: new YMDDate('2019-10-01'),
-            lots: [lotA, lotB],
-        }
-    });
-
-    const lotC = { purchaseYMDDate: new YMDDate('2019-10-11'), quantityBaseValue: 555555, costBasisBaseValue: 5555 };
-    const lotD = { purchaseYMDDate: new YMDDate('2019-10-12'), quantityBaseValue: 44444, costBasisBaseValue: 4444 };
-    expect(manager.validateSplits([
-        { accountId: sys.brokerageAId, quantityBaseValue: -70000, },
-        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, lotOldChanges: [[lotC]], },
-    ])).toBeUndefined();
-
-    console.log('brokerageAId: ' + sys.brokerageAId);
-    console.log('aaplBrokerageAId: ' + sys.aaplBrokerageAId);
-    expect(manager.validateSplits([
-        { accountId: sys.brokerageAId, quantityBaseValue: -70000, },
-        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, lotOldChanges: [[lotC, lotA]], },
-    ])).toBeUndefined();
-    expect(manager.validateSplits([
-        { accountId: sys.brokerageAId, quantityBaseValue: -70000, },
-        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, lotOldChanges: [[lotD, lotC]], },
-    ])).toBeInstanceOf(Error);
-
-    expect(manager.validateSplits([
-        { accountId: sys.brokerageAId, quantityBaseValue: -70000, },
-        { accountId: sys.aaplBrokerageAId, quantityBaseValue: 70000, },
-    ])).toBeInstanceOf(Error);
-*/
-
-    //
     // Currency exchange.
     const accountManager = accountingSystem.getAccountManager();
     const pricedItemManager = accountingSystem.getPricedItemManager();
@@ -524,23 +486,13 @@ test('TransactionManager-add_modify', async () => {
 
     let addEventArgs;
     manager.on('transactionsAdd', (arg) => addEventArgs = arg);
-/*
-    const lotC1 = { purchaseYMDDate: '2019-10-11', quantityBaseValue: 12345, costBasisBaseValue: 98765 };
-    const lotC2 = { purchaseYMDDate: '2019-10-12', quantityBaseValue: 98765, costBasisBaseValue: 44455 };
-    const settingsC = {
-        ymdDate: '2019-10-11',
-        splits: [
-            { accountId: sys.brokerageAId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -500000, },
-            { accountId: sys.aaplBrokerageAId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 500000, lotOldChanges: [[lotC1], [lotC2]]},
-        ]
-    };
 
-    const result = await manager.asyncAddTransactions([settingsB, settingsC]);
-    const [ transactionB, transactionC ] = result;
+    const result = await manager.asyncAddTransactions([settingsB]);
+    const [ transactionB ] = result;
     settingsB.id = transactionB.id;
-    settingsC.id = transactionC.id;
+    //settingsC.id = transactionC.id;
     expect(transactionB).toEqual(settingsB);
-    expect(transactionC).toEqual(settingsC);
+    //expect(transactionC).toEqual(settingsC);
 
 
     // transactionsAdd event test
@@ -663,7 +615,6 @@ test('TransactionManager-add_modify', async () => {
     expect(transactionG).toEqual(settingsG);
 
     expect(await manager.asyncGetTransactionDateRange(sys.checkingId)).toEqual([ new YMDDate('2019-04-05'), new YMDDate('2019-10-20')]);
-*/
 });
 
 
@@ -878,7 +829,7 @@ test('Transactions-accountStateUpdates', async () => {
         [{ ymdDate: initialYMDDate, quantityBaseValue: sys.checkingOBQuantityBaseValue }]);
 
 
-    // TODO:
+
     // Test multiple splits to the same account...
     const settingsE = { 
         ymdDate: '2010-01-20', 
@@ -937,214 +888,333 @@ test('Transactions-lotTransactions', async () => {
 
     const { accountingSystem } = sys;
     const transactionManager = accountingSystem.getTransactionManager();
+    const lotManager = accountingSystem.getLotManager();
 
     const brokerageId = sys.brokerageAId;
     const aaplId = sys.aaplBrokerageAId;
+    const { aaplPricedItemId } = sys;
 
     expect(transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual(
-        { quantityBaseValue: 0, lotStates: [], lots: [] });
+        { quantityBaseValue: 0, lotStates: [] });
 
-    const lotA = { purchaseYMDDate: '2010-09-21', quantityBaseValue: 12345, costBasisBaseValue: 98765 };
-/*
+    
+    const lot1 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 1'});
+    const changeA = { lotId: lot1.id, quantityBaseValue: 10000, costBasisBaseValue: 200000, };
+
     const settingsA = {
-        ymdDate: lotA.purchaseYMDDate,
+        ymdDate: '2010-05-10',
         splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -98765, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 98765, lotOldChanges: [[lotA, ]]},
-        ],
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -changeA.costBasisBaseValue, },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: changeA.costBasisBaseValue, 
+                lotChanges: [ changeA ]
+            },
+        ]
     };
+    const lot1StateA = { lotId: lot1.id, quantityBaseValue: changeA.quantityBaseValue, costBasisBaseValue: changeA.costBasisBaseValue };
+    const aaplStateA = { ymdDate: settingsA.ymdDate, quantityBaseValue: lot1StateA.quantityBaseValue, lotStates: [lot1StateA]};
+
     const transA = await transactionManager.asyncAddTransaction(settingsA);
     settingsA.id = transA.id;
     expect(transA).toEqual(settingsA);
 
-    let currentQuantityBaseValue = lotA.costBasisBaseValue;
-    expect(transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual(
-        { ymdDate: settingsA.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA]});
-    
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateA);
 
-    const lotB1 = { purchaseYMDDate: '2010-09-25', quantityBaseValue: 22222, costBasisBaseValue: 33333 };
-    const lotB2 = { purchaseYMDDate: '2010-09-25', quantityBaseValue: 44444, costBasisBaseValue: 55555 };
+
+    //
+    // Multiple lots in single split.
+    const lot2 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 2'});
+    const lot3 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 3'});
+    const changeB1 = { lotId: lot2.id, quantityBaseValue: 20000, costBasisBaseValue: 60 * 20000 };
+    const changeB2 = { lotId: lot3.id, quantityBaseValue: 30000, costBasisBaseValue: 50 * 30000 };
     const settingsB = {
-        ymdDate: lotB1.purchaseYMDDate,
+        ymdDate: '2010-06-10',
         splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -(lotB1.costBasisBaseValue + lotB2.costBasisBaseValue), },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotB1.costBasisBaseValue, lotOldChanges: [[lotB1, ]]},
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotB2.costBasisBaseValue, lotOldChanges: [[lotB2, ]]},
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -(changeB1.costBasisBaseValue + changeB2.costBasisBaseValue), },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: changeB1.costBasisBaseValue + changeB2.costBasisBaseValue, 
+                lotChanges: [ changeB1, changeB2 ],
+            },
         ],
     };
 
-    const lotC = { purchaseYMDDate: '2010-10-23', quantityBaseValue: 66666, costBasisBaseValue: 77777 };
-    const settingsC = {
-        ymdDate: lotC.purchaseYMDDate,
-        splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotC.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotC.costBasisBaseValue, lotOldChanges: [[lotC, ]]},
-        ],
+    const lot1StateB = lot1StateA;
+    const lot2StateB = { lotId: lot2.id, quantityBaseValue: changeB1.quantityBaseValue, costBasisBaseValue: changeB1.costBasisBaseValue, };
+    const lot3StateB = { lotId: lot3.id, quantityBaseValue: changeB2.quantityBaseValue, costBasisBaseValue: changeB2.costBasisBaseValue, };
+
+    const aaplStateB = { 
+        ymdDate: settingsB.ymdDate, 
+        quantityBaseValue: lot1StateB.quantityBaseValue + lot2StateB.quantityBaseValue + lot3StateB.quantityBaseValue, 
+        lotStates: [ lot1StateB, lot2StateB, lot3StateB, ],
     };
-    const [ transB, transC ] = await transactionManager.asyncAddTransactions([settingsB, settingsC]);
+
+
+    const lot4 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 4'});
+    const changeC = { lotId: lot4.id, quantityBaseValue: 40000, costBasisBaseValue: 40 * 40000 };
+    const settingsC = {
+        ymdDate: '2010-06-20',
+        splits: [
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -changeC.costBasisBaseValue, },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: changeC.costBasisBaseValue, 
+                lotChanges: [ changeC ],
+            },
+        ]
+    };
+
+    const lot1StateC = lot1StateB;
+    const lot2StateC = lot2StateB;
+    const lot3StateC = lot3StateB;
+    const lot4StateC = { lotId: lot4.id, quantityBaseValue: changeC.quantityBaseValue, costBasisBaseValue: changeC.costBasisBaseValue, };
+    
+    const aaplStateC = { 
+        ymdDate: settingsC.ymdDate, 
+        quantityBaseValue: lot1StateC.quantityBaseValue + lot2StateC.quantityBaseValue + lot3StateC.quantityBaseValue + lot4StateC.quantityBaseValue,
+        lotStates: [ lot1StateC, lot2StateC, lot3StateC, lot4StateC, ],
+    };
+
+    const [transB, transC] = await transactionManager.asyncAddTransactions([settingsB, settingsC]);
     settingsB.id = transB.id;
     settingsC.id = transC.id;
+    expect(transB).toEqual(settingsB);
+    expect(transC).toEqual(settingsC);
 
-    currentQuantityBaseValue += lotB1.costBasisBaseValue + lotB2.costBasisBaseValue;
-    currentQuantityBaseValue += lotC.costBasisBaseValue;
-    expect(transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual(
-        { ymdDate: settingsC.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotB2, lotC]});
-    // const lotA = { purchaseYMDDate: '2010-09-21', quantityBaseValue: 12345, costBasisBaseValue: 98765 };
-    // const lotB1 = { purchaseYMDDate: '2010-09-25', quantityBaseValue: 22222, costBasisBaseValue: 33333 };
-    // const lotB2 = { purchaseYMDDate: '2010-09-25', quantityBaseValue: 44444, costBasisBaseValue: 55555 };
-    // const lotC = { purchaseYMDDate: '2010-10-23', quantityBaseValue: 66666, costBasisBaseValue: 77777 };
-    
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateC);
 
-    //
-    // Test Add transaction with date between existing dates.
-    const lotD = { purchaseYMDDate: '2010-10-01', quantityBaseValue: 8888, costBasisBaseValue: 9999, };
+    const [ accountStateBTransB ] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transB.id);
+    expect(ACSTH.cleanAccountState(accountStateBTransB)).toEqual(aaplStateB);
+
+
+    const lot5 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 4'});
+    const changeD = { lotId: lot5.id, quantityBaseValue: 50000, costBasisBaseValue: 30 * 50000 };
     const settingsD = {
-        ymdDate: lotD.purchaseYMDDate,
+        ymdDate: '2010-06-05',
         splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotD.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotD.costBasisBaseValue, lotOldChanges: [[lotD, ]]},
-        ],
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -changeD.costBasisBaseValue, },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: changeD.costBasisBaseValue, 
+                lotChanges: [ changeD ],
+            },
+        ]
     };
 
-    const lotE = { purchaseYMDDate: '2010-11-12', quantityBaseValue: 232323, costBasisBaseValue: 232323, };
-    const settingsE = {
-        ymdDate: lotE.purchaseYMDDate,
-        splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotE.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotE.costBasisBaseValue, lotOldChanges: [[lotE, ]]},
-        ],
+    const lot1StateD = lot1StateC;
+    const lot2StateD = lot2StateC;
+    const lot3StateD = lot3StateC;
+    const lot4StateD = lot4StateC;
+    const lot5StateD = { lotId: lot5.id, quantityBaseValue: changeD.quantityBaseValue, costBasisBaseValue: changeD.costBasisBaseValue, };
+
+    const aaplStateD = { 
+        ymdDate: settingsC.ymdDate, 
+        quantityBaseValue: lot1StateD.quantityBaseValue + lot5StateD.quantityBaseValue + lot2StateD.quantityBaseValue 
+            + lot3StateD.quantityBaseValue + lot4StateD.quantityBaseValue,
+        lotStates: [ lot1StateD, lot5StateD, lot2StateD, lot3StateD, lot4StateD, ],
     };
-    const [ transE, transD ] = await transactionManager.asyncAddTransactions([settingsE, settingsD ]);
+
+    const transD = await transactionManager.asyncAddTransaction(settingsD);
     settingsD.id = transD.id;
+    expect(transD).toEqual(settingsD);
+
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateD);
+
+    // Now let's check the account states for the transactions.
+    const [accountStateDTransC] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transC.id);
+    expect(ACSTH.cleanAccountState(accountStateDTransC)).toEqual(aaplStateD);
+
+
+    // Let's check the caching while we're at it.
+    const lot1StateDTransD = lot1StateA;
+    const lot5StateDTransD = lot5StateD;
+    const aaplStateDTransD = {
+        ymdDate: settingsD.ymdDate,
+        quantityBaseValue: lot1StateDTransD.quantityBaseValue + lot5StateDTransD.quantityBaseValue,
+        lotStates: [ lot1StateDTransD, lot5StateDTransD ],
+    };
+
+    const [accountStateDTransD] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transD.id);
+    expect(ACSTH.cleanAccountState(accountStateDTransD)).toEqual(aaplStateDTransD);
+
+
+    const aaplStateDTransB = { 
+        ymdDate: settingsB.ymdDate, 
+        quantityBaseValue: lot1StateB.quantityBaseValue + lot5StateDTransD.quantityBaseValue + lot2StateB.quantityBaseValue + lot3StateB.quantityBaseValue, 
+        lotStates: [ lot1StateB, lot5StateDTransD, lot2StateB, lot3StateB, ],
+    };
+    const [accountStateDTransB] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transB.id);
+    expect(ACSTH.cleanAccountState(accountStateDTransB)).toEqual(aaplStateDTransB);
+
+
+    const [accountStateDTransDBefore] = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(aaplId, transD.id);
+    expect(ACSTH.cleanAccountState(accountStateDTransDBefore)).toEqual(aaplStateA);
+
+    const [accountStateDTransA] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transA.id);
+    expect(ACSTH.cleanAccountState(accountStateDTransA)).toEqual(aaplStateA);
+
+
+    //
+    // Test Modify
+    //
+
+    // Modify lot 5.
+    const changeE = { lotId: lot5.id, quantityBaseValue: 60000, costBasisBaseValue: 30 * 60000 };
+    const settingsE = {
+        id: transD.id,
+        splits: [
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -changeE.costBasisBaseValue, },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: changeE.costBasisBaseValue, 
+                lotChanges: [ changeE ],
+            },
+        ]
+    };
+    const transE = await transactionManager.asyncModifyTransaction(settingsE);
     settingsE.id = transE.id;
+    settingsE.ymdDate = transD.ymdDate;
+    expect(transE).toEqual(settingsE);
 
-    currentQuantityBaseValue += lotD.costBasisBaseValue;
-    currentQuantityBaseValue += lotE.costBasisBaseValue;
-    expect(transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual(
-        { ymdDate: settingsE.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotB2, lotD, lotC, lotE]});
+    const lot1StateE = lot1StateD;
+    const lot2StateE = lot2StateD;
+    const lot3StateE = lot3StateD;
+    const lot4StateE = lot4StateD;
+    const lot5StateE = { lotId: lot5.id, quantityBaseValue: changeE.quantityBaseValue, costBasisBaseValue: changeE.costBasisBaseValue, };
 
-    // const lotA = { purchaseYMDDate: '2010-09-21', quantityBaseValue: 12345, costBasisBaseValue: 98765 };
-    // const lotB1 = { purchaseYMDDate: '2010-09-25', quantityBaseValue: 22222, costBasisBaseValue: 33333 };
-    // const lotB2 = { purchaseYMDDate: '2010-09-25', quantityBaseValue: 44444, costBasisBaseValue: 55555 };
-    // const lotC = { purchaseYMDDate: '2010-10-23', quantityBaseValue: 66666, costBasisBaseValue: 77777 };
-    // const lotD = { purchaseYMDDate: '2010-10-01', quantityBaseValue: 8888, costBasisBaseValue: 9999, };
-    // const lotE = { purchaseYMDDate: '2010-11-12', quantityBaseValue: 232323, costBasisBaseValue: 232323, };
-
-    //
-    // Test modify D and E
-    const lotDa = { purchaseYMDDate: lotD.purchaseYMDDate, quantityBaseValue: 9999, costBasisBaseValue: 8888, };
-    const settingsDa = {
-        id: transD.id,
-        splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotDa.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotDa.costBasisBaseValue, lotOldChanges: [[lotDa, ]]},
-        ]
+    const aaplStateE = { 
+        ymdDate: settingsC.ymdDate, 
+        quantityBaseValue: lot1StateE.quantityBaseValue + lot5StateE.quantityBaseValue 
+            + lot2StateE.quantityBaseValue + lot3StateE.quantityBaseValue + lot4StateE.quantityBaseValue, 
+        lotStates: [ lot1StateE, lot5StateE, lot2StateE, lot3StateE, lot4StateE, ],
     };
-    await transactionManager.asyncModifyTransactions(settingsDa);
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateE);
 
-    currentQuantityBaseValue += lotDa.costBasisBaseValue - lotD.costBasisBaseValue;
-    expect(await transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual(
-        { ymdDate: settingsE.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotB2, lotDa, lotC, lotE]});
-
-
-    const lotDb = { purchaseYMDDate: '2010-10-31', quantityBaseValue: 9999, costBasisBaseValue: 8888, };
-    const settingsDb = {
-        id: transD.id,
-        ymdDate: lotDb.purchaseYMDDate,
-        splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotDb.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotDb.costBasisBaseValue, lotOldChanges: [[lotDb, ]]},
-        ]
+    const lot1StateETransD = lot1StateA;
+    const lot5StateETransD = lot5StateE;
+    const aaplStateETransD = {
+        ymdDate: settingsD.ymdDate,
+        quantityBaseValue: lot1StateETransD.quantityBaseValue + lot5StateETransD.quantityBaseValue,
+        lotStates: [ lot1StateETransD, lot5StateETransD ],
     };
-    await transactionManager.asyncModifyTransactions(settingsDb);
-    expect(await transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual(
-        { ymdDate: settingsE.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotB2, lotC, lotDb, lotE]});
+
+    const [accountStateETransD] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transD.id);
+    expect(ACSTH.cleanAccountState(accountStateETransD)).toEqual(aaplStateETransD);
 
 
-    // Test remove Db
-    await transactionManager.asyncRemoveTransactions(transD.id);
-
-    currentQuantityBaseValue -= lotDb.costBasisBaseValue;
-    expect(await transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual(
-        { ymdDate: settingsE.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotB2, lotC, lotE]});
-    
-
-    //
-    // Test lot modification transactions...
-
-    // const lotA = { purchaseYMDDate: '2010-09-21', quantityBaseValue: 12345, costBasisBaseValue: 98765 };
-    // const lotB1 = { purchaseYMDDate: '2010-09-25', quantityBaseValue: 22222, costBasisBaseValue: 33333 };
-    // const lotB2 = { purchaseYMDDate: '2010-09-25', quantityBaseValue: 44444, costBasisBaseValue: 55555 };
-    // const lotC = { purchaseYMDDate: '2010-10-23', quantityBaseValue: 66666, costBasisBaseValue: 77777 };
-    // const lotE = { purchaseYMDDate: '2010-11-12', quantityBaseValue: 232323, costBasisBaseValue: 232323, };
-
-    // Sell lotB2
-    const sellB2QuantitytBaseValue = 123456;
+    // Sell part of lot 5
+    const changeF = { lotId: lot5.id, quantityBaseValue: -20000, };
+    const changeFPrice = 45;
     const settingsF = {
-        ymdDate: '2010-12-11',
+        ymdDate: '2010-06-25',
         splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: sellB2QuantitytBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -sellB2QuantitytBaseValue, lotOldChanges: [[undefined, lotB2]]},
-        ],
-    };
-    const transF = await transactionManager.asyncAddTransactions(settingsF);
-    settingsF.id = transF.id;
-
-    currentQuantityBaseValue -= sellB2QuantitytBaseValue;
-    expect(await transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual(
-        { ymdDate: settingsF.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotC, lotE]});
-
-
-    // Modify lotC
-    const sellCaQuantityBaseValue = 54321;
-    const lotCa = { purchaseYMDDate: '2010-10-23', quantityBaseValue: 33333, costBasisBaseValue: 44444 };
-    const settingsG = {
-        ymdDate: '2010-12-23',
-        splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: sellCaQuantityBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -sellCaQuantityBaseValue, lotOldChanges: [[lotCa, lotC]]},
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -changeF.quantityBaseValue * changeFPrice, },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: changeF.quantityBaseValue * changeFPrice, 
+                lotChanges: [ changeF ],
+            },
         ]
     };
-    const transG = await transactionManager.asyncAddTransactions(settingsG);
-    settingsG.id = transG.id;
 
-    currentQuantityBaseValue -= sellCaQuantityBaseValue;
-    expect(await transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual(
-        { ymdDate: settingsG.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotCa, lotE]});
+    const lot1StateF = lot1StateE;
+    const lot2StateF = lot2StateE;
+    const lot3StateF = lot3StateE;
+    const lot4StateF = lot4StateE;
+    const lot5StateF = { 
+        lotId: lot5.id, 
+        quantityBaseValue: lot5StateE.quantityBaseValue + changeF.quantityBaseValue, 
+        costBasisBaseValue: Math.round((lot5StateE.quantityBaseValue + changeF.quantityBaseValue) 
+            * lot5StateD.costBasisBaseValue / lot5StateD.quantityBaseValue), 
+    };
+
+    const aaplStateF = { 
+        ymdDate: settingsF.ymdDate, 
+        quantityBaseValue: lot1StateF.quantityBaseValue + lot5StateF.quantityBaseValue 
+            + lot2StateF.quantityBaseValue + lot3StateF.quantityBaseValue + lot4StateF.quantityBaseValue,
+        lotStates: [ lot1StateF, lot5StateF, lot2StateF, lot3StateF, lot4StateF, ],
+    };
+
+    const transF = await transactionManager.asyncAddTransaction(settingsF);
+    settingsF.id = transF.id;
+    expect(transF).toEqual(settingsF);
+
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateF);
+
+    const [accountStateFTransC] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transC.id);
+    expect(ACSTH.cleanAccountState(accountStateFTransC)).toEqual(aaplStateE);
+
+
+    // Sell all of lot 5
+    const changeG = { lotId: lot5.id, quantityBaseValue: -lot5StateF.quantityBaseValue, };
+    const changeGPrice = 50;
+    const settingsG = {
+        ymdDate: '2010-06-30',
+        splits: [
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -changeG.quantityBaseValue * changeGPrice, },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: changeG.quantityBaseValue * changeGPrice, 
+                lotChanges: [ changeG ],
+            },
+        ]
+    };
+
+    const lot1StateG = lot1StateF;
+    const lot2StateG = lot2StateF;
+    const lot3StateG = lot3StateF;
+    const lot4StateG = lot4StateF;
+
+    const aaplStateG = { 
+        ymdDate: settingsG.ymdDate, 
+        quantityBaseValue: lot1StateG.quantityBaseValue
+            + lot2StateG.quantityBaseValue + lot3StateG.quantityBaseValue + lot4StateG.quantityBaseValue,
+        lotStates: [ lot1StateG, lot2StateG, lot3StateG, lot4StateG, ],
+    };
+
+    const transG = await transactionManager.asyncAddTransaction(settingsG);
+    settingsG.id = transG.id;
+    expect(transG).toEqual(settingsG);
+
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateG);
+
+    const [accountStateGTransC] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transC.id);
+    expect(ACSTH.cleanAccountState(accountStateGTransC)).toEqual(aaplStateE);
+
 
     //
-    // Test sameDayOrder for multiple same day transactions affecting the same lots.
-    // The buy
-    const lotF = { purchaseYMDDate: '2010-12-23', quantityBaseValue: 22222, costBasisBaseValue: 11111 };
-    const settingsH = {
-        ymdDate: '2010-12-23',
-        sameDayOrder: 0,
-        splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotF.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotF.costBasisBaseValue, lotOldChanges: [[lotF, ]]},
-        ],
-    };
+    // Remove
+    const transBRemove = await transactionManager.asyncRemoveTransactions(transB.id);
+    expect(transBRemove).toEqual(transB);
 
-    // The partial sell
-    const sellFaQuantityBaseValue = 1234;
-    const lotFa = { purchaseYMDDate: '2010-12-23', quantityBaseValue: 11111, costBasisBaseValue: 1212 };
-    const settingsI = {
-        ymdDate: '2010-12-23',
-        sameDayOrder: 1,
-        splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: sellFaQuantityBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -sellFaQuantityBaseValue, lotOldChanges: [[lotFa, lotF ]]},
-        ],
-    };
-    const [ transI, transH ] = await transactionManager.asyncAddTransactions([settingsI, settingsH]);
-    settingsH.id = transH.id;
-    settingsI.id = transI.id;
+    
+    const lot1StateH = lot1StateG;
+    const lot4StateH = lot4StateG;
 
-    currentQuantityBaseValue += lotF.costBasisBaseValue;
-    currentQuantityBaseValue -= sellFaQuantityBaseValue;
-    expect(await transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual(
-        { ymdDate: settingsI.ymdDate, quantityBaseValue: currentQuantityBaseValue, lots: [lotA, lotB1, lotCa, lotE, lotFa]});
-*/
+    const aaplStateH = { 
+        ymdDate: settingsG.ymdDate, 
+        quantityBaseValue: lot1StateH.quantityBaseValue + lot4StateH.quantityBaseValue,
+        lotStates: [ lot1StateH, lot4StateH, ],
+    };
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateH);
+
+    const aaplStateHTransF = {
+        ymdDate: settingsF.ymdDate, 
+        quantityBaseValue: lot1StateF.quantityBaseValue + lot5StateF.quantityBaseValue 
+            + lot4StateF.quantityBaseValue,
+        lotStates: [ lot1StateF, lot5StateF, lot4StateF, ],
+    };
+    const [accountStateHTransF] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transF.id);
+    expect(ACSTH.cleanAccountState(accountStateHTransF)).toEqual(aaplStateHTransF);
+
 });
 
 

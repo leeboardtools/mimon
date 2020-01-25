@@ -67,6 +67,9 @@
     "LotManager-remove_no_id": ["The lot cannot be deleted. An item with id '", "' was not found."],
     "LotManager-modify_no_id": ["The lot could not be modified. An item with id '", "' was not found."],
 
+    "LotState-remove_split_no_state": "The split could not be removed, the lot state is missing.",
+    "AccountState-remove_lot_missing_lot_state": "The split could not be removed, the lot state history is missing.",
+
     "PricedItemType-CURRENCY": "Currency",
     "PricedItemType-SECURITY": "Security",
     "PricedItemType-MUTUAL_FUND": "Mutual Fund",

@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events';
 import { userMsg, userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
-import { getLotDataItems, getLots } from './Lots';
 import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 import { SortedArray } from '../util/SortedArray';
 import { doSetsHaveSameElements } from '../util/DoSetsHaveSameElements';
@@ -506,7 +505,7 @@ class AccountStatesUpdater {
                     accountState = accountStates[accountStates.length - 1];
                 }
                 else {
-                    accountState = { lots: [] };
+                    accountState = { lotStates: [] };
                 }
 
                 const newAccountStatesByOrder = accountEntry.accountStatesByOrder.slice(0, oldestIndex);
@@ -519,10 +518,10 @@ class AccountStatesUpdater {
                     const accountStates = [ accountState ];
                     newAccountStatesByOrder.push(accountStates);
 
-                    const { id } = transactionKey;
+                    const { id, ymdDate } = transactionKey;
                     if (!newSplits) {
                         const transactionDataItem = await this._manager.asyncGetTransactionDataItemsWithIds(id);
-                        const { splits } = transactionDataItem;
+                        const { splits, ymdDate } = transactionDataItem;
                         splits.forEach((split) => {
                             if (split.accountId === accountId) {
                                 accountState = AS.addSplitToAccountStateDataItem(accountState, split, ymdDate);
@@ -728,6 +727,7 @@ export class TransactionManager extends EventEmitter {
             let workingAccountState = this.getCurrentAccountStateDataItem(accountId);
 
             const { sortedTransactionKeys, accountStatesByOrder, accountStatesByTransactionId } = accountEntry;
+
             for (let i = sortedTransactionKeys.length - 1; i >= 0; --i) {
                 const { id } = sortedTransactionKeys[i];
                 if (accountStatesByOrder[i]) {                    

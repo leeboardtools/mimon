@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
-import { userMsg, userError } from '../util/UserMessages';
+import { userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
-import { getYMDDate, getYMDDateString } from '../util/YMDDate';
-import { deepEqual } from 'assert';
+
+
 
 /**
  * @typedef {object} LotDataItem
@@ -19,86 +19,20 @@ import { deepEqual } from 'assert';
  */
 
 /**
- * Retrieves a {@link Lot} representation of a {@link LotDataItem}, avoiding copying if possible.
- * @param {LotDataItem|Lot} lotDataItem 
- * @param {boolean} alwaysCopy 
- * @returns {Lot}
- */
-export function getLot2(lotDataItem, alwaysCopy) {
-    if (lotDataItem) {
-        if (alwaysCopy) {
-            return Object.assign({}, lotDataItem);
-        }
-    }
-
-    return lotDataItem;
-}
-
-/**
- * Retrieves a {@link LotDataItem} representation of a {@link Lot}, avoiding copying if possible.
- * @function
- * @param {LotDataItem|Lot} lot
- * @param {boolean} alwaysCopy 
- * @returns {Lot}
- */
-export const getLotDataItem2 = getLot2;
-
-
-/**
- * @typedef {object} Lot
- * @property {YMDDate}  purchaseYMDDate The purchase date of the lot.
- * @property {number}   quantityBaseValue   The base value of the quantity of the lot. The {@link QuantityDefinition} is the quantity
- * definition of the lot of the account the lot belongs to.
- * @property {number}   costBasisBaseValue  The base value of the cost basis of the lot. The {@link QuantityDefinition} and
- * {@link Currency} are from the lot of the account the lot belongs to.
- * @property {string}   [description]   The description of the lot.
- */
-
-/**
  * Retrieves a {@link Lot} representation of a {@link LotDataItem}
  * @param {(LotDataItem|Lot)} lotDataItem 
  * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
  * @returns {Lot}
  */
-// TODELETE
 export function getLot(lotDataItem, alwaysCopy) {
     if (lotDataItem) {
-        const purchaseYMDDate = getYMDDate(lotDataItem.purchaseYMDDate);
-        if (alwaysCopy || (purchaseYMDDate !== lotDataItem.purchaseYMDDate)) {
-            const lot = Object.assign({}, lotDataItem);
-            lot.purchaseYMDDate = purchaseYMDDate;
-            return lot;
+        if (alwaysCopy) {
+            return Object.assign({}, lotDataItem);
         }
     }
     return lotDataItem;
 }
 
-
-// TODELETE
-function checkFirstDefinedEntry(array, callback) {
-    for (let i = 0; i < array.length; ++i) {
-        if ((array[i] !== undefined) && (array[i] !== null)) {
-            return callback(i);
-        }
-    }
-}
-
-/**
- * Array version of {@link getLot}.
- * @param {(LotDataItem[]|Lot[])} lotDataItems 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new array with new object will always be created.
- * @returns {Lot[]}
- */
-// TODELETE
-export function getLots(lotDataItems, alwaysCopy) {
-    if (lotDataItems) {
-        if (alwaysCopy
-         || checkFirstDefinedEntry(lotDataItems, (i) => (getLot(lotDataItems[i]) !== lotDataItems[i]))) {
-            return lotDataItems.map((lotDataItem) => getLot(lotDataItem, alwaysCopy));
-        }
-    }
-    return lotDataItems;
-}
 
 /**
  * Retrieves a {@link LotDataItem} representation of a {@link Lot}.
@@ -106,51 +40,7 @@ export function getLots(lotDataItems, alwaysCopy) {
  * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
  * @returns {LotDataItem}
  */
-// TODELETE
-export function getLotDataItem(lot, alwaysCopy) {
-    if (lot) {
-        const purchaseYMDDateString = getYMDDateString(lot.purchaseYMDDate);
-        if (alwaysCopy || (purchaseYMDDateString !== lot.purchaseYMDDate)) {
-            const lotDataItem = Object.assign({}, lot);
-            lotDataItem.purchaseYMDDate = purchaseYMDDateString;
-            return lotDataItem;
-        }
-    }
-    return lot;
-}
-
-/**
- * Array version of {@link getLotDataItem}
- * @param {(Lot[]|LotDataItem[])} lots 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new array with new objects will always be created.
- * @returns {LotDataItem[]}
- */
-// TODELETE
-export function getLotDataItems(lots, alwaysCopy) {
-    if (lots) {
-        if (alwaysCopy
-         || checkFirstDefinedEntry(lots, (i) => (getLotDataItem(lots[i]) !== lots[i]))) {
-            return lots.map((lot) => getLotDataItem(lot, alwaysCopy));
-        }
-    }
-    return lots;
-}
-
-/**
- * Returns a string representation of a {@link Lot} or {@link LotDataItem}. The string representation has
- * the properties in a fixed order, unlike JSON.stringify().
- * @param {Lot|LotDataItem} lot 
- * @returns {string}
- */
-// TODELETE
-export function getLotString(lot) {
-    const lotDataItem = getLotDataItem(lot);
-    let string = lotDataItem.purchaseYMDDate + '_' + lotDataItem.quantityBaseValue + '_' + lotDataItem.costBasisBaseValue;
-    if (lotDataItem.description) {
-        string += '_' + lotDataItem.description;
-    }
-    return string;
-}
+export const getLotDataItem = getLot;
 
 
 /**
@@ -222,7 +112,7 @@ export class LotManager extends EventEmitter {
      * @fires {LotManager~lotAdd}
      */
     async asyncAddLot(lot, validateOnly) {
-        const lotDataItem = getLotDataItem2(lot, true);
+        const lotDataItem = getLotDataItem(lot, true);
 
         const error = this._validate(lotDataItem);
         if (error) {
@@ -307,7 +197,7 @@ export class LotManager extends EventEmitter {
         }
 
         let newLotDataItem = Object.assign({}, oldLotDataItem, lot);
-        newLotDataItem = getLotDataItem2(newLotDataItem);
+        newLotDataItem = getLotDataItem(newLotDataItem);
 
         const error = this._validate(newLotDataItem);
         if (error) {

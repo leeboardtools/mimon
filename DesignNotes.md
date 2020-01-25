@@ -287,6 +287,7 @@ or do we keep the old one?
         - id
         - pricedItemId
         - description
+
     - The Lot state:
         - ymdDate
         - quantityBaseValue
@@ -302,14 +303,31 @@ or do we keep the old one?
     
     - For a purchase a lot split has:
         - accountId
-        - quantityBaseValue -> this becomes the costBasisBaseValue
+        - quantityBaseValue -> this must match the costBasisBaseValue of the Lot
         - lotId
-        - lotQuantityBaseValue
-        - pricedItemId
-        - Special rule: Can only have one purchase per lot.
     
     - For a sale a lot split has:
         - accountId
         - quantityBaseValue
         - lotId
-        - lotQuantityBaseValue - the quantity sold. Can lots go negative? I suppose so.
+        - lotQuantityBaseValue - the change in the lot state's quantityBaseValue.
+    
+    - For merge/split a lot split has:
+        - accountId
+        - [quantityBaseValue] This should be 0.
+        - lotId
+        - lotQuantityBaseValue - the change in the lot state's quantityBaseValue.
+        - isMergeSplit
+
+    - For a merge/split would need to be able to update the cost basis in case there is
+    a cash-in-lieu.
+        - Maybe a merge/split requires a new lot???
+        - Would just replace the old lot with a new lot that has the old lot's purchase date
+        and adjusted cost basis/quantity.
+
+
+- TODO:
+    - asyncAddTransactionValidate: Don't allow adding if not an add transaction and there is no add transaction.
+    - asyncRemoveTransactionValidate: Don't allow removal if the transaction is an add lot and there are future
+    transactions referring to the lot.
+

@@ -20,9 +20,9 @@ function testLotStateDataItem(lotIState) {
 //
 test('LotState-Data Items', () => {
     const stateA = {
-        ymdDate: new YMDDate(2019, 3, 4),
         quantityBaseValue: -4567,
         costBasisBaseValue: -1234,
+        previousBaseValues: [[1, 2], [3, 4]],
     };
     testLotStateDataItem(stateA);
 });
@@ -33,31 +33,31 @@ test('LotState-Data Items', () => {
 //
 test('LotState-add_remove_lotChange', () => {
     const stateA = {
-        ymdDate: new YMDDate('2019-10-12'),
         quantityBaseValue: 100000,
         costBasisBaseValue: 10000,
+        previousBaseValues: [],
     };
     const lotChangeA = { lotId: 1, quantityBaseValue: 100, };
-    const testA = L.addLotChangeToLotStateDataItem(stateA, lotChangeA, stateA.ymdDate);
+    const testA = L.addLotChangeToLotStateDataItem(stateA, lotChangeA);
     expect(testA).toEqual({
-        ymdDate: '2019-10-12',
         quantityBaseValue: 100100,
         costBasisBaseValue: 10010,
+        previousBaseValues: [ [stateA.quantityBaseValue, stateA.costBasisBaseValue] ],
     });
 
-    const revTestA = L.removeLotChangeFromLotStateDataItem(testA, lotChangeA, stateA.ymdDate);
+    const revTestA = L.removeLotChangeFromLotStateDataItem(testA, lotChangeA);
     expect(revTestA).toEqual(L.getLotStateDataItem(stateA));
 
 
     const lotChangeB = { lotId: 1, quantityBaseValue: 20000 - stateA.quantityBaseValue, isSplitMerge: true };
     const testB = L.addLotChangeToLotStateDataItem(stateA, lotChangeB, '2019-11-03');
     expect(testB).toEqual({
-        ymdDate: '2019-11-03',
         quantityBaseValue: 20000,
         costBasisBaseValue: 10000,
+        previousBaseValues: [ [stateA.quantityBaseValue, stateA.costBasisBaseValue] ],
     });
 
-    const revTestB = L.removeLotChangeFromLotStateDataItem(testB, lotChangeB, stateA.ymdDate);
+    const revTestB = L.removeLotChangeFromLotStateDataItem(testB, lotChangeB);
     expect(revTestB).toEqual(L.getLotStateDataItem(stateA));
 
 
@@ -65,15 +65,16 @@ test('LotState-add_remove_lotChange', () => {
     const lotChangeC = { lotId: 1, quantityBaseValue: 10000, costBasisBaseValue: 1000, };
     const testC = L.addLotChangeToLotStateDataItem(stateC, lotChangeC, '2010-04-05');
     expect(testC).toEqual({
-        ymdDate: '2010-04-05',
         quantityBaseValue: 10000,
         costBasisBaseValue: 1000,
+        previousBaseValues: [ [0, 0] ],
     });
 
     const revTestC = L.removeLotChangeFromLotStateDataItem(testC, lotChangeC);
     expect(revTestC).toEqual({
         quantityBaseValue: 0,
         costBasisBaseValue: 0,
+        previousBaseValues: [],
     });
 
 });

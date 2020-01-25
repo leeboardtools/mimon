@@ -3,17 +3,17 @@ import * as L from './Lots';
 import * as ASTH from './AccountingSystemTestHelpers';
 
 function testLotDataItems(lot) {
-    const dataItem = L.getLotDataItem2(lot);
+    const dataItem = L.getLotDataItem(lot);
 
     const string = JSON.stringify(dataItem);
     const jsonDataItem = JSON.parse(string);
     expect(jsonDataItem).toEqual(dataItem);
 
-    const lotBack = L.getLot2(jsonDataItem);
+    const lotBack = L.getLot(jsonDataItem);
     expect(lotBack).toEqual(lot);
 
-    expect(L.getLotDataItem2(dataItem) === dataItem).toBeTruthy();
-    expect(L.getLot2(lot) === lot).toBeTruthy();
+    expect(L.getLotDataItem(dataItem) === dataItem).toBeTruthy();
+    expect(L.getLot(lot) === lot).toBeTruthy();
 }
 
 
@@ -109,10 +109,16 @@ test('LotManager-other types', async () => {
         pricedItemId: settingsC.pricedItemId,
         description: 'A new description',
     };
-    await manager.asyncModifyLot({ id: settingsC.id, description: settingsCa.description }, true);
+    await manager.asyncModifyLot({
+        id: settingsC.id, 
+        description: settingsCa.description, 
+    }, true);
     expect(manager.getLotDataItemWithId(settingsC.id)).toEqual(settingsC);
 
-    const resultCa = await manager.asyncModifyLot({ id: settingsC.id, description: settingsCa.description });
+    const resultCa = await manager.asyncModifyLot({
+        id: settingsC.id, 
+        description: settingsCa.description, 
+    });
     const [ testCa, oldCa ] = resultCa;
     expect(testCa).toEqual(settingsCa);
     expect(oldCa).toEqual(settingsC);
