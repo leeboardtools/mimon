@@ -1,5 +1,4 @@
 import * as L from './LotStates';
-import { YMDDate } from '../util/YMDDate';
 
 function testLotStateDataItem(lotIState) {
     const dataItem = L.getLotStateDataItem(lotIState);
