@@ -303,7 +303,7 @@ test('asyncUpdatePricedItemPrices', async () => {
         currency: 'USD',
         ticker: 'AAPL',
     };
-    const pricedItemAAPL = await priceManager.asyncAddPricedItem(optionsAAPL);
+    const pricedItemAAPL = (await priceManager.asyncAddPricedItem(optionsAAPL)).newPricedItemDataItem;
     const localIdAAPL = pricedItemAAPL.id;
 
 
@@ -314,7 +314,7 @@ test('asyncUpdatePricedItemPrices', async () => {
         currency: 'USD',
         ticker: 'VOO',
     };
-    const pricedItemVOO = await priceManager.asyncAddPricedItem(optionsVOO);
+    const pricedItemVOO = (await priceManager.asyncAddPricedItem(optionsVOO)).newPricedItemDataItem;
     const localIdVOO = pricedItemVOO.id;
 
 
@@ -325,7 +325,7 @@ test('asyncUpdatePricedItemPrices', async () => {
         currency: 'USD',
         ticker: 'FSRPX',
     };
-    const pricedItemFSRPX = await priceManager.asyncAddPricedItem(optionsFSRPX);
+    const pricedItemFSRPX = (await priceManager.asyncAddPricedItem(optionsFSRPX)).newPricedItemDataItem;
     const localIdFSRPX = pricedItemFSRPX.id;
 
     const date1 = new YMDDate(2019, 8, 22);

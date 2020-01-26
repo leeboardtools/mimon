@@ -115,7 +115,7 @@ test('PricedItemManager-currencies', async () => {
     manager.on('pricedItemRemove', (arg) => removeEventArg = arg);
 
     // Add.
-    const itemA = await manager.asyncAddCurrencyPricedItem('BMD');
+    const itemA = (await manager.asyncAddCurrencyPricedItem('BMD')).newPricedItemDataItem;
     expect(manager.getCurrencyPricedItemDataItem('BMD')).toEqual(itemA);
 
     // pricedItemAdd event test
@@ -124,7 +124,7 @@ test('PricedItemManager-currencies', async () => {
 
 
     const quantityDefinitionB = getDecimalDefinition(-4);
-    const itemB = await manager.asyncAddCurrencyPricedItem('BMD', false, { quantityDefinition: quantityDefinitionB });
+    const itemB = (await manager.asyncAddCurrencyPricedItem('BMD', false, { quantityDefinition: quantityDefinitionB })).newPricedItemDataItem;
     expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB)).toEqual(itemB);
 
     expect(manager.getCurrencyPricedItemDataItem('BMD')).toEqual(itemA);
@@ -132,7 +132,9 @@ test('PricedItemManager-currencies', async () => {
 
     // Modify
     const quantityDefinitionC = getDecimalDefinition(-5);
-    const [itemC, oldItemC] = await manager.asyncModifyPricedItem({ id: itemB.id, quantityDefinition: quantityDefinitionC });
+    const result = await manager.asyncModifyPricedItem({ id: itemB.id, quantityDefinition: quantityDefinitionC });
+    const itemC = result.newPricedItemDataItem;
+    const oldItemC = result.oldPricedItemDataItem;
     expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB)).toBeUndefined();
     expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC)).toEqual(itemC);
 
@@ -143,7 +145,7 @@ test('PricedItemManager-currencies', async () => {
 
 
     // Remove.
-    const removedA = await manager.asyncRemovePricedItem(itemA.id);
+    const removedA = (await manager.asyncRemovePricedItem(itemA.id)).removedPricedItemDataItem;
     expect(manager.getCurrencyPricedItemDataItem('BMD')).toBeUndefined();
 
     // pricedItemRemove event test
@@ -179,27 +181,28 @@ test('PricedItemManager-other types', async () => {
         description: 'This is a security\'s description',
         ticker: 'ABC',
     };
-    const itemA = await manager.asyncAddPricedItem(optionsA);
+    const itemA = (await manager.asyncAddPricedItem(optionsA)).newPricedItemDataItem;
     expectPricedItemToMatch(itemA, optionsA);
 
     
     const optionsB = { type: PI.PricedItemType.MUTUAL_FUND, currency: 'JPY', quantityDefinition: getDecimalDefinition(-3), };
-    const itemB = await manager.asyncAddPricedItem(optionsB);
+    const itemB = (await manager.asyncAddPricedItem(optionsB)).newPricedItemDataItem;
     expectPricedItemToMatch(itemB, optionsB);
 
     
     const optionsC = { type: PI.PricedItemType.REAL_ESTATE, currency: 'EUR', quantityDefinition: getDecimalDefinition(0), };
-    const itemC = await manager.asyncAddPricedItem(optionsC);
+    const itemC = (await manager.asyncAddPricedItem(optionsC)).newPricedItemDataItem;
     expectPricedItemToMatch(itemC, optionsC);
 
     
     const optionsD = { type: PI.PricedItemType.PROPERTY, currency: 'USD', quantityDefinition: getDecimalDefinition(0), };
-    const itemD = await manager.asyncAddPricedItem(optionsD);
+    const itemD = (await manager.asyncAddPricedItem(optionsD)).newPricedItemDataItem;
     expectPricedItemToMatch(itemD, optionsD);
     expect(manager.getPricedItemDataItemWithId(itemD.id)).toEqual(itemD);
 
     // Validate only
-    const itemE = await manager.asyncAddPricedItem({ type: PI.PricedItemType.PROPERTY, currency: 'USD', quantityDefinition: getDecimalDefinition(0), }, true);
+    const itemE = await manager.asyncAddPricedItem({ type: PI.PricedItemType.PROPERTY, currency: 'USD', quantityDefinition: getDecimalDefinition(0), }, 
+        true);
     expect(itemE).toBeUndefined();
 
 
@@ -210,12 +213,12 @@ test('PricedItemManager-other types', async () => {
 
     const optionsA1 = Object.assign({}, optionsA);
     delete optionsA1.description;
-    const [itemA1] = await manager.asyncModifyPricedItem({ id: itemA.id, description: undefined });
+    const itemA1 = (await manager.asyncModifyPricedItem({ id: itemA.id, description: undefined })).newPricedItemDataItem;
     expectPricedItemToMatch(itemA1, optionsA1);
 
     const changeB1 = { id: itemB.id, currency: 'USD', quantityDefinition: getDecimalDefinition(-4), name: 'A name', description: 'A description', };
     const optionsB1 = Object.assign({}, optionsB, changeB1);
-    const [itemB1] = await manager.asyncModifyPricedItem(changeB1);
+    const itemB1 = (await manager.asyncModifyPricedItem(changeB1)).newPricedItemDataItem;
     expectPricedItemToMatch(itemB1, optionsB1);
 
 

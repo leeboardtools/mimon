@@ -252,7 +252,7 @@ export class PricedItemManager extends EventEmitter {
     async asyncSetupForUse() {
         let usdPricedItem = this.getCurrencyPricedItemDataItem('USD');
         if (!usdPricedItem) {
-            usdPricedItem = await this.asyncAddCurrencyPricedItem('USD');
+            usdPricedItem = (await this.asyncAddCurrencyPricedItem('USD')).newPricedItemDataItem;
         }
         this._currencyUSDPricedItemId = usdPricedItem.id;
         this._currencyUSDPricedItem = usdPricedItem;
@@ -261,7 +261,7 @@ export class PricedItemManager extends EventEmitter {
 
         let eurPricedItem = this.getCurrencyPricedItemDataItem('EUR');
         if (!eurPricedItem) {
-            eurPricedItem = await this.asyncAddCurrencyPricedItem('EUR');
+            eurPricedItem = (await this.asyncAddCurrencyPricedItem('EUR')).newPricedItemDataItem;
         }
         this._currencyEURPricedItemId = eurPricedItem.id;
         this._currencyEURPricedItem = eurPricedItem;
@@ -271,7 +271,7 @@ export class PricedItemManager extends EventEmitter {
         this._baseCurrency = this._accountingSystem.getBaseCurrency();
         let baseCurrencyPricedItem = this.getCurrencyPricedItemDataItem(this._baseCurrency);
         if (!baseCurrencyPricedItem) {
-            baseCurrencyPricedItem = await this.asyncAddCurrencyPricedItem(this._baseCurrency);
+            baseCurrencyPricedItem = (await this.asyncAddCurrencyPricedItem(this._baseCurrency)).newPricedItemDataItem;
         }
         this._currencyBasePricedItemId = baseCurrencyPricedItem.id;
         this._currencyBasePricedItem = baseCurrencyPricedItem;
@@ -421,7 +421,7 @@ export class PricedItemManager extends EventEmitter {
      * @param {(string|Currency)} currency 
      * @param {boolean} validateOnly 
      * @param {PricedItemDataItem} options 
-     * @returns {PricedItemDataItem}
+     * @returns {PricedItemManager~AddPricedItemResult|undefined}   <code>undefined</code> is returned if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {PricedItemManager~pricedItemAdd}
      */
@@ -442,10 +442,15 @@ export class PricedItemManager extends EventEmitter {
      */
 
     /**
+     * @typedef {object}    PricedItemManager~AddPricedItemResult
+     * @property {PricedItemDataItem}   newPricedItemDataItem
+     */
+
+    /**
      * Adds a priced item.
      * @param {(PricedItem|PricedItemDataItem)} pricedItem 
      * @param {boolean} validateOnly 
-     * @returns {PricedItemDataItem} Note that this object will not be the same as the pricedItem arg.
+     * @returns {PricedItemManager~AddPricedItemResult|undefined}   <code>undefined</code> is returned if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {PricedItemManager~pricedItemAdd}
      */
@@ -479,7 +484,7 @@ export class PricedItemManager extends EventEmitter {
         pricedItemDataItem = await this._asyncAddPricedItem(pricedItemDataItem);
         pricedItemDataItem = getPricedItemDataItem(pricedItemDataItem, true);
         this.emit('pricedItemAdd', { newPricedItemDataItem: pricedItemDataItem, });
-        return pricedItemDataItem;
+        return { newPricedItemDataItem: pricedItemDataItem, };
     }
 
     /**
@@ -490,10 +495,15 @@ export class PricedItemManager extends EventEmitter {
      */
 
     /**
+     * @typedef {object}    PricedItemManager~RemovePricedItemResult
+     * @property {PricedItemDataItem}   removedPricedItemDataItem
+     */
+
+    /**
      * Removes a priced item.
      * @param {number} id 
      * @param {boolean} validateOnly 
-     * @returns {PricedItemDataItem}    The priced item that was removed.
+     * @returns {PricedItemManager~RemovePricedItemResult|undefined}   <code>undefined</code> is returned if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {PricedItemManager~pricedItemRemove}
      */
@@ -523,7 +533,7 @@ export class PricedItemManager extends EventEmitter {
         await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems);
 
         this.emit('pricedItemRemove', { removedPricedItemDataItem: pricedItem });
-        return pricedItem;
+        return { removedPricedItemDataItem: pricedItem, };
     }
 
     /**
@@ -534,11 +544,19 @@ export class PricedItemManager extends EventEmitter {
      * @property {PricedItemDataItem}   oldPricedItemDataItem   The old priced item data item being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
      */
 
+
+    /**
+     * @typedef {object}    PricedItemManager~ModifyPricedItemResult
+     * @property {PricedItemDataItem}   newPricedItemDataItem
+     * @property {PricedItemDataItem}   oldPricedItemDataItem
+     */
+
     /**
      * Modifies an existing priced item. The type cannot be modified.
      * @param {(PricedItemData|PricedItem)} pricedItem The new priced item properties. The id property is required. For all other
      * properties, if the property is not included in pricedItem, the property will not be changed.
      * @param {boolean} validateOnly 
+     * @returns {PricedItemManager~ModifyPricedItemResult|undefined}   <code>undefined</code> is returned if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {PricedItemManager~pricedItemModify}
      */
@@ -587,7 +605,7 @@ export class PricedItemManager extends EventEmitter {
 
         newPricedItem = Object.assign({}, newPricedItem);
         this.emit('pricedItemModify', { newPricedItemDataItem: newPricedItem, oldPricedItemDataItem: oldPricedItem });
-        return [ newPricedItem, oldPricedItem ];
+        return { newPricedItemDataItem: newPricedItem, oldPricedItemDataItem: oldPricedItem };
     }
 }
 

@@ -44,7 +44,7 @@ test('LotManager-other types', async () => {
         pricedItemId: sys.aaplPricedItemId,
         description: 'Hello',
     };
-    const lotA = await manager.asyncAddLot(settingsA);
+    const lotA = (await manager.asyncAddLot(settingsA)).newLotDataItem;
     settingsA.id = lotA.id;
     expect(lotA).toEqual(settingsA);
 
@@ -62,7 +62,7 @@ test('LotManager-other types', async () => {
         addEventArgs = args;
     });
 
-    const lotB = await manager.asyncAddLot(settingsB);
+    const lotB = (await manager.asyncAddLot(settingsB)).newLotDataItem;
     settingsB.id = lotB.id;
     expect(lotB).toEqual(settingsB);
 
@@ -75,7 +75,7 @@ test('LotManager-other types', async () => {
         pricedItemId: sys.msftPricedItemId,
         description: 'Some MSFT',
     };
-    const lotC = await manager.asyncAddLot(settingsC);
+    const lotC = (await manager.asyncAddLot(settingsC)).newLotDataItem;
     settingsC.id = lotC.id;
     expect(lotC).toEqual(settingsC);
 
@@ -90,7 +90,7 @@ test('LotManager-other types', async () => {
         removeEventArgs = args;
     });
     expect(manager.getLotDataItemWithId(lotB.id)).toEqual(settingsB);
-    const removedB = await manager.asyncRemoveLot(lotB.id);
+    const removedB = (await manager.asyncRemoveLot(lotB.id)).removedLotDataItem;
     expect(manager.getLotDataItemWithId(lotB.id)).toBeUndefined();
     expect(removedB).toEqual(settingsB);
 
@@ -119,7 +119,8 @@ test('LotManager-other types', async () => {
         id: settingsC.id, 
         description: settingsCa.description, 
     });
-    const [ testCa, oldCa ] = resultCa;
+    const testCa = resultCa.newLotDataItem;
+    const oldCa = resultCa.oldLotDataItem;
     expect(testCa).toEqual(settingsCa);
     expect(oldCa).toEqual(settingsC);
 

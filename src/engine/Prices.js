@@ -145,10 +145,15 @@ export class PriceManager extends EventEmitter {
      */
 
     /**
+     * @typedef {object}    PriceManager~AddPricesResult
+     * @property {PriceDataItem[]}  newPriceDataItems
+     */
+
+    /**
      * Adds prices for a priced item. Existing prices with the same dates are replaced.
      * @param {number} pricedItemId 
      * @param {(Price|PriceDataItem|Price[]|PriceDataItem[])} prices 
-     * @returns {PriceDataItem[]}   An array of the newly added prices.
+     * @returns {PriceManager~AddPricesResult}
      * @fires {PriceManager~pricesAdd}
      */
     async asyncAddPrices(pricedItemId, prices) {
@@ -161,7 +166,7 @@ export class PriceManager extends EventEmitter {
             (priceDataItem) => getPriceDataItem(priceDataItem, true));
 
         this.emit('pricesAdd', { newPriceDataItems: result });
-        return result;
+        return { newPriceDataItems: result, };
     }
 
     /**
@@ -173,18 +178,23 @@ export class PriceManager extends EventEmitter {
      */
 
     /**
+     * @typedef {object}    PriceManager~RemovePricesResult
+     * @property {PriceDataItem[]}  removedPriceDataItems
+     */
+
+    /**
      * Removes prices for a priced item that are within a date range.
      * @param {number} pricedItemId 
      * @param {(YMDDate|string)} ymdDateA 
      * @param {(YMDDate|string)} [ymdDateB=ymdDateA]
-     * @returns {PriceDataItem[]}   The prices that were removed.
+     * @returns {PriceManager~RemovePricesResult}
      * @fires {PriceManager~pricesRemove}
      */
     async asyncRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB) {
         [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
         const prices = await this._handler.asyncRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB);
         this.emit('pricesRemove', { removedPriceDataItems: prices });
-        return prices;
+        return { removedPriceDataItems: prices, };
     }
 
 

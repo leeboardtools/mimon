@@ -410,13 +410,13 @@ test('TransactionManager-validateSplits', async () => {
     // Currency exchange.
     const accountManager = accountingSystem.getAccountManager();
     const pricedItemManager = accountingSystem.getPricedItemManager();
-    const cadPricedItemDataItem = await pricedItemManager.asyncAddCurrencyPricedItem('CAD');
+    const cadPricedItemDataItem = (await pricedItemManager.asyncAddCurrencyPricedItem('CAD')).newPricedItemDataItem;
     const cadCashAccountDataItem = (await accountManager.asyncAddAccount({
         parentAccountId: sys.currentAssetsId,
         type: A.AccountType.CASH,
         pricedItemId: cadPricedItemDataItem.id,
     })).newAccountDataItem;
-    const jpyPricedItemDataItem = await pricedItemManager.asyncAddCurrencyPricedItem('JPY');
+    const jpyPricedItemDataItem = (await pricedItemManager.asyncAddCurrencyPricedItem('JPY')).newPricedItemDataItem;
     const jpyCashAccountDataItem = (await accountManager.asyncAddAccount({
         parentAccountId: sys.currentAssetsId,
         type: A.AccountType.CASH,
@@ -550,7 +550,7 @@ test('TransactionManager-add_modify', async () => {
 
     const changesF1 = { id: settingsF.id, description: 'This is description F1', memo: 'This is memo F1', };
     const settingsF1 = Object.assign({}, settingsF, changesF1);
-    const transactionF1 = (await manager.asyncModifyTransactions(changesF1)).modifiedTransactionDataItem;
+    const transactionF1 = (await manager.asyncModifyTransactions(changesF1)).newTransactionDataItem;
     expect(transactionF1).toEqual(settingsF1);
 
 
@@ -575,7 +575,7 @@ test('TransactionManager-add_modify', async () => {
         ]
     };
     const settingsE1 = Object.assign({}, settingsE, changesE1);
-    const resultDE1 = (await manager.asyncModifyTransactions([changesD1, changesE1])).modifiedTransactionDataItems;
+    const resultDE1 = (await manager.asyncModifyTransactions([changesD1, changesE1])).newTransactionDataItems;
     expect(resultDE1).toEqual(expect.arrayContaining([settingsD1, settingsE1]));
 
     expect(await manager.asyncGetTransactionDateRange(sys.checkingId)).toEqual([ new YMDDate('2019-04-05'), new YMDDate('2019-10-15')]);
@@ -593,7 +593,7 @@ test('TransactionManager-add_modify', async () => {
         ymdDate: '2019-10-25',
     };
     const settingsE2 = Object.assign({}, settingsE1, changesE2);
-    const resultE2 = (await manager.asyncModifyTransactions(changesE2, true)).modifiedTransactionDataItem;
+    const resultE2 = (await manager.asyncModifyTransactions(changesE2, true)).newTransactionDataItem;
     expect(resultE2).toEqual(settingsE2);
     expect(await manager.asyncGetTransactionDataItemsWithIds(settingsE.id)).toEqual(settingsE1);
 
@@ -795,7 +795,7 @@ test('Transactions-accountStateUpdates', async () => {
 
     // Move C before B
     const ymdDateCa = '2010-01-04';
-    (await transactionManager.asyncModifyTransaction({ id: transC.id, ymdDate: ymdDateCa})).modifiedTransactionDataItem;
+    (await transactionManager.asyncModifyTransaction({ id: transC.id, ymdDate: ymdDateCa})).newTransactionDataItem;
     const checkingQuantityBaseValueCa = checkingQuantityBaseValueA + settingsC.splits[0].quantityBaseValue;
     const checkingQuantityBaseValueBa = checkingQuantityBaseValueCa + settingsB.splits[0].quantityBaseValue;
 
@@ -898,7 +898,7 @@ test('Transactions-lotTransactions', async () => {
         { quantityBaseValue: 0, lotStates: [] });
 
     
-    const lot1 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 1'});
+    const lot1 = (await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 1'})).newLotDataItem;
     const changeA = { lotId: lot1.id, quantityBaseValue: 10000, costBasisBaseValue: 200000, };
 
     const settingsA = {
@@ -925,8 +925,8 @@ test('Transactions-lotTransactions', async () => {
 
     //
     // Multiple lots in single split.
-    const lot2 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 2'});
-    const lot3 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 3'});
+    const lot2 = (await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 2'})).newLotDataItem;
+    const lot3 = (await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 3'})).newLotDataItem;
     const changeB1 = { lotId: lot2.id, quantityBaseValue: 20000, costBasisBaseValue: 60 * 20000 };
     const changeB2 = { lotId: lot3.id, quantityBaseValue: 30000, costBasisBaseValue: 50 * 30000 };
     const settingsB = {
@@ -953,7 +953,7 @@ test('Transactions-lotTransactions', async () => {
     };
 
 
-    const lot4 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 4'});
+    const lot4 = (await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 4'})).newLotDataItem;
     const changeC = { lotId: lot4.id, quantityBaseValue: 40000, costBasisBaseValue: 40 * 40000 };
     const settingsC = {
         ymdDate: '2010-06-20',
@@ -991,7 +991,7 @@ test('Transactions-lotTransactions', async () => {
     expect(ACSTH.cleanAccountState(accountStateBTransB)).toEqual(aaplStateB);
 
 
-    const lot5 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 4'});
+    const lot5 = (await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 4'})).newLotDataItem;
     const changeD = { lotId: lot5.id, quantityBaseValue: 50000, costBasisBaseValue: 30 * 50000 };
     const settingsD = {
         ymdDate: '2010-06-05',
@@ -1077,7 +1077,7 @@ test('Transactions-lotTransactions', async () => {
             },
         ]
     };
-    const transE = (await transactionManager.asyncModifyTransaction(settingsE)).modifiedTransactionDataItem;
+    const transE = (await transactionManager.asyncModifyTransaction(settingsE)).newTransactionDataItem;
     settingsE.id = transE.id;
     settingsE.ymdDate = transD.ymdDate;
     expect(transE).toEqual(settingsE);
@@ -1248,7 +1248,7 @@ test('Transactions-lotValidation', async () => {
     };
     await expect(transactionManager.asyncAddTransaction(settingsA)).rejects.toThrow();
 
-    const lot1 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 1'});
+    const lot1 = (await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 1'})).newLotDataItem;
     changeA.lotId = lot1.id;
 
     // valid quantityBaseValue
@@ -1281,7 +1281,7 @@ test('Transactions-lotValidation', async () => {
     await expect(transactionManager.asyncAddTransaction(settingsB)).rejects.toThrow();
 
 
-    const lot2 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 2'});
+    const lot2 = (await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 2'})).newLotDataItem;
     changeB.lotId = lot2.id;
     const transB = (await transactionManager.asyncAddTransaction(settingsB)).newTransactionDataItem;
 
@@ -1330,7 +1330,7 @@ test('Transactions-lotValidation', async () => {
 
     changeD.quantityBaseValue = 30000;
     changeD.costBasisBaseValue = 30000 * 20;
-    const transD = (await transactionManager.asyncModifyTransaction(settingsD)).modifiedTransactionDataItem;
+    const transD = (await transactionManager.asyncModifyTransaction(settingsD)).newTransactionDataItem;
     settingsD.ymdDate = transB.ymdDate;
     expect(transD).toEqual(settingsD);
 
@@ -1340,7 +1340,7 @@ test('Transactions-lotValidation', async () => {
 
 
     // Can't change lot id if lot is still in use.
-    const lot3 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 3'});
+    const lot3 = (await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 3'})).newLotDataItem;
     const changeE = Object.assign({}, changeD);
     changeE.lotId = lot3.id;
     const settingsE = {
@@ -1373,7 +1373,7 @@ test('Transactions-lotValidation', async () => {
             },
         ]
     };
-    const transF = (await transactionManager.asyncModifyTransaction(settingsF)).modifiedTransactionDataItem;
+    const transF = (await transactionManager.asyncModifyTransaction(settingsF)).newTransactionDataItem;
     expect(transF).toEqual(settingsF);
 
 

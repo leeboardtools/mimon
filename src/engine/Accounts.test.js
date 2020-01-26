@@ -179,31 +179,31 @@ test('AccountManager-add', async () => {
     const accountManager = accountingSystem.getAccountManager();
     const pricedItemManager = accountingSystem.getPricedItemManager();
 
-    const securityPricedItemA = await pricedItemManager.asyncAddPricedItem({
+    const securityPricedItemA = (await pricedItemManager.asyncAddPricedItem({
         type: PI.PricedItemType.SECURITY,
         currency: accountingSystem.getBaseCurrency(),
         quantityDefinition: getDecimalDefinition(-4),
         ticker: 'ABCD',
-    });
+    })).newPricedItemDataItem;
 
-    const mutualFundPricedItemA = await pricedItemManager.asyncAddPricedItem({
+    const mutualFundPricedItemA = (await pricedItemManager.asyncAddPricedItem({
         type: PI.PricedItemType.MUTUAL_FUND,
         currency: accountingSystem.getBaseCurrency(),
         quantityDefinition: getDecimalDefinition(-4),
         ticker: 'MFUND',
-    });
+    })).newPricedItemDataItem;
 
-    const realEstatePricedItemA = await pricedItemManager.asyncAddPricedItem({
+    const realEstatePricedItemA = (await pricedItemManager.asyncAddPricedItem({
         type: PI.PricedItemType.REAL_ESTATE,
         currency: accountingSystem.getBaseCurrency(),
         quantityDefinition: getDecimalDefinition(0),
-    });
+    })).newPricedItemDataItem;
 
-    const propertyPricedItemA = await pricedItemManager.asyncAddPricedItem({
+    const propertyPricedItemA = (await pricedItemManager.asyncAddPricedItem({
         type: PI.PricedItemType.PROPERTY,
         currency: accountingSystem.getBaseCurrency(),
         quantityDefinition: getDecimalDefinition(0),
-    });
+    })).newPricedItemDataItem;
 
 
     let accountDataItem;

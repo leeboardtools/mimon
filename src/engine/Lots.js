@@ -104,10 +104,15 @@ export class LotManager extends EventEmitter {
      */
 
     /**
+     * @typedef {object}    LotManager~AddLotResult
+     * @property {LotDataItem}  newLotDataItem
+     */
+
+    /**
      * Adds a lot.
      * @param {(Lot|LotDataItem)} lot 
      * @param {boolean} validateOnly 
-     * @returns {LotDataItem} Note that this object will not be the same as the lot arg.
+     * @returns {LotManager~AddLotResult|undefined} <code>undefined</code> is returned if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {LotManager~lotAdd}
      */
@@ -133,7 +138,7 @@ export class LotManager extends EventEmitter {
         this._lotDataItemsById.set(id, lotDataItem);
 
         this.emit('lotAdd', { newLotDataItem: lotDataItem, });
-        return lotDataItem;
+        return { newLotDataItem: lotDataItem, };
     }
 
 
@@ -145,10 +150,15 @@ export class LotManager extends EventEmitter {
      */
 
     /**
+     * @typedef {object}    LotManager~RemoveLotResult
+     * @property {LotDataItem}  removedLotDataItem
+     */
+
+    /**
      * Removes a lot.
      * @param {number} id 
      * @param {boolean} validateOnly 
-     * @returns {LotDataItem}    The lot that was removed.
+     * @returns {LotManager~RemoveLotResult|undefined}  <code>undefined</code> is returned if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {LotManager~lotRemove}
      */
@@ -168,7 +178,7 @@ export class LotManager extends EventEmitter {
         await this._handler.asyncUpdateLotDataItems(updatedDataItems);
 
         this.emit('lotRemove', { removedLotDataItem: lotDataItem });
-        return lotDataItem;
+        return { removedLotDataItem: lotDataItem, };
     }
 
 
@@ -181,10 +191,17 @@ export class LotManager extends EventEmitter {
      */
 
     /**
+     * @typedef {object}    LotManager~ModifyLotResult
+     * @property {LotDataItem}  newLotDataItem
+     * @property {LotDataItem}  oldLotDataItem
+     */
+
+    /**
      * Modifies an existing lot.
      * @param {(LotData|Lot)} lot The new lot properties. The id property is required. For all other
      * properties, if the property is not included in lot, the property will not be changed.
      * @param {boolean} validateOnly 
+     * @returns {LotManager~ModifyLotResult|undefined}  <code>undefined</code> is returned if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {LotManager~lotModify}
      */
@@ -216,7 +233,7 @@ export class LotManager extends EventEmitter {
 
         newLotDataItem = Object.assign({}, newLotDataItem);
         this.emit('lotModify', { newLotDataItem: newLotDataItem, oldLotDataItem: oldLotDataItem });
-        return [ newLotDataItem, oldLotDataItem ];
+        return { newLotDataItem: newLotDataItem, oldLotDataItem: oldLotDataItem };
     }
 }
 

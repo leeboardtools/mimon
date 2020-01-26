@@ -55,9 +55,9 @@ test('JSONGzipAccountingFile-simple', async () => {
         const aaplPricedItem = pricedItemManager1.getPricedItemDataItemWithId(sys.aaplPricedItemId);
         const housePricedItem = pricedItemManager1.getPricedItemDataItemWithId(sys.housePricedItemId);
 
-        const newPricedItemA = await pricedItemManager1.asyncAddPricedItem({
+        const newPricedItemA = (await pricedItemManager1.asyncAddPricedItem({
             type: PI.PricedItemType.PROPERTY, currency: 'USD', name: 'PricedItemA', quantityDefinition: getDecimalDefinition(-4),
-        });
+        })).newPricedItemDataItem;
 
 
         await file1.asyncWriteFile();

@@ -179,7 +179,7 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
     
     sys.housePricedItemId = (await pricedItemManager.asyncAddPricedItem(
         { type: PI.PricedItemType.REAL_ESTATE, currency: 'USD', quantityDefinition: getDecimalDefinition(0), name: 'Main House', }
-    )).id;
+    )).newPricedItemDataItem.id;
     sys.houseId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.fixedAssetsId, type: A.AccountType.REAL_ESTATE, pricedItemId: sys.housePricedItemId, name: 'Main House', },
         initialYMDDate
@@ -187,7 +187,7 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
 
     sys.secondHousePricedItemId = (await pricedItemManager.asyncAddPricedItem(
         { type: PI.PricedItemType.REAL_ESTATE, currency: 'USD', quantityDefinition: getDecimalDefinition(0), name: 'Second House', }
-    )).id;
+    )).newPricedItemDataItem.id;
     sys.secondHouseId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.fixedAssetsId, type: A.AccountType.REAL_ESTATE, pricedItemId: sys.secondHousePricedItemId, name: 'Vacation House', },
         initialYMDDate
@@ -196,26 +196,26 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
     
     sys.aaplPricedItemId = (await pricedItemManager.asyncAddPricedItem(
         { type: PI.PricedItemType.SECURITY, currency: 'USD', quantityDefinition: getDecimalDefinition(-4), name: 'Apple Computer Inc.', ticker: 'AAPL', market: 'NASDAQ', }
-    )).id;
+    )).newPricedItemDataItem.id;
     sys.intcPricedItemId = (await pricedItemManager.asyncAddPricedItem(
         { type: PI.PricedItemType.SECURITY, currency: 'USD', quantityDefinition: getDecimalDefinition(-4), name: 'Intel Corporation', ticker: 'INTC', market: 'NASDAQ', }
-    )).id;
+    )).newPricedItemDataItem.id;
     sys.msftPricedItemId = (await pricedItemManager.asyncAddPricedItem(
         { type: PI.PricedItemType.SECURITY, currency: 'USD', quantityDefinition: getDecimalDefinition(-4), name: 'Microsoft Corporation', ticker: 'MSFT', market: 'NASDAQ', }
-    )).id;
+    )).newPricedItemDataItem.id;
     sys.mmmPricedItemId = (await pricedItemManager.asyncAddPricedItem(
         { type: PI.PricedItemType.SECURITY, currency: 'USD', quantityDefinition: getDecimalDefinition(-4), name: '3M', ticker: 'MMM', market: 'NYSE', }
-    )).id;
+    )).newPricedItemDataItem.id;
     sys.ibmPricedItemId = (await pricedItemManager.asyncAddPricedItem(
         { type: PI.PricedItemType.SECURITY, currency: 'USD', quantityDefinition: getDecimalDefinition(-4), name: 'IBM Corporation', ticker: 'IBM', market: 'NYSE', }
-    )).id;
+    )).newPricedItemDataItem.id;
 
     sys.tibexPricedItemId = (await pricedItemManager.asyncAddPricedItem(
         { type: PI.PricedItemType.MUTUAL_FUND, currency: 'USD', quantityDefinition: getDecimalDefinition(-4), name: 'TIAA TIBEX', ticker: 'TIBEX', }
-    )).id;
+    )).newPricedItemDataItem.id;
     sys.vwusxPricedItemId = (await pricedItemManager.asyncAddPricedItem(
         { type: PI.PricedItemType.MUTUAL_FUND, currency: 'USD', quantityDefinition: getDecimalDefinition(-4), name: 'Vanguard VWUSX', ticker: 'VWUSX', }
-    )).id;
+    )).newPricedItemDataItem.id;
 
     sys.investmentsId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootAssetId, type: A.AccountType.ASSET, pricedItemId: baseCurrencyPricedItemId, name: 'Investsments', },

@@ -1231,8 +1231,10 @@ export class TransactionManager extends EventEmitter {
 
     /**
      * @typedef {object} TransactionManager~ModifyTransactionResult
-     * @property {TransactionDataItem}  [modifiedTransactionDataItem]    Used if a single transaction was passed to {@link TransactionManager#asyncModifyTransactions}
-     * @property {TransactionDataItem[]}    [modifiedTransactionDataItems]   Used if an array was passed to {@link TransactionManager#asyncModifyTransactions}
+     * @property {TransactionDataItem}  [newTransactionDataItem]    Used if a single transaction was passed to {@link TransactionManager#asyncModifyTransactions}
+     * @property {TransactionDataItem[]}    [newTransactionDataItems]   Used if an array was passed to {@link TransactionManager#asyncModifyTransactions}
+     * @property {TransactionDataItem}  [oldTransactionDataItem]    Used if a single transaction was passed to {@link TransactionManager#asyncModifyTransactions}
+     * @property {TransactionDataItem[]}    [oldTransactionDataItems]   Used if an array was passed to {@link TransactionManager#asyncModifyTransactions}
      * @property {object}   undo
      */
 
@@ -1247,7 +1249,11 @@ export class TransactionManager extends EventEmitter {
     async asyncModifyTransactions(transactions, validateOnly) {
         if (!Array.isArray(transactions)) {
             const result = await this.asyncModifyTransactions([transactions], validateOnly);
-            return { modifiedTransactionDataItem: result.modifiedTransactionDataItems[0], undo: result.undo };
+            return { 
+                newTransactionDataItem: result.newTransactionDataItems[0], 
+                oldTransactionDataItem: result.oldTransactionDataItems[0], 
+                undo: result.undo,
+            };
         }
 
         this._handler.isDebug = this.isDebug;
@@ -1296,7 +1302,7 @@ export class TransactionManager extends EventEmitter {
         const currentAccountStateUpdates = await stateUpdater.asyncGenerateCurrentAccountStates();
 
         if (validateOnly) {
-            return { modifiedTransactionDataItems: newDataItems, };
+            return { newTransactionDataItems: newDataItems, oldTransactionDataItems: oldDataItems, };
         }
 
         const transactionIdAndDataItemPairs = [];
@@ -1315,7 +1321,7 @@ export class TransactionManager extends EventEmitter {
             newTransactionDataItems: newDataItems,
             oldTransactionDataItems: oldDataItems,
         });
-        return { modifiedTransactionDataItems: newDataItems, };
+        return { newTransactionDataItems: newDataItems, oldTransactionDataItems: oldDataItems, };
     }
 }
 
