@@ -109,7 +109,7 @@ export function getSplitDataItem(split, alwaysCopy) {
             const splitDataItem = Object.assign({}, split);
             splitDataItem.reconcileState = reconcileStateName;
             if (lotChangeDataItems) {
-                split.lotChanges = lotChangeDataItems;
+                splitDataItem.lotChanges = lotChangeDataItems;
             }
             if (currencyToUSDRatioJSON) {
                 splitDataItem.currencyToUSDRatio = currencyToUSDRatioJSON;
@@ -376,7 +376,7 @@ class AccountStatesUpdater {
     }
 
 
-    async _asyncProcessTransactionDataItem(transactionDataItem, isNewDataItem) {
+    async _asyncProcessTransactionDataItem(transactionDataItem, isNewDataItem, replacementTransactionDataItem) {
         const { splits } = transactionDataItem;
         const newTransactionEntriesByAccountId = new Map();
         for (let i = 0; i < splits.length; ++i) {
@@ -404,6 +404,9 @@ class AccountStatesUpdater {
                 if (!hasLots) {
                     processor.oldSplitDataItems = [];
                     processor.newSplitDataItems = [];
+                }
+                else {
+                    processor.removedLotIds = new Set();
                 }
 
                 this._accountProcessorsByAccountIds.set(accountId, processor);
@@ -447,7 +450,33 @@ class AccountStatesUpdater {
                 processor.oldestIndex = index;
             }
 
-            if (!accountEntry.hasLots) {
+            if (accountEntry.hasLots) {
+                if (!isNewDataItem) {
+                    const removedLotIds = new Set();
+                    const oldLotChanges = split.lotChanges;
+                    oldLotChanges.forEach((lotChange) => {
+                        if (!lotChange.isSplitMerge && (lotChange.quantityBaseValue > 0)) {
+                            removedLotIds.add(lotChange.lotId);
+                        }
+                    });
+
+                    if (replacementTransactionDataItem) {
+                        const newSplits = replacementTransactionDataItem.splits;
+                        newSplits.forEach((newSplit) => {
+                            if (newSplit.accountId === accountId) {
+                                const newLotChanges = newSplit.lotChanges;
+                                newLotChanges.forEach((lotChange) => {
+                                    if (!lotChange.isSplitMerge && (lotChange.quantityBaseValue > 0)) {
+                                        removedLotIds.delete(lotChange.lotId);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    removedLotIds.forEach((lotId) => processor.removedLotIds.add(lotId));
+                }
+            }
+            else {
                 if (isNewDataItem) {
                     processor.newSplitDataItems.push(split);
                 }
@@ -461,12 +490,96 @@ class AccountStatesUpdater {
 
     async asyncAddTransactionUpdate(existingTransactionDataItem, newTransactionDataItem) {
         if (existingTransactionDataItem) {
-            await this._asyncProcessTransactionDataItem(existingTransactionDataItem, false);
+            await this._asyncProcessTransactionDataItem(existingTransactionDataItem, false, newTransactionDataItem);
         }
 
         if (newTransactionDataItem) {
             await this._asyncProcessTransactionDataItem(newTransactionDataItem, true);
         }
+    }
+
+
+    _validateLotSplit(transactionKey, accountState, split, newAccountStatesByOrder, removedLotIds) {
+        const { lotChanges } = split;
+        if (!lotChanges) {
+            throw userError('TransactionManager-lot_changes_missing');
+        }
+
+        let latestAccountState;
+        if (newAccountStatesByOrder.length) {
+            const latestAccountStates = newAccountStatesByOrder[newAccountStatesByOrder.length - 1];
+            if (latestAccountStates.length) {
+                latestAccountState = latestAccountStates[latestAccountStates.length - 1];
+            }
+        }
+
+        lotChanges.forEach((lotChange) => {
+            const { lotId, quantityBaseValue, costBasisBaseValue, isSplitMerge } = lotChange;
+            const lotManager = this._manager._accountingSystem.getLotManager();
+            if (!lotManager.getLotDataItemWithId(lotId)) {
+                throw userError('TransactionManager-lot_change_invalid_lot_id', lotId);
+            }
+
+            // New lot?
+            let existingLotState;
+            if (latestAccountState) {
+                const { lotStates } = latestAccountState;
+                if (lotStates) {
+                    for (let i = lotStates.length - 1; i >= 0; --i) {
+                        const lotState = lotStates[i];
+                        if (lotState.lotId === lotId) {
+                            existingLotState = lotState;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!existingLotState) {
+                // New lot...
+
+                // Was the lot removed?
+                if (removedLotIds.has(lotId)) {
+                    throw userError('TransactionManager-lot_still_in_use', lotId);
+                }
+
+                // Can't have a split/merge on a new lot...
+                if (isSplitMerge) {
+                    throw userError('TransactionManager-no_split_merge_new_lot');
+                }
+                
+                // We need a positive quantityBaseValue and a costBasisBaseValue.
+                if (!quantityBaseValue || (quantityBaseValue <= 0)) {
+                    if (this._manager.isDebug) {
+                        console.log('lotId: ' + lotId);
+                        console.log('removedLotIds: ' + JSON.stringify(Array.from(removedLotIds.values())));
+                    }
+                    throw userError('TransactionManager-new_lot_invalid_quantity');
+                }
+
+                // The costBasisBaseValue should also match the split's quantityBaseValue (should it?)
+                if ((costBasisBaseValue === undefined) || (costBasisBaseValue === null) || (costBasisBaseValue < 0)) {
+                    throw userError('TransactionManager-new_lot_invalid_cost_basis');
+                }
+            }
+            else {
+                // OK, the lot exists.
+                // For now only allow selling or split/merge, don't allow buying more.
+                if (isSplitMerge) {
+                    if ((quantityBaseValue + existingLotState.quantityBaseValue) < 0) {
+                        throw userError('TransactionManager-lot_split_merge_quantity_too_big');
+                    }
+                }
+                else {
+                    if (quantityBaseValue > 0) {
+                        throw userError('TransactionManager-modify_lot_quantity_invalid');
+                    }
+                    else if ((existingLotState.quantityBaseValue + quantityBaseValue) < 0) {
+                        throw userError('TransactionManager-modify_lot_quantity_too_big');
+                    }
+                }
+            }
+        });
     }
 
 
@@ -497,7 +610,7 @@ class AccountStatesUpdater {
                 // We want to unwind the account state all the way back to the oldest transaction
                 // Then we need to rewind back up but we need to use the updated splits.
                 const { sortedTransactionKeys } = accountEntry;
-                const { oldestIndex } = processor;
+                const { oldestIndex, removedLotIds } = processor;
 
                 if (sortedTransactionKeys.length) {
                     const transactionId = sortedTransactionKeys[oldestIndex].id;
@@ -524,6 +637,7 @@ class AccountStatesUpdater {
                         const { splits, ymdDate } = transactionDataItem;
                         splits.forEach((split) => {
                             if (split.accountId === accountId) {
+                                this._validateLotSplit(transactionKey, accountState, split, newAccountStatesByOrder, removedLotIds);
                                 accountState = AS.addSplitToAccountStateDataItem(accountState, split, ymdDate);
                                 accountStates.push(accountState);
                             }
@@ -531,6 +645,7 @@ class AccountStatesUpdater {
                     }
                     else {
                         newSplits.forEach((newSplit) => {
+                            this._validateLotSplit(transactionKey, accountState, newSplit, newAccountStatesByOrder, removedLotIds);
                             accountState = AS.addSplitToAccountStateDataItem(accountState, newSplit, ymdDate);
                             accountStates.push(accountState);
                         });
@@ -668,13 +783,33 @@ export class TransactionManager extends EventEmitter {
 
 
     /**
+     * Retrieves an array of the {@link TransactionKey}s for an account, sorted from oldest to newest.
+     * @param {number} accountId 
+     * @return {TransactionKey[]}
+     */
+    async asyncGetSortedTransactionKeysForAccount(accountId) {
+        return this._handler.asyncGetSortedTransactionKeysForAccount(accountId);
+    }
+
+
+    /**
+     * Retrieves an array of the {@link TransactionKey}s for a lot, sorted from oldest to newest.
+     * @param {number} lotId 
+     * @return {TransactionKey[]}
+     */
+    async asyncGetSortedTransactionKeysForLot(lotId) {
+        return this._handler.asyncGetSortedTransactionKeysForLot(lotId);
+    }
+
+
+    /**
      * @typedef {object}    TransactionManager~AccountEntry
      * accountStatesByTransactionId is the primary account state cache, it contains for each transaction an array with an account state
      * entry for each split in the transaction that references the account.
      * <p>
      * accountStatesByOrder is a secondary cache. It is an array that contains the account state arrays in
      * accountStatesByTransactionId, except these are ordered to match the ordering of the transaction
-     * keys in {@link TransactionHandler#asyncGetAccountSortedTransactionKeys}.
+     * keys in {@link TransactionHandler#asyncGetSortedTransactionKeysForAccount}.
      * <p>
      * The point behind accountStatesByOrder is that it caches account states that have been computed from the newest transaction
      * down to the last transaction. So if the next older transaction is requested, those account states have already
@@ -683,8 +818,8 @@ export class TransactionManager extends EventEmitter {
      * @property {boolean}  hasLots
      * @property {Map<number, AccountStateDataItem>} accountStatesByTransactionId
      * @property {AccountStateDataItem[]}   accountStatesByOrder    The ordering here matches the ordering of 
-     * the arrays returned by {@link TransactionHandler#asyncGetAccountSortedTransactionKeys}.
-     * @property {TransactionKey[]} sortedTransactionKeys   The result from {@link TransactionHandler#asyncGetAccountSortedTransactionKeys}.
+     * the arrays returned by {@link TransactionHandler#asyncGetSortedTransactionKeysForAccount}.
+     * @property {TransactionKey[]} sortedTransactionKeys   The result from {@link TransactionHandler#asyncGetSortedTransactionKeysForAccount}.
      */
     
 
@@ -706,7 +841,7 @@ export class TransactionManager extends EventEmitter {
         }
 
         if (!accountEntry.sortedTransactionKeys) {
-            const sortedTransactionKeys = await this._handler.asyncGetAccountSortedTransactionKeys(accountId);
+            const sortedTransactionKeys = await this._handler.asyncGetSortedTransactionKeysForAccount(accountId);
             accountEntry.sortedTransactionKeys = sortedTransactionKeys;
             const indicesByTransactionId = new Map();
             for (let i = sortedTransactionKeys.length - 1; i >= 0; --i) {
@@ -880,10 +1015,7 @@ export class TransactionManager extends EventEmitter {
                     return userError('TransactionManager~split_needs_lots', account.type.name);
                 }
 
-                // TODO: We need more lot validation here...
-                // Make sure all the lot ids are valid.
-                const lotManager = this._accountingSystem.getLotManager();
-
+                // Lot validation is performed by AccountStateUpdater.
             }
 
             creditSumBaseValue += creditBaseValue;
@@ -1229,12 +1361,22 @@ export class TransactionsHandler {
 
 
     /**
-     * Retrieves a array of the {@link TransactionKey}s for an account, sorted from oldest to newest.
+     * Retrieves an array of the {@link TransactionKey}s for an account, sorted from oldest to newest.
      * @param {number} accountId 
      * @return {TransactionKey[]}
      */
-    async asyncGetAccountSortedTransactionKeys(accountId) {
-        throw Error('TransactionHandler.asyncGetAccountSortedTransactionKeys() abstract method!');
+    async asyncGetSortedTransactionKeysForAccount(accountId) {
+        throw Error('TransactionHandler.asyncGetSortedTransactionKeysForAccount() abstract method!');
+    }
+
+
+    /**
+     * Retrieves an array of the {@link TransactionKey}s for a lot, sorted from oldest to newest.
+     * @param {number} lotId 
+     * @return {TransactionKey[]}
+     */
+    async asyncGetSortedTransactionKeysForLot(lotId) {
+        throw Error('TransactionHandler.asyncGetSortedTransactionKeysForLot() abstract method!');
     }
 
 
@@ -1242,6 +1384,8 @@ export class TransactionsHandler {
      * Main function for updating the transaction data items.
      * @param {*} transactionIdAndDataItemPairs Array of one or two element sub-arrays. The first element of each sub-array is the transaction id.
      * For new or modified transactions, the second element is the new data item. For accounts to be deleted, this is <code>undefined</code>.
+     * @param {Iterator}    accountStateUpdates Iterator returning two element arrays whose first element is an account id and whose second
+     * element is the current {@link AccountStateDataItem} for the account.
      * @param {NumericIdGenerator~Options|undefined}  idGeneratorOptions    The current state of the id generator, if <code>undefined</code>
      * the generator state hasn't changed.
      * @returns {TransactionDataItem[]} Array containing the updated data items for new and modified transactions,
@@ -1262,6 +1406,9 @@ function entryToJSON(entry) {
     if (entry.accountIds) {
         json.accountIds = Array.from(entry.accountIds.values());
     }
+    if (entry.lotIds) {
+        json.lotIds = Array.from(entry.lotIds.values());
+    }
     if (entry.sameDayOrder) {
         json.sameDayOrder = entry.sameDayOrder;
     }
@@ -1277,6 +1424,9 @@ function entryFromJSON(json) {
 
     if (json.accountIds) {
         entry.accountIds = new Set(json.accountIds);
+    }
+    if (json.lotIds) {
+        entry.lotIds = new Set(json.lotIds);
     }
     if (json.sameDayOrder !== undefined) {
         entry.sameDayOrder = json.sameDayOrder;
@@ -1298,8 +1448,9 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
      * @property {number}   id  The transaction id.
      * @property {number}   [sameDayOrder]    Optional, used to order transactions that fall on the same day,
      * the lower the value the earlier in the day the transaction is ordered. If not given then it is treated as
-     * @property {Set<number>}  accountIds  Set containing the account ids of all the accounts referred to
+     * @property {Set<number>}  [accountIds]  Set containing the account ids of all the accounts referred to
      * by the transaction's splits.
+     * @property {Set<number>}  [lotIds]  Set containing the lot ids of all the lots referred to by the transaction's splits.
      */
 
     /**
@@ -1316,6 +1467,9 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
 
         // Map of accountId, SortedArray of entries sorted by ymdDate then id.
         this._sortedEntriesByAccountId = new Map();
+
+        // Map of lotId, SortedArray of entries sorted by ymdDate then id.
+        this._sortedEntriesByLotId = new Map();
 
         // Sorted array of entries sorted by ymdDate then id.
         this._ymdDateSortedEntries = new SortedArray(compareTransactionKeys);
@@ -1341,6 +1495,7 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         this._entriesById.clear();
         this._ymdDateSortedEntries.clear();
         this._sortedEntriesByAccountId.clear();
+        this._sortedEntriesByLotId.clear();
         this._currentAccountStatesById.clear();
 
         entries.forEach((entry) => {
@@ -1359,33 +1514,42 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         this._entriesById.set(entry.id, entry);
         this._ymdDateSortedEntries.add(entry);
 
-        entry.accountIds.forEach((accountId) => {
-            this._addEntryToSortedEntriesByAccountId(accountId, entry);
-        });
+        if (entry.accountIds) {
+            entry.accountIds.forEach((accountId) => {
+                this._addEntryToSortedEntriesById(accountId, entry, this._sortedEntriesByAccountId);
+            });
+        }
+        if (entry.lotIds) {
+            entry.lotIds.forEach((lotId) => {
+                this._addEntryToSortedEntriesById(lotId, entry, this._sortedEntriesByLotId);
+            });
+        }
     }
 
-    _addEntryToSortedEntriesByAccountId(accountId, entry) {
-        let accountEntry = this._sortedEntriesByAccountId.get(accountId);
+    _addEntryToSortedEntriesById(id, entry, sortedEntriesById) {
+        let accountEntry = sortedEntriesById.get(id);
         if (!accountEntry) {
             accountEntry = new SortedArray(compareTransactionKeys);
-            this._sortedEntriesByAccountId.set(accountId, accountEntry);
+            sortedEntriesById.set(id, accountEntry);
         }
         accountEntry.add(entry);
     }
 
-    _removeEntryFromSortedEntriesByAccountId(oldEntry) {
-        oldEntry.accountIds.forEach((accountId) => {
-            const sortedEntries = this._sortedEntriesByAccountId.get(accountId);
-            if (sortedEntries) {
-                const wasDeleted = sortedEntries.delete(oldEntry);
-                if (!wasDeleted) {
-                    console.log('uh-oh: ' + JSON.stringify(oldEntry));
-                    console.log('sortedEntries: ' + JSON.stringify(sortedEntries.getValues()));
-                    console.log('entriesById: ' + JSON.stringify(Array.from(this._entriesById.entries())));
-                    throw Error('Stop!');
+    _removeEntryFromSortedEntriesById(oldEntry, ids, sortedEntriesById) {
+        if (ids) {
+            ids.forEach((id) => {
+                const sortedEntries = sortedEntriesById.get(id);
+                if (sortedEntries) {
+                    const wasDeleted = sortedEntries.delete(oldEntry);
+                    if (!wasDeleted) {
+                        console.log('uh-oh: ' + JSON.stringify(oldEntry));
+                        console.log('sortedEntries: ' + JSON.stringify(sortedEntries.getValues()));
+                        console.log('entriesById: ' + JSON.stringify(Array.from(this._entriesById.entries())));
+                        throw Error('Stop!');
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
 
@@ -1414,8 +1578,8 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
     }
 
 
-    async asyncGetAccountSortedTransactionKeys(accountId) {
-        const sortedEntries = this._sortedEntriesByAccountId.get(accountId);
+    _getSortedTransactionKeysForId(id, sortedEntriesById) {
+        const sortedEntries = sortedEntriesById.get(id);
         if (sortedEntries) {
             return sortedEntries.getValues().map((entry) => { return { id: entry.id, ymdDate: entry.ymdDate, sameDayOrder: entry.sameDayOrder, }; });
         }
@@ -1423,6 +1587,17 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
             return [];
         }
     }
+
+
+    async asyncGetSortedTransactionKeysForAccount(accountId) {
+        return this._getSortedTransactionKeysForId(accountId, this._sortedEntriesByAccountId);
+    }
+
+
+    async asyncGetSortedTransactionKeysForLot(lotId) {
+        return this._getSortedTransactionKeysForId(lotId, this._sortedEntriesByLotId);
+    }
+
 
     async asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs, accountStateUpdates, idGeneratorOptions) {
 
@@ -1438,9 +1613,16 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                 const newEntry = { id: id, };
 
                 let newAccountIds;
+                let newLotIds;
                 if (dataItem.splits) {
                     newAccountIds = new Set();
-                    dataItem.splits.forEach((split) => newAccountIds.add(split.accountId));
+                    newLotIds = new Set();
+                    dataItem.splits.forEach((split) => {
+                        newAccountIds.add(split.accountId);
+                        if (split.lotChanges) {
+                            split.lotChanges.forEach((lotChange) => newLotIds.add(lotChange.lotId));
+                        }
+                    });
                 }
 
                 if (oldEntry) {
@@ -1454,11 +1636,22 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                     else {
                         newEntry.accountIds = oldEntry.accountIds;
                     }
+
+                    if (newLotIds) {
+                        let lotIdsModified = !doSetsHaveSameElements(newLotIds, oldEntry.lotIds);
+                        newEntry.lotIds = (lotIdsModified) ? newLotIds : oldEntry.lotIds;
+                    }
+                    else if (oldEntry.lotIds) {
+                        newEntry.lotIds = oldEntry.lotIds;
+                    }
                 }
                 else {
                     // New entry
                     newEntry.ymdDate = dataItem.ymdDate;
                     newEntry.accountIds = newAccountIds;
+                    if (newLotIds) {
+                        newEntry.lotIds = newLotIds;
+                    }
                 }
 
                 newEntry.ymdDate = getYMDDate(newEntry.ymdDate);
@@ -1474,11 +1667,13 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
             if (!newEntry) {
                 // Delete
                 this._ymdDateSortedEntries.delete(oldEntry);
-                this._removeEntryFromSortedEntriesByAccountId(oldEntry);
+                this._removeEntryFromSortedEntriesById(oldEntry, oldEntry.accountIds, this._sortedEntriesByAccountId);
+                this._removeEntryFromSortedEntriesById(oldEntry, oldEntry.lotIds, this._sortedEntriesByLotId);
                 this._entriesById.delete(oldEntry.id);
             }
             else {
                 let accountIdsUnchanged;
+                let lotIdsUnchanged;
                 if (oldEntry) {
                     // Modify
                     let isDateChange;
@@ -1489,10 +1684,18 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
 
                     // This test is safe, earlier we checked for account id changes...
                     if ((newEntry.accountIds !== oldEntry.accountIds) || isDateChange) {
-                        this._removeEntryFromSortedEntriesByAccountId(oldEntry);
+                        this._removeEntryFromSortedEntriesById(oldEntry, oldEntry.accountIds, this._sortedEntriesByAccountId);
                     }
                     else {
                         accountIdsUnchanged = true;
+                    }
+
+                    // This test is safe, earlier we checked for lot id changes...
+                    if ((newEntry.lotIds !== oldEntry.lotIds) || isDateChange) {
+                        this._removeEntryFromSortedEntriesById(oldEntry, oldEntry.lotIds, this._sortedEntriesByAccountId);
+                    }
+                    else {
+                        lotIdsUnchanged = true;
                     }
                 }
 
@@ -1501,15 +1704,22 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
 
                 if (!accountIdsUnchanged) {
                     newEntry.accountIds.forEach((accountId) => {
-                        this._addEntryToSortedEntriesByAccountId(accountId, newEntry);
+                        this._addEntryToSortedEntriesById(accountId, newEntry, this._sortedEntriesByAccountId);
                     });
+                }
+
+                if (!lotIdsUnchanged) {
+                    if (newEntry.lotIds) {
+                        newEntry.lotIds.forEach((lotId) => {
+                            this._addEntryToSortedEntriesById(lotId, newEntry, this._sortedEntriesByLotId);
+                        });
+                    }
                 }
             }
         });
 
         if (accountStateUpdates) {
             for (let [accountId, accountStateDataItem] of accountStateUpdates) {
-            //accountStateUpdates.forEach(([accountId, accountStateDataItem]) => {
                 if (!accountStateDataItem) {
                     this._currentAccountStatesById.delete(accountId);
                 }

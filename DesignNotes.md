@@ -76,7 +76,7 @@ When an accounting file is first created or opened, it creates the [AccountingSy
 
 Since both [AccountManager](#accountmanager) and [PricedItemManager](#priceditemmanager) have predefined objects (the root accounts for AccountManager, the USD, EUR, and accounting system's base currency for PriceManager), these managers retrieve from their handlers the list of accounts/priced items when the managers are constructed. This means that when opening an existing file, the handlers must be pre-loaded before the accounting system can be created.
 
-[TransactionManager](#transactionmanager) and [PriceManager](#pricemanager) on the other hand don't have predefined objects, they work directly with the handlers 
+[TransactionManager](#transactionmanager) and [PriceManager](#pricemanager) on the other hand don't have predefined objects, they work directly with the handlers
 so don't really need pre-loading.
 
 
@@ -113,7 +113,9 @@ Some account types:
 Represents the quantity state of an account at a particular date. An account state has the following properties:
 - [YMDDate](#ymddate)
 - quantityBaseValue This represents the quantity of the priced item's currency.
-- [Lots](#lot) (only for accounts that support lots)
+- [LotStates](#lotstate) (only for accounts that support lots)
+
+Account states are managed by the [TransactionManager](#transactionmanager).
 
 
 ### AccountManager
@@ -143,52 +145,43 @@ Manages all the transactions in an accounting system.
 
 
 ### Lot
-The data item used to define a loat. A lot has the following properties:
-- PurcaseDate
+The data item used to define a lot. A lot has the following properties:
+- PricedItemId
 - Description (optional)
-- quantityBaseValue
-- CostBasisBaseValue
 
-Thinking about this.
-A lot hsa a current state that may change over time. This state includes:
-- [YMDDate](#ymddate)
-- quantityBaseValue
-- costBasisBaseValue
+Lots are managed by a [LotManager](#lotmanager)
 
-It also has the following more static values:
-- PurchaseDate
-- Description
-
-Whenever a split changes a lot, the change must be reflected in the state of all
-future splits that refer to the lot.
-
-In order to simplify the requirement of keeping things atomic, lot states should
-remain part of the account state. What needs to change is having a lot id.
-
-When a split adds a new lot, a lot id must be generated. The split doesn't have to be
-aware of this, the id is just part of the lot's state.
-
-What's the scenario when a split that created a lot is modified?
-- If the lot goes away, then the lot id becomes invalid.
-- If the lot properties are changed, then the lot properties must be updated.
-- A lot cannot go away if other splits refer to the lot.
-
-AccountStates and Lots
-- AccountState has a list of lot states.
-    - Each lot state consists of the quantityBaseValue and costBasisBaseValue (the date is already part of the account state)
-    - Must also have the lot id.
+### LotManager
+Manages all the lots in an accounting system.
 
 
-Maybe should separate lots from account state entirely.
-    - The transaction manager would then be responsible for updating the lot states.
-    - This makes lots transportable between accounts.
-    - But an account state would still need to contain the ids of the lots in the account at that state.
-    - Should AccountState actually be part of TransactionManager?
-        - Maybe, as TransactionManager is the one that actively manages the account state anyway.
+### LotChange
+Represents a change to a lot in a [Split](#split).
+There are effectively three types of changes:
+- Add lot for adding a new lot. It has the following properties:
+    - lotId
+    - quantityBaseValue The quantity for the new lot, must be > 0.
+    - costBasisBaseValue    The cost basis of the new lot, must be >= 0.
+
+- Sell lot for removing a portion of or all of a lot. It has the following properties:
+    - lotId
+    - quantityBaseValue The quantity to sell, must be < 0.
+
+- Split/Merge lot for representing a split or a merge. The original lot is pretty much redefined. It has the following properties:
+    - lotId
+    - quantityBaseValue The amount to change the current lot quantity.
+    - costBasisBaseValue    Optional, the new cost basis of the lot if given, otherwise the cost basis is not changed.
 
 
-AccountStates are read-only, only TransactionManager can update them.
+### LotState
+Represents the quantity of a lot in an [AccountState](#accountstate). It has the following properties:
+- lotId
+- quantityBaseValue The quantity of the lot.
+- costBasisBaseValue    The cost basis of the quantity.
 
+There are other properties used to apply or remove [LotChange](#lotchange)s from the lot state.
+
+Lot states are managed as part of [AccountState](#accountstate)s, which are managed by the [TransactionManager](#transactionmanager).
 
 
 ### PricedItem
@@ -267,67 +260,47 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
 ## TODOs
 - Add test transactions to AccountingSystemTestHelpers.js, then test transactions in JSONGzipAccountingFile.test.js
 
-- Need to add lot validation for modify transactions.
-    - Unwind state to before earlier transaction.
-    - Grab all future transactions.
-    - Replace the appropriate transaction.
-    - Verify all transactions going forward are valid.
+- Add a undo mechanism.
+    - After an action, there is an undo state available. Maybe part of the return from the action?
+    - Have an applyUndo().
+        - Would be sequentially controlled.
 
-- Need to address undoing actions like remove account/transaction. What happens to the id? Do we reassign a new one,
-or do we keep the old one?
-    - This may become a matter of what exactly do we want undo to mean.
-        - Could be a full revert to the particular state of the system (probaly the ideal)
-        - Could be a revert to a similar state of the system.
-        - The advantage of a full revert is that any extemparaneous links, say from a report,
-        will work after the undo.
-    - Since the transaction id may end up being used for sorting, we need to keep the old id.
+    - Why not just do the opposite of the action?
+        - Add -> Remove
+        - Remove -> Add
+        - Modify -> Modify
 
-- Lot Management:
-    - The Lot fundamentals:
-        - id
-        - pricedItemId
-        - description
+    - The only problem is that we want to retain the object id. Let's think about this:
+        - Add -> creates an id.
+            - Undo -> remove id
+            - Redo -> add back. Would like to add back with the same id. Why? Because if there
+            were actions after the add, they would be relying upon the id returned by the Add.
+            - Without keeping the id, would need to regenerate all the after actions.
 
-    - The Lot state:
-        - ymdDate
-        - quantityBaseValue
-        - costBasisBaseValue
-    
-    - Lots become somewhat like Accounts.
-    - The one big difference is the existence of a lot may be entirely controlled
-    by the transaction manager.
+        - Modify -> Not a problem, the id doesn't change.
 
-    - So a non-lot split has:
-        - accountId
-        - quantityBaseValue
-    
-    - For a purchase a lot split has:
-        - accountId
-        - quantityBaseValue -> this must match the costBasisBaseValue of the Lot
-        - lotId
-    
-    - For a sale a lot split has:
-        - accountId
-        - quantityBaseValue
-        - lotId
-        - lotQuantityBaseValue - the change in the lot state's quantityBaseValue.
-    
-    - For merge/split a lot split has:
-        - accountId
-        - [quantityBaseValue] This should be 0.
-        - lotId
-        - lotQuantityBaseValue - the change in the lot state's quantityBaseValue.
-        - isMergeSplit
+        - Could we just have a Restore counterpart to Add?
 
-    - For a merge/split would need to be able to update the cost basis in case there is
-    a cash-in-lieu.
-        - Maybe a merge/split requires a new lot???
-        - Would just replace the old lot with a new lot that has the old lot's purchase date
-        and adjusted cost basis/quantity.
+        - Would be simpler at the Action level to have a common LastActionReverter or something like that.
+        - When the Action acts, it performs the action, and saves the LastActionReverter.
+        - When the Action reverts, it can just pass the LastActionReverter to the manager.
+        - What about Redo?
+            - Well, the Action has all the information from the original Do, so it can just redo itself.
 
+- For removal of lots, need to:
+    - Removing a transaction:
+        - If the transaction represents a new lot,
+            - error if there are other transactions referring to the lot.
+        - Otherwise...
+            - Nothing?
 
-- TODO:
-    - asyncAddTransactionValidate: Don't allow adding if not an add transaction and there is no add transaction.
-    - asyncRemoveTransactionValidate: Don't allow removal if the transaction is an add lot and there are future
-    transactions referring to the lot.
+    - Transaction modifications:
+        - Need to check if an add lot is not replaced with another add lot.
 
+- Lot validation scenarios:
+    - Can't delete an add lot transaction of there are other transactions referring to the lot.
+    - This applies to:
+        - removing a transaction via asyncRemoveTransaction()
+        - modifying an addLot split so it no longer refers to the lot.
+            - tricky part here is to ensure that the splits remain valid.
+    - 

@@ -37,6 +37,7 @@
 
     "AccountState-add_split_lot_not_found": ["The lot '", "' is not part of the account's state."],
     "AccountState-remove_split_lot_not_found": ["The lot '", "' is not part of the account's later state."],
+    "AccountState-remove_lot_missing_lot_state": "The split could not be removed, the lot state history is missing.",
 
     "AccountManager-type_invalid": ["The account type '", "' is not supported."],
     "AccountManager-duplicate_ref_id": ["There is already an account with reference id '", "'."],
@@ -68,7 +69,6 @@
     "LotManager-modify_no_id": ["The lot could not be modified. An item with id '", "' was not found."],
 
     "LotState-remove_split_no_state": "The split could not be removed, the lot state is missing.",
-    "AccountState-remove_lot_missing_lot_state": "The split could not be removed, the lot state history is missing.",
 
     "PricedItemType-CURRENCY": "Currency",
     "PricedItemType-SECURITY": "Security",
@@ -103,8 +103,17 @@
         ["Could not determine the account state for a transaction, the transaction with id '", "' was not found."],
     "TransactionManager-account_state_update_account_invalid":
         ["Could not determine the account state for a transaction, the account with id '", "' was not found."],
+    "TransactionManager-lot_changes_missing": "Splits for accounts with lots must contain lot changes.",
+    "TransactionManager-lot_change_invalid_lot_id":  ["A lot with the id '", "' was not found."],
+    "TransactionManager-lot_still_in_use": ["The lot with id '", "' cannot be removed, there are still transactions referring to the lot."],
+    "TransactionManager-no_split_merge_new_lot": "The lot for the split/merge does not yet exist.",
+    "TransactionManager-new_lot_invalid_quantity": "New lots must have a quantity greater than 0.",
+    "TransactionManager-new_lot_invalid_cost_basis": "New lots must have a cost basis greater than or equal to 0.",
+    "TransactionManager-modify_lot_quantity_invalid": "The quantity for lot sales must be greater than or equal to 0.",
+    "TransactionManager-modify_lot_quantity_too_big": "The quantity for the lot sale must be less than or equal to the quantity in the lot.",
+    "TransactionManager-lot_split_merge_quantity_too_big":  "The amount to modify the lot split/merge must ",
 
-
+    
     "JSONGzipAccountingFile-dir_not_empty": ["The folder '", "' must be empty in order to create a new accounting file system there."],
     "JSONGzipAccountingFile-ledger_tag_missing": ["The file '", "' is not a valid MiMon ledger file, the tag is incorrect or missing."],
     "JSONGzipAccountingFile-accountsHandler_tag_missing": ["The file '", "' is not a valid MiMon ledger file, the accountsHandler section is missing."],

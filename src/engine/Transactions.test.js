@@ -1214,7 +1214,6 @@ test('Transactions-lotTransactions', async () => {
     };
     const [accountStateHTransF] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transF.id);
     expect(ACSTH.cleanAccountState(accountStateHTransF)).toEqual(aaplStateHTransF);
-
 });
 
 
@@ -1223,70 +1222,178 @@ test('Transactions-lotTransactions', async () => {
 //
 test('Transactions-lotValidation', async () => {
     const sys = await ASTH.asyncCreateBasicAccountingSystem();
-/*
+
     const { accountingSystem } = sys;
     const transactionManager = accountingSystem.getTransactionManager();
+    const lotManager = accountingSystem.getLotManager();
 
     const brokerageId = sys.brokerageAId;
     const aaplId = sys.aaplBrokerageAId;
-    expect(await transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual({ ymdDate: undefined, quantityBaseValue: 0, lotStates: [], lots: [] });
+    const { aaplPricedItemId } = sys;
 
-    const lotA = { purchaseYMDDate: '2010-09-21', quantityBaseValue: 11111, costBasisBaseValue: 22222 };
-    const lotB = { purchaseYMDDate: '2010-10-21', quantityBaseValue: 33333, costBasisBaseValue: 44444 };
-    const lotC = { purchaseYMDDate: '2010-11-21', quantityBaseValue: 55555, costBasisBaseValue: 66666 };
-    const lotD = { purchaseYMDDate: '2010-12-21', quantityBaseValue: 77777, costBasisBaseValue: 88888 };
-    const lotCa = { purchaseYMDDate: '2011-01-21', quantityBaseValue: 1212, costBasisBaseValue: 3434 };
 
+    // Lot must exist.
+    const changeA = { quantityBaseValue: 10000, costBasisBaseValue: 200000, };
     const settingsA = {
-        ymdDate: lotA.purchaseYMDDate,
+        ymdDate: '2010-05-10',
         splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotA.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotA.costBasisBaseValue, lotOldChanges: [[lotA, ]]},
-        ],
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -changeA.costBasisBaseValue, },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: changeA.costBasisBaseValue, 
+                lotChanges: [ changeA ]
+            },
+        ]
     };
+    await expect(transactionManager.asyncAddTransaction(settingsA)).rejects.toThrow();
 
+    const lot1 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 1'});
+    changeA.lotId = lot1.id;
+
+    // valid quantityBaseValue
+    changeA.quantityBaseValue = 0;
+    await expect(transactionManager.asyncAddTransaction(settingsA)).rejects.toThrow();
+    changeA.quantityBaseValue = 10000;
+
+    // valid costBasisBaseValue.
+    changeA.costBasisBaseValue = -1;
+    await expect(transactionManager.asyncAddTransaction(settingsA)).rejects.toThrow();
+    changeA.costBasisBaseValue = 200000;
+
+    const transA = await transactionManager.asyncAddTransaction(settingsA);
+
+
+    // Can't add another of the same lot.
+    const changeB = { lotId: lot1.id, quantityBaseValue: 20000, costBasisBaseValue: 20 * 20000, };
     const settingsB = {
-        ymdDate: lotB.purchaseYMDDate,
+        ymdDate: '2010-05-10',
         splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotB.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotB.costBasisBaseValue, lotOldChanges: [[lotB, ]]},
-        ],
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -changeB.costBasisBaseValue, },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: changeB.costBasisBaseValue, 
+                lotChanges: [ changeB ]
+            },
+        ]
     };
+    await expect(transactionManager.asyncAddTransaction(settingsB)).rejects.toThrow();
 
+
+    const lot2 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 2'});
+    changeB.lotId = lot2.id;
+    const transB = await transactionManager.asyncAddTransaction(settingsB);
+
+
+    const changeC = { lotId: lot2.id, quantityBaseValue: -20001, };
     const settingsC = {
-        ymdDate: lotC.purchaseYMDDate,
+        ymdDate: '2010-05-20',
         splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotC.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotC.costBasisBaseValue, lotOldChanges: [[lotC, ]]},
-        ],
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 10000, },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: -10000, 
+                lotChanges: [ changeC ]
+            },
+        ]
     };
 
-    const settingsD = {
-        ymdDate: lotD.purchaseYMDDate,
-        splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotD.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotD.costBasisBaseValue, lotOldChanges: [[lotD, ]]},
-        ],
-    };
-
-    const settingsCa = {
-        ymdDate: lotCa.purchaseYMDDate,
-        splits: [
-            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -lotCa.costBasisBaseValue, },
-            { accountId: aaplId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: lotCa.costBasisBaseValue, lotOldChanges: [[lotCa, lotC]]},
-        ],
-    };
-
-    const [ transA, transB, transC, transD, transCa ] = await transactionManager.asyncAddTransaction([settingsA, settingsB, settingsC, settingsD, settingsCa]);
-    settingsA.id = transA.id;
-    expect(transA).toEqual(settingsA);
-    settingsB.id = transB.id;
-    expect(transB).toEqual(settingsB);
+    // Can't decrease more than the available lot quantity.
+    await expect(transactionManager.asyncAddTransaction(settingsC)).rejects.toThrow();
+    
+    changeC.quantityBaseValue = -5000;
+    const costBasisBaseValueC = changeC.quantityBaseValue * 25;
+    settingsC.splits[0].quantityBaseValue = -costBasisBaseValueC;
+    settingsC.splits[1].quantityBaseValue = costBasisBaseValueC;
+    const transC = await transactionManager.asyncAddTransaction(settingsC);
     settingsC.id = transC.id;
     expect(transC).toEqual(settingsC);
-    settingsD.id = transD.id;
+
+
+    // Can't modify the quantity of lot2 in transB so transC becomes invalid.
+    const changeD = { lotId: lot2.id, quantityBaseValue: 4900, costBasisBaseValue: 4900 * 20, };
+    const settingsD = {
+        id: transB.id,
+        splits: [
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -changeD.costBasisBaseValue, },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: changeD.costBasisBaseValue, 
+                lotChanges: [ changeD ]
+            },
+        ]
+    };
+    await expect(transactionManager.asyncModifyTransaction(settingsD)).rejects.toThrow();
+
+    changeD.quantityBaseValue = 30000;
+    changeD.costBasisBaseValue = 30000 * 20;
+    const transD = await transactionManager.asyncModifyTransaction(settingsD);
+    settingsD.ymdDate = transB.ymdDate;
     expect(transD).toEqual(settingsD);
-    settingsCa.id = transCa.id;
-    expect(transCa).toEqual(settingsCa);
-*/
+
+
+    // Can't remove transaction of lot is still in use.
+    await expect(transactionManager.asyncRemoveTransactions(transB.id)).rejects.toThrow(new Error('TransactionManager-lot_still_in_use'));
+
+
+    // Can't change lot id if lot is still in use.
+    const lot3 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 3'});
+    const changeE = Object.assign({}, changeD);
+    changeE.lotId = lot3.id;
+    const settingsE = {
+        id: transB.id,
+        splits: [
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -changeE.costBasisBaseValue, },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: changeE.costBasisBaseValue, 
+                lotChanges: [ changeE ]
+            },
+        ]
+    };
+    await expect(transactionManager.asyncModifyTransaction(settingsE)).rejects.toThrow(new Error('TransactionManager-lot_still_in_use'));
+
+
+    // But can change lot that's not in use.
+    const changeF = { lotId: lot3.id, quantityBaseValue: 10000, costBasisBaseValue: 200000, };
+    const settingsF = {
+        id: transA.id,
+        ymdDate: '2010-05-10',
+        splits: [
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -changeF.costBasisBaseValue, },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: changeF.costBasisBaseValue, 
+                lotChanges: [ changeF ]
+            },
+        ]
+    };
+    const transF = await transactionManager.asyncModifyTransaction(settingsF);
+    expect(transF).toEqual(settingsF);
+
+
+    // Can't change to lot that's already in use.
+    const changeG = { lotId: lot2.id, quantityBaseValue: 10000, costBasisBaseValue: 200000, };
+    const settingsG = {
+        id: transA.id,
+        ymdDate: '2010-05-10',
+        splits: [
+            { accountId: brokerageId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -changeG.costBasisBaseValue, },
+            { 
+                accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: changeG.costBasisBaseValue, 
+                lotChanges: [ changeG ]
+            },
+        ]
+    };
+    await expect(transactionManager.asyncModifyTransaction(settingsG)).rejects.toThrow();
+
+
+    // Lot can only appear in one account at a time.
 });

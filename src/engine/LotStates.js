@@ -1,6 +1,3 @@
-import { getYMDDate, getYMDDateString } from '../util/YMDDate';
-
-
 /**
  * @typedef {object}    LotStateDataItem
  * @property {number}   lotId   The id of the lot this state represents.
@@ -119,7 +116,7 @@ export const getEmptyLotState = getEmptyLotStateDataItem;
  * @property {number}   quantityBaseValue   The change in the lot's quantityBaseValue.
  * @property {number}   [costBasisBaseValue]    If isSplitMerge is <code>true</code> and this is specified, it is the
  * new cost basis for the lot, if not specified then the cost basis is not changed. If isSplitMerge is <code>false</code>
- * this if the previous quantityBaseValue is 0 (which normally indicates a new purchase) this is the initial cost basis.
+ * if the previous quantityBaseValue is 0 (which normally indicates a new purchase) this is the initial cost basis.
  * @property {boolean}  [isSplitMerge]  Optional, if <code>true</code> then the lot change is a split or a merge.
  */
 
@@ -130,7 +127,7 @@ export const getEmptyLotState = getEmptyLotStateDataItem;
  * @property {number}   quantityBaseValue   The change in the lot's quantityBaseValue.
  * @property {number}   [costBasisBaseValue]    If isSplitMerge is <code>true</code> and this is specified, it is the
  * new cost basis for the lot, if not specified then the cost basis is not changed. If isSplitMerge is <code>false</code>
- * this if the previous quantityBaseValue is 0 (which normally indicates a new purchase) this is the initial cost basis.
+ * if the previous quantityBaseValue is 0 (which normally indicates a new purchase) this is the initial cost basis.
  * @property {boolean}  [isSplitMerge]  Optional, if <code>true</code> then the lot change is a split or a merge.
  */
 
