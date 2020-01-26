@@ -411,17 +411,17 @@ test('TransactionManager-validateSplits', async () => {
     const accountManager = accountingSystem.getAccountManager();
     const pricedItemManager = accountingSystem.getPricedItemManager();
     const cadPricedItemDataItem = await pricedItemManager.asyncAddCurrencyPricedItem('CAD');
-    const cadCashAccountDataItem = await accountManager.asyncAddAccount({
+    const cadCashAccountDataItem = (await accountManager.asyncAddAccount({
         parentAccountId: sys.currentAssetsId,
         type: A.AccountType.CASH,
         pricedItemId: cadPricedItemDataItem.id,
-    });
+    })).newAccountDataItem;
     const jpyPricedItemDataItem = await pricedItemManager.asyncAddCurrencyPricedItem('JPY');
-    const jpyCashAccountDataItem = await accountManager.asyncAddAccount({
+    const jpyCashAccountDataItem = (await accountManager.asyncAddAccount({
         parentAccountId: sys.currentAssetsId,
         type: A.AccountType.CASH,
         pricedItemId: jpyPricedItemDataItem.id,
-    });
+    })).newAccountDataItem;
 
     // Same currency, OK.
     expect(manager.validateSplits([
@@ -466,7 +466,7 @@ test('TransactionManager-add_modify', async () => {
             { accountId: sys.checkingId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: -10000, },
         ]
     };
-    const transactionA = await manager.asyncAddTransactions(settingsA);
+    const transactionA = (await manager.asyncAddTransactions(settingsA)).newTransactionDataItem;
     settingsA.id = transactionA.id;
     expect(transactionA).toEqual(settingsA);
     expect(await manager.asyncGetTransactionDataItemssInDateRange(0, '2019-10-05')).toEqual([settingsA]);
@@ -487,7 +487,7 @@ test('TransactionManager-add_modify', async () => {
     let addEventArgs;
     manager.on('transactionsAdd', (arg) => addEventArgs = arg);
 
-    const result = await manager.asyncAddTransactions([settingsB]);
+    const result = (await manager.asyncAddTransactions([settingsB])).newTransactionDataItems;
     const [ transactionB ] = result;
     settingsB.id = transactionB.id;
     //settingsC.id = transactionC.id;
@@ -507,7 +507,7 @@ test('TransactionManager-add_modify', async () => {
             { accountId: sys.checkingId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: -20000, },
         ]
     };
-    const transactionD = await manager.asyncAddTransactions(settingsD);
+    const transactionD = (await manager.asyncAddTransactions(settingsD)).newTransactionDataItem;
     settingsD.id = transactionD.id;
     expect(transactionD).toEqual(settingsD);
 
@@ -521,14 +521,14 @@ test('TransactionManager-add_modify', async () => {
     };
 
     // Check validate only.
-    const validateE = await manager.asyncAddTransactions(settingsE, true);
+    const validateE = (await manager.asyncAddTransactions(settingsE, true)).newTransactionDataItem;
     expect(validateE).toEqual(settingsE);
     expect(await manager.asyncGetTransactionDataItemssInDateRange(sys.checkingId, '2019-10-15')).toEqual([]);
 
     await expect(manager.asyncAddTransactions({ splits: []})).rejects.toThrow();
 
 
-    const transactionE = await manager.asyncAddTransactions(settingsE);
+    const transactionE = (await manager.asyncAddTransactions(settingsE)).newTransactionDataItem;
     settingsE.id = transactionE.id;
     expect(transactionE).toEqual(settingsE);
 
@@ -540,7 +540,7 @@ test('TransactionManager-add_modify', async () => {
 
 
     const settingsF = Object.assign({}, settingsE);
-    const transactionF = await manager.asyncAddTransactions(settingsF);
+    const transactionF = (await manager.asyncAddTransactions(settingsF)).newTransactionDataItem;
     settingsF.id = transactionF.id;
     expect(transactionF).toEqual(settingsF);
 
@@ -550,7 +550,7 @@ test('TransactionManager-add_modify', async () => {
 
     const changesF1 = { id: settingsF.id, description: 'This is description F1', memo: 'This is memo F1', };
     const settingsF1 = Object.assign({}, settingsF, changesF1);
-    const transactionF1 = await manager.asyncModifyTransactions(changesF1);
+    const transactionF1 = (await manager.asyncModifyTransactions(changesF1)).modifiedTransactionDataItem;
     expect(transactionF1).toEqual(settingsF1);
 
 
@@ -575,7 +575,7 @@ test('TransactionManager-add_modify', async () => {
         ]
     };
     const settingsE1 = Object.assign({}, settingsE, changesE1);
-    const resultDE1 = await manager.asyncModifyTransactions([changesD1, changesE1]);
+    const resultDE1 = (await manager.asyncModifyTransactions([changesD1, changesE1])).modifiedTransactionDataItems;
     expect(resultDE1).toEqual(expect.arrayContaining([settingsD1, settingsE1]));
 
     expect(await manager.asyncGetTransactionDateRange(sys.checkingId)).toEqual([ new YMDDate('2019-04-05'), new YMDDate('2019-10-15')]);
@@ -593,7 +593,7 @@ test('TransactionManager-add_modify', async () => {
         ymdDate: '2019-10-25',
     };
     const settingsE2 = Object.assign({}, settingsE1, changesE2);
-    const resultE2 = await manager.asyncModifyTransactions(changesE2, true);
+    const resultE2 = (await manager.asyncModifyTransactions(changesE2, true)).modifiedTransactionDataItem;
     expect(resultE2).toEqual(settingsE2);
     expect(await manager.asyncGetTransactionDataItemsWithIds(settingsE.id)).toEqual(settingsE1);
 
@@ -610,7 +610,7 @@ test('TransactionManager-add_modify', async () => {
             { accountId: sys.healthInsuranceId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 5000, },
         ],
     };
-    const transactionG = await manager.asyncAddTransactions(settingsG);
+    const transactionG = (await manager.asyncAddTransactions(settingsG)).newTransactionDataItem;
     settingsG.id = transactionG.id;
     expect(transactionG).toEqual(settingsG);
 
@@ -661,7 +661,7 @@ test('TransactionManager~remove', async () => {
             { accountId: sys.miscId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: 4000, },
         ]
     };
-    const resultABCDE = await manager.asyncAddTransactions([settingsA, settingsB, settingsC, settingsD, settingsE ]);
+    const resultABCDE = (await manager.asyncAddTransactions([settingsA, settingsB, settingsC, settingsD, settingsE ])).newTransactionDataItems;
     settingsA.id = resultABCDE[0].id;
     settingsB.id = resultABCDE[1].id;
     settingsC.id = resultABCDE[2].id;
@@ -674,14 +674,14 @@ test('TransactionManager~remove', async () => {
     await expect(manager.asyncRemoveTransactions(-123)).rejects.toThrow();
     expect(await manager.asyncGetTransactionDateRange(sys.householdId)).toEqual([new YMDDate(settingsD.ymdDate), new YMDDate(settingsD.ymdDate)]);
 
-    const removeD = await manager.asyncRemoveTransactions(settingsD.id);
+    const removeD = (await manager.asyncRemoveTransactions(settingsD.id)).removedTransactionDataItem;
     expect(removeD).toEqual(settingsD);
     expect(await manager.asyncGetTransactionDataItemsWithIds(settingsD.id)).toBeUndefined();
 
     let removeEventArg;
     manager.on('transactionsRemove', (arg) => removeEventArg = arg);
 
-    const removedAE = await manager.asyncRemoveTransactions([settingsA.id, settingsE.id]);
+    const removedAE = (await manager.asyncRemoveTransactions([settingsA.id, settingsE.id])).removedTransactionDataItems;
     expect(removedAE).toEqual([settingsA, settingsE]);
     expect(await manager.asyncGetTransactionDataItemsWithIds(settingsA.id)).toBeUndefined();
     expect(await manager.asyncGetTransactionDataItemsWithIds(settingsE.id)).toBeUndefined();
@@ -694,7 +694,7 @@ test('TransactionManager~remove', async () => {
     expect(await manager.asyncGetTransactionDateRange(sys.groceriesId)).toEqual([new YMDDate(settingsB.ymdDate), new YMDDate(settingsB.ymdDate)]);
 
 
-    const addedAE = await manager.asyncAddTransactions(removedAE);
+    const addedAE = (await manager.asyncAddTransactions(removedAE)).newTransactionDataItems;
     settingsA.id = addedAE[0].id;
     settingsE.id = addedAE[1].id;
     expect(addedAE).toEqual([settingsA, settingsE]);
@@ -761,7 +761,7 @@ test('Transactions-accountStateUpdates', async () => {
         ]};
     const checkingQuantityBaseValueD = checkingQuantityBaseValueC + settingsD.splits[0].quantityBaseValue;
 
-    const [transA, transB, transC, transD] = await transactionManager.asyncAddTransaction([settingsA, settingsB, settingsC, settingsD]);
+    const [transA, transB, transC, transD] = (await transactionManager.asyncAddTransaction([settingsA, settingsB, settingsC, settingsD])).newTransactionDataItems;
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(sys.checkingId, transD.id)).toEqual(
         [{ ymdDate: settingsD.ymdDate, quantityBaseValue: checkingQuantityBaseValueD }]);
@@ -795,7 +795,7 @@ test('Transactions-accountStateUpdates', async () => {
 
     // Move C before B
     const ymdDateCa = '2010-01-04';
-    await transactionManager.asyncModifyTransaction({ id: transC.id, ymdDate: ymdDateCa});
+    (await transactionManager.asyncModifyTransaction({ id: transC.id, ymdDate: ymdDateCa})).modifiedTransactionDataItem;
     const checkingQuantityBaseValueCa = checkingQuantityBaseValueA + settingsC.splits[0].quantityBaseValue;
     const checkingQuantityBaseValueBa = checkingQuantityBaseValueCa + settingsB.splits[0].quantityBaseValue;
 
@@ -851,7 +851,7 @@ test('Transactions-accountStateUpdates', async () => {
     const checkingQuantityBaseValueF0 = checkingQuantityBaseValueE1 + settingsF.splits[0].quantityBaseValue;
     const checkingQuantityBaseValueF1 = checkingQuantityBaseValueF0 + settingsF.splits[1].quantityBaseValue;
 
-    const [transE, transF] = await transactionManager.asyncAddTransaction([settingsE, settingsF]);
+    const [transE, transF] = (await transactionManager.asyncAddTransaction([settingsE, settingsF])).newTransactionDataItems;
 
     //  a: '2010-01-01', -100,  99900
     //  c: '2010-01-04', -300,  99600
@@ -916,7 +916,7 @@ test('Transactions-lotTransactions', async () => {
     const lot1StateA = { lotId: lot1.id, quantityBaseValue: changeA.quantityBaseValue, costBasisBaseValue: changeA.costBasisBaseValue };
     const aaplStateA = { ymdDate: settingsA.ymdDate, quantityBaseValue: lot1StateA.quantityBaseValue, lotStates: [lot1StateA]};
 
-    const transA = await transactionManager.asyncAddTransaction(settingsA);
+    const transA = (await transactionManager.asyncAddTransaction(settingsA)).newTransactionDataItem;
     settingsA.id = transA.id;
     expect(transA).toEqual(settingsA);
 
@@ -979,7 +979,7 @@ test('Transactions-lotTransactions', async () => {
         lotStates: [ lot1StateC, lot2StateC, lot3StateC, lot4StateC, ],
     };
 
-    const [transB, transC] = await transactionManager.asyncAddTransactions([settingsB, settingsC]);
+    const [transB, transC] = (await transactionManager.asyncAddTransactions([settingsB, settingsC])).newTransactionDataItems;
     settingsB.id = transB.id;
     settingsC.id = transC.id;
     expect(transB).toEqual(settingsB);
@@ -1019,7 +1019,7 @@ test('Transactions-lotTransactions', async () => {
         lotStates: [ lot1StateD, lot5StateD, lot2StateD, lot3StateD, lot4StateD, ],
     };
 
-    const transD = await transactionManager.asyncAddTransaction(settingsD);
+    const transD = (await transactionManager.asyncAddTransaction(settingsD)).newTransactionDataItem;
     settingsD.id = transD.id;
     expect(transD).toEqual(settingsD);
 
@@ -1077,7 +1077,7 @@ test('Transactions-lotTransactions', async () => {
             },
         ]
     };
-    const transE = await transactionManager.asyncModifyTransaction(settingsE);
+    const transE = (await transactionManager.asyncModifyTransaction(settingsE)).modifiedTransactionDataItem;
     settingsE.id = transE.id;
     settingsE.ymdDate = transD.ymdDate;
     expect(transE).toEqual(settingsE);
@@ -1142,7 +1142,7 @@ test('Transactions-lotTransactions', async () => {
         lotStates: [ lot1StateF, lot5StateF, lot2StateF, lot3StateF, lot4StateF, ],
     };
 
-    const transF = await transactionManager.asyncAddTransaction(settingsF);
+    const transF = (await transactionManager.asyncAddTransaction(settingsF)).newTransactionDataItem;
     settingsF.id = transF.id;
     expect(transF).toEqual(settingsF);
 
@@ -1180,7 +1180,7 @@ test('Transactions-lotTransactions', async () => {
         lotStates: [ lot1StateG, lot2StateG, lot3StateG, lot4StateG, ],
     };
 
-    const transG = await transactionManager.asyncAddTransaction(settingsG);
+    const transG = (await transactionManager.asyncAddTransaction(settingsG)).newTransactionDataItem;
     settingsG.id = transG.id;
     expect(transG).toEqual(settingsG);
 
@@ -1192,7 +1192,7 @@ test('Transactions-lotTransactions', async () => {
 
     //
     // Remove
-    const transBRemove = await transactionManager.asyncRemoveTransactions(transB.id);
+    const transBRemove = (await transactionManager.asyncRemoveTransactions(transB.id)).removedTransactionDataItem;
     expect(transBRemove).toEqual(transB);
 
     
@@ -1261,7 +1261,7 @@ test('Transactions-lotValidation', async () => {
     await expect(transactionManager.asyncAddTransaction(settingsA)).rejects.toThrow();
     changeA.costBasisBaseValue = 200000;
 
-    const transA = await transactionManager.asyncAddTransaction(settingsA);
+    const transA = (await transactionManager.asyncAddTransaction(settingsA)).newTransactionDataItem;
 
 
     // Can't add another of the same lot.
@@ -1283,7 +1283,7 @@ test('Transactions-lotValidation', async () => {
 
     const lot2 = await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 2'});
     changeB.lotId = lot2.id;
-    const transB = await transactionManager.asyncAddTransaction(settingsB);
+    const transB = (await transactionManager.asyncAddTransaction(settingsB)).newTransactionDataItem;
 
 
     const changeC = { lotId: lot2.id, quantityBaseValue: -20001, };
@@ -1307,7 +1307,7 @@ test('Transactions-lotValidation', async () => {
     const costBasisBaseValueC = changeC.quantityBaseValue * 25;
     settingsC.splits[0].quantityBaseValue = -costBasisBaseValueC;
     settingsC.splits[1].quantityBaseValue = costBasisBaseValueC;
-    const transC = await transactionManager.asyncAddTransaction(settingsC);
+    const transC = (await transactionManager.asyncAddTransaction(settingsC)).newTransactionDataItem;
     settingsC.id = transC.id;
     expect(transC).toEqual(settingsC);
 
@@ -1330,7 +1330,7 @@ test('Transactions-lotValidation', async () => {
 
     changeD.quantityBaseValue = 30000;
     changeD.costBasisBaseValue = 30000 * 20;
-    const transD = await transactionManager.asyncModifyTransaction(settingsD);
+    const transD = (await transactionManager.asyncModifyTransaction(settingsD)).modifiedTransactionDataItem;
     settingsD.ymdDate = transB.ymdDate;
     expect(transD).toEqual(settingsD);
 
@@ -1373,7 +1373,7 @@ test('Transactions-lotValidation', async () => {
             },
         ]
     };
-    const transF = await transactionManager.asyncModifyTransaction(settingsF);
+    const transF = (await transactionManager.asyncModifyTransaction(settingsF)).modifiedTransactionDataItem;
     expect(transF).toEqual(settingsF);
 
 

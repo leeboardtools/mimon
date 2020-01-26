@@ -44,9 +44,9 @@ test('JSONGzipAccountingFile-simple', async () => {
         const federalTaxes = accountManager1.getAccountDataItemWithId(sys.federalTaxesId);
 
         // Gonna remove this later to make sure remove works fine.
-        const newAccountA = await accountManager1.asyncAddAccount({
+        const newAccountA = (await accountManager1.asyncAddAccount({
             parentAccountId: sys.currentAssetsId, type: A.AccountType.BANK, pricedItemId: checking.pricedItemId, name: 'New Account A'
-        });
+        })).newAccountDataItem;
 
 
         // Priced items

@@ -567,13 +567,18 @@ export class AccountManager extends EventEmitter {
      * @property {AccountDataItem}  newAccountDataItem  The account data item being returned by the {@link AccountManager#asyncAddAccount} call.
      */
 
+    /**
+     * @typedef {object}    AccountManager~AddAccountResult
+     * @property {AccountDataItem}  newAccountDataItem
+     */
+
 
     /**
      * Adds a new account.
      * @param {(Account|AccountDataItem)} account   The account to add.
      * @param {(YMDDate|string)} [initialYMDDate]   The date to assign to the account state.
      * @param {boolean} validateOnly 
-     * @returns {AccountDataItem}   The newly added account's data item.
+     * @returns {AccountManager~AddAccountResult|undefined} <code>undefined</code> is returned if validateOnly is true.
      * @throws {Error}
      * @fires {AccountManager~accountAdd}
      */
@@ -621,7 +626,7 @@ export class AccountManager extends EventEmitter {
         const result = Object.assign({}, newAccountDataItem);
 
         this.emit('accountAdd', { newAccountDataItem: result });
-        return result;
+        return { newAccountDataItem: result };
     }
 
 
@@ -634,10 +639,15 @@ export class AccountManager extends EventEmitter {
      */
 
     /**
+     * @typedef {object}    AccountManager~RemoveAccountResult
+     * @property {AccountDataItem}  removedAccountDataItem
+     */
+
+    /**
      * Removes an account. Root accounts and the opening balances account cannot be removed.
      * @param {number} accountId 
      * @param {boolean} validateOnly 
-     * @returns {AccountDataItem}   The removed account data item.
+     * @returns {AccountManager~RemoveAccountResult|undefined}  <code>undefined</code> is returned if validateOnly is true.
      * @throws {Error}
      * @fires {AccountManager~accountRemove}
      */
@@ -712,7 +722,7 @@ export class AccountManager extends EventEmitter {
 
         this.emit('accountRemove', { removedAccountDataItem: accountDataItem });
 
-        return accountDataItem;
+        return { removedAccountDataItem: accountDataItem, };
     }
 
 
@@ -725,13 +735,18 @@ export class AccountManager extends EventEmitter {
      */
 
     /**
+     * @typedef {object}    TransactionManager~ModifyAccountResult
+     * @property {AccountDataItem}  newAccountDataItem
+     * @property {AccountDataItem}  oldAccountDataItem
+     */
+
+    /**
      * Modifies an account.
      * @param {(Account|AccountDataItem)} account The account id is required. Only specified properties are modified, with restrictions on the
      * type and priced item accounts. Note that the childAccountIds can only be shuffled about, the accounts in the list cannot be changed.
      * @param {boolean} validateOnly 
-     * @returns {AccountDataItem[]|undefined} If the account is modified, returns an array whose first element is the new account data item
-     * and whose second element is the old account item data. Otherwise <code>undefined</code> is returned (which happens if account does not actually
-     * change anything).
+     * @returns {TransactionManager~ModifyAccountResult|undefined}  <code>undefined</code> is returned if validateOnly is true or
+     * no changes were made to the account.
      * @throws {Error}
      * @fires {AccountManager~accountsModify}
      */
@@ -866,7 +881,7 @@ export class AccountManager extends EventEmitter {
             oldAccountDataItems: [result[1]],
         });
 
-        return result;
+        return { newAccountDataItem: result[0], oldAccountDataItem: result[1], };
     }
 
 }

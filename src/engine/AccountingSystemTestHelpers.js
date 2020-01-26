@@ -4,7 +4,7 @@ import { InMemoryAccountsHandler } from './Accounts';
 import { InMemoryLotsHandler } from './Lots';
 import * as A from './Accounts';
 import * as PI from './PricedItems';
-import * as T from './Transactions';
+//import * as T from './Transactions';
 import { getDecimalDefinition } from '../util/Quantities';
 import { InMemoryPricesHandler } from './Prices';
 import { InMemoryTransactionsHandler } from './Transactions';
@@ -154,27 +154,27 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
     sys.currentAssetsId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootAssetId, type: A.AccountType.ASSET, pricedItemId: baseCurrencyPricedItemId, name: 'Current Assets', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.cashId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.currentAssetsId, type: A.AccountType.CASH, pricedItemId: baseCurrencyPricedItemId, name: 'Cash', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     
     sys.checkingId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.currentAssetsId, type: A.AccountType.BANK, pricedItemId: baseCurrencyPricedItemId, name: 'Checking Account', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     
     sys.savingsId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.currentAssetsId, type: A.AccountType.BANK, pricedItemId: baseCurrencyPricedItemId, name: 'Savings Account', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
         
     sys.fixedAssetsId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootAssetId, type: A.AccountType.ASSET, pricedItemId: baseCurrencyPricedItemId, name: 'Fixed Assets', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     
     sys.housePricedItemId = (await pricedItemManager.asyncAddPricedItem(
@@ -183,7 +183,7 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
     sys.houseId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.fixedAssetsId, type: A.AccountType.REAL_ESTATE, pricedItemId: sys.housePricedItemId, name: 'Main House', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.secondHousePricedItemId = (await pricedItemManager.asyncAddPricedItem(
         { type: PI.PricedItemType.REAL_ESTATE, currency: 'USD', quantityDefinition: getDecimalDefinition(0), name: 'Second House', }
@@ -191,7 +191,7 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
     sys.secondHouseId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.fixedAssetsId, type: A.AccountType.REAL_ESTATE, pricedItemId: sys.secondHousePricedItemId, name: 'Vacation House', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     
     sys.aaplPricedItemId = (await pricedItemManager.asyncAddPricedItem(
@@ -220,59 +220,59 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
     sys.investmentsId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootAssetId, type: A.AccountType.ASSET, pricedItemId: baseCurrencyPricedItemId, name: 'Investsments', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.brokerageAId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.investmentsId, type: A.AccountType.BROKERAGE, pricedItemId: baseCurrencyPricedItemId, name: 'Brokerage A', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.aaplBrokerageAId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.brokerageAId, type: A.AccountType.SECURITY, pricedItemId: sys.aaplPricedItemId, name: 'AAPL', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.msftBrokerageAId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.brokerageAId, type: A.AccountType.SECURITY, pricedItemId: sys.msftPricedItemId, name: 'MSFT', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.mmmBrokerageAId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.brokerageAId, type: A.AccountType.SECURITY, pricedItemId: sys.mmmPricedItemId, name: 'MMM', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
 
     sys.brokerageBId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.investmentsId, type: A.AccountType.BROKERAGE, pricedItemId: baseCurrencyPricedItemId, name: 'Brokerage B', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.ibmBrokerageBId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.brokerageBId, type: A.AccountType.SECURITY, pricedItemId: sys.ibmPricedItemId, name: 'IBM', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.vwusxBrokerageBId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.brokerageBId, type: A.AccountType.MUTUAL_FUND, pricedItemId: sys.vwusxPricedItemId, name: 'Vanguard VWUSX', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
 
     sys.iraId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.investmentsId, type: A.AccountType.BROKERAGE, pricedItemId: baseCurrencyPricedItemId, name: 'IRA', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.aaplIRAId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.iraId, type: A.AccountType.SECURITY, pricedItemId: sys.aaplPricedItemId, name: 'AAPL', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.tibexIRAId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.iraId, type: A.AccountType.MUTUAL_FUND, pricedItemId: sys.tibexPricedItemId, name: 'TIAA TIBEX', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
 
     
@@ -282,33 +282,33 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
     sys.creditCardsId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootLiabilityId, type: A.AccountType.LIABILITY, pricedItemId: baseCurrencyPricedItemId, name: 'Credit Cards', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.amexCardId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.creditCardsId, type: A.AccountType.CREDIT_CARD, pricedItemId: baseCurrencyPricedItemId, name: 'American Express', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.discoverreditCardId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.creditCardsId, type: A.AccountType.CREDIT_CARD, pricedItemId: baseCurrencyPricedItemId, name: 'Discover Card', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
 
     sys.loansId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootLiabilityId, type: A.AccountType.LIABILITY, pricedItemId: baseCurrencyPricedItemId, name: 'Loans', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.autoLoanId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.loansId, type: A.AccountType.LOAN, pricedItemId: baseCurrencyPricedItemId, name: 'Auto Loan', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.mortgageId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.loansId, type: A.AccountType.MORTGAGE, pricedItemId: baseCurrencyPricedItemId, name: 'Mortgage', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
 
     //
@@ -317,32 +317,32 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
     sys.bonusId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootIncomeId, type: A.AccountType.INCOME, pricedItemId: baseCurrencyPricedItemId, name: 'Bonus', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.dividendsId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootIncomeId, type: A.AccountType.INCOME, pricedItemId: baseCurrencyPricedItemId, name: 'Dividend Income', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.giftsReceivedId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootIncomeId, type: A.AccountType.INCOME, pricedItemId: baseCurrencyPricedItemId, name: 'Gifts Received', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.interestId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootIncomeId, type: A.AccountType.INCOME, pricedItemId: baseCurrencyPricedItemId, name: 'Interest Income', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.otherIncomeId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootIncomeId, type: A.AccountType.INCOME, pricedItemId: baseCurrencyPricedItemId, name: 'Other Income', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     
     sys.salaryId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootIncomeId, type: A.AccountType.INCOME, pricedItemId: baseCurrencyPricedItemId, name: 'Salary', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     
     
     //
@@ -351,121 +351,121 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
     sys.autoId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Auto', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.autoInsuranceId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.autoId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Auto Insurance', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.autoFuelId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.autoId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Gas', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.autoMaintenanceId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.autoId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Maintenance', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
 
     sys.commissionsId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Commissions', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.feesId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Fees', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     
     sys.charityId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Charity', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.groceriesId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Groceries', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.entertainmentId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Entertainment', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.householdId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Household', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.insurancePremiumsId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Insurance', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.healthInsuranceId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.insurancePremiumsId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Health Insurance', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.dentalInsuranceId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.insurancePremiumsId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Dental Insurance', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.lifeInsuranceId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.insurancePremiumsId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Life Insurance', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.medicalId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Medical', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
     sys.miscId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Miscellaneous', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
 
     sys.taxesId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Taxes', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.federalTaxesId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.taxesId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Federal Taxes', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.stateTaxesId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.taxesId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'State Taxes', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.medicareTaxesId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.taxesId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Medicare Taxes', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.socSecTaxesId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.taxesId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Social Security Taxes', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     
 
     sys.utilitiesId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Utilities', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.electricityId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.utilitiesId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Power', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.gasId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.utilitiesId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Gas', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.phoneId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.utilitiesId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Phone', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
     sys.internetId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.utilitiesId, type: A.AccountType.EXPENSE, pricedItemId: baseCurrencyPricedItemId, name: 'Internet', },
         initialYMDDate
-    )).id;
+    )).newAccountDataItem.id;
 
 
     return sys;

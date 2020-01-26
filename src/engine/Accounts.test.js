@@ -217,7 +217,7 @@ test('AccountManager-add', async () => {
         pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
         name: 'Current Assets',
     };
-    const assetA = await accountManager.asyncAddAccount(assetOptionsA);
+    const assetA = (await accountManager.asyncAddAccount(assetOptionsA)).newAccountDataItem;
     ATH.expectAccount(assetA, assetOptionsA);
 
     expect(accountManager.getRootAssetAccount().childAccountIds.includes(assetA.id)).toBeTruthy();
@@ -232,7 +232,7 @@ test('AccountManager-add', async () => {
         name: 'Checking Account',
         description: 'This is a checking account',
     };
-    const bankA = await accountManager.asyncAddAccount(bankOptionsA);
+    const bankA = (await accountManager.asyncAddAccount(bankOptionsA)).newAccountDataItem;
     ATH.expectAccount(bankA, bankOptionsA);
 
     accountDataItem = accountManager.getAccountDataItemWithId(assetA.id);
@@ -248,7 +248,7 @@ test('AccountManager-add', async () => {
         pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
         name: 'Cash Account',
     };
-    const cashA = await accountManager.asyncAddAccount(cashOptionsA);
+    const cashA = (await accountManager.asyncAddAccount(cashOptionsA)).newAccountDataItem;
     ATH.expectAccount(cashA, cashOptionsA);
 
     accountDataItem = accountManager.getAccountDataItemWithId(assetA.id);
@@ -264,7 +264,7 @@ test('AccountManager-add', async () => {
         pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
         name: 'Brokerage Account',
     };
-    const brokerageA = await accountManager.asyncAddAccount(brokerageOptionsA);
+    const brokerageA = (await accountManager.asyncAddAccount(brokerageOptionsA)).newAccountDataItem;
     ATH.expectAccount(brokerageA, brokerageOptionsA);
 
     accountDataItem = accountManager.getAccountDataItemWithId(assetA.id);
@@ -285,7 +285,7 @@ test('AccountManager-add', async () => {
     await expect(accountManager.asyncAddAccount(securityOptionsA)).rejects.toThrow();
 
     securityOptionsA.pricedItemId = securityPricedItemA.id;
-    const securityA = await accountManager.asyncAddAccount(securityOptionsA);
+    const securityA = (await accountManager.asyncAddAccount(securityOptionsA)).newAccountDataItem;
     ATH.expectAccount(securityA, securityOptionsA);
 
     accountDataItem = accountManager.getAccountDataItemWithId(brokerageA.id);
@@ -312,7 +312,7 @@ test('AccountManager-add', async () => {
 
     mutualFundOptionsA.parentAccountId = brokerageA.id;
 
-    const mutualFundA = await accountManager.asyncAddAccount(mutualFundOptionsA);
+    const mutualFundA = (await accountManager.asyncAddAccount(mutualFundOptionsA)).newAccountDataItem;
     ATH.expectAccount(mutualFundA, mutualFundOptionsA);
 
 
@@ -330,7 +330,7 @@ test('AccountManager-add', async () => {
     await expect(accountManager.asyncAddAccount(realEstateOptionsA)).rejects.toThrow();
     realEstateOptionsA.pricedItemId = realEstatePricedItemA.id;
 
-    const realEstateA = await accountManager.asyncAddAccount(realEstateOptionsA);
+    const realEstateA = (await accountManager.asyncAddAccount(realEstateOptionsA)).newAccountDataItem;
     ATH.expectAccount(realEstateA, realEstateOptionsA);
 
 
@@ -348,7 +348,7 @@ test('AccountManager-add', async () => {
     await expect(accountManager.asyncAddAccount(propertyOptionsA)).rejects.toThrow();
     propertyOptionsA.pricedItemId = propertyPricedItemA.id;
 
-    const propertyA = await accountManager.asyncAddAccount(propertyOptionsA);
+    const propertyA = (await accountManager.asyncAddAccount(propertyOptionsA)).newAccountDataItem;
     ATH.expectAccount(propertyA, propertyOptionsA);
 
 
@@ -365,7 +365,7 @@ test('AccountManager-add', async () => {
     await expect(accountManager.asyncAddAccount(liabilityOptionsA)).rejects.toThrow();
     liabilityOptionsA.parentAccountId = accountManager.getRootLiabilityAccountId();
 
-    const liabilityA = await accountManager.asyncAddAccount(liabilityOptionsA);
+    const liabilityA = (await accountManager.asyncAddAccount(liabilityOptionsA)).newAccountDataItem;
     ATH.expectAccount(liabilityA, liabilityOptionsA);
 
 
@@ -382,7 +382,7 @@ test('AccountManager-add', async () => {
     await expect(accountManager.asyncAddAccount(creditCardOptionsA)).rejects.toThrow();
     creditCardOptionsA.parentAccountId = liabilityA.id;
 
-    const creditCardA = await accountManager.asyncAddAccount(creditCardOptionsA);
+    const creditCardA = (await accountManager.asyncAddAccount(creditCardOptionsA)).newAccountDataItem;
     ATH.expectAccount(creditCardA, creditCardOptionsA);
     
     accountDataItem = accountManager.getAccountDataItemWithId(liabilityA.id);
@@ -402,7 +402,7 @@ test('AccountManager-add', async () => {
     await expect(accountManager.asyncAddAccount(loanOptionsA)).rejects.toThrow();
     loanOptionsA.parentAccountId = liabilityA.id;
 
-    const loanA = await accountManager.asyncAddAccount(loanOptionsA);
+    const loanA = (await accountManager.asyncAddAccount(loanOptionsA)).newAccountDataItem;
     ATH.expectAccount(loanA, loanOptionsA);
     
     accountDataItem = accountManager.getAccountDataItemWithId(liabilityA.id);
@@ -422,7 +422,7 @@ test('AccountManager-add', async () => {
     await expect(accountManager.asyncAddAccount(mortgageOptionsA)).rejects.toThrow();
     mortgageOptionsA.parentAccountId = liabilityA.id;
 
-    const mortgageA = await accountManager.asyncAddAccount(mortgageOptionsA);
+    const mortgageA = (await accountManager.asyncAddAccount(mortgageOptionsA)).newAccountDataItem;
     ATH.expectAccount(mortgageA, mortgageOptionsA);
     
     accountDataItem = accountManager.getAccountDataItemWithId(liabilityA.id);
@@ -442,7 +442,7 @@ test('AccountManager-add', async () => {
     await expect(accountManager.asyncAddAccount(incomeOptionsA)).rejects.toThrow();
     incomeOptionsA.parentAccountId = accountManager.getRootIncomeAccountId();
 
-    const incomeA = await accountManager.asyncAddAccount(incomeOptionsA);
+    const incomeA = (await accountManager.asyncAddAccount(incomeOptionsA)).newAccountDataItem;
     ATH.expectAccount(incomeA, incomeOptionsA);
     
     accountDataItem = accountManager.getRootIncomeAccount();
@@ -455,7 +455,7 @@ test('AccountManager-add', async () => {
         pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
         name: 'Child Income Account',
     };
-    const incomeB = await accountManager.asyncAddAccount(incomeOptionsB);
+    const incomeB = (await accountManager.asyncAddAccount(incomeOptionsB)).newAccountDataItem;
     ATH.expectAccount(incomeB, incomeOptionsB);
     
     accountDataItem = accountManager.getAccountDataItemWithId(incomeA.id);
@@ -475,7 +475,7 @@ test('AccountManager-add', async () => {
     await expect(accountManager.asyncAddAccount(expenseOptionsA)).rejects.toThrow();
     expenseOptionsA.parentAccountId = accountManager.getRootExpenseAccountId();
 
-    const expenseA = await accountManager.asyncAddAccount(expenseOptionsA);
+    const expenseA = (await accountManager.asyncAddAccount(expenseOptionsA)).newAccountDataItem;
     ATH.expectAccount(expenseA, expenseOptionsA);
     
     accountDataItem = accountManager.getRootExpenseAccount();
@@ -488,7 +488,7 @@ test('AccountManager-add', async () => {
         pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
         name: 'Child Expense Account',
     };
-    const expenseB = await accountManager.asyncAddAccount(expenseOptionsB);
+    const expenseB = (await accountManager.asyncAddAccount(expenseOptionsB)).newAccountDataItem;
     ATH.expectAccount(expenseB, expenseOptionsB);
     
     accountDataItem = accountManager.getAccountDataItemWithId(expenseA.id);
@@ -508,7 +508,7 @@ test('AccountManager-add', async () => {
     await expect(accountManager.asyncAddAccount(equityOptionsA)).rejects.toThrow();
     equityOptionsA.parentAccountId = accountManager.getRootEquityAccountId();
 
-    const equityA = await accountManager.asyncAddAccount(equityOptionsA);
+    const equityA = (await accountManager.asyncAddAccount(equityOptionsA)).newAccountDataItem;
     ATH.expectAccount(equityA, equityOptionsA);
     
     accountDataItem = accountManager.getRootEquityAccount();
@@ -526,7 +526,7 @@ test('AccountManager-add', async () => {
         pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
         name: 'Child Equity Account',
     };
-    const equityB = await accountManager.asyncAddAccount(equityOptionsB);
+    const equityB = (await accountManager.asyncAddAccount(equityOptionsB)).newAccountDataItem;
     ATH.expectAccount(equityB, equityOptionsB);
     
     accountDataItem = accountManager.getAccountDataItemWithId(equityA.id);
@@ -581,7 +581,10 @@ test('AccountManager-modify', async () => {
     });
 
     // Now for the actual move...
-    [account, oldAccount] = await accountManager.asyncModifyAccount(iraMove);
+    let result;
+    result = await accountManager.asyncModifyAccount(iraMove);
+    account = result.newAccountDataItem;
+    oldAccount = result.oldAccountDataItem;
     expect(account.parentAccountId).toEqual(sys.fixedAssetsId);
 
     // accountsModify event test
@@ -611,7 +614,8 @@ test('AccountManager-modify', async () => {
 
     // Change type.
     const changeCheckingType = { id: sys.checkingId, type: A.AccountType.BROKERAGE };
-    [account] = await accountManager.asyncModifyAccount(changeCheckingType);
+    result = await accountManager.asyncModifyAccount(changeCheckingType);
+    account = result.newAccountDataItem;
     ATH.expectAccount(account, changeCheckingType);
 
     await accountManager.asyncModifyAccount({ id: sys.checkingId, type: A.AccountType.BANK });
@@ -632,7 +636,7 @@ test('AccountManager-modify', async () => {
 
     expect(accountManager.getAccountDataItemWithRefId('1234')).toEqual(account);
 
-    [account] = await accountManager.asyncModifyAccount({ id: sys.checkingId, refId: '9', });
+    account = (await accountManager.asyncModifyAccount({ id: sys.checkingId, refId: '9', })).newAccountDataItem;
     expect(accountManager.getAccountDataItemWithRefId('1234')).toBeUndefined();
 
     expect(accountManager.getAccountDataItemWithRefId('9')).toEqual(account);
@@ -673,7 +677,7 @@ test('AccountManager-removeAccount', async () => {
     });
 
     let account;
-    account = await accountManager.asyncRemoveAccount(sys.iraId);
+    account = (await accountManager.asyncRemoveAccount(sys.iraId)).removedAccountDataItem;
     expect(account).toEqual(originalAccount);
 
     // accountRemove event test.
@@ -690,7 +694,7 @@ test('AccountManager-removeAccount', async () => {
 
 
     // We should be able to add back the account.
-    account = await accountManager.asyncAddAccount(account);
+    account = (await accountManager.asyncAddAccount(account)).newAccountDataItem;
     const newIRAId = account.id;
     parentAccount = accountManager.getAccountDataItemWithId(sys.investmentsId);
     expect(parentAccount.childAccountIds).toEqual(expect.arrayContaining([newIRAId]));
