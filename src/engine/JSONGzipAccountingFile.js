@@ -8,6 +8,7 @@ import { InMemoryLotsHandler } from './Lots';
 import { InMemoryPricedItemsHandler } from './PricedItems';
 import { PricesHandler } from './Prices';
 import { TransactionsHandlerImplBase } from './Transactions';
+import { InMemoryUndoHandler } from '../util/Undo';
 import { AccountingSystem } from './AccountingSystem';
 import { userError } from '../util/UserMessages';
 import { GroupedItemManager, ItemGroups } from '../util/GroupedItemManager';
@@ -81,6 +82,13 @@ class JSONGzipLotsHandler extends InMemoryLotsHandler {
  * The priced items handler implementation.
  */
 class JSONGzipPricedItemsHandler extends InMemoryPricedItemsHandler {
+    constructor(accountingFile) {
+        super();
+        this._accountingFile = accountingFile;
+    }
+}
+
+class JSONGzipUndoHandler extends InMemoryUndoHandler {
     constructor(accountingFile) {
         super();
         this._accountingFile = accountingFile;
@@ -552,6 +560,7 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._accountsHandler = new JSONGzipAccountsHandler(this);
         this._pricedItemsHandler = new JSONGzipPricedItemsHandler(this);
         this._lotsHandler = new JSONGzipLotsHandler(this);
+        this._undoHandler = new JSONGzipUndoHandler(this);
 
         this._pricesHandler = new JSONGzipPricesHandler(this);
         this._transactionsHandler = new JSONGzipTransactionsHandler(this, 
@@ -573,6 +582,7 @@ class JSONGzipAccountingFile extends AccountingFile {
                 lotManager: { handler: this._lotsHandler },
                 priceManager: { handler: this._pricesHandler },
                 transactionManager: { handler: this._transactionsHandler },
+                undoManager: { handler: this._undoHandler },
             });
 
         this._accountingSystem = new AccountingSystem(options);
@@ -647,6 +657,7 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._lotsHandler = undefined;
         this._pricesHandler = undefined;
         this._transactionsHandler = undefined;
+        this._undoHandler = undefined;
     }
 }
 

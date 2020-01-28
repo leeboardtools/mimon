@@ -4,6 +4,7 @@ import { PricedItemManager } from './PricedItems';
 import { LotManager } from './Lots';
 import { TransactionManager } from './Transactions';
 import { PriceManager } from './Prices';
+import { UndoManager } from '../util/Undo';
 
 /**
  * The main interface object from the engine, this provides access to the various managers.
@@ -16,6 +17,9 @@ export class AccountingSystem extends EventEmitter {
 
         this._baseCurrency = options.baseCurrency || 'USD';
 
+        // This should come first.
+        this._undoManager = new UndoManager(options.undoManager);
+
         // Needs to come before the account manager...
         this._pricedItemManager = new PricedItemManager(this, options.pricedItemManager);
 
@@ -24,12 +28,14 @@ export class AccountingSystem extends EventEmitter {
 
         this._priceManager = new PriceManager(this, options.priceManager);
         this._transactionManager = new TransactionManager(this, options.transactionManager);
+
     }
 
     /**
      * This must be called before the accounting system can be used.
      */
     async asyncSetupForUse() {
+        await this._undoManager.asyncSetupForUse();
         await this._pricedItemManager.asyncSetupForUse();
         await this._priceManager.asyncSetupForUse();
         await this._accountManager.asyncSetupForUse();
@@ -61,6 +67,11 @@ export class AccountingSystem extends EventEmitter {
      * @returns {TransactionManager}
      */
     getTransactionManager() { return this._transactionManager; }
+
+    /**
+     * @returns {UndoManager}
+     */
+    getUndoManager() { return this._undoManager; }
 
     /**
      * @return {string} The 3 letter currency code for the base currency. The base currency is used whenever an

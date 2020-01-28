@@ -8,6 +8,7 @@ import * as PI from './PricedItems';
 import { getDecimalDefinition } from '../util/Quantities';
 import { InMemoryPricesHandler } from './Prices';
 import { InMemoryTransactionsHandler } from './Transactions';
+import { InMemoryUndoHandler } from '../util/Undo';
 
 
 //
@@ -33,6 +34,10 @@ export async function asyncCreateAccountingSystem(options) {
 
             transactionManager: {
                 handler: new InMemoryTransactionsHandler(),
+            },
+
+            undoManager: {
+                handler: new InMemoryUndoHandler(),
             },
         },
         options);

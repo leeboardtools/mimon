@@ -113,6 +113,12 @@
     "TransactionManager-modify_lot_quantity_too_big": "The quantity for the lot sale must be less than or equal to the quantity in the lot.",
     "TransactionManager-lot_split_merge_quantity_too_big":  "The amount to modify the lot split/merge must ",
 
+
+    "UndoManager-id_invalid": ["Cannot undo. The undo id '", "' was not found."],
+    "UndoManager-applier_not_registered": ["Bug: The undo applier '", "' has not been registered."],
+    "UndoManager-undo_id_invalid": ["The undo data for undo id '", "' is not available."],
+    "UndoManager-applier_not_found": ["The undo applier '", "' is not available."],
+
     
     "JSONGzipAccountingFile-dir_not_empty": ["The folder '", "' must be empty in order to create a new accounting file system there."],
     "JSONGzipAccountingFile-ledger_tag_missing": ["The file '", "' is not a valid MiMon ledger file, the tag is incorrect or missing."],

@@ -263,7 +263,7 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
 - Add a undo mechanism.
     - After an action, there is an undo state available. Maybe part of the return from the action?
     - Have an applyUndo().
-        - Would be sequentially controlled.
+        - Would need to be sequentially controlled.
 
     - Why not just do the opposite of the action?
         - Add -> Remove
@@ -287,20 +287,21 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
         - What about Redo?
             - Well, the Action has all the information from the original Do, so it can just redo itself.
 
-- For removal of lots, need to:
-    - Removing a transaction:
-        - If the transaction represents a new lot,
-            - error if there are other transactions referring to the lot.
-        - Otherwise...
-            - Nothing?
 
-    - Transaction modifications:
-        - Need to check if an add lot is not replaced with another add lot.
+- How will this work?
+    - add/modify/remove in all the managers now return an object, so one property can be set to the undoState.
+    - Only the latest undoState can be undone, but once the latest undoState is undone, the previous undoState
+    may be undone. Therefore keep track of undo state ids and a stack of those ids.
+    - The manager will then need to track their different undo states.
+    - Should there be a master undo manager?
+        - Maybe, since the order in which actions are performed may be important across subsystems.
+        - Could we make it all managed by AccountingSystem?
+            - AccountingSystem would have an applyUndoState(), where it would verify that the action is correct
+            in the undo sequence, and then delegate it to the appropriate manager.
+            - Undo States should be pure data, so they can be JSON'd out.
 
-- Lot validation scenarios:
-    - Can't delete an add lot transaction of there are other transactions referring to the lot.
-    - This applies to:
-        - removing a transaction via asyncRemoveTransaction()
-        - modifying an addLot split so it no longer refers to the lot.
-            - tricky part here is to ensure that the splits remain valid.
-    - 
+- How does this fit in with actions?
+    - Actions are on a higher level.
+    - An action may perform multiple DB activities, it would just need to keep track of the first undo data item ids.
+    - Actions would perform the forward part. The undo manager/undo data item ids would handle the undo part.
+    - Once an action is undone the undo id is no longer valid.
