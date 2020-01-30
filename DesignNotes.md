@@ -305,3 +305,7 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
     - An action may perform multiple DB activities, it would just need to keep track of the first undo data item ids.
     - Actions would perform the forward part. The undo manager/undo data item ids would handle the undo part.
     - Once an action is undone the undo id is no longer valid.
+
+        // TODO: Get rid of the ability to move accounts listed as child accounts to accounts
+        // being added by asyncAddAccount(), this was originally to support undoing of asyncRemoveAccount()
+        // but now that we have an undo mechanism, we don't need that.

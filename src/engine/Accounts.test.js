@@ -207,6 +207,7 @@ test('AccountManager-add', async () => {
 
 
     let accountDataItem;
+    let result;
 
     //
     // ASSET
@@ -232,11 +233,24 @@ test('AccountManager-add', async () => {
         name: 'Checking Account',
         description: 'This is a checking account',
     };
-    const bankA = (await accountManager.asyncAddAccount(bankOptionsA)).newAccountDataItem;
+    result = await accountManager.asyncAddAccount(bankOptionsA);
+    const bankA = result.newAccountDataItem;
     ATH.expectAccount(bankA, bankOptionsA);
 
     accountDataItem = accountManager.getAccountDataItemWithId(assetA.id);
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([bankA.id]));
+
+
+    // Check undo.
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(accountManager.getAccountDataItemWithId(bankA.id)).toBeUndefined();
+
+    accountDataItem = accountManager.getAccountDataItemWithId(assetA.id);
+    expect(accountDataItem.childAccountIds).not.toEqual(expect.arrayContaining([bankA.id]));
+
+    const bankA1 = (await accountManager.asyncAddAccount(bankOptionsA)).newAccountDataItem;
+    expect(bankA1).toEqual(bankA);
+
 
 
     //
@@ -602,6 +616,33 @@ test('AccountManager-modify', async () => {
     expect(account.childAccountIds).not.toEqual(expect.arrayContaining([sys.iraId]));
 
 
+    // Undo...
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+/*
+    expect(account.parentAccountId).toEqual(sys.investmentsId);
+
+    account = accountManager.getAccountDataItemWithId(sys.fixedAssetsId);
+    expect(account.childAccountIds).not.toEqual(expect.arrayContaining([sys.iraId]));
+
+    // And not investmentsId
+    account = accountManager.getAccountDataItemWithId(sys.investmentsId);
+    expect(account.childAccountIds).toEqual(expect.arrayContaining([sys.iraId]));
+
+
+    // And back...
+    result = await accountManager.asyncModifyAccount(iraMove);
+    account = result.newAccountDataItem;
+    oldAccount = result.oldAccountDataItem;
+
+    // Now a child of fixedAssetsId
+    account = accountManager.getAccountDataItemWithId(sys.fixedAssetsId);
+    expect(account.childAccountIds).toEqual(expect.arrayContaining([sys.iraId]));
+
+    // And not investmentsId
+    account = accountManager.getAccountDataItemWithId(sys.investmentsId);
+    expect(account.childAccountIds).not.toEqual(expect.arrayContaining([sys.iraId]));
+
+
     // Can't move root account.
     await expect(accountManager.asyncModifyAccount({ id: accountManager.getRootAssetAccountId(), parentAccountId: sys.fixedAssetsId })).rejects.toThrow();
 
@@ -647,7 +688,7 @@ test('AccountManager-modify', async () => {
     await accountManager.asyncModifyAccount({ id: sys.savingsId, refId: '8'});
     account = accountManager.getAccountDataItemWithRefId('8');
     expect(account.id).toEqual(sys.savingsId);
-
+*/
 });
 
 
@@ -676,8 +717,10 @@ test('AccountManager-removeAccount', async () => {
         eventArgs = args;
     });
 
+
     let account;
-    account = (await accountManager.asyncRemoveAccount(sys.iraId)).removedAccountDataItem;
+    const result = await accountManager.asyncRemoveAccount(sys.iraId);
+    account = result.removedAccountDataItem;
     expect(account).toEqual(originalAccount);
 
     // accountRemove event test.
@@ -694,15 +737,14 @@ test('AccountManager-removeAccount', async () => {
 
 
     // We should be able to add back the account.
-    account = (await accountManager.asyncAddAccount(account)).newAccountDataItem;
-    const newIRAId = account.id;
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    account = accountManager.getAccountDataItemWithId(sys.iraId);
     parentAccount = accountManager.getAccountDataItemWithId(sys.investmentsId);
-    expect(parentAccount.childAccountIds).toEqual(expect.arrayContaining([newIRAId]));
+    expect(parentAccount.childAccountIds).toEqual(expect.arrayContaining([sys.iraId]));
     expect(parentAccount.childAccountIds).not.toEqual(expect.arrayContaining([sys.aaplIRAId, sys.tibexIRAId]));
 
-    expect(accountManager.getAccountDataItemWithId(sys.aaplIRAId).parentAccountId).toEqual(newIRAId);
-    expect(accountManager.getAccountDataItemWithId(sys.tibexIRAId).parentAccountId).toEqual(newIRAId);
-
+    expect(accountManager.getAccountDataItemWithId(sys.aaplIRAId).parentAccountId).toEqual(sys.iraId);
+    expect(accountManager.getAccountDataItemWithId(sys.tibexIRAId).parentAccountId).toEqual(sys.iraId);
 
     //
     // Test JSON.

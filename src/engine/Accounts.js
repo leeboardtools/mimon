@@ -290,6 +290,18 @@ export class AccountManager extends EventEmitter {
         
         this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorOptions());
 
+
+        const undoManager = accountingSystem.getUndoManager();
+        this._asyncApplyUndoAddAccount = this._asyncApplyUndoAddAccount.bind(this);
+        undoManager.registerUndoApplier('addAccount', this._asyncApplyUndoAddAccount);
+
+        this._asyncApplyUndoRemoveAccount = this._asyncApplyUndoRemoveAccount.bind(this);
+        undoManager.registerUndoApplier('removeAccount', this._asyncApplyUndoRemoveAccount);
+
+        this._asyncApplyUndoModifyAccount = this._asyncApplyUndoModifyAccount.bind(this);
+        undoManager.registerUndoApplier('modifyAccount', this._asyncApplyUndoModifyAccount);
+
+
         this._accountsById = new Map();
         this._accountsByRefId = new Map();
 
@@ -321,7 +333,10 @@ export class AccountManager extends EventEmitter {
 
         this._openingBalancesAccountId = baseOptions.openingBalancesAccountId;
         this._openingBalancesAccount = this._accountsById.get(this._openingBalancesAccountId);
+
+
     }
+
 
     async asyncSetupForUse() {
         const accountingSystem = this._accountingSystem;
@@ -329,64 +344,64 @@ export class AccountManager extends EventEmitter {
         const currencyPricedItemId = pricedItemManager.getCurrencyPricedItemId(accountingSystem.getBaseCurrency());
 
         if (!this._rootAssetAccount) {
-            this._rootAssetAccount = await this._asyncAddAccount({
+            this._rootAssetAccount = (await this._asyncAddAccount({
                 type: AccountType.ASSET,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Assets_name'),
                 description: userMsg('Account-Root_Assets_desc'),
-            });
+            })).newAccountDataItem;
             this._rootAssetAccountId = this._rootAssetAccount.id;
         }
         
         if (!this._rootLiabilityAccount) {
-            this._rootLiabilityAccount = await this._asyncAddAccount({
+            this._rootLiabilityAccount = (await this._asyncAddAccount({
                 type: AccountType.LIABILITY,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Liabilities_name'),
                 description: userMsg('Account-Root_Liabilities_desc'),
-            });
+            })).newAccountDataItem;
             this._rootLiabilityAccountId = this._rootLiabilityAccount.id;
         }
 
         if (!this._rootIncomeAccount) {
-            this._rootIncomeAccount = await this._asyncAddAccount({
+            this._rootIncomeAccount = (await this._asyncAddAccount({
                 type: AccountType.INCOME,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Income_name'),
                 description: userMsg('Account-Root_Income_desc'),
-            });
+            })).newAccountDataItem;
             this._rootIncomeAccountId = this._rootIncomeAccount.id;
         }
 
         if (!this._rootExpenseAccount) {
-            this._rootExpenseAccount = await this._asyncAddAccount({
+            this._rootExpenseAccount = (await this._asyncAddAccount({
                 type: AccountType.EXPENSE,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Expense_name'),
                 description: userMsg('Account-Root_Expense_desc'),
-            });
+            })).newAccountDataItem;
             this._rootExpenseAccountId = this._rootExpenseAccount.id;
         }
 
         if (!this._rootEquityAccount) {
-            this._rootEquityAccount = await this._asyncAddAccount({
+            this._rootEquityAccount = (await this._asyncAddAccount({
                 type: AccountType.EQUITY,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Equity_name'),
                 description: userMsg('Account-Root_Equity_desc'),
-            });
+            })).newAccountDataItem;
             this._rootEquityAccountId = this._rootEquityAccount.id;
         }
 
         if (!this._openingBalancesAccount) {
-            this._openingBalancesAccount = await this._asyncAddAccount(
+            this._openingBalancesAccount = (await this._asyncAddAccount(
                 {
                     parentAccountId: this._rootEquityAccountId,
                     type: AccountType.OPENING_BALANCE,
                     pricedItemId: currencyPricedItemId, 
                     name: userMsg('Account-Opening_Balances_name'),
                     description: userMsg('Account-Opening_Balances_desc'),
-                });
+                })).newAccountDataItem;
             this._openingBalancesAccountId = this._openingBalancesAccount.id;
         }
 
@@ -468,6 +483,100 @@ export class AccountManager extends EventEmitter {
     }
 
 
+    async _asyncApplyUndoRemoveAccount(undoDataItem) {
+        const { removedAccountDataItem, parentChildIndex, } = undoDataItem;
+
+        const parentAccountDataItem = this.getAccountDataItemWithId(removedAccountDataItem.parentAccountId);
+        parentAccountDataItem.childAccountIds.splice(parentChildIndex, 0, removedAccountDataItem.id);
+
+        const updatedAccountEntries = [
+            [removedAccountDataItem.id, removedAccountDataItem],
+            [parentAccountDataItem.id, parentAccountDataItem],
+        ];
+
+        const { childAccountIds } = removedAccountDataItem;
+        if (childAccountIds && childAccountIds.length) {
+            const toRemoveIndices = parentAccountDataItem.childAccountIds.indexOf(removedAccountDataItem.childAccountIds[0]);
+            parentAccountDataItem.childAccountIds.splice(toRemoveIndices);
+
+            childAccountIds.forEach((id) => {
+                const childAccountDataItem = this.getAccountDataItemWithId(id);
+                childAccountDataItem.parentAccountId = removedAccountDataItem.id;
+                updatedAccountEntries.push([id, childAccountDataItem]);
+            });
+        }
+
+        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries);
+
+        updatedAccountEntries.forEach(([id, accountDataItem]) => {
+            this._accountsById.set(id, accountDataItem);
+            if (accountDataItem.refId) {
+                this._accountsByRefId.set(accountDataItem.refId, accountDataItem);
+            }
+        });
+    }
+
+
+    async _asyncApplyUndoModifyAccount(undoDataItem) {
+        const { oldAccountDataItem, oldParentChildIndex } = undoDataItem;
+
+        const updatedAccountEntries = [ [oldAccountDataItem.id, oldAccountDataItem] ];
+        if (oldParentChildIndex !== undefined) {
+            const newAccountDataItem = this.getAccountDataItemWithId(oldAccountDataItem.id);
+            const newParentAccountDataItem = this.getAccountDataItemWithId(newAccountDataItem.parentAccountId);
+            newParentAccountDataItem.childAccountIds.splice(newParentAccountDataItem.childAccountIds.length - 1);
+            updatedAccountEntries.push([newParentAccountDataItem.id, newParentAccountDataItem]);
+
+            const oldParentAccountDataItem = this.getAccountDataItemWithId(oldAccountDataItem.parentAccountId);
+            oldParentAccountDataItem.childAccountIds.splice(oldParentChildIndex, 0, oldAccountDataItem);
+            updatedAccountEntries.push([oldParentAccountDataItem.id, oldParentAccountDataItem]);
+        }
+
+        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries);
+
+        updatedAccountEntries.forEach(([id, accountDataItem]) => {
+            this._accountsById.set(id, accountDataItem);
+            if (accountDataItem.refId) {
+                this._accountsByRefId.set(accountDataItem.refId, accountDataItem);
+            }
+        });
+    }
+
+
+    async _asyncApplyUndoAddAccount(undoDataItem) {
+        const { accountId, idGeneratorOptions, } = undoDataItem;
+
+        const accountDataItem = this.getAccountDataItemWithId(accountId);
+
+        const updatedAccountEntries = [];
+
+        const parentDataItem = this.getAccountDataItemWithId(accountDataItem.parentAccountId);
+        const { childAccountIds } = parentDataItem;
+        childAccountIds.splice(childAccountIds.indexOf(accountId), 1);
+        updatedAccountEntries.push([accountDataItem.parentAccountId, parentDataItem]);
+
+        updatedAccountEntries.push([accountId]);
+
+        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries, idGeneratorOptions);
+
+        updatedAccountEntries.forEach(([id, accountDataItem]) => {
+            if (accountDataItem) {
+                this._accountsById.set(id, accountDataItem);
+                if (accountDataItem.refId) {
+                    this._accountsByRefId.set(accountDataItem.refId, accountDataItem);
+                }
+            }
+        });
+
+        this._accountsById.delete(accountId);
+        if (accountDataItem.refId) {
+            this._accountsByRefId.delete(accountDataItem.refId);
+        }
+
+        this._idGenerator.fromJSON(idGeneratorOptions);
+    }
+
+
     async _asyncAddAccount(account) {
         account = getAccountDataItem(account);
         
@@ -489,20 +598,6 @@ export class AccountManager extends EventEmitter {
             updatedAccountEntries.push([account.parentAccountId, parentAccountDataItem]);
         }
 
-        // Gotta move any specified child accounts.
-        accountDataItem.childAccountIds.forEach((childId) => {
-            const childAccountDataItem = this.getAccountDataItemWithId(childId);
-
-            const { parentAccountId } = childAccountDataItem;
-            const parentAccountDataItem = this.getAccountDataItemWithId(parentAccountId);
-            const index = parentAccountDataItem.childAccountIds.indexOf(childId);
-            parentAccountDataItem.childAccountIds.splice(index, 1);
-            updatedAccountEntries.push([parentAccountId, parentAccountDataItem]);
-
-            childAccountDataItem.parentAccountId = id;
-            updatedAccountEntries.push([childId, childAccountDataItem]);
-        });
-
 
         await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries, idGeneratorOptions);
 
@@ -513,7 +608,7 @@ export class AccountManager extends EventEmitter {
             }
         });
 
-        return accountDataItem;
+        return { newAccountDataItem: accountDataItem, };
     }
 
 
@@ -570,6 +665,7 @@ export class AccountManager extends EventEmitter {
     /**
      * @typedef {object}    AccountManager~AddAccountResult
      * @property {AccountDataItem}  newAccountDataItem
+     * @property {number}   undoId
      */
 
 
@@ -583,7 +679,7 @@ export class AccountManager extends EventEmitter {
      * @fires {AccountManager~accountAdd}
      */
     async asyncAddAccount(account, initialYMDDate, validateOnly) {
-        const accountDataItem = Object.assign({}, getAccountDataItem(account));
+        const accountDataItem = getAccountDataItem(account, true);
 
         const parentAccountDataItem = this.getAccountDataItemWithId(accountDataItem.parentAccountId);
         if (!parentAccountDataItem) {
@@ -622,13 +718,17 @@ export class AccountManager extends EventEmitter {
             return;
         }
 
-        const newAccountDataItem = await this._asyncAddAccount(accountDataItem);
+        const originalIdGeneratorOptions = this._idGenerator.toJSON();
+
+        const { newAccountDataItem, } = (await this._asyncAddAccount(accountDataItem));
         const result = Object.assign({}, newAccountDataItem);
 
-        this.emit('accountAdd', { newAccountDataItem: result });
-        return { newAccountDataItem: result };
-    }
+        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('addAccount', 
+            { accountId: newAccountDataItem.id, idGeneratorOptions: originalIdGeneratorOptions, });
 
+        this.emit('accountAdd', { newAccountDataItem: result });
+        return { newAccountDataItem: result, undoId: undoId };
+    }
 
 
     /**
@@ -641,6 +741,7 @@ export class AccountManager extends EventEmitter {
     /**
      * @typedef {object}    AccountManager~RemoveAccountResult
      * @property {AccountDataItem}  removedAccountDataItem
+     * @property {number}   undoId
      */
 
     /**
@@ -671,10 +772,13 @@ export class AccountManager extends EventEmitter {
         }
         const parentType = getAccountType(parentAccountDataItem.type);
 
+        // Grab this before we start adding kids to the parent's child list.
+        const parentChildIndex = parentAccountDataItem.childAccountIds.indexOf(accountId);
+
         // Make sure all the child accounts are compatible with the parent account.
         const { childAccountIds } = accountDataItem;
         const childAccountDataItems = [];
-        for (let i = childAccountIds.length - 1; i >= 0; --i) {
+        for (let i = 0; i < childAccountIds.length; ++i) {
             const childId = childAccountIds[i];
             const childAccountDataItem = this.getAccountDataItemWithId(childId);
             if (childAccountDataItem) {
@@ -689,11 +793,11 @@ export class AccountManager extends EventEmitter {
             childAccountDataItems.push(childAccountDataItem);
         }
 
-        parentAccountDataItem.childAccountIds.splice(parentAccountDataItem.childAccountIds.indexOf(accountId), 1);
-
         if (validateOnly) {
             return;
         }
+
+        parentAccountDataItem.childAccountIds.splice(parentChildIndex, 1);
 
         const updatedAccountEntries = [];
         updatedAccountEntries.push([accountId]);
@@ -720,9 +824,13 @@ export class AccountManager extends EventEmitter {
             this._accountsByRefId.delete(accountDataItem.refId);
         }
 
+
+        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('removeAccount', 
+            { removedAccountDataItem: Object.assign({}, accountDataItem), parentChildIndex: parentChildIndex });
+
         this.emit('accountRemove', { removedAccountDataItem: accountDataItem });
 
-        return { removedAccountDataItem: accountDataItem, };
+        return { removedAccountDataItem: accountDataItem, undoId, };
     }
 
 
@@ -738,6 +846,7 @@ export class AccountManager extends EventEmitter {
      * @typedef {object}    TransactionManager~ModifyAccountResult
      * @property {AccountDataItem}  newAccountDataItem
      * @property {AccountDataItem}  oldAccountDataItem
+     * @property {number}   undoId
      */
 
     /**
@@ -764,6 +873,7 @@ export class AccountManager extends EventEmitter {
         const newParentAccountId = newAccountDataItem.parentAccountId;
         let newParentAccountDataItem;
         let oldParentAccountDataItem;
+        let oldParentChildIndex;
         if (!oldAccountDataItem.parentAccountId) {
             if (newAccountDataItem.type !== oldAccountDataItem.type) {
                 throw userError('AccountManager-no_change_root_account_type');
@@ -800,6 +910,7 @@ export class AccountManager extends EventEmitter {
                 const index = oldParentAccountDataItem.childAccountIds.indexOf(id);
                 if (index >= 0) {
                     oldParentAccountDataItem.childAccountIds.splice(index, 1);
+                    oldParentChildIndex = index;
                 }
 
                 newParentAccountDataItem.childAccountIds.push(id);
@@ -876,12 +987,20 @@ export class AccountManager extends EventEmitter {
 
         const result = [Object.assign({}, newAccountDataItem), oldAccountDataItem];
         
+        const undoDataItem = { oldAccountDataItem: getAccountDataItem(oldAccountDataItem, true), };
+        if (oldParentChildIndex !== undefined) {
+            undoDataItem.oldParentChildIndex = oldParentChildIndex;
+        }
+
+        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('modifyAccount', 
+            undoDataItem);
+
         this.emit('accountsModify', {
             newAccountDataItems: [result[0]],
             oldAccountDataItems: [result[1]],
         });
 
-        return { newAccountDataItem: result[0], oldAccountDataItem: result[1], };
+        return { newAccountDataItem: result[0], oldAccountDataItem: result[1], undoId: undoId, };
     }
 
 }
