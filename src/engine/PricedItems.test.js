@@ -115,12 +115,22 @@ test('PricedItemManager-currencies', async () => {
     manager.on('pricedItemRemove', (arg) => removeEventArg = arg);
 
     // Add.
-    const itemA = (await manager.asyncAddCurrencyPricedItem('BMD')).newPricedItemDataItem;
+    let result;
+    result = await manager.asyncAddCurrencyPricedItem('BMD');
+    const itemA = result.newPricedItemDataItem;
     expect(manager.getCurrencyPricedItemDataItem('BMD')).toEqual(itemA);
 
     // pricedItemAdd event test
     expect(addEventArg).toEqual({ newPricedItemDataItem: itemA });
     expect(addEventArg.newPricedItemDataItem).toBe(itemA);
+
+
+    // Undo Add
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(manager.getCurrencyPricedItemDataItem('BMD')).toBeUndefined();
+
+    await manager.asyncAddCurrencyPricedItem('BMD');
+    expect(manager.getCurrencyPricedItemDataItem('BMD')).toEqual(itemA);
 
 
     const quantityDefinitionB = getDecimalDefinition(-4);
@@ -132,7 +142,7 @@ test('PricedItemManager-currencies', async () => {
 
     // Modify
     const quantityDefinitionC = getDecimalDefinition(-5);
-    const result = await manager.asyncModifyPricedItem({ id: itemB.id, quantityDefinition: quantityDefinitionC });
+    result = await manager.asyncModifyPricedItem({ id: itemB.id, quantityDefinition: quantityDefinitionC });
     const itemC = result.newPricedItemDataItem;
     const oldItemC = result.oldPricedItemDataItem;
     expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB)).toBeUndefined();
@@ -144,15 +154,35 @@ test('PricedItemManager-currencies', async () => {
     expect(modifyEventArg.oldPricedItemDataItem).toBe(oldItemC);
 
 
+    // Undo modify
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB)).toEqual(itemB);
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC)).toBeUndefined();
+
+    await manager.asyncModifyPricedItem({ id: itemB.id, quantityDefinition: quantityDefinitionC });
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB)).toBeUndefined();
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC)).toEqual(itemC);
+
+
     // Remove.
-    const removedA = (await manager.asyncRemovePricedItem(itemA.id)).removedPricedItemDataItem;
+    result = await manager.asyncRemovePricedItem(itemA.id);
+    const removedA = result.removedPricedItemDataItem;
     expect(manager.getCurrencyPricedItemDataItem('BMD')).toBeUndefined();
 
     // pricedItemRemove event test
     expect(removeEventArg).toEqual({ removedPricedItemDataItem: removedA });
     expect(removeEventArg.removedPricedItemDataItem).toBe(removedA);
 
-    await manager.asyncRemovePricedItem(itemC.id, true);
+    // Undo remove
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC)).toEqual(itemC);
+
+    await manager.asyncRemovePricedItem(itemA.id);
+    expect(manager.getCurrencyPricedItemDataItem('BMD')).toBeUndefined();
+
+
+    // Validate remove
+    result = await manager.asyncRemovePricedItem(itemC.id, true);
     expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC)).toEqual(itemC);
 
 });
@@ -171,6 +201,8 @@ function expectPricedItemToMatch(pricedItem, ref) {
 test('PricedItemManager-other types', async () => {
     const accountingSystem = await ASTH.asyncCreateAccountingSystem();
     const manager = accountingSystem.getPricedItemManager();
+
+    let result;
     
     // The adds....
     const optionsA = { 
@@ -191,8 +223,16 @@ test('PricedItemManager-other types', async () => {
 
     
     const optionsC = { type: PI.PricedItemType.REAL_ESTATE, currency: 'EUR', quantityDefinition: getDecimalDefinition(0), };
-    const itemC = (await manager.asyncAddPricedItem(optionsC)).newPricedItemDataItem;
+    result = await manager.asyncAddPricedItem(optionsC);
+    const itemC = result.newPricedItemDataItem;
     expectPricedItemToMatch(itemC, optionsC);
+
+    // Test Undo Add
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(manager.getPricedItemDataItemWithId(itemC.id)).toBeUndefined();
+
+    await manager.asyncAddPricedItem(optionsC);
+    expectPricedItemToMatch(manager.getPricedItemDataItemWithId(itemC.id), optionsC);
 
     
     const optionsD = { type: PI.PricedItemType.PROPERTY, currency: 'USD', quantityDefinition: getDecimalDefinition(0), };
@@ -218,9 +258,16 @@ test('PricedItemManager-other types', async () => {
 
     const changeB1 = { id: itemB.id, currency: 'USD', quantityDefinition: getDecimalDefinition(-4), name: 'A name', description: 'A description', };
     const optionsB1 = Object.assign({}, optionsB, changeB1);
-    const itemB1 = (await manager.asyncModifyPricedItem(changeB1)).newPricedItemDataItem;
+    result = await manager.asyncModifyPricedItem(changeB1);
+    const itemB1 = result.newPricedItemDataItem;
     expectPricedItemToMatch(itemB1, optionsB1);
 
+    // Undo modify
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expectPricedItemToMatch(manager.getPricedItemDataItemWithId(itemB.id), optionsB);
+
+    await manager.asyncModifyPricedItem(changeB1);
+    expectPricedItemToMatch(manager.getPricedItemDataItemWithId(itemB.id), optionsB1);
 
 
     // Test JSON

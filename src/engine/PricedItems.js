@@ -234,13 +234,23 @@ export class PricedItemManager extends EventEmitter {
         
         this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorOptions());
 
+        const undoManager = accountingSystem.getUndoManager();
+        this._asyncApplyUndoAddPricedItem = this._asyncApplyUndoAddPricedItem.bind(this);
+        undoManager.registerUndoApplier('addPricedItem', this._asyncApplyUndoAddPricedItem);
+
+        this._asyncApplyUndoRemovePricedItem = this._asyncApplyUndoRemovePricedItem.bind(this);
+        undoManager.registerUndoApplier('removePricedItem', this._asyncApplyUndoRemovePricedItem);
+
+        this._asyncApplyUndoModifyPricedItem = this._asyncApplyUndoModifyPricedItem.bind(this);
+        undoManager.registerUndoApplier('modifyPricedItem', this._asyncApplyUndoModifyPricedItem);
+
         this._currencyPricedItemIdsByCurrency = new Map();
-        this._pricedItemsById = new Map();
+        this._pricedItemDataItemsById = new Map();
         this._requiredCurrencyPricedItemIds = new Set();
 
         const pricedItems = this._handler.getPricedItemDataItems();
         pricedItems.forEach((pricedItem) => {
-            this._pricedItemsById.set(pricedItem.id, pricedItem);
+            this._pricedItemDataItemsById.set(pricedItem.id, pricedItem);
             if (pricedItem.type === PricedItemType.CURRENCY.name) {
                 const currencyName = this._getCurrencyName(pricedItem.currency, pricedItem.quantityDefinition);
                 this._currencyPricedItemIdsByCurrency.set(currencyName, pricedItem.id);
@@ -333,7 +343,7 @@ export class PricedItemManager extends EventEmitter {
         const updatedDataItems = [[id, pricedItemData]];
         await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems, idGeneratorOptions);
 
-        this._pricedItemsById.set(id, pricedItemData);
+        this._pricedItemDataItemsById.set(id, pricedItemData);
 
         if (getPricedItemType(pricedItem.type) === PricedItemType.CURRENCY) {
             const currencyName = this._getCurrencyName(pricedItemData.currency, pricedItemData.quantityDefinition);
@@ -344,7 +354,7 @@ export class PricedItemManager extends EventEmitter {
     }
 
     _getPricedItem(id) {
-        return this._pricedItemsById.get(id);
+        return this._pricedItemDataItemsById.get(id);
     }
 
 
@@ -352,7 +362,7 @@ export class PricedItemManager extends EventEmitter {
      * @returns {number[]}  Array containing the ids of all the priced items.
      */
     getPricedItemIds() {
-        return Array.from(this._pricedItemsById.keys());
+        return Array.from(this._pricedItemDataItemsById.keys());
     }
 
 
@@ -413,6 +423,65 @@ export class PricedItemManager extends EventEmitter {
      */
     getCurrencyPricedItemDataItem(currency, quantityDefinition) {
         return this.getPricedItemDataItemWithId(this.getCurrencyPricedItemId(currency, quantityDefinition));
+    }
+
+
+    async _asyncApplyUndoAddPricedItem(undoDataItem) {
+        const { pricedItemId, idGeneratorOptions } = undoDataItem;
+
+        const pricedItemDataItem = this.getPricedItemDataItemWithId(pricedItemId);
+
+        const updatedDataItems = [[pricedItemId]];
+        await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems);
+
+        this._pricedItemDataItemsById.delete(pricedItemId);
+        this._idGenerator.fromJSON(idGeneratorOptions);
+
+        const type = getPricedItemType(pricedItemDataItem.type);
+        if (type === PricedItemType.CURRENCY) {
+            const currencyName = this._getCurrencyName(pricedItemDataItem.currency, pricedItemDataItem.quantityDefinition);
+            this._currencyPricedItemIdsByCurrency.delete(currencyName);
+        }
+
+        this.emit('pricedItemRemove', { removedPricedItemDataItem: pricedItemDataItem });
+    }
+
+
+    async _asyncApplyUndoRemovePricedItem(undoDataItem) {
+        const { removedPricedItemDataItem } = undoDataItem;
+
+        const { id } = removedPricedItemDataItem;
+        const updatedDataItems = [[ id, removedPricedItemDataItem ]];
+        await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems);
+
+        this._pricedItemDataItemsById.set(id, removedPricedItemDataItem);
+
+        this.emit('pricedItemAdd', { newPricedItemDataItem: removedPricedItemDataItem, });
+    }
+
+
+    async _asyncApplyUndoModifyPricedItem(undoDataItem) {
+        const { oldPricedItemDataItem } = undoDataItem;
+
+        const { id } = oldPricedItemDataItem;
+        const newPricedItemDataItem = this.getPricedItemDataItemWithId(id);
+        const updatedDataItems = [[ id, oldPricedItemDataItem ]];
+        await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems);
+
+        this._pricedItemDataItemsById.set(id, oldPricedItemDataItem);
+
+        const type = getPricedItemType(oldPricedItemDataItem.type);
+        if (type === PricedItemType.CURRENCY) {
+            const oldCurrencyName = this._getCurrencyName(oldPricedItemDataItem.currency, oldPricedItemDataItem.quantityDefinition);
+            const newCurrencyName = this._getCurrencyName(newPricedItemDataItem.currency, newPricedItemDataItem.quantityDefinition);
+            
+            if (oldCurrencyName !== newCurrencyName) {
+                this._currencyPricedItemIdsByCurrency.delete(newCurrencyName);
+                this._currencyPricedItemIdsByCurrency.set(oldCurrencyName, id);
+            }
+        }
+
+        this.emit('pricedItemModify', { newPricedItemDataItem: oldPricedItemDataItem, oldPricedItemDataItem: newPricedItemDataItem, });
     }
 
 
@@ -480,11 +549,18 @@ export class PricedItemManager extends EventEmitter {
         if (validateOnly) {
             return;
         }
+        
+        const originalIdGeneratorOptions = this._idGenerator.toJSON();
 
         pricedItemDataItem = await this._asyncAddPricedItem(pricedItemDataItem);
         pricedItemDataItem = getPricedItemDataItem(pricedItemDataItem, true);
+
+        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('addPricedItem', 
+            { pricedItemId: pricedItemDataItem.id, idGeneratorOptions: originalIdGeneratorOptions, });
+
+
         this.emit('pricedItemAdd', { newPricedItemDataItem: pricedItemDataItem, });
-        return { newPricedItemDataItem: pricedItemDataItem, };
+        return { newPricedItemDataItem: pricedItemDataItem, undoId: undoId };
     }
 
     /**
@@ -512,8 +588,8 @@ export class PricedItemManager extends EventEmitter {
             throw userError('PricedItemManager-remove_required_currency');
         }
 
-        const pricedItem = this._pricedItemsById.get(id);
-        if (!pricedItem) {
+        const pricedItemDataItem = this._pricedItemDataItemsById.get(id);
+        if (!pricedItemDataItem) {
             throw userError('PricedItemManager-remove_no_id', id);
         }
 
@@ -521,19 +597,22 @@ export class PricedItemManager extends EventEmitter {
             return;
         }
 
-        const type = getPricedItemType(pricedItem.type);
+        const type = getPricedItemType(pricedItemDataItem.type);
         if (type === PricedItemType.CURRENCY) {
-            const currencyName = this._getCurrencyName(pricedItem.currency, pricedItem.quantityDefinition);
+            const currencyName = this._getCurrencyName(pricedItemDataItem.currency, pricedItemDataItem.quantityDefinition);
             this._currencyPricedItemIdsByCurrency.delete(currencyName);
         }
 
-        this._pricedItemsById.delete(id);
+        this._pricedItemDataItemsById.delete(id);
 
         const updatedDataItems = [[id]];
         await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems);
 
-        this.emit('pricedItemRemove', { removedPricedItemDataItem: pricedItem });
-        return { removedPricedItemDataItem: pricedItem, };
+        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('removePricedItem', 
+            { removedPricedItemDataItem: getPricedItemDataItem(pricedItemDataItem, true), });
+
+        this.emit('pricedItemRemove', { removedPricedItemDataItem: pricedItemDataItem });
+        return { removedPricedItemDataItem: pricedItemDataItem, undoId: undoId, };
     }
 
     /**
@@ -563,39 +642,39 @@ export class PricedItemManager extends EventEmitter {
     async asyncModifyPricedItem(pricedItem, validateOnly) {
         const id = pricedItem.id;
 
-        const oldPricedItem = this._pricedItemsById.get(id);
-        if (!oldPricedItem) {
+        const oldPricedItemDataItem = this._pricedItemDataItemsById.get(id);
+        if (!oldPricedItemDataItem) {
             throw userError('PricedItemManager-modify_no_id', id);
         }
 
-        let newPricedItem = Object.assign({}, oldPricedItem, pricedItem);
-        newPricedItem = getPricedItemDataItem(newPricedItem);
+        let newPricedItemDataItem = Object.assign({}, oldPricedItemDataItem, pricedItem);
+        newPricedItemDataItem = getPricedItemDataItem(newPricedItemDataItem);
 
-        if (newPricedItem.type !== oldPricedItem.type) {
+        if (newPricedItemDataItem.type !== oldPricedItemDataItem.type) {
             throw userError('PricedItemManager-modify_type_change');
         }
 
-        const type = getPricedItemType(newPricedItem.type);
+        const type = getPricedItemType(newPricedItemDataItem.type);
         if (type.validateFunc) {
-            const error = type.validateFunc(this, newPricedItem, true);
+            const error = type.validateFunc(this, newPricedItemDataItem, true);
             if (error) {
                 throw error;
             }
         }
 
         if (validateOnly) {
-            return newPricedItem;
+            return newPricedItemDataItem;
         }
 
-        const updatedDataItems = [[id, newPricedItem]];
+        const updatedDataItems = [[id, newPricedItemDataItem]];
 
         await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems);
 
-        this._pricedItemsById.set(id, newPricedItem);
+        this._pricedItemDataItemsById.set(id, newPricedItemDataItem);
 
         if (type === PricedItemType.CURRENCY) {
-            const oldCurrencyName = this._getCurrencyName(oldPricedItem.currency, oldPricedItem.quantityDefinition);
-            const newCurrencyName = this._getCurrencyName(newPricedItem.currency, newPricedItem.quantityDefinition);
+            const oldCurrencyName = this._getCurrencyName(oldPricedItemDataItem.currency, oldPricedItemDataItem.quantityDefinition);
+            const newCurrencyName = this._getCurrencyName(newPricedItemDataItem.currency, newPricedItemDataItem.quantityDefinition);
             
             if (oldCurrencyName !== newCurrencyName) {
                 this._currencyPricedItemIdsByCurrency.delete(oldCurrencyName);
@@ -603,9 +682,12 @@ export class PricedItemManager extends EventEmitter {
             }
         }
 
-        newPricedItem = Object.assign({}, newPricedItem);
-        this.emit('pricedItemModify', { newPricedItemDataItem: newPricedItem, oldPricedItemDataItem: oldPricedItem });
-        return { newPricedItemDataItem: newPricedItem, oldPricedItemDataItem: oldPricedItem };
+        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('modifyPricedItem', 
+            { oldPricedItemDataItem: getPricedItemDataItem(oldPricedItemDataItem, true), });
+
+        newPricedItemDataItem = getPricedItemDataItem(newPricedItemDataItem, true);
+        this.emit('pricedItemModify', { newPricedItemDataItem: newPricedItemDataItem, oldPricedItemDataItem: oldPricedItemDataItem });
+        return { newPricedItemDataItem: newPricedItemDataItem, oldPricedItemDataItem: oldPricedItemDataItem, undoId: undoId, };
     }
 }
 
