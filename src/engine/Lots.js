@@ -57,6 +57,16 @@ export class LotManager extends EventEmitter {
 
         this._lotDataItemsById = new Map();
 
+        const undoManager = accountingSystem.getUndoManager();
+        this._asyncApplyUndoAddLot = this._asyncApplyUndoAddLot.bind(this);
+        undoManager.registerUndoApplier('addLot', this._asyncApplyUndoAddLot);
+
+        this._asyncApplyUndoRemoveLot = this._asyncApplyUndoRemoveLot.bind(this);
+        undoManager.registerUndoApplier('removeLot', this._asyncApplyUndoRemoveLot);
+
+        this._asyncApplyUndoModifyLot = this._asyncApplyUndoModifyLot.bind(this);
+        undoManager.registerUndoApplier('modifyLot', this._asyncApplyUndoModifyLot);
+
         const lotDataItems = this._handler.getLotDataItems();
         lotDataItems.forEach((lotDataItem) => {
             this._lotDataItemsById.set(lotDataItem.id, lotDataItem);
@@ -87,6 +97,49 @@ export class LotManager extends EventEmitter {
         const lotDataItem = this._lotDataItemsById.get(id);
         return getLotDataItem(lotDataItem, true);
     }
+
+
+    async _asyncApplyUndoAddLot(undoDataItem) {
+        const { lotId, idGeneratorOptions } = undoDataItem;
+
+        const lotDataItem = this.getLotDataItemWithId(lotId);
+
+        const updatedDataItems = [[lotId]];
+        await this._handler.asyncUpdateLotDataItems(updatedDataItems);
+
+        this._lotDataItemsById.delete(lotId);
+        this._idGenerator.fromJSON(idGeneratorOptions);
+
+        this.emit('lotRemove', { removedLotDataItem: lotDataItem });
+    }
+
+
+    async _asyncApplyUndoRemoveLot(undoDataItem) {
+        const { removedLotDataItem } = undoDataItem;
+
+        const { id } = removedLotDataItem;
+        const updatedDataItems = [[ id, removedLotDataItem ]];
+        await this._handler.asyncUpdateLotDataItems(updatedDataItems);
+
+        this._lotDataItemsById.set(id, removedLotDataItem);
+
+        this.emit('lotAdd', { newLotDataItem: removedLotDataItem, });
+    }
+
+
+    async _asyncApplyUndoModifyLot(undoDataItem) {
+        const { oldLotDataItem } = undoDataItem;
+
+        const { id } = oldLotDataItem;
+        const newLotDataItem = this.getLotDataItemWithId(id);
+        const updatedDataItems = [[ id, oldLotDataItem ]];
+        await this._handler.asyncUpdateLotDataItems(updatedDataItems);
+
+        this._lotDataItemsById.set(id, oldLotDataItem);
+
+        this.emit('lotModify', { newLotDataItem: oldLotDataItem, oldLotDataItem: newLotDataItem, });
+    }
+
 
     _validate(lotDataItem) {
         const pricedItemManager = this._accountingSystem.getPricedItemManager();
@@ -128,6 +181,8 @@ export class LotManager extends EventEmitter {
             return;
         }
         
+        const originalIdGeneratorOptions = this._idGenerator.toJSON();
+
         const id = this._idGenerator.generateId();
         lotDataItem.id = id;
         const idGeneratorOptions = this._idGenerator.toJSON();
@@ -137,8 +192,11 @@ export class LotManager extends EventEmitter {
 
         this._lotDataItemsById.set(id, lotDataItem);
 
+        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('addLot', 
+            { lotId: lotDataItem.id, idGeneratorOptions: originalIdGeneratorOptions, });
+
         this.emit('lotAdd', { newLotDataItem: lotDataItem, });
-        return { newLotDataItem: lotDataItem, };
+        return { newLotDataItem: lotDataItem, undoId: undoId };
     }
 
 
@@ -177,8 +235,11 @@ export class LotManager extends EventEmitter {
         const updatedDataItems = [[id]];
         await this._handler.asyncUpdateLotDataItems(updatedDataItems);
 
+        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('removeLot', 
+            { removedLotDataItem: getLotDataItem(lotDataItem, true), });
+
         this.emit('lotRemove', { removedLotDataItem: lotDataItem });
-        return { removedLotDataItem: lotDataItem, };
+        return { removedLotDataItem: lotDataItem, undoId: undoId, };
     }
 
 
@@ -231,9 +292,12 @@ export class LotManager extends EventEmitter {
 
         this._lotDataItemsById.set(id, newLotDataItem);
 
-        newLotDataItem = Object.assign({}, newLotDataItem);
+        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('modifyLot', 
+            { oldLotDataItem: getLotDataItem(oldLotDataItem, true), });
+
+        newLotDataItem = getLotDataItem(newLotDataItem, true);
         this.emit('lotModify', { newLotDataItem: newLotDataItem, oldLotDataItem: oldLotDataItem });
-        return { newLotDataItem: newLotDataItem, oldLotDataItem: oldLotDataItem };
+        return { newLotDataItem: newLotDataItem, oldLotDataItem: oldLotDataItem, undoId: undoId, };
     }
 }
 

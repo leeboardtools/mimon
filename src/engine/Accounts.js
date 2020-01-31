@@ -720,14 +720,14 @@ export class AccountManager extends EventEmitter {
 
         const originalIdGeneratorOptions = this._idGenerator.toJSON();
 
-        const { newAccountDataItem, } = (await this._asyncAddAccount(accountDataItem));
-        const result = Object.assign({}, newAccountDataItem);
+        let { newAccountDataItem, } = (await this._asyncAddAccount(accountDataItem));
+        newAccountDataItem = getAccountDataItem(newAccountDataItem, true);
 
         const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('addAccount', 
             { accountId: newAccountDataItem.id, idGeneratorOptions: originalIdGeneratorOptions, });
 
-        this.emit('accountAdd', { newAccountDataItem: result });
-        return { newAccountDataItem: result, undoId: undoId };
+        this.emit('accountAdd', { newAccountDataItem: newAccountDataItem });
+        return { newAccountDataItem: newAccountDataItem, undoId: undoId };
     }
 
 
