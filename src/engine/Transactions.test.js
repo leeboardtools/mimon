@@ -487,8 +487,10 @@ test('TransactionManager-add_modify', async () => {
     let addEventArgs;
     manager.on('transactionsAdd', (arg) => addEventArgs = arg);
 
-    const result = (await manager.asyncAddTransactions([settingsB])).newTransactionDataItems;
-    const [ transactionB ] = result;
+    let result;
+    result = await manager.asyncAddTransactions([settingsB]);
+    const newTransactionDataItemsB = result.newTransactionDataItems;
+    const [ transactionB ] = newTransactionDataItemsB;
     settingsB.id = transactionB.id;
     //settingsC.id = transactionC.id;
     expect(transactionB).toEqual(settingsB);
@@ -496,8 +498,18 @@ test('TransactionManager-add_modify', async () => {
 
 
     // transactionsAdd event test
-    expect(addEventArgs).toEqual({ newTransactionDataItems: result });
-    expect(addEventArgs.newTransactionDataItems).toBe(result);
+    expect(addEventArgs).toEqual({ newTransactionDataItems: newTransactionDataItemsB });
+    expect(addEventArgs.newTransactionDataItems).toBe(newTransactionDataItemsB);
+
+
+    // test undo add.
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+
+    expect(await manager.asyncGetTransactionDataItemssInDateRange(0, '2019-10-05')).toEqual([settingsA]);
+    expect(await manager.asyncGetTransactionDataItemWithId(transactionB.id)).toBeUndefined();
+
+    await manager.asyncAddTransactions([settingsB]);
+    expect(await manager.asyncGetTransactionDataItemWithId(transactionB.id)).toEqual(settingsB);
 
 
     const settingsD = {
@@ -575,7 +587,8 @@ test('TransactionManager-add_modify', async () => {
         ]
     };
     const settingsE1 = Object.assign({}, settingsE, changesE1);
-    const resultDE1 = (await manager.asyncModifyTransactions([changesD1, changesE1])).newTransactionDataItems;
+    result = await manager.asyncModifyTransactions([changesD1, changesE1]);
+    const resultDE1 = result.newTransactionDataItems;
     expect(resultDE1).toEqual(expect.arrayContaining([settingsD1, settingsE1]));
 
     expect(await manager.asyncGetTransactionDateRange(sys.checkingId)).toEqual([ new YMDDate('2019-04-05'), new YMDDate('2019-10-15')]);
@@ -583,6 +596,17 @@ test('TransactionManager-add_modify', async () => {
     // transactionsModify event test
     expect(modifyEventArg).toEqual({ newTransactionDataItems: resultDE1, oldTransactionDataItems: [ settingsD, settingsE ]});
     expect(modifyEventArg.newTransactionDataItems).toBe(resultDE1);
+
+
+    // Test undo modify
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(await manager.asyncGetTransactionDataItemWithId(settingsD1.id)).toEqual(settingsD);
+    expect(await manager.asyncGetTransactionDataItemWithId(settingsE1.id)).toEqual(settingsE);
+
+    // Restore.
+    await manager.asyncModifyTransactions([changesD1, changesE1]);
+    expect(await manager.asyncGetTransactionDataItemWithId(settingsD1.id)).toEqual(settingsD1);
+    expect(await manager.asyncGetTransactionDataItemWithId(settingsE1.id)).toEqual(settingsE1);
 
 
     // Change validate:
@@ -625,6 +649,9 @@ test('TransactionManager~remove', async () => {
     const sys = await ASTH.asyncCreateBasicAccountingSystem();
     const { accountingSystem } = sys;
     const manager = accountingSystem.getTransactionManager();
+
+
+    let result;
 
     const settingsA = {
         ymdDate: '2019-10-05',
@@ -674,9 +701,20 @@ test('TransactionManager~remove', async () => {
     await expect(manager.asyncRemoveTransactions(-123)).rejects.toThrow();
     expect(await manager.asyncGetTransactionDateRange(sys.householdId)).toEqual([new YMDDate(settingsD.ymdDate), new YMDDate(settingsD.ymdDate)]);
 
-    const removeD = (await manager.asyncRemoveTransactions(settingsD.id)).removedTransactionDataItem;
+    result = await manager.asyncRemoveTransactions(settingsD.id);
+    const removeD = result.removedTransactionDataItem;
     expect(removeD).toEqual(settingsD);
     expect(await manager.asyncGetTransactionDataItemsWithIds(settingsD.id)).toBeUndefined();
+
+    
+    // Test undo remove.
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(resultABCDE).toEqual([settingsA, settingsB, settingsC, settingsD, settingsE ]);
+
+    // Redo
+    await manager.asyncRemoveTransactions(settingsD.id);
+    expect(await manager.asyncGetTransactionDataItemsWithIds(settingsD.id)).toBeUndefined();
+
 
     let removeEventArg;
     manager.on('transactionsRemove', (arg) => removeEventArg = arg);
@@ -897,6 +935,8 @@ test('Transactions-lotTransactions', async () => {
     expect(transactionManager.getCurrentAccountStateDataItem(aaplId)).toEqual(
         { quantityBaseValue: 0, lotStates: [] });
 
+
+    let result;
     
     const lot1 = (await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 1'})).newLotDataItem;
     const changeA = { lotId: lot1.id, quantityBaseValue: 10000, costBasisBaseValue: 200000, };
@@ -979,7 +1019,8 @@ test('Transactions-lotTransactions', async () => {
         lotStates: [ lot1StateC, lot2StateC, lot3StateC, lot4StateC, ],
     };
 
-    const [transB, transC] = (await transactionManager.asyncAddTransactions([settingsB, settingsC])).newTransactionDataItems;
+    result = await transactionManager.asyncAddTransactions([settingsB, settingsC]);
+    const [transB, transC] = result.newTransactionDataItems;
     settingsB.id = transB.id;
     settingsC.id = transC.id;
     expect(transB).toEqual(settingsB);
@@ -989,6 +1030,19 @@ test('Transactions-lotTransactions', async () => {
 
     const [ accountStateBTransB ] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transB.id);
     expect(ACSTH.cleanAccountState(accountStateBTransB)).toEqual(aaplStateB);
+
+
+    // Test mutliple add transaction undo.
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateA);
+
+    await transactionManager.asyncAddTransactions([settingsB, settingsC]);
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateC);
+
+    let trans;
+    let accountState;
+    [ accountState ] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transB.id);
+    expect(ACSTH.cleanAccountState(accountState)).toEqual(aaplStateB);
 
 
     const lot5 = (await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, description: 'Lot 4'})).newLotDataItem;
@@ -1019,11 +1073,13 @@ test('Transactions-lotTransactions', async () => {
         lotStates: [ lot1StateD, lot5StateD, lot2StateD, lot3StateD, lot4StateD, ],
     };
 
-    const transD = (await transactionManager.asyncAddTransaction(settingsD)).newTransactionDataItem;
+    result = await transactionManager.asyncAddTransaction(settingsD);
+    const transD = result.newTransactionDataItem;
     settingsD.id = transD.id;
     expect(transD).toEqual(settingsD);
 
     expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateD);
+    
 
     // Now let's check the account states for the transactions.
     const [accountStateDTransC] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transC.id);
@@ -1059,9 +1115,29 @@ test('Transactions-lotTransactions', async () => {
     expect(ACSTH.cleanAccountState(accountStateDTransA)).toEqual(aaplStateA);
 
 
+    // Test add single transaction undo.
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateC);
+
+    [ accountState ] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transB.id);
+    expect(ACSTH.cleanAccountState(accountState)).toEqual(aaplStateB);
+
+    // Redo
+    await transactionManager.asyncAddTransaction(settingsD);
+    await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transC.id);
+
+    [accountState] = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(aaplId, transD.id);
+    expect(ACSTH.cleanAccountState(accountState)).toEqual(aaplStateA);
+
+    [accountState] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transA.id);
+    expect(ACSTH.cleanAccountState(accountState)).toEqual(aaplStateA);
+
+
     //
     // Test Modify
     //
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateD);
 
     // Modify lot 5.
     const changeE = { lotId: lot5.id, quantityBaseValue: 60000, costBasisBaseValue: 30 * 60000 };
@@ -1077,7 +1153,8 @@ test('Transactions-lotTransactions', async () => {
             },
         ]
     };
-    const transE = (await transactionManager.asyncModifyTransaction(settingsE)).newTransactionDataItem;
+    result = await transactionManager.asyncModifyTransaction(settingsE);
+    const transE = result.newTransactionDataItem;
     settingsE.id = transE.id;
     settingsE.ymdDate = transD.ymdDate;
     expect(transE).toEqual(settingsE);
@@ -1104,8 +1181,20 @@ test('Transactions-lotTransactions', async () => {
         lotStates: [ lot1StateETransD, lot5StateETransD ],
     };
 
-    const [accountStateETransD] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transD.id);
-    expect(ACSTH.cleanAccountState(accountStateETransD)).toEqual(aaplStateETransD);
+    [accountState] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transD.id);
+    expect(ACSTH.cleanAccountState(accountState)).toEqual(aaplStateETransD);
+
+
+    // Test undo modify
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateD);
+
+    // Redo
+    await transactionManager.asyncModifyTransaction(settingsE);
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateE);
+
+    [accountState] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transD.id);
+    expect(ACSTH.cleanAccountState(accountState)).toEqual(aaplStateETransD);
 
 
     // Sell part of lot 5
@@ -1186,13 +1275,14 @@ test('Transactions-lotTransactions', async () => {
 
     expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateG);
 
-    const [accountStateGTransC] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transC.id);
-    expect(ACSTH.cleanAccountState(accountStateGTransC)).toEqual(aaplStateE);
+    [accountState] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transC.id);
+    expect(ACSTH.cleanAccountState(accountState)).toEqual(aaplStateE);
 
 
     //
     // Remove
-    const transBRemove = (await transactionManager.asyncRemoveTransactions(transB.id)).removedTransactionDataItem;
+    result = await transactionManager.asyncRemoveTransactions(transB.id);
+    const transBRemove = result.removedTransactionDataItem;
     expect(transBRemove).toEqual(transB);
 
     
@@ -1212,8 +1302,28 @@ test('Transactions-lotTransactions', async () => {
             + lot4StateF.quantityBaseValue,
         lotStates: [ lot1StateF, lot5StateF, lot4StateF, ],
     };
-    const [accountStateHTransF] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transF.id);
-    expect(ACSTH.cleanAccountState(accountStateHTransF)).toEqual(aaplStateHTransF);
+    [accountState] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transF.id);
+    expect(ACSTH.cleanAccountState(accountState)).toEqual(aaplStateHTransF);
+
+
+    // Test Undo remove
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    trans = await transactionManager.asyncGetTransactionDataItemsWithIds(transB.id);
+    expect(trans).toEqual(transB);
+
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateG);
+
+    [accountState] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transC.id);
+    expect(ACSTH.cleanAccountState(accountState)).toEqual(aaplStateE);
+
+    // Redo.
+    await transactionManager.asyncRemoveTransactions(transB.id);
+    trans = await transactionManager.asyncGetTransactionDataItemsWithIds(transB.id);
+    expect(trans).toBeUndefined();
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(aaplId))).toEqual(aaplStateH);
+
+    [accountState] = await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(aaplId, transF.id);
+    expect(ACSTH.cleanAccountState(accountState)).toEqual(aaplStateHTransF);
 });
 
 

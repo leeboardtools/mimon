@@ -717,6 +717,17 @@ export class TransactionManager extends EventEmitter {
         
         this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorOptions());
 
+        const undoManager = accountingSystem.getUndoManager();
+        this._asyncApplyUndoAddTransactions = this._asyncApplyUndoAddTransactions.bind(this);
+        undoManager.registerUndoApplier('addTransactions', this._asyncApplyUndoAddTransactions);
+
+        this._asyncApplyUndoRemoveTransactions = this._asyncApplyUndoRemoveTransactions.bind(this);
+        undoManager.registerUndoApplier('removeTransactions', this._asyncApplyUndoRemoveTransactions);
+
+        this._asyncApplyUndoModifyTransactions = this._asyncApplyUndoModifyTransactions.bind(this);
+        undoManager.registerUndoApplier('modifyTransactions', this._asyncApplyUndoModifyTransactions);
+
+        this.asyncGetTransactionDataItemWithId = this.asyncGetTransactionDataItemsWithIds;
         this.asyncAddTransaction = this.asyncAddTransactions;
         this.asyncRemoveTransaction = this.asyncRemoveTransactions;
         this.asyncModifyTransaction = this.asyncModifyTransactions;
@@ -1061,6 +1072,84 @@ export class TransactionManager extends EventEmitter {
         }
     }
 
+    async _asyncApplyUndoAddTransactions(undoDataItem) {
+        const { transactionIds, idGeneratorOptions } = undoDataItem;
+
+        const stateUpdater = new AccountStatesUpdater(this);
+
+        const transactionIdAndDataItemPairs = [];
+        const transactionDataItems = await this._handler.asyncGetTransactionDataItemsWithIds(transactionIds);
+        for (let i = transactionDataItems.length - 1; i >= 0; --i) {
+            const transactionDataItem = transactionDataItems[i];
+            transactionIdAndDataItemPairs.push([transactionDataItem.id]);
+
+            await stateUpdater.asyncAddTransactionUpdate(transactionDataItem);
+        }
+
+        const currentAccountStateUpdates = await stateUpdater.asyncGenerateCurrentAccountStates();
+
+        await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs, currentAccountStateUpdates.entries());
+
+        stateUpdater.updateAccountEntries();
+
+        this._idGenerator.fromJSON(idGeneratorOptions);
+
+        this.emit('transactionsRemove', { removedTransactionDataItems: transactionDataItems });
+    }
+
+
+    async _asyncApplyUndoRemoveTransactions(undoDataItem) {
+        const { removedTransactionDataItems  } = undoDataItem;
+
+        const stateUpdater = new AccountStatesUpdater(this);
+
+        const transactionIdAndDataItemPairs = [];
+        for (let i = removedTransactionDataItems.length - 1; i >= 0; --i) {
+            const transactionDataItem = removedTransactionDataItems[i];
+            transactionIdAndDataItemPairs.push([transactionDataItem.id, transactionDataItem]);
+
+            await stateUpdater.asyncAddTransactionUpdate(undefined, transactionDataItem);
+        }
+
+        const currentAccountStateUpdates = await stateUpdater.asyncGenerateCurrentAccountStates();
+
+        await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs, currentAccountStateUpdates.entries());
+
+        stateUpdater.updateAccountEntries();
+
+        const transactionDataItems = removedTransactionDataItems.map((dataItem) => getTransactionDataItem(dataItem, true));
+        this.emit('transactionsAdd', { newTransactionDataItems: transactionDataItems });
+    }
+
+
+    async _asyncApplyUndoModifyTransactions(undoDataItem) {
+        let { oldTransactionDataItems } = undoDataItem;
+
+        const stateUpdater = new AccountStatesUpdater(this);
+
+        const transactionIds = oldTransactionDataItems.map((dataItem) => dataItem.id);
+        const currentTransactionDataItems = await this.asyncGetTransactionDataItemsWithIds(transactionIds);
+
+        const transactionIdAndDataItemPairs = [];
+        for (let i = oldTransactionDataItems.length - 1; i >= 0; --i) {
+            const transactionDataItem = oldTransactionDataItems[i];
+            transactionIdAndDataItemPairs.push([transactionDataItem.id, transactionDataItem]);
+
+            await stateUpdater.asyncAddTransactionUpdate(currentTransactionDataItems[i], transactionDataItem);
+            transactionIds.push(transactionDataItem.id);
+        }
+
+        const currentAccountStateUpdates = await stateUpdater.asyncGenerateCurrentAccountStates();
+
+        await this._handler.asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs, currentAccountStateUpdates.entries());
+
+        stateUpdater.updateAccountEntries();
+
+        oldTransactionDataItems = oldTransactionDataItems.map((dataItem) => getTransactionDataItem(dataItem, true));
+        this.emit('transactionsAdd', { newTransactionDataItems: oldTransactionDataItems, oldTransactionDataItems: currentTransactionDataItems, });
+    }
+
+
     /**
      * Fired by {@link TransactionManager#asyncAddTransactions} after the transactions have been added.
      * @event TransactionManager~transactionsAdd
@@ -1143,9 +1232,14 @@ export class TransactionManager extends EventEmitter {
             stateUpdater.updateAccountEntries();
 
             transactionDataItems = transactionDataItems.map((dataItem) => getTransactionDataItem(dataItem, true));
+            const transactionIds = transactionDataItems.map((dataItem) => dataItem.id);
+
+            const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('addTransactions', 
+                { transactionIds: transactionIds, idGeneratorOptions: idGeneratorOriginal, });
+
 
             this.emit('transactionsAdd', { newTransactionDataItems: transactionDataItems });
-            return { newTransactionDataItems: transactionDataItems };
+            return { newTransactionDataItems: transactionDataItems, undoId: undoId };
         }
         catch (e) {
             this._idGenerator.fromJSON(idGeneratorOriginal);
@@ -1214,8 +1308,11 @@ export class TransactionManager extends EventEmitter {
 
         stateUpdater.updateAccountEntries();
 
+        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('removeTransactions', 
+            { removedTransactionDataItems: transactionDataItems.map((dataItem) => getTransactionDataItem(dataItem, true)), });
+
         this.emit('transactionsRemove', { removedTransactionDataItems: transactionDataItems });
-        return { removedTransactionDataItems: transactionDataItems, };
+        return { removedTransactionDataItems: transactionDataItems, undoId: undoId, };
     }
 
 
@@ -1317,11 +1414,15 @@ export class TransactionManager extends EventEmitter {
 
         newDataItems = newDataItems.map((dataItem) => getTransactionDataItem(dataItem, true));
 
+        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('modifyTransactions', 
+            { oldTransactionDataItems: oldDataItems.map((dataItem) => getTransactionDataItem(dataItem, true)), });
+
+
         this.emit('transactionsModify', {
             newTransactionDataItems: newDataItems,
             oldTransactionDataItems: oldDataItems,
         });
-        return { newTransactionDataItems: newDataItems, oldTransactionDataItems: oldDataItems, };
+        return { newTransactionDataItems: newDataItems, oldTransactionDataItems: oldDataItems, undoId: undoId, };
     }
 }
 
