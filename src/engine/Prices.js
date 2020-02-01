@@ -75,6 +75,13 @@ export class PriceManager extends EventEmitter {
 
         this._accountingSystem = accountingSystem;
         this._handler = options.handler;
+
+        const undoManager = accountingSystem.getUndoManager();
+        this._asyncApplyUndoAddPrices = this._asyncApplyUndoAddPrices.bind(this);
+        undoManager.registerUndoApplier('addPrices', this._asyncApplyUndoAddPrices);
+
+        this._asyncApplyUndoRemovePrices = this._asyncApplyUndoRemovePrices.bind(this);
+        undoManager.registerUndoApplier('removePrices', this._asyncApplyUndoRemovePrices);
     }
 
     async asyncSetupForUse() {
@@ -136,6 +143,43 @@ export class PriceManager extends EventEmitter {
     }
 
 
+    async _asyncApplyUndoAddPrices(undoDataItem) {
+        const { pricedItemId, updates } = undoDataItem;
+
+        let addedPrices = [];
+        let removedPrices = [];
+        for (let i = updates.length - 1; i >= 0; --i) {
+            const [ymdDate, priceDataItem] = updates[i];
+            if (priceDataItem) {
+                const result = await this._handler.asyncAddPriceDataItems(pricedItemId, [priceDataItem]);
+                addedPrices = addedPrices.concat(result.map((priceDataItem) => getPriceDataItem(priceDataItem, true)));
+            }
+            else {
+                const ymdDateObject = getYMDDate(ymdDate);
+                const result = await this._handler.asyncRemovePricesInDateRange(pricedItemId, ymdDateObject, ymdDateObject);
+                removedPrices = removedPrices.concat(result.map((priceDataItem) => getPriceDataItem(priceDataItem, true)));
+            }
+        }
+
+        if (addedPrices.length) {
+            this.emit('pricesAdd', { newPriceDataItems: addedPrices });
+        }
+        if (removedPrices.length) {
+            this.emit('pricesRemove', { removedPriceDataItems: removedPrices });
+        }
+    }
+
+
+    async _asyncApplyUndoRemovePrices(undoDataItem) {
+        const { pricedItemId, removedPrices } = undoDataItem;
+        if (removedPrices.length) {
+            await this._handler.asyncAddPriceDataItems(pricedItemId, removedPrices);
+
+            this.emit('pricesAdd', { newPriceDataItems: removedPrices });
+        }
+    }
+
+
     /**
      * Fired by {@link PriceManager#asyncAddPrices} after the prices have been added.
      * @event PriceManager~pricesAdd
@@ -160,13 +204,31 @@ export class PriceManager extends EventEmitter {
         if (!Array.isArray(prices)) {
             prices = [prices];
         }
-        const priceDataItems = prices.map((price) => getPriceDataItem(price, true));
+        //const priceDataItems = prices.map((price) => getPriceDataItem(price, true));
+        const priceDataItems = [];
+        const updates = [];
+        for (let i = 0; i < prices.length; ++i) {
+            const priceDataItem = getPriceDataItem(prices[i]);
+            priceDataItems.push(priceDataItem);
+
+            const update = [ priceDataItem.ymdDate, ];
+            updates.push(update);
+
+            const ymdDate = getYMDDate(priceDataItem.ymdDate);
+            const existingPriceDataItems = await this._handler.asyncGetPriceDataItemsInDateRange(pricedItemId, ymdDate, ymdDate);
+            if (existingPriceDataItems && existingPriceDataItems.length) {
+                update.push(getPriceDataItem(existingPriceDataItems[0], true));
+            }
+        }
 
         const result = (await this._handler.asyncAddPriceDataItems(pricedItemId, priceDataItems)).map(
             (priceDataItem) => getPriceDataItem(priceDataItem, true));
 
+        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('addPrices', 
+            { pricedItemId: pricedItemId, updates: updates, });
+
         this.emit('pricesAdd', { newPriceDataItems: result });
-        return { newPriceDataItems: result, };
+        return { newPriceDataItems: result, undoId: undoId, };
     }
 
     /**
@@ -193,8 +255,14 @@ export class PriceManager extends EventEmitter {
     async asyncRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB) {
         [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
         const prices = await this._handler.asyncRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB);
+
+        const removedPrices = prices.map((price) => getPriceDataItem(price, true));
+        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('removePrices', 
+            { pricedItemId: pricedItemId, removedPrices: removedPrices, });
+
+
         this.emit('pricesRemove', { removedPriceDataItems: prices });
-        return { removedPriceDataItems: prices, };
+        return { removedPriceDataItems: prices, undoId: undoId};
     }
 
 
