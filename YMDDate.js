@@ -54,7 +54,7 @@ export class YMDDate {
     }
 
     _setFromParts(year, month, dom) {
-        this._date = new Date();
+        this._date = new Date(year, month, dom, 0, 0, 0, 0);
 
         // NOTE: Set the year last, or if you're using this on New Year' Eve, the date will come out wrong!
         this._date.setUTCHours(0);
