@@ -46,7 +46,7 @@ PricedItems representing other items would have a [QuantityDefinition](#quantity
 
 The quantity of 'something' represented by an account is tracked via an [AccountState](#accountstate) data item. An AcccountState represents the state of the account at a particular date. An AccountState has a quantity base value, the quantity definition defining the quantity is the quantity definition from the account's priced item. For accounts associated with PricedItems representing things with the concept of a 'lot', such as a stock, the account state also maintains a list of the lots in the account at a particular date. Lots are represented by [Lot](#lot) data items.
 
-Transactions are what change the quantity state of accounts. The [Transaction](#transaction) data item represents individual transactions. A transaction is composed of two or more entries, each entry represents an action applied to a particular account. The entries of a transaction must be such that they represent a balanced transaction. The engine ensures this is so.
+Transactions are what change the quantity state of accounts. The [Transaction](#transaction) data item represents individual transactions. A transaction is composed of two or more entries, each entry is called a [Split](#split). Each split represents an action applied to a particular account. The splits of a transaction must be such that they represent a balanced transaction. The engine ensures this is so.
 
 When a transaction involves accounts whose underlying quantities represented are not the same (ie. purchasing a security, or an exchange between accounts with different currencies), there is an exchange rate involved. An exchange rate is really just the ratio of the two items in the exchange. For example, the exchange rate for the purchase of a stock would be the price per share. When this occurs, the transaction also contains the current exchange rates of the various items involved.
 
@@ -57,6 +57,7 @@ To handle the references of different data items to other data items, the engine
 There are actually two forms of most data items. The first form has properties that are objects, such as [Currencies](#currency), [QuantityDefinitions](#quantitydefinition), and [YMDDates](#ymddate). The second form is pure primitive data, and as such can be directly converted to and from JSON strings. The various data items have simple conversion functions for converting between the two.
 
 Of all the data items, Transactions and Prices have the potential of have a large quantity of the data items. As such the AccountingFile interface supports asynchronous loading of those data items. This requires that retrieval of transactions and prices be done via async functions.
+
 
 ### File Storage System
 The underlying file storage system is for the most part transparent outside the engine. However, there are several presumptions about the file system:
@@ -78,6 +79,37 @@ Since both [AccountManager](#accountmanager) and [PricedItemManager](#priceditem
 
 [TransactionManager](#transactionmanager) and [PriceManager](#pricemanager) on the other hand don't have predefined objects, they work directly with the handlers
 so don't really need pre-loading.
+
+
+### Undoing Actions
+The engine supports the ability to undo modifications to the database. This is done via an instance of [UndoManager](#undomanager) maintained by the [AccountingSystem](#accountingsystem).
+
+Modifications to the database are performed via method calls to manager objects for the various data items. These include [AccountManager](#accountmanager),
+[TransactionManager](#transactionmanager), [PricedItemManager](#priceditemmanager), [PricesManager](#pricesmanager), and [LotManager](#lotmanager).
+
+[AccountingSystem](#accountingsystem) maintains an instance of each of these managers. For most of the managers there are three methods for modifying
+the set of managed items:
+    - asyncAdd___ for adding new items.
+    - asyncRemove___ for removing existing items.
+    - asyncModify___ for modifying existing items.
+
+The one exception is [PricesManager](#pricesmanager), which does not support a modify.
+
+Each of these editing methods returns an object. The objects contain information pertinent to the action performed:
+    - asyncAdd returns copies of the newly added data item(s).
+    - asyncRemove returns copies of the data items that were removed.
+    - asyncModify returns copies of the original data item and the new data item.
+
+The object also contains an undoId property. The undoId may be passed to the [UndoManager](#undomanager), which will result in the state of the database being rewound to the point immediately before the action that generated the undoId. This includes undoing of any modifications after the modifcation that generated the undo id. Once an undoId has been paseed to [UndoManager](#undomanager), all undoIds that were generated between the undoId being acted upon and the time it is passed to the UndoManager become invalid.
+
+When an editing method of a data item manager is called, the method creates an object that contains enough information to undo the modification and registers that object with the undo manager. The undo manager returns an id for that object, and keeps track of all the objects registered with it. Each data item manager
+also registers callback methods with the undo manager.
+
+When the undo manager is called to undo to a given undo id, the undo manager walks through the list of registered objects, starting with the most recently registered object, and calls the callback associated with the undo object. It does this sequentially until the object with the given id is reached and processed. This ensures that the state of the database remains consistent.
+
+The undo objects registered by the various data item managers are pure data objects and are directly JSON'able. The storage and retrieval of the registered undo objects is handled via a handler, similar to how the other data item managers use handlers to interact with the underlying storage.
+
+This means that the undoable history of the editing of the database may be maintained if the [AccountingFile](#accountingfile) implementation wishes to do so.
 
 
 ## Entities and Objects
@@ -254,6 +286,8 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
 
 ### NumericIdGenerator
 
+### UndoManager
+
 ### YMDDate
 
 
@@ -309,3 +343,4 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
         // TODO: Get rid of the ability to move accounts listed as child accounts to accounts
         // being added by asyncAddAccount(), this was originally to support undoing of asyncRemoveAccount()
         // but now that we have an undo mechanism, we don't need that.
+
