@@ -43,8 +43,12 @@ export function getAccountState(accountStateDataItem, alwaysCopy) {
          || (ymdDate !== accountStateDataItem.ymdDate)
          || (lotStates !== accountStateDataItem.lotStates)) {
             const accountState = Object.assign({}, accountStateDataItem);
-            accountState.ymdDate = ymdDate;
-            accountState.lotStates = lotStates;
+            if (ymdDate !== undefined) {
+                accountState.ymdDate = ymdDate;
+            }
+            if (lotStates !== undefined) {
+                accountState.lotStates = lotStates;
+            }
             return accountState;
         }
     }
@@ -66,8 +70,12 @@ export function getAccountStateDataItem(accountState, alwaysCopy) {
          || (ymdDateString !== accountState.ymdDate)
          || (lotStateDataItems !== accountState.lotStates)) {
             const accountStateDataItem = Object.assign({}, accountState);
-            accountStateDataItem.ymdDate = ymdDateString;
-            accountStateDataItem.lotStates = lotStateDataItems;
+            if (ymdDateString !== undefined) {
+                accountStateDataItem.ymdDate = ymdDateString;
+            }
+            if (lotStateDataItems !== undefined) {
+                accountStateDataItem.lotStates = lotStateDataItems;
+            }
             return accountStateDataItem;
         }
     }

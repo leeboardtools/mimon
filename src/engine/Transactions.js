@@ -107,11 +107,13 @@ export function getSplitDataItem(split, alwaysCopy) {
          || (lotChangeDataItems !== split.lotChanges)
          || (currencyToUSDRatioJSON !== split.currencyToUSDRatio)) {
             const splitDataItem = Object.assign({}, split);
-            splitDataItem.reconcileState = reconcileStateName;
-            if (lotChangeDataItems) {
+            if (reconcileStateName !== undefined) {
+                splitDataItem.reconcileState = reconcileStateName;
+            }
+            if (lotChangeDataItems !== undefined) {
                 splitDataItem.lotChanges = lotChangeDataItems;
             }
-            if (currencyToUSDRatioJSON) {
+            if (currencyToUSDRatioJSON !== undefined) {
                 splitDataItem.currencyToUSDRatio = currencyToUSDRatioJSON;
             }
             return splitDataItem;
@@ -138,11 +140,13 @@ export function getSplit(splitDataItem, alwaysCopy) {
          || (lotChanges !== splitDataItem.lotChanges)
          || (currencyToUSDRatio !== splitDataItem.currencyToUSDRatio)) {
             const split = Object.assign({}, splitDataItem);
-            split.reconcileState = reconcileState;
-            if (lotChanges) {
+            if (reconcileState !== undefined) {
+                split.reconcileState = reconcileState;
+            }
+            if (lotChanges !== undefined) {
                 split.lotChanges = lotChanges;
             }
-            if (currencyToUSDRatio) {
+            if (currencyToUSDRatio !== undefined) {
                 split.currencyToUSDRatio = currencyToUSDRatio;
             }
             return split;
@@ -265,8 +269,12 @@ export function getTransactionDataItem(transaction, alwaysCopy) {
          || (ymdDateString !== transaction.ymdDate)
          || (splitDataItems !== transaction.splits)) {
             const transactionDataItem = Object.assign({}, transaction);
-            transactionDataItem.ymdDate = ymdDateString;
-            transactionDataItem.splits = splitDataItems;
+            if (ymdDateString !== undefined) {
+                transactionDataItem.ymdDate = ymdDateString;
+            }
+            if (splitDataItems !== undefined) {
+                transactionDataItem.splits = splitDataItems;
+            }
             return transactionDataItem;
         }
     }
@@ -289,8 +297,12 @@ export function getTransaction(transactionDataItem, alwaysCopy) {
          || (ymdDate !== transactionDataItem.ymdDate)
          || (splits !== transactionDataItem.splits)) {
             const transaction = Object.assign({}, transactionDataItem);
-            transaction.ymdDate = ymdDate;
-            transaction.splits = splits;
+            if (ymdDate !== undefined) {
+                transaction.ymdDate = ymdDate;
+            }
+            if (splits !== undefined) {
+                transaction.splits = splits;
+            }
             return transaction;
         }
     }

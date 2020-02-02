@@ -39,7 +39,9 @@ export function getPrice(priceDataItem, alwaysCopy) {
         const ymdDate = getYMDDate(priceDataItem.ymdDate);
         if (alwaysCopy || (ymdDate !== priceDataItem.ymdDate)) {
             const price = Object.assign({}, priceDataItem);
-            price.ymdDate = ymdDate;
+            if (ymdDate !== undefined) {
+                price.ymdDate = ymdDate;
+            }
             return price;
         }
     }
@@ -57,7 +59,9 @@ export function getPriceDataItem(price, alwaysCopy) {
         const ymdDate = getYMDDateString(price.ymdDate);
         if (alwaysCopy || (ymdDate !== price.ymdDate)) {
             const priceDataItem = Object.assign({}, price);
-            priceDataItem.ymdDate = ymdDate;
+            if (ymdDate !== undefined) {
+                priceDataItem.ymdDate = ymdDate;
+            }
             return priceDataItem;
         }
     }

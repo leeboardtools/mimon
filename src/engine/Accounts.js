@@ -219,8 +219,10 @@ export function getAccount(accountDataItem, alwaysCopy) {
         if (alwaysCopy
          || (type !== accountDataItem.type)) {
             const account = Object.assign({}, accountDataItem);
-            account.type = type;
-            if (accountDataItem.childAccountIds) {
+            if (type !== undefined) {
+                account.type = type;
+            }
+            if (accountDataItem.childAccountIds !== undefined) {
                 account.childAccountIds = Array.from(accountDataItem.childAccountIds);
             }
             return account;
@@ -242,8 +244,10 @@ export function getAccountDataItem(account, alwaysCopy) {
         if (alwaysCopy
          || (typeName !== account.type)) {
             const accountDataItem = Object.assign({}, account);
-            accountDataItem.type = typeName;
-            if (account.childAccountIds) {
+            if (typeName !== undefined) {
+                accountDataItem.type = typeName;
+            }
+            if (account.childAccountIds !== undefined) {
                 accountDataItem.childAccountIds = Array.from(account.childAccountIds);
             }
             return accountDataItem;
