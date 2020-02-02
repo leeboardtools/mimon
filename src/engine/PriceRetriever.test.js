@@ -1,11 +1,11 @@
 // TEMP!!!
 /* eslint-disable no-unused-vars */
 
-import { asyncUpdatePricedItemPrices, setIsElectron, asyncGetUpdatedPricedItemPrices } from './PriceRetriever';
-import { PricedItemType } from './Prices';
+import { asyncGetPricesForTicker, asyncUpdatePricedItemPrices, setIsElectron, asyncGetUpdatedPricedItemPrices } from './PriceRetriever';
+import { PricedItemType } from './PricedItems';
 //import * as PTH from './PricesTestHelpers';
 //import { AccountingSystem, USStockPriceDefinition } from './AccountingSystem';
-import { YMDDate } from '../util/YMDDate';
+import { YMDDate, getYMDDate } from '../util/YMDDate';
 import { getDecimalDefinition } from '../util/Quantities';
 import * as ASTH from './AccountingSystemTestHelpers';
 
@@ -33,7 +33,9 @@ function cleanupPrices(prices) {
         entry.high = cleanupPrice(entry.high);
         entry.low = cleanupPrice(entry.low);
         entry.close = cleanupPrice(entry.close);
-        entry.adjClose = cleanupPrice(entry.adjClose);
+        if (entry.adjClose) {
+            entry.adjClose = cleanupPrice(entry.adjClose);
+        }
     });
 }
 
@@ -270,6 +272,9 @@ cleanupPrices(FSRPX);
 
 
 function getItemsInRange(items, dateA, dateB) {
+    dateB = dateB || dateA;
+    dateA = getYMDDate(dateA);
+    dateB = getYMDDate(dateB);
     const inRange = [];
     for (const item of items) {
         if ((YMDDate.compare(item.ymdDate, dateA) >= 0) && (YMDDate.compare(item.ymdDate, dateB) <= 0)) {
@@ -279,6 +284,50 @@ function getItemsInRange(items, dateA, dateB) {
     return inRange;
 }
 
+
+function cleanPricesResult(prices) {
+    prices.forEach((price) => {
+        delete price.adjClose;
+    });
+}
+
+
+
+//
+//---------------------------------------------------------
+//
+test('asyncGetPricesForTicker', async () => {
+    let result;
+    let ref;
+
+    result = await asyncGetPricesForTicker('AAPL', '2019-10-01');
+    cleanPricesResult(result);
+    ref = getItemsInRange(AAPL, '2019-10-01');
+    expect(result).toEqual(ref);
+
+    result = await asyncGetPricesForTicker('AAPL', '2019-09-30', '2019-09-29');
+    cleanPricesResult(result);
+    ref = getItemsInRange(AAPL, '2019-09-29', '2019-09-30');
+    expect(result).toEqual(ref);
+
+    // Weekend
+    result = await asyncGetPricesForTicker('AAPL', '2019-09-29');
+    cleanPricesResult(result);
+    ref = getItemsInRange(AAPL, '2019-09-27', '2019-09-27');
+    expect(result).toEqual(ref);
+
+    // Multiple dates
+    result = await asyncGetPricesForTicker('AAPL', '2019-09-26', '2019-09-30');
+    cleanPricesResult(result);
+    expect(result.length).toEqual(3);
+    ref = getItemsInRange(AAPL, '2019-09-26', '2019-09-30');
+    expect(result).toEqual(ref);
+});
+
+
+//
+//---------------------------------------------------------
+//
 test('asyncUpdatePricedItemPrices', async () => {
 
     // const results = await yf.historical({ symbol: 'FSRPX', from: new Date(2019, 8, 22), to: new Date(2019, 9, 2) });
@@ -286,13 +335,14 @@ test('asyncUpdatePricedItemPrices', async () => {
 
 
     let isTestEnabled;
-    // isTestEnabled = true;
+    isTestEnabled = true;
     if (!isTestEnabled) {
         return;
     }
 
 
     const accountingSystem = await ASTH.asyncCreateAccountingSystem();
+    const pricedItemManager = accountingSystem.getPricedItemManager();
     const priceManager = accountingSystem.getPriceManager();
 
 
@@ -301,9 +351,12 @@ test('asyncUpdatePricedItemPrices', async () => {
         description: 'A computer company',
         type: PricedItemType.SECURITY,
         currency: 'USD',
+        quantityDefinition: USStockPriceDefinition,
         ticker: 'AAPL',
+        onlineUpdateType: 'YAHOO_FINANCE',
     };
-    const pricedItemAAPL = (await priceManager.asyncAddPricedItem(optionsAAPL)).newPricedItemDataItem;
+    pricedItemManager.isDebug = true;
+    const pricedItemAAPL = (await pricedItemManager.asyncAddPricedItem(optionsAAPL)).newPricedItemDataItem;
     const localIdAAPL = pricedItemAAPL.id;
 
 
@@ -312,9 +365,11 @@ test('asyncUpdatePricedItemPrices', async () => {
         description: 'An ETF',
         type: PricedItemType.SECURITY,
         currency: 'USD',
+        quantityDefinition: USStockPriceDefinition,
         ticker: 'VOO',
+        onlineUpdateType: 'YAHOO_FINANCE',
     };
-    const pricedItemVOO = (await priceManager.asyncAddPricedItem(optionsVOO)).newPricedItemDataItem;
+    const pricedItemVOO = (await pricedItemManager.asyncAddPricedItem(optionsVOO)).newPricedItemDataItem;
     const localIdVOO = pricedItemVOO.id;
 
 
@@ -323,33 +378,56 @@ test('asyncUpdatePricedItemPrices', async () => {
         description: 'A Mutual Fund',
         type: PricedItemType.SECURITY,
         currency: 'USD',
+        quantityDefinition: USStockPriceDefinition,
         ticker: 'FSRPX',
+        onlineUpdateType: 'YAHOO_FINANCE',
     };
-    const pricedItemFSRPX = (await priceManager.asyncAddPricedItem(optionsFSRPX)).newPricedItemDataItem;
+    const pricedItemFSRPX = (await pricedItemManager.asyncAddPricedItem(optionsFSRPX)).newPricedItemDataItem;
     const localIdFSRPX = pricedItemFSRPX.id;
 
-    const date1 = new YMDDate(2019, 8, 22);
-    const date2 = new YMDDate(2019, 8, 26);
+    const resultA = await asyncGetUpdatedPricedItemPrices({
+        pricedItemManager: pricedItemManager,
+        pricedItemIds: [localIdAAPL, localIdFSRPX],
+        ymdDateA: '2019-09-28',
+        ymdDateB: '2019-09-26',
+    });
+    resultA.successfulEntries.forEach((entry) => {
+        cleanPricesResult(entry.prices);
+    });
+
+    const successfulEntriesA = [];
+    successfulEntriesA.push({ pricedItemId: localIdAAPL, ticker: 'AAPL', prices: getItemsInRange(AAPL, '2019-09-26', '2019-09-28'), });
+    successfulEntriesA.push({ pricedItemId: localIdFSRPX, ticker: 'FSRPX', prices: getItemsInRange(FSRPX, '2019-09-26', '2019-09-28'), });
+    const expectedA = {
+        isCancelled: false,
+        successfulEntries: successfulEntriesA,
+        failedEntries: [],
+    };
+    expect(resultA).toEqual(expectedA);
+
+
+    const date1 = '2019-09-22';
+    const date2 = '2019-09-26';
     //await asyncUpdatePricedItemPrices(priceManager, [localIdAAPL, localIdVOO], date1, date2);
     //PTH.expectPricesToMatchOptions(accountingSystem, await priceManager.asyncGetPricesForPricedItem(localIdAAPL, date1, date2), getItemsInRange(AAPL, date1, date2));
     //PTH.expectPricesToMatchOptions(accountingSystem, await priceManager.asyncGetPricesForPricedItem(localIdVOO, date1, date2), getItemsInRange(VOO, date1, date2));
     //PTH.expectPricesToMatchOptions(accountingSystem, await priceManager.asyncGetPricesForPricedItem(localIdFSRPX, date1, date2), []);
 
-    const date3 = new YMDDate(2019, 8, 25);
-    const date4 = new YMDDate(2019, 9, 2);
+    const date3 = '2019-09-25';
+    const date4 = '2019-10-02';
     //await asyncUpdatePricedItemPrices(priceManager, [localIdAAPL, localIdVOO, localIdFSRPX], date3, date4);
     //PTH.expectPricesToMatchOptions(accountingSystem, await priceManager.asyncGetPricesForPricedItem(localIdAAPL, date1, date4), getItemsInRange(AAPL, date1, date4));
     //PTH.expectPricesToMatchOptions(accountingSystem, await priceManager.asyncGetPricesForPricedItem(localIdVOO, date1, date4), getItemsInRange(VOO, date1, date4));
     //PTH.expectPricesToMatchOptions(accountingSystem, await priceManager.asyncGetPricesForPricedItem(localIdFSRPX, date3, date4), getItemsInRange(FSRPX, date3, date4));
 
-    const resultA = await asyncGetUpdatedPricedItemPrices({
-        priceManager: priceManager,
-        pricedItemRefs: [localIdAAPL],
-        oDateA: new YMDDate(2019, 0, 21), // MLK Day 2019
+/*   const resultA = await asyncGetUpdatedPricedItemPrices({
+        pricedItemManager: pricedItemManager,
+        pricedItemIds: [localIdAAPL],
+        ymdDateA: '2019-01-21', // MLK Day 2019
     });
-    expect(resultA.priceOptions.length).toEqual(1);
-    expect(resultA.priceOptions[0].ymdDate).toEqual(new YMDDate(2019, 0, 18));
-
+    expect(resultA.prices.length).toEqual(1);
+    expect(resultA.prices[0].ymdDate).toEqual('2019-01-18');
+*/
     // console.log(JSON.stringify(getItemsInRange(FSRPX, date3, date4)));
     // console.log(JSON.stringify(FSRPX));
     // const results = await yf.historical({ symbol: 'FSRPX', from: date3, to: date4 });

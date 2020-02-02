@@ -1,7 +1,6 @@
-//import { AddPricesAction } from './PriceActions'
-import { YMDDate } from '../util/YMDDate';
-import { PricedItemOnlineUpdateType } from './Prices';
-//import * as PI from './PricedItems';
+import { YMDDate, getYMDDate } from '../util/YMDDate';
+import { getPricedItem, PricedItemOnlineUpdateType } from './PricedItems';
+import { getDecimalDefinition } from '../util/Quantities';
 
 const request = require('request');
 const yf = require('yahoo-finance');
@@ -56,87 +55,37 @@ async function directRetrieveQuote(options) {
     });
 }
 
+
 /**
- * @typedef {object} PriceRetrieverSuccess
- * @property {string}   ticker
- * @property {Price~Option[]}   priceOptions
+ * @typedef {object} PriceRetrieverOptions
+ * @param {number} [timeout]    Optional timeout in msec.
+ * @param {QuantityDefinition}  [quantityDefinition]    Optional quantity definition to use for defining the price values,
+ * if not given then 4 decimal places will be used.
  */
 
 /**
- * @typedef {object}    PriceRetrieverFailure
- * @property {string}   ticker
- * @property {Error}    err
+ * Retrieves {@link PriceDataItem} prices for a given ticker.
+ * @param {string} ticker 
+ * @param {string|YMDDate} ymdDateA 
+ * @param {string|YMDDate} ymdDateB 
+ * @param {PriceRetrieverOptions} options 
  */
+export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, options) {
+    options = options || {};
 
-/**
- * @callback PriceRetrieverCallback
- * @param {number}  totalPricedItemsCount   The total number of priced items whose prices are being retrieved, this may be
- * different from the number of priced items passed to {@link resolveRefToPricedItem}.
- * @param {number}  processedPricedItemsCount   The number of priced items whose prices have been processed, this will be
- * equal to totalPricedItemsCount after the last priced item is processed.
- * @param {number}  pricedItemId   The local id of the priced item that was just processed.
- * @param {Price~Options[]} priceOptions    Array containing the options for the prices that were retrieved for the priced item.
- * @param {boolean} isCancel    Set this to <code>true</code> if further processing should be aborted.
- * @param {PriceRetrieverSuccess[]} successTickerSymbolsAndPrices   Array containing all the price retrievals that have been successful
- * so far.
- * @param {PriceRetrieverFailure[]} failedTickerSymbolsAndErrors    Array containing all the price retrievals that have failed so far.
- */
-
-/**
- * @typedef {object}    PriceRetrieverOptions
- * @property {PriceManager} priceManager    The price manager, required.
- * @property {PricedItem[]|Id[]|number[]} pricedItemRefs    Array of references to the priced items whose prices are to be retrieved,
- * valid elements are similar to the pricedItemRef argument of {@link PriceManager#resolveRefToPricedItem}.
- * @property {YMDDate}    [ymdDateA]    One date of the date range.
- * @property {YMDDate}    [ymdDateB=ymdDateA] The other date of the date range. If both ymdDateA and ymdDateB are left out then the current
- * date is used.
- * @property {PriceRetrieverCallback}   [callback]  Optional callback function called after prices are retrieved for a priced item.
- * @property {boolean}  [isElectron=false]  Set to <code>true</code> if this is called from Electron.
- */
-
-/**
- * @typedef {object}    PriceRetrieverResult
- * @property {boolean}  isCancelled
- * @property {Price~Options[]}  priceOptions  Array containing the options for all the prices retrieved.
- * @property {number[]} successPricedItemIds  Array containing the local ids of all the priced items whose prices were successfully retrieved.
- * @property {number[]} failedPricedItemIds    Array containing the local ids of all the priced items whose prices could not be retrieved.
- */
-
-/**
- * The main price retrieval function.
- * @param {PriceRetrieverOptions} options
- * @returns {PriceRetrieverResult}
- */
-export async function asyncGetUpdatedPricedItemPrices(options) {
-    let { priceManager, pricedItemRefs, ymdDateA, ymdDateB, callback, msecDelay, isElectron } = options;
-
-    setIsElectron(isElectron);
-
-    if (ymdDateB === undefined) {
+    if (!ymdDateB) {
         ymdDateB = ymdDateA;
     }
-    if (ymdDateA === undefined) {
+    else if (!ymdDateA) {
         ymdDateA = ymdDateB;
     }
-    if (ymdDateA === undefined) {
-        ymdDateA = new YMDDate();
-        ymdDateB = ymdDateA;
-    }
-    if (YMDDate.compare(ymdDateA, ymdDateB) > 0) {
-        [ymdDateA, ymdDateB] = [ymdDateB, ymdDateA];
-    }
 
-    if (ymdDateA === ymdDateB) {
-        ymdDateA = YMDDate.fromOptions(ymdDateA);
-        ymdDateB = ymdDateA;
-    }
-    else {
-        ymdDateA = YMDDate.fromOptions(ymdDateA);
-        ymdDateB = YMDDate.fromOptions(ymdDateB);
-    }
+    ymdDateA = getYMDDate(ymdDateA);
+    ymdDateB = getYMDDate(ymdDateB);
+    [ ymdDateA, ymdDateB ] = YMDDate.orderYMDDatePair(ymdDateA, ymdDateB);
 
     // Our little hack to work around weekends and holidays.
-    // There should never be more than 3 days of weekend/holiday.
+    // There normally should never be more than 3 days of weekend/holiday.
     let fromYMDDate = ymdDateA;
     const toYMDDate = ymdDateB;
     if (fromYMDDate.daysAfterMe(toYMDDate) < 4) {
@@ -146,17 +95,139 @@ export async function asyncGetUpdatedPricedItemPrices(options) {
     const to = new Date(toYMDDate.valueOf() + 1000 * 60 * 60 * 12);
     const from = fromYMDDate.toDate();
 
-    if (!Array.isArray(pricedItemRefs)) {
-        pricedItemRefs = [pricedItemRefs];
+    const retrieveArgs = {
+        from: from,
+        to: to,
+        timeout: options.timeout,
+        symbol: ticker,
+    };
+
+    const results = await retrieverFunc(retrieveArgs);
+
+    const quantityDefinition = options.quantityDefinition || getDecimalDefinition(4);
+
+    // The results from historical() are from newest to oldest, but our default
+    // price handler works best if the prices are from oldest to newest, so we reverse
+    // their insertion.
+    let priceDataItemCount = 0;
+    let index = results.length - 1;
+    const priceDataItems = [];
+    for (let i = 0; i < results.length; ++i) {
+        const result = results[i];
+    
+        const ymdDate = new YMDDate(result.date);
+        if ((priceDataItemCount > 0) && (YMDDate.compare(ymdDate, ymdDateA) < 0)) {
+            // This test is for the case where we stuffed in extra days before to work
+            // around weekends and holidays.
+            break;
+        }
+
+        const priceDataItem = {
+            ymdDate: ymdDate,
+            close: quantityDefinition.cleanupNumber(result.close),
+        };
+
+        if ((result.open !== result.close) || (result.high !== result.close) || (result.low !== result.close)) {
+            if (result.open !== undefined) {
+                priceDataItem.open = quantityDefinition.cleanupNumber(result.open);
+            }
+            if (result.high !== undefined) {
+                priceDataItem.high = quantityDefinition.cleanupNumber(result.high);
+            }
+            if (result.low !== undefined) {
+                priceDataItem.low = quantityDefinition.cleanupNumber(result.low);
+            }
+        }
+        if ((result.adjClose !== undefined) && (result.adjClose !== result.close)) {
+            priceDataItem.adjClose = quantityDefinition.cleanupNumber(result.adjClose);
+        }
+        if (result.volume) {
+            priceDataItem.volume = result.volume;
+        }
+
+        priceDataItems[index] = priceDataItem;
+        --index;
+        ++priceDataItemCount;
+    }
+
+    if (index >= 0) {
+        priceDataItems.splice(0, index + 1);
+    }
+
+    return priceDataItems;
+}
+
+/**
+ * @typedef {object} PriceRetrieverSuccessfulEntry
+ * @property {number}   pricedItemId
+ * @property {string}   ticker
+ * @property {PriceDataItem[]}  prices
+ */
+
+/**
+ * @typedef {object} PriceRetrieverFailedEntry
+ * @property {number}   pricedItemId
+ * @property {string}   ticker
+ * @property {Error}    err
+ */
+
+
+/**
+ * @callback PriceRetrieverCallback
+ * @param {number}  totalPricedItemsCount   The total number of priced items whose prices are being retrieved.
+ * @param {number}  processedPricedItemsCount   The number of priced items whose prices have been processed, this will be
+ * equal to totalPricedItemsCount after the last priced item is processed.
+ * @param {number}  pricedItemId   The local id of the priced item that was just processed.
+ * @param {Price[]} [prices]    Array containing the options for the prices that were retrieved for the priced item, will be
+ * <code>undefined</code> if retrieval failed.
+ * @param {Error} [err] If the last retrieval failed this is the error.
+ * @param {boolean} isCancel    Set this to <code>true</code> if further processing should be aborted.
+ * @param {PriceRetrieverSuccessfulEntry[]} successfulEntries   Array containing the entries for priced items whose retrieval succeeded.
+ * @param {PriceRetrieverFailedEntry[]} failedEntries   Array containing the entries for priced items whose retrieval failed.
+ */
+
+
+/**
+ * @typedef {object}    PriceRetrieverOptions
+ * @property {PriceManager} priceManager    The price manager, required.
+ * @property {number[]} pricedItemIds    Array of ids of the priced items whose prices are to be retrieved,
+ * @property {YMDDate}    [ymdDateA]    One date of the date range.
+ * @property {YMDDate}    [ymdDateB=ymdDateA] The other date of the date range. If both ymdDateA and ymdDateB are left out then the current
+ * date is used.
+ * @property {PriceRetrieverCallback}   [callback]  Optional callback function called after prices are retrieved for a priced item.
+ * @property {number}   [msecDelay] Optional number of milliseconds to delay between calls to the price retriever.
+ * @property {boolean}  [isElectron=false]  Set to <code>true</code> if this is called from Electron.
+ */
+
+/**
+ * @typedef {object}    PriceRetrieverResult
+ * @property {boolean}  isCancelled
+ * @param {PriceRetrieverSuccessfulEntry[]} successfulEntries   Array containing the entries for priced items whose retrieval succeeded.
+ * @param {PriceRetrieverFailedEntry[]} failedEntries   Array containing the entries for priced items whose retrieval failed.
+ */
+
+/**
+ * The main price retrieval function.
+ * @param {PriceRetrieverOptions} options
+ * @returns {PriceRetrieverResult}
+ */
+export async function asyncGetUpdatedPricedItemPrices(options) {
+    let { pricedItemManager, pricedItemIds, ymdDateA, ymdDateB, callback, msecDelay, isElectron } = options;
+
+    setIsElectron(isElectron);
+
+    if (!Array.isArray(pricedItemIds)) {
+        pricedItemIds = [pricedItemIds];
     }
 
     const pricedItems = [];
-    pricedItemRefs.forEach((pricedItem) => {
-        pricedItem = priceManager.resolveRefToPricedItem(pricedItem);
+    pricedItemIds.forEach((pricedItemId) => {
+        const pricedItemDataItem = pricedItemManager.getPricedItemDataItemWithId(pricedItemId);
+        const pricedItem = getPricedItem(pricedItemDataItem);
         if (!pricedItem) {
             return;
         }
-        if (!pricedItem.type.category.hasTickerSymbol) {
+        if (!pricedItem.type.hasTickerSymbol) {
             return;
         }
 
@@ -173,103 +244,42 @@ export async function asyncGetUpdatedPricedItemPrices(options) {
         pricedItems.push(pricedItem);
     });
 
-    const successPricedItemIds = [];
-    const failedPricedItemIds = [];
-    const successSymbolsAndPrices = [];
-    const failedSymbols = [];
+    const successfulEntries = [];
+    const failedEntries = [];
     const callbackArgs = {
         totalPricedItemsCount: pricedItems.length,
-        successTickerSymbolsAndPrices: successSymbolsAndPrices,
-        failedTickerSymbolsAndErrors: failedSymbols,
-    };
-
-    const retrieveArgs = {
-        from: from,
-        to: to,
-        timeout: options.timeout,
+        successfulEntries: successfulEntries,
+        failedEntries: failedEntries,
     };
 
     let isCancelled = false;
 
-    let prices = [];
-
     for (let i = 0; i < pricedItems.length; ++i) {
-        const isLast = (i + 1) >= pricedItems.length;
         const pricedItem = pricedItems[i];
-        const symbol = pricedItem.ticker;
+        const { ticker } = pricedItem;
 
-        const priceOptions = [];
-
+        let prices;
+        let err;
         try {
-            retrieveArgs.symbol = symbol;
-            const results = await retrieverFunc(retrieveArgs);
-
-            if (msecDelay && (msecDelay > 0) && !isLast) {
+            prices = await asyncGetPricesForTicker(pricedItem.ticker, ymdDateA, ymdDateB, options);
+            if (msecDelay && (msecDelay > 0) && (i + 1 < pricedItems.length)) {
                 await new Promise((resolve, reject) => {
                     setTimeout(() => resolve(), msecDelay);
                 });
             }
 
-            // The results from historical() are from newest to oldest, but our default
-            // price handler works best if the prices are from oldes to newest, so we reverse
-            // their insertion.
-            let optionsCount = 0;
-            let i = results.length - 1;
-            for (const result of results) {
-                const ymdDate = new YMDDate(result.date);
-                if ((optionsCount > 0) && (YMDDate.compare(ymdDate, ymdDateA) < 0)) {
-                    // This test is for the case where we stuffed in extra days before to work
-                    // around weekends and holidays.
-                    continue;
-                }
-
-                const { quantityDefinition } = pricedItem;
-                const options = {
-                    pricedItemId: pricedItem.id,
-                    ymdDate: ymdDate,
-                    close: quantityDefinition.cleanupNumber(result.close),
-                };
-
-                if ((result.open !== result.close) || (result.high !== result.close) || (result.low !== result.close)) {
-                    if (result.open !== undefined) {
-                        options.open = quantityDefinition.cleanupNumber(result.open);
-                    }
-                    if (result.high !== undefined) {
-                        options.high = quantityDefinition.cleanupNumber(result.high);
-                    }
-                    if (result.low !== undefined) {
-                        options.low = quantityDefinition.cleanupNumber(result.low);
-                    }
-                }
-                if ((result.adjClose !== undefined) && (result.adjClose !== result.close)) {
-                    options.adjClose = quantityDefinition.cleanupNumber(result.adjClose);
-                }
-                if (result.volume) {
-                    options.volume = result.volume;
-                }
-
-                priceOptions[i] = options;
-                --i;
-                ++optionsCount;
-            }
-            if (i >= 0) {
-                priceOptions.splice(0, i + 1);
-            }
-
-            prices = prices.concat(priceOptions);
-
-            successPricedItemIds.push(pricedItem.id);
-            successSymbolsAndPrices.push({ ticker: symbol, priceOptions: priceOptions });
+            successfulEntries.push({ pricedItemId: pricedItem.id, ticker: ticker, prices: prices, });
         }
         catch (e) {
-            failedPricedItemIds.push(pricedItem.id);
-            failedSymbols.push({ ticker: symbol, err: e });
+            failedEntries.push({ pricedItemId: pricedItem.id, ticker: ticker, err: e, });
+            err = e;
         }
 
         if (callback) {
             callbackArgs.processedPricedItemsCount = i + 1;
             callbackArgs.pricedItemId = pricedItem.id;
-            callbackArgs.priceOptions = priceOptions;
+            callbackArgs.prices = prices;
+            callbackArgs.err = err;
             callbackArgs.isCancel = false;
 
             callback(callbackArgs);
@@ -282,23 +292,8 @@ export async function asyncGetUpdatedPricedItemPrices(options) {
 
     return {
         isCancelled: isCancelled,
-        priceOptions: prices,
-        successPricedItemIds: successPricedItemIds,
-        failedPricedItemIds: failedPricedItemIds,
+        successfulEntries: successfulEntries,
+        failedEntries: failedEntries,
     };
 }
 
-/*
-export async function asyncUpdatePricedItemPrices(priceManager, pricedItems, dateA, dateB, description) {
-    const result = await asyncGetUpdatedPricedItemPrices({
-        priceManager: priceManager, pricedItemRefs: pricedItems, ymdDateA: dateA, ymdDateB: dateB, description: description,
-    });
-
-    const accountingSystem = priceManager.getAccountingSystem();
-    const actionManager = accountingSystem.getActionManager();
-    const addPricesAction = new AddPricesAction(accountingSystem, { newPriceOptions: result.priceOptions, description: description });
-    await actionManager.applyAction(addPricesAction);
-
-    return result;
-}
-*/
