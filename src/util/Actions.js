@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events';
-import { bug } from '../util/Bug';
-//import { userMsg, userError } from '../util/UserMessages';
+import { bug } from './Bug';
 
 
 /**
@@ -30,10 +29,10 @@ export function createCompositeAction(mainAction, subActions) {
  * There is one built-in action type: 'Composite'.
  */
 export class ActionManager extends EventEmitter {
-    constructor(accountingSystem, options) {
+    constructor(options) {
         super(options);
 
-        this._accountingSystem = accountingSystem;
+        this._undoManager = options.undoManager;
 
         this._handler = options.handler;
 
@@ -91,7 +90,7 @@ export class ActionManager extends EventEmitter {
         const firstEntry = await this._handler.asyncGetAppliedActionEntryAtIndex(0);
         if (firstEntry) {
             await this._handler.asyncRemoveLastAppliedActionEntries(this._handler.getAppliedActionCount());
-            await this._accountingSystem.getUndoManager().asyncUndoToId(firstEntry.undoId, true);
+            await this._undoManager.asyncUndoToId(firstEntry.undoId, true);
         }
     }
 
@@ -121,7 +120,7 @@ export class ActionManager extends EventEmitter {
             throw bug('An applier was not registered for actions of type "' + action.type + '"!');
         }
 
-        await applier(action, this._accountingSystem);
+        await applier(action);
     }
 
 
@@ -130,8 +129,7 @@ export class ActionManager extends EventEmitter {
      * @param {ActionDataItem} action 
      */
     async asyncApplyAction(action) {
-        const undoManager = this._accountingSystem.getUndoManager();
-        const undoId = undoManager.getNextUndoId();
+        const undoId = this._undoManager.getNextUndoId();
         const actionEntry = {
             undoId: undoId,
             action: action,
@@ -142,7 +140,7 @@ export class ActionManager extends EventEmitter {
             await this._handler.asyncAddAppliedActionEntry(actionEntry);
         }
         catch (e) {
-            await undoManager.asyncUndoToId(undoId);
+            await this._undoManager.asyncUndoToId(undoId);
         }
     }
 
@@ -164,7 +162,7 @@ export class ActionManager extends EventEmitter {
 
 
             const actionEntry = await this._handler.asyncGetAppliedActionEntryAtIndex(lastIndex);
-            await this._accountingSystem.getUndoManager().asyncUndoToId(actionEntry.undoId);
+            await this._undoManager.asyncUndoToId(actionEntry.undoId);
 
             for (let index = totalCount - 1; index >= lastIndex; --index) {
                 const actionEntry = await this._handler.asyncGetAppliedActionEntryAtIndex(index);
@@ -203,7 +201,6 @@ export class ActionManager extends EventEmitter {
     /**
      * @callback ActionManager~Applier
      * @param {ActionDataItem} actionDataItem   The action data item to be applied.
-     * @param {AccountingSystem}    accountingSystem
      */
 
 

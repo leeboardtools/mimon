@@ -9,7 +9,7 @@ import { InMemoryPricedItemsHandler } from './PricedItems';
 import { PricesHandler } from './Prices';
 import { TransactionsHandlerImplBase } from './Transactions';
 import { InMemoryUndoHandler } from '../util/Undo';
-import { InMemoryActionsHandler } from './Actions';
+import { InMemoryActionsHandler } from '../util/Actions';
 import { AccountingSystem } from './AccountingSystem';
 import { userError } from '../util/UserMessages';
 import { GroupedItemManager, ItemGroups } from '../util/GroupedItemManager';

@@ -5,7 +5,7 @@ import { LotManager } from './Lots';
 import { TransactionManager } from './Transactions';
 import { PriceManager } from './Prices';
 import { UndoManager } from '../util/Undo';
-import { ActionManager } from './Actions';
+import { ActionManager } from '../util/Actions';
 
 /**
  * The main interface object from the engine, this provides access to the various managers.
@@ -21,6 +21,9 @@ export class AccountingSystem extends EventEmitter {
         // This should come first.
         this._undoManager = new UndoManager(options.undoManager);
 
+        const actionManagerOptions = Object.assign({}, options.actionManager, { undoManager: this._undoManager, });
+        this._actionManager = new ActionManager(actionManagerOptions);
+
         // Needs to come before the account manager...
         this._pricedItemManager = new PricedItemManager(this, options.pricedItemManager);
 
@@ -29,8 +32,6 @@ export class AccountingSystem extends EventEmitter {
 
         this._priceManager = new PriceManager(this, options.priceManager);
         this._transactionManager = new TransactionManager(this, options.transactionManager);
-
-        this._actionManager = new ActionManager(this, options.actionManager);
 
     }
 

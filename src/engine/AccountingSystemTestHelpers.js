@@ -9,7 +9,7 @@ import { getDecimalDefinition } from '../util/Quantities';
 import { InMemoryPricesHandler } from './Prices';
 import { InMemoryTransactionsHandler } from './Transactions';
 import { InMemoryUndoHandler } from '../util/Undo';
-import { InMemoryActionsHandler } from './Actions';
+import { InMemoryActionsHandler } from '../util/Actions';
 
 
 //

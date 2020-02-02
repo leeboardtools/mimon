@@ -1,16 +1,14 @@
-import * as ASTH from './AccountingSystemTestHelpers';
-import { createCompositeAction } from './Actions';
+import { ActionManager, InMemoryActionsHandler, createCompositeAction } from './Actions';
+import { UndoManager, InMemoryUndoHandler } from './Undo';
 
-function applyAction(action, accountingSystem, values, undoName) {
-    const undoManager = accountingSystem.getUndoManager();
+function applyAction(action, undoManager, values, undoName) {
     undoManager.asyncRegisterUndoDataItem(undoName, { value: values[0], });
     values[0] = action.value;
 }
 
 test('ActionManager', async () => {
-    const accountingSystem = await ASTH.asyncCreateAccountingSystem();
-    const manager = accountingSystem.getActionManager();
-    const undoManager = accountingSystem.getUndoManager();
+    const undoManager = new UndoManager({handler : new InMemoryUndoHandler() });
+    const manager = new ActionManager({ handler: new InMemoryActionsHandler(), undoManager: undoManager, });
 
     let valueA = [];
     let valueB = [];
@@ -18,8 +16,8 @@ test('ActionManager', async () => {
     undoManager.registerUndoApplier('A', (undoDataItem) => { valueA[0] = undoDataItem.value; } );
     undoManager.registerUndoApplier('B', (undoDataItem) => { valueB[0] = undoDataItem.value; } );
 
-    manager.registerActionApplier('actionA', (action, accountingSystem) => { applyAction(action, accountingSystem, valueA, 'A'); });
-    manager.registerActionApplier('actionB', (action, accountingSystem) => { applyAction(action, accountingSystem, valueB, 'B'); });
+    manager.registerActionApplier('actionA', (action) => { applyAction(action, undoManager, valueA, 'A'); });
+    manager.registerActionApplier('actionB', (action) => { applyAction(action, undoManager, valueB, 'B'); });
 
     expect(manager.getAppliedActionCount()).toEqual(0);
     expect(manager.getUndoneActionCount()).toEqual(0);
