@@ -220,6 +220,9 @@ export function getAccount(accountDataItem, alwaysCopy) {
          || (type !== accountDataItem.type)) {
             const account = Object.assign({}, accountDataItem);
             account.type = type;
+            if (accountDataItem.childAccountIds) {
+                account.childAccountIds = Array.from(accountDataItem.childAccountIds);
+            }
             return account;
         }
     }
@@ -240,6 +243,9 @@ export function getAccountDataItem(account, alwaysCopy) {
          || (typeName !== account.type)) {
             const accountDataItem = Object.assign({}, account);
             accountDataItem.type = typeName;
+            if (account.childAccountIds) {
+                accountDataItem.childAccountIds = Array.from(account.childAccountIds);
+            }
             return accountDataItem;
         }
     }
@@ -317,24 +323,11 @@ export class AccountManager extends EventEmitter {
         const baseOptions = this._handler.getBaseOptions() || {};
 
         this._rootAssetAccountId = baseOptions.rootAssetAccountId;
-        this._rootAssetAccount = this._accountsById.get(this._rootAssetAccountId);
-
         this._rootLiabilityAccountId = baseOptions.rootLiabilityAccountId;
-        this._rootLiabilityAccount = this._accountsById.get(this._rootLiabilityAccountId);
-
         this._rootIncomeAccountId = baseOptions.rootIncomeAccountId;
-        this._rootIncomeAccount = this._accountsById.get(this._rootIncomeAccountId);
-
         this._rootExpenseAccountId = baseOptions.rootExpenseAccountId;
-        this._rootExpenseAccount = this._accountsById.get(this._rootExpenseAccountId);
-
         this._rootEquityAccountId = baseOptions.rootEquityAccountId;
-        this._rootEquityAccount = this._accountsById.get(this._rootEquityAccountId);
-
         this._openingBalancesAccountId = baseOptions.openingBalancesAccountId;
-        this._openingBalancesAccount = this._accountsById.get(this._openingBalancesAccountId);
-
-
     }
 
 
@@ -343,58 +336,58 @@ export class AccountManager extends EventEmitter {
         const pricedItemManager = accountingSystem.getPricedItemManager();
         const currencyPricedItemId = pricedItemManager.getCurrencyPricedItemId(accountingSystem.getBaseCurrency());
 
-        if (!this._rootAssetAccount) {
-            this._rootAssetAccount = (await this._asyncAddAccount({
+        if (!this._rootAssetAccountId) {
+            const account = (await this._asyncAddAccount({
                 type: AccountType.ASSET,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Assets_name'),
                 description: userMsg('Account-Root_Assets_desc'),
             })).newAccountDataItem;
-            this._rootAssetAccountId = this._rootAssetAccount.id;
+            this._rootAssetAccountId = account.id;
         }
         
-        if (!this._rootLiabilityAccount) {
-            this._rootLiabilityAccount = (await this._asyncAddAccount({
+        if (!this._rootLiabilityAccountId) {
+            const account = (await this._asyncAddAccount({
                 type: AccountType.LIABILITY,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Liabilities_name'),
                 description: userMsg('Account-Root_Liabilities_desc'),
             })).newAccountDataItem;
-            this._rootLiabilityAccountId = this._rootLiabilityAccount.id;
+            this._rootLiabilityAccountId = account.id;
         }
 
-        if (!this._rootIncomeAccount) {
-            this._rootIncomeAccount = (await this._asyncAddAccount({
+        if (!this._rootIncomeAccountId) {
+            const account = (await this._asyncAddAccount({
                 type: AccountType.INCOME,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Income_name'),
                 description: userMsg('Account-Root_Income_desc'),
             })).newAccountDataItem;
-            this._rootIncomeAccountId = this._rootIncomeAccount.id;
+            this._rootIncomeAccountId = account.id;
         }
 
-        if (!this._rootExpenseAccount) {
-            this._rootExpenseAccount = (await this._asyncAddAccount({
+        if (!this._rootExpenseAccountId) {
+            const account = (await this._asyncAddAccount({
                 type: AccountType.EXPENSE,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Expense_name'),
                 description: userMsg('Account-Root_Expense_desc'),
             })).newAccountDataItem;
-            this._rootExpenseAccountId = this._rootExpenseAccount.id;
+            this._rootExpenseAccountId = account.id;
         }
 
-        if (!this._rootEquityAccount) {
-            this._rootEquityAccount = (await this._asyncAddAccount({
+        if (!this._rootEquityAccountId) {
+            const account = (await this._asyncAddAccount({
                 type: AccountType.EQUITY,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Equity_name'),
                 description: userMsg('Account-Root_Equity_desc'),
             })).newAccountDataItem;
-            this._rootEquityAccountId = this._rootEquityAccount.id;
+            this._rootEquityAccountId = account.id;
         }
 
-        if (!this._openingBalancesAccount) {
-            this._openingBalancesAccount = (await this._asyncAddAccount(
+        if (!this._openingBalancesAccountId) {
+            const account = (await this._asyncAddAccount(
                 {
                     parentAccountId: this._rootEquityAccountId,
                     type: AccountType.OPENING_BALANCE,
@@ -402,7 +395,7 @@ export class AccountManager extends EventEmitter {
                     name: userMsg('Account-Opening_Balances_name'),
                     description: userMsg('Account-Opening_Balances_desc'),
                 })).newAccountDataItem;
-            this._openingBalancesAccountId = this._openingBalancesAccount.id;
+            this._openingBalancesAccountId = account.id;
         }
 
         this._handler.setBaseOptions({
@@ -420,22 +413,22 @@ export class AccountManager extends EventEmitter {
 
 
     getRootAssetAccountId() { return this._rootAssetAccountId; }
-    getRootAssetAccount() { return Object.assign({}, this._rootAssetAccount); }
+    getRootAssetAccount() { return this.getAccountDataItemWithId(this._rootAssetAccountId); }
 
     getRootLiabilityAccountId() { return this._rootLiabilityAccountId; }
-    getRootLiabilityAccount() { return Object.assign({}, this._rootLiabilityAccount); }
+    getRootLiabilityAccount() { return this.getAccountDataItemWithId(this._rootLiabilityAccountId); }
 
     getRootIncomeAccountId() { return this._rootIncomeAccountId; }
-    getRootIncomeAccount() { return Object.assign({}, this._rootIncomeAccount); }
+    getRootIncomeAccount() { return this.getAccountDataItemWithId(this._rootIncomeAccountId); }
 
     getRootExpenseAccountId() { return this._rootExpenseAccountId; }
-    getRootExpenseAccount() { return Object.assign({}, this._rootExpenseAccount); }
+    getRootExpenseAccount() { return this.getAccountDataItemWithId(this._rootExpenseAccountId); }
 
     getRootEquityAccountId() { return this._rootEquityAccountId; }
-    getRootEquityAccount() { return Object.assign({}, this._rootEquityAccount); }
+    getRootEquityAccount() { return this.getAccountDataItemWithId(this._rootEquityAccountId); }
 
     getOpeningBalancesAccountId() { return this._openingBalancesAccountId; }
-    getOpeningBalancesAccount() { return Object.assign({}, this._openingBalancesAccount); }
+    getOpeningBalancesAccount() { return this.getAccountDataItemWithId(this._openingBalancesAccountId); }
 
 
     /**
@@ -444,8 +437,7 @@ export class AccountManager extends EventEmitter {
      * @returns {(AccountDataItem|undefined)}
      */
     getAccountDataItemWithId(id) {
-        const account = this._accountsById.get(id);
-        return (account) ? Object.assign({}, account) : undefined;
+        return getAccountDataItem(this._accountsById.get(id), true);
     }
 
 
@@ -455,8 +447,7 @@ export class AccountManager extends EventEmitter {
      * @returns {(AccountDataItem|undefined)}
      */
     getAccountDataItemWithRefId(refId) {
-        const account = this._accountsByRefId.get(refId);
-        return (account) ? Object.assign({}, account) : undefined;
+        return getAccountDataItem(this._accountsByRefId.get(refId), true);
     }
 
 
@@ -528,7 +519,7 @@ export class AccountManager extends EventEmitter {
             updatedAccountEntries.push([newParentAccountDataItem.id, newParentAccountDataItem]);
 
             const oldParentAccountDataItem = this.getAccountDataItemWithId(oldAccountDataItem.parentAccountId);
-            oldParentAccountDataItem.childAccountIds.splice(oldParentChildIndex, 0, oldAccountDataItem);
+            oldParentAccountDataItem.childAccountIds.splice(oldParentChildIndex, 0, oldAccountDataItem.id);
             updatedAccountEntries.push([oldParentAccountDataItem.id, oldParentAccountDataItem]);
         }
 
@@ -908,10 +899,11 @@ export class AccountManager extends EventEmitter {
                 }
 
                 const index = oldParentAccountDataItem.childAccountIds.indexOf(id);
-                if (index >= 0) {
-                    oldParentAccountDataItem.childAccountIds.splice(index, 1);
-                    oldParentChildIndex = index;
+                if (index < 0) {
+                    throw userError('AccountManager-account_not_in_parent', oldParentAccountId);
                 }
+                oldParentAccountDataItem.childAccountIds.splice(index, 1);
+                oldParentChildIndex = index;
 
                 newParentAccountDataItem.childAccountIds.push(id);
             }

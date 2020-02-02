@@ -618,7 +618,8 @@ test('AccountManager-modify', async () => {
 
     // Undo...
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
-/*
+    account = accountManager.getAccountDataItemWithId(sys.iraId);
+
     expect(account.parentAccountId).toEqual(sys.investmentsId);
 
     account = accountManager.getAccountDataItemWithId(sys.fixedAssetsId);
@@ -688,7 +689,6 @@ test('AccountManager-modify', async () => {
     await accountManager.asyncModifyAccount({ id: sys.savingsId, refId: '8'});
     account = accountManager.getAccountDataItemWithRefId('8');
     expect(account.id).toEqual(sys.savingsId);
-*/
 });
 
 
