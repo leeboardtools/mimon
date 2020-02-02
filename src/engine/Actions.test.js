@@ -1,4 +1,5 @@
 import * as ASTH from './AccountingSystemTestHelpers';
+import { createCompositeAction } from './Actions';
 
 function applyAction(action, accountingSystem, values, undoName) {
     const undoManager = accountingSystem.getUndoManager();
@@ -158,4 +159,57 @@ test('ActionManager', async () => {
     await manager.asyncUndoLastAppliedActions();
     expect(valueA[0]).toEqual(actionA2.value);
     expect(valueB[0]).toEqual(actionB2.value);
+
+
+    let action;
+
+
+    // Test composite actions
+    const main1 = { name: 'Composite1', };
+    const subActions1 = [ actionA1, actionA2, actionB1, ];
+    const composite1 = createCompositeAction(main1, subActions1);
+    
+    await manager.asyncApplyAction(composite1);
+    expect(valueA[0]).toEqual(actionA2.value);
+    expect(valueB[0]).toEqual(actionB1.value);
+
+    expect(manager.getAppliedActionCount()).toEqual(1);
+
+    action = await manager.asyncGetAppliedActionAtIndex(0);
+    expect(action).toEqual(expect.objectContaining(main1));
+
+
+    const main2 = { name: 'Composite 2', };
+    const subActions2 = [ actionB2, actionA3 ];
+    const composite2 = createCompositeAction(main2, subActions2);
+
+    await manager.asyncApplyAction(composite2);
+    expect(valueA[0]).toEqual(actionA3.value);
+    expect(valueB[0]).toEqual(actionB2.value);
+
+    expect(manager.getAppliedActionCount()).toEqual(2);
+    expect(await manager.asyncGetAppliedActionAtIndex(1)).toEqual(composite2);
+
+
+    // Undo the composite action.
+    await manager.asyncUndoLastAppliedActions(1);
+    expect(valueA[0]).toEqual(actionA2.value);
+    expect(valueB[0]).toEqual(actionB1.value);
+
+    expect(manager.getAppliedActionCount()).toEqual(1);
+    expect(manager.getUndoneActionCount()).toEqual(1);
+
+    expect(await manager.asyncGetAppliedActionAtIndex(0)).toEqual(composite1);
+    expect(await manager.asyncGetUndoneActionAtIndex(0)).toEqual(composite2);
+
+
+    // Reapply the composite action.
+    await manager.asyncReapplyLastUndoneActions(1);
+    expect(valueA[0]).toEqual(actionA3.value);
+    expect(valueB[0]).toEqual(actionB2.value);
+
+    expect(manager.getAppliedActionCount()).toEqual(2);
+    expect(await manager.asyncGetAppliedActionAtIndex(1)).toEqual(composite2);
+
+    expect(manager.getUndoneActionCount()).toEqual(0);
 });
