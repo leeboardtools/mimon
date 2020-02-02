@@ -103,24 +103,39 @@ export class ActionManager extends EventEmitter {
     }
 
 
-    async _asyncCompositeActionApplier(action) {
+    async _asyncCompositeActionApplier(isValidateOnly, action) {
         const { subActions } = action;
         if (!subActions) {
             throw bug('Action of type "Composite" does not have a subActions property! Action: ' + JSON.stringify(action));
         }
         for (let i = 0; i < subActions.length; ++i) {
-            await this._asyncApplyAction(subActions[i]);
+            await this._asyncApplyAction(subActions[i], isValidateOnly);
         }
     }
 
 
-    async _asyncApplyAction(action) {
+    async _asyncApplyAction(action, isValidateOnly) {
         const applier = this._appliersByType.get(action.type);
         if (!applier) {
             throw bug('An applier was not registered for actions of type "' + action.type + '"!');
         }
 
-        await applier(action);
+        await applier(isValidateOnly, action);
+    }
+
+
+    /**
+     * Performs validation on an action. The action manager is not updated.
+     * @param {ActionDataItem} action 
+     * @returns {undefined|Error}   Returns <code>undefined</code> if the action passes validation, an Error object if invalid.
+     */
+    async asyncValidateApplyAction(action) {
+        try {
+            await this._asyncApplyAction(action, true);
+        }
+        catch (e) {
+            return e;
+        }
     }
 
 
@@ -200,6 +215,7 @@ export class ActionManager extends EventEmitter {
 
     /**
      * @callback ActionManager~Applier
+     * @param {boolean} isValidateOnly  <code>true</code> if the applier is being called from {@link ActionManager#asyncValidateApplyAction}.
      * @param {ActionDataItem} actionDataItem   The action data item to be applied.
      */
 

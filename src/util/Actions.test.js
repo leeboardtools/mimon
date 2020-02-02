@@ -1,7 +1,16 @@
 import { ActionManager, InMemoryActionsHandler, createCompositeAction } from './Actions';
 import { UndoManager, InMemoryUndoHandler } from './Undo';
 
-function applyAction(action, undoManager, values, undoName) {
+let failValue;
+
+function applyAction(isValidateOnly, action, undoManager, values, undoName) {
+    if (action.value === failValue) {
+        throw Error('FAIL');
+    }
+
+    if (isValidateOnly) {
+        return;
+    }
     undoManager.asyncRegisterUndoDataItem(undoName, { value: values[0], });
     values[0] = action.value;
 }
@@ -16,8 +25,8 @@ test('ActionManager', async () => {
     undoManager.registerUndoApplier('A', (undoDataItem) => { valueA[0] = undoDataItem.value; } );
     undoManager.registerUndoApplier('B', (undoDataItem) => { valueB[0] = undoDataItem.value; } );
 
-    manager.registerActionApplier('actionA', (action) => { applyAction(action, undoManager, valueA, 'A'); });
-    manager.registerActionApplier('actionB', (action) => { applyAction(action, undoManager, valueB, 'B'); });
+    manager.registerActionApplier('actionA', (isValidateOnly, action) => { applyAction(isValidateOnly, action, undoManager, valueA, 'A'); });
+    manager.registerActionApplier('actionB', (isValidateOnly, action) => { applyAction(isValidateOnly, action, undoManager, valueB, 'B'); });
 
     expect(manager.getAppliedActionCount()).toEqual(0);
     expect(manager.getUndoneActionCount()).toEqual(0);
@@ -54,6 +63,12 @@ test('ActionManager', async () => {
 
 
     const actionB2 = { type: 'actionB', value: 20, };
+
+    // Simple validateOnly test
+    expect(await manager.asyncValidateApplyAction(actionB2)).toBeUndefined();
+    expect(valueB[0]).toEqual(10);
+    expect(valueA[0]).toEqual(2);
+
     await manager.asyncApplyAction(actionB2);
 
     const actionB3 = { type: 'actionB', value: 30, };
@@ -181,6 +196,17 @@ test('ActionManager', async () => {
     const subActions2 = [ actionB2, actionA3 ];
     const composite2 = createCompositeAction(main2, subActions2);
 
+    // Validate only the composite action.
+    expect(await manager.asyncValidateApplyAction(composite2)).toBeUndefined();
+
+    expect(valueA[0]).toEqual(actionA2.value);
+    expect(valueB[0]).toEqual(actionB1.value);
+
+    failValue = actionA3.value;
+    expect(await manager.asyncValidateApplyAction(composite2)).toEqual(Error('FAIL'));
+    failValue = undefined;
+
+
     await manager.asyncApplyAction(composite2);
     expect(valueA[0]).toEqual(actionA3.value);
     expect(valueB[0]).toEqual(actionB2.value);
@@ -210,4 +236,5 @@ test('ActionManager', async () => {
     expect(await manager.asyncGetAppliedActionAtIndex(1)).toEqual(composite2);
 
     expect(manager.getUndoneActionCount()).toEqual(0);
+
 });
