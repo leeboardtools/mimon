@@ -1,6 +1,8 @@
 import * as A from './Accounts';
 import * as PI from './PricedItems';
 import * as L from './Lots';
+import * as P from './Prices';
+import { getYMDDateString, YMDDate } from '../util/YMDDate';
 
 /**
  * Class that creates the various actions that apply to an {@link AccountingSystem}.
@@ -42,6 +44,13 @@ export class AccountingActions {
         this._asyncModifyLotApplier = this._asyncModifyLotApplier.bind(this);
         actionManager.registerAsyncActionApplier('modifyLot', this._asyncModifyLotApplier);
 
+
+        this._asyncAddPricesApplier = this._asyncAddPricesApplier.bind(this);
+        actionManager.registerAsyncActionApplier('addPrices', this._asyncAddPricesApplier);
+
+        this._asyncRemovePricesInDateRangeApplier = this._asyncRemovePricesInDateRangeApplier.bind(this);
+        actionManager.registerAsyncActionApplier('removePricesInDateRange', this._asyncRemovePricesInDateRangeApplier);
+        
     }
 
     async asyncSetupForUse() {
@@ -52,10 +61,12 @@ export class AccountingActions {
         this._asyncActionCallbacksByType.set(actionType, asyncCallback);
     }
 
-    async _asyncCallActionCallback(action, result) {
-        const asyncCallback = this._asyncActionCallbacksByType.get(action.type);
-        if (asyncCallback) {
-            await asyncCallback(action, result);
+    async _asyncCallActionCallback(isValidateOnly, action, result) {
+        if (!isValidateOnly) {
+            const asyncCallback = this._asyncActionCallbacksByType.get(action.type);
+            if (asyncCallback) {
+                await asyncCallback(action, result);
+            }
         }
     }
 
@@ -72,7 +83,7 @@ export class AccountingActions {
 
     async _asyncAddAccountApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getAccountManager().asyncAddAccount(action.accountDataItem, isValidateOnly);
-        await this._asyncCallActionCallback(action, result);
+        await this._asyncCallActionCallback(isValidateOnly, action, result);
     }
 
 
@@ -87,7 +98,7 @@ export class AccountingActions {
 
     async _asyncRemoveAccountApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getAccountManager().asyncRemoveAccount(action.accountId, isValidateOnly);
-        await this._asyncCallActionCallback(action, result);
+        await this._asyncCallActionCallback(isValidateOnly, action, result);
     }
 
 
@@ -103,7 +114,7 @@ export class AccountingActions {
 
     async _asyncModifyAccountApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getAccountManager().asyncModifyAccount(action.accountDataItem, isValidateOnly);
-        await this._asyncCallActionCallback(action, result);
+        await this._asyncCallActionCallback(isValidateOnly, action, result);
     }
 
 
@@ -119,7 +130,7 @@ export class AccountingActions {
 
     async _asyncAddPricedItemApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getPricedItemManager().asyncAddPricedItem(action.pricedItemDataItem, isValidateOnly);
-        await this._asyncCallActionCallback(action, result);
+        await this._asyncCallActionCallback(isValidateOnly, action, result);
     }
 
 
@@ -134,7 +145,7 @@ export class AccountingActions {
 
     async _asyncRemovePricedItemApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getPricedItemManager().asyncRemovePricedItem(action.pricedItemId, isValidateOnly);
-        await this._asyncCallActionCallback(action, result);
+        await this._asyncCallActionCallback(isValidateOnly, action, result);
     }
 
 
@@ -150,7 +161,7 @@ export class AccountingActions {
 
     async _asyncModifyPricedItemApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getPricedItemManager().asyncModifyPricedItem(action.pricedItemDataItem, isValidateOnly);
-        await this._asyncCallActionCallback(action, result);
+        await this._asyncCallActionCallback(isValidateOnly, action, result);
     }
 
 
@@ -166,7 +177,7 @@ export class AccountingActions {
 
     async _asyncAddLotApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getLotManager().asyncAddLot(action.accountDataItem, isValidateOnly);
-        await this._asyncCallActionCallback(action, result);
+        await this._asyncCallActionCallback(isValidateOnly, action, result);
     }
 
 
@@ -181,7 +192,7 @@ export class AccountingActions {
 
     async _asyncRemoveLotApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getLotManager().asyncRemoveLot(action.lotId, isValidateOnly);
-        await this._asyncCallActionCallback(action, result);
+        await this._asyncCallActionCallback(isValidateOnly, action, result);
     }
 
 
@@ -197,8 +208,60 @@ export class AccountingActions {
 
     async _asyncModifyLotApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getLotManager().asyncModifyLot(action.lotDataItem, isValidateOnly);
-        await this._asyncCallActionCallback(action, result);
+        await this._asyncCallActionCallback(isValidateOnly, action, result);
     }
 
 
+    /**
+     * Creates an action for adding prices.
+     * @param {number} pricedItemId 
+     * @param {Price|PriceDataItem|Price[]|PriceDataItem[]} prices 
+     * @returns {ActionDataItem}
+     */
+    createAddPricesAction(pricedItemId, prices) {
+        if (!Array.isArray(prices)) {
+            prices = [prices];
+        }
+        const priceDataItems = prices.map((price) => P.getPriceDataItem(price, true));
+        return { type: 'addPrices', pricedItemId: pricedItemId, priceDataItems: priceDataItems, };
+    }
+
+    async _asyncAddPricesApplier(isValidateOnly, action) {
+        const result = await this._accountingSystem.getPriceManager().asyncAddPrices(action.pricedItemId, action.priceDataItems, isValidateOnly);
+        await this._asyncCallActionCallback(isValidateOnly, action, result);
+    }
+
+
+    /**
+     * Creates an action for removing prices in a date range.
+     * @param {number} pricedItemId 
+     * @param {YMDDate|string|undefined} ymdDateA 
+     * @param {YMDDate|string|undefined} ymdDateB 
+     * @returns {ActionDataItem}
+     */
+    createRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB) {
+        if (!ymdDateA && !ymdDateB) {
+            ymdDateA = new YMDDate();
+        }
+
+        ymdDateA = getYMDDateString(ymdDateA);
+        ymdDateB = getYMDDateString(ymdDateB);
+
+        return { type: 'removePricesInDateRange', pricedItemId: pricedItemId, ymdDateA: ymdDateA, ymdDateB, };
+    }
+
+    async _asyncRemovePricesInDateRangeApplier(isValidateOnly, action) {
+        const result = await this._accountingSystem.getPriceManager().asyncRemovePricesInDateRange(action.pricedItemId, 
+            action.ymdDateA, action.ymdDateB, isValidateOnly);
+        await this._asyncCallActionCallback(isValidateOnly, action, result);
+        
+    }
+
+    
+    // Transaction actions
+
+    // Special transaction actions:
+    // - Buy Transactions
+    // - Merge/Split Transaction?
+    // - Reconcile Transactions?
 }

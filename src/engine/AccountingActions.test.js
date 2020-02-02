@@ -1,6 +1,7 @@
 import * as ASTH from './AccountingSystemTestHelpers';
 import * as A from './Accounts';
 import * as PI from './PricedItems';
+import * as P from './Prices';
 
 
 
@@ -224,4 +225,49 @@ test('AccountingActions-Lots', async () => {
     await actionManager.asyncReapplyLastUndoneActions();
     expect(lotManager.getLotDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA1));
 
+});
+
+
+
+//
+//---------------------------------------------------------
+//
+test('AccountingActions-Prices', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    const { accountingSystem } = sys;
+    const priceManager = accountingSystem.getPriceManager();
+    const actions = accountingSystem.getAccountingActions();
+    const actionManager = accountingSystem.getActionManager();
+
+    const pricesA = [
+        { ymdDate: '2019-01-02', close: 12345, open: 11111, },
+        { ymdDate: '2019-01-03', close: 23456, open: 22222, },
+        { ymdDate: '2019-01-04', close: 34567, open: 33333, },
+        { ymdDate: '2019-01-05', close: 45678, open: 44444, },
+        { ymdDate: '2019-01-06', close: 56789, open: 55555, },
+    ];
+    const actionA = actions.createAddPricesAction(sys.aaplPricedItemId, pricesA);
+    await actionManager.asyncApplyAction(actionA);
+    expect(await priceManager.asyncGetPriceDataItemsInDateRange(sys.aaplPricedItemId, '2019-01-02', '2019-01-06')).toEqual(pricesA);
+
+    await actionManager.asyncUndoLastAppliedActions();
+    expect(await priceManager.asyncGetPriceDataItemsInDateRange(sys.aaplPricedItemId, '2019-01-02', '2019-01-06')).toEqual([]);
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(await priceManager.asyncGetPriceDataItemsInDateRange(sys.aaplPricedItemId, '2019-01-02', '2019-01-06')).toEqual(pricesA);
+
+
+    const actionB = actions.createRemovePricesInDateRange(sys.aaplPricedItemId, '2019-01-03', '2019-01-05');
+    await actionManager.asyncApplyAction(actionB);
+    expect(await priceManager.asyncGetPriceDataItemsInDateRange(sys.aaplPricedItemId, '2019-01-02', '2019-01-06')).toEqual([
+        pricesA[0], pricesA[4],
+    ]);
+
+    await actionManager.asyncUndoLastAppliedActions();
+    expect(await priceManager.asyncGetPriceDataItemsInDateRange(sys.aaplPricedItemId, '2019-01-02', '2019-01-06')).toEqual(pricesA);
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(await priceManager.asyncGetPriceDataItemsInDateRange(sys.aaplPricedItemId, '2019-01-02', '2019-01-06')).toEqual([
+        pricesA[0], pricesA[4],
+    ]);
 });
