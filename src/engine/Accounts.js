@@ -663,13 +663,12 @@ export class AccountManager extends EventEmitter {
     /**
      * Adds a new account.
      * @param {(Account|AccountDataItem)} account   The account to add.
-     * @param {(YMDDate|string)} [initialYMDDate]   The date to assign to the account state.
      * @param {boolean} validateOnly 
      * @returns {AccountManager~AddAccountResult|undefined} <code>undefined</code> is returned if validateOnly is true.
      * @throws {Error}
      * @fires {AccountManager~accountAdd}
      */
-    async asyncAddAccount(account, initialYMDDate, validateOnly) {
+    async asyncAddAccount(account, validateOnly) {
         const accountDataItem = getAccountDataItem(account, true);
 
         const parentAccountDataItem = this.getAccountDataItemWithId(accountDataItem.parentAccountId);
