@@ -165,10 +165,18 @@ export function getPricedItem(pricedItemDataItem, alwaysCopy) {
          || (onlineUpdateType !== pricedItemDataItem.onlineUpdateType)) {
             // We're using Object.assign() to create a copy just in case there are other properties.
             const pricedItem = Object.assign({}, pricedItemDataItem);
-            pricedItem.type = type;
-            pricedItem.currency = currency;
-            pricedItem.quantityDefinition = quantityDefinition;
-            pricedItem.onlineUpdateType = onlineUpdateType;
+            if (type !== undefined) {
+                pricedItem.type = type;
+            }
+            if (currency !== undefined) {
+                pricedItem.currency = currency;
+            }
+            if (quantityDefinition !== undefined) {
+                pricedItem.quantityDefinition = quantityDefinition;
+            }
+            if (onlineUpdateType !== undefined) {
+                pricedItem.onlineUpdateType = onlineUpdateType;
+            }
             return pricedItem;
         }
     }
@@ -194,10 +202,18 @@ export function getPricedItemDataItem(pricedItem, alwaysCopy) {
          || (quantityDefinitionName !== pricedItem.quantityDefinition)
          || (onlineUpdateTypeName !== pricedItem.onlineUpdateType)) {
             const pricedItemDataItem = Object.assign({}, pricedItem);
-            pricedItemDataItem.type = typeName;
-            pricedItemDataItem.currency = currencyCode;
-            pricedItemDataItem.quantityDefinition = quantityDefinitionName;
-            pricedItemDataItem.onlineUpdateType = onlineUpdateTypeName;
+            if (typeName !== undefined) {
+                pricedItemDataItem.type = typeName;
+            }
+            if (currencyCode !== undefined) {
+                pricedItemDataItem.currency = currencyCode;
+            }
+            if (quantityDefinitionName !== undefined) {
+                pricedItemDataItem.quantityDefinition = quantityDefinitionName;
+            }
+            if (onlineUpdateTypeName !== undefined) {
+                pricedItemDataItem.onlineUpdateType = onlineUpdateTypeName;
+            }
             return pricedItemDataItem;
         }
     }

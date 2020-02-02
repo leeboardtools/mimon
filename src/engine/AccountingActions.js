@@ -1,4 +1,5 @@
 import * as A from './Accounts';
+import * as PI from './PricedItems';
 
 /**
  * Class that creates the various actions that apply to an {@link AccountingSystem}.
@@ -19,6 +20,15 @@ export class AccountingActions {
 
         this._asyncModifyAccountApplier = this._asyncModifyAccountApplier.bind(this);
         actionManager.registerAsyncActionApplier('modifyAccount', this._asyncModifyAccountApplier);
+
+        this._asyncAddPricedItemApplier = this._asyncAddPricedItemApplier.bind(this);
+        actionManager.registerAsyncActionApplier('addPricedItem', this._asyncAddPricedItemApplier);
+
+        this._asyncRemovePricedItemApplier = this._asyncRemovePricedItemApplier.bind(this);
+        actionManager.registerAsyncActionApplier('removePricedItem', this._asyncRemovePricedItemApplier);
+
+        this._asyncModifyPricedItemApplier = this._asyncModifyPricedItemApplier.bind(this);
+        actionManager.registerAsyncActionApplier('modifyPricedItem', this._asyncModifyPricedItemApplier);
 
     }
 
@@ -81,6 +91,53 @@ export class AccountingActions {
 
     async _asyncModifyAccountApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getAccountManager().asyncModifyAccount(action.accountDataItem, isValidateOnly);
+        await this._asyncCallActionCallback(action, result);
+    }
+
+
+    /**
+     * Creates an action for adding a new priced item.
+     * @param {PricedItem|PricedItemDataItem} pricedItem The information for the new priced item.
+     * @returns {ActionDataItem}
+     */
+    createAddPricedItemAction(pricedItem) {
+        const pricedItemDataItem = PI.getPricedItemDataItem(pricedItem, true);
+        return { type: 'addPricedItem', accountDataItem: pricedItemDataItem, };
+    }
+
+    async _asyncAddPricedItemApplier(isValidateOnly, action) {
+        const result = await this._accountingSystem.getPricedItemManager().asyncAddPricedItem(action.accountDataItem, isValidateOnly);
+        await this._asyncCallActionCallback(action, result);
+    }
+
+
+    /**
+     * Creates an action for removing a priced item.
+     * @param {number} pricedItemId 
+     * @returns {ActionDataItem}
+     */
+    createRemovePricedItemAction(pricedItemId) {
+        return { type: 'removePricedItem', pricedItemId: pricedItemId, };
+    }
+
+    async _asyncRemovePricedItemApplier(isValidateOnly, action) {
+        const result = await this._accountingSystem.getPricedItemManager().asyncRemovePricedItem(action.pricedItemId, isValidateOnly);
+        await this._asyncCallActionCallback(action, result);
+    }
+
+
+    /**
+     * Creates an action for modifying a priced item.
+     * @param {PricedItem|PricedItemDataItem} pricedItemUpdates The updates to the priced item, the id property is required.
+     * @returns {ActionDataItem}
+     */
+    createModifyPricedItemAction(pricedItemUpdates) {
+        const pricedItemDataItem = PI.getPricedItemDataItem(pricedItemUpdates, true);
+        return { type: 'modifyPricedItem', pricedItemDataItem: pricedItemDataItem, };
+    }
+
+    async _asyncModifyPricedItemApplier(isValidateOnly, action) {
+        const result = await this._accountingSystem.getPricedItemManager().asyncModifyPricedItem(action.pricedItemDataItem, isValidateOnly);
         await this._asyncCallActionCallback(action, result);
     }
 
