@@ -36,10 +36,10 @@ export class ActionManager extends EventEmitter {
 
         this._handler = options.handler;
 
-        this._appliersByType = new Map();
+        this._asyncAppliersByType = new Map();
 
         this._asyncCompositeActionApplier = this._asyncCompositeActionApplier.bind(this);
-        this.registerActionApplier('Composite', this._asyncCompositeActionApplier);
+        this.registerAsyncActionApplier('Composite', this._asyncCompositeActionApplier);
     }
 
 
@@ -115,12 +115,12 @@ export class ActionManager extends EventEmitter {
 
 
     async _asyncApplyAction(action, isValidateOnly) {
-        const applier = this._appliersByType.get(action.type);
-        if (!applier) {
+        const asyncApplier = this._asyncAppliersByType.get(action.type);
+        if (!asyncApplier) {
             throw bug('An applier was not registered for actions of type "' + action.type + '"!');
         }
 
-        await applier(isValidateOnly, action);
+        await asyncApplier(isValidateOnly, action);
     }
 
 
@@ -155,7 +155,10 @@ export class ActionManager extends EventEmitter {
             await this._handler.asyncAddAppliedActionEntry(actionEntry);
         }
         catch (e) {
-            await this._undoManager.asyncUndoToId(undoId);
+            if (this._undoManager.getNextUndoId() !== undoId) {
+                await this._undoManager.asyncUndoToId(undoId);
+            }
+            throw e;
         }
     }
 
@@ -215,6 +218,7 @@ export class ActionManager extends EventEmitter {
 
     /**
      * @callback ActionManager~Applier
+     * @async
      * @param {boolean} isValidateOnly  <code>true</code> if the applier is being called from {@link ActionManager#asyncValidateApplyAction}.
      * @param {ActionDataItem} actionDataItem   The action data item to be applied.
      */
@@ -223,10 +227,10 @@ export class ActionManager extends EventEmitter {
     /**
      * Registers an applier for an action type.
      * @param {string} type 
-     * @param {ActionManager~Applier} applier 
+     * @param {ActionManager~Applier} asyncApplier 
      */
-    registerActionApplier(type, applier) {
-        this._appliersByType.set(type, applier);
+    registerAsyncActionApplier(type, asyncApplier) {
+        this._asyncAppliersByType.set(type, asyncApplier);
     }
 }
 
