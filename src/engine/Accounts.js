@@ -951,6 +951,7 @@ export class AccountManager extends EventEmitter {
             return;
         }
 
+
         const updatedAccountEntries = [];
         updatedAccountEntries.push([newAccountDataItem.id, newAccountDataItem]);
 

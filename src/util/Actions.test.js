@@ -25,8 +25,8 @@ test('ActionManager', async () => {
     undoManager.registerUndoApplier('A', (undoDataItem) => { valueA[0] = undoDataItem.value; } );
     undoManager.registerUndoApplier('B', (undoDataItem) => { valueB[0] = undoDataItem.value; } );
 
-    manager.registerActionApplier('actionA', (isValidateOnly, action) => { applyAction(isValidateOnly, action, undoManager, valueA, 'A'); });
-    manager.registerActionApplier('actionB', (isValidateOnly, action) => { applyAction(isValidateOnly, action, undoManager, valueB, 'B'); });
+    manager.registerAsyncActionApplier('actionA', (isValidateOnly, action) => { applyAction(isValidateOnly, action, undoManager, valueA, 'A'); });
+    manager.registerAsyncActionApplier('actionB', (isValidateOnly, action) => { applyAction(isValidateOnly, action, undoManager, valueB, 'B'); });
 
     expect(manager.getAppliedActionCount()).toEqual(0);
     expect(manager.getUndoneActionCount()).toEqual(0);

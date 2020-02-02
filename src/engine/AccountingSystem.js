@@ -6,6 +6,7 @@ import { TransactionManager } from './Transactions';
 import { PriceManager } from './Prices';
 import { UndoManager } from '../util/Undo';
 import { ActionManager } from '../util/Actions';
+import { AccountingActions } from './AccountingActions';
 
 /**
  * The main interface object from the engine, this provides access to the various managers.
@@ -33,6 +34,7 @@ export class AccountingSystem extends EventEmitter {
         this._priceManager = new PriceManager(this, options.priceManager);
         this._transactionManager = new TransactionManager(this, options.transactionManager);
 
+        this._accountingActions = new AccountingActions(this);
     }
 
     /**
@@ -82,6 +84,11 @@ export class AccountingSystem extends EventEmitter {
      * @returns {ActionManager}
      */
     getActionManager() { return this._actionManager; }
+
+    /**
+     * @returns {AccountingActions}
+     */
+    getAccountingActions() { return this._accountingActions; }
 
 
     /**
