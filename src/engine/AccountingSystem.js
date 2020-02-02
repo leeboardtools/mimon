@@ -5,6 +5,7 @@ import { LotManager } from './Lots';
 import { TransactionManager } from './Transactions';
 import { PriceManager } from './Prices';
 import { UndoManager } from '../util/Undo';
+import { ActionManager } from './Actions';
 
 /**
  * The main interface object from the engine, this provides access to the various managers.
@@ -29,6 +30,8 @@ export class AccountingSystem extends EventEmitter {
         this._priceManager = new PriceManager(this, options.priceManager);
         this._transactionManager = new TransactionManager(this, options.transactionManager);
 
+        this._actionManager = new ActionManager(this, options.actionManager);
+
     }
 
     /**
@@ -41,6 +44,7 @@ export class AccountingSystem extends EventEmitter {
         await this._accountManager.asyncSetupForUse();
         await this._lotManager.asyncSetupForUse();
         await this._transactionManager.asyncSetupForUse();
+        await this._actionManager.asyncSetupForUse();
     }
 
     /**
@@ -72,6 +76,12 @@ export class AccountingSystem extends EventEmitter {
      * @returns {UndoManager}
      */
     getUndoManager() { return this._undoManager; }
+
+    /**
+     * @returns {ActionManager}
+     */
+    getActionManager() { return this._actionManager; }
+
 
     /**
      * @return {string} The 3 letter currency code for the base currency. The base currency is used whenever an

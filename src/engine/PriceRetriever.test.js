@@ -292,11 +292,18 @@ function cleanPricesResult(prices) {
 }
 
 
+let isTestEnabled;
+//isTestEnabled = true;
+
 
 //
 //---------------------------------------------------------
 //
 test('asyncGetPricesForTicker', async () => {
+    if (!isTestEnabled) {
+        return;
+    }
+
     let result;
     let ref;
 
@@ -334,8 +341,6 @@ test('asyncUpdatePricedItemPrices', async () => {
     // console.log(JSON.stringify(results));
 
 
-    let isTestEnabled;
-    isTestEnabled = true;
     if (!isTestEnabled) {
         return;
     }

@@ -9,6 +9,7 @@ import { getDecimalDefinition } from '../util/Quantities';
 import { InMemoryPricesHandler } from './Prices';
 import { InMemoryTransactionsHandler } from './Transactions';
 import { InMemoryUndoHandler } from '../util/Undo';
+import { InMemoryActionsHandler } from './Actions';
 
 
 //
@@ -36,6 +37,9 @@ export async function asyncCreateAccountingSystem(options) {
                 handler: new InMemoryTransactionsHandler(),
             },
 
+            actionManager: {
+                handler: new InMemoryActionsHandler(),
+            },
             undoManager: {
                 handler: new InMemoryUndoHandler(),
             },

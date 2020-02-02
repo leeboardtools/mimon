@@ -126,7 +126,7 @@ Accounts are managed by an [AccountManager](#accountmanager)
 
 
 #### AccountType
-A [NamedEnum](#namedenum) used to define account types and their properties.
+An enumeration used to define account types and their properties.
 Some account types:
 - Asset
 - Liability
@@ -294,53 +294,5 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
 ## TODOs
 - Add test transactions to AccountingSystemTestHelpers.js, then test transactions in JSONGzipAccountingFile.test.js
 
-- Add a undo mechanism.
-    - After an action, there is an undo state available. Maybe part of the return from the action?
-    - Have an applyUndo().
-        - Would need to be sequentially controlled.
 
-    - Why not just do the opposite of the action?
-        - Add -> Remove
-        - Remove -> Add
-        - Modify -> Modify
-
-    - The only problem is that we want to retain the object id. Let's think about this:
-        - Add -> creates an id.
-            - Undo -> remove id
-            - Redo -> add back. Would like to add back with the same id. Why? Because if there
-            were actions after the add, they would be relying upon the id returned by the Add.
-            - Without keeping the id, would need to regenerate all the after actions.
-
-        - Modify -> Not a problem, the id doesn't change.
-
-        - Could we just have a Restore counterpart to Add?
-
-        - Would be simpler at the Action level to have a common LastActionReverter or something like that.
-        - When the Action acts, it performs the action, and saves the LastActionReverter.
-        - When the Action reverts, it can just pass the LastActionReverter to the manager.
-        - What about Redo?
-            - Well, the Action has all the information from the original Do, so it can just redo itself.
-
-
-- How will this work?
-    - add/modify/remove in all the managers now return an object, so one property can be set to the undoState.
-    - Only the latest undoState can be undone, but once the latest undoState is undone, the previous undoState
-    may be undone. Therefore keep track of undo state ids and a stack of those ids.
-    - The manager will then need to track their different undo states.
-    - Should there be a master undo manager?
-        - Maybe, since the order in which actions are performed may be important across subsystems.
-        - Could we make it all managed by AccountingSystem?
-            - AccountingSystem would have an applyUndoState(), where it would verify that the action is correct
-            in the undo sequence, and then delegate it to the appropriate manager.
-            - Undo States should be pure data, so they can be JSON'd out.
-
-- How does this fit in with actions?
-    - Actions are on a higher level.
-    - An action may perform multiple DB activities, it would just need to keep track of the first undo data item ids.
-    - Actions would perform the forward part. The undo manager/undo data item ids would handle the undo part.
-    - Once an action is undone the undo id is no longer valid.
-
-        // TODO: Get rid of the ability to move accounts listed as child accounts to accounts
-        // being added by asyncAddAccount(), this was originally to support undoing of asyncRemoveAccount()
-        // but now that we have an undo mechanism, we don't need that.
-
+- Need to add event emitting to account manager undo.

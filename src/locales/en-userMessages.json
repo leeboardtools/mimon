@@ -42,6 +42,7 @@
     "AccountManager-type_invalid": ["The account type '", "' is not supported."],
     "AccountManager-duplicate_ref_id": ["There is already an account with reference id '", "'."],
     "AccountManager-parent_account_invalid": ["A parent account with id '", "' was not found."],
+    "AccountManager-account_not_in_parent": ["The account is not a child of the parent account with id '", ""],
     "AccountManager-child_account_invalid": ["A child account with id '", "' was not found."],
     "AccountManager-child_incompatible": ["The account with id '", "' cannot be a child of the new account. The account type '", "' is not compatible with '", "'."],
     "AccountManager-invalid_pricedItem_id": ["A priced item with id '", "' was not found."],

@@ -46,6 +46,15 @@ export class UndoManager {
         this._sortedUndoIds.clear();
     }
 
+
+    /**
+     * @returns {number}    The undo id that will be assigned to the next {@link UndoDataItem} registered with the manager.
+     */
+    getNextUndoId() {
+        return this._idGenerator.peekGenerateId();
+    }
+
+
     /**
      * 
      * @param {number} undoId 

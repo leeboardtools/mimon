@@ -29,4 +29,11 @@ export class NumericIdGenerator {
     generateId() {
         return ++this._lastId;
     }
+
+    /**
+     * @returns {number}    The value that will be returned by the next call to {@link NumericIdGenerator#generateId}
+     */
+    peekGenerateId() {
+        return this._lastId + 1;
+    }
 }
