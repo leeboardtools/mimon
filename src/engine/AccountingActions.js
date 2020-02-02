@@ -1,5 +1,6 @@
 import * as A from './Accounts';
 import * as PI from './PricedItems';
+import * as L from './Lots';
 
 /**
  * Class that creates the various actions that apply to an {@link AccountingSystem}.
@@ -21,6 +22,7 @@ export class AccountingActions {
         this._asyncModifyAccountApplier = this._asyncModifyAccountApplier.bind(this);
         actionManager.registerAsyncActionApplier('modifyAccount', this._asyncModifyAccountApplier);
 
+
         this._asyncAddPricedItemApplier = this._asyncAddPricedItemApplier.bind(this);
         actionManager.registerAsyncActionApplier('addPricedItem', this._asyncAddPricedItemApplier);
 
@@ -29,6 +31,16 @@ export class AccountingActions {
 
         this._asyncModifyPricedItemApplier = this._asyncModifyPricedItemApplier.bind(this);
         actionManager.registerAsyncActionApplier('modifyPricedItem', this._asyncModifyPricedItemApplier);
+
+        
+        this._asyncAddLotApplier = this._asyncAddLotApplier.bind(this);
+        actionManager.registerAsyncActionApplier('addLot', this._asyncAddLotApplier);
+
+        this._asyncRemoveLotApplier = this._asyncRemoveLotApplier.bind(this);
+        actionManager.registerAsyncActionApplier('removeLot', this._asyncRemoveLotApplier);
+
+        this._asyncModifyLotApplier = this._asyncModifyLotApplier.bind(this);
+        actionManager.registerAsyncActionApplier('modifyLot', this._asyncModifyLotApplier);
 
     }
 
@@ -102,11 +114,11 @@ export class AccountingActions {
      */
     createAddPricedItemAction(pricedItem) {
         const pricedItemDataItem = PI.getPricedItemDataItem(pricedItem, true);
-        return { type: 'addPricedItem', accountDataItem: pricedItemDataItem, };
+        return { type: 'addPricedItem', pricedItemDataItem: pricedItemDataItem, };
     }
 
     async _asyncAddPricedItemApplier(isValidateOnly, action) {
-        const result = await this._accountingSystem.getPricedItemManager().asyncAddPricedItem(action.accountDataItem, isValidateOnly);
+        const result = await this._accountingSystem.getPricedItemManager().asyncAddPricedItem(action.pricedItemDataItem, isValidateOnly);
         await this._asyncCallActionCallback(action, result);
     }
 
@@ -138,6 +150,53 @@ export class AccountingActions {
 
     async _asyncModifyPricedItemApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getPricedItemManager().asyncModifyPricedItem(action.pricedItemDataItem, isValidateOnly);
+        await this._asyncCallActionCallback(action, result);
+    }
+
+
+    /**
+     * Creates an action for adding a new lot.
+     * @param {Lot|LotDataItem} lot The information for the new lot.
+     * @returns {ActionDataItem}
+     */
+    createAddLotAction(lot) {
+        const lotDataItem = L.getLotDataItem(lot, true);
+        return { type: 'addLot', accountDataItem: lotDataItem, };
+    }
+
+    async _asyncAddLotApplier(isValidateOnly, action) {
+        const result = await this._accountingSystem.getLotManager().asyncAddLot(action.accountDataItem, isValidateOnly);
+        await this._asyncCallActionCallback(action, result);
+    }
+
+
+    /**
+     * Creates an action for removing a lot.
+     * @param {number} lotId 
+     * @returns {ActionDataItem}
+     */
+    createRemoveLotAction(lotId) {
+        return { type: 'removeLot', lotId: lotId, };
+    }
+
+    async _asyncRemoveLotApplier(isValidateOnly, action) {
+        const result = await this._accountingSystem.getLotManager().asyncRemoveLot(action.lotId, isValidateOnly);
+        await this._asyncCallActionCallback(action, result);
+    }
+
+
+    /**
+     * Creates an action for modifying a lot.
+     * @param {Lot|LotDataItem} lotUpdates The updates to the lot, the id property is required.
+     * @returns {ActionDataItem}
+     */
+    createModifyLotAction(lotUpdates) {
+        const lotDataItem = L.getLotDataItem(lotUpdates, true);
+        return { type: 'modifyLot', lotDataItem: lotDataItem, };
+    }
+
+    async _asyncModifyLotApplier(isValidateOnly, action) {
+        const result = await this._accountingSystem.getLotManager().asyncModifyLot(action.lotDataItem, isValidateOnly);
         await this._asyncCallActionCallback(action, result);
     }
 

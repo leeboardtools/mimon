@@ -65,6 +65,20 @@ test('AccountingActions-Accounts', async () => {
 
     await actionManager.asyncUndoLastAppliedActions();
     expect(accountManager.getAccountDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA));
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(accountManager.getAccountDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA1));
+
+
+    // Validation.
+    const invalidA1 = {
+        id: settingsA.id,
+        type: A.AccountType.LIABILITY.name,
+    };
+    const invalidModifyAction = actions.createModifyAccountAction(invalidA1);
+    await expect(actionManager.asyncApplyAction(invalidModifyAction)).rejects.toThrow();
+
+    expect(accountManager.getAccountDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA1));
 });
 
 
@@ -117,7 +131,7 @@ test('AccountingActions-PricedItems', async () => {
     expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA));
 
 
-    // Modify account.
+    // Modify priced item.
     const settingsA1 = {
         id: settingsA.id,
         currency: 'USD',
@@ -131,5 +145,83 @@ test('AccountingActions-PricedItems', async () => {
 
     await actionManager.asyncUndoLastAppliedActions();
     expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA));
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA1));
+
+
+    // Invalid modify.
+    const invalidA1 = {
+        id: settingsA.id,
+        type: PI.PricedItemType.PROPERTY.name,
+    };
+    const invalidModifyAction = actions.createModifyPricedItemAction(invalidA1);
+    await expect(actionManager.asyncApplyAction(invalidModifyAction)).rejects.toThrow();
+    expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA1));
+});
+
+
+
+//
+//---------------------------------------------------------
+//
+test('AccountingActions-Lots', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    const { accountingSystem } = sys;
+    const lotManager = accountingSystem.getLotManager();
+    const actions = accountingSystem.getAccountingActions();
+    const actionManager = accountingSystem.getActionManager();
+
+    let currentSettings;
+    actions.registerAsyncActionCallback('addLot', (action, result) => {
+        if (currentSettings) {
+            currentSettings.id = result.newLotDataItem.id;
+        }
+    });
+
+
+    const settingsA = {
+        pricedItemId: sys.aaplPricedItemId,
+        description: 'Lot A',
+    };
+
+    // New Lot
+    const newLotAction = actions.createAddLotAction(settingsA);
+    
+    currentSettings = settingsA;
+    await actionManager.asyncApplyAction(newLotAction);
+    expect(lotManager.getLotDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA));
+
+
+    // Remove Lot
+    const removeLotAction = actions.createRemoveLotAction(settingsA.id);
+    await actionManager.asyncApplyAction(removeLotAction);
+    expect(lotManager.getLotDataItemWithId(settingsA.id)).toBeUndefined();
+
+    await actionManager.asyncUndoLastAppliedActions(1);
+    expect(lotManager.getLotDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA));
+
+    await actionManager.asyncUndoLastAppliedActions(1);
+    expect(lotManager.getLotDataItemWithId(settingsA.id)).toBeUndefined();
+
+    await actionManager.asyncReapplyLastUndoneActions(1);
+    expect(lotManager.getLotDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA));
+
+
+    // Modify Lot.
+    const settingsA1 = {
+        id: settingsA.id,
+        pricedItemId: sys.intcPricedItemId,
+        description: 'Modified Lot A',
+    };
+    const modifyLotAction = actions.createModifyLotAction(settingsA1);
+    await actionManager.asyncApplyAction(modifyLotAction);
+    expect(lotManager.getLotDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA1));
+
+    await actionManager.asyncUndoLastAppliedActions();
+    expect(lotManager.getLotDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA));
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(lotManager.getLotDataItemWithId(settingsA.id)).toEqual(expect.objectContaining(settingsA1));
 
 });
