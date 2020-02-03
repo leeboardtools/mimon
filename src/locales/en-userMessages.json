@@ -65,6 +65,23 @@
     "AccountManager-remove_parent_account_not_found": ["The parent account with id '", "' was not found."],
     "AccountManager-child_not_compatible": ["The account contains a child account of type '", "', which is not allowed in the parent account, which is of type '", "'."],
 
+
+    "Actions-addAccount": "New Account",
+    "Actions-removeAccount": "Delete Account",
+    "Actions-modifyAccount": "Modify Account",
+    "Actions-addPricedItem": "New Priced Item",
+    "Actions-removePricedItem": "Delete Priced Item",
+    "Actions-modifyPricedItem": "Edit Priced Item",
+    "Actions-addLot": "New Lot",
+    "Actions-removeLot": "Delete Lot",
+    "Actions-modifyLot": "Modify Lot",
+    "Actions-addPrices": "Update Prices",
+    "Actions-removePrices": "Remove Prices",
+    "Actions-addTransactions": "New Transaction",
+    "Actions-removeTransactions": "Delete Transaction",
+    "Actions-modifyTransactinos": "Modify Transactions",
+
+
     "LotManager-invalid_pricedItem_id": ["A priced item with id '", "' was not found."],
     "LotManager-remove_no_id": ["The lot cannot be deleted. An item with id '", "' was not found."],
     "LotManager-modify_no_id": ["The lot could not be modified. An item with id '", "' was not found."],

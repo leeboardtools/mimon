@@ -5,6 +5,7 @@ import * as L from './Lots';
 import * as P from './Prices';
 import * as T from './Transactions';
 import { getYMDDateString, YMDDate } from '../util/YMDDate';
+import { userMsg } from '../util/UserMessages';
 
 /**
  * @event AccountingActions#actionApply
@@ -100,7 +101,7 @@ export class AccountingActions extends EventEmitter {
      */
     createAddAccountAction(account) {
         const accountDataItem = A.getAccountDataItem(account, true);
-        return { type: 'addAccount', accountDataItem: accountDataItem, };
+        return { type: 'addAccount', accountDataItem: accountDataItem, name: userMsg('Actions-addAccount'), };
     }
 
     async _asyncAddAccountApplier(isValidateOnly, action) {
@@ -115,7 +116,7 @@ export class AccountingActions extends EventEmitter {
      * @returns {ActionDataItem}
      */
     createRemoveAccountAction(accountId) {
-        return { type: 'removeAccount', accountId: accountId, };
+        return { type: 'removeAccount', accountId: accountId, name: userMsg('Actions-removeAccount'), };
     }
 
     async _asyncRemoveAccountApplier(isValidateOnly, action) {
@@ -131,7 +132,7 @@ export class AccountingActions extends EventEmitter {
      */
     createModifyAccountAction(accountUpdates) {
         const accountDataItem = A.getAccountDataItem(accountUpdates, true);
-        return { type: 'modifyAccount', accountDataItem: accountDataItem, };
+        return { type: 'modifyAccount', accountDataItem: accountDataItem, name: userMsg('Actions-modifyAccount'), };
     }
 
     async _asyncModifyAccountApplier(isValidateOnly, action) {
@@ -147,7 +148,7 @@ export class AccountingActions extends EventEmitter {
      */
     createAddPricedItemAction(pricedItem) {
         const pricedItemDataItem = PI.getPricedItemDataItem(pricedItem, true);
-        return { type: 'addPricedItem', pricedItemDataItem: pricedItemDataItem, };
+        return { type: 'addPricedItem', pricedItemDataItem: pricedItemDataItem, name: userMsg('Actions-addPricedItem'), };
     }
 
     async _asyncAddPricedItemApplier(isValidateOnly, action) {
@@ -162,7 +163,7 @@ export class AccountingActions extends EventEmitter {
      * @returns {ActionDataItem}
      */
     createRemovePricedItemAction(pricedItemId) {
-        return { type: 'removePricedItem', pricedItemId: pricedItemId, };
+        return { type: 'removePricedItem', pricedItemId: pricedItemId, name: userMsg('Actions-removePricedItem'), };
     }
 
     async _asyncRemovePricedItemApplier(isValidateOnly, action) {
@@ -178,7 +179,7 @@ export class AccountingActions extends EventEmitter {
      */
     createModifyPricedItemAction(pricedItemUpdates) {
         const pricedItemDataItem = PI.getPricedItemDataItem(pricedItemUpdates, true);
-        return { type: 'modifyPricedItem', pricedItemDataItem: pricedItemDataItem, };
+        return { type: 'modifyPricedItem', pricedItemDataItem: pricedItemDataItem, name: userMsg('Actions-modifyPricedItem'), };
     }
 
     async _asyncModifyPricedItemApplier(isValidateOnly, action) {
@@ -194,7 +195,7 @@ export class AccountingActions extends EventEmitter {
      */
     createAddLotAction(lot) {
         const lotDataItem = L.getLotDataItem(lot, true);
-        return { type: 'addLot', accountDataItem: lotDataItem, };
+        return { type: 'addLot', accountDataItem: lotDataItem, name: userMsg('Actions-addLot'), };
     }
 
     async _asyncAddLotApplier(isValidateOnly, action) {
@@ -209,7 +210,7 @@ export class AccountingActions extends EventEmitter {
      * @returns {ActionDataItem}
      */
     createRemoveLotAction(lotId) {
-        return { type: 'removeLot', lotId: lotId, };
+        return { type: 'removeLot', lotId: lotId, name: userMsg('Actions-removeLot'), };
     }
 
     async _asyncRemoveLotApplier(isValidateOnly, action) {
@@ -225,7 +226,7 @@ export class AccountingActions extends EventEmitter {
      */
     createModifyLotAction(lotUpdates) {
         const lotDataItem = L.getLotDataItem(lotUpdates, true);
-        return { type: 'modifyLot', lotDataItem: lotDataItem, };
+        return { type: 'modifyLot', lotDataItem: lotDataItem, name: userMsg('Actions-modifyLot'), };
     }
 
     async _asyncModifyLotApplier(isValidateOnly, action) {
@@ -245,7 +246,7 @@ export class AccountingActions extends EventEmitter {
             prices = [prices];
         }
         const priceDataItems = prices.map((price) => P.getPriceDataItem(price, true));
-        return { type: 'addPrices', pricedItemId: pricedItemId, priceDataItems: priceDataItems, };
+        return { type: 'addPrices', pricedItemId: pricedItemId, priceDataItems: priceDataItems, name: userMsg('Actions-addPrices'), };
     }
 
     async _asyncAddPricesApplier(isValidateOnly, action) {
@@ -269,7 +270,7 @@ export class AccountingActions extends EventEmitter {
         ymdDateA = getYMDDateString(ymdDateA);
         ymdDateB = getYMDDateString(ymdDateB);
 
-        return { type: 'removePricesInDateRange', pricedItemId: pricedItemId, ymdDateA: ymdDateA, ymdDateB, };
+        return { type: 'removePricesInDateRange', pricedItemId: pricedItemId, ymdDateA: ymdDateA, ymdDateB, name: userMsg('Actions-removePrices'), };
     }
 
     async _asyncRemovePricesInDateRangeApplier(isValidateOnly, action) {
@@ -292,7 +293,7 @@ export class AccountingActions extends EventEmitter {
         else {
             transactionDataItems = transactions.map((transaction) => T.getTransactionDataItem(transaction, true));
         }
-        return { type: 'addTransactions', transactionDataItems: transactionDataItems, };
+        return { type: 'addTransactions', transactionDataItems: transactionDataItems, name: userMsg('Actions-addTransactions'), };
     }
 
     async _asyncAddTransactionsApplier(isValidateOnly, action) {
@@ -311,7 +312,7 @@ export class AccountingActions extends EventEmitter {
             transactionIds = Array.from(transactionIds);
         }
 
-        return { type: 'removeTransactions', transactionIds: transactionIds, };
+        return { type: 'removeTransactions', transactionIds: transactionIds, name: userMsg('Actions-removeTransactions'), };
     }
 
     async _asyncRemoveTransactionsApplier(isValidateOnly, action) {
@@ -333,7 +334,7 @@ export class AccountingActions extends EventEmitter {
         else {
             transactionDataItems = transactions.map((transaction) => T.getTransactionDataItem(transaction, true));
         }
-        return { type: 'modifyTransactions', transactionDataItems: transactionDataItems, };
+        return { type: 'modifyTransactions', transactionDataItems: transactionDataItems, name: userMsg('Actions-modifyTransactions'), };
     }
 
     async _asyncModifyTransactionsApplier(isValidateOnly, action) {
