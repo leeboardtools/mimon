@@ -276,17 +276,38 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
     - Repository for an AccountingSystem.
 
 
+### AccountingActions
+A class instantiated as a property of [AccountingSystem](#accountingsystem), this provides methods for generating
+action objects for performing the various edit actions on the database.
+
+
+### ActionManager
+Utility class for working action data items. Works with [UndoManager](#undomanager) to support undo/redo.
+
+Similar in design to [UndoManager](#undomanager), the action manager requires things that support actions to register
+an applier with the manager. Actions are represented as entirely data so they can be JSON'ified. When an action is applied
+the current undo id is recorded and the action applied via the applier. The manager maintains ordered lists of the actions
+that have been applied and actions that have been undone, supporting multiple undos and redos.
+
+The manager employs a handler to provide the underlying storage system. This allows the storage of the action history.
+
 ### Currency
 
 ### QuantityDefinition
-
-### NamedEnum
 
 ### Ratio
 
 ### NumericIdGenerator
 
 ### UndoManager
+Utility class for managing undo. Things that support undo register an applier with the manager, then when something
+they can undo occurs, they register an undo data item with the manager.
+
+The manager manages an ordered list of the registered undo data items, and supports undoing multiple items. When it is desired
+to undo to a given point, the manager sequentially passes the undo data items to the appropriate appliers to perform
+the actual undo.
+
+The manager employs a handler to provide the underlying storage system. This allows the storage of the undo history.
 
 ### YMDDate
 
@@ -294,5 +315,6 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
 ## TODOs
 - Add test transactions to AccountingSystemTestHelpers.js, then test transactions in JSONGzipAccountingFile.test.js
 
-
 - Need to add event emitting to account manager undo.
+
+- Add support for undo, actions to accounting file implementation.
