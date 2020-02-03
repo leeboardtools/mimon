@@ -1,7 +1,7 @@
 import * as ASTH from './AccountingSystemTestHelpers';
 import * as A from './Accounts';
 import * as PI from './PricedItems';
-import * as P from './Prices';
+import * as T from './Transactions';
 
 
 
@@ -18,7 +18,7 @@ test('AccountingActions-Accounts', async () => {
     const baseCurrencyPricedItemId = accountingSystem.getPricedItemManager().getCurrencyBasePricedItemId();
 
     let currentSettings;
-    actions.registerAsyncActionCallback('addAccount', (action, result) => {
+    actions.on('addAccount', (action, result) => {
         if (currentSettings) {
             currentSettings.id = result.newAccountDataItem.id;
         }
@@ -95,7 +95,7 @@ test('AccountingActions-PricedItems', async () => {
     const actionManager = accountingSystem.getActionManager();
 
     let currentSettings;
-    actions.registerAsyncActionCallback('addPricedItem', (action, result) => {
+    actions.on('addPricedItem', (action, result) => {
         if (currentSettings) {
             currentSettings.id = result.newPricedItemDataItem.id;
         }
@@ -174,7 +174,7 @@ test('AccountingActions-Lots', async () => {
     const actionManager = accountingSystem.getActionManager();
 
     let currentSettings;
-    actions.registerAsyncActionCallback('addLot', (action, result) => {
+    actions.on('addLot', (action, result) => {
         if (currentSettings) {
             currentSettings.id = result.newLotDataItem.id;
         }
@@ -270,4 +270,176 @@ test('AccountingActions-Prices', async () => {
     expect(await priceManager.asyncGetPriceDataItemsInDateRange(sys.aaplPricedItemId, '2019-01-02', '2019-01-06')).toEqual([
         pricesA[0], pricesA[4],
     ]);
+});
+
+
+
+//
+//---------------------------------------------------------
+//
+test('AccountingActions-Tranasctions', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    const { accountingSystem } = sys;
+    const transactionManager = accountingSystem.getTransactionManager();
+    const actions = accountingSystem.getAccountingActions();
+    const actionManager = accountingSystem.getActionManager();
+
+    let currentSettings;
+    actions.on('addTransactions', (action, result) => {
+        if (currentSettings) {
+            if (!Array.isArray(currentSettings)) {
+                currentSettings.id = result.newTransactionDataItem.id;
+            }
+            else {
+                for (let i = 0; i < currentSettings.length; ++i) {
+                    currentSettings[i].id = result.newTransactionDataItems[i].id;
+                }
+            }
+        }
+    });
+
+
+    const settingsA = [
+        {
+            ymdDate: '2019-10-05',
+            description: 'First A',
+            splits: [
+                { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 10000, },
+                { accountId: sys.checkingId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: -10000, },
+            ],
+        },
+        {
+            ymdDate: '2019-10-10',
+            description: 'Second A',
+            splits: [
+                { accountId: sys.cashId, reconcileState: T.ReconcileState.RECONCILED.name, quantityBaseValue: 20000, },
+                { accountId: sys.checkingId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: -20000, },
+            ],
+        },
+    ];
+
+    const actionA = actions.createAddTransactionsAction(settingsA);
+    currentSettings = settingsA;
+    await actionManager.asyncApplyAction(actionA);
+
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id)).toEqual(expect.objectContaining(settingsA[0]));
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id)).toEqual(expect.objectContaining(settingsA[1]));
+
+
+    const settingsB = {
+        ymdDate: '2019-10-15',
+        splits: [
+            { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -2000, },
+            { accountId: sys.groceriesId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 2000, },
+        ],
+
+    };
+
+    const actionB = actions.createAddTransactionsAction(settingsB);
+    currentSettings = settingsB;
+    await actionManager.asyncApplyAction(actionB);
+    currentSettings = undefined;
+
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id)).toEqual(expect.objectContaining(settingsB));
+
+    await actionManager.asyncUndoLastAppliedActions(2);
+
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id)).toBeUndefined();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id)).toBeUndefined();
+
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id)).toEqual(expect.objectContaining(settingsA[0]));
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id)).toEqual(expect.objectContaining(settingsA[1]));
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id)).toBeUndefined();
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id)).toEqual(expect.objectContaining(settingsB));
+
+
+    // Modify transaction
+    const settingsA1 = [
+        {
+            id: settingsA[0].id,
+            ymdDate: '2019-10-20',
+        },
+        {
+            id: settingsB.id,
+            splits: [
+                { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -3000, },
+                { accountId: sys.groceriesId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 3000, },
+            ],    
+        }
+    ];
+
+    const modifyAction = actions.createModifyTransactionsAction(settingsA1);
+    await actionManager.asyncApplyAction(modifyAction);
+
+    const modifiedA0 = Object.assign({}, settingsA[0], settingsA1[0]);
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id)).toEqual(expect.objectContaining(modifiedA0));
+
+    const modifiedB = Object.assign({}, settingsB, settingsA1[1]);
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id)).toEqual(expect.objectContaining(modifiedB));
+
+    await actionManager.asyncUndoLastAppliedActions();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id)).toEqual(expect.objectContaining(settingsA[0]));
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id)).toEqual(expect.objectContaining(settingsA[1]));
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id)).toEqual(expect.objectContaining(settingsB));
+
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id)).toEqual(expect.objectContaining(modifiedA0));
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id)).toEqual(expect.objectContaining(modifiedB));
+
+
+    // Remove transaction.
+    const removeAction = actions.createRemoveTransactionsAction(settingsA[1].id);
+    await actionManager.asyncApplyAction(removeAction);
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id)).toBeUndefined();
+
+    await actionManager.asyncUndoLastAppliedActions();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id)).toEqual(expect.objectContaining(settingsA[1]));
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id)).toBeUndefined();
+
+
+    // Multiple remove transactions
+    const removeActionB = actions.createRemoveTransactionsAction([settingsA[0].id, settingsB.id]);
+    await actionManager.asyncApplyAction(removeActionB);
+
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id)).toBeUndefined();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id)).toBeUndefined();
+
+    await actionManager.asyncUndoLastAppliedActions();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id)).toEqual(expect.objectContaining(modifiedA0));
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id)).toEqual(expect.objectContaining(modifiedB));
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id)).toBeUndefined();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id)).toBeUndefined();
+
+    await actionManager.asyncUndoLastAppliedActions(2);
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id)).toEqual(expect.objectContaining(modifiedA0));
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id)).toEqual(expect.objectContaining(modifiedB));
+
+
+    // Check validation.
+    const invalidA1 = [
+        {
+            id: settingsA[0].id,
+            ymdDate: '2019-10-20',
+        },
+        {
+            id: settingsB.id,
+            splits: [
+                { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -3000, },
+                { accountId: sys.groceriesId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 4000, },
+            ],    
+        }
+    ];
+    const invalidModifyAction = actions.createModifyTransactionsAction(invalidA1);
+    expect(await actionManager.asyncValidateApplyAction(invalidModifyAction)).toBeInstanceOf(Error);
+
+    await expect(actionManager.asyncApplyAction(invalidModifyAction)).rejects.toThrow();
 });

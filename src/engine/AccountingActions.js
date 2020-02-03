@@ -1,14 +1,33 @@
+import { EventEmitter } from 'events';
 import * as A from './Accounts';
 import * as PI from './PricedItems';
 import * as L from './Lots';
 import * as P from './Prices';
+import * as T from './Transactions';
 import { getYMDDateString, YMDDate } from '../util/YMDDate';
 
 /**
- * Class that creates the various actions that apply to an {@link AccountingSystem}.
+ * @event AccountingActions#actionApply
+ * @param {ActionDataItem}  actionDataItem  The action that was applied.
+ * @param {object}  result  The result returned by the corresponding manager function.
  */
-export class AccountingActions {
+
+/**
+ * Class that creates the various actions that apply to an {@link AccountingSystem}.
+ * <p>
+ * When an action created by {@link AccountingActions} is applied, an event that has the form
+ * of {@link AccountingActions#event:actionApply} is fired. The event name is the type property
+ * of the {@link ActionDataItem}.
+ * <p>
+ * Listening on events is necessary to obtain the results of an action, particularly the add actions.
+ * For example, in order to obtain the account id of a newly added account via the action returned by
+ * {@link AccountingActions#createAddAccountAction}, you would need to listen to the 'addAccount' event,
+ * and obtain the id from result.newAccountDataItem.id.
+ */
+export class AccountingActions extends EventEmitter {
     constructor(accountingSystem) {
+        super();
+
         this._accountingSystem = accountingSystem;
 
         const actionManager = accountingSystem.getActionManager();
@@ -50,6 +69,16 @@ export class AccountingActions {
 
         this._asyncRemovePricesInDateRangeApplier = this._asyncRemovePricesInDateRangeApplier.bind(this);
         actionManager.registerAsyncActionApplier('removePricesInDateRange', this._asyncRemovePricesInDateRangeApplier);
+
+        
+        this._asyncAddTransactionsApplier = this._asyncAddTransactionsApplier.bind(this);
+        actionManager.registerAsyncActionApplier('addTransactions', this._asyncAddTransactionsApplier);
+
+        this._asyncRemoveTransactionsApplier = this._asyncRemoveTransactionsApplier.bind(this);
+        actionManager.registerAsyncActionApplier('removeTransactions', this._asyncRemoveTransactionsApplier);
+
+        this._asyncModifyTransactionsApplier = this._asyncModifyTransactionsApplier.bind(this);
+        actionManager.registerAsyncActionApplier('modifyTransactions', this._asyncModifyTransactionsApplier);
         
     }
 
@@ -57,16 +86,9 @@ export class AccountingActions {
     }
 
 
-    registerAsyncActionCallback(actionType, asyncCallback) {
-        this._asyncActionCallbacksByType.set(actionType, asyncCallback);
-    }
-
-    async _asyncCallActionCallback(isValidateOnly, action, result) {
+    _emitActionEvent(isValidateOnly, action, result) {
         if (!isValidateOnly) {
-            const asyncCallback = this._asyncActionCallbacksByType.get(action.type);
-            if (asyncCallback) {
-                await asyncCallback(action, result);
-            }
+            this.emit(action.type, action, result);
         }
     }
 
@@ -83,7 +105,7 @@ export class AccountingActions {
 
     async _asyncAddAccountApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getAccountManager().asyncAddAccount(action.accountDataItem, isValidateOnly);
-        await this._asyncCallActionCallback(isValidateOnly, action, result);
+        this._emitActionEvent(isValidateOnly, action, result);
     }
 
 
@@ -98,7 +120,7 @@ export class AccountingActions {
 
     async _asyncRemoveAccountApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getAccountManager().asyncRemoveAccount(action.accountId, isValidateOnly);
-        await this._asyncCallActionCallback(isValidateOnly, action, result);
+        this._emitActionEvent(isValidateOnly, action, result);
     }
 
 
@@ -114,7 +136,7 @@ export class AccountingActions {
 
     async _asyncModifyAccountApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getAccountManager().asyncModifyAccount(action.accountDataItem, isValidateOnly);
-        await this._asyncCallActionCallback(isValidateOnly, action, result);
+        this._emitActionEvent(isValidateOnly, action, result);
     }
 
 
@@ -130,7 +152,7 @@ export class AccountingActions {
 
     async _asyncAddPricedItemApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getPricedItemManager().asyncAddPricedItem(action.pricedItemDataItem, isValidateOnly);
-        await this._asyncCallActionCallback(isValidateOnly, action, result);
+        this._emitActionEvent(isValidateOnly, action, result);
     }
 
 
@@ -145,7 +167,7 @@ export class AccountingActions {
 
     async _asyncRemovePricedItemApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getPricedItemManager().asyncRemovePricedItem(action.pricedItemId, isValidateOnly);
-        await this._asyncCallActionCallback(isValidateOnly, action, result);
+        this._emitActionEvent(isValidateOnly, action, result);
     }
 
 
@@ -161,7 +183,7 @@ export class AccountingActions {
 
     async _asyncModifyPricedItemApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getPricedItemManager().asyncModifyPricedItem(action.pricedItemDataItem, isValidateOnly);
-        await this._asyncCallActionCallback(isValidateOnly, action, result);
+        this._emitActionEvent(isValidateOnly, action, result);
     }
 
 
@@ -177,7 +199,7 @@ export class AccountingActions {
 
     async _asyncAddLotApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getLotManager().asyncAddLot(action.accountDataItem, isValidateOnly);
-        await this._asyncCallActionCallback(isValidateOnly, action, result);
+        this._emitActionEvent(isValidateOnly, action, result);
     }
 
 
@@ -192,7 +214,7 @@ export class AccountingActions {
 
     async _asyncRemoveLotApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getLotManager().asyncRemoveLot(action.lotId, isValidateOnly);
-        await this._asyncCallActionCallback(isValidateOnly, action, result);
+        this._emitActionEvent(isValidateOnly, action, result);
     }
 
 
@@ -208,7 +230,7 @@ export class AccountingActions {
 
     async _asyncModifyLotApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getLotManager().asyncModifyLot(action.lotDataItem, isValidateOnly);
-        await this._asyncCallActionCallback(isValidateOnly, action, result);
+        this._emitActionEvent(isValidateOnly, action, result);
     }
 
 
@@ -228,7 +250,7 @@ export class AccountingActions {
 
     async _asyncAddPricesApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getPriceManager().asyncAddPrices(action.pricedItemId, action.priceDataItems, isValidateOnly);
-        await this._asyncCallActionCallback(isValidateOnly, action, result);
+        this._emitActionEvent(isValidateOnly, action, result);
     }
 
 
@@ -253,12 +275,72 @@ export class AccountingActions {
     async _asyncRemovePricesInDateRangeApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getPriceManager().asyncRemovePricesInDateRange(action.pricedItemId, 
             action.ymdDateA, action.ymdDateB, isValidateOnly);
-        await this._asyncCallActionCallback(isValidateOnly, action, result);
-        
+        this._emitActionEvent(isValidateOnly, action, result);        
     }
 
     
-    // Transaction actions
+    /**
+     * Creates an action for adding transactions.
+     * @param {Transaction|TransactionDataItem|Transaction[]|TransactionDataItem[]} transactions 
+     * @returns {ActionDataItem}
+     */
+    createAddTransactionsAction(transactions) {
+        let transactionDataItems;
+        if (!Array.isArray(transactions)) {
+            transactionDataItems = T.getTransactionDataItem(transactions, true);
+        }
+        else {
+            transactionDataItems = transactions.map((transaction) => T.getTransactionDataItem(transaction, true));
+        }
+        return { type: 'addTransactions', transactionDataItems: transactionDataItems, };
+    }
+
+    async _asyncAddTransactionsApplier(isValidateOnly, action) {
+        const result = await this._accountingSystem.getTransactionManager().asyncAddTransactions(action.transactionDataItems, isValidateOnly);
+        this._emitActionEvent(isValidateOnly, action, result);
+    }
+
+
+    /**
+     * Creates an action for removing transactions.
+     * @param {number|number[]} transactionIds 
+     * @returns {ActionDataItem}
+     */
+    createRemoveTransactionsAction(transactionIds) {
+        if (Array.isArray(transactionIds)) {
+            transactionIds = Array.from(transactionIds);
+        }
+
+        return { type: 'removeTransactions', transactionIds: transactionIds, };
+    }
+
+    async _asyncRemoveTransactionsApplier(isValidateOnly, action) {
+        const result = await this._accountingSystem.getTransactionManager().asyncRemoveTransactions(action.transactionIds, isValidateOnly);
+        this._emitActionEvent(isValidateOnly, action, result);
+    }
+
+    
+    /**
+     * Creates an action for modifying transactions.
+     * @param {Transaction|TransactionDataItem|Transaction[]|TransactionDataItem[]} transactions The transaction modifications, an id property is required.
+     * @returns {ActionDataItem}
+     */
+    createModifyTransactionsAction(transactions) {
+        let transactionDataItems;
+        if (!Array.isArray(transactions)) {
+            transactionDataItems = T.getTransactionDataItem(transactions, true);
+        }
+        else {
+            transactionDataItems = transactions.map((transaction) => T.getTransactionDataItem(transaction, true));
+        }
+        return { type: 'modifyTransactions', transactionDataItems: transactionDataItems, };
+    }
+
+    async _asyncModifyTransactionsApplier(isValidateOnly, action) {
+        const result = await this._accountingSystem.getTransactionManager().asyncModifyTransactions(action.transactionDataItems, isValidateOnly);
+        this._emitActionEvent(isValidateOnly, action, result);
+    }
+
 
     // Special transaction actions:
     // - Buy Transactions

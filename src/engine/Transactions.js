@@ -357,10 +357,12 @@ export function getTransactionKeyData(transaction) {
 export function compareTransactionKeys(a, b) {
     let result;
     if (typeof a.ymdDate === 'string') {
-        result = a.ymdDate.localeCompare(b.ymdDate);
+        const bYMDDate = (typeof b.ymdDate !== 'string') ? b.ymdDate.toString() : b.ymdDate;
+        result = a.ymdDate.localeCompare(bYMDDate);
     }
     else {
-        result = YMDDate.compare(a.ymdDate, b.ymdDate);
+        const bYMDDate = (typeof b.ymdDate === 'string') ? new YMDDate(b.ymdDate) : b.ymdDate;
+        result = YMDDate.compare(a.ymdDate, bYMDDate);
     }
     if (result) {
         return result;
@@ -1111,7 +1113,7 @@ export class TransactionManager extends EventEmitter {
 
 
     async _asyncApplyUndoRemoveTransactions(undoDataItem) {
-        const { removedTransactionDataItems  } = undoDataItem;
+        const { removedTransactionDataItems } = undoDataItem;
 
         const stateUpdater = new AccountStatesUpdater(this);
 
