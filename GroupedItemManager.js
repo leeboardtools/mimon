@@ -294,7 +294,7 @@ export class ItemGroups {
 
     /**
      * @typedef {object} ItemGroups~GroupItems
-     * @property {Map}  itemsByIds  Map whose keys are ids and values are the items.
+     * @property {Map}  itemsById  Map whose keys are ids and values are the items.
      * @property {number}   lastChangeId    Id that's incremented every time there's a change
      * made to an item in the group.
      */
@@ -307,7 +307,7 @@ export class ItemGroups {
 
     async _loadNewGroupItems(groupKey, alwaysCreate) {
         const groupItems = {
-            itemsByIds: new Map(),
+            itemsById: new Map(),
             lastChangeId: 0,
         };
         if (this._asyncLoadGroupItems) {
@@ -329,11 +329,11 @@ export class ItemGroups {
         if (!groupItems) {
             return [];
         }
-        const { itemsByIds } = groupItems;
+        const { itemsById } = groupItems;
 
         const items = [];
         for (let i = 0; i < ids.length; ++i) {
-            items[i] = itemsByIds.get(ids[i]);
+            items[i] = itemsById.get(ids[i]);
         }
         return items;
     }
@@ -345,15 +345,15 @@ export class ItemGroups {
             groupItems = await this._loadNewGroupItems(groupKey, true);
         }
 
-        const { itemsByIds } = groupItems;
+        const { itemsById } = groupItems;
 
         itemUpdates.forEach((itemUpdate) => {
             const [ id, item ] = itemUpdate;
             if (item) {
-                itemsByIds.set(id, item);
+                itemsById.set(id, item);
             }
             else {
-                itemsByIds.delete(id);
+                itemsById.delete(id);
             }
             ++groupItems.lastChangeId;
         });
