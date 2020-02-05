@@ -7,6 +7,7 @@ import { PriceManager } from './Prices';
 import { UndoManager } from '../util/Undo';
 import { ActionManager } from '../util/Actions';
 import { AccountingActions } from './AccountingActions';
+import { getCurrency } from '../util/Currency';
 
 /**
  * The main interface object from the engine, this provides access to the various managers.
@@ -96,6 +97,12 @@ export class AccountingSystem extends EventEmitter {
      * exchange rate is needed.
      */
     getBaseCurrency() { return this._baseCurrency; }
+
+
+    /**
+     * @returns {Currency}  The currency object for {@link AccountingSystem#getBaseCurrency}.
+     */
+    getBaseCurrencyObject() { return getCurrency(this._baseCurrency); }
 
 
     /**

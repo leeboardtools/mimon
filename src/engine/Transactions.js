@@ -74,6 +74,7 @@ export function loadTransactionsUserMessages() {
  * @property {LotChangeDataItem[]}  [lotChanges]    Array of changes to any lots.
  * @property {string}   [description]
  * @property {string}   [memo]  
+ * @property {string}   [refNum]
  */
 
 
@@ -87,6 +88,7 @@ export function loadTransactionsUserMessages() {
  * @property {LotChange[]}  [lotChanges]    Array of changes to any lots.
  * @property {string}   [description]
  * @property {string}   [memo]  
+ * @property {string}   [refNum]
  */
 
 
@@ -991,7 +993,7 @@ export class TransactionManager extends EventEmitter {
      * @returns {Error|undefined}   Returns an Error if invalid, <code>undefined</code> if valid.
      */
     validateSplits(splits, isModify) {
-        if (!splits || (splits.length < 2)) {
+        if (!splits) {
             return userError('TransactionManager~need_at_least_2_splits');
         }
 
@@ -1006,6 +1008,7 @@ export class TransactionManager extends EventEmitter {
         const splitCurrencies = [];
         const splitCreditBaseValues = [];
         let isCurrencyExchange = false;
+        let splitMergeLotCount = 0;
 
         for (let i = 0; i < splits.length; ++i) {
             const split = splits[i];
@@ -1036,14 +1039,30 @@ export class TransactionManager extends EventEmitter {
 
 
             if (account.type.hasLots) {
-                if (!split.lotChanges && creditBaseValue) {
+                const { lotChanges } = split;
+                if (!lotChanges && creditBaseValue) {
                     return userError('TransactionManager~split_needs_lots', account.type.name);
+                }
+
+                if (lotChanges) {
+                    for (let j = lotChanges.length - 1; j >= 0; --j) {
+                        if (lotChanges[j].isSplitMerge) {
+                            ++splitMergeLotCount;
+                            break;
+                        }
+                    }
                 }
 
                 // Lot validation is performed by AccountStateUpdater.
             }
 
             creditSumBaseValue += creditBaseValue;
+        }
+
+        if (splitMergeLotCount !== 1) {
+            if (splits.length < 2) {
+                return userError('TransactionManager~need_at_least_2_splits');
+            }
         }
 
         if (isCurrencyExchange) {

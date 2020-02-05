@@ -6,7 +6,7 @@ import { FileBackups } from '../util/FileBackups';
 import { InMemoryAccountsHandler } from './Accounts';
 import { InMemoryLotsHandler } from './Lots';
 import { InMemoryPricedItemsHandler } from './PricedItems';
-import { PricesHandler } from './Prices';
+import { InMemoryPricesHandler } from './Prices';
 import { TransactionsHandlerImplBase } from './Transactions';
 import { InMemoryUndoHandler } from '../util/Undo';
 import { InMemoryActionsHandler } from '../util/Actions';
@@ -45,7 +45,8 @@ const JOURNAL_TRANSACTIONS_TAG = 'mimon-journalTransactions';
 //      - Holds the:
 //          - accounts (manager)
 //          - priced items (manager)
-//          - 
+//          - lots (manager)
+//
 //  - Journal
 //      - Two sets of files:
 //          - Single summary file holds summary info for all the transactions.
@@ -109,7 +110,7 @@ function getYMDYearKey(ymdDate) {
     if (ymdDate) {
         const index = ymdDate.indexOf('-');
         if (index >= 0) {
-            ymdDate = ymdDate.slicee(0, index);
+            ymdDate = ymdDate.slice(0, index);
         }
         else {
             ymdDate = undefined;
@@ -122,7 +123,7 @@ function getYMDYearKey(ymdDate) {
 /**
  * The prices handler implementation.
  */
-class JSONGzipPricesHandler extends PricesHandler {
+class JSONGzipPricesHandler extends InMemoryPricesHandler {
     constructor(accountingFile) {
         super();
         this._accountingFile = accountingFile;
@@ -238,7 +239,10 @@ class JSONGzipTransactionsHandler extends TransactionsHandlerImplBase {
 
 
 /**
- * Handles the ledger file.
+ * Handles the ledger file. The ledger file stores data items for the following managers:
+ * <li>{@link AccountManager}
+ * <li>{@link PricedItemManager}
+ * <li>{@link LotManager}
  */
 class JSONGzipLedgerFile {
     constructor(accountingFile) {
@@ -363,7 +367,7 @@ class JSONGzipJournalFiles {
     }
 
     static buildJournalGroupPathName(pathName, groupKey) {
-        return path.join(pathName, JOURNAL_FILES_PREFIX, groupKey, FILE_SUFFIX, FILE_EXT);
+        return path.join(pathName, JOURNAL_FILES_PREFIX + groupKey + FILE_SUFFIX + FILE_EXT);
     }
     
     cleanIsModified() {
@@ -458,7 +462,8 @@ class JSONGzipJournalFiles {
         ];
 
         const itemGroups = this._transactionsHandler.getItemGroups();
-        itemGroups.forEach(([groupItems, groupKey]) => {
+
+        itemGroups.forEach((groupItems, groupKey) => {
             const lastChangeId = this._groupKeysLastChangeIds.get(groupKey);
             if (lastChangeId !== groupItems.lastChangeId) {
                 const pathName = JSONGzipJournalFiles.buildJournalGroupPathName(this._accountingFile.getPathName(), groupKey);
