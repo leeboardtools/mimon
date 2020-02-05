@@ -9,11 +9,6 @@ import { YMDDate, getYMDDate } from '../util/YMDDate';
 import { getDecimalDefinition } from '../util/Quantities';
 import * as ASTH from './AccountingSystemTestHelpers';
 
-//
-//
-// NOTE: THIS DOES NOT YET TEST PriceRetriever.js!!!
-//
-//
 
 export const USStockPriceDefinition = getDecimalDefinition({ decimalPlaces: 4 });
 export const USStockQuantityDefinition = getDecimalDefinition({ decimalPlaces: 4 });
