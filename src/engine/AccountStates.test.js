@@ -62,7 +62,11 @@ test('AccountState-add_remove_split', () => {
         quantityBaseValue: 0,
         lotStates: [],
     };
-    const lotStateA = { lotId: 1, quantityBaseValue: 3000, costBasisBaseValue: 300, previousBaseValues: [ [0, 0] ]};
+    const lotStateA = { lotId: 1, 
+        quantityBaseValue: 3000, 
+        costBasisBaseValue: 300, 
+        previousBaseValues: [ [0, 0] ],
+    };
 
     const splitB = { accountId: 1, quantityBaseValue: 100, lotChanges: [lotChangeA], };
     const accountStateB = {
@@ -70,7 +74,7 @@ test('AccountState-add_remove_split', () => {
         quantityBaseValue: lotStateA.quantityBaseValue,
         lotStates: [ lotStateA ],
     };
-    const testB = A.addSplitToAccountStateDataItem(stateB, splitB, new YMDDate('2019-03-31'));
+    const testB = A.addSplitToAccountStateDataItem(stateB, splitB, '2019-03-31');
     expect(testB).toEqual(accountStateB);
 
 
@@ -95,7 +99,10 @@ test('AccountState-add_remove_split', () => {
         ],
     };
 
-    const splitC = { accountId: 2, quantityBaseValue: 300, lotChanges: [lotChangeB, lotChangeA1] };
+    const splitC = { accountId: 2, 
+        quantityBaseValue: 300, 
+        lotChanges: [lotChangeB, lotChangeA1],
+    };
     const accountStateC = {
         ymdDate: '2019-03-31',
         quantityBaseValue: lotStateA1.quantityBaseValue + lotStateB.quantityBaseValue,
@@ -114,8 +121,14 @@ test('AccountState-add_remove_split', () => {
         previousBaseValues: [ [0, 0], ],
     };
 
-    const lotChangeB1 = { lotId: 2, quantityBaseValue: -lotStateB.quantityBaseValue, costBasisBaseValue: lotStateB.costBasisBaseValue, };
-    const splitD = { accountId: 2, quantityBaseValue: 200, lotChanges: [ lotChangeD, lotChangeB1, ]};
+    const lotChangeB1 = { lotId: 2, 
+        quantityBaseValue: -lotStateB.quantityBaseValue, 
+        costBasisBaseValue: lotStateB.costBasisBaseValue, 
+    };
+    const splitD = { accountId: 2, 
+        quantityBaseValue: 200, 
+        lotChanges: [ lotChangeD, lotChangeB1, ],
+    };
     const accountStateD = {
         ymdDate: '2019-03-31',
         quantityBaseValue: lotStateA1.quantityBaseValue + lotStateD.quantityBaseValue,
@@ -131,7 +144,10 @@ test('AccountState-add_remove_split', () => {
         lotId: 3, 
         quantityBaseValue: 246, 
         costBasisBaseValue: 789, 
-        previousBaseValues: [ [0, 0], [lotStateD.quantityBaseValue, lotStateD.costBasisBaseValue] ],
+        previousBaseValues: [ 
+            [0, 0], 
+            [lotStateD.quantityBaseValue, lotStateD.costBasisBaseValue] 
+        ],
     };
     const splitE = { accountId: 2, quantityBaseValue: 0, lotChanges: [ lotChangeD1, ]};
     const accountStateE = {
@@ -144,7 +160,11 @@ test('AccountState-add_remove_split', () => {
 
 
     // Split merge with cost basis
-    const lotChangeD2 = { lotId: 3, quantityBaseValue: 123, costBasisBaseValue: 700, isSplitMerge: true };
+    const lotChangeD2 = { lotId: 3, 
+        quantityBaseValue: 123, 
+        costBasisBaseValue: 700, 
+        isSplitMerge: true,
+    };
     const lotStateD2 = {
         lotId: 3, 
         quantityBaseValue: 246 + 123, 
@@ -175,9 +195,11 @@ test('AccountState-add_remove_split', () => {
     const revTestD = A.removeSplitFromAccountStateDataItem(testD, splitD);
     expect(revTestD).toEqual(expect.objectContaining(accountStateC));
 
-    const revTestC = A.removeSplitFromAccountStateDataItem(revTestD, splitC, accountStateB.ymdDate);
+    const revTestC = A.removeSplitFromAccountStateDataItem(revTestD, splitC, 
+        accountStateB.ymdDate);
     expect(revTestC).toEqual(expect.objectContaining(accountStateB));
 
-    const revTestB = A.removeSplitFromAccountStateDataItem(revTestC, splitB, stateB.ymdDate);
+    const revTestB = A.removeSplitFromAccountStateDataItem(revTestC, splitB, 
+        stateB.ymdDate);
     expect(revTestB).toEqual(expect.objectContaining(stateB));
 });

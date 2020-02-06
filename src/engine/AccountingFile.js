@@ -1,7 +1,9 @@
 /**
- * Base class for the object that associates a {@link AccountingSystem} with some form of storage.
+ * Base class for the object that associates a {@link AccountingSystem} with some 
+ * form of storage.
  * <p>
- * {@link AccountingFile}s are created by implementations of {@link AccountingFileFactory}.
+ * {@link AccountingFile}s are created by implementations of 
+ * {@link AccountingFileFactory}.
  */
 export class AccountingFile {
 
@@ -18,7 +20,8 @@ export class AccountingFile {
     }
 
     _setup(options) {
-        this._accountingFileFactory = options.accountingFileFactory || this._accountingFileFactory;
+        this._accountingFileFactory 
+            = options.accountingFileFactory || this._accountingFileFactory;
         this._accountingSystem = options.accountingSystem || this._accountingSystem;
         this._pathName = options.pathName || this._pathName;
         this._stateId = options.stateId || 1;
@@ -34,8 +37,8 @@ export class AccountingFile {
 
 
     /**
-     * @returns {boolean}   <code>true</code> if changes have been made to the accounting system that have
-     * not yet been saved.
+     * @returns {boolean}   <code>true</code> if changes have been made to the 
+     * accounting system that have not yet been saved.
      */
     isModified() {
         throw Error('AccountingFile.isModified() abstract method!');
@@ -76,8 +79,8 @@ export class AccountingFile {
 
 /**
  * @class
- * Base class for factory objects that create an {@link AccountingFile} object for representing a
- * {@link AccountingSystem} in a file or directory.
+ * Base class for factory objects that create an {@link AccountingFile} object for 
+ * representing a {@link AccountingSystem} in a file or directory.
  */
 export class AccountingFileFactory {
 
@@ -90,7 +93,8 @@ export class AccountingFileFactory {
 
 
     /**
-     * Called to retrieve an array of Electron [FileFilter]{@link https://electronjs.org/docs/api/structures/file-filter} objects
+     * Called to retrieve an array of Electron 
+     * [FileFilter]{@link https://electronjs.org/docs/api/structures/file-filter} objects
      * for use with file open dialog boxes.
      * @returns {AccountingFileFactory~FileFilter[]|undefined}
      */
@@ -100,18 +104,22 @@ export class AccountingFileFactory {
 
 
     /**
-     * Determines if a given directory/file name is a possible valid accounting file of this type.
-     * @param {string} pathName The path name of interest. If {@link AccountingFile#isDirBased} returned <code>true</code> this
+     * Determines if a given directory/file name is a possible valid accounting file 
+     * of this type.
+     * @param {string} pathName The path name of interest. If 
+     * {@link AccountingFile#isDirBased} returned <code>true</code> this
      * should be a directory, otherwise it should be a file name.
      * @returns {boolean}   <code>true</code> if it could be.
      */
     async asyncIsPossibleAccountingFile(pathName) {
+        // eslint-disable-next-line max-len
         throw Error('AccountingFileFactory.asyncIsPossibleAccountingFile() abstract method!');
     }
 
 
     /**
-     * Determines if a path name is likely to succeed if passed to {@link AccountingFile#createFile}.
+     * Determines if a path name is likely to succeed if passed to 
+     * {@link AccountingFile#createFile}.
      * @param {string} pathName The path name of interest.
      * @returns {true|Error}
      */
@@ -122,9 +130,10 @@ export class AccountingFileFactory {
 
     /**
      * Creates a new accounting file system, replacing an existing one if necessary.
-     * @param {string} pathName The path name for the new file system. If the file system already exists
-     * it should be overwritten. If {@link AccountingFileFactor#isDirBased} returns <code>true</code> this should be a directory,
-     * otherwise it should be a file name.
+     * @param {string} pathName The path name for the new file system. If the file 
+     * system already exists
+     * it should be overwritten. If {@link AccountingFileFactor#isDirBased} returns 
+     * <code>true</code> this should be a directory, otherwise it should be a file name.
      * @returns {AccountingFile}    The accounting file that was created.
      */
     async asyncCreateFile(pathName) {
@@ -134,8 +143,9 @@ export class AccountingFileFactory {
 
     /**
      * Opens an existing accounting file system.
-     * @param {string} pathName The path name of the file system to open. If {@link AccountingFileFactor#isDirBased} returns
-     * <code>true</code> this should be a directory, otherwise it should be a file name.
+     * @param {string} pathName The path name of the file system to open. If 
+     * {@link AccountingFileFactor#isDirBased} returns <code>true</code> this should 
+     * be a directory, otherwise it should be a file name.
      * @returns {AccountingFile}    The accounting file that was opened.
      */
     async asyncOpenFile(pathName) {
@@ -144,12 +154,14 @@ export class AccountingFileFactory {
 
 
     /**
-     * Copies an existing accounting file into a new accounting system, replacing an existing one if necessary.
+     * Copies an existing accounting file into a new accounting system, replacing an 
+     * existing one if necessary.
      * Note that an {@link AccountingFile} is returned, if not needed it should be closed.
      * @param {AccountingFile} accountingFile The accounting file to be copied.
-     * @param {string} pathName The path name for the new file system. If the file system already exists
-     * it should be overwritten. If {@link AccountingFileFactor#isDirBased} returns <code>true</code> this should be a directory,
-     * otherwise it should be a file name.
+     * @param {string} pathName The path name for the new file system. If the file 
+     * system already exists it should be overwritten. If 
+     * {@link AccountingFileFactor#isDirBased} returns <code>true</code> this should 
+     * be a directory, otherwise it should be a file name.
      * @returns {AccountingFile}    The accounting file that was created.
      */
     async asyncCopyAccountingFile(accountingFile, pathName) {

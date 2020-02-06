@@ -10,7 +10,8 @@ import { AccountingActions } from './AccountingActions';
 import { getCurrency } from '../util/Currency';
 
 /**
- * The main interface object from the engine, this provides access to the various managers.
+ * The main interface object from the engine, this provides access to the 
+ * various managers.
  */
 export class AccountingSystem extends EventEmitter {
     constructor(options) {
@@ -23,7 +24,8 @@ export class AccountingSystem extends EventEmitter {
         // This should come first.
         this._undoManager = new UndoManager(options.undoManager);
 
-        const actionManagerOptions = Object.assign({}, options.actionManager, { undoManager: this._undoManager, });
+        const actionManagerOptions = Object.assign({}, options.actionManager, 
+            { undoManager: this._undoManager, });
         this._actionManager = new ActionManager(actionManagerOptions);
 
         // Needs to come before the account manager...
@@ -33,7 +35,8 @@ export class AccountingSystem extends EventEmitter {
         this._lotManager = new LotManager(this, options.lotManager);
 
         this._priceManager = new PriceManager(this, options.priceManager);
-        this._transactionManager = new TransactionManager(this, options.transactionManager);
+        this._transactionManager 
+            = new TransactionManager(this, options.transactionManager);
 
         this._accountingActions = new AccountingActions(this);
     }
@@ -93,22 +96,23 @@ export class AccountingSystem extends EventEmitter {
 
 
     /**
-     * @return {string} The 3 letter currency code for the base currency. The base currency is used whenever an
-     * exchange rate is needed.
+     * @return {string} The 3 letter currency code for the base currency. 
+     * The base currency is used whenever an exchange rate is needed.
      */
     getBaseCurrency() { return this._baseCurrency; }
 
 
     /**
-     * @returns {Currency}  The currency object for {@link AccountingSystem#getBaseCurrency}.
+     * @returns {Currency}  The currency object for 
+     * {@link AccountingSystem#getBaseCurrency}.
      */
     getBaseCurrencyObject() { return getCurrency(this._baseCurrency); }
 
 
     /**
-     * Returns an data object that can be JSON.stringify()'d out that contains options for the accounting system.
-     * The object can be passed to the constructor (the handlers must still be set) to restore
-     * the options.
+     * Returns an data object that can be JSON.stringify()'d out that contains 
+     * options for the accounting system. The object can be passed to the 
+     * constructor (the handlers must still be set) to restore the options.
      * @returns {object}
      */
     getOptions() {

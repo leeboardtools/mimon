@@ -6,33 +6,43 @@ import { userError } from '../util/UserMessages';
 
 /**
  * @typedef {object} AccountStateDataItem
- * @property {string}   ymdDate The date this state represented as a {@link YMDDate} string.
- * @property {number}   quantityBaseValue   The base value of the quantity of the state. The applicable 
- * quantity definition is found in the account's priced item's quantityDefinition. Note that for accounts
- * with lots this is the sum of the quantityBaseValue properties of the lot states.
- * @property {LotStateDataItem[]}   [lotStates] For accounts that use lots, the array of the lot state data items.
- * @property {LotStateDataItem[]}   [removedLotStates] For accounts that use lots, this is created as needed to hold
- * lot states whose quantity has been reduced to 0 (i.e. fully sold). These are used to assist in removing
- * splits from the account state, as they hold a lot state that can be unwound from by {@link removeLotChangeFromLotStateDataItem}.
+ * @property {string}   ymdDate The date this state represented as a 
+ * {@link YMDDate} string.
+ * @property {number}   quantityBaseValue   The base value of the quantity of the 
+ * state. The applicable quantity definition is found in the account's priced item's 
+ * quantityDefinition. Note that for accounts with lots this is the sum of the 
+ * quantityBaseValue properties of the lot states.
+ * @property {LotStateDataItem[]}   [lotStates] For accounts that use lots, the array 
+ * of the lot state data items.
+ * @property {LotStateDataItem[]}   [removedLotStates] For accounts that use lots, 
+ * this is created as needed to hold lot states whose quantity has been reduced to 0 
+ * (i.e. fully sold). These are used to assist in removing splits from the account 
+ * state, as they hold a lot state that can be unwound from by 
+ * {@link removeLotChangeFromLotStateDataItem}.
  */
 
 /**
  * @typedef {object} AccountState
  * @property {YMDDate}  ymdDate The date this state represents.
- * @property {number}   quantityBaseValue   The base value of the quantity of the state. The applicable 
- * quantity definition is found in the account's priced item's quantityDefinition. Note that for accounts
- * with lots this is the sum of the quantityBaseValue properties of the lot states.
- * @property {LotState[]}   [lotStates] For accounts that use lots, the array of the lot states.
- * @property {LotStateDataItem[]}   [removedLotStates] For accounts that use lots, this is created as needed to hold
- * lot states whose quantity has been reduced to 0 (i.e. fully sold). These are used to assist in removing
- * splits from the account state, as they hold a lot state that can be unwound from by {@link removeLotChangeFromLotStateDataItem}.
+ * @property {number}   quantityBaseValue   The base value of the quantity of the 
+ * state. The applicable quantity definition is found in the account's priced 
+ * item's quantityDefinition. Note that for accounts with lots this is the sum of 
+ * the quantityBaseValue properties of the lot states.
+ * @property {LotState[]}   [lotStates] For accounts that use lots, the array of 
+ * the lot states.
+ * @property {LotStateDataItem[]}   [removedLotStates] For accounts that use lots, 
+ * this is created as needed to hold lot states whose quantity has been reduced to 0 
+ * (i.e. fully sold). These are used to assist in removing splits from the account 
+ * state, as they hold a lot state that can be unwound from by 
+ * {@link removeLotChangeFromLotStateDataItem}.
  */
 
 /**
- * Retrieves an {@link AccountState} representation of a {@link AccountStateDataItem} object, avoids copying if the arg
- * is already an {@link AccountState}
+ * Retrieves an {@link AccountState} representation of a {@link AccountStateDataItem} 
+ * object, avoids copying if the arg is already an {@link AccountState}
  * @param {(AccountStateDataItem|AccountState)} accountStateDataItem 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will 
+ * always be created.
  * @returns {AccountState}
  */
 export function getAccountState(accountStateDataItem, alwaysCopy) {
@@ -56,10 +66,12 @@ export function getAccountState(accountStateDataItem, alwaysCopy) {
 }
 
 /**
- * Retrieves an {@link AccountStateDataItem} representation of a {@link AccountState} object, avoids copying if the arg
- * is already an {@link AccountStateDataItem}
+ * Retrieves an {@link AccountStateDataItem} representation of a 
+ * {@link AccountState} object, avoids copying if the arg is already an 
+ * {@link AccountStateDataItem}
  * @param {(AccountState|AccountStateDataItem)} accountState 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will 
+ * always be created.
  * @returns {AccountStateDataItem}
  */
 export function getAccountStateDataItem(accountState, alwaysCopy) {
@@ -84,8 +96,8 @@ export function getAccountStateDataItem(accountState, alwaysCopy) {
 
 
 /**
- * Retrieves an {@link AccountStateDataItem} that has any missing required properties filled in with
- * default values.
+ * Retrieves an {@link AccountStateDataItem} that has any missing required properties 
+ * filled in with default values.
  * @param {AccountState|AccountStateDataItem} accountState 
  * @param {boolean} hasLots 
  * @returns {AccountStateDataItem}
@@ -104,8 +116,8 @@ export function getFullAccountStateDataItem(accountState, hasLots) {
 
 
 /**
- * Retrieves an {@link AccountState} that has any missing required properties filled in with
- * default values.
+ * Retrieves an {@link AccountState} that has any missing required properties filled 
+ * in with default values.
  * @param {AccountState|AccountStateDataItem} accountState 
  * @param {boolean} hasLots 
  * @returns {AccountState}
@@ -174,7 +186,8 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) 
                     // Must have been a lot that was remove.
                     lotStateDataItem = removedLotStates.get(lotId);
                     if (!lotStateDataItem) {
-                        console.log('removedLotStates: ' + lotId + ' ' + JSON.stringify(Array.from(removedLotStates.entries())));
+                        console.log('removedLotStates: ' + lotId + ' ' 
+                            + JSON.stringify(Array.from(removedLotStates.entries())));
                         throw userError('AccountState-remove_lot_missing_lot_state');
                     }
                 }
@@ -211,14 +224,16 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) 
                 delete accountStateDataItem.removedLotStates;
             }
             else {
-                accountStateDataItem.removedLotStates = Array.from(removedLotStates.entries());
+                accountStateDataItem.removedLotStates 
+                    = Array.from(removedLotStates.entries());
             }
         }
     }
 
     if (hasLots) {
         let quantityBaseValue = 0;
-        accountStateDataItem.lotStates.forEach((lotState) => { quantityBaseValue += lotState.quantityBaseValue; });
+        accountStateDataItem.lotStates.forEach(
+            (lotState) => { quantityBaseValue += lotState.quantityBaseValue; });
         accountStateDataItem.quantityBaseValue = quantityBaseValue;
     }
     else {

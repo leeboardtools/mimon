@@ -6,7 +6,8 @@ export function cleanAccountState(accountState) {
 
     const { lotStates } = accountState;
     if (lotStates) {
-        accountState.lotStates = lotStates.map((lotState) => LSTH.cleanLotState(lotState));
+        accountState.lotStates = lotStates.map(
+            (lotState) => LSTH.cleanLotState(lotState));
     }
     return accountState;
 }

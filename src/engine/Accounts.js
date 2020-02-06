@@ -9,8 +9,10 @@ import deepEqual from 'deep-equal';
  * @typedef {object} AccountCategoryDef
  * @property {string}   name    The identifying name of the account class.
  * @property {string}   description The user description of the account class.
- * @property {number}   creditSign  Either -1 or 1, a credit value is multiplied by this before the value is added to
- * @property {boolean}  isAle   <code>true</code> if the category is an asset, liability, or equity.
+ * @property {number}   creditSign  Either -1 or 1, a credit value is multiplied 
+ * by this before the value is added to
+ * @property {boolean}  isAle   <code>true</code> if the category is an asset, 
+ * liability, or equity.
  * the account balance.
  */
 
@@ -34,7 +36,8 @@ export const AccountCategory = {
 
 /**
  * @param {(string|AccountCategoryDef)} ref 
- * @returns {AccountCategoryDef}    Returns the {@link AccountCategoryDef} represented by ref.
+ * @returns {AccountCategoryDef}    Returns the {@link AccountCategoryDef} 
+ * represented by ref.
  */
 export function accountCategory(ref) {
     return (typeof ref === 'string') ? AccountCategory[ref] : ref;
@@ -46,9 +49,12 @@ export function accountCategory(ref) {
  * @property {string}   name    The identifying name of the account type.
  * @property {AccountCategory} category   The account category to which the type belongs.
  * @property {string}   description The user description of the account class.
- * @property {boolean}  [hasLots=false] If <code>true</code> the account uses {@link Lot}s.
- * @property {boolean}  [isSingleton=false] If <code>true</code> only one instance of this type should be created.
- * @property {AccountTypeDef[]} allowedChildTypes   Array containing the account types allowed for child accounts.
+ * @property {boolean}  [hasLots=false] If <code>true</code> the account 
+ * uses {@link Lot}s.
+ * @property {boolean}  [isSingleton=false] If <code>true</code> only one instance of 
+ * this type should be created.
+ * @property {AccountTypeDef[]} allowedChildTypes   Array containing the account types 
+ * allowed for child accounts.
  * @property {PricedItemType}   pricedItemType  The type of priced items this supports.
  */
 
@@ -57,7 +63,8 @@ export function accountCategory(ref) {
  * @readonly
  * @enum {AccountTypeDef} AccountType
  * @property {AccountTypeDef}   ASSET   All purpose asset account.
- * @property {AccountTypeDef}   BANK    For accounts that hold money, such as checking and savings accounts.
+ * @property {AccountTypeDef}   BANK    For accounts that hold money, such as checking 
+ * and savings accounts.
  * @property {AccountTypeDef}   BROKERAGE   Accounts that typically contain securities.
  * @property {AccountTypeDef}   CASH    For straight cash.
  * @property {AccountTypeDef}   SECURITY    For a specific security.
@@ -68,7 +75,8 @@ export function accountCategory(ref) {
  * @property {AccountTypeDef}   LAIBILITY   All purpose liability account.
  * @property {AccountTypeDef}   CREDIT_CARD For credit cards.
  * @property {AccountTypeDef}   LOAN    For a basic loan such as an auto loan.
- * @property {AccountTypeDef}   MORTGAGE    For mortgages, which typically include escrow payments.
+ * @property {AccountTypeDef}   MORTGAGE    For mortgages, which typically include 
+ * escrow payments.
  *
  * @property {AccountTypeDef}   INCOME  Straightforward income account.
  * @property {AccountTypeDef}   EXPENSE Straightforward expense account.
@@ -78,25 +86,82 @@ export function accountCategory(ref) {
  *
  */
 export const AccountType = {
-    ASSET: { name: 'ASSET', category: AccountCategory.ASSET, pricedItemType: PricedItemType.CURRENCY, },
-    BANK: { name: 'BANK', category: AccountCategory.ASSET, pricedItemType: PricedItemType.CURRENCY, hasChecks: true, },
-    BROKERAGE: { name: 'BROKERAGE', category: AccountCategory.ASSET, pricedItemType: PricedItemType.CURRENCY, hasChecks: true, },
-    CASH: { name: 'CASH', category: AccountCategory.ASSET, pricedItemType: PricedItemType.CURRENCY, },
-    SECURITY: { name: 'SECURITY', category: AccountCategory.ASSET, pricedItemType: PricedItemType.SECURITY, hasLots: true, },
-    MUTUAL_FUND: { name: 'MUTUAL_FUND', category: AccountCategory.ASSET, pricedItemType: PricedItemType.MUTUAL_FUND, hasLots: true, hasChecks: true, },
-    REAL_ESTATE: { name: 'REAL_ESTATE', category: AccountCategory.ASSET, pricedItemType: PricedItemType.REAL_ESTATE, hasLots: true, },
-    PROPERTY: { name: 'PROPERTY', category: AccountCategory.ASSET, pricedItemType: PricedItemType.PROPERTY, hasLots: true, },
+    ASSET: { name: 'ASSET', 
+        category: AccountCategory.ASSET, 
+        pricedItemType: PricedItemType.CURRENCY, 
+    },
+    BANK: { name: 'BANK', 
+        category: AccountCategory.ASSET, 
+        pricedItemType: PricedItemType.CURRENCY, 
+        hasChecks: true, 
+    },
+    BROKERAGE: { name: 'BROKERAGE', 
+        category: AccountCategory.ASSET, 
+        pricedItemType: PricedItemType.CURRENCY, 
+        hasChecks: true, 
+    },
+    CASH: { name: 'CASH', 
+        category: AccountCategory.ASSET, 
+        pricedItemType: PricedItemType.CURRENCY, 
+    },
+    SECURITY: { name: 'SECURITY', 
+        category: AccountCategory.ASSET, 
+        pricedItemType: PricedItemType.SECURITY, 
+        hasLots: true, 
+    },
+    MUTUAL_FUND: { name: 'MUTUAL_FUND', 
+        category: AccountCategory.ASSET, 
+        pricedItemType: PricedItemType.MUTUAL_FUND, 
+        hasLots: true, 
+        hasChecks: true, 
+    },
+    REAL_ESTATE: { name: 'REAL_ESTATE', 
+        category: AccountCategory.ASSET, 
+        pricedItemType: PricedItemType.REAL_ESTATE, 
+        hasLots: true, 
+    },
+    PROPERTY: { name: 'PROPERTY', 
+        category: AccountCategory.ASSET, 
+        pricedItemType: PricedItemType.PROPERTY, 
+        hasLots: true, 
+    },
 
-    LIABILITY: { name: 'LIABILITY', category: AccountCategory.LIABILITY, pricedItemType: PricedItemType.CURRENCY, },
-    CREDIT_CARD: { name: 'CREDIT_CARD', category: AccountCategory.LIABILITY, pricedItemType: PricedItemType.CURRENCY, hasChecks: true, },
-    LOAN: { name: 'LOAN', category: AccountCategory.LIABILITY, pricedItemType: PricedItemType.CURRENCY, },
-    MORTGAGE: { name: 'MORTGAGE', category: AccountCategory.LIABILITY, pricedItemType: PricedItemType.CURRENCY, },
+    LIABILITY: { name: 'LIABILITY', 
+        category: AccountCategory.LIABILITY, 
+        pricedItemType: PricedItemType.CURRENCY, 
+    },
+    CREDIT_CARD: { name: 'CREDIT_CARD', 
+        category: AccountCategory.LIABILITY, 
+        pricedItemType: PricedItemType.CURRENCY, 
+        hasChecks: true, 
+    },
+    LOAN: { name: 'LOAN', 
+        category: AccountCategory.LIABILITY, 
+        pricedItemType: PricedItemType.CURRENCY, 
+    },
+    MORTGAGE: { name: 'MORTGAGE', 
+        category: AccountCategory.LIABILITY, 
+        pricedItemType: PricedItemType.CURRENCY, 
+    },
 
-    INCOME: { name: 'INCOME', category: AccountCategory.INCOME, pricedItemType: PricedItemType.CURRENCY, },
-    EXPENSE: { name: 'EXPENSE', category: AccountCategory.EXPENSE, pricedItemType: PricedItemType.CURRENCY, },
+    INCOME: { name: 'INCOME', 
+        category: AccountCategory.INCOME, 
+        pricedItemType: PricedItemType.CURRENCY, 
+    },
+    EXPENSE: { name: 'EXPENSE', 
+        category: AccountCategory.EXPENSE, 
+        pricedItemType: PricedItemType.CURRENCY, 
+    },
 
-    EQUITY: { name: 'EQUITY', category: AccountCategory.EQUITY, pricedItemType: PricedItemType.CURRENCY, },
-    OPENING_BALANCE: { name: 'OPENING_BALANCE', category: AccountCategory.EQUITY, pricedItemType: PricedItemType.CURRENCY, isSingleton: true, },
+    EQUITY: { name: 'EQUITY', 
+        category: AccountCategory.EQUITY, 
+        pricedItemType: PricedItemType.CURRENCY, 
+    },
+    OPENING_BALANCE: { name: 'OPENING_BALANCE', 
+        category: AccountCategory.EQUITY, 
+        pricedItemType: PricedItemType.CURRENCY, 
+        isSingleton: true, 
+    },
 };
 
 
@@ -190,7 +255,8 @@ export function loadAccountsUserMessages() {
  * @property {string}   [refId] Optional user reference id, these must be unique.
  * @property {number}   parentAccountId The account id of the parent account.
  * @property {string}   type    The name property of one of {@link AccountType}.
- * @property {number}   pricedItemId   The local id of the priced item the account represents.
+ * @property {number}   pricedItemId   The local id of the priced item the account 
+ * represents.
  * @property {string}   [name]  The name of the account.
  * @property {string}   [description]   The description of the account.
  */
@@ -201,16 +267,18 @@ export function loadAccountsUserMessages() {
  * @property {string}   [refId] Optional user reference id, these must be unique.
  * @property {number}   parentAccountId The account id of the parent account.
  * @property {AccountType}  type    The account's type.
- * @property {number}   pricedItemId   The local id of the priced item the account represents.
+ * @property {number}   pricedItemId   The local id of the priced item the account 
+ * represents.
  * @property {string}   [name]  The name of the account.
  * @property {string}   [description]   The description of the account.
  */
 
 /**
- * Retrieves an {@link Account} representation of an {@link AccountDataItem}, avoids copying if the arg
- * is already an {@link Account}
+ * Retrieves an {@link Account} representation of an {@link AccountDataItem}, avoids 
+ * copying if the arg is already an {@link Account}
  * @param {(AccountDataItem|Account)} accountDataItem 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always 
+ * be created.
  * @returns {Account}
  */
 export function getAccount(accountDataItem, alwaysCopy) {
@@ -232,10 +300,11 @@ export function getAccount(accountDataItem, alwaysCopy) {
 }
 
 /**
- * Retrieves an {@link AccountDataItem} representation of an {@link Account}, avoids copying if the arg
- * is already an {@link AccountDataItem}
+ * Retrieves an {@link AccountDataItem} representation of an {@link Account}, avoids 
+ * copying if the arg is already an {@link AccountDataItem}
  * @param {(Account|AccountDataItem)} account 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will 
+ * always be created.
  * @returns {AccountDataItem}
  */
 export function getAccountDataItem(account, alwaysCopy) {
@@ -274,7 +343,8 @@ export function deepCopyAccount(account) {
 
 
 /**
- * Retrieves the id from an account reference, which may be an id already, an {@link Account}, or an {@link AccountDataItem}
+ * Retrieves the id from an account reference, which may be an id already, an 
+ * {@link Account}, or an {@link AccountDataItem}
  * @param {(Account|AccountDataItem|number)} ref 
  * @returns {number}
  */
@@ -290,7 +360,8 @@ export class AccountManager extends EventEmitter {
 
     /**
      * @typedef {object}    AccountManager~Options
-     * @property {NumericIdGenerator~Options}   [idGenerator]   The id generator state to restore to.
+     * @property {NumericIdGenerator~Options}   [idGenerator]   The id generator 
+     * state to restore to.
      */
     constructor(accountingSystem, options) {
         super(options);
@@ -298,18 +369,22 @@ export class AccountManager extends EventEmitter {
         this._accountingSystem = accountingSystem;
         this._handler = options.handler;
         
-        this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorOptions());
+        this._idGenerator = new NumericIdGenerator(options.idGenerator 
+            || this._handler.getIdGeneratorOptions());
 
 
         const undoManager = accountingSystem.getUndoManager();
         this._asyncApplyUndoAddAccount = this._asyncApplyUndoAddAccount.bind(this);
-        undoManager.registerUndoApplier('addAccount', this._asyncApplyUndoAddAccount);
+        undoManager.registerUndoApplier('addAccount', 
+            this._asyncApplyUndoAddAccount);
 
         this._asyncApplyUndoRemoveAccount = this._asyncApplyUndoRemoveAccount.bind(this);
-        undoManager.registerUndoApplier('removeAccount', this._asyncApplyUndoRemoveAccount);
+        undoManager.registerUndoApplier('removeAccount', 
+            this._asyncApplyUndoRemoveAccount);
 
         this._asyncApplyUndoModifyAccount = this._asyncApplyUndoModifyAccount.bind(this);
-        undoManager.registerUndoApplier('modifyAccount', this._asyncApplyUndoModifyAccount);
+        undoManager.registerUndoApplier('modifyAccount', 
+            this._asyncApplyUndoModifyAccount);
 
 
         this._accountsById = new Map();
@@ -338,7 +413,8 @@ export class AccountManager extends EventEmitter {
     async asyncSetupForUse() {
         const accountingSystem = this._accountingSystem;
         const pricedItemManager = accountingSystem.getPricedItemManager();
-        const currencyPricedItemId = pricedItemManager.getCurrencyPricedItemId(accountingSystem.getBaseCurrency());
+        const currencyPricedItemId = pricedItemManager.getCurrencyPricedItemId(
+            accountingSystem.getBaseCurrency());
 
         if (!this._rootAssetAccountId) {
             const account = (await this._asyncAddAccount({
@@ -417,22 +493,34 @@ export class AccountManager extends EventEmitter {
 
 
     getRootAssetAccountId() { return this._rootAssetAccountId; }
-    getRootAssetAccount() { return this.getAccountDataItemWithId(this._rootAssetAccountId); }
+    getRootAssetAccount() { 
+        return this.getAccountDataItemWithId(this._rootAssetAccountId); 
+    }
 
     getRootLiabilityAccountId() { return this._rootLiabilityAccountId; }
-    getRootLiabilityAccount() { return this.getAccountDataItemWithId(this._rootLiabilityAccountId); }
+    getRootLiabilityAccount() { 
+        return this.getAccountDataItemWithId(this._rootLiabilityAccountId); 
+    }
 
     getRootIncomeAccountId() { return this._rootIncomeAccountId; }
-    getRootIncomeAccount() { return this.getAccountDataItemWithId(this._rootIncomeAccountId); }
+    getRootIncomeAccount() { 
+        return this.getAccountDataItemWithId(this._rootIncomeAccountId); 
+    }
 
     getRootExpenseAccountId() { return this._rootExpenseAccountId; }
-    getRootExpenseAccount() { return this.getAccountDataItemWithId(this._rootExpenseAccountId); }
+    getRootExpenseAccount() { 
+        return this.getAccountDataItemWithId(this._rootExpenseAccountId); 
+    }
 
     getRootEquityAccountId() { return this._rootEquityAccountId; }
-    getRootEquityAccount() { return this.getAccountDataItemWithId(this._rootEquityAccountId); }
+    getRootEquityAccount() { 
+        return this.getAccountDataItemWithId(this._rootEquityAccountId); 
+    }
 
     getOpeningBalancesAccountId() { return this._openingBalancesAccountId; }
-    getOpeningBalancesAccount() { return this.getAccountDataItemWithId(this._openingBalancesAccountId); }
+    getOpeningBalancesAccount() { 
+        return this.getAccountDataItemWithId(this._openingBalancesAccountId); 
+    }
 
 
     /**
@@ -457,9 +545,12 @@ export class AccountManager extends EventEmitter {
 
     /**
      * Determines if an account is a child of another account.
-     * @param {(Account|AccountDataItem|number)} test A reference to the account to be tested.
-     * @param {(Account|AccountDataItem|number)} ref A reference to the account to be tested against.
-     * @returns {boolean}   <code>true</code> if the account with id testId is a child of the account with id refId.
+     * @param {(Account|AccountDataItem|number)} test A reference to the 
+     * account to be tested.
+     * @param {(Account|AccountDataItem|number)} ref A reference to the 
+     * account to be tested against.
+     * @returns {boolean}   <code>true</code> if the account with id testId is a 
+     * child of the account with id refId.
      */
     isAccountChildOfAccount(test, ref) {
         const testId = getAccountId(test);
@@ -471,7 +562,8 @@ export class AccountManager extends EventEmitter {
                 return true;
             }
 
-            accountDataItem = this.getAccountDataItemWithId(accountDataItem.parentAccountId);
+            accountDataItem = this.getAccountDataItemWithId(
+                accountDataItem.parentAccountId);
         }
 
         return false;
@@ -481,8 +573,10 @@ export class AccountManager extends EventEmitter {
     async _asyncApplyUndoRemoveAccount(undoDataItem) {
         const { removedAccountDataItem, parentChildIndex, } = undoDataItem;
 
-        const parentAccountDataItem = this.getAccountDataItemWithId(removedAccountDataItem.parentAccountId);
-        parentAccountDataItem.childAccountIds.splice(parentChildIndex, 0, removedAccountDataItem.id);
+        const parentAccountDataItem = this.getAccountDataItemWithId(
+            removedAccountDataItem.parentAccountId);
+        parentAccountDataItem.childAccountIds.splice(parentChildIndex, 0, 
+            removedAccountDataItem.id);
 
         const updatedAccountEntries = [
             [removedAccountDataItem.id, removedAccountDataItem],
@@ -491,7 +585,8 @@ export class AccountManager extends EventEmitter {
 
         const { childAccountIds } = removedAccountDataItem;
         if (childAccountIds && childAccountIds.length) {
-            const toRemoveIndices = parentAccountDataItem.childAccountIds.indexOf(removedAccountDataItem.childAccountIds[0]);
+            const toRemoveIndices = parentAccountDataItem.childAccountIds.indexOf(
+                removedAccountDataItem.childAccountIds[0]);
             parentAccountDataItem.childAccountIds.splice(toRemoveIndices);
 
             childAccountIds.forEach((id) => {
@@ -517,14 +612,21 @@ export class AccountManager extends EventEmitter {
 
         const updatedAccountEntries = [ [oldAccountDataItem.id, oldAccountDataItem] ];
         if (oldParentChildIndex !== undefined) {
-            const newAccountDataItem = this.getAccountDataItemWithId(oldAccountDataItem.id);
-            const newParentAccountDataItem = this.getAccountDataItemWithId(newAccountDataItem.parentAccountId);
-            newParentAccountDataItem.childAccountIds.splice(newParentAccountDataItem.childAccountIds.length - 1);
-            updatedAccountEntries.push([newParentAccountDataItem.id, newParentAccountDataItem]);
+            const newAccountDataItem = this.getAccountDataItemWithId(
+                oldAccountDataItem.id);
+            const newParentAccountDataItem = this.getAccountDataItemWithId(
+                newAccountDataItem.parentAccountId);
+            newParentAccountDataItem.childAccountIds.splice(
+                newParentAccountDataItem.childAccountIds.length - 1);
+            updatedAccountEntries.push(
+                [newParentAccountDataItem.id, newParentAccountDataItem]);
 
-            const oldParentAccountDataItem = this.getAccountDataItemWithId(oldAccountDataItem.parentAccountId);
-            oldParentAccountDataItem.childAccountIds.splice(oldParentChildIndex, 0, oldAccountDataItem.id);
-            updatedAccountEntries.push([oldParentAccountDataItem.id, oldParentAccountDataItem]);
+            const oldParentAccountDataItem = this.getAccountDataItemWithId(
+                oldAccountDataItem.parentAccountId);
+            oldParentAccountDataItem.childAccountIds.splice(
+                oldParentChildIndex, 0, oldAccountDataItem.id);
+            updatedAccountEntries.push(
+                [oldParentAccountDataItem.id, oldParentAccountDataItem]);
         }
 
         await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries);
@@ -545,14 +647,16 @@ export class AccountManager extends EventEmitter {
 
         const updatedAccountEntries = [];
 
-        const parentDataItem = this.getAccountDataItemWithId(accountDataItem.parentAccountId);
+        const parentDataItem = this.getAccountDataItemWithId(
+            accountDataItem.parentAccountId);
         const { childAccountIds } = parentDataItem;
         childAccountIds.splice(childAccountIds.indexOf(accountId), 1);
         updatedAccountEntries.push([accountDataItem.parentAccountId, parentDataItem]);
 
         updatedAccountEntries.push([accountId]);
 
-        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries, idGeneratorOptions);
+        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries, 
+            idGeneratorOptions);
 
         updatedAccountEntries.forEach(([id, accountDataItem]) => {
             if (accountDataItem) {
@@ -587,14 +691,16 @@ export class AccountManager extends EventEmitter {
         updatedAccountEntries.push([id, accountDataItem]);
 
         if (accountDataItem.parentAccountId) {
-            const parentAccountDataItem = this.getAccountDataItemWithId(accountDataItem.parentAccountId);
+            const parentAccountDataItem = this.getAccountDataItemWithId(
+                accountDataItem.parentAccountId);
             parentAccountDataItem.childAccountIds.push(id);
 
             updatedAccountEntries.push([account.parentAccountId, parentAccountDataItem]);
         }
 
 
-        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries, idGeneratorOptions);
+        await this._handler.asyncUpdateAccountDataItems(updatedAccountEntries, 
+            idGeneratorOptions);
 
         updatedAccountEntries.forEach(([id, accountDataItem]) => {
             this._accountsById.set(id, accountDataItem);
@@ -620,25 +726,31 @@ export class AccountManager extends EventEmitter {
         if (parentAccountDataItem) {
             const parentType = getAccountType(parentAccountDataItem.type);
             if (!parentType.allowedChildTypes.includes(type)) {
-                return userError('AccountManager-type_not_allowed_for_parent', getAccountTypeName(type), getAccountTypeName(parentAccountDataItem.type));
+                return userError('AccountManager-type_not_allowed_for_parent', 
+                    getAccountTypeName(type), 
+                    getAccountTypeName(parentAccountDataItem.type));
             }
         }
 
         if (accountDataItem.refId) {
             const refIdAccount = this._accountsByRefId.get(accountDataItem.refId);
             if (refIdAccount) {
-                return userError('AccountManager-duplicate_ref_id', accountDataItem.refId);
+                return userError('AccountManager-duplicate_ref_id', 
+                    accountDataItem.refId);
             }
         }
 
-        const pricedItem = this._accountingSystem.getPricedItemManager().getPricedItemDataItemWithId(accountDataItem.pricedItemId);
+        const pricedItem = this._accountingSystem.getPricedItemManager()
+            .getPricedItemDataItemWithId(accountDataItem.pricedItemId);
         if (!pricedItem) {
-            return userError('AccountManager-invalid_pricedItem_id', accountDataItem.pricedItemId);
+            return userError('AccountManager-invalid_pricedItem_id', 
+                accountDataItem.pricedItemId);
         }
 
         const pricedItemType = getPricedItemType(pricedItem.type);
         if (pricedItemType !== type.pricedItemType) {
-            return userError('AccountManager-invalid_pricedItem_type_for_type', pricedItemType.name, type.name);
+            return userError('AccountManager-invalid_pricedItem_type_for_type', 
+                pricedItemType.name, type.name);
         }
 
         if (type.validateFunc) {
@@ -654,7 +766,8 @@ export class AccountManager extends EventEmitter {
      * Fired by {@link AccountManager#asyncAddAccount} after an account has been added.
      * @event AccountManager~accountAdd
      * @type {object}
-     * @property {AccountDataItem}  newAccountDataItem  The account data item being returned by the {@link AccountManager#asyncAddAccount} call.
+     * @property {AccountDataItem}  newAccountDataItem  The account data item being 
+     * returned by the {@link AccountManager#asyncAddAccount} call.
      */
 
     /**
@@ -668,23 +781,27 @@ export class AccountManager extends EventEmitter {
      * Adds a new account.
      * @param {(Account|AccountDataItem)} account   The account to add.
      * @param {boolean} validateOnly 
-     * @returns {AccountManager~AddAccountResult|undefined} <code>undefined</code> is returned if validateOnly is true.
+     * @returns {AccountManager~AddAccountResult|undefined} <code>undefined</code> 
+     * is returned if validateOnly is true.
      * @throws {Error}
      * @fires {AccountManager~accountAdd}
      */
     async asyncAddAccount(account, validateOnly) {
         const accountDataItem = getAccountDataItem(account, true);
 
-        const parentAccountDataItem = this.getAccountDataItemWithId(accountDataItem.parentAccountId);
+        const parentAccountDataItem = this.getAccountDataItemWithId(
+            accountDataItem.parentAccountId);
         if (!parentAccountDataItem) {
-            throw userError('AccountManager-parent_account_invalid', accountDataItem.parentAccountId);
+            throw userError('AccountManager-parent_account_invalid', 
+                accountDataItem.parentAccountId);
         }
 
         
         const type = getAccountType(accountDataItem.type);
         
         if (accountDataItem.childAccountIds) {
-            // Verify that all the accounts in childAccountIds can be moved to this account's type.
+            // Verify that all the accounts in childAccountIds can be moved to this 
+            // account's type.
             const { childAccountIds } = accountDataItem;
             for (let i = childAccountIds.length - 1; i >= 0; --i) {
                 const childId = childAccountIds[i];
@@ -694,7 +811,8 @@ export class AccountManager extends EventEmitter {
                 }
                 const childType = getAccountType(childAccount.type);
                 if (!type.allowedChildTypes.includes(childType)) {
-                    throw userError('AccountManager-child_incompatible', childId, childType.name, type.name);
+                    throw userError('AccountManager-child_incompatible', 
+                        childId, childType.name, type.name);
                 }
             }
         }
@@ -703,7 +821,8 @@ export class AccountManager extends EventEmitter {
         }
 
 
-        const error = this._validateAccountBasics(accountDataItem, parentAccountDataItem, false);
+        const error = this._validateAccountBasics(accountDataItem, 
+            parentAccountDataItem, false);
         if (error) {
             throw error;
         }
@@ -717,8 +836,10 @@ export class AccountManager extends EventEmitter {
         let { newAccountDataItem, } = (await this._asyncAddAccount(accountDataItem));
         newAccountDataItem = getAccountDataItem(newAccountDataItem, true);
 
-        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('addAccount', 
-            { accountId: newAccountDataItem.id, idGeneratorOptions: originalIdGeneratorOptions, });
+        const undoId = await this._accountingSystem.getUndoManager()
+            .asyncRegisterUndoDataItem('addAccount', 
+                { accountId: newAccountDataItem.id, 
+                    idGeneratorOptions: originalIdGeneratorOptions, });
 
         this.emit('accountAdd', { newAccountDataItem: newAccountDataItem });
         return { newAccountDataItem: newAccountDataItem, undoId: undoId };
@@ -726,10 +847,12 @@ export class AccountManager extends EventEmitter {
 
 
     /**
-     * Fired by {@link AccountManager#asyncRemoveAccount} after an account has been removed.
+     * Fired by {@link AccountManager#asyncRemoveAccount} after an account has 
+     * been removed.
      * @event AccountManager~accountRemove
      * @type {object}
-     * @property {AccountDataItem}  removedAccountDataItem  The account data item that was removed.
+     * @property {AccountDataItem}  removedAccountDataItem  The account data item 
+     * that was removed.
      */
 
     /**
@@ -739,10 +862,12 @@ export class AccountManager extends EventEmitter {
      */
 
     /**
-     * Removes an account. Root accounts and the opening balances account cannot be removed.
+     * Removes an account. Root accounts and the opening balances account 
+     * cannot be removed.
      * @param {number} accountId 
      * @param {boolean} validateOnly 
-     * @returns {AccountManager~RemoveAccountResult|undefined}  <code>undefined</code> is returned if validateOnly is true.
+     * @returns {AccountManager~RemoveAccountResult|undefined}  
+     * <code>undefined</code> is returned if validateOnly is true.
      * @throws {Error}
      * @fires {AccountManager~accountRemove}
      */
@@ -762,7 +887,8 @@ export class AccountManager extends EventEmitter {
         const { parentAccountId } = accountDataItem;
         const parentAccountDataItem = this.getAccountDataItemWithId(parentAccountId);
         if (!parentAccountDataItem) {
-            throw userError('AccountManager-remove_parent_account_not_found', accountDataItem.parentAccountId);
+            throw userError('AccountManager-remove_parent_account_not_found', 
+                accountDataItem.parentAccountId);
         }
         const parentType = getAccountType(parentAccountDataItem.type);
 
@@ -778,7 +904,8 @@ export class AccountManager extends EventEmitter {
             if (childAccountDataItem) {
                 const childType = getAccountType(childAccountDataItem.type);
                 if (!parentType.allowedChildTypes.includes(childType)) {
-                    throw userError('AccountManager-child_not_compatible', childType.name, parentType.name);
+                    throw userError('AccountManager-child_not_compatible', 
+                        childType.name, parentType.name);
                 }
             }
 
@@ -819,8 +946,10 @@ export class AccountManager extends EventEmitter {
         }
 
 
-        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('removeAccount', 
-            { removedAccountDataItem: Object.assign({}, accountDataItem), parentChildIndex: parentChildIndex });
+        const undoId = await this._accountingSystem.getUndoManager()
+            .asyncRegisterUndoDataItem('removeAccount', 
+                { removedAccountDataItem: Object.assign({}, accountDataItem), 
+                    parentChildIndex: parentChildIndex });
 
         this.emit('accountRemove', { removedAccountDataItem: accountDataItem });
 
@@ -829,11 +958,14 @@ export class AccountManager extends EventEmitter {
 
 
     /**
-     * Fired by {@link AccountManager#asyncModifyAccount} after an account has been modified.
+     * Fired by {@link AccountManager#asyncModifyAccount} after an account has 
+     * been modified.
      * @event AccountManager~accountsModify
      * @type {object}
-     * @property {AccountDataItem[]}  newAccountDataItems  Array of the new account data items.
-     * @property {AccountDataItem[]}  oldAccountDataItems  Array of the old account data items.
+     * @property {AccountDataItem[]}  newAccountDataItems  Array of the new 
+     * account data items.
+     * @property {AccountDataItem[]}  oldAccountDataItems  Array of the old 
+     * account data items.
      */
 
     /**
@@ -845,10 +977,13 @@ export class AccountManager extends EventEmitter {
 
     /**
      * Modifies an account.
-     * @param {(Account|AccountDataItem)} account The account id is required. Only specified properties are modified, with restrictions on the
-     * type and priced item accounts. Note that the childAccountIds can only be shuffled about, the accounts in the list cannot be changed.
+     * @param {(Account|AccountDataItem)} account The account id is required. 
+     * Only specified properties are modified, with restrictions on the
+     * type and priced item accounts. Note that the childAccountIds can 
+     * only be shuffled about, the accounts in the list cannot be changed.
      * @param {boolean} validateOnly 
-     * @returns {TransactionManager~ModifyAccountResult|undefined}  <code>undefined</code> is returned if validateOnly is true or
+     * @returns {TransactionManager~ModifyAccountResult|undefined}  
+     * <code>undefined</code> is returned if validateOnly is true or
      * no changes were made to the account.
      * @throws {Error}
      * @fires {AccountManager~accountsModify}
@@ -860,7 +995,8 @@ export class AccountManager extends EventEmitter {
             throw userError('AccountManager-modify_no_id', id);
         }
 
-        const newAccountDataItem = getAccountDataItem(deepCopyAccount(Object.assign({}, oldAccountDataItem, account)));
+        const newAccountDataItem = getAccountDataItem(
+            deepCopyAccount(Object.assign({}, oldAccountDataItem, account)));
 
         // Can't change the type nor parent of the root and opening balance accounts.
         const oldParentAccountId = oldAccountDataItem.parentAccountId;
@@ -880,14 +1016,17 @@ export class AccountManager extends EventEmitter {
             if (newAccountDataItem.type !== oldAccountDataItem.type) {
                 throw userError('AccountManager-no_change_opening_balances_account_type');
             }
-            if (newAccountDataItem.parentAccountId !== oldAccountDataItem.parentAccountId) {
-                throw userError('AccountManager-no_change_opening_balances_account_parent');
+            if (newAccountDataItem.parentAccountId 
+                !== oldAccountDataItem.parentAccountId) {
+                throw userError(
+                    'AccountManager-no_change_opening_balances_account_parent');
             }
         }
         else {
             newParentAccountDataItem = this.getAccountDataItemWithId(newParentAccountId);
             if (!newParentAccountDataItem) {
-                throw userError('AccountManager-parent_account_invalid', newParentAccountId);
+                throw userError(
+                    'AccountManager-parent_account_invalid', newParentAccountId);
             }
 
             if (newParentAccountId !== oldParentAccountId) {
@@ -896,14 +1035,17 @@ export class AccountManager extends EventEmitter {
                     throw userError('AccountManager-parent_is_child');
                 }
 
-                oldParentAccountDataItem = this.getAccountDataItemWithId(oldParentAccountId);
+                oldParentAccountDataItem = this.getAccountDataItemWithId(
+                    oldParentAccountId);
                 if (!oldParentAccountDataItem) {
-                    throw userError('AccountManager-parent_account_invalid', oldParentAccountId);
+                    throw userError('AccountManager-parent_account_invalid', 
+                        oldParentAccountId);
                 }
 
                 const index = oldParentAccountDataItem.childAccountIds.indexOf(id);
                 if (index < 0) {
-                    throw userError('AccountManager-account_not_in_parent', oldParentAccountId);
+                    throw userError('AccountManager-account_not_in_parent', 
+                        oldParentAccountId);
                 }
                 oldParentAccountDataItem.childAccountIds.splice(index, 1);
                 oldParentChildIndex = index;
@@ -932,7 +1074,8 @@ export class AccountManager extends EventEmitter {
         }
 
         if (account.childAccountIds) {
-            if (oldAccountDataItem.childAccountIds.length !== account.childAccountIds.length) {
+            if (oldAccountDataItem.childAccountIds.length 
+                !== account.childAccountIds.length) {
                 throw userError('AccountManager-no_change_child_ids');
             }
             const existingIds = new Set(oldAccountDataItem.childAccountIds);
@@ -942,7 +1085,8 @@ export class AccountManager extends EventEmitter {
             }
         }
 
-        const error = this._validateAccountBasics(newAccountDataItem, newParentAccountDataItem, true);
+        const error = this._validateAccountBasics(newAccountDataItem, 
+            newParentAccountDataItem, true);
         if (error) {
             throw error;
         }
@@ -960,7 +1104,8 @@ export class AccountManager extends EventEmitter {
         updatedAccountEntries.push([newAccountDataItem.id, newAccountDataItem]);
 
         if (newParentAccountId !== oldParentAccountId) {
-            updatedAccountEntries.push([oldParentAccountDataItem.id, oldParentAccountDataItem]);
+            updatedAccountEntries.push(
+                [oldParentAccountDataItem.id, oldParentAccountDataItem]);
             updatedAccountEntries.push([newParentAccountId, newParentAccountDataItem]);
         }
 
@@ -983,27 +1128,34 @@ export class AccountManager extends EventEmitter {
 
         const result = [Object.assign({}, newAccountDataItem), oldAccountDataItem];
         
-        const undoDataItem = { oldAccountDataItem: getAccountDataItem(oldAccountDataItem, true), };
+        const undoDataItem = { 
+            oldAccountDataItem: getAccountDataItem(oldAccountDataItem, true), 
+        };
         if (oldParentChildIndex !== undefined) {
             undoDataItem.oldParentChildIndex = oldParentChildIndex;
         }
 
-        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('modifyAccount', 
-            undoDataItem);
+        const undoId = await this._accountingSystem.getUndoManager()
+            .asyncRegisterUndoDataItem('modifyAccount', undoDataItem);
 
         this.emit('accountsModify', {
             newAccountDataItems: [result[0]],
             oldAccountDataItems: [result[1]],
         });
 
-        return { newAccountDataItem: result[0], oldAccountDataItem: result[1], undoId: undoId, };
+        return { 
+            newAccountDataItem: result[0], 
+            oldAccountDataItem: result[1], 
+            undoId: undoId, 
+        };
     }
 
 }
 
 
 /**
- * Handler interface implemented by {@link AccountingFile} implementations to interact with the {@link AccountManager}.
+ * Handler interface implemented by {@link AccountingFile} implementations to 
+ * interact with the {@link AccountManager}.
  * @interface
  */
 export class AccountsHandler {
@@ -1017,7 +1169,8 @@ export class AccountsHandler {
     }
 
     /**
-     * @returns {NumericIdGenerator~Options}    The id generator options for initializing the id generator.
+     * @returns {NumericIdGenerator~Options}    The id generator options for 
+     * initializing the id generator.
      */
     getIdGeneratorOptions() {
         throw Error('AccountsHandler.getIdGeneratorOptions() abstract method!');
@@ -1025,7 +1178,8 @@ export class AccountsHandler {
 
 
     /**
-     * Called by {@link AccountManager#asyncSetupForUse} to save the base options of the account manager.
+     * Called by {@link AccountManager#asyncSetupForUse} to save the base options 
+     * of the account manager.
      * @param {object} options The options, a JSON-able object.
      */
     setBaseOptions(options) {
@@ -1033,7 +1187,8 @@ export class AccountsHandler {
     }
 
     /**
-     * @returns {object}    The base options object passed to {@link AccountsHandler#setBaseOptinos}.
+     * @returns {object}    The base options object passed to 
+     * {@link AccountsHandler#setBaseOptinos}.
      */
     getBaseOptions() {
         throw Error('AccountsHandler.getBaseOptions() abstract method!');
@@ -1041,12 +1196,16 @@ export class AccountsHandler {
 
 
     /**
-     * Main function for updating the account data items. We use a single function for both modify and delete because
-     * modifying or deleting one account may affect other accounts, so those accounts must also be deleted at the same time.
-     * @param {*} accountIdAndDataItemPairs Array of one or two element sub-arrays. The first element of each sub-array is the account id.
-     * For new or modified accounts, the second element is the new data item. For accounts to be deleted, this is <code>undefined</code>.
-     * @param {NumericIdGenerator~Options|undefined}  idGeneratorOptions    The current state of the id generator, if <code>undefined</code>
-     * the generator state hasn't changed.
+     * Main function for updating the account data items. We use a single function 
+     * for both modify and delete because modifying or deleting one account may 
+     * affect other accounts, so those accounts must also be deleted at the same time.
+     * @param {*} accountIdAndDataItemPairs Array of one or two element sub-arrays. 
+     * The first element of each sub-array is the account id. For new or modified 
+     * accounts, the second element is the new data item. For accounts to be deleted, 
+     * this is <code>undefined</code>.
+     * @param {NumericIdGenerator~Options|undefined}  idGeneratorOptions    The 
+     * current state of the id generator, if <code>undefined</code> the generator 
+     * state hasn't changed.
      */
     async asyncUpdateAccountDataItems(accountIdAndDataItemPairs, idGeneratorOptions) {
         throw Error('AccountsHandler.asyncUpdateAccountDataItems() abstract method!');

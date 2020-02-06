@@ -195,7 +195,9 @@ class JSONGzipTransactionsHandler extends TransactionsHandlerImplBase {
         return await this._itemManager.asyncGetItemsWithIds(ids);
     }
 
-    async asyncUpdateTransactionDataItemsAndEntries(entryDataItemUpdates, idGeneratorOptions) {
+    async asyncUpdateTransactionDataItemsAndEntries(
+        entryDataItemUpdates, idGeneratorOptions) {
+
         this._idGeneratorOptions = idGeneratorOptions || this._idGeneratorOptions;
         const result = [];
 
@@ -224,7 +226,8 @@ class JSONGzipTransactionsHandler extends TransactionsHandlerImplBase {
         }
 
         if (idsToRemove.length) {
-            const removedItems = await this._itemManager.asyncGetItemsWithIds(idsToRemove);
+            const removedItems = await this._itemManager.asyncGetItemsWithIds(
+                idsToRemove);
             for (let i = 0; i < removeIndices.length; ++i) {
                 result[removedItems[i]] = removedItems[i];
             }
@@ -248,7 +251,8 @@ class JSONGzipLedgerFile {
     constructor(accountingFile) {
         this._accountingFile = accountingFile;
 
-        this._pathName = JSONGzipLedgerFile.buildLedgerPathName(accountingFile.getPathName());
+        this._pathName = JSONGzipLedgerFile.buildLedgerPathName(
+            accountingFile.getPathName());
 
         this._accountsHandler = accountingFile._accountsHandler;
         this._pricedItemsHandler = accountingFile._pricedItemsHandler;
@@ -283,17 +287,21 @@ class JSONGzipLedgerFile {
         const pathName = this._pathName;
         const json = await JGZ.readFromFile(pathName);
         if (json.tag !== LEDGER_TAG) {
-            throw userError('JSONGzipAccountingFile-ledger_tag_missing', pathName);
+            throw userError('JSONGzipAccountingFile-ledger_tag_missing', 
+                pathName);
         }
 
         if (!json.accountsHandler) {
-            throw userError('JSONGzipAccountingFile-accountsHandler_tag_missing', pathName);
+            throw userError('JSONGzipAccountingFile-accountsHandler_tag_missing', 
+                pathName);
         }
         if (!json.pricedItemsHandler) {
-            throw userError('JSONGzipAccountingFile-pricedItemsHandler_tag_missing', pathName);
+            throw userError('JSONGzipAccountingFile-pricedItemsHandler_tag_missing', 
+                pathName);
         }
         if (!json.lotsHandler) {
-            throw userError('JSONGzipAccountingFile-lotsHandler_tag_missing', pathName);
+            throw userError('JSONGzipAccountingFile-lotsHandler_tag_missing', 
+                pathName);
         }
 
         this._accountsHandler.fromJSON(json.accountsHandler);
@@ -316,7 +324,8 @@ class JSONGzipLedgerFile {
             accountsHandler: this._accountsHandler.toJSON(),
             pricedItemsHandler: this._pricedItemsHandler.toJSON(),
             lotsHandler: this._lotsHandler.toJSON(),
-            accountingSystemOptions: this._accountingFile.getAccountingSystem().getOptions(),
+            accountingSystemOptions: 
+                this._accountingFile.getAccountingSystem().getOptions(),
         };
 
         // Write out the file...
@@ -354,7 +363,8 @@ class JSONGzipJournalFiles {
     constructor(accountingFile) {
         this._accountingFile = accountingFile;
 
-        this._journalSummaryPathName = JSONGzipJournalFiles.buildJournalSummaryPathName(accountingFile.getPathName());
+        this._journalSummaryPathName = JSONGzipJournalFiles.buildJournalSummaryPathName(
+            accountingFile.getPathName());
 
         this._transactionsHandler = accountingFile._transactionsHandler;
 
@@ -367,7 +377,8 @@ class JSONGzipJournalFiles {
     }
 
     static buildJournalGroupPathName(pathName, groupKey) {
-        return path.join(pathName, JOURNAL_FILES_PREFIX + groupKey + FILE_SUFFIX + FILE_EXT);
+        return path.join(pathName, 
+            JOURNAL_FILES_PREFIX + groupKey + FILE_SUFFIX + FILE_EXT);
     }
     
     cleanIsModified() {
@@ -376,12 +387,14 @@ class JSONGzipJournalFiles {
 
     
     isModified() {
-        return (this._transactionsChangeId !== this._transactionsHandler.getLastChangeId());
+        return (this._transactionsChangeId 
+            !== this._transactionsHandler.getLastChangeId());
     }
 
 
     async asyncLoadGroupTransactions(groupKey, groupItems) {
-        const pathName = JSONGzipJournalFiles.buildJournalGroupPathName(this._accountingFile.getPathName(), groupKey);
+        const pathName = JSONGzipJournalFiles.buildJournalGroupPathName(
+            this._accountingFile.getPathName(), groupKey);
         let json;
         try {
             json = await JGZ.readFromFile(pathName);
@@ -392,10 +405,12 @@ class JSONGzipJournalFiles {
         }
 
         if (json.tag !== JOURNAL_TRANSACTIONS_TAG) {
-            throw userError('JSONGzipAccountingFile-journal_transactions_tag_missing', pathName);
+            throw userError('JSONGzipAccountingFile-journal_transactions_tag_missing', 
+                pathName);
         }
         if (!json.transactions) {
-            throw userError('JSONGzipAccountingFile-journal_transactions_missing', pathName);
+            throw userError('JSONGzipAccountingFile-journal_transactions_missing', 
+                pathName);
         }
 
         const { itemsById } = groupItems;
@@ -425,11 +440,13 @@ class JSONGzipJournalFiles {
         const pathName = this._journalSummaryPathName;
         const json = await JGZ.readFromFile(pathName);
         if (json.tag !== JOURNAL_SUMMARY_TAG) {
-            throw userError('JSONGzipAccountingFile-journal_summary_tag_missing', pathName);
+            throw userError('JSONGzipAccountingFile-journal_summary_tag_missing', 
+                pathName);
         }
 
         if (!json.transactionsHandler) {
-            throw userError('JSONGzipAccountingFile-transactionsHandler_tag_missing', pathName);
+            throw userError('JSONGzipAccountingFile-transactionsHandler_tag_missing', 
+                pathName);
         }
 
         this._transactionsHandler.entriesFromJSON(json.transactionsHandler);
@@ -457,7 +474,8 @@ class JSONGzipJournalFiles {
         const fileActions = [
             new FA.ReplaceFileAction(this._journalSummaryPathName,
                 {
-                    applyCallback: (pathName) => this._asyncWriteJournalSummaryFile(stateId),
+                    applyCallback: (pathName) => 
+                        this._asyncWriteJournalSummaryFile(stateId),
                 })
         ];
 
@@ -466,11 +484,14 @@ class JSONGzipJournalFiles {
         itemGroups.forEach((groupItems, groupKey) => {
             const lastChangeId = this._groupKeysLastChangeIds.get(groupKey);
             if (lastChangeId !== groupItems.lastChangeId) {
-                const pathName = JSONGzipJournalFiles.buildJournalGroupPathName(this._accountingFile.getPathName(), groupKey);
+                const pathName = JSONGzipJournalFiles.buildJournalGroupPathName(
+                    this._accountingFile.getPathName(), groupKey);
                 fileActions.push(
                     new FA.ReplaceFileAction(pathName,
                         {
-                            applyCallback: (pathName) => this._asyncWriteGroupItems(pathName, groupKey, groupItems),
+                            applyCallback: (pathName) => 
+                                this._asyncWriteGroupItems(pathName, groupKey, 
+                                    groupItems),
                         })
                 );
             }
@@ -578,7 +599,8 @@ class JSONGzipAccountingFile extends AccountingFile {
 
         this._pricesHandler = new JSONGzipPricesHandler(this);
         this._transactionsHandler = new JSONGzipTransactionsHandler(this, 
-            async (groupKey, groupItems) => this._journalFiles.asyncLoadGroupTransactions(groupKey, groupItems));
+            async (groupKey, groupItems) => 
+                this._journalFiles.asyncLoadGroupTransactions(groupKey, groupItems));
 
         this._ledgerFile = new JSONGzipLedgerFile(this);
         this._journalFiles = new JSONGzipJournalFiles(this);
@@ -637,11 +659,14 @@ class JSONGzipAccountingFile extends AccountingFile {
 
     async _asyncWriteFileImpl(stateId) {
         const ledgerFileActions = await this._ledgerFile.asyncCreateWriteFileActions();
-        const journalFilesActions = await this._journalFiles.asyncCreateWriteFileActions();
+        const journalFilesActions 
+            = await this._journalFiles.asyncCreateWriteFileActions();
         const priceFilesActions = await this._priceFiles.asyncCreateWriteFileActions();
-        const historyFilesActions = await this._historyFiles.asyncCreateWriteFileActions();
+        const historyFilesActions 
+            = await this._historyFiles.asyncCreateWriteFileActions();
 
-        const fileActions = ledgerFileActions.concat(journalFilesActions, priceFilesActions, historyFilesActions);
+        const fileActions = ledgerFileActions.concat(journalFilesActions, 
+            priceFilesActions, historyFilesActions);
 
         // Apply the backup mechanism.
         const fileBackups = new FileBackups();
@@ -701,7 +726,8 @@ export class JSONGzipAccountingFileFactory extends AccountingFileFactory {
 
 
     /**
-     * Called to retrieve an array of Electron [FileFilter]{@link https://electronjs.org/docs/api/structures/file-filter} objects
+     * Called to retrieve an array of Electron 
+     * [FileFilter]{@link https://electronjs.org/docs/api/structures/file-filter} objects
      * for use with file open dialog boxes.
      * @returns {AccountingFileFactory~FileFilter[]|undefined}
      */
@@ -713,9 +739,11 @@ export class JSONGzipAccountingFileFactory extends AccountingFileFactory {
 
 
     /**
-     * Determines if a given directory/file name is a possible valid accounting file of this type.
-     * @param {string} pathName The path name of interest. If {@link AccountingFile#isDirBased} returned <code>true</code> this
-     * should be a directory, otherwise it should be a file name.
+     * Determines if a given directory/file name is a possible valid accounting file of 
+     * this type.
+     * @param {string} pathName The path name of interest. If 
+     * {@link AccountingFile#isDirBased} returned <code>true</code> this should be a 
+     * directory, otherwise it should be a file name.
      * @returns {boolean}   <code>true</code> if it could be.
      */
     async asyncIsPossibleAccountingFile(pathName) {
@@ -730,7 +758,8 @@ export class JSONGzipAccountingFileFactory extends AccountingFileFactory {
 
 
     /**
-     * Determines if a path name is likely to succeed if passed to {@link AccountingFile#createFile}.
+     * Determines if a path name is likely to succeed if passed to 
+     * {@link AccountingFile#createFile}.
      * @param {string} pathName The path name of interest.
      * @returns {true|Error}
      */
@@ -755,9 +784,10 @@ export class JSONGzipAccountingFileFactory extends AccountingFileFactory {
 
     /**
      * Creates a new accounting file system, replacing an existing one if necessary.
-     * @param {string} pathName The path name for the new file system. If the file system already exists
-     * it should be overwritten. If {@link AccountingFileFactor#isDirBased} returns <code>true</code> this should be a directory,
-     * otherwise it should be a file name.
+     * @param {string} pathName The path name for the new file system. If the file 
+     * system already exists it should be overwritten. If 
+     * {@link AccountingFileFactor#isDirBased} returns <code>true</code> this 
+     * should be a directory, otherwise it should be a file name.
      * @returns {AccountingFile}    The accounting file that was created.
      */
     async asyncCreateFile(pathName) {
@@ -780,8 +810,9 @@ export class JSONGzipAccountingFileFactory extends AccountingFileFactory {
 
     /**
      * Opens an existing accounting file system.
-     * @param {string} pathName The path name of the file system to open. If {@link AccountingFileFactor#isDirBased} returns
-     * <code>true</code> this should be a directory, otherwise it should be a file name.
+     * @param {string} pathName The path name of the file system to open. If 
+     * {@link AccountingFileFactor#isDirBased} returns <code>true</code> this 
+     * should be a directory, otherwise it should be a file name.
      * @returns {AccountingFile}    The accounting file that was opened.
      */
     async asyncOpenFile(pathName) {
@@ -799,17 +830,20 @@ export class JSONGzipAccountingFileFactory extends AccountingFileFactory {
 
 
     /**
-     * Copies an existing accounting file into a new accounting system, replacing an existing one if necessary.
-     * Note that an {@link AccountingFile} is returned, if not needed it should be closed.
+     * Copies an existing accounting file into a new accounting system, replacing an 
+     * existing one if necessary. Note that an {@link AccountingFile} is returned, 
+     * if not needed it should be closed.
      * @param {AccountingFile} accountingFile The accounting file to be copied.
-     * @param {string} pathName The path name for the new file system. If the file system already exists
-     * it should be overwritten. If {@link AccountingFileFactor#isDirBased} returns <code>true</code> this should be a directory,
-     * otherwise it should be a file name.
+     * @param {string} pathName The path name for the new file system. If the file 
+     * system  already exists it should be overwritten. If 
+     * {@link AccountingFileFactor#isDirBased} returns <code>true</code> this should 
+     * be a directory, otherwise it should be a file name.
      * @returns {AccountingFile}    The accounting file that was created.
      */
     async asyncCopyAccountingFile(accountingFile, pathName) {
         if (accountingFile instanceof JSONGzipAccountingFile) {
-            // We can just copy all the files (though we need to write everything out somehow...)
+            // We can just copy all the files (though we need to write everything 
+            // out somehow...)
         }
         throw Error('JSONGzipAccountingFileFactory.asyncSaveAsFile() abstract method!');
     }

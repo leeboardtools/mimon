@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { AccountingSystem } from './AccountingSystem';
 import { InMemoryPricedItemsHandler } from './PricedItems';
 import { InMemoryAccountsHandler } from './Accounts';

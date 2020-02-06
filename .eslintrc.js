@@ -46,9 +46,10 @@ module.exports = {
             'always'
         ],
 
+        "max-len": ["error", { "code": 90 }],
         "no-multi-spaces": ["error", {"ignoreEOLComments": true}],
         "comma-dangle": "off",
-        "operator-linebreak": [ "error", "before", { "overrides": { "+": "before", "?": "before", ":": "before", "=": "after" }} ],
+        "operator-linebreak": [ "error", "before", { "overrides": { "+": "before", "?": "before", ":": "before", "=": "before" }} ],
         "padded-blocks": "off",
         "brace-style": ["error", "stroustrup", { "allowSingleLine": true }],
         "space-before-function-paren": ["error", {"named": "never"}],
