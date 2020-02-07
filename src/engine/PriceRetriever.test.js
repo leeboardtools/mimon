@@ -1,7 +1,8 @@
 // TEMP!!!
 /* eslint-disable no-unused-vars */
 
-import { asyncGetPricesForTicker, asyncUpdatePricedItemPrices, setIsElectron, asyncGetUpdatedPricedItemPrices } from './PriceRetriever';
+import { asyncGetPricesForTicker, asyncUpdatePricedItemPrices, 
+    setIsElectron, asyncGetUpdatedPricedItemPrices } from './PriceRetriever';
 import { PricedItemType } from './PricedItems';
 //import * as PTH from './PricesTestHelpers';
 //import { AccountingSystem, USStockPriceDefinition } from './AccountingSystem';
@@ -417,17 +418,30 @@ test('asyncUpdatePricedItemPrices', async () => {
 
     const date1 = '2019-09-22';
     const date2 = '2019-09-26';
-    //await asyncUpdatePricedItemPrices(priceManager, [localIdAAPL, localIdVOO], date1, date2);
-    //PTH.expectPricesToMatchOptions(accountingSystem, await priceManager.asyncGetPricesForPricedItem(localIdAAPL, date1, date2), getItemsInRange(AAPL, date1, date2));
-    //PTH.expectPricesToMatchOptions(accountingSystem, await priceManager.asyncGetPricesForPricedItem(localIdVOO, date1, date2), getItemsInRange(VOO, date1, date2));
-    //PTH.expectPricesToMatchOptions(accountingSystem, await priceManager.asyncGetPricesForPricedItem(localIdFSRPX, date1, date2), []);
+    //await asyncUpdatePricedItemPrices(priceManager,
+    //  [localIdAAPL, localIdVOO], date1, date2);
+    //PTH.expectPricesToMatchOptions(accountingSystem, 
+    //  await priceManager.asyncGetPricesForPricedItem(localIdAAPL, date1, date2), 
+    //      getItemsInRange(AAPL, date1, date2));
+    //PTH.expectPricesToMatchOptions(accountingSystem, 
+    //  await priceManager.asyncGetPricesForPricedItem(localIdVOO, date1, date2), 
+    //      getItemsInRange(VOO, date1, date2));
+    //PTH.expectPricesToMatchOptions(accountingSystem, 
+    //  await priceManager.asyncGetPricesForPricedItem(localIdFSRPX, date1, date2), []);
 
     const date3 = '2019-09-25';
     const date4 = '2019-10-02';
-    //await asyncUpdatePricedItemPrices(priceManager, [localIdAAPL, localIdVOO, localIdFSRPX], date3, date4);
-    //PTH.expectPricesToMatchOptions(accountingSystem, await priceManager.asyncGetPricesForPricedItem(localIdAAPL, date1, date4), getItemsInRange(AAPL, date1, date4));
-    //PTH.expectPricesToMatchOptions(accountingSystem, await priceManager.asyncGetPricesForPricedItem(localIdVOO, date1, date4), getItemsInRange(VOO, date1, date4));
-    //PTH.expectPricesToMatchOptions(accountingSystem, await priceManager.asyncGetPricesForPricedItem(localIdFSRPX, date3, date4), getItemsInRange(FSRPX, date3, date4));
+    //await asyncUpdatePricedItemPrices(priceManager, 
+    //  [localIdAAPL, localIdVOO, localIdFSRPX], date3, date4);
+    //PTH.expectPricesToMatchOptions(accountingSystem, 
+    //  await priceManager.asyncGetPricesForPricedItem(localIdAAPL, date1, date4), 
+    //      getItemsInRange(AAPL, date1, date4));
+    //PTH.expectPricesToMatchOptions(accountingSystem, 
+    //  await priceManager.asyncGetPricesForPricedItem(localIdVOO, date1, date4), 
+    //      getItemsInRange(VOO, date1, date4));
+    //PTH.expectPricesToMatchOptions(accountingSystem,
+    //   await priceManager.asyncGetPricesForPricedItem(localIdFSRPX, date3, date4), 
+    //      getItemsInRange(FSRPX, date3, date4));
 
 /*   const resultA = await asyncGetUpdatedPricedItemPrices({
         pricedItemManager: pricedItemManager,
