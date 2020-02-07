@@ -48,7 +48,10 @@ test('LotState-add_remove_lotChange', () => {
     expect(revTestA).toEqual(L.getLotStateDataItem(stateA));
 
 
-    const lotChangeB = { lotId: 1, quantityBaseValue: 20000 - stateA.quantityBaseValue, isSplitMerge: true };
+    const lotChangeB = { lotId: 1, 
+        quantityBaseValue: 20000 - stateA.quantityBaseValue, 
+        isSplitMerge: true,
+    };
     const testB = L.addLotChangeToLotStateDataItem(stateA, lotChangeB, '2019-11-03');
     expect(testB).toEqual({
         quantityBaseValue: 20000,

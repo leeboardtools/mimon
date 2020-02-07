@@ -272,7 +272,8 @@ function getItemsInRange(items, dateA, dateB) {
     dateB = getYMDDate(dateB);
     const inRange = [];
     for (const item of items) {
-        if ((YMDDate.compare(item.ymdDate, dateA) >= 0) && (YMDDate.compare(item.ymdDate, dateB) <= 0)) {
+        if ((YMDDate.compare(item.ymdDate, dateA) >= 0) 
+            && (YMDDate.compare(item.ymdDate, dateB) <= 0)) {
             inRange.push(item);
         }
     }
@@ -332,7 +333,8 @@ test('asyncGetPricesForTicker', async () => {
 //
 test('asyncUpdatePricedItemPrices', async () => {
 
-    // const results = await yf.historical({ symbol: 'FSRPX', from: new Date(2019, 8, 22), to: new Date(2019, 9, 2) });
+    // const results = await yf.historical({ symbol: 'FSRPX', 
+    // from: new Date(2019, 8, 22), to: new Date(2019, 9, 2) });
     // console.log(JSON.stringify(results));
 
 
@@ -356,7 +358,8 @@ test('asyncUpdatePricedItemPrices', async () => {
         onlineUpdateType: 'YAHOO_FINANCE',
     };
     pricedItemManager.isDebug = true;
-    const pricedItemAAPL = (await pricedItemManager.asyncAddPricedItem(optionsAAPL)).newPricedItemDataItem;
+    const pricedItemAAPL = (await pricedItemManager.asyncAddPricedItem(optionsAAPL))
+        .newPricedItemDataItem;
     const localIdAAPL = pricedItemAAPL.id;
 
 
@@ -369,7 +372,8 @@ test('asyncUpdatePricedItemPrices', async () => {
         ticker: 'VOO',
         onlineUpdateType: 'YAHOO_FINANCE',
     };
-    const pricedItemVOO = (await pricedItemManager.asyncAddPricedItem(optionsVOO)).newPricedItemDataItem;
+    const pricedItemVOO = (await pricedItemManager.asyncAddPricedItem(optionsVOO))
+        .newPricedItemDataItem;
     const localIdVOO = pricedItemVOO.id;
 
 
@@ -382,7 +386,8 @@ test('asyncUpdatePricedItemPrices', async () => {
         ticker: 'FSRPX',
         onlineUpdateType: 'YAHOO_FINANCE',
     };
-    const pricedItemFSRPX = (await pricedItemManager.asyncAddPricedItem(optionsFSRPX)).newPricedItemDataItem;
+    const pricedItemFSRPX = (await pricedItemManager.asyncAddPricedItem(optionsFSRPX))
+        .newPricedItemDataItem;
     const localIdFSRPX = pricedItemFSRPX.id;
 
     const resultA = await asyncGetUpdatedPricedItemPrices({
@@ -396,8 +401,12 @@ test('asyncUpdatePricedItemPrices', async () => {
     });
 
     const successfulEntriesA = [];
-    successfulEntriesA.push({ pricedItemId: localIdAAPL, ticker: 'AAPL', prices: getItemsInRange(AAPL, '2019-09-26', '2019-09-28'), });
-    successfulEntriesA.push({ pricedItemId: localIdFSRPX, ticker: 'FSRPX', prices: getItemsInRange(FSRPX, '2019-09-26', '2019-09-28'), });
+    successfulEntriesA.push({ pricedItemId: localIdAAPL, 
+        ticker: 'AAPL', 
+        prices: getItemsInRange(AAPL, '2019-09-26', '2019-09-28'), });
+    successfulEntriesA.push({ pricedItemId: localIdFSRPX, 
+        ticker: 'FSRPX', 
+        prices: getItemsInRange(FSRPX, '2019-09-26', '2019-09-28'), });
     const expectedA = {
         isCancelled: false,
         successfulEntries: successfulEntriesA,

@@ -77,7 +77,8 @@ test('PricedItem-Data Items', () => {
 //---------------------------------------------------------
 //
 test('PricedItemManager-currencies', async () => {
-    const accountingSystem = await ASTH.asyncCreateAccountingSystem({ baseCurrency: 'JPY' });
+    const accountingSystem = await ASTH.asyncCreateAccountingSystem(
+        { baseCurrency: 'JPY' });
     expect(accountingSystem.getBaseCurrency()).toEqual('JPY');
 
     const manager = accountingSystem.getPricedItemManager();
@@ -86,8 +87,10 @@ test('PricedItemManager-currencies', async () => {
     const baseCurrencyPricedItem = manager.getCurrencyBasePricedItem();
     expect(baseCurrencyPricedItem.currency).toEqual(manager.getBaseCurrency());
     
-    expect(manager.getPricedItemDataItemWithId(manager.getCurrencyBasePricedItemId())).toEqual(baseCurrencyPricedItem);
-    expect(manager.getCurrencyPricedItemDataItem(manager.getBaseCurrency())).toEqual(baseCurrencyPricedItem);
+    expect(manager.getPricedItemDataItemWithId(manager.getCurrencyBasePricedItemId()))
+        .toEqual(baseCurrencyPricedItem);
+    expect(manager.getCurrencyPricedItemDataItem(manager.getBaseCurrency()))
+        .toEqual(baseCurrencyPricedItem);
     expect(baseCurrencyPricedItem.id).toEqual(manager.getCurrencyBasePricedItemId());
 
     
@@ -103,9 +106,12 @@ test('PricedItemManager-currencies', async () => {
 
 
     // Can't remove the built-in currency priced items...
-    await expect(manager.asyncRemovePricedItem(manager.getCurrencyBasePricedItemId())).rejects.toThrow();
-    await expect(manager.asyncRemovePricedItem(manager.getCurrencyUSDPricedItemId())).rejects.toThrow();
-    await expect(manager.asyncRemovePricedItem(manager.getCurrencyEURPricedItemId())).rejects.toThrow();
+    await expect(manager.asyncRemovePricedItem(manager.getCurrencyBasePricedItemId()))
+        .rejects.toThrow();
+    await expect(manager.asyncRemovePricedItem(manager.getCurrencyUSDPricedItemId()))
+        .rejects.toThrow();
+    await expect(manager.asyncRemovePricedItem(manager.getCurrencyEURPricedItemId()))
+        .rejects.toThrow();
 
     let addEventArg;
     let modifyEventArg;
@@ -134,34 +140,45 @@ test('PricedItemManager-currencies', async () => {
 
 
     const quantityDefinitionB = getDecimalDefinition(-4);
-    const itemB = (await manager.asyncAddCurrencyPricedItem('BMD', false, { quantityDefinition: quantityDefinitionB })).newPricedItemDataItem;
-    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB)).toEqual(itemB);
+    const itemB = (await manager.asyncAddCurrencyPricedItem('BMD', false, 
+        { quantityDefinition: quantityDefinitionB })).newPricedItemDataItem;
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB))
+        .toEqual(itemB);
 
     expect(manager.getCurrencyPricedItemDataItem('BMD')).toEqual(itemA);
 
 
     // Modify
     const quantityDefinitionC = getDecimalDefinition(-5);
-    result = await manager.asyncModifyPricedItem({ id: itemB.id, quantityDefinition: quantityDefinitionC });
+    result = await manager.asyncModifyPricedItem(
+        { id: itemB.id, quantityDefinition: quantityDefinitionC });
     const itemC = result.newPricedItemDataItem;
     const oldItemC = result.oldPricedItemDataItem;
-    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB)).toBeUndefined();
-    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC)).toEqual(itemC);
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB))
+        .toBeUndefined();
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC))
+        .toEqual(itemC);
 
     // pricedItemModify event test
-    expect(modifyEventArg).toEqual({ newPricedItemDataItem: itemC, oldPricedItemDataItem: oldItemC });
+    expect(modifyEventArg).toEqual(
+        { newPricedItemDataItem: itemC, oldPricedItemDataItem: oldItemC });
     expect(modifyEventArg.newPricedItemDataItem).toBe(itemC);
     expect(modifyEventArg.oldPricedItemDataItem).toBe(oldItemC);
 
 
     // Undo modify
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
-    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB)).toEqual(itemB);
-    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC)).toBeUndefined();
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB))
+        .toEqual(itemB);
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC))
+        .toBeUndefined();
 
-    await manager.asyncModifyPricedItem({ id: itemB.id, quantityDefinition: quantityDefinitionC });
-    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB)).toBeUndefined();
-    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC)).toEqual(itemC);
+    await manager.asyncModifyPricedItem(
+        { id: itemB.id, quantityDefinition: quantityDefinitionC });
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB))
+        .toBeUndefined();
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC))
+        .toEqual(itemC);
 
 
     // Remove.
@@ -175,7 +192,8 @@ test('PricedItemManager-currencies', async () => {
 
     // Undo remove
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
-    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC)).toEqual(itemC);
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC))
+        .toEqual(itemC);
 
     await manager.asyncRemovePricedItem(itemA.id);
     expect(manager.getCurrencyPricedItemDataItem('BMD')).toBeUndefined();
@@ -183,7 +201,8 @@ test('PricedItemManager-currencies', async () => {
 
     // Validate remove
     result = await manager.asyncRemovePricedItem(itemC.id, true);
-    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC)).toEqual(itemC);
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC))
+        .toEqual(itemC);
 
 });
 
@@ -217,12 +236,18 @@ test('PricedItemManager-other types', async () => {
     expectPricedItemToMatch(itemA, optionsA);
 
     
-    const optionsB = { type: PI.PricedItemType.MUTUAL_FUND, currency: 'JPY', quantityDefinition: getDecimalDefinition(-3), };
+    const optionsB = { type: PI.PricedItemType.MUTUAL_FUND, 
+        currency: 'JPY', 
+        quantityDefinition: getDecimalDefinition(-3), 
+    };
     const itemB = (await manager.asyncAddPricedItem(optionsB)).newPricedItemDataItem;
     expectPricedItemToMatch(itemB, optionsB);
 
     
-    const optionsC = { type: PI.PricedItemType.REAL_ESTATE, currency: 'EUR', quantityDefinition: getDecimalDefinition(0), };
+    const optionsC = { type: PI.PricedItemType.REAL_ESTATE, 
+        currency: 'EUR', 
+        quantityDefinition: getDecimalDefinition(0), 
+    };
     result = await manager.asyncAddPricedItem(optionsC);
     const itemC = result.newPricedItemDataItem;
     expectPricedItemToMatch(itemC, optionsC);
@@ -235,28 +260,42 @@ test('PricedItemManager-other types', async () => {
     expectPricedItemToMatch(manager.getPricedItemDataItemWithId(itemC.id), optionsC);
 
     
-    const optionsD = { type: PI.PricedItemType.PROPERTY, currency: 'USD', quantityDefinition: getDecimalDefinition(0), };
+    const optionsD = { type: PI.PricedItemType.PROPERTY, 
+        currency: 'USD', 
+        quantityDefinition: getDecimalDefinition(0), 
+    };
     const itemD = (await manager.asyncAddPricedItem(optionsD)).newPricedItemDataItem;
     expectPricedItemToMatch(itemD, optionsD);
     expect(manager.getPricedItemDataItemWithId(itemD.id)).toEqual(itemD);
 
     // Validate only
-    const itemE = await manager.asyncAddPricedItem({ type: PI.PricedItemType.PROPERTY, currency: 'USD', quantityDefinition: getDecimalDefinition(0), }, 
+    const itemE = await manager.asyncAddPricedItem(
+        { type: PI.PricedItemType.PROPERTY, 
+            currency: 'USD', 
+            quantityDefinition: getDecimalDefinition(0), 
+        }, 
         true);
     expect(itemE).toBeUndefined();
 
 
     // Modify
     // Can't change the type.
-    await expect(manager.asyncModifyPricedItem({ id: itemA.id, type: PI.PricedItemType.PROPERTY })).rejects.toThrow();
+    await expect(manager.asyncModifyPricedItem(
+        { id: itemA.id, type: PI.PricedItemType.PROPERTY })).rejects.toThrow();
 
 
     const optionsA1 = Object.assign({}, optionsA);
     delete optionsA1.description;
-    const itemA1 = (await manager.asyncModifyPricedItem({ id: itemA.id, description: undefined })).newPricedItemDataItem;
+    const itemA1 = (await manager.asyncModifyPricedItem(
+        { id: itemA.id, description: undefined })).newPricedItemDataItem;
     expectPricedItemToMatch(itemA1, optionsA1);
 
-    const changeB1 = { id: itemB.id, currency: 'USD', quantityDefinition: getDecimalDefinition(-4), name: 'A name', description: 'A description', };
+    const changeB1 = { id: itemB.id, 
+        currency: 'USD', 
+        quantityDefinition: getDecimalDefinition(-4), 
+        name: 'A name', 
+        description: 'A description', 
+    };
     const optionsB1 = Object.assign({}, optionsB, changeB1);
     result = await manager.asyncModifyPricedItem(changeB1);
     const itemB1 = result.newPricedItemDataItem;

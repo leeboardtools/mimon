@@ -23,18 +23,31 @@ import { userError } from '../util/UserMessages';
  * @property {PricedItemTypeDef}  PROPERTY
  */
 export const PricedItemType = {
-    CURRENCY: { name: 'CURRENCY', validateFunc: validateCurrencyDataItem },
-    SECURITY: { name: 'SECURITY', validateFunc: validateSecurityDataItem, hasTickerSymbol: true },
-    MUTUAL_FUND: { name: 'MUTUAL_FUND', validateFunc: validateMutualFundDataItem, hasTickerSymbol: true },
-    REAL_ESTATE: { name: 'REAL_ESTATE', validateFunc: validateRealEstateDataItem, },
-    PROPERTY: { name: 'PROPERTY', validateFunc: validatePropertyDataItem, },
+    CURRENCY: { name: 'CURRENCY', 
+        validateFunc: validateCurrencyDataItem,
+    },
+    SECURITY: { name: 'SECURITY', 
+        validateFunc: validateSecurityDataItem, 
+        hasTickerSymbol: true,
+    },
+    MUTUAL_FUND: { name: 'MUTUAL_FUND', 
+        validateFunc: validateMutualFundDataItem, 
+        hasTickerSymbol: true,
+    },
+    REAL_ESTATE: { name: 'REAL_ESTATE', 
+        validateFunc: validateRealEstateDataItem, 
+    },
+    PROPERTY: { name: 'PROPERTY', 
+        validateFunc: validatePropertyDataItem, 
+    },
     // COLLECTIBLE: { name: 'COLLECTIBLE', },
 };
 
 function validateCurrencyDataItem(manager, item, isModify) {
     if (!item.quantityDefinition) {
         const currency = getCurrency(item.currency);
-        item.quantityDefinition = getQuantityDefinitionName(currency.getQuantityDefinition());
+        item.quantityDefinition = getQuantityDefinitionName(
+            currency.getQuantityDefinition());
     }
 
     const currencyName = manager._getCurrencyName(item.currency, item.quantityDefinition);
@@ -128,42 +141,53 @@ export function getPricedItemOnlineUpdateTypeName(type) {
  * @typedef {object} PricedItemDataItem
  * @property {number}   id  The priced item's id.
  * @property {string}   type    name property of one of {@link PricedItemType}.
- * @property {string}   currency    The 3 letter currency name of the currency underlying the priced item.
- * @property {string}   quantityDefinition  The name of the {@link QuantityDefinition} defining quantities of the priced item.
+ * @property {string}   currency    The 3 letter currency name of the currency 
+ * underlying the priced item.
+ * @property {string}   quantityDefinition  The name of the {@link QuantityDefinition} 
+ * defining quantities of the priced item.
  * @property {string}   [name]  The user supplied name of the priced item.
- * @property {string}   [description]   The user supplied description of the priced item.
- * @property {string}   [onlineUpdateType]  The online update type, only for priced item types that have hasTickerSymbol.
+ * @property {string}   [description]   The user supplied description of the 
+ * priced item.
+ * @property {string}   [onlineUpdateType]  The online update type, only for 
+ * priced item types that have hasTickerSymbol.
  */
 
 /**
  * @typedef {object} PricedItem
  * @property {number}   id  The priced item's id.
  * @property {PricedItemType}   type    The priced item's type.
- * @property {Currency} currency    The currency object of the currency underlying the priced item.
- * @property {QuantityDefinition}   quantityDefinition  The quantity definition defining the priced item's quantities.
+ * @property {Currency} currency    The currency object of the currency underlying 
+ * the priced item.
+ * @property {QuantityDefinition}   quantityDefinition  The quantity definition 
+ * defining the priced item's quantities.
  * @property {string}   [name]  The user supplied name of the priced item.
  * @property {string}   [description]   The user supplied description of the priced item.
- * @property {PricedItemOnlineUpdateType}   [onlineUpdateType]  The online update type, only for priced item types that have hasTickerSymbol.
+ * @property {PricedItemOnlineUpdateType}   [onlineUpdateType]  The online update 
+ * type, only for priced item types that have hasTickerSymbol.
  */
 
 /**
  * Retrieves a {@link PricedItem} representation of a {@link PricedItemDataItem}.
  * @param {(PricedItemDataItem|PricedItem)} pricedItemDataItem 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will 
+ * always be created.
  * @returns {PricedItem}
  */
 export function getPricedItem(pricedItemDataItem, alwaysCopy) {
     if (pricedItemDataItem) {
         const type = getPricedItemType(pricedItemDataItem.type);
         const currency = getCurrency(pricedItemDataItem.currency);
-        const quantityDefinition = getQuantityDefinition(pricedItemDataItem.quantityDefinition);
-        const onlineUpdateType = getPricedItemOnlineUpdateType(pricedItemDataItem.onlineUpdateType);
+        const quantityDefinition = getQuantityDefinition(
+            pricedItemDataItem.quantityDefinition);
+        const onlineUpdateType = getPricedItemOnlineUpdateType(
+            pricedItemDataItem.onlineUpdateType);
         if (alwaysCopy
          || (type !== pricedItemDataItem.type)
          || (currency !== pricedItemDataItem.currency)
          || (quantityDefinition !== pricedItemDataItem.quantityDefinition)
          || (onlineUpdateType !== pricedItemDataItem.onlineUpdateType)) {
-            // We're using Object.assign() to create a copy just in case there are other properties.
+            // We're using Object.assign() to create a copy just in case 
+            // there are other properties.
             const pricedItem = Object.assign({}, pricedItemDataItem);
             if (type !== undefined) {
                 pricedItem.type = type;
@@ -187,15 +211,18 @@ export function getPricedItem(pricedItemDataItem, alwaysCopy) {
 /**
  * Retrieves a {@link PricedItemDataItem} representation of a {@link PricedItem}.
  * @param {(PricedItem|PricedItemDataItem)} pricedItem 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will 
+ * always be created.
  * @returns {PricedItemDataItem}
  */
 export function getPricedItemDataItem(pricedItem, alwaysCopy) {
     if (pricedItem) {
         const typeName = getPricedItemTypeName(pricedItem.type);
         const currencyCode = getCurrencyCode(pricedItem.currency);
-        const quantityDefinitionName = getQuantityDefinitionName(pricedItem.quantityDefinition);
-        const onlineUpdateTypeName = getPricedItemOnlineUpdateTypeName(pricedItem.onlineUpdateType);
+        const quantityDefinitionName = getQuantityDefinitionName(
+            pricedItem.quantityDefinition);
+        const onlineUpdateTypeName = getPricedItemOnlineUpdateTypeName(
+            pricedItem.onlineUpdateType);
         if (alwaysCopy
          || (typeName !== pricedItem.type)
          || (currencyCode !== pricedItem.currency)
@@ -226,7 +253,8 @@ export function getPricedItemDataItem(pricedItem, alwaysCopy) {
 /**
  * Manages {@link PricedItemDataItem}s.
  * <p>
- * Note that priced items with the PricedItemType.CURRENCY are restricted to only one priced item per currency.
+ * Note that priced items with the PricedItemType.CURRENCY are restricted to only 
+ * one priced item per currency.
  */
 export class PricedItemManager extends EventEmitter {
 
@@ -248,17 +276,24 @@ export class PricedItemManager extends EventEmitter {
         this._accountingSystem = accountingSystem;
         this._handler = options.handler;
         
-        this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorOptions());
+        this._idGenerator = new NumericIdGenerator(options.idGenerator 
+            || this._handler.getIdGeneratorOptions());
 
         const undoManager = accountingSystem.getUndoManager();
-        this._asyncApplyUndoAddPricedItem = this._asyncApplyUndoAddPricedItem.bind(this);
-        undoManager.registerUndoApplier('addPricedItem', this._asyncApplyUndoAddPricedItem);
+        this._asyncApplyUndoAddPricedItem 
+            = this._asyncApplyUndoAddPricedItem.bind(this);
+        undoManager.registerUndoApplier('addPricedItem', 
+            this._asyncApplyUndoAddPricedItem);
 
-        this._asyncApplyUndoRemovePricedItem = this._asyncApplyUndoRemovePricedItem.bind(this);
-        undoManager.registerUndoApplier('removePricedItem', this._asyncApplyUndoRemovePricedItem);
+        this._asyncApplyUndoRemovePricedItem 
+            = this._asyncApplyUndoRemovePricedItem.bind(this);
+        undoManager.registerUndoApplier('removePricedItem', 
+            this._asyncApplyUndoRemovePricedItem);
 
-        this._asyncApplyUndoModifyPricedItem = this._asyncApplyUndoModifyPricedItem.bind(this);
-        undoManager.registerUndoApplier('modifyPricedItem', this._asyncApplyUndoModifyPricedItem);
+        this._asyncApplyUndoModifyPricedItem 
+            = this._asyncApplyUndoModifyPricedItem.bind(this);
+        undoManager.registerUndoApplier('modifyPricedItem', 
+            this._asyncApplyUndoModifyPricedItem);
 
         this._currencyPricedItemIdsByCurrency = new Map();
         this._pricedItemDataItemsById = new Map();
@@ -268,7 +303,8 @@ export class PricedItemManager extends EventEmitter {
         pricedItems.forEach((pricedItem) => {
             this._pricedItemDataItemsById.set(pricedItem.id, pricedItem);
             if (pricedItem.type === PricedItemType.CURRENCY.name) {
-                const currencyName = this._getCurrencyName(pricedItem.currency, pricedItem.quantityDefinition);
+                const currencyName = this._getCurrencyName(pricedItem.currency, 
+                    pricedItem.quantityDefinition);
                 this._currencyPricedItemIdsByCurrency.set(currencyName, pricedItem.id);
             }
         });
@@ -278,7 +314,8 @@ export class PricedItemManager extends EventEmitter {
     async asyncSetupForUse() {
         let usdPricedItem = this.getCurrencyPricedItemDataItem('USD');
         if (!usdPricedItem) {
-            usdPricedItem = (await this.asyncAddCurrencyPricedItem('USD')).newPricedItemDataItem;
+            usdPricedItem = (await this.asyncAddCurrencyPricedItem('USD'))
+                .newPricedItemDataItem;
         }
         this._currencyUSDPricedItemId = usdPricedItem.id;
         this._currencyUSDPricedItem = usdPricedItem;
@@ -287,7 +324,8 @@ export class PricedItemManager extends EventEmitter {
 
         let eurPricedItem = this.getCurrencyPricedItemDataItem('EUR');
         if (!eurPricedItem) {
-            eurPricedItem = (await this.asyncAddCurrencyPricedItem('EUR')).newPricedItemDataItem;
+            eurPricedItem = (await this.asyncAddCurrencyPricedItem('EUR'))
+                .newPricedItemDataItem;
         }
         this._currencyEURPricedItemId = eurPricedItem.id;
         this._currencyEURPricedItem = eurPricedItem;
@@ -295,9 +333,12 @@ export class PricedItemManager extends EventEmitter {
 
 
         this._baseCurrency = this._accountingSystem.getBaseCurrency();
-        let baseCurrencyPricedItem = this.getCurrencyPricedItemDataItem(this._baseCurrency);
+        let baseCurrencyPricedItem 
+            = this.getCurrencyPricedItemDataItem(this._baseCurrency);
         if (!baseCurrencyPricedItem) {
-            baseCurrencyPricedItem = (await this.asyncAddCurrencyPricedItem(this._baseCurrency)).newPricedItemDataItem;
+            baseCurrencyPricedItem 
+                = (await this.asyncAddCurrencyPricedItem(this._baseCurrency))
+                    .newPricedItemDataItem;
         }
         this._currencyBasePricedItemId = baseCurrencyPricedItem.id;
         this._currencyBasePricedItem = baseCurrencyPricedItem;
@@ -309,7 +350,8 @@ export class PricedItemManager extends EventEmitter {
 
 
     /**
-     * @returns {Currency}  The base currency, from {@link AccountingSystem#getBaseCurrency}.
+     * @returns {Currency}  The base currency, from 
+     * {@link AccountingSystem#getBaseCurrency}.
      */
     getBaseCurrency() { return this._baseCurrency; }
 
@@ -357,12 +399,14 @@ export class PricedItemManager extends EventEmitter {
         const idGeneratorOptions = this._idGenerator.toJSON();
 
         const updatedDataItems = [[id, pricedItemData]];
-        await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems, idGeneratorOptions);
+        await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems, 
+            idGeneratorOptions);
 
         this._pricedItemDataItemsById.set(id, pricedItemData);
 
         if (getPricedItemType(pricedItem.type) === PricedItemType.CURRENCY) {
-            const currencyName = this._getCurrencyName(pricedItemData.currency, pricedItemData.quantityDefinition);
+            const currencyName = this._getCurrencyName(pricedItemData.currency, 
+                pricedItemData.quantityDefinition);
             this._currencyPricedItemIdsByCurrency.set(currencyName, id);
         }
 
@@ -394,7 +438,8 @@ export class PricedItemManager extends EventEmitter {
 
 
     /**
-     * Resolves an argument into a {@link PricedItem}. The argument may be the id of a priced item,
+     * Resolves an argument into a {@link PricedItem}. The argument may be the id 
+     * of a priced item,
      * a {@link PricedItemDataItem}, a {@link PricedItem}, or <code>undefined</code>.
      * @param {(number|PricedItemDataItem|PricedItem)} ref 
      * @returns {PricedItem|undefined}
@@ -421,8 +466,8 @@ export class PricedItemManager extends EventEmitter {
     /**
      * Retrieves the priced item for a currency.
      * @param {(string|Currency)} currency Either a currency code or a {@link Currency}.
-     * @param {(string|QuantityDefinition)} [quantityDefinition]    Optional quantity definition, if
-     * <code>undefined</code> the currency's quantity definition is used.
+     * @param {(string|QuantityDefinition)} [quantityDefinition]    Optional quantity 
+     * definition, if <code>undefined</code> the currency's quantity definition is used.
      * @returns {number}
      */
     getCurrencyPricedItemId(currency, quantityDefinition) {
@@ -433,12 +478,13 @@ export class PricedItemManager extends EventEmitter {
     /**
      * Retrieves a copy of the priced item data item for a currency.
      * @param {(string|Currency)} currency Either a currency code or a {@link Currency}.
-     * @param {(string|QuantityDefinition)} [quantityDefinition]    Optional quantity definition, if
-     * <code>undefined</code> the currency's quantity definition is used.
+     * @param {(string|QuantityDefinition)} [quantityDefinition]    Optional quantity 
+     * definition, if <code>undefined</code> the currency's quantity definition is used.
      * @returns {PricedItemDataItem}
      */
     getCurrencyPricedItemDataItem(currency, quantityDefinition) {
-        return this.getPricedItemDataItemWithId(this.getCurrencyPricedItemId(currency, quantityDefinition));
+        return this.getPricedItemDataItemWithId(
+            this.getCurrencyPricedItemId(currency, quantityDefinition));
     }
 
 
@@ -455,7 +501,8 @@ export class PricedItemManager extends EventEmitter {
 
         const type = getPricedItemType(pricedItemDataItem.type);
         if (type === PricedItemType.CURRENCY) {
-            const currencyName = this._getCurrencyName(pricedItemDataItem.currency, pricedItemDataItem.quantityDefinition);
+            const currencyName = this._getCurrencyName(pricedItemDataItem.currency, 
+                pricedItemDataItem.quantityDefinition);
             this._currencyPricedItemIdsByCurrency.delete(currencyName);
         }
 
@@ -488,8 +535,10 @@ export class PricedItemManager extends EventEmitter {
 
         const type = getPricedItemType(oldPricedItemDataItem.type);
         if (type === PricedItemType.CURRENCY) {
-            const oldCurrencyName = this._getCurrencyName(oldPricedItemDataItem.currency, oldPricedItemDataItem.quantityDefinition);
-            const newCurrencyName = this._getCurrencyName(newPricedItemDataItem.currency, newPricedItemDataItem.quantityDefinition);
+            const oldCurrencyName = this._getCurrencyName(oldPricedItemDataItem.currency, 
+                oldPricedItemDataItem.quantityDefinition);
+            const newCurrencyName = this._getCurrencyName(newPricedItemDataItem.currency, 
+                newPricedItemDataItem.quantityDefinition);
             
             if (oldCurrencyName !== newCurrencyName) {
                 this._currencyPricedItemIdsByCurrency.delete(newCurrencyName);
@@ -497,7 +546,10 @@ export class PricedItemManager extends EventEmitter {
             }
         }
 
-        this.emit('pricedItemModify', { newPricedItemDataItem: oldPricedItemDataItem, oldPricedItemDataItem: newPricedItemDataItem, });
+        this.emit('pricedItemModify', 
+            { newPricedItemDataItem: oldPricedItemDataItem, 
+                oldPricedItemDataItem: newPricedItemDataItem, 
+            });
     }
 
 
@@ -506,7 +558,8 @@ export class PricedItemManager extends EventEmitter {
      * @param {(string|Currency)} currency 
      * @param {boolean} validateOnly 
      * @param {PricedItemDataItem} options 
-     * @returns {PricedItemManager~AddPricedItemResult|undefined}   <code>undefined</code> is returned if validateOnly is <code>true</code>.
+     * @returns {PricedItemManager~AddPricedItemResult|undefined}   
+     * <code>undefined</code> is returned if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {PricedItemManager~pricedItemAdd}
      */
@@ -519,11 +572,13 @@ export class PricedItemManager extends EventEmitter {
     }
 
     /**
-     * Fired by {@link PricedItemManager#asyncAddPricedItem} and {@link PricedItemManager#asyncAddCurrencyPricedItem} after the priced
+     * Fired by {@link PricedItemManager#asyncAddPricedItem} and 
+     * {@link PricedItemManager#asyncAddCurrencyPricedItem} after the priced
      * item has been added.
      * @event PricedItemManager~pricedItemAdd
      * @type {object}
-     * @property {PricedItemData}   newPricedItemData   The priced item data item being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
+     * @property {PricedItemData}   newPricedItemData   The priced item data item 
+     * being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
      */
 
     /**
@@ -535,7 +590,8 @@ export class PricedItemManager extends EventEmitter {
      * Adds a priced item.
      * @param {(PricedItem|PricedItemDataItem)} pricedItem 
      * @param {boolean} validateOnly 
-     * @returns {PricedItemManager~AddPricedItemResult|undefined}   <code>undefined</code> is returned if validateOnly is <code>true</code>.
+     * @returns {PricedItemManager~AddPricedItemResult|undefined}   
+     * <code>undefined</code> is returned if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {PricedItemManager~pricedItemAdd}
      */
@@ -548,7 +604,8 @@ export class PricedItemManager extends EventEmitter {
 
         const currency = getCurrency(pricedItemDataItem.currency);
         if (!currency) {
-            throw userError('PricedItemManager-invalid_currency', pricedItemDataItem.currency);
+            throw userError('PricedItemManager-invalid_currency', 
+                pricedItemDataItem.currency);
         }
 
         if (type.validateFunc) {
@@ -571,8 +628,11 @@ export class PricedItemManager extends EventEmitter {
         pricedItemDataItem = await this._asyncAddPricedItem(pricedItemDataItem);
         pricedItemDataItem = getPricedItemDataItem(pricedItemDataItem, true);
 
-        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('addPricedItem', 
-            { pricedItemId: pricedItemDataItem.id, idGeneratorOptions: originalIdGeneratorOptions, });
+        const undoId = await this._accountingSystem.getUndoManager()
+            .asyncRegisterUndoDataItem('addPricedItem', 
+                { pricedItemId: pricedItemDataItem.id, 
+                    idGeneratorOptions: originalIdGeneratorOptions, 
+                });
 
 
         this.emit('pricedItemAdd', { newPricedItemDataItem: pricedItemDataItem, });
@@ -580,10 +640,13 @@ export class PricedItemManager extends EventEmitter {
     }
 
     /**
-     * Fired by {@link PricedItemManager#asyncRemovedPricedItem} after a priced item has been removed.
+     * Fired by {@link PricedItemManager#asyncRemovedPricedItem} after a priced item 
+     * has been removed.
      * @event PricedItemManager~pricedItemRemove
      * @type {object}
-     * @property {PricedItemDataItem}   removedPricedItemDataItem   The priced item data item being returned by the {@link PricedItemManager#asyncRemovePricedItem} call.
+     * @property {PricedItemDataItem}   removedPricedItemDataItem   The priced item 
+     * data item being returned by the {@link PricedItemManager#asyncRemovePricedItem} 
+     * call.
      */
 
     /**
@@ -595,7 +658,8 @@ export class PricedItemManager extends EventEmitter {
      * Removes a priced item.
      * @param {number} id 
      * @param {boolean} validateOnly 
-     * @returns {PricedItemManager~RemovePricedItemResult|undefined}   <code>undefined</code> is returned if validateOnly is <code>true</code>.
+     * @returns {PricedItemManager~RemovePricedItemResult|undefined}   
+     * <code>undefined</code> is returned if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {PricedItemManager~pricedItemRemove}
      */
@@ -615,7 +679,8 @@ export class PricedItemManager extends EventEmitter {
 
         const type = getPricedItemType(pricedItemDataItem.type);
         if (type === PricedItemType.CURRENCY) {
-            const currencyName = this._getCurrencyName(pricedItemDataItem.currency, pricedItemDataItem.quantityDefinition);
+            const currencyName = this._getCurrencyName(pricedItemDataItem.currency, 
+                pricedItemDataItem.quantityDefinition);
             this._currencyPricedItemIdsByCurrency.delete(currencyName);
         }
 
@@ -624,19 +689,25 @@ export class PricedItemManager extends EventEmitter {
         const updatedDataItems = [[id]];
         await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems);
 
-        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('removePricedItem', 
-            { removedPricedItemDataItem: getPricedItemDataItem(pricedItemDataItem, true), });
+        const undoId = await this._accountingSystem.getUndoManager()
+            .asyncRegisterUndoDataItem('removePricedItem', 
+                { removedPricedItemDataItem: 
+                    getPricedItemDataItem(pricedItemDataItem, true), 
+                });
 
         this.emit('pricedItemRemove', { removedPricedItemDataItem: pricedItemDataItem });
         return { removedPricedItemDataItem: pricedItemDataItem, undoId: undoId, };
     }
 
     /**
-     * Fired by {@link PricedItemManager#asyncModifyPricedItem} after the priced item has been modified.
+     * Fired by {@link PricedItemManager#asyncModifyPricedItem} after the priced item 
+     * has been modified.
      * @event PricedItemManager~pricedItemModify
      * @type {object}
-     * @property {PricedItemDataItem}   newPricedItemDataItem   The new priced item data item being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
-     * @property {PricedItemDataItem}   oldPricedItemDataItem   The old priced item data item being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
+     * @property {PricedItemDataItem}   newPricedItemDataItem   The new priced item data 
+     * item being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
+     * @property {PricedItemDataItem}   oldPricedItemDataItem   The old priced item data 
+     * item being returned by the {@link PricedItemManager#asyncAddPricedItem} call.
      */
 
 
@@ -648,10 +719,12 @@ export class PricedItemManager extends EventEmitter {
 
     /**
      * Modifies an existing priced item. The type cannot be modified.
-     * @param {(PricedItemData|PricedItem)} pricedItem The new priced item properties. The id property is required. For all other
-     * properties, if the property is not included in pricedItem, the property will not be changed.
+     * @param {(PricedItemData|PricedItem)} pricedItem The new priced item properties. 
+     * The id property is required. For all other properties, if the property is not 
+     * included in pricedItem, the property will not be changed.
      * @param {boolean} validateOnly 
-     * @returns {PricedItemManager~ModifyPricedItemResult|undefined}   <code>undefined</code> is returned if validateOnly is <code>true</code>.
+     * @returns {PricedItemManager~ModifyPricedItemResult|undefined}   
+     * <code>undefined</code> is returned if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {PricedItemManager~pricedItemModify}
      */
@@ -689,8 +762,10 @@ export class PricedItemManager extends EventEmitter {
         this._pricedItemDataItemsById.set(id, newPricedItemDataItem);
 
         if (type === PricedItemType.CURRENCY) {
-            const oldCurrencyName = this._getCurrencyName(oldPricedItemDataItem.currency, oldPricedItemDataItem.quantityDefinition);
-            const newCurrencyName = this._getCurrencyName(newPricedItemDataItem.currency, newPricedItemDataItem.quantityDefinition);
+            const oldCurrencyName = this._getCurrencyName(
+                oldPricedItemDataItem.currency, oldPricedItemDataItem.quantityDefinition);
+            const newCurrencyName = this._getCurrencyName(
+                newPricedItemDataItem.currency, newPricedItemDataItem.quantityDefinition);
             
             if (oldCurrencyName !== newCurrencyName) {
                 this._currencyPricedItemIdsByCurrency.delete(oldCurrencyName);
@@ -698,18 +773,28 @@ export class PricedItemManager extends EventEmitter {
             }
         }
 
-        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('modifyPricedItem', 
-            { oldPricedItemDataItem: getPricedItemDataItem(oldPricedItemDataItem, true), });
+        const undoId = await this._accountingSystem.getUndoManager()
+            .asyncRegisterUndoDataItem('modifyPricedItem', 
+                { oldPricedItemDataItem: 
+                    getPricedItemDataItem(oldPricedItemDataItem, true), 
+                });
 
         newPricedItemDataItem = getPricedItemDataItem(newPricedItemDataItem, true);
-        this.emit('pricedItemModify', { newPricedItemDataItem: newPricedItemDataItem, oldPricedItemDataItem: oldPricedItemDataItem });
-        return { newPricedItemDataItem: newPricedItemDataItem, oldPricedItemDataItem: oldPricedItemDataItem, undoId: undoId, };
+        this.emit('pricedItemModify', 
+            { newPricedItemDataItem: newPricedItemDataItem, 
+                oldPricedItemDataItem: oldPricedItemDataItem 
+            });
+        return { newPricedItemDataItem: newPricedItemDataItem, 
+            oldPricedItemDataItem: oldPricedItemDataItem, 
+            undoId: undoId, 
+        };
     }
 }
 
 
 /**
- * Handler interface implemented by {@link AccountingFile} implementations to interact with the {@link PricedItemManager}.
+ * Handler interface implemented by {@link AccountingFile} implementations to interact 
+ * with the {@link PricedItemManager}.
  * @interface
  */
 export class PricedItemsHandler {
@@ -723,7 +808,8 @@ export class PricedItemsHandler {
     }
 
     /**
-     * @returns {NumericIdGenerator~Options}    The id generator options for initializing the id generator.
+     * @returns {NumericIdGenerator~Options}    The id generator options for initializing 
+     * the id generator.
      */
     getIdGeneratorOptions() {
         throw Error('PricedItemsHandler.getIdGeneratorOptions() abstract method!');
@@ -732,10 +818,13 @@ export class PricedItemsHandler {
 
     /**
      * Main function for updating the priced item data items.
-     * @param {*} idPricedItemDataItemPairs Array of one or two element sub-arrays. The first element of each sub-array is the priced item id.
-     * For new or modified priced items, the second element is the new data item. For priced items to be deleted, this is <code>undefined</code>.
-     * @param {NumericIdGenerator~Options|undefined}  idGeneratorOptions    The current state of the id generator, if <code>undefined</code>
-     * the generator state hasn't changed.
+     * @param {*} idPricedItemDataItemPairs Array of one or two element sub-arrays. 
+     * The first element of each sub-array is the priced item id. For new or modified 
+     * priced items, the second element is the new data item. For priced items to be 
+     * deleted, this is <code>undefined</code>.
+     * @param {NumericIdGenerator~Options|undefined}  idGeneratorOptions    The current 
+     * state of the id generator, if <code>undefined</code> the generator state hasn't 
+     * changed.
      */
     async asyncUpdatePricedItemDataItems(idPricedItemDataItemPairs, idGeneratorOptions) {
         throw Error('PricedItemsHandler.pricedItemModify() abstract method!');

@@ -28,10 +28,11 @@ import { SortedArray } from '../util/SortedArray';
 
 
 /**
- * Retrieves a {@link Price} representation of a {@link PriceDataItem}, avoids copying if the arg
- * is already an {@link Price}
+ * Retrieves a {@link Price} representation of a {@link PriceDataItem}, avoids 
+ * copying if the arg is already an {@link Price}
  * @param {(PriceDataItem|Price)} priceDataItem 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will 
+ * always be created.
  * @returns {Price}
  */
 export function getPrice(priceDataItem, alwaysCopy) {
@@ -49,10 +50,11 @@ export function getPrice(priceDataItem, alwaysCopy) {
 }
 
 /**
- * Retrieves a {@link PriceDataItem} representation of an {@link Price}, avoids copying if the arg
- * is already a {@link PriceDataItem}
+ * Retrieves a {@link PriceDataItem} representation of an {@link Price}, avoids 
+ * copying if the arg is already a {@link PriceDataItem}
  * @param {(Price|PriceDataItem)} price 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will 
+ * always be created.
  */
 export function getPriceDataItem(price, alwaysCopy) {
     if (price) {
@@ -97,7 +99,8 @@ export class PriceManager extends EventEmitter {
     /**
      * Retrieves the date range of prices available for a priced item.
      * @param {number} pricedItemId 
-     * @returns {YMDDate[]|undefined}   An array containing the oldest and newest price dates, or <code>undefined</code> if there are no prices.
+     * @returns {YMDDate[]|undefined}   An array containing the oldest and newest 
+     * price dates, or <code>undefined</code> if there are no prices.
      */
     async asyncGetPriceDateRange(pricedItemId) {
         return this._handler.asyncGetPriceDateRange(pricedItemId);
@@ -113,37 +116,43 @@ export class PriceManager extends EventEmitter {
      * Retrieves the prices for a priced item within a date range.
      * @param {number} pricedItemId 
      * @param {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
-     * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date range, inclusive.
+     * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
+     * range, inclusive.
      * @returns {PriceDataItem[]}   Array containing the prices within the date range.
      */
     async asyncGetPriceDataItemsInDateRange(pricedItemId, ymdDateA, ymdDateB) {
         [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
-        const result = await this._handler.asyncGetPriceDataItemsInDateRange(pricedItemId, ymdDateA, ymdDateB);
+        const result = await this._handler.asyncGetPriceDataItemsInDateRange(
+            pricedItemId, ymdDateA, ymdDateB);
         return result.map((price) => getPriceDataItem(price, true));
     }
 
 
     /**
-     * Retrieves the price data item for a priced item that is on or closest to but before a particular date.
+     * Retrieves the price data item for a priced item that is on or closest to 
+     * but before a particular date.
      * @param {number} pricedItemId 
      * @param {YMDDate|string} ymdDate 
      * @returns {PriceDataItem|undefined}
      */
     async asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
         ymdDate = getYMDDate(ymdDate);
-        return this._handler.asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, ymdDate);
+        return this._handler.asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, 
+            ymdDate);
     }
 
 
     /**
-     * Retrieves the price data item for a priced item that is on or closest to but after a particular date.
+     * Retrieves the price data item for a priced item that is on or closest to 
+     * but after a particular date.
      * @param {number} pricedItemId 
      * @param {YMDDate|string} ymdDate 
      * @returns {PriceDataItem|undefined}
      */
     async asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
         ymdDate = getYMDDate(ymdDate);
-        return this._handler.asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, ymdDate);
+        return this._handler.asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, 
+            ymdDate);
     }
 
 
@@ -155,13 +164,17 @@ export class PriceManager extends EventEmitter {
         for (let i = updates.length - 1; i >= 0; --i) {
             const [ymdDate, priceDataItem] = updates[i];
             if (priceDataItem) {
-                const result = await this._handler.asyncAddPriceDataItems(pricedItemId, [priceDataItem]);
-                addedPrices = addedPrices.concat(result.map((priceDataItem) => getPriceDataItem(priceDataItem, true)));
+                const result = await this._handler.asyncAddPriceDataItems(
+                    pricedItemId, [priceDataItem]);
+                addedPrices = addedPrices.concat(result.map(
+                    (priceDataItem) => getPriceDataItem(priceDataItem, true)));
             }
             else {
                 const ymdDateObject = getYMDDate(ymdDate);
-                const result = await this._handler.asyncRemovePricesInDateRange(pricedItemId, ymdDateObject, ymdDateObject);
-                removedPrices = removedPrices.concat(result.map((priceDataItem) => getPriceDataItem(priceDataItem, true)));
+                const result = await this._handler.asyncRemovePricesInDateRange(
+                    pricedItemId, ymdDateObject, ymdDateObject);
+                removedPrices = removedPrices.concat(result.map(
+                    (priceDataItem) => getPriceDataItem(priceDataItem, true)));
             }
         }
 
@@ -188,7 +201,8 @@ export class PriceManager extends EventEmitter {
      * Fired by {@link PriceManager#asyncAddPrices} after the prices have been added.
      * @event PriceManager~pricesAdd
      * @type {object}
-     * @property {PriceDataItem[]}  newPriceDataItems   Array of the newly added price data items being returned
+     * @property {PriceDataItem[]}  newPriceDataItems   Array of the newly added 
+     * price data items being returned
      * by the call to {@link PriceManager#asyncAddPrices}.
      */
 
@@ -219,17 +233,20 @@ export class PriceManager extends EventEmitter {
             updates.push(update);
 
             const ymdDate = getYMDDate(priceDataItem.ymdDate);
-            const existingPriceDataItems = await this._handler.asyncGetPriceDataItemsInDateRange(pricedItemId, ymdDate, ymdDate);
+            const existingPriceDataItems = await this._handler
+                .asyncGetPriceDataItemsInDateRange(pricedItemId, ymdDate, ymdDate);
             if (existingPriceDataItems && existingPriceDataItems.length) {
                 update.push(getPriceDataItem(existingPriceDataItems[0], true));
             }
         }
 
-        const result = (await this._handler.asyncAddPriceDataItems(pricedItemId, priceDataItems)).map(
+        const result = (await this._handler.asyncAddPriceDataItems(
+            pricedItemId, priceDataItems)).map(
             (priceDataItem) => getPriceDataItem(priceDataItem, true));
 
-        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('addPrices', 
-            { pricedItemId: pricedItemId, updates: updates, });
+        const undoId = await this._accountingSystem.getUndoManager()
+            .asyncRegisterUndoDataItem('addPrices', 
+                { pricedItemId: pricedItemId, updates: updates, });
 
         this.emit('pricesAdd', { newPriceDataItems: result });
         return { newPriceDataItems: result, undoId: undoId, };
@@ -239,8 +256,8 @@ export class PriceManager extends EventEmitter {
      * Fired by {@link PriceManager#asyncRemovePrices} after the prices have been removed.
      * @event PriceManager~pricesRemove
      * @type {object}
-     * @property {PriceDataItem[]}  removedPriceDataItems   Array of the removed price data items being returned
-     * by the call to {@link PriceManager#asyncRemovePrices}.
+     * @property {PriceDataItem[]}  removedPriceDataItems   Array of the removed price 
+     * data items being returned by the call to {@link PriceManager#asyncRemovePrices}.
      */
 
     /**
@@ -258,11 +275,14 @@ export class PriceManager extends EventEmitter {
      */
     async asyncRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB) {
         [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
-        const prices = await this._handler.asyncRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB);
+        const prices = await this._handler.asyncRemovePricesInDateRange(
+            pricedItemId, ymdDateA, ymdDateB);
 
-        const removedPrices = prices.map((price) => getPriceDataItem(price, true));
-        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('removePrices', 
-            { pricedItemId: pricedItemId, removedPrices: removedPrices, });
+        const removedPrices = prices.map(
+            (price) => getPriceDataItem(price, true));
+        const undoId = await this._accountingSystem.getUndoManager()
+            .asyncRegisterUndoDataItem('removePrices', 
+                { pricedItemId: pricedItemId, removedPrices: removedPrices, });
 
 
         this.emit('pricesRemove', { removedPriceDataItems: prices });
@@ -274,7 +294,8 @@ export class PriceManager extends EventEmitter {
 
 
 /**
- * Handler interface implemented by {@link AccountingFile} implementations to interact with the {@link PriceManager}.
+ * Handler interface implemented by {@link AccountingFile} implementations to 
+ * interact with the {@link PriceManager}.
  * @interface
  */
 
@@ -282,7 +303,8 @@ export class PricesHandler {
     /**
      * Retrieves the date range of prices available for a priced item.
      * @param {number} pricedItemId 
-     * @returns {YMDDate[]|undefined}   An array containing the oldest and newest price dates, or <code>undefined</code> if there are no prices.
+     * @returns {YMDDate[]|undefined}   An array containing the oldest and newest 
+     * price dates, or <code>undefined</code> if there are no prices.
      */
     async asyncGetPriceDateRange(pricedItemId) {
         throw Error('PricesHandler.asyncGetPricedDateRange() abstract method!');
@@ -300,22 +322,26 @@ export class PricesHandler {
     }
 
     /**
-     * Retrieves the price data item for a priced item that is on or closest to but before a particular date.
+     * Retrieves the price data item for a priced item that is on or closest to but 
+     * before a particular date.
      * @param {number} pricedItemId 
      * @param {YMDDate|string} ymdDate 
      * @returns {PriceDataItem|undefined}
      */
     async asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
+        // eslint-disable-next-line max-len
         throw Error('PricesHandler.asyncGetPriceDataItemOnOrClosestBefore() abstract method!');
     }
 
     /**
-     * Retrieves the price data item for a priced item that is on or closest to but after a particular date.
+     * Retrieves the price data item for a priced item that is on or closest to 
+     * but after a particular date.
      * @param {number} pricedItemId 
      * @param {YMDDate|string} ymdDate 
      * @returns {PriceDataItem|undefined}
      */
     async asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
+        // eslint-disable-next-line max-len
         throw Error('PricesHandler.asyncGetPriceDataItemOnOrClosestAfter() abstract method!');
     }
 
@@ -388,7 +414,8 @@ export class InMemoryPricesHandler extends PricesHandler {
         if (entry && entry.length > 0) {
             const indexA = entry.indexGE({ ymdDate: ymdDateA });
             const indexB = entry.indexLE({ ymdDate: ymdDateB });
-            return entry.getValues().slice(indexA, indexB + 1).map((value) => getPriceDataItem(value));
+            return entry.getValues().slice(indexA, indexB + 1).map(
+                (value) => getPriceDataItem(value));
         }
         return [];
     }
@@ -412,12 +439,14 @@ export class InMemoryPricesHandler extends PricesHandler {
     _asyncAddPriceDataItems(pricedItemId, priceDataItems) {
         let entry = this._sortedPricesByPricedItemId.get(pricedItemId);
         if (!entry) {
-            entry = new SortedArray((a, b) => YMDDate.compare(a.ymdDate, b.ymdDate), { duplicates: 'replace' });
+            entry = new SortedArray((a, b) => YMDDate.compare(a.ymdDate, b.ymdDate), 
+                { duplicates: 'replace' });
             this._sortedPricesByPricedItemId.set(pricedItemId, entry);
         }
 
         priceDataItems.forEach((priceDataItem) => {
-            // We store Price, not PriceDataItem so we can sort directly with YMDDate.compare().
+            // We store Price, not PriceDataItem so we can sort directly with 
+            // YMDDate.compare().
             entry.add(getPrice(priceDataItem, true));
         });
 

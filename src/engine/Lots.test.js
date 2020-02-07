@@ -159,7 +159,8 @@ test('LotManager-other types', async () => {
     expect(result.oldLotDataItem).toEqual(settingsC);
 
 
-    await expect(manager.asyncModifyLot({ id: settingsC.id, pricedItemId: -1, })).rejects.toThrow();
+    await expect(manager.asyncModifyLot(
+        { id: settingsC.id, pricedItemId: -1, })).rejects.toThrow();
 
 
     // Test JSON

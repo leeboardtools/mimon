@@ -21,7 +21,8 @@ import { NumericIdGenerator } from '../util/NumericIds';
 /**
  * Retrieves a {@link Lot} representation of a {@link LotDataItem}
  * @param {(LotDataItem|Lot)} lotDataItem 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will 
+ * always be created.
  * @returns {Lot}
  */
 export function getLot(lotDataItem, alwaysCopy) {
@@ -37,7 +38,8 @@ export function getLot(lotDataItem, alwaysCopy) {
 /**
  * Retrieves a {@link LotDataItem} representation of a {@link Lot}.
  * @param {(Lot|LotDataItem)} lot 
- * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will always be created.
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will 
+ * always be created.
  * @returns {LotDataItem}
  */
 export const getLotDataItem = getLot;
@@ -53,7 +55,8 @@ export class LotManager extends EventEmitter {
         this._accountingSystem = accountingSystem;
         this._handler = options.handler;
         
-        this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorOptions());
+        this._idGenerator = new NumericIdGenerator(options.idGenerator 
+            || this._handler.getIdGeneratorOptions());
 
         this._lotDataItemsById = new Map();
 
@@ -137,23 +140,26 @@ export class LotManager extends EventEmitter {
 
         this._lotDataItemsById.set(id, oldLotDataItem);
 
-        this.emit('lotModify', { newLotDataItem: oldLotDataItem, oldLotDataItem: newLotDataItem, });
+        this.emit('lotModify', 
+            { newLotDataItem: oldLotDataItem, oldLotDataItem: newLotDataItem, });
     }
 
 
     _validate(lotDataItem) {
         const pricedItemManager = this._accountingSystem.getPricedItemManager();
         if (!pricedItemManager.getPricedItemDataItemWithId(lotDataItem.pricedItemId)) {
-            return userError('LotManager-invalid_pricedItem_id', lotDataItem.pricedItemId);
+            return userError('LotManager-invalid_pricedItem_id', 
+                lotDataItem.pricedItemId);
         }
     }
 
     /**
-     * Fired by {@link LotManager#asyncAddLot} and {@link LotManager#asyncAddCurrencyLot} after the priced
-     * item has been added.
+     * Fired by {@link LotManager#asyncAddLot} and 
+     * {@link LotManager#asyncAddCurrencyLot} after the priced item has been added.
      * @event LotManager~lotAdd
      * @type {object}
-     * @property {LotData}   newLotData   The lot data item being returned by the {@link LotManager#asyncAddLot} call.
+     * @property {LotData}   newLotData   The lot data item being returned by the 
+     * {@link LotManager#asyncAddLot} call.
      */
 
     /**
@@ -165,7 +171,8 @@ export class LotManager extends EventEmitter {
      * Adds a lot.
      * @param {(Lot|LotDataItem)} lot 
      * @param {boolean} validateOnly 
-     * @returns {LotManager~AddLotResult|undefined} <code>undefined</code> is returned if validateOnly is <code>true</code>.
+     * @returns {LotManager~AddLotResult|undefined} <code>undefined</code> is returned 
+     * if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {LotManager~lotAdd}
      */
@@ -192,8 +199,11 @@ export class LotManager extends EventEmitter {
 
         this._lotDataItemsById.set(id, lotDataItem);
 
-        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('addLot', 
-            { lotId: lotDataItem.id, idGeneratorOptions: originalIdGeneratorOptions, });
+        const undoId = await this._accountingSystem.getUndoManager()
+            .asyncRegisterUndoDataItem('addLot', 
+                { lotId: lotDataItem.id, 
+                    idGeneratorOptions: originalIdGeneratorOptions, 
+                });
 
         this.emit('lotAdd', { newLotDataItem: lotDataItem, });
         return { newLotDataItem: lotDataItem, undoId: undoId };
@@ -204,7 +214,8 @@ export class LotManager extends EventEmitter {
      * Fired by {@link LotManager#asyncRemovedLot} after a lot has been removed.
      * @event LotManager~lotRemove
      * @type {object}
-     * @property {LotDataItem}   removedLotDataItem   The lot data item being returned by the {@link LotManager#asyncRemoveLot} call.
+     * @property {LotDataItem}   removedLotDataItem   The lot data item being returned 
+     * by the {@link LotManager#asyncRemoveLot} call.
      */
 
     /**
@@ -216,7 +227,8 @@ export class LotManager extends EventEmitter {
      * Removes a lot.
      * @param {number} id 
      * @param {boolean} validateOnly 
-     * @returns {LotManager~RemoveLotResult|undefined}  <code>undefined</code> is returned if validateOnly is <code>true</code>.
+     * @returns {LotManager~RemoveLotResult|undefined}  <code>undefined</code> is 
+     * returned if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {LotManager~lotRemove}
      */
@@ -235,8 +247,9 @@ export class LotManager extends EventEmitter {
         const updatedDataItems = [[id]];
         await this._handler.asyncUpdateLotDataItems(updatedDataItems);
 
-        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('removeLot', 
-            { removedLotDataItem: getLotDataItem(lotDataItem, true), });
+        const undoId = await this._accountingSystem.getUndoManager()
+            .asyncRegisterUndoDataItem('removeLot', 
+                { removedLotDataItem: getLotDataItem(lotDataItem, true), });
 
         this.emit('lotRemove', { removedLotDataItem: lotDataItem });
         return { removedLotDataItem: lotDataItem, undoId: undoId, };
@@ -247,8 +260,10 @@ export class LotManager extends EventEmitter {
      * Fired by {@link LotManager#asyncModifyLot} after the lot has been modified.
      * @event LotManager~lotModify
      * @type {object}
-     * @property {LotDataItem}   newLotDataItem   The new lot data item being returned by the {@link LotManager#asyncAddLot} call.
-     * @property {LotDataItem}   oldLotDataItem   The old lot data item being returned by the {@link LotManager#asyncAddLot} call.
+     * @property {LotDataItem}   newLotDataItem   The new lot data item being returned 
+     * by the {@link LotManager#asyncAddLot} call.
+     * @property {LotDataItem}   oldLotDataItem   The old lot data item being returned 
+     * by the {@link LotManager#asyncAddLot} call.
      */
 
     /**
@@ -259,10 +274,12 @@ export class LotManager extends EventEmitter {
 
     /**
      * Modifies an existing lot.
-     * @param {(LotData|Lot)} lot The new lot properties. The id property is required. For all other
-     * properties, if the property is not included in lot, the property will not be changed.
+     * @param {(LotData|Lot)} lot The new lot properties. The id property is required. 
+     * For all other properties, if the property is not included in lot, the property 
+     * will not be changed.
      * @param {boolean} validateOnly 
-     * @returns {LotManager~ModifyLotResult|undefined}  <code>undefined</code> is returned if validateOnly is <code>true</code>.
+     * @returns {LotManager~ModifyLotResult|undefined}  <code>undefined</code> is 
+     * returned if validateOnly is <code>true</code>.
      * @throws {Error}
      * @fires {LotManager~lotModify}
      */
@@ -292,18 +309,24 @@ export class LotManager extends EventEmitter {
 
         this._lotDataItemsById.set(id, newLotDataItem);
 
-        const undoId = await this._accountingSystem.getUndoManager().asyncRegisterUndoDataItem('modifyLot', 
-            { oldLotDataItem: getLotDataItem(oldLotDataItem, true), });
+        const undoId = await this._accountingSystem.getUndoManager()
+            .asyncRegisterUndoDataItem('modifyLot', 
+                { oldLotDataItem: getLotDataItem(oldLotDataItem, true), });
 
         newLotDataItem = getLotDataItem(newLotDataItem, true);
-        this.emit('lotModify', { newLotDataItem: newLotDataItem, oldLotDataItem: oldLotDataItem });
-        return { newLotDataItem: newLotDataItem, oldLotDataItem: oldLotDataItem, undoId: undoId, };
+        this.emit('lotModify', 
+            { newLotDataItem: newLotDataItem, oldLotDataItem: oldLotDataItem });
+        return { newLotDataItem: newLotDataItem, 
+            oldLotDataItem: oldLotDataItem, 
+            undoId: undoId, 
+        };
     }
 }
 
 
 /**
- * Handler interface implemented by {@link AccountingFile} implementations to interact with the {@link LotManager}.
+ * Handler interface implemented by {@link AccountingFile} implementations to 
+ * interact with the {@link LotManager}.
  * @interface
  */
 export class LotsHandler {
@@ -317,7 +340,8 @@ export class LotsHandler {
     }
 
     /**
-     * @returns {NumericIdGenerator~Options}    The id generator options for initializing the id generator.
+     * @returns {NumericIdGenerator~Options}    The id generator options for 
+     * initializing the id generator.
      */
     getIdGeneratorOptions() {
         throw Error('LotsHandler.getIdGeneratorOptions() abstract method!');
@@ -326,10 +350,13 @@ export class LotsHandler {
 
     /**
      * Main function for updating the lot data items.
-     * @param {*} idLotDataItemPairs Array of one or two element sub-arrays. The first element of each sub-array is the lot id.
-     * For new or modified lots, the second element is the new data item. For lots to be deleted, this is <code>undefined</code>.
-     * @param {NumericIdGenerator~Options|undefined}  idGeneratorOptions    The current state of the id generator, if <code>undefined</code>
-     * the generator state hasn't changed.
+     * @param {*} idLotDataItemPairs Array of one or two element sub-arrays. 
+     * The first element of each sub-array is the lot id.
+     * For new or modified lots, the second element is the new data item. 
+     * For lots to be deleted, this is <code>undefined</code>.
+     * @param {NumericIdGenerator~Options|undefined}  idGeneratorOptions    The 
+     * current state of the id generator, if <code>undefined</code> the generator 
+     * state hasn't changed.
      */
     async asyncUpdateLotDataItems(idLotDataItemPairs, idGeneratorOptions) {
         throw Error('LotsHandler.lotModify() abstract method!');

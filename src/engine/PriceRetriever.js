@@ -25,6 +25,7 @@ async function directRetrieveQuote(options) {
         const frequency = '1d';
 
         //
+        // eslint-disable-next-line max-len
         // Adapted from https://github.com/darthbatman/yahoo-stock-prices/blob/master/yahoo-stock-prices.js
         //
         const url = 'https://finance.yahoo.com/quote/' + symbol
@@ -42,7 +43,9 @@ async function directRetrieveQuote(options) {
                     reject(err);
                 }
                 else {
-                    const prices = JSON.parse(body.split('HistoricalPriceStore":{"prices":')[1].split(',"isPending')[0]);
+                    const prices = JSON.parse(
+                        body.split('HistoricalPriceStore":{"prices":')[1]
+                            .split(',"isPending')[0]);
                     prices.forEach((price) => {
                         if (price.date) {
                             price.date = new Date(price.date * 1000);
@@ -59,8 +62,8 @@ async function directRetrieveQuote(options) {
 /**
  * @typedef {object} PriceRetrieverOptions
  * @param {number} [timeout]    Optional timeout in msec.
- * @param {QuantityDefinition}  [quantityDefinition]    Optional quantity definition to use for defining the price values,
- * if not given then 4 decimal places will be used.
+ * @param {QuantityDefinition}  [quantityDefinition]    Optional quantity definition 
+ * to use for defining the price values, if not given then 4 decimal places will be used.
  */
 
 /**
@@ -127,7 +130,10 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
             close: quantityDefinition.cleanupNumber(result.close),
         };
 
-        if ((result.open !== result.close) || (result.high !== result.close) || (result.low !== result.close)) {
+        if ((result.open !== result.close) 
+            || (result.high !== result.close) 
+            || (result.low !== result.close)) {
+
             if (result.open !== undefined) {
                 priceDataItem.open = quantityDefinition.cleanupNumber(result.open);
             }
@@ -174,36 +180,48 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
 
 /**
  * @callback PriceRetrieverCallback
- * @param {number}  totalPricedItemsCount   The total number of priced items whose prices are being retrieved.
- * @param {number}  processedPricedItemsCount   The number of priced items whose prices have been processed, this will be
- * equal to totalPricedItemsCount after the last priced item is processed.
- * @param {number}  pricedItemId   The local id of the priced item that was just processed.
- * @param {Price[]} [prices]    Array containing the options for the prices that were retrieved for the priced item, will be
- * <code>undefined</code> if retrieval failed.
+ * @param {number}  totalPricedItemsCount   The total number of priced items whose 
+ * prices are being retrieved.
+ * @param {number}  processedPricedItemsCount   The number of priced items whose 
+ * prices have been processed, this will be equal to totalPricedItemsCount after 
+ * the last priced item is processed.
+ * @param {number}  pricedItemId   The local id of the priced item that was just 
+ * processed.
+ * @param {Price[]} [prices]    Array containing the options for the prices that 
+ * were retrieved for the priced item, will be <code>undefined</code> if retrieval failed.
  * @param {Error} [err] If the last retrieval failed this is the error.
- * @param {boolean} isCancel    Set this to <code>true</code> if further processing should be aborted.
- * @param {PriceRetrieverSuccessfulEntry[]} successfulEntries   Array containing the entries for priced items whose retrieval succeeded.
- * @param {PriceRetrieverFailedEntry[]} failedEntries   Array containing the entries for priced items whose retrieval failed.
+ * @param {boolean} isCancel    Set this to <code>true</code> if further processing 
+ * should be aborted.
+ * @param {PriceRetrieverSuccessfulEntry[]} successfulEntries   Array containing 
+ * the entries for priced items whose retrieval succeeded.
+ * @param {PriceRetrieverFailedEntry[]} failedEntries   Array containing the 
+ * entries for priced items whose retrieval failed.
  */
 
 
 /**
  * @typedef {object}    PriceRetrieverOptions
  * @property {PriceManager} priceManager    The price manager, required.
- * @property {number[]} pricedItemIds    Array of ids of the priced items whose prices are to be retrieved,
+ * @property {number[]} pricedItemIds    Array of ids of the priced items whose 
+ * prices are to be retrieved,
  * @property {YMDDate}    [ymdDateA]    One date of the date range.
- * @property {YMDDate}    [ymdDateB=ymdDateA] The other date of the date range. If both ymdDateA and ymdDateB are left out then the current
- * date is used.
- * @property {PriceRetrieverCallback}   [callback]  Optional callback function called after prices are retrieved for a priced item.
- * @property {number}   [msecDelay] Optional number of milliseconds to delay between calls to the price retriever.
- * @property {boolean}  [isElectron=false]  Set to <code>true</code> if this is called from Electron.
+ * @property {YMDDate}    [ymdDateB=ymdDateA] The other date of the date range. If 
+ * both ymdDateA and ymdDateB are left out then the current date is used.
+ * @property {PriceRetrieverCallback}   [callback]  Optional callback function called 
+ * after prices are retrieved for a priced item.
+ * @property {number}   [msecDelay] Optional number of milliseconds to delay between 
+ * calls to the price retriever.
+ * @property {boolean}  [isElectron=false]  Set to <code>true</code> if this is 
+ * called from Electron.
  */
 
 /**
  * @typedef {object}    PriceRetrieverResult
  * @property {boolean}  isCancelled
- * @param {PriceRetrieverSuccessfulEntry[]} successfulEntries   Array containing the entries for priced items whose retrieval succeeded.
- * @param {PriceRetrieverFailedEntry[]} failedEntries   Array containing the entries for priced items whose retrieval failed.
+ * @param {PriceRetrieverSuccessfulEntry[]} successfulEntries   Array containing the 
+ * entries for priced items whose retrieval succeeded.
+ * @param {PriceRetrieverFailedEntry[]} failedEntries   Array containing the entries 
+ * for priced items whose retrieval failed.
  */
 
 /**
@@ -212,7 +230,8 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
  * @returns {PriceRetrieverResult}
  */
 export async function asyncGetUpdatedPricedItemPrices(options) {
-    let { pricedItemManager, pricedItemIds, ymdDateA, ymdDateB, callback, msecDelay, isElectron } = options;
+    let { pricedItemManager, pricedItemIds, ymdDateA, 
+        ymdDateB, callback, msecDelay, isElectron } = options;
 
     setIsElectron(isElectron);
 
@@ -222,7 +241,8 @@ export async function asyncGetUpdatedPricedItemPrices(options) {
 
     const pricedItems = [];
     pricedItemIds.forEach((pricedItemId) => {
-        const pricedItemDataItem = pricedItemManager.getPricedItemDataItemWithId(pricedItemId);
+        const pricedItemDataItem 
+            = pricedItemManager.getPricedItemDataItemWithId(pricedItemId);
         const pricedItem = getPricedItem(pricedItemDataItem);
         if (!pricedItem) {
             return;
@@ -261,14 +281,16 @@ export async function asyncGetUpdatedPricedItemPrices(options) {
         let prices;
         let err;
         try {
-            prices = await asyncGetPricesForTicker(pricedItem.ticker, ymdDateA, ymdDateB, options);
+            prices = await asyncGetPricesForTicker(pricedItem.ticker, ymdDateA, ymdDateB, 
+                options);
             if (msecDelay && (msecDelay > 0) && (i + 1 < pricedItems.length)) {
                 await new Promise((resolve, reject) => {
                     setTimeout(() => resolve(), msecDelay);
                 });
             }
 
-            successfulEntries.push({ pricedItemId: pricedItem.id, ticker: ticker, prices: prices, });
+            successfulEntries.push(
+                { pricedItemId: pricedItem.id, ticker: ticker, prices: prices, });
         }
         catch (e) {
             failedEntries.push({ pricedItemId: pricedItem.id, ticker: ticker, err: e, });
