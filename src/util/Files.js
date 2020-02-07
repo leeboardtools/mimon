@@ -43,7 +43,8 @@ export async function allFilesExist(fileNames) {
 }
 
 /**
- * Retrieves all the files in a directory, prepending the directory name to the file names.
+ * Retrieves all the files in a directory, prepending the directory name to the 
+ * file names.
  * @param {string} dir
  * @returns {string[]}  Array containing the path names to the files.
  * @async
@@ -56,7 +57,8 @@ export async function getFullPathsInDir(dir) {
 /**
  * Retrieves the base file names of all the files, but no directories, in a directory.
  * @param {string} dir The directory of interest.
- * @returns {string[]} Array containing the base file names (name.txt) of all the files in dir, no directories.
+ * @returns {string[]} Array containing the base file names (name.txt) of all the 
+ * files in dir, no directories.
  */
 export async function getFilesOnlyInDir(dir) {
     const dirEnts = await fsPromises.readdir(dir, { withFileTypes: true });
@@ -72,7 +74,8 @@ export async function getFilesOnlyInDir(dir) {
 /**
  * Retrieves the base file names of all the directories, but no files, in a directory.
  * @param {string} dir The directory of interest.
- * @returns {string[]} Array containing the base file names (name.txt) of all the directories in dir, no files.
+ * @returns {string[]} Array containing the base file names (name.txt) of all the 
+ * directories in dir, no files.
  */
 export async function getDirectoriessOnlyInDir(dir) {
     const dirEnts = await fsPromises.readdir(dir, { withFileTypes: true });

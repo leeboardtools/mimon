@@ -1,17 +1,21 @@
 const path = require('path');
 
 /**
- * Simple class for constructing/deconstructing a base file name (name.ext) from a prefix, suffix, and extension.
+ * Simple class for constructing/deconstructing a base file name (name.ext) from a 
+ * prefix, suffix, and extension.
  * @class
  */
 export class FileNameBuilder {
     /**
      * @typedef {object} FileNameBuilder~Options
      * @property {string}   [prefix=""]
-     * @property {string}   [noBasisName=""]    Optional base file name to use when no basis is passed to {@link FileNameBuilder#buildFileName}
-     * If this is specified and there is no basis passed, this will replace the prefix and suffix. The extension will still be added.
+     * @property {string}   [noBasisName=""]    Optional base file name to use when 
+     * no basis is passed to {@link FileNameBuilder#buildFileName}. If this is 
+     * specified and there is no basis passed, this will replace the prefix and 
+     * suffix. The extension will still be added.
      * @property {string}   [suffix=""]
-     * @property {string}   [ext=""]    The file extension, this should only be the final extension.
+     * @property {string}   [ext=""]    The file extension, this should only be 
+     * the final extension.
      */
 
     /**
@@ -50,8 +54,10 @@ export class FileNameBuilder {
 
     /**
      * Parses the basis from a file name.
-     * @param {string} fileName The file name to parse. Only the base file name is used, any root/directory is ignored.
-     * @returns {string|undefined}  The basis used to construct the file name, or <code>undefined</code> if the base file name
+     * @param {string} fileName The file name to parse. Only the base file name is 
+     * used, any root/directory is ignored.
+     * @returns {string|undefined}  The basis used to construct the file name, or
+     * <code>undefined</code> if the base file name
      * is not compatible.
      */
     parseFileName(fileName) {
