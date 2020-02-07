@@ -15,7 +15,8 @@ test('UserMessages', () => {
         expect(userMsg('Message-With-Arg')).toEqual('Prefix--Suffix');
         expect(userMsg('Message-With-Arg', 1234, 456)).toEqual('Prefix-1234-Suffix');
         expect(userMsg('Abc', 'ZYX', 'MNO', 'QRS')).toEqual('ZYX def MNO ghi QRS');
-        expect(userMsg(['ZZZ', 'Abc'], 'ZYX', 'MNO', 'QRS')).toEqual('ZYX def MNO ghi QRS');
+        expect(userMsg(['ZZZ', 'Abc'], 'ZYX', 'MNO', 'QRS'))
+            .toEqual('ZYX def MNO ghi QRS');
         expect(userMsg(['Simple-Msg', 'Abc'])).toEqual(msgs['Simple-Msg']);
 
         const testError = Error('ZYX def MNO ghi QRS');

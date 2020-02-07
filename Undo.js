@@ -11,13 +11,15 @@ import { userError } from './UserMessages';
  */
 
 /**
- * Manages {@link UndoDataItem} items. Items are only added by the accounting system subsystem managers.
+ * Manages {@link UndoDataItem} items. Items are only added by the accounting system 
+ * subsystem managers.
  */
 export class UndoManager {
     constructor(options) {
         this._handler = options.handler;
 
-        this._idGenerator = new NumericIdGenerator(options.idGenerator || this._handler.getIdGeneratorOptions());
+        this._idGenerator = new NumericIdGenerator(options.idGenerator 
+            || this._handler.getIdGeneratorOptions());
 
         this._appliersByName = new Map();
 
@@ -48,7 +50,8 @@ export class UndoManager {
 
 
     /**
-     * @returns {number}    The undo id that will be assigned to the next {@link UndoDataItem} registered with the manager.
+     * @returns {number}    The undo id that will be assigned to the next 
+     * {@link UndoDataItem} registered with the manager.
      */
     getNextUndoId() {
         return this._idGenerator.peekGenerateId();
@@ -85,8 +88,8 @@ export class UndoManager {
     /**
      * Undoes actions up to and including a given undo id.
      * @param {number} undoId 
-     * @param {boolean} [clearOnly=false]   If <code>true</code> the undo items are removed from the manager but are not
-     * actually undone.
+     * @param {boolean} [clearOnly=false]   If <code>true</code> the undo items are 
+     * removed from the manager but are not actually undone.
      * @throws Error
      */
     async asyncUndoToId(undoId, clearOnly) {
@@ -155,7 +158,8 @@ export class UndoManager {
         undoDataItem = Object.assign({}, undoDataItem, { applier: applier, });
         undoDataItem.id = this._idGenerator.generateId();
         try {
-            await this._handler.asyncAddUndoDataItem(undoDataItem, this._idGenerator.toJSON());
+            await this._handler.asyncAddUndoDataItem(undoDataItem, 
+                this._idGenerator.toJSON());
             this._sortedUndoIds.add(undoDataItem.id);
         }
         catch (e) {
@@ -169,7 +173,8 @@ export class UndoManager {
 
 
 /**
- * Handler interface implemented by {@link AccountingFile} implementations to interact with the {@link UndoManager}.
+ * Handler interface implemented by {@link AccountingFile} implementations to 
+ * interact with the {@link UndoManager}.
  * @interface
  */
 export class UndoHandler {
@@ -181,7 +186,8 @@ export class UndoHandler {
     }
 
     /**
-     * @returns {NumericIdGenerator~Options}    The id generator options for initializing the id generator.
+     * @returns {NumericIdGenerator~Options}    The id generator options for 
+     * initializing the id generator.
      */
     getIdGeneratorOptions() {
         throw Error('AccountsHandler.getIdGeneratorOptions() abstract method!');

@@ -1,23 +1,28 @@
 /**
- * Represents a quantity of something. Quantities are strictly controlled so that the allowed math involving
- * quantities results in exact results.
+ * Represents a quantity of something. Quantities are strictly controlled so that the 
+ * allowed math involving quantities results in exact results.
  * <p>
- * Quantities are based upon a {@link QuantityDefinition}, which defines the properties of a quantity. The QuantityDefinition
- * handles the actual manipulation of the quantites.
+ * Quantities are based upon a {@link QuantityDefinition}, which defines the 
+ * properties of a quantity. The QuantityDefinition handles the actual manipulation 
+ * of the quantites.
  * <p>
- * Quantities store their value as an integer. All math is performed with integers. The QuantityDefinition determines
- * the meaning of this base value.
+ * Quantities store their value as an integer. All math is performed with integers. 
+ * The QuantityDefinition determines the meaning of this base value.
  * <p>
- * Quantity objects are immutable. All manipulation methods result in a new Quantity object being created.
+ * Quantity objects are immutable. All manipulation methods result in a new Quantity 
+ * object being created.
  * @class
  */
 export class Quantity {
     /**
      * @typedef {object} Quantity~Options
-     * @property {number}   numberValue    The number value to be converted to the base value.
-     * @property {number}   baseValue   The base value, this is rounded to an integer. This takes precedence over numberValue.
-     * @property {QuantityDefinition|string}   definition  The quantity definition. If a string then {@link getQuantityDefinition} is called
-     * to retrieve the definition associated with the string.
+     * @property {number}   numberValue    The number value to be converted to the 
+     * base value.
+     * @property {number}   baseValue   The base value, this is rounded to an
+     *  integer. This takes precedence over numberValue.
+     * @property {QuantityDefinition|string}   definition  The quantity definition. 
+     * If a string then {@link getQuantityDefinition} is called to retrieve the 
+     * definition associated with the string.
      */
     constructor(options) {
         if (options instanceof Quantity) {
@@ -32,7 +37,8 @@ export class Quantity {
         if ((options.baseValue !== undefined) && (options.baseValue !== null)) {
             this._baseValue = Math.round(options.baseValue);
         }
-        else if ((options.numberValue !== undefined) && (options.numberValue !== null)) {
+        else if ((options.numberValue !== undefined) 
+            && (options.numberValue !== null)) {
             this._baseValue = this._definition.numberToBaseValue(options.numberValue);
         }
         else {
@@ -59,18 +65,24 @@ export class Quantity {
             baseValue: this._baseValue,
         };
 
-        const definitionName = (definitionLibrary) ? definitionLibrary.getName(this._definition) : undefined;
+        const definitionName = (definitionLibrary) 
+            ? definitionLibrary.getName(this._definition) 
+            : undefined;
         if (definitionName) {
             json.definitionName = definitionName;
         }
         else {
-            json.definition = (processor) ? processor.objectToJSON(this._definition) : this._definition.definitionToJSON();
+            json.definition = (processor) 
+                ? processor.objectToJSON(this._definition) 
+                : this._definition.definitionToJSON();
         }
         return json;
     }
 
     static preprocessFromJSON(json, processor, definitionLibrary) {
-        const libraryDefinition = (definitionLibrary) ? definitionLibrary.getDefinition(json.definitionName) : undefined;
+        const libraryDefinition = (definitionLibrary) 
+            ? definitionLibrary.getDefinition(json.definitionName) 
+            : undefined;
         if (libraryDefinition) {
             json.definition = libraryDefinition;
         }
@@ -81,30 +93,35 @@ export class Quantity {
     }
 
     /**
-     * Registers a simple processor supporting IdGenerator objects in a {@link JSONObjectProcessor}.
-     * Note that if you extend Quantity, and have separate JSON object processing for that class,
-     * you should set a <code>_jsonNoQuantity</code> property to <code>true</code> in that class.
+     * Registers a simple processor supporting IdGenerator objects in a 
+     * {@link JSONObjectProcessor}. Note that if you extend Quantity, and have 
+     * separate JSON object processing for that class, you should set a 
+     * <code>_jsonNoQuantity</code> property to <code>true</code> in that class.
      * @param {JSONProcessor} jsonProcessor The JSON object processor.
-     * @param {QuantityDefinitionLibrary}   [definitionLibrary] Optional library of quantity definitions holding
-     * pre-defined quantity definitions.
+     * @param {QuantityDefinitionLibrary}   [definitionLibrary] Optional library of 
+     * quantity definitions holding pre-defined quantity definitions.
      */
     static registerWithJSONObjectProcessor(jsonProcessor, definitionLibrary) {
         jsonProcessor.addSimpleObjectProcessor({
             name: 'Quantity',
-            isForObject: (object) => object instanceof Quantity && !object._jsonNoQuantity,
+            isForObject: (object) => object instanceof Quantity 
+                && !object._jsonNoQuantity,
             fromJSON: (json, processor) => {
                 Quantity.preprocessFromJSON(json, processor, definitionLibrary);
                 return new Quantity(json);
             },
-            toJSON: (object, processor) => object.toJSON(undefined, processor, definitionLibrary),
+            toJSON: (object, processor) => object.toJSON(undefined, 
+                processor, definitionLibrary),
         });
 
-        DecimalDefinition.registerWithJSONObjectProcessor(jsonProcessor, definitionLibrary);
+        DecimalDefinition.registerWithJSONObjectProcessor(jsonProcessor, 
+            definitionLibrary);
     }
 
 
     /**
-     * Determines if two quantities are the same, that is they have the same value and definition.
+     * Determines if two quantities are the same, that is they have the same value 
+     * and definition.
      * @param {Quantity} a
      * @param {Quantity} b
      * @returns {boolean}
@@ -145,14 +162,16 @@ export class Quantity {
     }
 
     /**
-     * @returns {number}    The number representation of the quantity, this is most likely not exact.
+     * @returns {number}    The number representation of the quantity, this is 
+     * most likely not exact.
      */
     toNumber() {
         return this._definition.baseValueToNumber(this._baseValue);
     }
 
     /**
-     * Creates a {@link Quantity} with this quantity's definition that most closely matches a given number.
+     * Creates a {@link Quantity} with this quantity's definition that most closely 
+     * matches a given number.
      * @param {number} number The number of interest.
      * @returns {Quantity}
      */
@@ -162,8 +181,9 @@ export class Quantity {
 
 
     /**
-     * @returns {string}    A text representation of the quantity. This is parseable back into a similar quantity
-     * via {@link Quantity#fromValueText} if the definition is the same.
+     * @returns {string}    A text representation of the quantity. This is parseable 
+     * back into a similar quantity via {@link Quantity#fromValueText} if the 
+     * definition is the same.
      */
     toValueText() {
         return this._definition.baseValueToValueText(this._baseValue);
@@ -172,15 +192,18 @@ export class Quantity {
     /**
      * @typedef {object}    Quantity~ParseResult    The result of parsing a quantity.
      * @property {Quantity} quantity    The parsed quantity with the current definition.
-     * @property {Quantity} fullQuantity    The parsed quantity in full resolution if the value text represented a higher
-     * resolution quantity, otherwise it is the same as quantity.
+     * @property {Quantity} fullQuantity    The parsed quantity in full resolution 
+     * if the value text represented a higher resolution quantity, otherwise it is the 
+     * same as quantity.
      * @property {string}   remainingText   The text following the parsed quantity.
      */
 
     /**
-     * Parses a value text string generated by {@link Quantity#toValueText} back into a {@link Quantity}.
+     * Parses a value text string generated by {@link Quantity#toValueText} back 
+     * into a {@link Quantity}.
      * @param {string} valueText The value text to parse.
-     * @returns {Quantity#ParseResult|undefined}    The parse result, <code>undefined</code> if valueText could not be parsed.
+     * @returns {Quantity#ParseResult|undefined}    The parse result, 
+     * <code>undefined</code> if valueText could not be parsed.
      */
     fromValueText(valueText) {
         return this._definition.fromValueText(valueText);
@@ -188,9 +211,11 @@ export class Quantity {
 
 
     /**
-     * Finds the quantity in an array of quantities whose definition has the highest resolution.
-     * If multiple quantities have the same resolution the first one is returned.
-     * @param {Quantity[]} quantities The array of quantities to go over. Elements may be a number, in which case they are ignored.
+     * Finds the quantity in an array of quantities whose definition has the highest 
+     * resolution. If multiple quantities have the same resolution the first one is 
+     * returned.
+     * @param {Quantity[]} quantities The array of quantities to go over. Elements 
+     * may be a number, in which case they are ignored.
      * @returns {Quantity}  The quantity with the highest resolution.
      */
     static getHighestResolutionQuantity(quantities) {
@@ -209,7 +234,8 @@ export class Quantity {
                 continue;
             }
 
-            if (definition.compareDefinitionResolution(quantities[i].getDefinition()) < 0) {
+            if (definition.compareDefinitionResolution(quantities[i].getDefinition()) 
+                < 0) {
                 quantity = quantities[i];
                 definition = quantity.getDefinition();
             }
@@ -220,8 +246,10 @@ export class Quantity {
 
 
     /**
-     * Adds several quantities together. The result is set to the definition of the highest resolution quantity.
-     * @param {(Quantity[]|...Quantity)} args The quantities to be added, either an array of {@link Quantity}s or as individual parameters.
+     * Adds several quantities together. The result is set to the definition of the 
+     * highest resolution quantity.
+     * @param {(Quantity[]|...Quantity)} args The quantities to be added, either an 
+     * array of {@link Quantity}s or as individual parameters.
      * @returns {Quantity}
      */
     static addQuantities(args) {
@@ -235,8 +263,10 @@ export class Quantity {
     }
 
     /**
-     * Adds one or more quantities to this quantity. The result has the same definition as this quantity.
-     * @param {(Quantity[]|...Quantity)} args The quantities to be added to this quantity, either an array of {@link Quantity}s or as individual parameters.
+     * Adds one or more quantities to this quantity. The result has the same 
+     * definition as this quantity.
+     * @param {(Quantity[]|...Quantity)} args The quantities to be added to this 
+     * quantity, either an array of {@link Quantity}s or as individual parameters.
      * @returns {Quantity}
      */
     add(args) {
@@ -251,8 +281,10 @@ export class Quantity {
 
 
     /**
-     * Subtracts one or more quantities from a quantity. The result is set to the definition of the highest resolution quantity.
-     * @param {(Quantity[]|...Quantity)} args The quantities to be subtracted, either an array of {@link Quantity}s or as individual parameters.
+     * Subtracts one or more quantities from a quantity. The result is set to the 
+     * definition of the highest resolution quantity.
+     * @param {(Quantity[]|...Quantity)} args The quantities to be subtracted, 
+     * either an array of {@link Quantity}s or as individual parameters.
      * All quantities after the first quantity are subtracted from the first quantity.
      * @returns {Quantity}
      */
@@ -267,8 +299,10 @@ export class Quantity {
     }
 
     /**
-     * Subtracts one or more quantities from this quantity. The result has the same definition as this quantity.
-     * @param {(Quantity[]|...Quantity)} args The quantities to be subtacted from this quantity, either an array of {@link Quantity}s or as individual parameters.
+     * Subtracts one or more quantities from this quantity. The result has the 
+     * same definition as this quantity.
+     * @param {(Quantity[]|...Quantity)} args The quantities to be subtacted from 
+     * this quantity, either an array of {@link Quantity}s or as individual parameters.
      * Individual elements may be numbers.
      * @returns {Quantity}
      */
@@ -292,9 +326,11 @@ export class Quantity {
 
 
     /**
-     * Multiplies several quantities together. The result uses the definition of the highest resolution quantity.
-     * Note that multiplication is typically a lossy operation.
-     * @param {(Quantity[]|...Quantity)} args The quantities to be multiplied, either an array of {@link Quantity}s or as individual parameters.
+     * Multiplies several quantities together. The result uses the definition of 
+     * the highest resolution quantity. Note that multiplication is typically a 
+     * lossy operation.
+     * @param {(Quantity[]|...Quantity)} args The quantities to be multiplied, 
+     * either an array of {@link Quantity}s or as individual parameters.
      * @returns {Quantity}
      */
     static multiplyQuantities(args) {
@@ -308,9 +344,11 @@ export class Quantity {
     }
 
     /**
-     * Multiplies one or more quantities with this quantity. The result has the same definition as this quantity.
-     * Note that multiplication is typically a lossy operation.
-     * @param {(Quantity[]|...Quantity)} args The quantities to be multiplied with this quantity, either an array of {@link Quantity}s or as individual parameters.
+     * Multiplies one or more quantities with this quantity. The result has the same 
+     * definition as this quantity. Note that multiplication is typically a lossy 
+     * operation.
+     * @param {(Quantity[]|...Quantity)} args The quantities to be multiplied with 
+     * this quantity, either an array of {@link Quantity}s or as individual parameters.
      * Individual elements may be numbers.
      * @returns {Quantity}
      */
@@ -327,13 +365,16 @@ export class Quantity {
 
     /**
      * Subdivides the quantity into several quantities according to a set of proportions.
-     * Note that the final quantity is adjusted as necessary so that the sum of all the sub-divided quantities
-     * is the same as this quantity.
-     * @param {(number[]|...number)} args Defines the proportions, may be an array of numbers or a list of numbers as individual parameters.
-     * The total number of subdivided quantities is the number of proportion values, each subdivided quantity is approximately
-     * proportion[i] / proportionSum of the original value, with the exception of the final subdivided quantity, which is always
+     * Note that the final quantity is adjusted as necessary so that the sum of all 
+     * the sub-divided quantities is the same as this quantity.
+     * @param {(number[]|...number)} args Defines the proportions, may be an array 
+     * of numbers or a list of numbers as individual parameters. The total number of 
+     * subdivided quantities is the number of proportion values, each subdivided 
+     * quantity is approximately proportion[i] / proportionSum of the original value, 
+     * with the exception of the final subdivided quantity, which is always
      * set so that the sum of all the subdivided quantities equals this quantity.
-     * @returns {Quantity[]}    The array of the subdivided quantities, all the quantities have the same definition as this quantity.
+     * @returns {Quantity[]}    The array of the subdivided quantities, all the 
+     * quantities have the same definition as this quantity.
      */
     subdivide(args) {
         if ((args instanceof Quantity) && (arguments.length === 1)) {
@@ -344,7 +385,8 @@ export class Quantity {
         }
 
         const baseValues = this._definition.subdivideBaseValue(this._baseValue, args);
-        return baseValues.map((baseValue) => new Quantity({ baseValue: baseValue, definition: this._definition }));
+        return baseValues.map((baseValue) => new Quantity(
+            { baseValue: baseValue, definition: this._definition }));
     }
 }
 
@@ -354,20 +396,23 @@ const registeredDefinitions = new Map();
 
 /**
  * Interface for the objects used to define the resolution of {@link Quantity}s.
- * Note that most methods that take a single {@link Quantity} argument presume that the definition
- * being called is the definition of the quantity.
+ * Note that most methods that take a single {@link Quantity} argument presume that 
+ * the definition being called is the definition of the quantity.
  * @interface
  */
 class QuantityDefinition {
     static fromOptions(options) {
-        return (options instanceof QuantityDefinition) ? options : getQuantityDefinition(options);
+        return (options instanceof QuantityDefinition) 
+            ? options 
+            : getQuantityDefinition(options);
     }
 
 
     /**
-     * The name of the quantity definition. The name is based upon the quantity definition's properties.
-     * Calling {@link getQuantityDefinition} with a given name will return an instance of the appropriate quantity
-     * definition. These instances are shared.
+     * The name of the quantity definition. The name is based upon the quantity 
+     * definition's properties.
+     * Calling {@link getQuantityDefinition} with a given name will return an 
+     * instance of the appropriate quantity definition. These instances are shared.
      * @returns {string}
      */
     getName() {
@@ -379,16 +424,18 @@ class QuantityDefinition {
      * Compares the resolution of this definition against another definition.
      * @abstract
      * @param {QuantityDefinition} otherDefinition The definition to compare to.
-     * @returns {number}    < 0 if this definition is lower than otherDefinition's, 0 if the same,
-     * > 0 if higher than otherDefinition's.
+     * @returns {number}    < 0 if this definition is lower than otherDefinition's, 
+     * 0 if the same, > 0 if higher than otherDefinition's.
      * @throws An exception if otherDefinition is not compatible with this definition.
      */
     compareDefinitionResolution(otherDefinition) {
+        // eslint-disable-next-line max-len
         throw Error('QuantityDefinition.compareDefinitionResolution() - Abstract method!');
     }
 
     /**
-     * Creates a {@link Quantity} with this as its definition that's the closest representation of a number.
+     * Creates a {@link Quantity} with this as its definition that's the closest 
+     * representation of a number.
      * @param {number} number The number of interest.
      * @returns {Quantity}
      */
@@ -400,7 +447,8 @@ class QuantityDefinition {
     }
 
     /**
-     * Creates a {@link Quantity} with this as its definition and with a given base value.
+     * Creates a {@link Quantity} with this as its definition and with a given 
+     * base value.
      * @param {number} baseValue
      * @returns {Quantity}
      */
@@ -440,8 +488,9 @@ class QuantityDefinition {
     }
 
     /**
-     * Returns a text representation of the numerical value of a quantity. The text represntation can be
-     * parsed back via {@link QuantityDefinition#fromValueText} into an equivalent quantity.
+     * Returns a text representation of the numerical value of a quantity. The 
+     * text represntation can be parsed back via 
+     * {@link QuantityDefinition#fromValueText} into an equivalent quantity.
      * @param {number} baseValue
      * @returns {string}
      */
@@ -450,9 +499,11 @@ class QuantityDefinition {
     }
 
     /**
-     * Parses a value text string generated by {@link Quantity#baseValueToValueText} back into a {@link Quantity}.
+     * Parses a value text string generated by {@link Quantity#baseValueToValueText} 
+     * back into a {@link Quantity}.
      * @param {string} valueText The value text to parse.
-     * @returns {Quantity#ParseResult|undefined}    The parse result, <code>undefined</code> if valueText could not be parsed.
+     * @returns {Quantity#ParseResult|undefined}    The parse result, 
+     * <code>undefined</code> if valueText could not be parsed.
      */
     fromValueText(quantity) {
         throw Error('QuantityDefinition.fromValueText() - Abstract method!');
@@ -460,7 +511,8 @@ class QuantityDefinition {
 
     /**
      * Adds several quantities together. The resulting quantity has this definition.
-     * @param {(Quantity[]|...Quantity)} args The quantities to be added, either an array of {@link Quantity}s or as individual parameters.
+     * @param {(Quantity[]|...Quantity)} args The quantities to be added, either 
+     * an array of {@link Quantity}s or as individual parameters.
      * @returns {Quantity}  The resulting quantity, it has this as its definition.
      */
     addQuantities(quantities) {
@@ -468,8 +520,10 @@ class QuantityDefinition {
     }
 
     /**
-     * Subtracts several quantities from the first quantity. The resulting quantity has this definition.
-     * @param {(Quantity[]|...Quantity)} args The quantities to be subtracted, either an array of {@link Quantity}s or as individual parameters.
+     * Subtracts several quantities from the first quantity. The resulting quantity 
+     * has this definition.
+     * @param {(Quantity[]|...Quantity)} args The quantities to be subtracted, 
+     * either an array of {@link Quantity}s or as individual parameters.
      * @returns {Quantity}  The resulting quantity, it has this as its definition.
      */
     subtractQuantities(quantities) {
@@ -487,11 +541,14 @@ class QuantityDefinition {
 
 
     /**
-     * Multiplies several quantities together. The multiplication is done using the definition of the quantity with the highest resolution,
-     * then converted as needed to this definition.
-     * Note that multiplication is typically a lossy operation.
-     * @param {(Quantity[]|...Quantity)} args The quantities to be multiplied, either an array of {@link Quantity}s or as individual parameters.
-     * @returns {Quantity}  The product of the quantities, it has this as its definition.
+     * Multiplies several quantities together. The multiplication is done using 
+     * the definition of the quantity with the highest resolution, then converted 
+     * as needed to this definition. Note that multiplication is typically a lossy 
+     * operation.
+     * @param {(Quantity[]|...Quantity)} args The quantities to be multiplied, 
+     * either an array of {@link Quantity}s or as individual parameters.
+     * @returns {Quantity}  The product of the quantities, it has this as its 
+     * definition.
      */
     multiplyQuantities(quantities) {
         throw Error('QuantityDefinition.multiplyQuantities() - Abstract method!');
@@ -501,12 +558,14 @@ class QuantityDefinition {
 
     /**
      * Subdivides a quantity into several quantities according to a set of proportions.
-     * Note that the final quantity is adjusted as necessary so that the sum of all the sub-divided quantities
-     * is the same as the original quantity.
+     * Note that the final quantity is adjusted as necessary so that the sum of 
+     * all the sub-divided quantities is the same as the original quantity.
      * @param {number} baseValue
-     * @param {(number[]|...number)} args An array containing the proportions to allocate to each subdivided quantity.
-     * The total number of subdivided quantities is the number of proportion values, each subdivided quantity is approximately
-     * proportion[i] / proportionSum of the original value, with the exception of the final subdivided quantity, which is always
+     * @param {(number[]|...number)} args An array containing the proportions to 
+     * allocate to each subdivided quantity. The total number of subdivided 
+     * quantities is the number of proportion values, each subdivided quantity 
+     * is approximately proportion[i] / proportionSum of the original value, 
+     * with the exception of the final subdivided quantity, which is always
      * set so that the sum of all the subdivided quantities equals this quantity.
      * @returns {number[]}    The array of the subdivided base values.
     */
@@ -526,21 +585,28 @@ const DECIMAL_CHAR_CODE = '.'.charCodeAt(0);
 const ZERO_CHAR_CODE = '0'.charCodeAt(0);
 
 /**
- * {@link QuantityDefinition} for decimal numbers with a fixed number of digits after the decimal point.
+ * {@link QuantityDefinition} for decimal numbers with a fixed number of digits 
+ * after the decimal point.
  * <p>
- * The number of decimal places may be negative, in which case the quantities are in chunks of powers of 10. For example,
- * setting the number of decimal places to -2 has the effect of making quantities be in terms of hundreds. That is, there will
- * always be two zeros before the decimal point for non-zero values. Note that for 0 this would result in a valueText of '000'.
+ * The number of decimal places may be negative, in which case the quantities 
+ * are in chunks of powers of 10. For example, setting the number of decimal 
+ * places to -2 has the effect of making quantities be in terms of hundreds. 
+ * That is, there will always be two zeros before the decimal point for non-zero 
+ * values. Note that for 0 this would result in a valueText of '000'.
  * <p>
- * DecimalDefinitions are immutable. DecimalDefinitions are created by calling {@link getDecimalDefinition}.
+ * DecimalDefinitions are immutable. DecimalDefinitions are created by calling 
+ * {@link getDecimalDefinition}.
  * @class
  */
 class DecimalDefinition extends QuantityDefinition {
     /**
-     * @typedef {object}    DecimalDefinition~Options   The options for the constructor.
-     * @property {number}   decimalPlaces   The number of digits after the decimal point. If negative then represents
-     * the number of zeroes before the decimal point.
-     * @property {string}   [groupMark] Optional group separator mark use to separate the value into thousands, millions, etc.
+     * @typedef {object}    DecimalDefinition~Options   The options for the 
+     * constructor.
+     * @property {number}   decimalPlaces   The number of digits after the 
+     * decimal point. If negative then represents the number of zeroes before the 
+     * decimal point.
+     * @property {string}   [groupMark] Optional group separator mark use to 
+     * separate the value into thousands, millions, etc.
      */
 
     /**
@@ -567,8 +633,9 @@ class DecimalDefinition extends QuantityDefinition {
             this._name += '_' + this._groupMark;
         }
 
-        // We need to use numerator and denominator values so the multiplication/division
-        // is always done with an integer, this avoids roundoff errors with decimal arithmetic.
+        // We need to use numerator and denominator values so the 
+        // multiplication/division is always done with an integer, this avoids 
+        // roundoff errors with decimal arithmetic.
         if (this._decimalPlaces >= 0) {
             this._numPow10 = 1;
             this._denPow10 = Math.pow(10, this._decimalPlaces);
@@ -604,7 +671,8 @@ class DecimalDefinition extends QuantityDefinition {
             groupMark = name.substring(decimalPlacesEnd + 1);
         }
 
-        return new DecimalDefinition({ deicmalPlaces: decimalPlaces, groupMark: groupMark });
+        return new DecimalDefinition(
+            { deicmalPlaces: decimalPlaces, groupMark: groupMark });
     }
 
     toJSON(arg) {
@@ -789,7 +857,10 @@ class DecimalDefinition extends QuantityDefinition {
             return this.quantityFromNumber(quantity.toNumber());
         }
         else if (compare > 0) {
-            const baseValue = quantity.getBaseValue() * Math.pow(10, (this._decimalPlaces - quantity.getDefinition()._decimalPlaces));
+            const baseValue = quantity.getBaseValue() 
+                * Math.pow(10, 
+                    (this._decimalPlaces - quantity.getDefinition()._decimalPlaces)
+                );
             return new Quantity({
                 baseValue: baseValue,
                 definition: this,
@@ -844,18 +915,20 @@ class DecimalDefinition extends QuantityDefinition {
 
 
     multiplyQuantities(quantities) {
-        // For multiplication, we want to perform the multiplication at the highest resolution, then
-        // down convert.
+        // For multiplication, we want to perform the multiplication at the highest
+        // resolution, then down convert.
         const highestResQuantity = Quantity.getHighestResolutionQuantity(quantities);
         const highestResDefinition = highestResQuantity.getDefinition();
 
-        let baseValue = highestResDefinition.changeQuantityDefinition(quantities[0]).getBaseValue();
+        let baseValue = highestResDefinition.changeQuantityDefinition(quantities[0])
+            .getBaseValue();
         for (let i = 1; i < quantities.length; ++i) {
             const quantity = highestResDefinition.changeQuantityDefinition(quantities[i]);
             baseValue *= quantity.getBaseValue();
         }
 
-        baseValue *= Math.pow(10, -(quantities.length - 1) * highestResDefinition._decimalPlaces);
+        baseValue *= Math.pow(10, -(quantities.length - 1) 
+            * highestResDefinition._decimalPlaces);
         const quantity = new Quantity({
             baseValue: baseValue,
             definition: highestResDefinition,
@@ -877,7 +950,8 @@ class DecimalDefinition extends QuantityDefinition {
         const result = [];
         const end = proportions.length - 1;
         for (let i = 0; i < end; ++i) {
-            const subBaseValue = this.numberToBaseValue(originalValue * proportions[i] / sum);
+            const subBaseValue = this.numberToBaseValue(originalValue * proportions[i] 
+                / sum);
             result.push(subBaseValue);
             baseValueSum += subBaseValue;
         }
@@ -905,7 +979,8 @@ class DecimalDefinition extends QuantityDefinition {
 
 
 /**
- * Retrieves a {@link DecimalDefinition}. Any given set of options always returns the same quantity definition object.
+ * Retrieves a {@link DecimalDefinition}. Any given set of options always returns 
+ * the same quantity definition object.
  * @param {DecimalDefinition~Options} options 
  * @returns {DecimalDefinition}
  */
@@ -921,7 +996,8 @@ export function getDecimalDefinition(options) {
 }
 
 /**
- * Retrieves a {@link QuantityDefinition} object whose {@link QuantityDefinition~getName} would match a given name.
+ * Retrieves a {@link QuantityDefinition} object whose 
+ * {@link QuantityDefinition~getName} would match a given name.
  * For any given name the same quantity definition object is returned.
  * @param {(string|QuantityDefinition)} name 
  * @returns {QuantityDefinition}
@@ -944,11 +1020,13 @@ export function getQuantityDefinition(name) {
 }
 
 /**
- * Retrieves the name from a {@link QuantityDefinition} if the argument is a {@link QuantityDefinition}, otherwise returns
- * the argument.
+ * Retrieves the name from a {@link QuantityDefinition} if the argument is a 
+ * {@link QuantityDefinition}, otherwise returns the argument.
  * @param {(string|QuantityDefinition)} definition 
  * @returns {string}
  */
 export function getQuantityDefinitionName(definition) {
-    return ((definition === undefined) || (typeof definition === 'string')) ? definition : definition.getName();
+    return ((definition === undefined) || (typeof definition === 'string')) 
+        ? definition 
+        : definition.getName();
 }

@@ -27,8 +27,9 @@ async function tryLocalePathName(prefix, parts) {
 /**
  * Loads the user messages from a locale specific JSON file.
  * @param {string} locale The locale.
- * @param {string} pathName The default path name, if it contains a '-' the portion of the name before the '-'
- * is presumed to be a locale and is stripped of when trying to find a locale specific file.
+ * @param {string} pathName The default path name, if it contains a '-' the portion 
+ * of the name before the '-' is presumed to be a locale and is stripped of when 
+ * trying to find a locale specific file.
  * @returns {string}    The path name that was actually loaded.
  */
 export async function loadLocaleMsgsFile(locale, pathName) {
@@ -71,7 +72,8 @@ export async function loadLocaleMsgsFile(locale, pathName) {
 
 
 /**
- * Installs a messages object. The properties of the object are the keys, the values are the strings.
+ * Installs a messages object. The properties of the object are the keys, the values 
+ * are the strings.
  * @param {object} msgsToSet The messages object.
  */
 export function setMsgs(msgsToSet) {
@@ -84,7 +86,8 @@ export function setMsgs(msgsToSet) {
 /**
  * Determines if there is a user message with a given key.
  * @param {string} key The message key.
- * @returns {string|string[]|undefined}   The message value, <code>undefined</code> if there is no message with that key.
+ * @returns {string|string[]|undefined}   The message value, <code>undefined</code> 
+ * if there is no message with that key.
  */
 export function isUserMsg(key) {
     return msgs[key] !== undefined;
@@ -93,8 +96,9 @@ export function isUserMsg(key) {
 
 /**
  * Looks up and constructs a user message.
- * @param {string|string[]} key The message key or an array of message keys. If an array is specified, the keys
- * in the array are tried starting with index 0 until a message is found.
+ * @param {string|string[]} key The message key or an array of message keys. If an 
+ * array is specified, the keys in the array are tried starting with index 0 until 
+ * a message is found.
  * @param  {...any} args The arguments for the message.
  * @returns {string}    The user message.
  */
@@ -143,8 +147,8 @@ class ArgsClass {
 
 
 /**
- * Creates an {@link Error} object with the message based on {@link uMsg}. The Error object has a
- * <code>msgCode</code> field set to the key argument.
+ * Creates an {@link Error} object with the message based on {@link uMsg}. The Error 
+ * object has a <code>msgCode</code> field set to the key argument.
  * @param {string} key The message key.
  * @param  {...any} args
  * @returns {Error}

@@ -5,10 +5,12 @@ test('InMemoryUndoHandler', async () => {
     const manager = new UndoManager({ handler: handler });
 
     let appliedUndoDataItemsA = [];
-    manager.registerUndoApplier('applierA', (undoDataItem) => { appliedUndoDataItemsA.push(undoDataItem); });
+    manager.registerUndoApplier('applierA', 
+        (undoDataItem) => { appliedUndoDataItemsA.push(undoDataItem); });
 
     let appliedUndoDataItemsB = [];
-    manager.registerUndoApplier('applierB', async (undoDataItem) => { appliedUndoDataItemsB.push(undoDataItem); });
+    manager.registerUndoApplier('applierB', 
+        async (undoDataItem) => { appliedUndoDataItemsB.push(undoDataItem); });
 
     const applierA1 = { description: 'ApplierA 1'};
     applierA1.id = await manager.asyncRegisterUndoDataItem('applierA', applierA1);
@@ -37,12 +39,15 @@ test('InMemoryUndoHandler', async () => {
     applierA3.id = await manager.asyncRegisterUndoDataItem(applierA3);
     expect(await manager.asyncGetUndoDataItemWithId(applierA3.id)).toEqual(applierA3);
 
-    expect(await manager.getSortedUndoIds()).toEqual([ applierA1.id, applierA2.id, applierB1.id, applierB2.id, applierA3.id ]);
+    expect(await manager.getSortedUndoIds())
+        .toEqual(
+            [ applierA1.id, applierA2.id, applierB1.id, applierB2.id, applierA3.id ]);
 
     
     await manager.asyncUndoToId(applierA3.id);
     expect(appliedUndoDataItemsA[0]).toEqual(applierA3);
-    expect(await manager.getSortedUndoIds()).toEqual([ applierA1.id, applierA2.id, applierB1.id, applierB2.id, ]);
+    expect(await manager.getSortedUndoIds())
+        .toEqual([ applierA1.id, applierA2.id, applierB1.id, applierB2.id, ]);
 
     await manager.asyncUndoToId(applierB1.id);
     expect(appliedUndoDataItemsB).toEqual([applierB2, applierB1]);
@@ -62,13 +67,18 @@ test('InMemoryUndoHandler', async () => {
         handler2.fromJSON(json);
 
         const manager2 = new UndoManager({ handler: handler2 });
-        expect(await manager2.getSortedUndoIds()).toEqual([ applierA1.id, applierA2.id, ]);
-        expect(await manager2.asyncGetUndoDataItemWithId(applierA1.id)).toEqual(applierA1);
-        expect(await manager2.asyncGetUndoDataItemWithId(applierA2.id)).toEqual(applierA2);
+        expect(await manager2.getSortedUndoIds())
+            .toEqual([ applierA1.id, applierA2.id, ]);
+        expect(await manager2.asyncGetUndoDataItemWithId(applierA1.id))
+            .toEqual(applierA1);
+        expect(await manager2.asyncGetUndoDataItemWithId(applierA2.id))
+            .toEqual(applierA2);
         expect(await manager2.asyncGetUndoDataItemWithId(applierA3.id)).toBeUndefined();
 
-        manager2.registerUndoApplier('applierA', (undoDataItem) => { appliedUndoDataItemsA.push(undoDataItem); });
-        manager2.registerUndoApplier('applierB', (undoDataItem) => { appliedUndoDataItemsB.push(undoDataItem); });
+        manager2.registerUndoApplier('applierA', 
+            (undoDataItem) => { appliedUndoDataItemsA.push(undoDataItem); });
+        manager2.registerUndoApplier('applierB', 
+            (undoDataItem) => { appliedUndoDataItemsB.push(undoDataItem); });
 
         appliedUndoDataItemsA.length = 0;
         appliedUndoDataItemsB.length = 0;

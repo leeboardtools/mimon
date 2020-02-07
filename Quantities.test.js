@@ -163,20 +163,29 @@ test('DecimalQuantity-add-subtract-negate', () => {
     const m1p234 = def3.quantityFromNumber(-1.234);
     const pSumDef3 = def3.quantityFromNumber(12.34 + 23.45 - 1.234 + 34.56);
     expect(Quantity.addQuantities(p12p34, p23p45, m1p234, p34p56)).toEqual(pSumDef3);
-    expect(Quantity.subtractQuantities(p12p34, p23p45, m1p234, p34p56)).toEqual(def3.quantityFromNumber(12.34 - 23.45 - -1.234 - 34.56));
-    expect(Quantity.multiplyQuantities(p12p34, p23p45, m1p234, p34p56)).toEqual(def3.quantityFromNumber(12.34 * 23.45 * -1.234 * 34.56));
+    expect(Quantity.subtractQuantities(p12p34, p23p45, m1p234, p34p56))
+        .toEqual(def3.quantityFromNumber(12.34 - 23.45 - -1.234 - 34.56));
+    expect(Quantity.multiplyQuantities(p12p34, p23p45, m1p234, p34p56))
+        .toEqual(def3.quantityFromNumber(12.34 * 23.45 * -1.234 * 34.56));
 
     // Make sure add(), subtract() keep the originating quantity's definition.
-    expect(p12p34.add(p23p45, m1p234, p34p56)).toEqual(def2.quantityFromNumber(12.34 + 23.45 - 1.234 + 34.56));
-    expect(p12p34.subtract(p23p45, m1p234, p34p56)).toEqual(def2.quantityFromNumber(12.34 - 23.45 - -1.234 - 34.56));
-    expect(p12p34.multiply(p23p45, m1p234, p34p56)).toEqual(def2.quantityFromNumber(12.34 * 23.45 * -1.234 * 34.56));
+    expect(p12p34.add(p23p45, m1p234, p34p56))
+        .toEqual(def2.quantityFromNumber(12.34 + 23.45 - 1.234 + 34.56));
+    expect(p12p34.subtract(p23p45, m1p234, p34p56))
+        .toEqual(def2.quantityFromNumber(12.34 - 23.45 - -1.234 - 34.56));
+    expect(p12p34.multiply(p23p45, m1p234, p34p56))
+        .toEqual(def2.quantityFromNumber(12.34 * 23.45 * -1.234 * 34.56));
 
     // Numeric arg test...
-    expect(p12p34.add(p23p45, -1.234, p34p56)).toEqual(def2.quantityFromNumber(12.34 + 23.45 + -1.234 + 34.56));
-    expect(p12p34.subtract(p23p45, -1.234, p34p56)).toEqual(def2.quantityFromNumber(12.34 - 23.45 - -1.234 - 34.56));
+    expect(p12p34.add(p23p45, -1.234, p34p56))
+        .toEqual(def2.quantityFromNumber(12.34 + 23.45 + -1.234 + 34.56));
+    expect(p12p34.subtract(p23p45, -1.234, p34p56))
+        .toEqual(def2.quantityFromNumber(12.34 - 23.45 - -1.234 - 34.56));
 
-    // Note: can't use -1.234 as test for multiply() as multiply() can't figure out that it's the highest resolution.
-    expect(p12p34.multiply(23.45, m1p234, p34p56)).toEqual(def2.quantityFromNumber(12.34 * 23.45 * -1.234 * 34.56));
+    // Note: can't use -1.234 as test for multiply() as multiply() can't figure 
+    // out that it's the highest resolution.
+    expect(p12p34.multiply(23.45, m1p234, p34p56))
+        .toEqual(def2.quantityFromNumber(12.34 * 23.45 * -1.234 * 34.56));
 
     // negate()
     expect(m1p234.negate()).toEqual(def3.quantityFromNumber(1.234));
@@ -189,11 +198,13 @@ test('DecimalQuantities-subdivide', () => {
 
     // Check last subdivided quantity handles round-off error.
     const resultA = quantity.subdivide([1, 1, 1]);
-    expect(resultA).toEqual([def2.quantityFromNumber(0.33), def2.quantityFromNumber(0.33), def2.quantityFromNumber(0.34)]);
+    expect(resultA).toEqual([def2.quantityFromNumber(0.33), 
+        def2.quantityFromNumber(0.33), def2.quantityFromNumber(0.34)]);
     expect(def2.addQuantities(resultA)).toEqual(quantity);
 
     const resultB = quantity.subdivide([2, 1, 1]);
-    expect(resultB).toEqual([def2.quantityFromNumber(0.5), def2.quantityFromNumber(0.25), def2.quantityFromNumber(0.25)]);
+    expect(resultB).toEqual([def2.quantityFromNumber(0.5), 
+        def2.quantityFromNumber(0.25), def2.quantityFromNumber(0.25)]);
 
     // Degenerate cases.
     expect(quantity.subdivide([4])).toEqual([quantity]);
@@ -213,8 +224,10 @@ test('DecimalQuantities-groupMark', () => {
     expect(def2Comma.quantityFromNumber(-123456.78).toValueText()).toEqual('-123,456.78');
     expect(def2Comma.quantityFromNumber(1234567.8).toValueText()).toEqual('1,234,567.80');
 
-    expect(def2Comma.fromValueText('1,234.56').quantity).toEqual(def2Comma.quantityFromNumber(1234.56));
-    expect(def2Comma.fromValueText('-1,234,567.89').quantity).toEqual(def2Comma.quantityFromNumber(-1234567.89));
+    expect(def2Comma.fromValueText('1,234.56').quantity)
+        .toEqual(def2Comma.quantityFromNumber(1234.56));
+    expect(def2Comma.fromValueText('-1,234,567.89').quantity)
+        .toEqual(def2Comma.quantityFromNumber(-1234567.89));
 
 
     const defm2Comma = getDecimalDefinition({
@@ -226,7 +239,8 @@ test('DecimalQuantities-groupMark', () => {
     expect(defm2Comma.quantityFromNumber(1000).toValueText()).toEqual('1,000');
     expect(defm2Comma.quantityFromNumber(100000).toValueText()).toEqual('100,000');
     expect(defm2Comma.quantityFromNumber(-1000000).toValueText()).toEqual('-1,000,000');
-    expect(defm2Comma.fromValueText('1,000,000').quantity).toEqual(defm2Comma.quantityFromNumber(1000000));
+    expect(defm2Comma.fromValueText('1,000,000').quantity)
+        .toEqual(defm2Comma.quantityFromNumber(1000000));
 });
 
 
