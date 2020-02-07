@@ -1,6 +1,8 @@
-import { parseDecimalInteger, defMakeBackupFileName, defParseBackupFileName, FileBackups } from './FileBackups';
+import { parseDecimalInteger, defMakeBackupFileName, defParseBackupFileName, 
+    FileBackups } from './FileBackups';
 import { createDir, cleanupDir, writeFile, expectFileToBe } from './FileTestHelpers';
-import { ReplaceFileAction, DeleteFileAction, performFileActions, fileExists } from './FileActions';
+import { ReplaceFileAction, DeleteFileAction, performFileActions, 
+    fileExists } from './FileActions';
 
 const path = require('path');
 
@@ -16,9 +18,11 @@ test('parseDecimalInteger', () => {
 
 
 test('defMakeBackupFileName', () => {
-    expect(defMakeBackupFileName('Abc.TXT', new Date(2019, 0, 4))).toEqual('BAK_20190104_Abc.TXT');
+    expect(defMakeBackupFileName('Abc.TXT', new Date(2019, 0, 4)))
+        .toEqual('BAK_20190104_Abc.TXT');
 
-//    expect(defMakeBackupLogFileName('/abc', new Date(2019, 0, 4))).toEqual('BAKLOG_20190104_Log.json');
+//    expect(defMakeBackupLogFileName('/abc', new Date(2019, 0, 4)))
+//      .toEqual('BAKLOG_20190104_Log.json');
 });
 
 

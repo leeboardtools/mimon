@@ -43,7 +43,8 @@ export function bSearchNumberArray(array, value) {
  * @param {object} arrayValue   The value in the array to compare against.
  * @param {object[]}    array   The array passed into {@link bSearch}.
  * @param {number}  index   The index of arrayValue in array.
- * @returns {number}    &lt; 0 if value is before arrayValue, &gt; 0 if value is after arrayValue, 0 if value is the same as arrayValue.
+ * @returns {number}    &lt; 0 if value is before arrayValue, &gt; 0 if value is 
+ * after arrayValue, 0 if value is the same as arrayValue.
  */
 
 

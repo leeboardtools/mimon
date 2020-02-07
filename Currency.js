@@ -1,8 +1,9 @@
+/* eslint-disable max-len */
 import { getDecimalDefinition } from './Quantities';
 
 /**
- * Class defining individual currency properties. Currency objects normally should be accessed via
- * {@link Currencies} by their 3 letter currency code.
+ * Class defining individual currency properties. Currency objects normally should be 
+ * accessed via {@link Currencies} by their 3 letter currency code.
  * Currency objects are immutable.
  * @class
  */
@@ -50,7 +51,8 @@ export class Currency {
 
         this._plusSign = this._plusSign || '+';
 
-        this._quantityDefinition = getDecimalDefinition({ decimalPlaces: this._decimalPlaces, groupMark: this._groupMark });
+        this._quantityDefinition = getDecimalDefinition(
+            { decimalPlaces: this._decimalPlaces, groupMark: this._groupMark });
     }
 
 
@@ -80,7 +82,8 @@ export class Currency {
 
 
     /**
-     * Converts a currency decimal value ($12.34 would be 12.34) into an internationalized currency string.
+     * Converts a currency decimal value ($12.34 would be 12.34) into an 
+     * internationalized currency string.
      * @param {number} value The decimal value to convert to a string.
      * @returns {string}
      */
@@ -90,7 +93,8 @@ export class Currency {
 
 
     /**
-     * Parses an internationalized currency string into a currency decimal value ($12.34 woudl be 12.34).
+     * Parses an internationalized currency string into a currency decimal value 
+     * ($12.34 woudl be 12.34).
      * @param {string} string The string to parse.
      * @return {number}
      */
@@ -100,7 +104,8 @@ export class Currency {
 
 
     /**
-     * Converts a currency base value ($12.34 would be 1234) into an internationalized currency string..
+     * Converts a currency base value ($12.34 would be 1234) into an internationalized 
+     * currency string..
      * @param {number} value The base value to convert to a string.
      * @returns {string}
      */
@@ -153,7 +158,8 @@ export class Currency {
         for (; decimalPlaces > this._decimalPlaces; --decimalPlaces) {
             value /= 10;
         }
-        for (decimalPlaces = Math.max(decimalPlaces, 0); decimalPlaces < this._decimalPlaces; ++decimalPlaces) {
+        for (decimalPlaces = Math.max(decimalPlaces, 0); 
+            decimalPlaces < this._decimalPlaces; ++decimalPlaces) {
             value *= 10;
         }
 
@@ -163,11 +169,12 @@ export class Currency {
 
 
     /**
-     * Converts a currency base value ($12.34 would be 1234) into an internationalized currency string leaving out selected
-     * parts of the currency string.
+     * Converts a currency base value ($12.34 would be 1234) into an internationalized 
+     * currency string leaving out selected parts of the currency string.
      * @param {number} value
-     * @param {string[]}    partsToSkip The array of parts to skip, these are the part types from
-     * [Intl.NumberFormat.prototype.formatToParts()]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NumberFormat/formatToParts}.
+     * @param {string[]}    partsToSkip The array of parts to skip, these are the 
+     * part types from [Intl.NumberFormat.prototype.formatToParts()]
+     * {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NumberFormat/formatToParts}.
      */
     formatBaseValueWithParts(value, partsToSkip) {
         if (!Array.isArray(partsToSkip)) {
@@ -175,17 +182,19 @@ export class Currency {
         }
 
         let text = '';
-        this._valueToStringFormat.formatToParts(value / this._valueScale).map(({ type, value }) => {
-            if (!partsToSkip.includes(type)) {
-                text += value;
-            }
-        });
+        this._valueToStringFormat.formatToParts(value / this._valueScale).map(
+            ({ type, value }) => {
+                if (!partsToSkip.includes(type)) {
+                    text += value;
+                }
+            });
         return text;
     }
 
 
     /**
-     * Converts a currency base value ($12.34 would be 1234) into an internationalized currency string without the currency symbol
+     * Converts a currency base value ($12.34 would be 1234) into an 
+     * internationalized currency string without the currency symbol
      * or the group marker.
      * @param {number} value
      */
@@ -195,7 +204,8 @@ export class Currency {
 
 
     /**
-     * Converts a currency base value ($12.34 would be 1234) into an internationalized currency string without the currency symbol.
+     * Converts a currency base value ($12.34 would be 1234) into an 
+     * internationalized currency string without the currency symbol.
      * @param {number} value
      */
     baseValueToNoCurrencyString(value) {

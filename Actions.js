@@ -4,7 +4,8 @@ import { bug } from './Bug';
 
 /**
  * @typedef {object}    ActionDataItem
- * @property {string}   type    String used to identify the callback to use for applying the action.
+ * @property {string}   type    String used to identify the callback to use for 
+ * applying the action.
  * @property {string}   name    Simple name for the action.
  * @property {string}   [description]
  * @property {string}   [undoName]    Simple name for undoing the action.
@@ -19,7 +20,8 @@ import { bug } from './Bug';
  * @returns {ActionDataItem}
  */
 export function createCompositeAction(mainAction, subActions) {
-    return Object.assign({}, mainAction, { type: 'Composite', subActions: subActions, });
+    return Object.assign({}, mainAction, 
+        { type: 'Composite', subActions: subActions, });
 }
 
 
@@ -49,14 +51,16 @@ export class ActionManager extends EventEmitter {
 
 
     /**
-     * @returns {number}    The number of actions that have been applied and are available for undoing.
+     * @returns {number}    The number of actions that have been applied and are 
+     * available for undoing.
      */
     getAppliedActionCount() {
         return this._handler.getAppliedActionCount();
     }
 
     /**
-     * @returns {number}    The number of actions that have been undone and can be reapplied.
+     * @returns {number}    The number of actions that have been undone and can be 
+     * reapplied.
      */
     getUndoneActionCount() {
         return this._handler.getUndoneActionCount();
@@ -89,7 +93,8 @@ export class ActionManager extends EventEmitter {
     async asyncClearAppliedActions() {
         const firstEntry = await this._handler.asyncGetAppliedActionEntryAtIndex(0);
         if (firstEntry) {
-            await this._handler.asyncRemoveLastAppliedActionEntries(this._handler.getAppliedActionCount());
+            await this._handler.asyncRemoveLastAppliedActionEntries(
+                this._handler.getAppliedActionCount());
             await this._undoManager.asyncUndoToId(firstEntry.undoId, true);
         }
     }
@@ -106,6 +111,7 @@ export class ActionManager extends EventEmitter {
     async _asyncCompositeActionApplier(isValidateOnly, action) {
         const { subActions } = action;
         if (!subActions) {
+            // eslint-disable-next-line max-len
             throw bug('Action of type "Composite" does not have a subActions property! Action: ' + JSON.stringify(action));
         }
         for (let i = 0; i < subActions.length; ++i) {
@@ -117,7 +123,8 @@ export class ActionManager extends EventEmitter {
     async _asyncApplyAction(action, isValidateOnly) {
         const asyncApplier = this._asyncAppliersByType.get(action.type);
         if (!asyncApplier) {
-            throw bug('An applier was not registered for actions of type "' + action.type + '"!');
+            throw bug('An applier was not registered for actions of type "' 
+                + action.type + '"!');
         }
 
         await asyncApplier(isValidateOnly, action);
@@ -127,7 +134,8 @@ export class ActionManager extends EventEmitter {
     /**
      * Performs validation on an action. The action manager is not updated.
      * @param {ActionDataItem} action 
-     * @returns {undefined|Error}   Returns <code>undefined</code> if the action passes validation, an Error object if invalid.
+     * @returns {undefined|Error}   Returns <code>undefined</code> if the action 
+     * passes validation, an Error object if invalid.
      */
     async asyncValidateApplyAction(action) {
         try {
@@ -140,7 +148,8 @@ export class ActionManager extends EventEmitter {
 
 
     /**
-     * Applies an action. After application the action is in the applied actions list at index {@link ActionManager#getAppliedActionCount} - 1.
+     * Applies an action. After application the action is in the applied actions list 
+     * at index {@link ActionManager#getAppliedActionCount} - 1.
      * @param {ActionDataItem} action 
      */
     async asyncApplyAction(action) {
@@ -164,9 +173,10 @@ export class ActionManager extends EventEmitter {
 
 
     /**
-     * Undoes a number of the last applied actions. The actions are moved to the undone action list.
-     * @param {number} [actionCount=1]  The number of applied actions to undo, if greater than the number of applied actions then
-     * all applied actions are undone.
+     * Undoes a number of the last applied actions. The actions are moved to the 
+     * undone action list.
+     * @param {number} [actionCount=1]  The number of applied actions to undo, if 
+     * greater than the number of applied actions then all applied actions are undone.
      */
     async asyncUndoLastAppliedActions(actionCount) {
         const totalCount = this._handler.getAppliedActionCount();
@@ -179,11 +189,13 @@ export class ActionManager extends EventEmitter {
             actionCount = totalCount - lastIndex;
 
 
-            const actionEntry = await this._handler.asyncGetAppliedActionEntryAtIndex(lastIndex);
+            const actionEntry 
+                = await this._handler.asyncGetAppliedActionEntryAtIndex(lastIndex);
             await this._undoManager.asyncUndoToId(actionEntry.undoId);
 
             for (let index = totalCount - 1; index >= lastIndex; --index) {
-                const actionEntry = await this._handler.asyncGetAppliedActionEntryAtIndex(index);
+                const actionEntry 
+                    = await this._handler.asyncGetAppliedActionEntryAtIndex(index);
                 await this._handler.asyncRemoveLastAppliedActionEntries(1);
                 await this._handler.asyncAddUndoneAction(actionEntry.action);
             }
@@ -192,10 +204,10 @@ export class ActionManager extends EventEmitter {
 
 
     /**
-     * Reapplies a number of the last undone actions. The actions are moved frmo the undone action list to the applied action list
-     * as they are reapplied.
-     * @param {number} [actionCount=1]  The number of undone actions to reapply. If greater than the number of undone actions then
-     * all undone actions are reapplied.
+     * Reapplies a number of the last undone actions. The actions are moved frmo the 
+     * undone action list to the applied action list as they are reapplied.
+     * @param {number} [actionCount=1]  The number of undone actions to reapply. 
+     * If greater than the number of undone actions then all undone actions are reapplied.
      */
     async asyncReapplyLastUndoneActions(actionCount) {
         const totalCount = this._handler.getUndoneActionCount();
@@ -219,7 +231,8 @@ export class ActionManager extends EventEmitter {
     /**
      * @callback ActionManager~Applier
      * @async
-     * @param {boolean} isValidateOnly  <code>true</code> if the applier is being called from {@link ActionManager#asyncValidateApplyAction}.
+     * @param {boolean} isValidateOnly  <code>true</code> if the applier is being 
+     * called from {@link ActionManager#asyncValidateApplyAction}.
      * @param {ActionDataItem} actionDataItem   The action data item to be applied.
      */
 
@@ -237,7 +250,8 @@ export class ActionManager extends EventEmitter {
 
 
 /**
- * Handler interface implemented by {@link AccountingFile} implementations to interact with the {@link ActionManager}.
+ * Handler interface implemented by {@link AccountingFile} implementations to 
+ * interact with the {@link ActionManager}.
  * @interface
  */
 export class ActionsHandler {
@@ -250,6 +264,7 @@ export class ActionsHandler {
     }
 
     async asyncGetAppliedActionEntryAtIndex(index) {
+        // eslint-disable-next-line max-len
         throw Error('ActionHandler.asyncGetAppliedActionEntryAtIndex() abstract method!');
     }
     
@@ -266,6 +281,7 @@ export class ActionsHandler {
     }
 
     async asyncRemoveLastAppliedActionEntries(count) {
+        // eslint-disable-next-line max-len
         throw Error('ActionsHandler.asyncRemoveLastAppliedActionEntries() abstract method!');
     }
 

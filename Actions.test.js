@@ -17,16 +17,26 @@ function applyAction(isValidateOnly, action, undoManager, values, undoName) {
 
 test('ActionManager', async () => {
     const undoManager = new UndoManager({handler : new InMemoryUndoHandler() });
-    const manager = new ActionManager({ handler: new InMemoryActionsHandler(), undoManager: undoManager, });
+    const manager = new ActionManager({ handler: new InMemoryActionsHandler(), 
+        undoManager: undoManager, 
+    });
 
     let valueA = [];
     let valueB = [];
     
-    undoManager.registerUndoApplier('A', (undoDataItem) => { valueA[0] = undoDataItem.value; } );
-    undoManager.registerUndoApplier('B', (undoDataItem) => { valueB[0] = undoDataItem.value; } );
+    undoManager.registerUndoApplier('A', 
+        (undoDataItem) => { valueA[0] = undoDataItem.value; } );
+    undoManager.registerUndoApplier('B', 
+        (undoDataItem) => { valueB[0] = undoDataItem.value; } );
 
-    manager.registerAsyncActionApplier('actionA', (isValidateOnly, action) => { applyAction(isValidateOnly, action, undoManager, valueA, 'A'); });
-    manager.registerAsyncActionApplier('actionB', (isValidateOnly, action) => { applyAction(isValidateOnly, action, undoManager, valueB, 'B'); });
+    manager.registerAsyncActionApplier('actionA', 
+        (isValidateOnly, action) => { 
+            applyAction(isValidateOnly, action, undoManager, valueA, 'A'); 
+        });
+    manager.registerAsyncActionApplier('actionB', 
+        (isValidateOnly, action) => { 
+            applyAction(isValidateOnly, action, undoManager, valueB, 'B'); 
+        });
 
     expect(manager.getAppliedActionCount()).toEqual(0);
     expect(manager.getUndoneActionCount()).toEqual(0);
