@@ -38,10 +38,14 @@ class MenuHandler {
                     this._idMenuItems.set(idRenderer, menuItemEntries);
                 }
 
-                itemTemplate.overrideRole = itemTemplate.overrideRole || itemTemplate.role;
+                itemTemplate.overrideRole = itemTemplate.overrideRole 
+                    || itemTemplate.role;
 
                 if (!menuItem.role) {
-                    menuItem.click = (event, focusedWindow, focusedWebContents) => { this._handleMenuClick(event, focusedWindow, focusedWebContents, idRenderer); };
+                    menuItem.click = (event, focusedWindow, focusedWebContents) => { 
+                        this._handleMenuClick(event, focusedWindow, 
+                            focusedWebContents, idRenderer); 
+                    };
                 }
 
                 menuItemEntries.push({
@@ -98,7 +102,9 @@ class MenuHandler {
         if (this._idMenuItems) {
             const menuItemEntries = this._idMenuItems.get(id);
             if (menuItemEntries) {
-                menuItemEntries.forEach((menuItem) => { menuItem.itemTemplate.label = label; });
+                menuItemEntries.forEach((menuItem) => { 
+                    menuItem.itemTemplate.label = label; 
+                });
                 this._rebuildMenu();
             }
         }
@@ -140,10 +146,11 @@ class MenuHandler {
 
 /**
  * @class MenuManagerMain
- * Main process side of the menu manager. To use just create an instance of it in the main process, preferrably
- * after the app 'ready' event has been fired.
+ * Main process side of the menu manager. To use just create an instance of it in the 
+ * main process, preferrably after the app 'ready' event has been fired.
  * <p>
- * This provides the menu item callback, which simply sends an async ipc message back to the renderer process.
+ * This provides the menu item callback, which simply sends an async ipc message back 
+ * to the renderer process.
  */
 export class MenuManagerMain {
     constructor(options) {
@@ -163,7 +170,8 @@ export class MenuManagerMain {
         this.handleMenuClick = this.handleMenuClick.bind(this);
 
         ipcMain.on('MenuManager-setMenuTemplate', this.handleSetMenuTemplate);
-        ipcMain.on('MenuManager-setContextMenuTemplate', this.handleSetContextMenuTemplate);
+        ipcMain.on('MenuManager-setContextMenuTemplate', 
+            this.handleSetContextMenuTemplate);
         ipcMain.on('MenuManager-popupContextMenu', this.handlePopupContextMenu);
         ipcMain.on('MenuManager-closeContextMenu', this.handleCloseContextMenu);
 
@@ -177,7 +185,8 @@ export class MenuManagerMain {
 
     handleSetMenuTemplate(event, menuTemplate) {
         if (menuTemplate) {
-            this._mainMenuHandler = new MenuHandler(menuTemplate, this.handleMenuClick, (menu) => Menu.setApplicationMenu(menu));
+            this._mainMenuHandler = new MenuHandler(menuTemplate, 
+                this.handleMenuClick, (menu) => Menu.setApplicationMenu(menu));
         }
         else {
             this._mainMenuHandler = undefined;
@@ -187,7 +196,8 @@ export class MenuManagerMain {
 
     handleSetContextMenuTemplate(event, menuTemplate) {
         if (menuTemplate) {
-            this._contextMenuHandler = new MenuHandler(menuTemplate, this.handleMenuClick);
+            this._contextMenuHandler = new MenuHandler(menuTemplate, 
+                this.handleMenuClick);
         }
         else {
             this._contextMenuHandler = undefined;

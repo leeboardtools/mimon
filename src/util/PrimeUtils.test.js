@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { reduceToSimplePrimes } from './PrimeUtils';
 
 function expectResult(result, ref) {

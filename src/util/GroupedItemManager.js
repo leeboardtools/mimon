@@ -1,17 +1,17 @@
 
 /**
- * Object that manages items by grouping and caching them. Items are normally stored offline
- * and are retrieved when needed.
+ * Object that manages items by grouping and caching them. Items are normally 
+ * stored offline and are retrieved when needed.
  * <p>
- * The design use case is to group items with dates (such as transactions) by say year, and
- * have each group stored in a separate file.
+ * The design use case is to group items with dates (such as transactions) by 
+ * say year, and have each group stored in a separate file.
  * <p>
- * The creator of the manager provides a number of callbacks. These are used to interpret the
- * items stored in the manager.
+ * The creator of the manager provides a number of callbacks. These are used to 
+ * interpret the items stored in the manager.
  * <p>
- * Items are the individual chunks of data. Each item has a tag, provided by the itemTagFromItem callback.
- * The tag holds the id used to uniquely identify an item and the group key used to group
- * the item.
+ * Items are the individual chunks of data. Each item has a tag, provided by the 
+ * itemTagFromItem callback. The tag holds the id used to uniquely identify an 
+ * item and the group key used to group the item.
  */
 export class GroupedItemManager {
     /**
@@ -38,20 +38,23 @@ export class GroupedItemManager {
      * @callback GroupedItemManager~asyncUpdateItemsInGroup
      * @async
      * @param {*}   groupKey    The group key of the group whose items are to be updated.
-     * @param {Array[]}   itemUpdates   Array of one or two element sub-arrays representing the items to be updated.
-     * The first element is the id of the item, the second element is the new item, or <code>undefined</code> if the
-     * item is being removed.
+     * @param {Array[]}   itemUpdates   Array of one or two element sub-arrays 
+     * representing the items to be updated.
+     * The first element is the id of the item, the second element is the new item, 
+     * or <code>undefined</code> if the item is being removed.
      */
 
 
     /**
      * @typedef {object} GroupedItemManager~Options
-     * @property {object[][]}   [itemTagsById]  Optional array of two elemenet arrays, compatible with the
-     * constructor of {@link Map}.
+     * @property {object[][]}   [itemTagsById]  Optional array of two elemenet arrays, 
+     * compatible with the constructor of {@link Map}.
      * @property {GroupedItemManager~itemTagFromItem}   itemTagFromItem
-     * @property {GroupedItemManager~asyncRetrieveItemsFromGroup}   asyncRetrieveItemsFromGroup
+     * @property {GroupedItemManager~asyncRetrieveItemsFromGroup}   
+     * asyncRetrieveItemsFromGroup
      * @property {GroupedItemManager~asyncUpdateItemsInGroup}   asyncUpdateItemsInGroup
-     * @property {boolean}  [noCache=false] If <code>true</code> items are not cached by the manager.
+     * @property {boolean}  [noCache=false] If <code>true</code> items are not cached 
+     * by the manager.
      */
     
     constructor(options) {
@@ -99,9 +102,10 @@ export class GroupedItemManager {
 
     /**
      * Retrieves one or more items.
-     * @param {*|Array} ids Array containing the ids of the items to be retrieved. May also be a single value.
-     * @returns {*|Array} Array containing the retrieved items, the ordering corresponds to that of ids, or a single
-     * item if ids is not an array.
+     * @param {*|Array} ids Array containing the ids of the items to be retrieved. 
+     * May also be a single value.
+     * @returns {*|Array} Array containing the retrieved items, the ordering 
+     * corresponds to that of ids, or a single item if ids is not an array.
      */
     async asyncGetItemsWithIds(ids) {
         if (!Array.isArray(ids)) {
@@ -109,7 +113,8 @@ export class GroupedItemManager {
             return result ? result[0] : result;
         }
 
-        // We want to keep track of the ordering of the items so we can return them in the same order.
+        // We want to keep track of the ordering of the items so we can return them 
+        // in the same order.
         const items = [];
         const groupEntries = new Map();
         for (let i = 0; i < ids.length; ++i) {
@@ -147,7 +152,8 @@ export class GroupedItemManager {
         }
 
         for (let [groupKey, groupEntry] of groupEntries) {
-            const groupItems = await this._asyncRetrieveItemsFromGroup(groupKey, groupEntry.ids);
+            const groupItems = await this._asyncRetrieveItemsFromGroup(groupKey, 
+                groupEntry.ids);
 
             for (let i = 0; i < groupEntry.indices.length; ++i) {
                 items[groupEntry.indices[i]] = groupItems[i];
@@ -163,7 +169,8 @@ export class GroupedItemManager {
 
     /**
      * Adds and/or modifies items.
-     * @param {*|Array} itemUpdates Either an array containing the new or modified items, or a single new or modified item.
+     * @param {*|Array} itemUpdates Either an array containing the new or modified 
+     * items, or a single new or modified item.
      */
     async asyncUpdateItems(itemUpdates) {
         if (!Array.isArray(itemUpdates)) {
@@ -237,7 +244,8 @@ export class GroupedItemManager {
 
     /**
      * Removes items.
-     * @param {*|Array} ids Either an array of the ids to the items to be removed or a single id.
+     * @param {*|Array} ids Either an array of the ids to the items to be removed or 
+     * a single id.
      */
     async asyncRemoveItems(ids) {
         if (!Array.isArray(ids)) {
@@ -275,11 +283,11 @@ export class GroupedItemManager {
 
 
 /**
- * Object that can be used to store items for use with {@link GroupedItemManager}, providing the async callbacks 
- * for the GroupedItemManager.
+ * Object that can be used to store items for use with {@link GroupedItemManager}, 
+ * providing the async callbacks for the GroupedItemManager.
  * <p>
- * This handles the storage of items in a group, with an optional callback for loading items when a group is
- * first created.
+ * This handles the storage of items in a group, with an optional callback for 
+ * loading items when a group is first created.
  */
 export class ItemGroups {
     constructor(options) {
@@ -295,8 +303,8 @@ export class ItemGroups {
     /**
      * @typedef {object} ItemGroups~GroupItems
      * @property {Map}  itemsById  Map whose keys are ids and values are the items.
-     * @property {number}   lastChangeId    Id that's incremented every time there's a change
-     * made to an item in the group.
+     * @property {number}   lastChangeId    Id that's incremented every time there's 
+     * a change made to an item in the group.
      */
 
     /**
