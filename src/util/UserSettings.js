@@ -59,10 +59,13 @@ async function setUserSettingsJSON(json) {
 
 /**
  * Retrieves a user setting.
- * @param {string|string[]} key The key of interest, or an array of keys. If it is an array of keys, the settings
- * is first set to defValue, then any settings obtained from key[0] is Object.assign()'d to those settings, and so forth.
- * The intended effect is to provide default settings that are overridable by keys with higher indices.
- * @param {object} [defValue=undefined]   Optional value to return if the key is not defined.
+ * @param {string|string[]} key The key of interest, or an array of keys. If it is 
+ * an array of keys, the settings is first set to defValue, then any settings 
+ * obtained from key[0] is Object.assign()'d to those settings, and so forth. The 
+ * intended effect is to provide default settings that are overridable by keys with 
+ * higher indices.
+ * @param {object} [defValue=undefined]   Optional value to return if the key is 
+ * not defined.
  */
 export async function getUserSetting(key, defValue) {
     if (!userSettingsPathName) {
@@ -94,7 +97,8 @@ export async function getUserSetting(key, defValue) {
 /**
  * Sets the value of a user setting.
  * @param {string} key The key of interest.
- * @param {object} value The value to set, if <code>undefined</code> then the key is deleted, and the next time
+ * @param {object} value The value to set, if <code>undefined</code> then the key 
+ * is deleted, and the next time
  * {@link getUserSetting} is called, the default value will be returned.
  */
 export async function setUserSetting(key, value) {

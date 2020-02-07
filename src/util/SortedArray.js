@@ -8,17 +8,20 @@ export class SortedArray {
 
     /**
      * @typedef {object}    SortedArray~Options
-     * @property {string}  [duplicates=undefined]  How to handle duplicates, allowed values are:
+     * @property {string}  [duplicates=undefined]  How to handle duplicates, 
+     * allowed values are:
      * <li>'ignore' (the default, {@link SortedArray#add} returns -1 for duplicates
      * <li>'allow'
      * <li>'replace' Existing values are replaced.
-     * @property {object[]} [initialValues] Optional initial values for the array. These will be sorted.
+     * @property {object[]} [initialValues] Optional initial values for the array. 
+     * These will be sorted.
      */
 
     /**
      * @constructor
-     * @param {(bSearchCompare|SortedArray)} compare The binary search comparison function. This may also be a {@link SortedArray},
-     * in which case a shallow copy of the sorted array is made and the options arg is ignored.
+     * @param {(bSearchCompare|SortedArray)} compare The binary search comparison 
+     * function. This may also be a {@link SortedArray}, in which case a shallow 
+     * copy of the sorted array is made and the options arg is ignored.
      * @param {SortedArray~Options} [options]
      */
     constructor(compare, options) {
@@ -85,7 +88,8 @@ export class SortedArray {
     at(index) { return this._array[index]; }
 
     /**
-     * Retrieves the index of the element that is equal to or is the closest to but less than a value.
+     * Retrieves the index of the element that is equal to or is the closest to but 
+     * less than a value.
      * @param {object} value
      * @returns {number}
      */
@@ -94,7 +98,8 @@ export class SortedArray {
     }
 
     /**
-     * Retrieves the index of the element that is equal to or is the closest to but greater than a value.
+     * Retrieves the index of the element that is equal to or is the closest to but 
+     * greater than a value.
      * @param {object} value
      */
     indexGE(value) {
@@ -102,7 +107,8 @@ export class SortedArray {
         if (index < 0) {
             return 0;
         }
-        while ((index < this._array.length) && (this._compare(value, this._array[index]) >= 0)) {
+        while ((index < this._array.length) 
+            && (this._compare(value, this._array[index]) >= 0)) {
             ++index;
         }
         if (!this._compare(value, this._array[index - 1])) {
@@ -112,8 +118,8 @@ export class SortedArray {
     }
 
     /**
-     * Determines the index of an element of a given value. If there are multiple entries of the index
-     * this returns the lowest index.
+     * Determines the index of an element of a given value. If there are multiple 
+     * entries of the index this returns the lowest index.
      * @param {object} value The value of interest.
      * @returns {number}    The index, -1 if value is not in the array.
      */
@@ -130,8 +136,8 @@ export class SortedArray {
     /**
      * Adds a value to the array.
      * @param {object} value The value to add.
-     * @returns {number}    The index where the value was inserted, -1 if duplicates are not allowed and the
-     * value was already in the array.
+     * @returns {number}    The index where the value was inserted, -1 if duplicates 
+     * are not allowed and the value was already in the array.
      */
     add(value) {
         let index = this.indexLE(value);
@@ -195,7 +201,8 @@ export class SortedArray {
     }
 
     /**
-     * Calls a callback function for each value in the array, similar to {@link Array.forEach}.
+     * Calls a callback function for each value in the array, similar to 
+     * {@link Array.forEach}.
      * @param {Function} callback
      */
     forEach(callback) {
