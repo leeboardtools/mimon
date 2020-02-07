@@ -57,10 +57,12 @@ test('GroupedItemManager', async () => {
 
     await manager.asyncRemoveItems(1);
     expect(await manager.asyncGetItemsWithIds(1)).toBeUndefined();
-    expect(await manager.asyncGetItemsWithIds([1, 2, 3, 4])).toEqual([undefined, item2a, item3b, item4a]);
+    expect(await manager.asyncGetItemsWithIds([1, 2, 3, 4]))
+        .toEqual([undefined, item2a, item3b, item4a]);
 
     await manager.asyncRemoveItems([2, 4]);
-    expect(await manager.asyncGetItemsWithIds([1, 2, 3, 4])).toEqual([undefined, undefined, item3b, undefined]);
+    expect(await manager.asyncGetItemsWithIds([1, 2, 3, 4]))
+        .toEqual([undefined, undefined, item3b, undefined]);
 
 });
 
@@ -112,9 +114,11 @@ test('GroupedItemManager-noCache', async () => {
 
     await manager.asyncRemoveItems(1);
     expect(await manager.asyncGetItemsWithIds(1)).toBeUndefined();
-    expect(await manager.asyncGetItemsWithIds([1, 2, 3, 4])).toEqual([undefined, item2a, item3b, item4a]);
+    expect(await manager.asyncGetItemsWithIds([1, 2, 3, 4]))
+        .toEqual([undefined, item2a, item3b, item4a]);
 
     await manager.asyncRemoveItems([2, 4]);
-    expect(await manager.asyncGetItemsWithIds([1, 2, 3, 4])).toEqual([undefined, undefined, item3b, undefined]);
+    expect(await manager.asyncGetItemsWithIds([1, 2, 3, 4]))
+        .toEqual([undefined, undefined, item3b, undefined]);
 
 });

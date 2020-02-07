@@ -31,7 +31,8 @@ export class NumericIdGenerator {
     }
 
     /**
-     * @returns {number}    The value that will be returned by the next call to {@link NumericIdGenerator#generateId}
+     * @returns {number}    The value that will be returned by the next call to 
+     * {@link NumericIdGenerator#generateId}
      */
     peekGenerateId() {
         return this._lastId + 1;

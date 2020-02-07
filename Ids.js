@@ -5,15 +5,16 @@ const uuidv1 = require('uuid/v1');
 
 /**
  * Immutable object representing an id. An id has both a local id value and a UUID.
- * The idea is that local ids are used locally and are just numbers, making sorting and tracking
- * ids simpler.
+ * The idea is that local ids are used locally and are just numbers, making sorting 
+ * and tracking ids simpler.
  * @class
  */
 export class Id {
     /**
      * @typedef {object}    Id~Options
      * @property {number}   localId The local id
-     * @property {string}   uuid    The uuid of the id, a string of the form '1b671a64-40d5-491e-99b0-da01ff1f3341'.
+     * @property {string}   uuid    The uuid of the id, a string of the form 
+     * '1b671a64-40d5-491e-99b0-da01ff1f3341'.
      */
 
     /**
@@ -43,15 +44,18 @@ export class Id {
     getLocalId() { return this._localId; }
 
     /**
-     * @returns {string}    The uuid, a string of the form '1b671a64-40d5-491e-99b0-da01ff1f3341'.
+     * @returns {string}    The uuid, a string of the form 
+     * '1b671a64-40d5-491e-99b0-da01ff1f3341'.
      */
     getUuid() { return this._uuid; }
 
 
     /**
-     * Registers a simple processor supporting Id objects in a {@link JSONObjectProcessor}.
-     * Note that if you extend Id, and have separate JSON object processing for that class,
-     * you should set a <code>_jsonNoId</code> property to <code>true</code> in that class.
+     * Registers a simple processor supporting Id objects in a 
+     * {@link JSONObjectProcessor}.
+     * Note that if you extend Id, and have separate JSON object processing for 
+     * that class, you should set a <code>_jsonNoId</code> property to 
+     * <code>true</code> in that class.
      * @param {JSONProcessor} jsonProcessor The JSON object processor.
      */
     static registerWithJSONObjectProcessor(jsonProcessor) {
@@ -145,15 +149,18 @@ export class IdGenerator {
 
 
     /**
-     * Registers a simple processor supporting IdGenerator objects in a {@link JSONObjectProcessor}.
-     * Note that if you extend IdGenerator, and have separate JSON object processing for that class,
-     * you should set a <code>_jsonNoIdGenerator</code> property to <code>true</code> in that class.
+     * Registers a simple processor supporting IdGenerator objects in a 
+     * {@link JSONObjectProcessor}.
+     * Note that if you extend IdGenerator, and have separate JSON object 
+     * processing for that class, you should set a <code>_jsonNoIdGenerator</code> 
+     * property to <code>true</code> in that class.
      * @param {JSONProcessor} jsonProcessor The JSON object processor.
      */
     static registerWithJSONObjectProcessor(jsonProcessor) {
         jsonProcessor.addSimpleObjectProcessor({
             name: 'IdManager',
-            isForObject: (object) => object instanceof IdGenerator && !object._jsonNoIdGenerator,
+            isForObject: (object) => object instanceof IdGenerator 
+                && !object._jsonNoIdGenerator,
             fromJSON: (json) => new IdGenerator(json),
         });
     }

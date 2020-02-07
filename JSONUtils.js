@@ -17,7 +17,8 @@ export function toCleanJSON(json) {
 
 
 /**
- * Converts a {@link Map} to a JSON object that can be passed to {@link jsonToMap} to get an equivalent Map back.
+ * Converts a {@link Map} to a JSON object that can be passed to {@link jsonToMap} 
+ * to get an equivalent Map back.
  * @param {Map} map The map to convert.
  * @returns {object}    The JSON object.
  */
@@ -43,7 +44,8 @@ export function jsonToMap(json) {
 }
 
 /**
- * Converts a {@link Set} to a JSON object that can be passed to {@link jsonToSet} to get an equivalent Set back.
+ * Converts a {@link Set} to a JSON object that can be passed to {@link jsonToSet} 
+ * to get an equivalent Set back.
  * @param {Set} set The set to convert.
  * @returns {object}    The JSON object.
  */

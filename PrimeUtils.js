@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /**
  * Prime numbers up to 1000.
  * Generated via [node primes](https://www.npmjs.com/package/primes)

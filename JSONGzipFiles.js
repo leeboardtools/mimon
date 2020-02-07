@@ -28,9 +28,11 @@ export class StringReadable extends Readable {
 
 /**
  * Writes a JSON object as a Gzip file using {@link fs#createWriteStream}.
- * @param {object} json The JSON object to be written, will be passed to {@link JSON#stringify}.
+ * @param {object} json The JSON object to be written, will be passed to 
+ * {@link JSON#stringify}.
  * @param {string} path The path of the file to be written.
- * @param {object} [options] The optional options to pass to {@link fs#createWriteStream}.
+ * @param {object} [options] The optional options to pass to 
+ * {@link fs#createWriteStream}.
  * @returns {Promise}
  */
 export function writeToFile(json, path, options) {
@@ -45,7 +47,8 @@ export function writeToFile(json, path, options) {
 
 /**
  * Writes a JSON object as a Gzip file via a file handle.
- * @param {object} json The JSON object to be written, will be passed to {@link JSON#stringify}.
+ * @param {object} json The JSON object to be written, will be passed to 
+ * {@link JSON#stringify}.
  * @param {FileHandle} fileHandle The file handle to write to.
  * @returns {Promise}
  */
@@ -61,7 +64,8 @@ export function writeToFileHandle(json, fileHandle) {
 
 /**
  * Writes a JSON object as a Gzip file using a {@link fs#WriteStream}.
- * @param {object} json The JSON object to be written, will be passed to {@link JSON#stringify}.
+ * @param {object} json The JSON object to be written, will be passed to 
+ * {@link JSON#stringify}.
  * @param {fs.WriteStream} writeStream The stream to write to.
  * @returns {Promise}
  */
@@ -87,7 +91,8 @@ export function writeToWriteStream(json, writeStream) {
 /**
  * Reads a JSON object from a Gzip file using {@link fs#createReadStream}.
  * @param {string} path The path of the file.
- * @param {object} [options]    The optional options to pass to {@link fs#createReadStream}.
+ * @param {object} [options]    The optional options to pass to 
+ * {@link fs#createReadStream}.
  * @returns {Promise<object>}
  */
 export function readFromFile(path, options) {
