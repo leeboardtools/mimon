@@ -598,6 +598,28 @@ export async function asyncAddBasicTransactions(sys) {
             { ymdDate: '2020-01-31', close: 309.51, },
 
         ]);
+    
+    // MSFT
+    await priceManager.asyncAddPrices(sys.msftPricedItemId,
+        [
+            { ymdDate: '2005-02-04', close: 26.32, },
+            { ymdDate: '2005-02-11', close: 25.97, },
+            { ymdDate: '2005-02-18', close: 25.48, },
+            { ymdDate: '2005-02-25', close: 25.25, },
+            { ymdDate: '2005-02-28', close: 25.16, },
+            { ymdDate: '2005-03-04', close: 25.17, },
+            { ymdDate: '2005-03-11', close: 25.09, },
+
+            { ymdDate: '2014-06-04', close: 40.32, },
+            { ymdDate: '2014-06-10', close: 41.11, },
+            { ymdDate: '2014-06-13', close: 41.23, },
+            { ymdDate: '2014-06-20', close: 41.68, },
+
+            { ymdDate: '2015-03-12', close: 41.02, },
+
+            { ymdDate: '2020-01-24', close: 165.04, },
+            { ymdDate: '2020-01-31', close: 170.23, },
+        ]);
 
     const pricedItemManager = accountingSystem.getPricedItemManager();
     const aaplPricedItem = pricedItemManager.getPricedItemDataItemWithId(sys.aaplPricedItemId);

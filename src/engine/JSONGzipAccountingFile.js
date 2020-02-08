@@ -27,6 +27,9 @@ const LEDGER_FILE_NAME = LEDGER_FILE_PREFIX + FILE_SUFFIX + FILE_EXT;
 const JOURNAL_FILES_PREFIX = 'Journal';
 const JOURNAL_SUMMARY_FILE_NAME = JOURNAL_FILES_PREFIX + FILE_SUFFIX + FILE_EXT;
 
+const PRICES_FILE_PREFIX = 'Prices';
+const PRICES_FILE_NAME = PRICES_FILE_PREFIX + FILE_SUFFIX + FILE_EXT;
+
 // const HISTORY_FILES_PREFIX = 'History';
 // const PRICE_FILES_PREFIX = 'Prices';
 
@@ -35,6 +38,7 @@ const FILE_EXT_UPPER_CASE = FILE_EXT.toUpperCase();
 const LEDGER_TAG = 'mimon-ledger';
 const JOURNAL_SUMMARY_TAG = 'mimon-journalSummary';
 const JOURNAL_TRANSACTIONS_TAG = 'mimon-journalTransactions';
+const PRICES_TAG = 'prices-ledger';
 
 ///
 // The JSONGzip accounting file system design:
@@ -514,28 +518,70 @@ class JSONGzipJournalFiles {
 
 
 /**
- * Handles the price files
+ * Handles the prices file
  */
-class JSONGzipPriceFiles {
+class JSONGzipPricesFile {
     constructor(accountingFile) {
         this._accountingFile = accountingFile;
+
+        this._pathName = JSONGzipPricesFile.buildPricesPathName(
+            accountingFile.getPathName());
+
+        this._pricesHandler = accountingFile._pricesHandler;
+    }
+
+    static buildPricesPathName(pathName) {
+        return path.join(pathName, PRICES_FILE_NAME);
     }
 
     cleanIsModified() {
-
+        this._pricesChangeId = this._pricesHandler.getLastChangeId();
     }
 
     isModified() {
-        return false;
+        return this._pricesChangeId !== this._pricesHandler.getLastChangeId();
     }
 
     async asyncRead() {
+        const pathName = this._pathName;
+        const json = await JGZ.readFromFile(pathName);
+        if (json.tag !== PRICES_TAG) {
+            throw userError('JSONGzipAccountingFile-prices_tag_missing', 
+                pathName);
+        }
+
+        if (!json.pricesHandler) {
+            throw userError('JSONGzipAccountingFile-pricesHandler_tag_missing', 
+                pathName);
+        }
+
+        this._pricesHandler.fromJSON(json.pricesHandler);
 
         this.cleanIsModified();
+
+        return json.stateId;
+    }
+
+
+    async _asyncWritePricesFile(stateId) {
+        const json = {
+            tag: PRICES_TAG,
+            fileVersion: '1.0',
+            stateId: stateId,
+            pricesHandler: this._pricesHandler.toJSON(),
+        };
+
+        // Write out the file...
+        await JGZ.writeToFile(json, this._pathName);
     }
 
     async asyncCreateWriteFileActions(stateId) {
-        return [];
+        return [
+            new FA.ReplaceFileAction(this._pathName,
+                {
+                    applyCallback: (pathName) => this._asyncWritePricesFile(stateId),
+                })
+        ];
     }
 
     writeCompleted() {
@@ -544,12 +590,14 @@ class JSONGzipPriceFiles {
 
     async asyncClose() {
         this._accountingFile = undefined;
+        this._pricesHandler = undefined;
     }
 }
 
 
 /**
- * Handles the history files.
+ * Handles the history files. The history consists of the {@link UndoDataItem}s from the
+ * {@link UndoHandler} and the {@link ActionDataItem}s from the {@link ActionsHandler}.
  */
 class JSONGzipHistoryFiles {
     constructor(accountingFile) {
@@ -604,7 +652,7 @@ class JSONGzipAccountingFile extends AccountingFile {
 
         this._ledgerFile = new JSONGzipLedgerFile(this);
         this._journalFiles = new JSONGzipJournalFiles(this);
-        this._priceFiles = new JSONGzipPriceFiles(this);
+        this._priceFiles = new JSONGzipPricesFile(this);
         this._historyFiles = new JSONGzipHistoryFiles(this);
     }
 

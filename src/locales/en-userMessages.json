@@ -147,6 +147,8 @@
     "JSONGzipAccountingFile-transactionsHandler_tag_missing": ["The file '", "' is not a valid MiMon journal file, the transactions handler section is missing,"],
     "JSONGzipAccountingFile-journal_transactions_tag_missing": ["The file '", "' is not a valid MiMon journal transactions file, the tag is incorrect or missing,"],
     "JSONGzipAccountingFile-journal_transactions_missing": ["The file '", "' is not a valid MiMon journal transactions file, the transactions section is missing,"],
+    "JSONGzipAccountingFile-prices_tag_missing": ["The file '", "' is not a valid MiMon prices file, the tag is incorrect or missing."],
+    "JSONGzipAccountingFile-pricesHandler_tag_missing": ["The file '", "' is not a valid MiMon prices file, the pricesHandler section is missing."],
 
     "": ""
 }
