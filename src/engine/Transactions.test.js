@@ -551,6 +551,14 @@ test('TransactionManager-add_modify', async () => {
         .toEqual([new YMDDate('2019-10-05'), new YMDDate('2019-10-05')]);
     expect(await manager.asyncGetTransactionDateRange(sys.checkingId))
         .toEqual([new YMDDate('2019-10-05'), new YMDDate('2019-10-05')]);
+    
+    const cashNonReconciledIds = [settingsA.id];
+    const checkingNonReconciledIds = [settingsA.id];
+    expect(await manager.asyncGetNonReconciledIdsForAccountId(sys.cashId))
+        .toEqual(cashNonReconciledIds);
+    expect(await manager.asyncGetNonReconciledIdsForAccountId(sys.checkingId))
+        .toEqual(checkingNonReconciledIds);
+
 
     const settingsB = {
         ymdDate: '2019-10-10',
@@ -578,7 +586,16 @@ test('TransactionManager-add_modify', async () => {
     expect(transactionB).toEqual(settingsB);
     //expect(transactionC).toEqual(settingsC);
 
-
+    const brokerageANonReconciledIds = [];
+    checkingNonReconciledIds.push(settingsB.id);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.brokerageAId))
+        .sort((a, b) => a - b))
+        .toEqual(brokerageANonReconciledIds);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.checkingId))
+        .sort((a, b) => a - b))
+        .toEqual(checkingNonReconciledIds);
+    
+    
     // transactionsAdd event test
     expect(addEventArgs).toEqual({ newTransactionDataItems: newTransactionDataItemsB });
     expect(addEventArgs.newTransactionDataItems).toBe(newTransactionDataItemsB);
@@ -615,7 +632,16 @@ test('TransactionManager-add_modify', async () => {
     settingsD.id = transactionD.id;
     expect(transactionD).toEqual(settingsD);
 
+    cashNonReconciledIds.push(settingsD.id);
+    checkingNonReconciledIds.push(settingsD.id);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.cashId))
+        .sort((a, b) => a - b))
+        .toEqual(cashNonReconciledIds);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.checkingId))
+        .sort((a, b) => a - b))
+        .toEqual(checkingNonReconciledIds);
 
+    
     const settingsE = {
         ymdDate: '2019-10-15',
         splits: [
@@ -640,6 +666,7 @@ test('TransactionManager-add_modify', async () => {
     await expect(manager.asyncAddTransactions({ splits: []})).rejects.toThrow();
 
 
+
     const transactionE = (await manager.asyncAddTransactions(settingsE))
         .newTransactionDataItem;
     settingsE.id = transactionE.id;
@@ -654,6 +681,16 @@ test('TransactionManager-add_modify', async () => {
         .toEqual([new YMDDate('2019-10-05'), new YMDDate('2019-10-20')]);
 
 
+    cashNonReconciledIds.push(settingsE.id);
+    checkingNonReconciledIds.push(settingsE.id);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.cashId))
+        .sort((a, b) => a - b))
+        .toEqual(cashNonReconciledIds);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.checkingId))
+        .sort((a, b) => a - b))
+        .toEqual(checkingNonReconciledIds);        
+
+
     const settingsF = Object.assign({}, settingsE);
     const transactionF = (await manager.asyncAddTransactions(settingsF))
         .newTransactionDataItem;
@@ -665,6 +702,16 @@ test('TransactionManager-add_modify', async () => {
     expect(resultEF).toEqual(expect.arrayContaining([settingsF, settingsE]));
 
 
+    cashNonReconciledIds.push(settingsF.id);
+    checkingNonReconciledIds.push(settingsF.id);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.cashId))
+        .sort((a, b) => a - b))
+        .toEqual(cashNonReconciledIds);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.checkingId))
+        .sort((a, b) => a - b))
+        .toEqual(checkingNonReconciledIds);
+    
+    
     const changesF1 = { id: settingsF.id, 
         description: 'This is description F1', 
         memo: 'This is memo F1', 
@@ -673,6 +720,14 @@ test('TransactionManager-add_modify', async () => {
     const transactionF1 = (await manager.asyncModifyTransactions(changesF1))
         .newTransactionDataItem;
     expect(transactionF1).toEqual(settingsF1);
+
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.cashId))
+        .sort((a, b) => a - b))
+        .toEqual(cashNonReconciledIds);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.checkingId))
+        .sort((a, b) => a - b))
+        .toEqual(checkingNonReconciledIds);
+    
 
 
     const changesD1 = {
@@ -684,7 +739,7 @@ test('TransactionManager-add_modify', async () => {
                 quantityBaseValue: 50000, 
             },
             { accountId: sys.checkingId, 
-                reconcileState: T.ReconcileState.PENDING.name, 
+                reconcileState: T.ReconcileState.RECONCILED.name, 
                 quantityBaseValue: -50000, 
             },
         ]
@@ -698,7 +753,7 @@ test('TransactionManager-add_modify', async () => {
         id: settingsE.id,
         splits: [
             { accountId: sys.cashId, 
-                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                reconcileState: T.ReconcileState.RECONCILED.name, 
                 quantityBaseValue: 25000, 
             },
             { accountId: sys.checkingId, 
@@ -707,6 +762,7 @@ test('TransactionManager-add_modify', async () => {
             },
         ]
     };
+
     const settingsE1 = Object.assign({}, settingsE, changesE1);
     result = await manager.asyncModifyTransactions([changesD1, changesE1]);
     const resultDE1 = result.newTransactionDataItems;
@@ -720,6 +776,17 @@ test('TransactionManager-add_modify', async () => {
         oldTransactionDataItems: [ settingsD, settingsE ]}
     );
     expect(modifyEventArg.newTransactionDataItems).toBe(resultDE1);
+
+    brokerageANonReconciledIds.push(settingsD.id);
+    cashNonReconciledIds.splice(cashNonReconciledIds.indexOf(settingsD.id), 1);
+    cashNonReconciledIds.splice(cashNonReconciledIds.indexOf(settingsE.id), 1);
+    checkingNonReconciledIds.splice(checkingNonReconciledIds.indexOf(settingsD.id), 1);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.cashId))
+        .sort((a, b) => a - b))
+        .toEqual(cashNonReconciledIds);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.checkingId))
+        .sort((a, b) => a - b))
+        .toEqual(checkingNonReconciledIds);
 
 
     // Test undo modify
@@ -735,6 +802,13 @@ test('TransactionManager-add_modify', async () => {
         .toEqual(settingsD1);
     expect(await manager.asyncGetTransactionDataItemWithId(settingsE1.id))
         .toEqual(settingsE1);
+
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.cashId))
+        .sort((a, b) => a - b))
+        .toEqual(cashNonReconciledIds);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.checkingId))
+        .sort((a, b) => a - b))
+        .toEqual(checkingNonReconciledIds);
 
 
     // Change validate:
@@ -821,7 +895,7 @@ test('TransactionManager~remove', async () => {
         ymdDate: '2019-10-15',
         splits: [
             { accountId: sys.cashId, 
-                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                reconcileState: T.ReconcileState.RECONCILED.name, 
                 quantityBaseValue: -1000, 
             },
             { accountId: sys.groceriesId, 
@@ -834,7 +908,7 @@ test('TransactionManager~remove', async () => {
         ymdDate: '2019-10-10',
         splits: [
             { accountId: sys.cashId, 
-                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                reconcileState: T.ReconcileState.RECONCILED.name, 
                 quantityBaseValue: -2000, 
             },
             { accountId: sys.householdId, 
@@ -879,6 +953,19 @@ test('TransactionManager~remove', async () => {
     expect(resultABCDE).toEqual(
         [settingsA, settingsB, settingsC, settingsD, settingsE ]);
 
+    const cashNonReconciledIds = [settingsA.id, settingsD.id, settingsE.id];
+    const checkingNonReconciledIds = [settingsA.id];
+    const householdNonReconciledIds = [settingsC.id, settingsD.id];
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.cashId))
+        .sort((a, b) => a - b))
+        .toEqual(cashNonReconciledIds);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.checkingId))
+        .sort((a, b) => a - b))
+        .toEqual(checkingNonReconciledIds);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.householdId))
+        .sort((a, b) => a - b))
+        .toEqual(householdNonReconciledIds);
+
 
     
     await expect(manager.asyncRemoveTransactions(-123)).rejects.toThrow();
@@ -891,11 +978,24 @@ test('TransactionManager~remove', async () => {
     expect(await manager.asyncGetTransactionDataItemsWithIds(settingsD.id))
         .toBeUndefined();
 
+    cashNonReconciledIds.splice(cashNonReconciledIds.indexOf(settingsD.id), 1);
+    householdNonReconciledIds.splice(householdNonReconciledIds.indexOf(settingsD.id), 1);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.cashId))
+        .sort((a, b) => a - b))
+        .toEqual(cashNonReconciledIds);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.checkingId))
+        .sort((a, b) => a - b))
+        .toEqual(checkingNonReconciledIds);
+    expect((await manager.asyncGetNonReconciledIdsForAccountId(sys.householdId))
+        .sort((a, b) => a - b))
+        .toEqual(householdNonReconciledIds);
+
     
     // Test undo remove.
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
     expect(resultABCDE).toEqual(
         [settingsA, settingsB, settingsC, settingsD, settingsE ]);
+
 
     // Redo
     await manager.asyncRemoveTransactions(settingsD.id);

@@ -784,7 +784,9 @@ class AccountStatesUpdater {
                 }
             }
 
+            // Force reloading of the account entry the next time it's needed.
             accountEntry.sortedTransactionKeys = undefined;
+            accountEntry.nonReconciledTransactionIds = undefined;
 
             accountEntry.accountStatesByTransactionId.clear();
         }
@@ -942,6 +944,7 @@ export class TransactionManager extends EventEmitter {
      * {@link TransactionHandler#asyncGetSortedTransactionKeysForAccount}.
      * @property {TransactionKey[]} sortedTransactionKeys   The result from 
      * {@link TransactionHandler#asyncGetSortedTransactionKeysForAccount}.
+     * @property {number[]} nonReconciledTransactionIds The result from
      */
     
 
@@ -973,6 +976,12 @@ export class TransactionManager extends EventEmitter {
                 indicesByTransactionId.set(sortedTransactionKeys[i].id, i);
             }
             accountEntry.indicesByTransactionId = indicesByTransactionId;
+        }
+
+        if (!accountEntry.nonReconciledTransactionIds) {
+            accountEntry.nonReconciledTransactionIds 
+                = Array.from(await this._handler.asyncGetNonReconciledIdsForAccountId(
+                    accountId));
         }
 
         return accountEntry;
@@ -1095,6 +1104,18 @@ export class TransactionManager extends EventEmitter {
             = await this._asyncLoadAccountStateDataItemsForTransactionId(
                 accountId, transactionId);
         return accountStateDataItems.slice(0, accountStateDataItems.length - 1);
+    }
+
+
+    /**
+     * Retrieves an array of the ids of transactions that have splits that refer
+     * to a given account whose reconcileState is not {@link ReconcileState.RECONCILED}.
+     * @param {number} accountId 
+     * @returns {number[]}
+     */
+    async asyncGetNonReconciledIdsForAccountId(accountId) {
+        const accountEntry = await this._asyncLoadAccountEntry(accountId);
+        return Array.from(accountEntry.nonReconciledTransactionIds);
     }
 
 
@@ -1749,6 +1770,18 @@ export class TransactionsHandler {
 
 
     /**
+     * Retrieves an array of the ids of the transactions with a split referring to the 
+     * account that is not marked as reconciled.
+     * @param {number} accountId 
+     * @return {number[]}
+     */
+    async asyncGetNonReconciledIdsForAccountId(accountId) {
+        // eslint-disable-next-line max-len
+        throw Error('TransactionHandler.asyncGetNonReconciledIdsForAccountId() abstract method!');
+    }
+
+
+    /**
      * Retrieves an array of the {@link TransactionKey}s for a lot, sorted from 
      * oldest to newest.
      * @param {number} lotId 
@@ -1863,6 +1896,8 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         this._ymdDateSortedEntries = new SortedArray(compareTransactionKeys);
 
         this._currentAccountStatesById = new Map();
+
+        this._sortedNonReconciledIdsByAccountId = new Map();
     }
 
 
@@ -1871,21 +1906,34 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         this._entriesById.forEach((entry, id) => {
             entries.push(entryToJSON(entry));
         });
+
+        const nonReconciledTransactionIdsByAccount = [];
+        this._sortedNonReconciledIdsByAccountId.forEach((sortedIds, accountId) => {
+            if (sortedIds.length) {
+                nonReconciledTransactionIdsByAccount.push(
+                    [accountId, sortedIds.getValues()]);
+            }
+        });
+
         return {
             entries: entries,
             currentAccountStatesById: 
                 Array.from(this._currentAccountStatesById.entries()),
+            nonReconciledTransactionIdsByAccount:
+                nonReconciledTransactionIdsByAccount,
         };
     }
 
     entriesFromJSON(json) {
-        const { entries, currentAccountStatesById } = json;
+        const { entries, currentAccountStatesById,
+            nonReconciledTransactionIdsByAccount } = json;
 
         this._entriesById.clear();
         this._ymdDateSortedEntries.clear();
         this._sortedEntriesByAccountId.clear();
         this._sortedEntriesByLotId.clear();
         this._currentAccountStatesById.clear();
+        this._sortedNonReconciledIdsByAccountId.clear();
 
         entries.forEach((entry) => {
             this._addEntry(entryFromJSON(entry));
@@ -1894,7 +1942,15 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         currentAccountStatesById.forEach(([accountId, accountStateDataItem]) => {
             this._currentAccountStatesById.set(accountId, accountStateDataItem);
         });
-    }
+
+        nonReconciledTransactionIdsByAccount.forEach(
+            ([accountId, sortedTransactionIds]) => {
+                this._sortedNonReconciledIdsByAccountId.set(accountId,
+                    new SortedArray((a, b) => a - b, {
+                        initialValues: sortedTransactionIds
+                    }));
+            });
+    } 
 
 
     _addEntry(entry) {
@@ -2000,6 +2056,10 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
             this._sortedEntriesByAccountId);
     }
 
+    async asyncGetNonReconciledIdsForAccountId(accountId) {
+        const sortedIds = this._sortedNonReconciledIdsByAccountId.get(accountId);
+        return (sortedIds) ? sortedIds.getValues() : [];
+    }
 
     async asyncGetSortedTransactionKeysForLot(lotId) {
         return this._getSortedTransactionKeysForId(lotId, 
@@ -2009,10 +2069,20 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
 
     async asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs, 
         accountStateUpdates, idGeneratorOptions) {
+        
+        // When to update nonReconciled transactions?
+        // - Delete
+        //      - oldEntry has list of accounts, just go through that list.
+        // - New
+        //
+        //
 
         const entryChanges = [];
-        transactionIdAndDataItemPairs.forEach(([id, dataItem]) => {
+        const originalDataItems = [];
+        for (let i = 0; i < transactionIdAndDataItemPairs.length; ++i) {
+            const [id, dataItem] = transactionIdAndDataItemPairs[i];
             const oldEntry = this._entriesById.get(id);
+
             if (!dataItem) {
                 // A remove...
                 entryChanges.push([undefined, oldEntry]);
@@ -2057,6 +2127,9 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                     else if (oldEntry.lotIds) {
                         newEntry.lotIds = oldEntry.lotIds;
                     }
+
+                    originalDataItems[i] 
+                        = (await this.asyncGetTransactionDataItemsWithIds([id]))[0];
                 }
                 else {
                     // New entry
@@ -2070,14 +2143,17 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                 newEntry.ymdDate = getYMDDate(newEntry.ymdDate);
                 entryChanges.push([newEntry, oldEntry, dataItem]);
             }
-        });
+        }
+
 
         // Update the underlying storage.
         const result = await this.asyncUpdateTransactionDataItemsAndEntries(
             entryChanges, idGeneratorOptions);
 
         // Update our collections.
-        entryChanges.forEach(([newEntry, oldEntry]) => {
+        for (let i = 0; i < entryChanges.length; ++i) {
+            const [newEntry, oldEntry, newDataItem] = entryChanges[i];
+
             if (!newEntry) {
                 // Delete
                 this._ymdDateSortedEntries.delete(oldEntry);
@@ -2086,10 +2162,19 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                 this._removeEntryFromSortedEntriesById(oldEntry, 
                     oldEntry.lotIds, this._sortedEntriesByLotId);
                 this._entriesById.delete(oldEntry.id);
+
+                oldEntry.accountIds.forEach((accountId) => {
+                    const nonReconciledIds 
+                        = this._sortedNonReconciledIdsByAccountId.get(accountId);
+                    if (nonReconciledIds) {
+                        nonReconciledIds.delete(oldEntry.id);
+                    }
+                });
             }
             else {
                 let accountIdsUnchanged;
                 let lotIdsUnchanged;
+                let nonReconciledChanged;
                 if (oldEntry) {
                     // Modify
                     let isDateChange;
@@ -2115,6 +2200,49 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                     else {
                         lotIdsUnchanged = true;
                     }
+
+                    const oldNonReconciledIds = new Set();
+                    const newNonReconciledIds = [];
+                    const oldDataItem = originalDataItems[i];
+                    oldDataItem.splits.forEach((split) => {
+                        if (split.reconcileState !== ReconcileState.RECONCILED.name) {
+                            oldNonReconciledIds.add(split.accountId);
+                        }
+                    });
+
+                    if (newDataItem.splits) {
+                        newDataItem.splits.forEach((split) => {
+                            if (split.reconcileState !== ReconcileState.RECONCILED.name) {
+                                newNonReconciledIds.push(split.accountId);
+                            }
+                        });
+    
+                        if (newNonReconciledIds.length !== oldNonReconciledIds.size) {
+                            nonReconciledChanged = true;
+                        }
+                        else {
+                            for (let j = newNonReconciledIds.length - 1; j >= 0; --j) {
+                                if (!oldNonReconciledIds.has(newNonReconciledIds[j])) {
+                                    nonReconciledChanged = true;
+                                    break;
+                                }
+                            }
+                        }
+    
+                        if (nonReconciledChanged) {
+                            oldNonReconciledIds.forEach((accountId) => {
+                                const nonReconciledIds 
+                                    = this._sortedNonReconciledIdsByAccountId.get(
+                                        accountId);
+                                if (nonReconciledIds) {
+                                    nonReconciledIds.delete(oldEntry.id);
+                                }
+                            });
+                        }
+                    }
+                }
+                else {
+                    nonReconciledChanged = true;
                 }
 
                 this._entriesById.set(newEntry.id, newEntry);
@@ -2135,8 +2263,27 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                         });
                     }
                 }
+
+                if (nonReconciledChanged) {
+                    newDataItem.splits.forEach((split) => {
+                        if (split.reconcileState !== ReconcileState.RECONCILED.name) {
+                            let nonReconciledTransactionIds 
+                                = this._sortedNonReconciledIdsByAccountId
+                                    .get(split.accountId);
+                            if (!nonReconciledTransactionIds) {
+                                nonReconciledTransactionIds = new SortedArray(
+                                    (a, b) => a - b
+                                );
+                                this._sortedNonReconciledIdsByAccountId.set(
+                                    split.accountId,
+                                    nonReconciledTransactionIds);
+                            }
+                            nonReconciledTransactionIds.add(newEntry.id);
+                        }
+                    });
+                }
             }
-        });
+        }
 
         if (accountStateUpdates) {
             for (let [accountId, accountStateDataItem] of accountStateUpdates) {
