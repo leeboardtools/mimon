@@ -42,6 +42,9 @@ export class ActionManager extends EventEmitter {
 
         this._asyncCompositeActionApplier = this._asyncCompositeActionApplier.bind(this);
         this.registerAsyncActionApplier('Composite', this._asyncCompositeActionApplier);
+
+        this.asyncUndoLastAppliedAction = this.asyncUndoLastAppliedActions;
+        this.asyncReapplyLastUndoneAction = this.asyncReapplyLastUndoneActions;
     }
 
 
@@ -145,6 +148,13 @@ export class ActionManager extends EventEmitter {
             return e;
         }
     }
+
+
+    /**
+     * @typedef {object}    ActionManager#ActionEntry
+     * @property {number}   undoId
+     * @property {ActionDataItem}   action
+     */
 
 
     /**
@@ -263,28 +273,54 @@ export class ActionsHandler {
         throw Error('ActionHandler.getUndoneActionCount() abstract method!');
     }
 
+    /**
+     * 
+     * @param {number} index 
+     * @returns {ActionManager#ActionEntry}
+     */
     async asyncGetAppliedActionEntryAtIndex(index) {
         // eslint-disable-next-line max-len
         throw Error('ActionHandler.asyncGetAppliedActionEntryAtIndex() abstract method!');
     }
     
+    /**
+     * 
+     * @param {number} index 
+     * @returns {ActionDataItem}
+     */
     async asyncGetUndoneActionAtIndex(index) {
         throw Error('ActionHandler.asyncGetUndoneActionAtIndex() abstract method!');
     }
     
+    /**
+     * Adds an applied action to the applied actions stack.
+     * @param {ActionManager#ActionEntry} actionEntry 
+     */
     async asyncAddAppliedActionEntry(actionEntry) {
         throw Error('ActionsHandler.asyncAddAppliedActionEntry() abstract method!');
     }
 
+    /**
+     * Adds an undone action to the undone action stack.
+     * @param {ActionDataItem} action 
+     */
     async asyncAddUndoneAction(action) {
         throw Error('ActionsHandler.asyncAddUndoneAction() abstract method!');
     }
 
+    /**
+     * Removes one or more entries starting from the newest in the applied actions stack.
+     * @param {number} count 
+     */
     async asyncRemoveLastAppliedActionEntries(count) {
         // eslint-disable-next-line max-len
         throw Error('ActionsHandler.asyncRemoveLastAppliedActionEntries() abstract method!');
     }
 
+    /**
+     * Removes one or more entries starting from the newest in the undone actions stack.
+     * @param {number} count 
+     */
     async asyncRemoveLastUndoneActions(count) {
         throw Error('ActionsHandler.asyncRemoveLastUndoneActions() abstract method!');
     }
@@ -310,7 +346,7 @@ export class InMemoryActionsHandler extends ActionsHandler {
     toJSON() {
         return {
             appliedActionEntries: this._appliedActionEntries,
-            udoneActions: this._undoneActions,
+            undoneActions: this._undoneActions,
         };
     }
 
