@@ -255,7 +255,7 @@ export class AccountingActions extends EventEmitter {
         const lotDataItem = L.getLotDataItem(lot, true);
         return { 
             type: 'addLot', 
-            accountDataItem: lotDataItem, 
+            lotDataItem: lotDataItem, 
             name: userMsg('Actions-addLot'), 
         };
     }
@@ -263,7 +263,7 @@ export class AccountingActions extends EventEmitter {
     async _asyncAddLotApplier(isValidateOnly, action) {
         const result 
             = await this._accountingSystem.getLotManager().asyncAddLot(
-                action.accountDataItem, isValidateOnly);
+                action.lotDataItem, isValidateOnly);
         this._emitActionEvent(isValidateOnly, action, result);
     }
 

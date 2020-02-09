@@ -8,12 +8,13 @@ import { InMemoryLotsHandler } from './Lots';
 import { InMemoryPricedItemsHandler } from './PricedItems';
 import { InMemoryPricesHandler } from './Prices';
 import { TransactionsHandlerImplBase } from './Transactions';
-import { InMemoryUndoHandler } from '../util/Undo';
-import { InMemoryActionsHandler } from '../util/Actions';
+import { UndoHandler } from '../util/Undo';
+import { ActionsHandler } from '../util/Actions';
 import { AccountingSystem } from './AccountingSystem';
 import { userError } from '../util/UserMessages';
 import { GroupedItemManager, ItemGroups } from '../util/GroupedItemManager';
 import { getYMDDateString } from '../util/YMDDate';
+import { SortedArray } from '../util/SortedArray';
 
 const path = require('path');
 const fsPromises = require('fs').promises;
@@ -30,8 +31,9 @@ const JOURNAL_SUMMARY_FILE_NAME = JOURNAL_FILES_PREFIX + FILE_SUFFIX + FILE_EXT;
 const PRICES_FILE_PREFIX = 'Prices';
 const PRICES_FILE_NAME = PRICES_FILE_PREFIX + FILE_SUFFIX + FILE_EXT;
 
-// const HISTORY_FILES_PREFIX = 'History';
-// const PRICE_FILES_PREFIX = 'Prices';
+const HISTORY_FILES_PREFIX = 'History';
+const HISTORY_SUMMARY_FILE_NAME = HISTORY_FILES_PREFIX + FILE_SUFFIX + FILE_EXT;
+
 
 const FILE_EXT_UPPER_CASE = FILE_EXT.toUpperCase();
 
@@ -39,6 +41,8 @@ const LEDGER_TAG = 'mimon-ledger';
 const JOURNAL_SUMMARY_TAG = 'mimon-journalSummary';
 const JOURNAL_TRANSACTIONS_TAG = 'mimon-journalTransactions';
 const PRICES_TAG = 'prices-ledger';
+const HISTORY_SUMMARY_TAG = 'mimon-historySummary';
+const HISTORY_GROUPS_TAG = 'mimon-historyGroups';
 
 ///
 // The JSONGzip accounting file system design:
@@ -94,19 +98,276 @@ class JSONGzipPricedItemsHandler extends InMemoryPricedItemsHandler {
     }
 }
 
-class JSONGzipUndoHandler extends InMemoryUndoHandler {
-    constructor(accountingFile) {
+
+/**
+ * The undo data items handler implementation.
+ */
+class JSONGzipUndoHandler extends UndoHandler {
+    constructor(accountingFile, dataItemHandler) {
         super();
+
         this._accountingFile = accountingFile;
+
+        this._sortedUndoIds = new SortedArray((a, b) => a - b);
+
+        this._dataItemHandler = dataItemHandler;
+    }
+
+    itemTagFromItem(item) {
+        const groupKey = Math.floor(item.id / this._idsPerGroup);
+        return { id: item.id, groupKey: groupKey, };
+    }
+
+
+    getItemGroups() {
+        return this._itemGroups.getItemGroups();
+    }
+
+    
+    toJSON() {
+        return {
+            idGeneratorOptions: this._idGeneratorOptions,
+            undoIds: Array.from(this._sortedUndoIds.getValues()),
+        };
+    }
+
+    fromJSON(json) {
+        this._idGeneratorOptions = json.idGeneratorOptions;
+
+        this._sortedUndoIds.clear();
+        if (json.undoIds) {
+            json.undoIds.forEach((id) => {
+                this._sortedUndoIds.add(id);
+            });
+        }
+    }
+
+
+    getUndoIds() {
+        return Array.from(this._sortedUndoIds.getValues());
+    }
+
+    getIdGeneratorOptions() {
+        return this._idGeneratorOptions;
+    }
+
+    async asyncGetUndoDataItemWithId(undoId) {
+        return await this._dataItemHandler.asyncGetUndoDataItemWithId(undoId);
+    }
+
+    async asyncAddUndoDataItem(undoDataItem, idGeneratorOptions) {
+        this._idGeneratorOptions = idGeneratorOptions;
+
+        this._sortedUndoIds.add(undoDataItem.id);
+        await this._dataItemHandler.asyncUpdateUndoDataItem(undoDataItem);
+
+    }
+
+    async asyncDeleteUndoDataItems(undoIds) {
+        if (undoIds && undoIds.length) {
+            undoIds.forEach((id) => this._sortedUndoIds.delete(id));
+            await this._dataItemHandler.asyncRemoveUndoDataItems(undoIds);
+        }
     }
 }
 
-class JSONGzipActionsHandler extends InMemoryActionsHandler {
-    constructor(accountingFile) {
+
+
+/**
+ * The actions handler implementation.
+ */
+class JSONGzipActionsHandler extends ActionsHandler {
+    constructor(accountingFile, dataItemHandler) {
         super();
+
         this._accountingFile = accountingFile;
+        this._dataItemHandler = dataItemHandler;
+
+        this._appliedActionItemIds = [];
+        this._undoneActions = [];
+    }
+
+    toJSON() {
+        return {
+            appliedActionItemIds: Array.from(this._appliedActionItemIds),
+        };
+    }
+
+    fromJSON(json) {
+        this._appliedActionItemIds = json.appliedActionItemIds;
+        this._undoneActions.length = 0;
+    }
+
+
+    getAppliedActionCount() {
+        return this._appliedActionItemIds.length;
+    }
+
+    getUndoneActionCount() {
+        return this._undoneActions.length;
+    }
+
+
+    async asyncGetAppliedActionEntryAtIndex(index) {
+        const id = this._appliedActionItemIds[index];
+        return this._dataItemHandler.asyncGetAppliedActionEntryWithId(id);
+    }
+    
+
+    async asyncGetUndoneActionAtIndex(index) {
+        return this._undoneActions[index];
+    }
+    
+
+    async asyncAddAppliedActionEntry(actionEntry) {
+        const id = await this._dataItemHandler.asyncAddAppliedActionEntry(actionEntry);
+        this._appliedActionItemIds.push(id);
+    }
+
+
+    async asyncAddUndoneAction(action) {
+        this._undoneActions.push(action);
+    }
+
+
+    async asyncRemoveLastAppliedActionEntries(count) {
+        const { _appliedActionItemIds } = this;
+        const newEndIndex = _appliedActionItemIds.length - count;
+        const idsToRemove = _appliedActionItemIds.slice(newEndIndex - count + 1);
+        await this._dataItemHandler.asyncRemoveAppliedActionEntries(idsToRemove);
+        _appliedActionItemIds.splice(newEndIndex);
+    }
+
+
+    async asyncRemoveLastUndoneActions(count) {
+        const { _undoneActions } = this;
+        _undoneActions.splice(_undoneActions.length - count);
     }
 }
+
+
+
+/**
+ * The manages the history handlers, which are {@link JSONGzipUndoHandler} and
+ * {@link JSONGzipActionsHandler}.
+ */
+class JSONGzipHistoryHandlers {
+    constructor(accountingFile, asyncLoadGroupHistories) {
+
+        this._accountingFile = accountingFile;
+
+        this._idsPerGroup = (accountingFile._isTest) ? 20 : 1000;
+        this.itemTagFromItem = this.itemTagFromItem.bind(this);
+
+        this._itemGroups = new ItemGroups({
+            asyncLoadGroupItems: asyncLoadGroupHistories,
+        });
+        this._itemManager = new GroupedItemManager({
+            itemTagFromItem: this.itemTagFromItem,
+            asyncRetrieveItemsFromGroup: this._itemGroups.asyncRetrieveItemsFromGroup,
+            asyncUpdateItemsInGroup: this._itemGroups.asyncUpdateItemsInGroup,
+    
+        });
+
+
+        this._undoHandler = new JSONGzipUndoHandler(accountingFile, this);
+        this._actionsHandler = new JSONGzipActionsHandler(accountingFile, this);
+
+        this._lastChangeId = 0;
+    }
+
+    itemTagFromItem(item) {
+        const groupKey = Math.floor(item.id.slice(1) / this._idsPerGroup);
+        return { id: item.id, groupKey: groupKey, };
+    }
+
+
+    getItemGroups() {
+        return this._itemGroups.getItemGroups();
+    }
+
+
+    toJSON() {
+        return {
+            itemTags: this._itemManager.itemTagsToJSON(),
+            undoHandler: this._undoHandler.toJSON(),
+            actionsHandler: this._actionsHandler.toJSON(),
+        };
+    }
+
+
+    fromJSON(json) {
+        this._itemManager.itemTagsFromJSON(json.itemTags);
+        this._undoHandler.fromJSON(json.undoHandler);
+        this._actionsHandler.fromJSON(json.actionsHandler);
+    }
+
+
+    getLastChangeId() { return this._lastChangeId; }
+
+    markChanged() { ++this._lastChangeId; }
+
+
+    undoIdToItemId(undoId) {
+        return 'U' + undoId;
+    }
+
+    appliedActionIdToItemId(appliedActionId) {
+        return 'A' + appliedActionId;
+    }
+
+
+    async asyncGetUndoDataItemWithId(undoId) {
+        const item = await this._itemManager.asyncGetItemsWithIds(
+            this.undoIdToItemId(undoId));
+        return item.undoDataItem;
+    }
+
+
+    async asyncUpdateUndoDataItem(undoDataItem) {
+        const item = {
+            id: this.undoIdToItemId(undoDataItem.id),
+            undoDataItem: undoDataItem,
+        };
+        await this._itemManager.asyncUpdateItems(item);
+        this.markChanged();
+    }
+
+
+    async asyncRemoveUndoDataItems(undoIds) {
+        const itemIds = undoIds.map((id) => this.undoIdToItemId(id));
+        await this._itemManager.asyncRemoveItems(itemIds);
+        this.markChanged();
+    }
+
+
+    async asyncGetAppliedActionEntryWithId(id) {
+        this._itemGroups.isDebug = this._itemManager.isDebug = true;
+        const item = await this._itemManager.asyncGetItemsWithIds(
+            this.appliedActionIdToItemId(id));
+        this._itemGroups.isDebug = this._itemManager.isDebug = false;
+        return item.actionEntry;
+    }
+
+    async asyncAddAppliedActionEntry(actionEntry) {
+        const item = {
+            id: this.appliedActionIdToItemId(actionEntry.undoId),
+            actionEntry: actionEntry,
+        };
+        this._itemManager.asyncUpdateItems(item);
+
+        this.markChanged();
+        return actionEntry.undoId;
+    }
+
+    async asyncRemoveAppliedActionEntries(ids) {
+        const itemIds = ids.map((id) => this.appliedActionIdToItemId(id));
+        await this._itemManager.asyncRemoveItems(itemIds);
+
+        this.markChanged();
+    }
+}
+
 
 
 function getYMDYearKey(ymdDate) {
@@ -122,6 +383,7 @@ function getYMDYearKey(ymdDate) {
     }
     return ymdDate || '_X_';
 }
+
 
 
 /**
@@ -146,7 +408,7 @@ class JSONGzipTransactionsHandler extends TransactionsHandlerImplBase {
         this.itemTagFromItem = this.itemTagFromItem.bind(this);
 
         this._itemGroups = new ItemGroups({
-            _asyncLoadGroupItems: asyncLoadGroupTransactions,
+            asyncLoadGroupItems: asyncLoadGroupTransactions,
         });
         this._itemManager = new GroupedItemManager({
             itemTagFromItem: this.itemTagFromItem,
@@ -170,15 +432,18 @@ class JSONGzipTransactionsHandler extends TransactionsHandlerImplBase {
 
 
     toJSON() {
-        const json = this.entriesToJSON();
-        json.idGeneratorOptions = this._idGeneratorOptions;
-        return json;
+        return {
+            entries: this.entriesToJSON(),
+            idGeneratorOptions: this._idGeneratorOptions,
+            itemTags: this._itemManager.itemTagsToJSON(),
+        };
     }
 
 
     fromJSON(json) {
         this._idGeneratorOptions = json.idGeneratorOptions;
-        this.entriesFromJSON(json);
+        this._itemManager.itemTagsFromJSON(json.itemTags);
+        this.entriesFromJSON(json.entries);
     }
 
 
@@ -453,7 +718,7 @@ class JSONGzipJournalFiles {
                 pathName);
         }
 
-        this._transactionsHandler.entriesFromJSON(json.transactionsHandler);
+        this._transactionsHandler.fromJSON(json.transactionsHandler);
 
         this.cleanIsModified();
 
@@ -602,23 +867,142 @@ class JSONGzipPricesFile {
 class JSONGzipHistoryFiles {
     constructor(accountingFile) {
         this._accountingFile = accountingFile;
+
+        this._historySummaryPathName = JSONGzipHistoryFiles.buildHistorySummaryPathName(
+            accountingFile.getPathName());
+
+        this._historiesHandler = accountingFile._historiesHandler;
+        this._undoHandler = accountingFile._undoHandler;
+        this._actionsHandler = accountingFile._actionsHandler;
+
+        this._groupKeysLastChangeIds = new Map();
     }
 
+    
+    static buildHistorySummaryPathName(pathName) {
+        return path.join(pathName, HISTORY_SUMMARY_FILE_NAME);
+    }
+
+    static buildHistoryGroupPathName(pathName, groupKey) {
+        return path.join(pathName, 
+            HISTORY_FILES_PREFIX + groupKey + FILE_SUFFIX + FILE_EXT);
+    }
+    
     cleanIsModified() {
-
+        this._lastChangeId = this._historiesHandler.getLastChangeId();
     }
 
+    
     isModified() {
-        return false;
+        return (this._lastChangeId !== this._historiesHandler.getLastChangeId());
     }
+
+    
+    async asyncLoadGroupHistories(groupKey, groupItems) {
+        const pathName = JSONGzipHistoryFiles.buildHistoryGroupPathName(
+            this._accountingFile.getPathName(), groupKey);
+        let json;
+        try {
+            json = await JGZ.readFromFile(pathName);
+        }
+        catch (e) {
+            // For now don't do anything.
+            return;
+        }
+
+        if (json.tag !== HISTORY_GROUPS_TAG) {
+            throw userError('JSONGzipAccountingFile-history_groups_tag_missing', 
+                pathName);
+        }
+        if (!json.historyDataItems) {
+            throw userError('JSONGzipAccountingFile-history_data_items_missing', 
+                pathName);
+        }
+
+        const { itemsById } = groupItems;
+        json.historyDataItems.forEach((dataItem) => {
+            itemsById.set(dataItem.id, dataItem);
+        });
+
+        this._groupKeysLastChangeIds.set(groupKey, groupItems.lastChangeId);
+    }
+
+
+    async _asyncWriteGroupItems(pathName, groupKey, groupItems) {
+        const json = {
+            tag: HISTORY_GROUPS_TAG,
+            fileVersion: '1.0',
+            historyDataItems: Array.from(groupItems.itemsById.values()),
+        };
+
+        // Write out the file...
+        await JGZ.writeToFile(json, pathName);
+
+        this._groupKeysLastChangeIds.set(groupKey, groupItems.lastChangeId);
+    }
+
 
     async asyncRead() {
+        const pathName = this._historySummaryPathName;
+        const json = await JGZ.readFromFile(pathName);
+        if (json.tag !== HISTORY_SUMMARY_TAG) {
+            throw userError('JSONGzipAccountingFile-history_summary_tag_missing', 
+                pathName);
+        }
+
+        if (!json.historiesHandler) {
+            throw userError('JSONGzipAccountingFile-historiesHandler_tag_missing', 
+                pathName);
+        }
+        this._historiesHandler.fromJSON(json.historiesHandler);
 
         this.cleanIsModified();
+
+        return json.stateId;
     }
 
+
+    async _asyncWriteHistorySummaryFile(stateId) {
+        const json = {
+            tag: HISTORY_SUMMARY_TAG,
+            fileVersion: '1.0',
+            stateId: stateId,
+            historiesHandler: this._historiesHandler.toJSON(),
+        };
+
+        // Write out the file...
+        await JGZ.writeToFile(json, this._historySummaryPathName);
+    }
+
+
     async asyncCreateWriteFileActions(stateId) {
-        return [];
+        const fileActions = [
+            new FA.ReplaceFileAction(this._historySummaryPathName,
+                {
+                    applyCallback: (pathName) => 
+                        this._asyncWriteHistorySummaryFile(stateId),
+                })
+        ];
+
+        const itemGroups = this._historiesHandler.getItemGroups();
+
+        itemGroups.forEach((groupItems, groupKey) => {
+            const lastChangeId = this._groupKeysLastChangeIds.get(groupKey);
+            if (lastChangeId !== groupItems.lastChangeId) {
+                const pathName = JSONGzipHistoryFiles.buildHistoryGroupPathName(
+                    this._accountingFile.getPathName(), groupKey);
+                fileActions.push(
+                    new FA.ReplaceFileAction(pathName,
+                        {
+                            applyCallback: (pathName) => 
+                                this._asyncWriteGroupItems(pathName, groupKey, 
+                                    groupItems),
+                        })
+                );
+            }
+        });
+
+        return fileActions;
     }
 
     writeCompleted() {
@@ -626,6 +1010,9 @@ class JSONGzipHistoryFiles {
     }
 
     async asyncClose() {
+        this._undoHandler = undefined;
+        this._actionsHandler = undefined;
+        this._historiesHandler = undefined;
         this._accountingFile = undefined;
     }
 }
@@ -638,12 +1025,20 @@ class JSONGzipAccountingFile extends AccountingFile {
     constructor(options) {
         super(options);
 
+        this._isTest = options.fileFactory._isTest;
+
+
         // Set up the accounting system.
         this._accountsHandler = new JSONGzipAccountsHandler(this);
         this._pricedItemsHandler = new JSONGzipPricedItemsHandler(this);
         this._lotsHandler = new JSONGzipLotsHandler(this);
-        this._undoHandler = new JSONGzipUndoHandler(this);
-        this._actionsHandler = new JSONGzipActionsHandler(this);
+
+        this._historiesHandler = new JSONGzipHistoryHandlers(this,
+            async (groupKey, groupItems) =>
+                this._historyFiles.asyncLoadGroupHistories(groupKey, groupItems));
+
+        this._undoHandler = this._historiesHandler._undoHandler;
+        this._actionsHandler = this._historiesHandler._actionsHandler;
 
         this._pricesHandler = new JSONGzipPricesHandler(this);
         this._transactionsHandler = new JSONGzipTransactionsHandler(this, 
@@ -747,6 +1142,7 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._transactionsHandler = undefined;
         this._actionsHandler = undefined;
         this._undoHandler = undefined;
+        this._historiesHandler = undefined;
     }
 }
 
@@ -756,7 +1152,10 @@ class JSONGzipAccountingFile extends AccountingFile {
  */
 export class JSONGzipAccountingFileFactory extends AccountingFileFactory {
     constructor(options) {
+        options = options || {};
         super(options);
+
+        this._isTest = options.isTest;
     }
 
 

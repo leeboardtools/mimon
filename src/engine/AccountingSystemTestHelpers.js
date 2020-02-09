@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable max-len */
 import { AccountingSystem } from './AccountingSystem';
 import { InMemoryPricedItemsHandler } from './PricedItems';

@@ -1380,6 +1380,12 @@ export class TransactionManager extends EventEmitter {
                     sameDayOrder: transactionDataItem.sameDayOrder, 
                     index: i,
                 });
+            
+            const { splits } = transactionDataItem;
+            splits.forEach((split) => {
+                split.reconcileState = split.reconcileState 
+                    || ReconcileState.NOT_RECONCILED.name;
+            });
         }
 
         const sortedIndices = [];
