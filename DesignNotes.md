@@ -69,7 +69,11 @@ All file system implementations extend the [AccountingFile](#accountingfile) cla
 The base file system is folder based and consists of a number of Gzipped JSON files in a common folder. These files include:
 - A Ledger File - this holds all the [Account](#account), and [PricedItem](#priceditem) data items.
 - Several Journal Files - these are for the transactions. There is a summary file and then for each year a separate file containing the transactions belonging to that year.
-- Several Prices Files - these are for the prices. Similar to the Journal Files, there is a summary file and then for each year a separate file containing the prices belong to that year.
+- A Prices File - this holds all the [Price](#price) data items. The original plan was to batch
+the prices similar to the journal files, but I decided that the price data items are compact enough
+to store in one big file.
+- Several History Files - these are for the modifications performed on the database. There is a summary file and then separate batch files for large groups of items (currently 10000). The items stored
+are the undo data items for every modification and the action data item that was performed. With this information you can backtrack to a past history to either view the sequence of changes or to undo the database to that state.
 
 To handle retrieving and saving data items between a file system and the engine, the various data item managers ([AccountManager](#accountmanager), [TransactionManager](#transactionmanager), etc) employ a handler object. File system implementations will implement the different handler objects.
 
@@ -110,6 +114,15 @@ When the undo manager is called to undo to a given undo id, the undo manager wal
 The undo objects registered by the various data item managers are pure data objects and are directly JSON'able. The storage and retrieval of the registered undo objects is handled via a handler, similar to how the other data item managers use handlers to interact with the underlying storage.
 
 This means that the undoable history of the editing of the database may be maintained if the [AccountingFile](#accountingfile) implementation wishes to do so.
+
+
+### Actions
+The engine is supports the managing of actions using an [ActionManager](#actionmanager), accessible via the [AccountingSystem](#accountingsystem). The action manager works with ActionDataItems, which are applied and may be undone. Undone actions may be reapplied. The sequence of the action application/undoing/reapplying is strictly maintained.
+
+All actions are data items and are therefore convertible to JSON. Similar to the other data item managers, the action manager utilizes a handler to provide action storage. Accounting file implementations may therefore save applied actions.
+
+The actions supported by the engine are provided via [AccountingActions](#accountingactions), which is an object accessible via [AccountingSystem](#accountingsystem). AccountingActions creates action data items which may be applied via the action manager. AccountingActions doesn't actually apply the actions, though it does handle the implementations.
+
 
 
 ## Entities and Objects
@@ -300,12 +313,9 @@ The manager employs a handler to provide the underlying storage system. This all
 ### NumericIdGenerator
 
 ### UndoManager
-Utility class for managing undo. Things that support undo register an applier with the manager, then when something
-they can undo occurs, they register an undo data item with the manager.
+Utility class for managing undo. Things that support undo register an applier with the manager, then when something they can undo occurs, they register an undo data item with the manager.
 
-The manager manages an ordered list of the registered undo data items, and supports undoing multiple items. When it is desired
-to undo to a given point, the manager sequentially passes the undo data items to the appropriate appliers to perform
-the actual undo.
+The manager manages an ordered list of the registered undo data items, and supports undoing multiple items. When it is desired to undo to a given point, the manager sequentially passes the undo data items to the appropriate appliers to perform the actual undo.
 
 The manager employs a handler to provide the underlying storage system. This allows the storage of the undo history.
 
@@ -313,8 +323,15 @@ The manager employs a handler to provide the underlying storage system. This all
 
 
 ## TODOs
-- Add test transactions to AccountingSystemTestHelpers.js, then test transactions in JSONGzipAccountingFile.test.js
+- Add retrieving non-reconciled transactions from transaction manager for accounts.
+
 
 - Need to add event emitting to account manager undo.
+- Need to test event emitting for various undos.
 
 - Add support for undo, actions to accounting file implementation.
+    - Move ItemGroups from Undo Handler to History File so it can be shared
+    with Action Handler.
+    - Difference between the two items will be a prefix on the id.
+    - Undone actions go into their own single file?
+        - Or maybe don't even save undone actions.
