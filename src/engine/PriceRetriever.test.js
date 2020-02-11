@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 
 import { asyncGetPricesForTicker, asyncUpdatePricedItemPrices, 
-    setIsElectron, asyncGetUpdatedPricedItemPrices } from './PriceRetriever';
+    asyncGetUpdatedPricedItemPrices } from './PriceRetriever';
 import { PricedItemType } from './PricedItems';
 //import * as PTH from './PricesTestHelpers';
 //import { AccountingSystem, USStockPriceDefinition } from './AccountingSystem';
@@ -13,8 +13,6 @@ import * as ASTH from './AccountingSystemTestHelpers';
 
 export const USStockPriceDefinition = getDecimalDefinition({ decimalPlaces: 4 });
 export const USStockQuantityDefinition = getDecimalDefinition({ decimalPlaces: 4 });
-
-setIsElectron(false);
 
 
 function cleanupPrice(price) {

@@ -3,21 +3,9 @@ import { getPricedItem, PricedItemOnlineUpdateType } from './PricedItems';
 import { getDecimalDefinition } from '../util/Quantities';
 
 const request = require('request');
-const yf = require('yahoo-finance');
-
-let retrieverFunc = yf.historical;
-
-export function setIsElectron(isElectron) {
-    if (isElectron) {
-        retrieverFunc = directRetrieveQuote;
-    }
-    else {
-        retrieverFunc = yf.historical;
-    }
-}
 
 
-async function directRetrieveQuote(options) {
+async function retrieveQuote(options) {
     return new Promise((resolve, reject) => {
         const { symbol, from, to } = options;
         const fromSecs = Math.round(from.valueOf() / 1000);
@@ -31,7 +19,10 @@ async function directRetrieveQuote(options) {
         const url = 'https://finance.yahoo.com/quote/' + symbol
             + '/history?period1=' + fromSecs + '&period2=' + toSecs
             + '&interval=' + frequency + '&filter=history&frequency=' + frequency;
-        console.log('retrieveQuote url: ' + url);
+        
+        if (options.logOutput) {
+            console.log('retrieveQuote url: ' + url);
+        }
 
         request(
             {
@@ -105,7 +96,7 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
         symbol: ticker,
     };
 
-    const results = await retrieverFunc(retrieveArgs);
+    const results = await retrieveQuote(retrieveArgs);
 
     const quantityDefinition = options.quantityDefinition || getDecimalDefinition(4);
 
@@ -231,9 +222,7 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
  */
 export async function asyncGetUpdatedPricedItemPrices(options) {
     let { pricedItemManager, pricedItemIds, ymdDateA, 
-        ymdDateB, callback, msecDelay, isElectron } = options;
-
-    setIsElectron(isElectron);
+        ymdDateB, callback, msecDelay } = options;
 
     if (!Array.isArray(pricedItemIds)) {
         pricedItemIds = [pricedItemIds];
