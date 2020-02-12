@@ -104,7 +104,7 @@ test('AccountManager-rootAccounts', async () => {
         accountingSystem.getBaseCurrency());
 
 
-    const rootAssetAccount = accountManager.getRootAssetAccount();
+    const rootAssetAccount = accountManager.getRootAssetAccountDataItem();
     const testRootAssetAccount = accountManager.getAccountDataItemWithId(
         accountManager.getRootAssetAccountId());
     expect(testRootAssetAccount).toEqual(rootAssetAccount);
@@ -116,7 +116,7 @@ test('AccountManager-rootAccounts', async () => {
     });
 
 
-    const rootLiabilityAccount = accountManager.getRootLiabilityAccount();
+    const rootLiabilityAccount = accountManager.getRootLiabilityAccountDataItem();
     const testRootLiabilityAccount = accountManager.getAccountDataItemWithId(
         accountManager.getRootLiabilityAccountId());
     expect(testRootLiabilityAccount).toEqual(rootLiabilityAccount);
@@ -128,7 +128,7 @@ test('AccountManager-rootAccounts', async () => {
     });
 
 
-    const rootIncomeAccount = accountManager.getRootIncomeAccount();
+    const rootIncomeAccount = accountManager.getRootIncomeAccountDataItem();
     const testRootIncomeAccount = accountManager.getAccountDataItemWithId(
         accountManager.getRootIncomeAccountId());
     expect(testRootIncomeAccount).toEqual(rootIncomeAccount);
@@ -140,7 +140,7 @@ test('AccountManager-rootAccounts', async () => {
     });
 
 
-    const rootExpenseAccount = accountManager.getRootExpenseAccount();
+    const rootExpenseAccount = accountManager.getRootExpenseAccountDataItem();
     const testRootExpenseAccount = accountManager.getAccountDataItemWithId(
         accountManager.getRootExpenseAccountId());
     expect(testRootExpenseAccount).toEqual(rootExpenseAccount);
@@ -152,7 +152,7 @@ test('AccountManager-rootAccounts', async () => {
     });
 
 
-    const rootEquityAccount = accountManager.getRootEquityAccount();
+    const rootEquityAccount = accountManager.getRootEquityAccountDataItem();
     const testRootEquityAccount = accountManager.getAccountDataItemWithId(
         accountManager.getRootEquityAccountId());
     expect(testRootEquityAccount).toEqual(rootEquityAccount);
@@ -165,7 +165,7 @@ test('AccountManager-rootAccounts', async () => {
     });
 
 
-    const openingBalancesAccount = accountManager.getOpeningBalancesAccount();
+    const openingBalancesAccount = accountManager.getOpeningBalancesAccountDataItem();
     const testOpeningBalancesAccount = accountManager.getAccountDataItemWithId(
         accountManager.getOpeningBalancesAccountId());
     expect(testOpeningBalancesAccount).toEqual(openingBalancesAccount);
@@ -229,7 +229,7 @@ test('AccountManager-add', async () => {
         .newAccountDataItem;
     ATH.expectAccount(assetA, assetOptionsA);
 
-    expect(accountManager.getRootAssetAccount().childAccountIds.includes(assetA.id))
+    expect(accountManager.getRootAssetAccountDataItem().childAccountIds.includes(assetA.id))
         .toBeTruthy();
 
     //
@@ -483,7 +483,7 @@ test('AccountManager-add', async () => {
         .newAccountDataItem;
     ATH.expectAccount(incomeA, incomeOptionsA);
     
-    accountDataItem = accountManager.getRootIncomeAccount();
+    accountDataItem = accountManager.getRootIncomeAccountDataItem();
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([incomeA.id]));
 
 
@@ -518,7 +518,7 @@ test('AccountManager-add', async () => {
         .newAccountDataItem;
     ATH.expectAccount(expenseA, expenseOptionsA);
     
-    accountDataItem = accountManager.getRootExpenseAccount();
+    accountDataItem = accountManager.getRootExpenseAccountDataItem();
     expect(accountDataItem.childAccountIds)
         .toEqual(expect.arrayContaining([expenseA.id]));
 
@@ -555,7 +555,7 @@ test('AccountManager-add', async () => {
         .newAccountDataItem;
     ATH.expectAccount(equityA, equityOptionsA);
     
-    accountDataItem = accountManager.getRootEquityAccount();
+    accountDataItem = accountManager.getRootEquityAccountDataItem();
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([equityA.id]));
 
 

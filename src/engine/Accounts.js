@@ -493,32 +493,32 @@ export class AccountManager extends EventEmitter {
 
 
     getRootAssetAccountId() { return this._rootAssetAccountId; }
-    getRootAssetAccount() { 
+    getRootAssetAccountDataItem() { 
         return this.getAccountDataItemWithId(this._rootAssetAccountId); 
     }
 
     getRootLiabilityAccountId() { return this._rootLiabilityAccountId; }
-    getRootLiabilityAccount() { 
+    getRootLiabilityAccountDataItem() { 
         return this.getAccountDataItemWithId(this._rootLiabilityAccountId); 
     }
 
     getRootIncomeAccountId() { return this._rootIncomeAccountId; }
-    getRootIncomeAccount() { 
+    getRootIncomeAccountDataItem() { 
         return this.getAccountDataItemWithId(this._rootIncomeAccountId); 
     }
 
     getRootExpenseAccountId() { return this._rootExpenseAccountId; }
-    getRootExpenseAccount() { 
+    getRootExpenseAccountDataItem() { 
         return this.getAccountDataItemWithId(this._rootExpenseAccountId); 
     }
 
     getRootEquityAccountId() { return this._rootEquityAccountId; }
-    getRootEquityAccount() { 
+    getRootEquityAccountDataItem() { 
         return this.getAccountDataItemWithId(this._rootEquityAccountId); 
     }
 
     getOpeningBalancesAccountId() { return this._openingBalancesAccountId; }
-    getOpeningBalancesAccount() { 
+    getOpeningBalancesAccountDataItem() { 
         return this.getAccountDataItemWithId(this._openingBalancesAccountId); 
     }
 
