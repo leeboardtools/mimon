@@ -77,7 +77,7 @@ export async function getFilesOnlyInDir(dir) {
  * @returns {string[]} Array containing the base file names (name.txt) of all the 
  * directories in dir, no files.
  */
-export async function getDirectoriessOnlyInDir(dir) {
+export async function getDirectoriesOnlyInDir(dir) {
     const dirEnts = await fsPromises.readdir(dir, { withFileTypes: true });
     const names = [];
     dirEnts.forEach((dirEnt) => {
