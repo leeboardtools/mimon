@@ -119,7 +119,7 @@ export class AccountingFileFactory {
 
     /**
      * Determines if a path name is likely to succeed if passed to 
-     * {@link AccountingFile#createFile}.
+     * {@link AccountingFile#asyncCreateFile}.
      * @param {string} pathName The path name of interest.
      * @returns {true|Error}
      */

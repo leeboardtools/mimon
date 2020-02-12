@@ -18,7 +18,8 @@ import { userMsg } from '../util/UserMessages';
  * <p>
  * When an action created by {@link AccountingActions} is applied, an event that has 
  * the form of {@link AccountingActions#event:actionApply} is fired. The event name 
- * is the type property of the {@link ActionDataItem}.
+ * is the type property of the {@link ActionDataItem}. Following that event is
+ * the firing of an actual {@link AccountingActions#event:actionApply}.
  * <p>
  * Listening on events is necessary to obtain the results of an action, particularly 
  * the add actions. For example, in order to obtain the account id of a newly added 
@@ -110,6 +111,7 @@ export class AccountingActions extends EventEmitter {
     _emitActionEvent(isValidateOnly, action, result) {
         if (!isValidateOnly) {
             this.emit(action.type, action, result);
+            this.emit('actionApply', action, result);
         }
     }
 
