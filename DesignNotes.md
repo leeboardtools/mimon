@@ -124,6 +124,18 @@ All actions are data items and are therefore convertible to JSON. Similar to the
 The actions supported by the engine are provided via [AccountingActions](#accountingactions), which is an object accessible via [AccountingSystem](#accountingsystem). AccountingActions creates action data items which may be applied via the action manager. AccountingActions doesn't actually apply the actions, though it does handle the implementations.
 
 
+## Tool Concepts
+The tools includes the various items that are useful for manipulating the accounting database via the engine, but neither fall within the scope of the engine nor are UI specific.
+
+The [EngineAccessor](#engineaccessor) object serves as the central point of access to the engine from the tools and UI. One of the main features of EngineAccessor is that it can provide a filtering mechanism for data items retrieved from or passed to the engine. This is primarily used by the [Reconciler](#reconciler) to present a temporarily updated state as transaction splits are marked as reconciled without commiting the changes to the engine.
+
+Another feature of EngineAccessor is it provides a central point for listening for events emitted by the various managers of the engine.
+
+The [Reconciler](#reconciler) tool offers reconciliation functionality in a work-in-progress fashion, filtering split data items via EngineAccessor as the state of splits for an account are marked as reconciled. Reconciler manages temporary reconcile states for the splits of a transaction until they are finalized.
+
+Reports will probably also fall under Tools, at least the data gathering portion.
+
+
 
 ## Entities and Objects
 
@@ -163,8 +175,21 @@ Represents the quantity state of an account at a particular date. An account sta
 Account states are managed by the [TransactionManager](#transactionmanager).
 
 
+### AccountingActions
+A class instantiated as a property of [AccountingSystem](#accountingsystem), this provides methods for generating
+action objects for performing the various edit actions on the database.
+
+
+### AccountingFile
+Base class for the main objects that associate a [AccountingSystem](#accountingsystem) with storage
+
+
+### AccountingSystem
+The central object that represents an accounting system. This instantiates and holds the various managers.
+
+
 ### AccountManager
-Manages all the accounts in an accounting system.
+Manages all the [Account](#account)s in an accounting system.
 
 
 ### Transaction
@@ -177,7 +202,7 @@ The main transaction data item. A transaction has the following properties:
 Transactions are managed by a [TransactionManager](#transactionmanager)
 
 
-### Split
+#### Split
 The data item used to define the involvement of an account in a transaction. In any one transaction there may be multiple entries referring to the same account. Entries have the following properties:
 - AccountId
 - quantityBaseValue
@@ -268,31 +293,27 @@ Manages all the [Prices](#prices) in an accounting system.
 Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price manager will add, retrieve, or update prices for a particular PricedItem at one time.
 
 
-### History
-    - Manages the action history.
-
-
-
 ### PriceRetriever
     - Module for retrieving [Prices](#price) from online.
 
+
+### Reminder
+
+### ReminderManager
+Manages all the [Reminder](#reminder)s in an accounting system.
+
+
+## Tools
+
+### EngineAccessor
+Single point access to the engine. Provides data item filtering capabilities.
 
 ### Reconciler
     - Reconciles an account.
 
 
-### AccountingSystem
-    - Holds together everything.
 
-
-### AccountingFile
-    - Repository for an AccountingSystem.
-
-
-### AccountingActions
-A class instantiated as a property of [AccountingSystem](#accountingsystem), this provides methods for generating
-action objects for performing the various edit actions on the database.
-
+## Utility Entities and Objects
 
 ### ActionManager
 Utility class for working action data items. Works with [UndoManager](#undomanager) to support undo/redo.
@@ -320,18 +341,21 @@ The manager manages an ordered list of the registered undo data items, and suppo
 The manager employs a handler to provide the underlying storage system. This allows the storage of the undo history.
 
 ### YMDDate
+Represents a year-month-date. Currently uses a Date object to manage the actual date.
 
 
 ## TODOs
-- Add retrieving non-reconciled transactions from transaction manager for accounts.
-
-
 - Need to add event emitting to account manager undo.
 - Need to test event emitting for various undos.
 
-- Add support for undo, actions to accounting file implementation.
-    - Move ItemGroups from Undo Handler to History File so it can be shared
-    with Action Handler.
-    - Difference between the two items will be a prefix on the id.
-    - Undone actions go into their own single file?
-        - Or maybe don't even save undone actions.
+- Reconciler
+    - Add data item filtering to EngineAccessor.
+
+- Auto complete
+
+- Reminders
+
+- Add accounting action for setting the base currency.
+
+- Action Recovery
+    - Option to save applied actions to a recovery file.
