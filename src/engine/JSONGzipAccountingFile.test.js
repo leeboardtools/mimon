@@ -176,7 +176,7 @@ test('JSONGzipAccountingFile-transactions', async () => {
         const [ checkingYMDDateFirst1, checkingYMDDateLast1 ] 
             = await transactionManager1.asyncGetTransactionDateRange(sys.checkingId);
         const checkingTransactionDataItems1 
-            = await transactionManager1.asyncGetTransactionDataItemssInDateRange(
+            = await transactionManager1.asyncGetTransactionDataItemsInDateRange(
                 checkingYMDDateFirst1, checkingYMDDateLast1);
 
         const checkingAccountState1 
@@ -185,7 +185,7 @@ test('JSONGzipAccountingFile-transactions', async () => {
         const [ aaplIRAYMDDateFirst1, aaplIRAYMDDateLast1 ] 
             = await transactionManager1.asyncGetTransactionDateRange(sys.aaplIRAId);
         const aaplIRATransactionDataItems1 
-            = await transactionManager1.asyncGetTransactionDataItemssInDateRange(
+            = await transactionManager1.asyncGetTransactionDataItemsInDateRange(
                 aaplIRAYMDDateFirst1, aaplIRAYMDDateLast1);
 
         const aaplIRAAccountStates1 = [];
@@ -222,7 +222,7 @@ test('JSONGzipAccountingFile-transactions', async () => {
         expect(checkingYMDDateLast2).toEqual(checkingYMDDateLast1);
 
         const checkingTransactionDataItems2 
-            = await transactionManager2.asyncGetTransactionDataItemssInDateRange(
+            = await transactionManager2.asyncGetTransactionDataItemsInDateRange(
                 checkingYMDDateFirst2, checkingYMDDateLast2);
         expect(checkingTransactionDataItems2).toEqual(checkingTransactionDataItems1);
 
@@ -233,7 +233,7 @@ test('JSONGzipAccountingFile-transactions', async () => {
         const [ aaplIRAYMDDateFirst2, aaplIRAYMDDateLast2 ] 
             = await transactionManager2.asyncGetTransactionDateRange(sys.aaplIRAId);
         const aaplIRATransactionDataItems2 
-            = await transactionManager2.asyncGetTransactionDataItemssInDateRange(
+            = await transactionManager2.asyncGetTransactionDataItemsInDateRange(
                 aaplIRAYMDDateFirst2, aaplIRAYMDDateLast2);
 
         const aaplIRAAccountStates2 = [];

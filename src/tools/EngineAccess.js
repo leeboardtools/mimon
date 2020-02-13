@@ -24,6 +24,12 @@ export class EngineAccessor {
 
         this._handleActionApply = this._handleActionApply.bind(this);
 
+        // Some synonyms.
+        this.asyncUndoLastAppliedAction = this.asyncUndoLastAppliedActions;
+        this.asyncReapplyLastUndoneAction = this.asyncReapplyLastUndoneActions;
+        this.asyncGetTransactionDataItemWithId = this.asyncGetTransactionDataItemsWithIds;
+
+
         this._fileFactories = [];
 
         this._fileFactories.push(new JSONGzipAccountingFileFactory());
@@ -61,6 +67,7 @@ export class EngineAccessor {
             this._accountManager = _accountingSystem.getAccountManager();
             this._pricedItemManager = _accountingSystem.getPricedItemManager();
             this._priceManager = _accountingSystem.getPriceManager();
+            this._lotManager = _accountingSystem.getLotManager();
             this._transactionManager = _accountingSystem.getTransactionManager();
         }
         else {
@@ -75,6 +82,7 @@ export class EngineAccessor {
             this._actionManager = undefined;
             this._pricedItemManager = undefined;
             this._priceManager = undefined;
+            this._lotManager = undefined;
             this._transactionManager = undefined;
         }
     }
@@ -434,10 +442,12 @@ export class EngineAccessor {
      * Applies an action. After application the action is in the applied actions list 
      * at index {@link ActionManager#getAppliedActionCount} - 1.
      * @param {ActionDataItem} action 
+     * @returns {object}    The result of the action.
      */
     async asyncApplyAction(action) {
         this._clearLastAppliedAction();
-        return this._actionManager.asyncApplyAction(action);
+        await this._actionManager.asyncApplyAction(action);
+        return this._lastAppliedActionResult;
     }
 
 
@@ -496,45 +506,45 @@ export class EngineAccessor {
 
 
     /**
-     * @returns {AccountDataItem}   The account data item of the root asset account.
+     * @returns {number}   The account id of the root asset account.
      */
-    getRootAssetAccountDataItem() {
-        return this._accountManager.getRootAssetAccountDataItem();
+    getRootAssetAccountId() {
+        return this._accountManager.getRootAssetAccountId();
     }
 
     /**
-     * @returns {AccountDataItem}   The account data item of the root liability account.
+     * @returns {number}   The account id of the root liability account.
      */
-    getRootLiabilityAccountDataItem() {
-        return this._accountManager.getRootLiabilityAccountDataItem();
+    getRootLiabilityAccountId() {
+        return this._accountManager.getRootLiabilityAccountId();
     }
 
     /**
-     * @returns {AccountDataItem}   The account data item of the root income account.
+     * @returns {number}   The account id of the root income account.
      */
-    getRootIncomeAccountDataItem() {
-        return this._accountManager.getRootIncomeAccountDataItem();
+    getRootIncomeAccountId() {
+        return this._accountManager.getRootIncomeAccountId();
     }
 
     /**
-     * @returns {AccountDataItem}   The account data item of the root expense account.
+     * @returns {number}   The account id of the root expense account.
      */
-    getRootExpenseAccountDataItem() {
-        return this._accountManager.getRootExpenseAccountDataItem();
+    getRootExpenseAccountId() {
+        return this._accountManager.getRootExpenseAccountId();
     }
 
     /**
-     * @returns {AccountDataItem}   The account data item of the root equity account.
+     * @returns {number}   The account id of the root equity account.
      */
-    getRootEquityAccountDataItem() {
-        return this._accountManager.getRootEquityAccountDataItem();
+    getRootEquityAccountId() {
+        return this._accountManager.getRootEquityAccountId();
     }
 
     /**
-     * @returns {AccountDataItem}   The account data item of the opening balances account.
+     * @returns {number}   The account id of the opening balances account.
      */
-    getOpeningBalancesAccountDataItem() {
-        return this._accountManager.getOpeningBalancesAccountDataItem();
+    getOpeningBalancesAccountId() {
+        return this._accountManager.getOpeningBalancesAccountId();
     }
 
     /**
@@ -706,6 +716,22 @@ export class EngineAccessor {
     }
 
 
+    /**
+     * @returns {number[]}  Array containing the ids of all the lots.
+     */
+    getLotIds() {
+        return this._lotManager.getLotIds();
+    }
+
+
+    /**
+     * 
+     * @param {number} id The id of the lot to retrieve.
+     * @returns {(LotDataItem|undefined)}    A copy of the lot's data.
+     */
+    getLotDataItemWithId(id) {
+        return this._lotManager.getLotDataItemWithId(id);
+    }
 
 
     /**
@@ -733,8 +759,8 @@ export class EngineAccessor {
      * @returns {TransactionDataItem[]} An array containing the transaction data 
      * items, sorted from earliest to latest date.
      */
-    async asyncGetTransactionDataItemssInDateRange(accountId, ymdDateA, ymdDateB) {
-        return this._transactionManager.asyncGetTransactionDataItemssInDateRange(
+    async asyncGetTransactionDataItemsInDateRange(accountId, ymdDateA, ymdDateB) {
+        return this._transactionManager.asyncGetTransactionDataItemsInDateRange(
             accountId, ymdDateA, ymdDateB);
     }
 
@@ -844,4 +870,13 @@ export class EngineAccessor {
         return this._transactionManager.validateSplits(splits, isModify);
     }
 
+
+    //
+    // Reminders
+    //
+
+
+    //
+    // Auto Complete
+    //
 }

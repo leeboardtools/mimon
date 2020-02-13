@@ -232,7 +232,7 @@ test('TransactionHandlerImplBase', async () => {
 
     expect(await handlerA.asyncGetTransactionDateRange()).toBeUndefined();
     expect(await handlerA.asyncGetTransactionDateRange(1)).toBeUndefined();
-    expect(await handlerA.asyncGetTransactionDataItemssInDateRange(1, 
+    expect(await handlerA.asyncGetTransactionDataItemsInDateRange(1, 
         new YMDDate('2018-01-01'), new YMDDate('2018-01-01'))).toEqual([]);
 
     let result;
@@ -327,7 +327,7 @@ test('TransactionHandlerImplBase', async () => {
     expect(await handlerA.asyncGetTransactionDateRange(13))
         .toEqual([new YMDDate('2017-12-31'), new YMDDate('2018-01-01')]);
 
-    result = await handlerA.asyncGetTransactionDataItemssInDateRange(0, 
+    result = await handlerA.asyncGetTransactionDataItemsInDateRange(0, 
         new YMDDate('2017-12-31'), new YMDDate('2018-12-31'));
     expect(result).toEqual([
         transaction5,
@@ -358,7 +358,7 @@ test('TransactionHandlerImplBase', async () => {
     ]);
     expect(result).toEqual([ transaction3A ]);
 
-    result = await handlerA.asyncGetTransactionDataItemssInDateRange(13, 
+    result = await handlerA.asyncGetTransactionDataItemsInDateRange(13, 
         new YMDDate('2018-01-01'), new YMDDate('2018-12-31'));
     expect(result).toEqual([transaction2, transaction3A]);
 
@@ -378,7 +378,7 @@ test('TransactionHandlerImplBase', async () => {
     expect(await handlerA.asyncGetTransactionDateRange()).toEqual(
         [new YMDDate('2017-07-04'), new YMDDate('2018-12-31')]);
 
-    result = await handlerA.asyncGetTransactionDataItemssInDateRange(12, 
+    result = await handlerA.asyncGetTransactionDataItemsInDateRange(12, 
         new YMDDate('2017-01-01'), new YMDDate('2017-12-31'));
     expect(result).toEqual([transaction4A, transaction5]);
 
@@ -390,7 +390,7 @@ test('TransactionHandlerImplBase', async () => {
     ]);
     expect(result).toEqual([transaction1]);
 
-    result = await handlerA.asyncGetTransactionDataItemssInDateRange(11, 
+    result = await handlerA.asyncGetTransactionDataItemsInDateRange(11, 
         new YMDDate('2018-01-01'), new YMDDate('2018-01-01'));
     expect(result).toEqual([transaction2]);
 
@@ -406,11 +406,11 @@ test('TransactionHandlerImplBase', async () => {
     expect(await handlerB.asyncGetTransactionDateRange()).toEqual(
         [new YMDDate('2017-07-04'), new YMDDate('2018-12-31')]);
 
-    result = await handlerB.asyncGetTransactionDataItemssInDateRange(12, 
+    result = await handlerB.asyncGetTransactionDataItemsInDateRange(12, 
         new YMDDate('2017-01-01'), new YMDDate('2017-12-31'));
     expect(result).toEqual([transaction4A, transaction5]);
 
-    result = await handlerB.asyncGetTransactionDataItemssInDateRange(11, 
+    result = await handlerB.asyncGetTransactionDataItemsInDateRange(11, 
         new YMDDate('2018-01-01'), new YMDDate('2018-01-01'));
     expect(result).toEqual([transaction2]);
 
@@ -539,13 +539,13 @@ test('TransactionManager-add_modify', async () => {
         .newTransactionDataItem;
     settingsA.id = transactionA.id;
     expect(transactionA).toEqual(settingsA);
-    expect(await manager.asyncGetTransactionDataItemssInDateRange(0, '2019-10-05'))
+    expect(await manager.asyncGetTransactionDataItemsInDateRange(0, '2019-10-05'))
         .toEqual([settingsA]);
-    expect(await manager.asyncGetTransactionDataItemssInDateRange(0, '2019-10-04'))
+    expect(await manager.asyncGetTransactionDataItemsInDateRange(0, '2019-10-04'))
         .toEqual([]);
-    expect(await manager.asyncGetTransactionDataItemssInDateRange(0, '2019-10-06'))
+    expect(await manager.asyncGetTransactionDataItemsInDateRange(0, '2019-10-06'))
         .toEqual([]);
-    expect(await manager.asyncGetTransactionDataItemssInDateRange(sys.cashId, 
+    expect(await manager.asyncGetTransactionDataItemsInDateRange(sys.cashId, 
         '2019-10-05')).toEqual([settingsA]);
     expect(await manager.asyncGetTransactionDateRange(sys.cashId))
         .toEqual([new YMDDate('2019-10-05'), new YMDDate('2019-10-05')]);
@@ -604,7 +604,7 @@ test('TransactionManager-add_modify', async () => {
     // test undo add.
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
 
-    expect(await manager.asyncGetTransactionDataItemssInDateRange(0, '2019-10-05'))
+    expect(await manager.asyncGetTransactionDataItemsInDateRange(0, '2019-10-05'))
         .toEqual([settingsA]);
     expect(await manager.asyncGetTransactionDataItemWithId(transactionB.id))
         .toBeUndefined();
@@ -660,7 +660,7 @@ test('TransactionManager-add_modify', async () => {
     const validateE = (await manager.asyncAddTransactions(settingsE, true))
         .newTransactionDataItem;
     expect(validateE).toEqual(settingsE);
-    expect(await manager.asyncGetTransactionDataItemssInDateRange(sys.checkingId, 
+    expect(await manager.asyncGetTransactionDataItemsInDateRange(sys.checkingId, 
         '2019-10-15')).toEqual([]);
 
     await expect(manager.asyncAddTransactions({ splits: []})).rejects.toThrow();
@@ -672,7 +672,7 @@ test('TransactionManager-add_modify', async () => {
     settingsE.id = transactionE.id;
     expect(transactionE).toEqual(settingsE);
 
-    expect(await manager.asyncGetTransactionDataItemssInDateRange(sys.checkingId, 
+    expect(await manager.asyncGetTransactionDataItemsInDateRange(sys.checkingId, 
         '2019-10-15', '2019-10-20')).toEqual([
         transactionE,
         transactionD,
@@ -697,7 +697,7 @@ test('TransactionManager-add_modify', async () => {
     settingsF.id = transactionF.id;
     expect(transactionF).toEqual(settingsF);
 
-    const resultEF = await manager.asyncGetTransactionDataItemssInDateRange(
+    const resultEF = await manager.asyncGetTransactionDataItemsInDateRange(
         sys.cashId, '2019-10-15');
     expect(resultEF).toEqual(expect.arrayContaining([settingsF, settingsE]));
 

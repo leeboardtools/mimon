@@ -363,10 +363,14 @@ export function deepCopyTransaction(transaction) {
 export function getTransactionKey(transaction) {
     if (transaction) {
         if (typeof transaction.ymdDate === 'string') {
-            return { id: transaction.id, 
+            const key = { id: transaction.id, 
                 ymdDate: getYMDDate(transaction.ymdDate), 
-                sameDayOrder: transaction.sameDayOrder, 
             };
+            if ((transaction.sameDayOrder !== undefined) 
+             && (transaction.sameDayOrder !== null)) {
+                key.sameDayOrder = transaction.sameDayOrder;
+            }
+            return key;
         }
         return transaction;
     }
@@ -377,10 +381,14 @@ export function getTransactionKeyData(transaction) {
         if (typeof transaction.ymdDate === 'string') {
             return transaction;
         }
-        return { id: transaction.id, 
+        const key = { id: transaction.id, 
             ymdDate: getYMDDateString(transaction.ymdDate), 
-            sameDayOrder: transaction.sameDayOrder, 
         };
+        if ((transaction.sameDayOrder !== undefined) 
+         && (transaction.sameDayOrder !== null)) {
+            key.sameDayOrder = transaction.sameDayOrder;
+        }
+        return key;
     }
 }
 
@@ -873,9 +881,9 @@ export class TransactionManager extends EventEmitter {
      * @returns {TransactionDataItem[]} An array containing the transaction data 
      * items, sorted from earliest to latest date.
      */
-    async asyncGetTransactionDataItemssInDateRange(accountId, ymdDateA, ymdDateB) {
+    async asyncGetTransactionDataItemsInDateRange(accountId, ymdDateA, ymdDateB) {
         [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
-        return this._handler.asyncGetTransactionDataItemssInDateRange(accountId, 
+        return this._handler.asyncGetTransactionDataItemsInDateRange(accountId, 
             ymdDateA, ymdDateB);
     }
 
@@ -1395,12 +1403,15 @@ export class TransactionManager extends EventEmitter {
         for (let i = 0; i < transactionDataItems.length; ++i) {
             const transactionDataItem = transactionDataItems[i];
             transactionDataItem.id = this._idGenerator.generateId();
-            sortedTransactionIndices.add(
-                { id: transactionDataItem.id, 
-                    ymdDate: getYMDDate(transactionDataItem.ymdDate), 
-                    sameDayOrder: transactionDataItem.sameDayOrder, 
-                    index: i,
-                });
+            const key = { id: transactionDataItem.id, 
+                ymdDate: getYMDDate(transactionDataItem.ymdDate), 
+                index: i,
+            };
+            if ((transactionDataItem.sameDayOrder !== undefined)
+             && (transactionDataItem.sameDayOrder !== null)) {
+                key.sameDayOrder = transactionDataItem.sameDayOrder;
+            }
+            sortedTransactionIndices.add(key);
             
             const { splits } = transactionDataItem;
             splits.forEach((split) => {
@@ -1741,9 +1752,9 @@ export class TransactionsHandler {
      * @returns {TransactionDataItem[]} An array containing the transaction data items, 
      * sorted from earliest to latest date.
      */
-    async asyncGetTransactionDataItemssInDateRange(accountId, ymdDateA, ymdDateB) {
+    async asyncGetTransactionDataItemsInDateRange(accountId, ymdDateA, ymdDateB) {
         // eslint-disable-next-line max-len
-        throw Error('TransactionHandler.asyncGetTransactionDataItemssInDateRange() asbtract method!');
+        throw Error('TransactionHandler.asyncGetTransactionDataItemsInDateRange() asbtract method!');
     }
 
     /**
@@ -1828,7 +1839,8 @@ function entryToJSON(entry) {
     if (entry.lotIds) {
         json.lotIds = Array.from(entry.lotIds.values());
     }
-    if (entry.sameDayOrder) {
+    if ((entry.sameDayOrder !== undefined)
+     && (entry.sameDayOrder !== null)) {
         json.sameDayOrder = entry.sameDayOrder;
     }
     
@@ -1847,7 +1859,8 @@ function entryFromJSON(json) {
     if (json.lotIds) {
         entry.lotIds = new Set(json.lotIds);
     }
-    if (json.sameDayOrder !== undefined) {
+    if ((json.sameDayOrder !== undefined)
+     && (json.sameDayOrder !== null)) {
         entry.sameDayOrder = json.sameDayOrder;
     }
 
@@ -2018,7 +2031,7 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         }
     }
 
-    async asyncGetTransactionDataItemssInDateRange(accountId, ymdDateA, ymdDateB) {
+    async asyncGetTransactionDataItemsInDateRange(accountId, ymdDateA, ymdDateB) {
         const sortedEntries = (accountId) 
             ? this._sortedEntriesByAccountId.get(accountId) 
             : this._ymdDateSortedEntries;
@@ -2039,10 +2052,15 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         const sortedEntries = sortedEntriesById.get(id);
         if (sortedEntries) {
             return sortedEntries.getValues().map(
-                (entry) => { 
-                    return { id: entry.id, 
+                (entry) => {
+                    const key = { id: entry.id, 
                         ymdDate: entry.ymdDate, 
-                        sameDayOrder: entry.sameDayOrder, }; 
+                    };
+                    if ((entry.sameDayOrder !== undefined)
+                     && (entry.sameDayOrder !== null)) {
+                        key.sameDayOrder = entry.sameDayOrder;
+                    }
+                    return key; 
                 });
         }
         else {

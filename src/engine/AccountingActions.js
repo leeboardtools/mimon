@@ -101,6 +101,12 @@ export class AccountingActions extends EventEmitter {
             = this._asyncModifyTransactionsApplier.bind(this);
         actionManager.registerAsyncActionApplier('modifyTransactions', 
             this._asyncModifyTransactionsApplier);
+
+        
+        // Some synonyms
+        this.createAddTransactionAction = this.createAddTransactionsAction;
+        this.createRemoveTransactionAction = this.createRemoveTransactionsAction;
+        this.createModifyTransactionAction = this.createModifyTransactionsAction;
         
     }
 
