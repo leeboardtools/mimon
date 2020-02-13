@@ -417,7 +417,7 @@ test('EngineAccessor-actions', async () => {
 
         result = await accessor.asyncGetNonReconciledIdsForAccountId(checkingId);
         expect(result).toEqual([ transG.id, ]);
-        
+
 
         const testSplitsA = [
             { accountId: checkingId,
@@ -433,6 +433,40 @@ test('EngineAccessor-actions', async () => {
         expect(result).toBeInstanceOf(Error);
 
 
+        //
+        // Prices
+        //
+        const priceSettingsA = [
+            { ymdDate: '2014-06-09', close: 93.70, },
+            { ymdDate: '2014-06-10', close: 94.25, },
+            { ymdDate: '2014-06-13', close: 91.28, },
+            { ymdDate: '2014-06-20', close: 90.91, },
+        ];
+        const priceActionA = accountingActions.createAddPricesAction(
+            aaplPricedItem.id, priceSettingsA);
+        result = await accessor.asyncApplyAction(priceActionA);
+
+        result = await accessor.asyncGetPriceDateRange(aaplPricedItem.id);
+        expect(result).toEqual([
+            getYMDDate('2014-06-09'),
+            getYMDDate('2014-06-20'),
+        ]);
+
+        result = await accessor.asyncGetPriceDataItemsInDateRange(
+            aaplPricedItem.id, priceSettingsA[1].ymdDate, priceSettingsA[2].ymdDate);
+        expect(result).toEqual([
+            priceSettingsA[1], 
+            priceSettingsA[2],
+        ]);
+
+        result = await accessor.asyncGetPriceDataItemOnOrClosestBefore(
+            aaplPricedItem.id, '2014-06-12');
+        expect(result).toEqual(priceSettingsA[1]);
+
+
+        //
+        // All done...
+        //
         await accessor.asyncCloseAccountingFile();
     }
     finally {
