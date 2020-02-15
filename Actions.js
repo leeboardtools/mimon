@@ -52,6 +52,12 @@ export class ActionManager extends EventEmitter {
 
     }
 
+    shutDownFromUse() {
+        this._asyncAppliersByType.clear();
+        this._handler = undefined;
+        this._undoManager = undefined;
+    }
+    
 
     /**
      * @returns {number}    The number of actions that have been applied and are 
