@@ -294,8 +294,8 @@ test('JSONGzipAccountingFile-history', async () => {
             sys.aaplPricedItemId);
         const lotQuantityDefinition = getQuantityDefinition(
             aaplPricedItem1.quantityDefinition);
-        const priceQuantityDefinition = accountingSystem1
-            .getBaseCurrencyObject().getQuantityDefinition();
+        const priceQuantityDefinition = pricedItemManager1
+            .getBaseCurrency().getQuantityDefinition();
     
         const actionManager1 = accountingSystem1.getActionManager();
         const accountingActions1 = accountingSystem1.getAccountingActions();

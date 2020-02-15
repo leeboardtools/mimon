@@ -54,6 +54,14 @@ export async function asyncCreateAccountingSystem(options) {
 
     const accountingSystem = new AccountingSystem(options);
     await accountingSystem.asyncSetupForUse();
+
+    if (options.baseCurrencyCode) {
+        const pricedItemManager = accountingSystem.getPricedItemManager();
+        await pricedItemManager.asyncModifyPricedItem({
+            id: pricedItemManager.getBaseCurrencyPricedItemId(),
+            currency: options.baseCurrencyCode,
+        });
+    }
     return accountingSystem;
 }
 
@@ -627,7 +635,7 @@ export async function asyncAddBasicTransactions(sys) {
     const pricedItemManager = accountingSystem.getPricedItemManager();
     const aaplPricedItem = pricedItemManager.getPricedItemDataItemWithId(sys.aaplPricedItemId);
     const lotQuantityDefinition = getQuantityDefinition(aaplPricedItem.quantityDefinition);
-    const priceQuantityDefinition = accountingSystem.getBaseCurrencyObject().getQuantityDefinition();
+    const priceQuantityDefinition = pricedItemManager.getBaseCurrency().getQuantityDefinition();
     
     const lotManager = accountingSystem.getLotManager();
     const aaplLot1 = (await lotManager.asyncAddLot({ pricedItemId: sys.aaplPricedItemId, description: 'Lot 2005-02-11'})).newLotDataItem;

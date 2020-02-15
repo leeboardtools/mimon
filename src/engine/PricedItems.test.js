@@ -78,31 +78,23 @@ test('PricedItem-Data Items', () => {
 //
 test('PricedItemManager-currencies', async () => {
     const accountingSystem = await ASTH.asyncCreateAccountingSystem(
-        { baseCurrency: 'JPY' });
-    expect(accountingSystem.getBaseCurrencyCode()).toEqual('JPY');
+        { baseCurrencyCode: 'JPY' });
 
     const manager = accountingSystem.getPricedItemManager();
-    expect(manager.getBaseCurrencyCode()).toEqual(accountingSystem.getBaseCurrencyCode());
 
-    const baseCurrencyPricedItem = manager.getBaseCurrencyPricedItem();
-    expect(baseCurrencyPricedItem.currency).toEqual(manager.getBaseCurrencyCode());
-    
-    expect(manager.getPricedItemDataItemWithId(manager.getBaseCurrencyPricedItemId()))
-        .toEqual(baseCurrencyPricedItem);
-    expect(manager.getCurrencyPricedItemDataItem(manager.getBaseCurrencyCode()))
-        .toEqual(baseCurrencyPricedItem);
+    const baseCurrencyPricedItem = manager.getBaseCurrencyPricedItemDataItem();
+    expect(baseCurrencyPricedItem.currency).toEqual('JPY');
     expect(baseCurrencyPricedItem.id).toEqual(manager.getBaseCurrencyPricedItemId());
-
     
     const usdPricedItem = manager.getCurrencyPricedItemDataItem('USD');
     expect(usdPricedItem.currency).toEqual('USD');
-    expect(usdPricedItem).toEqual(manager.getCurrencyUSDPricedItem());
+    expect(usdPricedItem).toEqual(manager.getCurrencyUSDPricedItemDataItem());
     expect(usdPricedItem.id).toEqual(manager.getCurrencyUSDPricedItemId());
 
     const eurPricedItem = manager.getCurrencyPricedItemDataItem('EUR');
     expect(eurPricedItem.currency).toEqual('EUR');
     expect(eurPricedItem).toEqual(manager.getCurrencyEURPricedItem());
-    expect(eurPricedItem.id).toEqual(manager.getCurrencyEURPricedItemId());
+    expect(eurPricedItem.id).toEqual(manager.getCurrencyEURPricedItemDataItem());
 
 
     // Can't remove the built-in currency priced items...
@@ -110,7 +102,8 @@ test('PricedItemManager-currencies', async () => {
         .rejects.toThrow();
     await expect(manager.asyncRemovePricedItem(manager.getCurrencyUSDPricedItemId()))
         .rejects.toThrow();
-    await expect(manager.asyncRemovePricedItem(manager.getCurrencyEURPricedItemId()))
+    await expect(manager.asyncRemovePricedItem(
+        manager.getCurrencyEURPricedItemDataItem()))
         .rejects.toThrow();
 
     let addEventArg;

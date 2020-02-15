@@ -1244,8 +1244,11 @@ export class TransactionManager extends EventEmitter {
         }
 
         if (creditSumBaseValue !== 0) {
-            activeCurrency = activeCurrency 
-                || getCurrency(this._accountingSystem.getBaseCurrencyCode());
+            if (!activeCurrency) {
+                const pricedItemManager = this._accountingSystem.getPricedItemManager();
+                activeCurrency = pricedItemManager.getBaseCurrencyPricedItemDataItem()
+                    .currency;
+            }
             const excessAmount = activeCurrency.baseValueToString(creditSumBaseValue);
             return userError('TransactionManager~splits_dont_add_up', excessAmount);
         }

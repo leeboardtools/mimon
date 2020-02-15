@@ -100,8 +100,7 @@ test('AccountManager-rootAccounts', async () => {
     expect(accountManager).not.toBeUndefined();
 
     const pricedItemManager = accountingSystem.getPricedItemManager();
-    const currencyPricedItemId = pricedItemManager.getCurrencyPricedItemId(
-        accountingSystem.getBaseCurrencyCode());
+    const currencyPricedItemId = pricedItemManager.getBaseCurrencyPricedItemId();
 
 
     const rootAssetAccount = accountManager.getRootAssetAccountDataItem();
@@ -188,27 +187,27 @@ test('AccountManager-add', async () => {
 
     const securityPricedItemA = (await pricedItemManager.asyncAddPricedItem({
         type: PI.PricedItemType.SECURITY,
-        currency: accountingSystem.getBaseCurrencyCode(),
+        currency: pricedItemManager.getBaseCurrencyCode(),
         quantityDefinition: getDecimalDefinition(-4),
         ticker: 'ABCD',
     })).newPricedItemDataItem;
 
     const mutualFundPricedItemA = (await pricedItemManager.asyncAddPricedItem({
         type: PI.PricedItemType.MUTUAL_FUND,
-        currency: accountingSystem.getBaseCurrencyCode(),
+        currency: pricedItemManager.getBaseCurrencyCode(),
         quantityDefinition: getDecimalDefinition(-4),
         ticker: 'MFUND',
     })).newPricedItemDataItem;
 
     const realEstatePricedItemA = (await pricedItemManager.asyncAddPricedItem({
         type: PI.PricedItemType.REAL_ESTATE,
-        currency: accountingSystem.getBaseCurrencyCode(),
+        currency: pricedItemManager.getBaseCurrencyCode(),
         quantityDefinition: getDecimalDefinition(0),
     })).newPricedItemDataItem;
 
     const propertyPricedItemA = (await pricedItemManager.asyncAddPricedItem({
         type: PI.PricedItemType.PROPERTY,
-        currency: accountingSystem.getBaseCurrencyCode(),
+        currency: pricedItemManager.getBaseCurrencyCode(),
         quantityDefinition: getDecimalDefinition(0),
     })).newPricedItemDataItem;
 
@@ -229,8 +228,8 @@ test('AccountManager-add', async () => {
         .newAccountDataItem;
     ATH.expectAccount(assetA, assetOptionsA);
 
-    expect(accountManager.getRootAssetAccountDataItem().childAccountIds.includes(assetA.id))
-        .toBeTruthy();
+    expect(accountManager.getRootAssetAccountDataItem()
+        .childAccountIds.includes(assetA.id)).toBeTruthy();
 
     //
     // BANK

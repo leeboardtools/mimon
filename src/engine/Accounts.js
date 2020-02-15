@@ -413,8 +413,7 @@ export class AccountManager extends EventEmitter {
     async asyncSetupForUse() {
         const accountingSystem = this._accountingSystem;
         const pricedItemManager = accountingSystem.getPricedItemManager();
-        const currencyPricedItemId = pricedItemManager.getCurrencyPricedItemId(
-            accountingSystem.getBaseCurrencyCode());
+        const currencyPricedItemId = pricedItemManager.getBaseCurrencyPricedItemId();
 
         if (!this._rootAssetAccountId) {
             const account = (await this._asyncAddAccount({
@@ -478,7 +477,7 @@ export class AccountManager extends EventEmitter {
             this._openingBalancesAccountId = account.id;
         }
 
-        this._handler.setBaseOptions({
+        await this._handler.asyncSetBaseOptions({
             rootAssetAccountId: this._rootAssetAccountId,
             rootLiabilityAccountId: this._rootLiabilityAccountId,
             rootIncomeAccountId: this._rootIncomeAccountId,
@@ -1190,13 +1189,13 @@ export class AccountsHandler {
      * of the account manager.
      * @param {object} options The options, a JSON-able object.
      */
-    setBaseOptions(options) {
-        throw Error('AccountsHandler.setBaseOptiosn() abstract method!');
+    async asyncSetBaseOptions(options) {
+        throw Error('AccountsHandler.asyncSetBaseOptiosn() abstract method!');
     }
 
     /**
      * @returns {object}    The base options object passed to 
-     * {@link AccountsHandler#setBaseOptinos}.
+     * {@link AccountsHandler#asyncSetBaseOptinos}.
      */
     getBaseOptions() {
         throw Error('AccountsHandler.getBaseOptions() abstract method!');
@@ -1272,7 +1271,7 @@ export class InMemoryAccountsHandler extends AccountsHandler {
         return this._idGeneratorOptions;
     }
 
-    setBaseOptions(options) {
+    async asyncSetBaseOptions(options) {
         this._baseOptions = options;
         this.markChanged();
     }

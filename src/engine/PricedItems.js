@@ -53,7 +53,8 @@ function validateCurrencyDataItem(manager, item, isModify) {
     const currencyName = manager._getCurrencyName(item.currency, item.quantityDefinition);
     const existingId = manager._currencyPricedItemIdsByCurrency.get(currencyName);
     if (existingId) {
-        if (!isModify || (existingId !== item.id)) {
+        if ((item.id !== manager._currencyBasePricedItemId)
+         && (!isModify || (existingId !== item.id))) {
             return userError('PricedItemManager-currency_already_exists', item.currency);
         }
     }
@@ -253,8 +254,15 @@ export function getPricedItemDataItem(pricedItem, alwaysCopy) {
 /**
  * Manages {@link PricedItemDataItem}s.
  * <p>
- * Note that priced items with the PricedItemType.CURRENCY are restricted to only 
- * one priced item per currency.
+ * The base currency is a special PricedItemType.CURRENCY priced item.
+ * It's designed to be used as the default currency, particularly
+ * for accounts. The idea is that the base currency can be changed and
+ * it will be reflected by all the data items that refer to the base
+ * currency priced item.
+ * <p>
+ * All other currencies, on the other hand, are defined by a combination
+ * of currency code and quantity definition. The priced items for
+ * these can be looked up by currency code and quantity definition.
  */
 export class PricedItemManager extends EventEmitter {
 
@@ -279,6 +287,7 @@ export class PricedItemManager extends EventEmitter {
         this._idGenerator = new NumericIdGenerator(options.idGenerator 
             || this._handler.getIdGeneratorOptions());
 
+
         const undoManager = accountingSystem.getUndoManager();
         this._asyncApplyUndoAddPricedItem 
             = this._asyncApplyUndoAddPricedItem.bind(this);
@@ -295,14 +304,21 @@ export class PricedItemManager extends EventEmitter {
         undoManager.registerUndoApplier('modifyPricedItem', 
             this._asyncApplyUndoModifyPricedItem);
 
+
         this._currencyPricedItemIdsByCurrency = new Map();
         this._pricedItemDataItemsById = new Map();
         this._requiredCurrencyPricedItemIds = new Set();
 
+        const baseOptions = this._handler.getBaseOptions() || {};
+        this._currencyUSDPricedItemId = baseOptions.currencyUSDPricedItemId;
+        this._currencyEURPricedItemId = baseOptions.currencyEURPricedItemId;
+        this._currencyBasePricedItemId = baseOptions.currencyBasePricedItemId;
+
         const pricedItems = this._handler.getPricedItemDataItems();
         pricedItems.forEach((pricedItem) => {
             this._pricedItemDataItemsById.set(pricedItem.id, pricedItem);
-            if (pricedItem.type === PricedItemType.CURRENCY.name) {
+            if ((pricedItem.type === PricedItemType.CURRENCY.name)
+             && (pricedItem.id !== this._currencyBasePricedItemId)) {
                 const currencyName = this._getCurrencyName(pricedItem.currency, 
                     pricedItem.quantityDefinition);
                 this._currencyPricedItemIdsByCurrency.set(currencyName, pricedItem.id);
@@ -312,45 +328,47 @@ export class PricedItemManager extends EventEmitter {
 
 
     async asyncSetupForUse() {
-        let usdPricedItem = this.getCurrencyPricedItemDataItem('USD');
-        if (!usdPricedItem) {
-            usdPricedItem = (await this.asyncAddCurrencyPricedItem('USD'))
-                .newPricedItemDataItem;
-        }
-        this._currencyUSDPricedItemId = usdPricedItem.id;
-        this._currencyUSDPricedItem = usdPricedItem;
-        this._requiredCurrencyPricedItemIds.add(usdPricedItem.id);
-
-
-        let eurPricedItem = this.getCurrencyPricedItemDataItem('EUR');
-        if (!eurPricedItem) {
-            eurPricedItem = (await this.asyncAddCurrencyPricedItem('EUR'))
-                .newPricedItemDataItem;
-        }
-        this._currencyEURPricedItemId = eurPricedItem.id;
-        this._currencyEURPricedItem = eurPricedItem;
-        this._requiredCurrencyPricedItemIds.add(eurPricedItem.id);
-
-
-        this._baseCurrencyCode = this._accountingSystem.getBaseCurrencyCode();
-        let baseCurrencyPricedItem 
-            = this.getCurrencyPricedItemDataItem(this._baseCurrencyCode);
-        if (!baseCurrencyPricedItem) {
-            baseCurrencyPricedItem 
-                = (await this.asyncAddCurrencyPricedItem(this._baseCurrencyCode))
+        if (!this._currencyBasePricedItemId) {
+            this._addingBaseCurrency = true;
+            try {
+                const pricedItem = (await this.asyncAddCurrencyPricedItem('USD'))
                     .newPricedItemDataItem;
+                this._currencyBasePricedItemId = pricedItem.id;
+            }
+            finally {
+                delete this._addingBaseCurrency;
+            }
         }
-        this._currencyBasePricedItemId = baseCurrencyPricedItem.id;
-        this._currencyBasePricedItem = baseCurrencyPricedItem;
-        this._requiredCurrencyPricedItemIds.add(baseCurrencyPricedItem.id);
+        this._requiredCurrencyPricedItemIds.add(this._currencyBasePricedItemId);
+
+        
+        if (!this._currencyUSDPricedItemId) {
+            const pricedItem = (await this.asyncAddCurrencyPricedItem('USD'))
+                .newPricedItemDataItem;
+            this._currencyUSDPricedItemId = pricedItem.id;
+        }
+        this._requiredCurrencyPricedItemIds.add(this._currencyUSDPricedItemId);
+
+
+        if (!this._currencyEURPricedItemId) {
+            const pricedItem = (await this.asyncAddCurrencyPricedItem('EUR'))
+                .newPricedItemDataItem;
+            this._currencyEURPricedItemId = pricedItem.id;
+        }
+        this._requiredCurrencyPricedItemIds.add(this._currencyEURPricedItemId);
+
+
+        const baseOptions = {
+            currencyUSDPricedItemId: this._currencyUSDPricedItemId,
+            currencyEURPricedItemId: this._currencyEURPricedItemId,
+            baseCurrencyPricedItemId: this._currencyBasePricedItemId,
+        };
+        await this._handler.asyncSetBaseOptions(baseOptions);
     }
 
 
     shutDownFromUse() {
         this._requiredCurrencyPricedItemIds.clear();
-        this._currencyBasePricedItem = undefined;
-        this._currencyEURPricedItem = undefined;
-        this._currencyUSDPricedItem = undefined;
 
         this._currencyPricedItemIdsByCurrency.clear();
         this._pricedItemDataItemsById.clear();
@@ -363,13 +381,7 @@ export class PricedItemManager extends EventEmitter {
 
     getAccountingSystem() { return this._accountingSystem; }
 
-
-    /**
-     * @returns {Currency}  The base currency, from 
-     * {@link AccountingSystem#getBaseCurrencyCode}.
-     */
-    getBaseCurrencyCode() { return this._baseCurrencyCode; }
-
+    
     /**
      * @returns {number}    The id of the base currency priced item.
      */
@@ -378,7 +390,23 @@ export class PricedItemManager extends EventEmitter {
     /**
      * @returns {PricedItemDataItem}    The priced item for the base currency.
      */
-    getBaseCurrencyPricedItem() { return this._currencyBasePricedItem; }
+    getBaseCurrencyPricedItemDataItem() { 
+        return this.getPricedItemDataItemWithId(this._currencyBasePricedItemId); 
+    }
+
+    /**
+     * @returns {string}    The currency of the base currency priced item.
+     */
+    getBaseCurrencyCode() {
+        return this.getBaseCurrencyPricedItemDataItem().currency;
+    }
+
+    /**
+     * @returns {Currency}  The currency of the base currency priced item.
+     */
+    getBaseCurrency() {
+        return getCurrency(this.getBaseCurrencyCode());
+    }
 
 
     /**
@@ -389,21 +417,21 @@ export class PricedItemManager extends EventEmitter {
     /**
      * @returns {PricedItemDataItem}    The priced item for the USD currency.
      */
-    getCurrencyUSDPricedItem() { 
-        return getPricedItemDataItem(this._currencyUSDPricedItem, true); 
+    getCurrencyUSDPricedItemDataItem() { 
+        return this.getPricedItemDataItemWithId(this._currencyUSDPricedItemId); 
     }
 
 
     /**
      * @returns {number}    The id of the priced item for the EUR currency.
      */
-    getCurrencyEURPricedItemId() { return this._currencyEURPricedItemId; }
+    getCurrencyEURPricedItemDataItem() { return this._currencyEURPricedItemId; }
 
     /**
      * @returns {PricedItemDataItem}    The priced item for the EUR currency.
      */
     getCurrencyEURPricedItem() { 
-        return getPricedItemDataItem(this._currencyEURPricedItem, true); 
+        return this.getPricedItemDataItemWithId(this._currencyEURPricedItemId); 
     }
 
     
@@ -421,7 +449,8 @@ export class PricedItemManager extends EventEmitter {
 
         this._pricedItemDataItemsById.set(id, pricedItemDataItem);
 
-        if (getPricedItemType(pricedItem.type) === PricedItemType.CURRENCY) {
+        if (!this._addingBaseCurrency
+         && (getPricedItemType(pricedItem.type) === PricedItemType.CURRENCY)) {
             const currencyName = this._getCurrencyName(pricedItemDataItem.currency, 
                 pricedItemDataItem.quantityDefinition);
             this._currencyPricedItemIdsByCurrency.set(currencyName, id);
@@ -451,21 +480,6 @@ export class PricedItemManager extends EventEmitter {
     getPricedItemDataItemWithId(id) {
         const pricedItem = this._getPricedItem(id);
         return (pricedItem) ? getPricedItemDataItem(pricedItem, true) : undefined;
-    }
-
-
-    /**
-     * Resolves an argument into a {@link PricedItem}. The argument may be the id 
-     * of a priced item,
-     * a {@link PricedItemDataItem}, a {@link PricedItem}, or <code>undefined</code>.
-     * @param {(number|PricedItemDataItem|PricedItem)} ref 
-     * @returns {PricedItem|undefined}
-     */
-    resolveRefToPricedItem(ref) {
-        if (typeof ref === 'number') {
-            ref = this.getPricedItemDataItemWithId(ref);
-        }
-        return getPricedItem(ref);
     }
 
 
@@ -517,7 +531,8 @@ export class PricedItemManager extends EventEmitter {
         this._idGenerator.fromJSON(idGeneratorOptions);
 
         const type = getPricedItemType(pricedItemDataItem.type);
-        if (type === PricedItemType.CURRENCY) {
+        if ((type === PricedItemType.CURRENCY) 
+         && (pricedItemDataItem.id !== this._currencyBasePricedItemId)) {
             const currencyName = this._getCurrencyName(pricedItemDataItem.currency, 
                 pricedItemDataItem.quantityDefinition);
             this._currencyPricedItemIdsByCurrency.delete(currencyName);
@@ -551,7 +566,8 @@ export class PricedItemManager extends EventEmitter {
         this._pricedItemDataItemsById.set(id, oldPricedItemDataItem);
 
         const type = getPricedItemType(oldPricedItemDataItem.type);
-        if (type === PricedItemType.CURRENCY) {
+        if ((type === PricedItemType.CURRENCY) 
+         && (id !== this._currencyBasePricedItemId)) {
             const oldCurrencyName = this._getCurrencyName(oldPricedItemDataItem.currency, 
                 oldPricedItemDataItem.quantityDefinition);
             const newCurrencyName = this._getCurrencyName(newPricedItemDataItem.currency, 
@@ -695,7 +711,8 @@ export class PricedItemManager extends EventEmitter {
         }
 
         const type = getPricedItemType(pricedItemDataItem.type);
-        if (type === PricedItemType.CURRENCY) {
+        if ((type === PricedItemType.CURRENCY) 
+         && (pricedItemDataItem.id !== this._currencyBasePricedItemId)) {
             const currencyName = this._getCurrencyName(pricedItemDataItem.currency, 
                 pricedItemDataItem.quantityDefinition);
             this._currencyPricedItemIdsByCurrency.delete(currencyName);
@@ -756,6 +773,7 @@ export class PricedItemManager extends EventEmitter {
         let newPricedItemDataItem = Object.assign({}, oldPricedItemDataItem, pricedItem);
         newPricedItemDataItem = getPricedItemDataItem(newPricedItemDataItem);
 
+
         if (newPricedItemDataItem.type !== oldPricedItemDataItem.type) {
             throw userError('PricedItemManager-modify_type_change');
         }
@@ -778,7 +796,8 @@ export class PricedItemManager extends EventEmitter {
 
         this._pricedItemDataItemsById.set(id, newPricedItemDataItem);
 
-        if (type === PricedItemType.CURRENCY) {
+        if ((type === PricedItemType.CURRENCY) 
+         && (id !== this._currencyBasePricedItemId)) {
             const oldCurrencyName = this._getCurrencyName(
                 oldPricedItemDataItem.currency, oldPricedItemDataItem.quantityDefinition);
             const newCurrencyName = this._getCurrencyName(
@@ -815,6 +834,7 @@ export class PricedItemManager extends EventEmitter {
  * @interface
  */
 export class PricedItemsHandler {
+    
     /**
      * Retrieves an array containing all the priced items. The priced items are presumed
      * to already be loaded when the {@link PricedItemManager} is constructed.
@@ -830,6 +850,24 @@ export class PricedItemsHandler {
      */
     getIdGeneratorOptions() {
         throw Error('PricedItemsHandler.getIdGeneratorOptions() abstract method!');
+    }
+
+
+    /**
+     * Called by {@link PricedItemManager#asyncSetupForUse} to save the base options 
+     * of the manager.
+     * @param {object} options The options, a JSON-able object.
+     */
+    async asyncSetBaseOptions(baseOptions) {
+        throw Error('PricedItemsHandler.asyncSetBaseOptiosn() abstract method!');
+    }
+
+    /**
+     * @returns {object}    The base options object passed to 
+     * {@link PricedItemsHandler#asyncSetBaseOptinos}.
+     */
+    getBaseOptions() {
+        throw Error('PricedItemsHandler.getBaseOptiosn() abstract method!');
     }
 
 
@@ -876,6 +914,7 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
         return {
             idGeneratorOptions: this._idGeneratorOptions,
             pricedItems: Array.from(this._pricedItemDataItemsById.values()),
+            baseOptions: this._baseOptions,
         };
     }
 
@@ -887,6 +926,8 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
             this._pricedItemDataItemsById.set(pricedItemDataItem.id, pricedItemDataItem);
         });
 
+        this._baseOptions = json.baseOptions;
+
         this.markChanged();
     }
 
@@ -897,6 +938,15 @@ export class InMemoryPricedItemsHandler extends PricedItemsHandler {
 
     getIdGeneratorOptions() {
         return this._idGeneratorOptions;
+    }
+
+    async asyncSetBaseOptions(baseOptions) {
+        this._baseOptions = baseOptions;
+        this.markChanged();
+    }
+
+    getBaseOptions() {
+        return this._baseOptions;
     }
 
     async asyncUpdatePricedItemDataItems(idPricedItemDataItemPairs, idGeneratorOptions) {

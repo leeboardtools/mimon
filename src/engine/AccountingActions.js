@@ -37,6 +37,10 @@ export class AccountingActions extends EventEmitter {
 
         this._asyncActionCallbacksByType = new Map();
 
+        this._asyncModifyOptionsApplier = this._asyncModifyOptionsApplier.bind(this);
+        actionManager.registerAsyncActionApplier('modifyOptions',
+            this._asyncModifyOptionsApplier);
+
         this._asyncAddAccountApplier = this._asyncAddAccountApplier.bind(this);
         actionManager.registerAsyncActionApplier('addAccount', 
             this._asyncAddAccountApplier);
@@ -119,6 +123,26 @@ export class AccountingActions extends EventEmitter {
             this.emit(action.type, action, result);
             this.emit('actionApply', action, result);
         }
+    }
+
+
+    /**
+     * Creates an action for modifying the accounting system options.
+     * @param {object} optionChanges
+     * @returns {ActionDataItem}
+     */
+    createModifyOptions(optionChanges) {
+        return { 
+            type: 'modifyOptions',
+            optionChanges: optionChanges,
+            name: userMsg('Actions-modifyOptions'), 
+        };
+    }
+
+    async _asyncModifyOptionsApplier(isValidateOnly, action) {
+        const result = await this._accountingSystem.asyncModifyOptions(
+            action.modifyOptions, isValidateOnly);
+        this._emitActionEvent(isValidateOnly, action, result);
     }
 
 

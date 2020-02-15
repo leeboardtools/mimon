@@ -570,11 +570,10 @@ export class EngineAccessor {
 
 
     /**
-     * @returns {Currency}  The base currency, from 
-     * {@link AccountingSystem#getBaseCurrencyCode}.
+     * @returns {Currency}  The base currency.
      */
     getBaseCurrencyCode() { 
-        return this._pricedItemManager.getBaseCurrencyCode(); 
+        return this._pricedItemManager.getBaseCurrencyCode();
     }
 
     /**
@@ -587,8 +586,8 @@ export class EngineAccessor {
     /**
      * @returns {PricedItemDataItem}    The priced item for the base currency.
      */
-    getBaseCurrencyPricedItem() { 
-        return this._pricedItemManager.getBaseCurrencyPricedItem();
+    getBaseCurrencyPricedItemDataItem() { 
+        return this._pricedItemManager.getBaseCurrencyPricedItemDataItem();
     }
 
 
@@ -602,16 +601,16 @@ export class EngineAccessor {
     /**
      * @returns {PricedItemDataItem}    The priced item for the USD currency.
      */
-    getCurrencyUSDPricedItem() {
-        return this._pricedItemManager.getCurrencyUSDPricedItem();
+    getCurrencyUSDPricedItemDataItem() {
+        return this._pricedItemManager.getCurrencyUSDPricedItemDataItem();
     }
 
 
     /**
      * @returns {number}    The id of the priced item for the EUR currency.
      */
-    getCurrencyEURPricedItemId() {
-        return this._pricedItemManager.getCurrencyEURPricedItemId();
+    getCurrencyEURPricedItemDataItem() {
+        return this._pricedItemManager.getCurrencyEURPricedItemDataItem();
     }
 
     /**

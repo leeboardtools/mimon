@@ -8,8 +8,7 @@ import { InMemoryLotsHandler } from './Lots';
 
 test('AccountingSystem', async () => {
     const handler = new InMemoryAccountingSystemHandler();
-    await handler.asyncSetBaseCurrencyCode('JPY');
-
+    
     const initialOptions = {
         a: { 
             b: {
@@ -33,33 +32,7 @@ test('AccountingSystem', async () => {
 
     const undoManager = accountingSystem.getUndoManager();
 
-    
-    //
-    // Test the base currency...
-    expect(accountingSystem.getBaseCurrencyCode()).toEqual('JPY');
-
-    let setCurrencyEventResult;
-    accountingSystem.on('baseCurrencySet', 
-        (result) => { setCurrencyEventResult = result; });
-
     let result;
-    result = await accountingSystem.asyncSetBaseCurrency('EUR');
-    expect(result).toEqual(expect.objectContaining({
-        newCurrencyCode: 'EUR',
-        oldCurrencyCode: 'JPY',
-    }));
-    expect(setCurrencyEventResult).toEqual(expect.objectContaining({
-        newCurrencyCode: 'EUR',
-        oldCurrencyCode: 'JPY',
-    }));
-
-    await undoManager.asyncUndoToId(result.undoId);
-    expect(accountingSystem.getBaseCurrencyCode()).toEqual('JPY');
-    expect(setCurrencyEventResult).toEqual(expect.objectContaining({
-        newCurrencyCode: 'JPY',
-        oldCurrencyCode: 'EUR',
-    }));
-
 
     //
     // Test the options.

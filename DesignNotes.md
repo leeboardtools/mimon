@@ -79,7 +79,7 @@ To handle retrieving and saving data items between a file system and the engine,
 
 When an accounting file is first created or opened, it creates the [AccountingSystem](#accountingsystem) represented by the file. When it does, it passes in the various handlers to the accounting system's constructor, which then passes them on to the various managers.
 
-Since both [AccountManager](#accountmanager) and [PricedItemManager](#priceditemmanager) have predefined objects (the root accounts for AccountManager, the USD, EUR, and accounting system's base currency for PriceManager), these managers retrieve from their handlers the list of accounts/priced items when the managers are constructed. This means that when opening an existing file, the handlers must be pre-loaded before the accounting system can be created.
+Since both [AccountManager](#accountmanager) and [PricedItemManager](#priceditemmanager) have predefined objects (the root accounts for AccountManager, the USD, EUR, and a base currency for PriceManager), these managers retrieve from their handlers the list of accounts/priced items when the managers are constructed. This means that when opening an existing file, the handlers must be pre-loaded before the accounting system can be created.
 
 [TransactionManager](#transactionmanager) and [PriceManager](#pricemanager) on the other hand don't have predefined objects, they work directly with the handlers
 so don't really need pre-loading.
@@ -355,7 +355,15 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
 
 - Reminders
 
-- Add accounting action for setting the base currency.
+- Add accounting action for:
+    - Setting options.
+    - Price retrieval.
+
 
 - Action Recovery
     - Option to save applied actions to a recovery file.
+
+
+- dataDeepCopy
+    - Add support for Set and Map, prevent recursion.
+

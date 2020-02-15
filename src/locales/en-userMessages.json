@@ -106,6 +106,7 @@
     "PricedItemManager-remove_no_id": ["The priced item cannot be deleted. An item with id '", "' was not found."],
     "PricedItemManager-modify_no_id": ["The priced item could not be modified. An item with id '", "' was not found."],
     "PricedItemManager-modify_type_change": "The priced item could not be modified. The type cannot be changed.",
+    "PricedItemManager-modify_no_change_currency_currency": "The currency of a currency priced item cannot be changed.",
 
 
     "ReconcileState-NOT_RECONCILED": "Not reconciled",
