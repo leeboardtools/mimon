@@ -165,7 +165,7 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
     //
     // Assets
     //
-    const baseCurrencyPricedItemId = pricedItemManager.getCurrencyBasePricedItemId();
+    const baseCurrencyPricedItemId = pricedItemManager.getBaseCurrencyPricedItemId();
     sys.currentAssetsId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootAssetId, type: A.AccountType.ASSET, pricedItemId: baseCurrencyPricedItemId, name: 'Current Assets', },
     )).newAccountDataItem.id;

@@ -94,6 +94,11 @@ export class PriceManager extends EventEmitter {
         
     }
 
+    shutDownFromUse() {
+        this._handler = undefined;
+        this._accountingSystem = undefined;
+    }
+
     getAccountingSystem() { return this._accountingSystem; }
 
     /**

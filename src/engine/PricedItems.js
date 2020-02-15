@@ -332,17 +332,32 @@ export class PricedItemManager extends EventEmitter {
         this._requiredCurrencyPricedItemIds.add(eurPricedItem.id);
 
 
-        this._baseCurrency = this._accountingSystem.getBaseCurrencyCode();
+        this._baseCurrencyCode = this._accountingSystem.getBaseCurrencyCode();
         let baseCurrencyPricedItem 
-            = this.getCurrencyPricedItemDataItem(this._baseCurrency);
+            = this.getCurrencyPricedItemDataItem(this._baseCurrencyCode);
         if (!baseCurrencyPricedItem) {
             baseCurrencyPricedItem 
-                = (await this.asyncAddCurrencyPricedItem(this._baseCurrency))
+                = (await this.asyncAddCurrencyPricedItem(this._baseCurrencyCode))
                     .newPricedItemDataItem;
         }
         this._currencyBasePricedItemId = baseCurrencyPricedItem.id;
         this._currencyBasePricedItem = baseCurrencyPricedItem;
         this._requiredCurrencyPricedItemIds.add(baseCurrencyPricedItem.id);
+    }
+
+
+    shutDownFromUse() {
+        this._requiredCurrencyPricedItemIds.clear();
+        this._currencyBasePricedItem = undefined;
+        this._currencyEURPricedItem = undefined;
+        this._currencyUSDPricedItem = undefined;
+
+        this._currencyPricedItemIdsByCurrency.clear();
+        this._pricedItemDataItemsById.clear();
+        this._requiredCurrencyPricedItemIds.clear();
+
+        this._handler = undefined;
+        this._accountingSystem = undefined;
     }
 
 
@@ -353,17 +368,17 @@ export class PricedItemManager extends EventEmitter {
      * @returns {Currency}  The base currency, from 
      * {@link AccountingSystem#getBaseCurrencyCode}.
      */
-    getBaseCurrencyCode() { return this._baseCurrency; }
+    getBaseCurrencyCode() { return this._baseCurrencyCode; }
 
     /**
      * @returns {number}    The id of the base currency priced item.
      */
-    getCurrencyBasePricedItemId() { return this._currencyBasePricedItemId; }
+    getBaseCurrencyPricedItemId() { return this._currencyBasePricedItemId; }
 
     /**
      * @returns {PricedItemDataItem}    The priced item for the base currency.
      */
-    getCurrencyBasePricedItem() { return this._currencyBasePricedItem; }
+    getBaseCurrencyPricedItem() { return this._currencyBasePricedItem; }
 
 
     /**

@@ -33,6 +33,12 @@ export class UndoManager {
     async asyncSetupForUse() {
     }
 
+    shutDownFromUse() {
+        this._appliersByName.clear();
+        this._sortedUndoIds.clear();
+        this._handler = undefined;
+    }
+
     /**
      * @returns {number[]}  An array containing the undo ids in increasing order.
      */

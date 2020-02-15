@@ -68,6 +68,8 @@
     "AccountManager-child_not_compatible": ["The account contains a child account of type '", "', which is not allowed in the parent account, which is of type '", "'."],
 
 
+    "Actions-setBaseCurrency": "Set Base Currency",
+    "Actions-modifyOptions": "Modify Options",
     "Actions-addAccount": "New Account",
     "Actions-removeAccount": "Delete Account",
     "Actions-modifyAccount": "Modify Account",

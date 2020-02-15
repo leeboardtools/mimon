@@ -488,6 +488,14 @@ export class AccountManager extends EventEmitter {
         });
     }
 
+
+    shutDownFromUse() {
+        this._accountsById.clear();
+        this._accountsByRefId.clear();
+        this._handler = undefined;
+        this._accountingSystem = undefined;
+    }
+
     
     getAccountingSystem() { return this._accountingSystem; }
 

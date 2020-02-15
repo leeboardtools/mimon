@@ -222,7 +222,7 @@ test('AccountManager-add', async () => {
     const assetOptionsA = {
         parentAccountId: accountManager.getRootAssetAccountId(),
         type: A.AccountType.ASSET,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Current Assets',
     };
     const assetA = (await accountManager.asyncAddAccount(assetOptionsA))
@@ -238,7 +238,7 @@ test('AccountManager-add', async () => {
     const bankOptionsA = {
         parentAccountId: assetA.id,
         type: A.AccountType.BANK,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Checking Account',
         description: 'This is a checking account',
     };
@@ -270,7 +270,7 @@ test('AccountManager-add', async () => {
     const cashOptionsA = {
         parentAccountId: assetA.id,
         type: A.AccountType.CASH,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Cash Account',
     };
     const cashA = (await accountManager.asyncAddAccount(cashOptionsA)).newAccountDataItem;
@@ -286,7 +286,7 @@ test('AccountManager-add', async () => {
     const brokerageOptionsA = {
         parentAccountId: assetA.id,
         type: A.AccountType.BROKERAGE,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Brokerage Account',
     };
     const brokerageA = (await accountManager.asyncAddAccount(brokerageOptionsA))
@@ -304,7 +304,7 @@ test('AccountManager-add', async () => {
     const securityOptionsA = {
         parentAccountId: brokerageA.id,
         type: A.AccountType.SECURITY,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Security Account',
         description: 'This is a security account',
     };
@@ -327,7 +327,7 @@ test('AccountManager-add', async () => {
     const mutualFundOptionsA = {
         parentAccountId: brokerageA.id,
         type: A.AccountType.MUTUAL_FUND,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Mutual Fund Account',
         description: 'This is a mutual funds account',
     };
@@ -352,7 +352,7 @@ test('AccountManager-add', async () => {
     const realEstateOptionsA = {
         parentAccountId: assetA.id,
         type: A.AccountType.REAL_ESTATE,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Real Estate Account',
         description: 'This is a real estate account',
     };
@@ -371,7 +371,7 @@ test('AccountManager-add', async () => {
     const propertyOptionsA = {
         parentAccountId: assetA.id,
         type: A.AccountType.PROPERTY,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Property Account',
         description: 'This is a property account',
     };
@@ -390,7 +390,7 @@ test('AccountManager-add', async () => {
     const liabilityOptionsA = {
         parentAccountId: assetA.id,
         type: A.AccountType.LIABILITY,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Liability Account',
     };
     // Fails because asset accounts can't have liability accounts..
@@ -408,7 +408,7 @@ test('AccountManager-add', async () => {
     const creditCardOptionsA = {
         parentAccountId: assetA.id,
         type: A.AccountType.CREDIT_CARD,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Credit Card Account',
     };
     // Fails because asset accounts can't have liability accounts..
@@ -430,7 +430,7 @@ test('AccountManager-add', async () => {
     const loanOptionsA = {
         parentAccountId: creditCardA.id,
         type: A.AccountType.LOAN,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Loan Account',
     };
     // Fails because asset accounts can't have liability accounts..
@@ -450,7 +450,7 @@ test('AccountManager-add', async () => {
     const mortgageOptionsA = {
         parentAccountId: loanA.id,
         type: A.AccountType.MORTGAGE,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Mortgage Account',
     };
     // Fails because asset accounts can't have liability accounts..
@@ -472,7 +472,7 @@ test('AccountManager-add', async () => {
     const incomeOptionsA = {
         parentAccountId: loanA.id,
         type: A.AccountType.INCOME,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Income Account',
     };
     // Fails because asset accounts can't have liability accounts..
@@ -490,7 +490,7 @@ test('AccountManager-add', async () => {
     const incomeOptionsB = {
         parentAccountId: incomeA.id,
         type: A.AccountType.INCOME,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Child Income Account',
     };
     const incomeB = (await accountManager.asyncAddAccount(incomeOptionsB))
@@ -507,7 +507,7 @@ test('AccountManager-add', async () => {
     const expenseOptionsA = {
         parentAccountId: loanA.id,
         type: A.AccountType.EXPENSE,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Income Account',
     };
     // Fails because asset accounts can't have liability accounts..
@@ -526,7 +526,7 @@ test('AccountManager-add', async () => {
     const expenseOptionsB = {
         parentAccountId: expenseA.id,
         type: A.AccountType.EXPENSE,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Child Expense Account',
     };
     const expenseB = (await accountManager.asyncAddAccount(expenseOptionsB))
@@ -544,7 +544,7 @@ test('AccountManager-add', async () => {
     const equityOptionsA = {
         parentAccountId: incomeA.id,
         type: A.AccountType.EQUITY,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Equity Account',
     };
     // Fails because income accounts can't have equity accounts..
@@ -567,7 +567,7 @@ test('AccountManager-add', async () => {
     const equityOptionsB = {
         parentAccountId: equityA.id,
         type: A.AccountType.EQUITY,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Child Equity Account',
     };
     const equityB = (await accountManager.asyncAddAccount(equityOptionsB))
@@ -587,7 +587,7 @@ test('AccountManager-add', async () => {
     const openingBalancesOptionsA = {
         parentAccountId: equityA.id,
         type: A.AccountType.OPENING_BALANCE,
-        pricedItemId: pricedItemManager.getCurrencyBasePricedItemId(),
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Opening Balance Account',
     };
     // Can only have one opening balances account.

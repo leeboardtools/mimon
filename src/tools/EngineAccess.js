@@ -580,15 +580,15 @@ export class EngineAccessor {
     /**
      * @returns {number}    The id of the base currency priced item.
      */
-    getCurrencyBasePricedItemId() { 
-        return this._pricedItemManager.getCurrencyBasePricedItemId(); 
+    getBaseCurrencyPricedItemId() { 
+        return this._pricedItemManager.getBaseCurrencyPricedItemId(); 
     }
 
     /**
      * @returns {PricedItemDataItem}    The priced item for the base currency.
      */
-    getCurrencyBasePricedItem() { 
-        return this._pricedItemManager.getCurrencyBasePricedItem();
+    getBaseCurrencyPricedItem() { 
+        return this._pricedItemManager.getBaseCurrencyPricedItem();
     }
 
 

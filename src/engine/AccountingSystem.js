@@ -74,6 +74,43 @@ export class AccountingSystem extends EventEmitter {
         await this._actionManager.asyncSetupForUse();
     }
 
+    shutDownFromUse() {
+        if (this._actionManager) {
+            this._actionManager.shutDownFromUse();
+            this._actionManager = undefined;
+        }
+
+        if (this.undoManager) {
+            this._undoManager.shutDownFromUse();
+            this._undoManager = undefined;
+        }
+
+        if (this._transactionManager) {
+            this._transactionManager.shutDownFromUse();
+            this._transactionManager = undefined;
+        }
+
+        if (this._lotManager) {
+            this._lotManager.shutDownFromUse();
+            this._lotManager = undefined;
+        }
+
+        if (this._pricedItemManager) {
+            this._pricedItemManager.shutDownFromUse();
+            this._pricedItemManager = undefined;
+        }
+
+        if (this._priceManager) {
+            this._priceManager.shutDownFromUse();
+            this._priceManager = undefined;
+        }
+
+        if (this._accountManager) {
+            this._accountManager.shutDownFromUse();
+            this._accountManager = undefined;
+        }
+    }
+
     /**
      * @returns {AccountManager}
      */

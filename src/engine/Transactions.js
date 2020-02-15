@@ -843,7 +843,13 @@ export class TransactionManager extends EventEmitter {
     }
 
     async asyncSetupForUse() {
-        
+    }
+
+
+    shutDownFromUse() {
+        this._accountEntriesByAccountId.clear();
+        this._handler = undefined;
+        this._accountingSystem = undefined;        
     }
     
     getAccountingSystem() { return this._accountingSystem; }

@@ -107,7 +107,7 @@ test('EngineAccessor-actions', async () => {
 
         const settingsA = { type: A.AccountType.BANK.name, 
             parentAccountId: accessor.getRootAssetAccountId(),
-            pricedItemId: accessor.getCurrencyBasePricedItemId(),
+            pricedItemId: accessor.getBaseCurrencyPricedItemId(),
             name: 'Checking',
         };
         const actionA = accountingActions.createAddAccountAction(settingsA);
@@ -129,7 +129,7 @@ test('EngineAccessor-actions', async () => {
 
         const settingsB = { type: A.AccountType.EXPENSE.name,
             parentAccountId: accessor.getRootExpenseAccountId(),
-            pricedItemId: accessor.getCurrencyBasePricedItemId(),
+            pricedItemId: accessor.getBaseCurrencyPricedItemId(),
             name: 'Groceries',
             refId: 'Groceries',
         };
@@ -150,7 +150,7 @@ test('EngineAccessor-actions', async () => {
 
         const settingsC = { type: A.AccountType.BROKERAGE.name,
             parentAccountId: accessor.getRootAssetAccountId(),
-            pricedItemId: accessor.getCurrencyBasePricedItemId(),
+            pricedItemId: accessor.getBaseCurrencyPricedItemId(),
             name: 'Brokerage',
         };
         const actionC = accountingActions.createAddAccountAction(settingsC);

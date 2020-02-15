@@ -79,6 +79,12 @@ export class LotManager extends EventEmitter {
     async asyncSetupForUse() {
     }
 
+    shutDownFromUse() {
+        this._lotDataItemsById.clear();
+        this._handler = undefined;
+        this._accountingSystem = undefined;
+    }
+
 
     getAccountingSystem() { return this._accountingSystem; }
 

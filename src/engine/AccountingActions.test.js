@@ -16,7 +16,7 @@ test('AccountingActions-Accounts', async () => {
     const actionManager = accountingSystem.getActionManager();
 
     const baseCurrencyPricedItemId 
-        = accountingSystem.getPricedItemManager().getCurrencyBasePricedItemId();
+        = accountingSystem.getPricedItemManager().getBaseCurrencyPricedItemId();
 
     let currentSettings;
     actions.on('addAccount', (action, result) => {

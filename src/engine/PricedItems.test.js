@@ -84,14 +84,14 @@ test('PricedItemManager-currencies', async () => {
     const manager = accountingSystem.getPricedItemManager();
     expect(manager.getBaseCurrencyCode()).toEqual(accountingSystem.getBaseCurrencyCode());
 
-    const baseCurrencyPricedItem = manager.getCurrencyBasePricedItem();
+    const baseCurrencyPricedItem = manager.getBaseCurrencyPricedItem();
     expect(baseCurrencyPricedItem.currency).toEqual(manager.getBaseCurrencyCode());
     
-    expect(manager.getPricedItemDataItemWithId(manager.getCurrencyBasePricedItemId()))
+    expect(manager.getPricedItemDataItemWithId(manager.getBaseCurrencyPricedItemId()))
         .toEqual(baseCurrencyPricedItem);
     expect(manager.getCurrencyPricedItemDataItem(manager.getBaseCurrencyCode()))
         .toEqual(baseCurrencyPricedItem);
-    expect(baseCurrencyPricedItem.id).toEqual(manager.getCurrencyBasePricedItemId());
+    expect(baseCurrencyPricedItem.id).toEqual(manager.getBaseCurrencyPricedItemId());
 
     
     const usdPricedItem = manager.getCurrencyPricedItemDataItem('USD');
@@ -106,7 +106,7 @@ test('PricedItemManager-currencies', async () => {
 
 
     // Can't remove the built-in currency priced items...
-    await expect(manager.asyncRemovePricedItem(manager.getCurrencyBasePricedItemId()))
+    await expect(manager.asyncRemovePricedItem(manager.getBaseCurrencyPricedItemId()))
         .rejects.toThrow();
     await expect(manager.asyncRemovePricedItem(manager.getCurrencyUSDPricedItemId()))
         .rejects.toThrow();

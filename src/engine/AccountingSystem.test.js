@@ -107,4 +107,6 @@ test('AccountingSystem', async () => {
         newOptions: initialOptions,
     });
 
+
+    accountingSystem.shutDownFromUse();
 });
