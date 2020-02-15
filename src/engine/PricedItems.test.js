@@ -211,7 +211,8 @@ function expectPricedItemToMatch(pricedItem, ref) {
 //---------------------------------------------------------
 //
 test('PricedItemManager-other types', async () => {
-    const accountingSystem = await ASTH.asyncCreateAccountingSystem();
+    const accountingSystem = await ASTH.asyncCreateAccountingSystem(
+        { baseCurrencyCode: 'JPY' });
     const manager = accountingSystem.getPricedItemManager();
 
     let result;
@@ -310,6 +311,7 @@ test('PricedItemManager-other types', async () => {
     handlerB.fromJSON(json);
 
     expect(handlerB.getIdGeneratorOptions()).toEqual(handlerA.getIdGeneratorOptions());
+    expect(handlerB.getBaseOptions()).toEqual(handlerA.getBaseOptions());
 
     const pricedItemsA = Array.from(handlerA.getPricedItemDataItems()).sort();
     const pricedItemsB = Array.from(handlerB.getPricedItemDataItems()).sort();
