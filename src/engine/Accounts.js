@@ -414,7 +414,7 @@ export class AccountManager extends EventEmitter {
         const accountingSystem = this._accountingSystem;
         const pricedItemManager = accountingSystem.getPricedItemManager();
         const currencyPricedItemId = pricedItemManager.getCurrencyPricedItemId(
-            accountingSystem.getBaseCurrency());
+            accountingSystem.getBaseCurrencyCode());
 
         if (!this._rootAssetAccountId) {
             const account = (await this._asyncAddAccount({

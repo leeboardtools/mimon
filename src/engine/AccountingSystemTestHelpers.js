@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable max-len */
-import { AccountingSystem } from './AccountingSystem';
+import { AccountingSystem, InMemoryAccountingSystemHandler } from './AccountingSystem';
 import { InMemoryPricedItemsHandler } from './PricedItems';
 import { InMemoryAccountsHandler } from './Accounts';
 import { InMemoryLotsHandler } from './Lots';
@@ -23,6 +23,8 @@ export async function asyncCreateAccountingSystem(options) {
     options = options || {};
     options = Object.assign(
         {
+            handler: new InMemoryAccountingSystemHandler(),
+
             accountManager: {
                 handler: new InMemoryAccountsHandler(),
             },

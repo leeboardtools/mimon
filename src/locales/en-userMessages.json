@@ -1,4 +1,6 @@
 {
+    "AccountingSystem-invalid_currency_code": ["'", "' is not a valid 3 digit currency code."],
+
     "AccountCategory-ASSET": "Asset",
     "AccountCategory-LIABILITY": "Liability",
     "AccountCategory-INCOME": "Income",

@@ -79,17 +79,17 @@ test('PricedItem-Data Items', () => {
 test('PricedItemManager-currencies', async () => {
     const accountingSystem = await ASTH.asyncCreateAccountingSystem(
         { baseCurrency: 'JPY' });
-    expect(accountingSystem.getBaseCurrency()).toEqual('JPY');
+    expect(accountingSystem.getBaseCurrencyCode()).toEqual('JPY');
 
     const manager = accountingSystem.getPricedItemManager();
-    expect(manager.getBaseCurrency()).toEqual(accountingSystem.getBaseCurrency());
+    expect(manager.getBaseCurrencyCode()).toEqual(accountingSystem.getBaseCurrencyCode());
 
     const baseCurrencyPricedItem = manager.getCurrencyBasePricedItem();
-    expect(baseCurrencyPricedItem.currency).toEqual(manager.getBaseCurrency());
+    expect(baseCurrencyPricedItem.currency).toEqual(manager.getBaseCurrencyCode());
     
     expect(manager.getPricedItemDataItemWithId(manager.getCurrencyBasePricedItemId()))
         .toEqual(baseCurrencyPricedItem);
-    expect(manager.getCurrencyPricedItemDataItem(manager.getBaseCurrency()))
+    expect(manager.getCurrencyPricedItemDataItem(manager.getBaseCurrencyCode()))
         .toEqual(baseCurrencyPricedItem);
     expect(baseCurrencyPricedItem.id).toEqual(manager.getCurrencyBasePricedItemId());
 

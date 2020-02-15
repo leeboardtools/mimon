@@ -571,10 +571,10 @@ export class EngineAccessor {
 
     /**
      * @returns {Currency}  The base currency, from 
-     * {@link AccountingSystem#getBaseCurrency}.
+     * {@link AccountingSystem#getBaseCurrencyCode}.
      */
-    getBaseCurrency() { 
-        return this._pricedItemManager.getBaseCurrency(); 
+    getBaseCurrencyCode() { 
+        return this._pricedItemManager.getBaseCurrencyCode(); 
     }
 
     /**

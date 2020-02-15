@@ -10,7 +10,7 @@ import { InMemoryPricesHandler } from './Prices';
 import { TransactionsHandlerImplBase } from './Transactions';
 import { UndoHandler } from '../util/Undo';
 import { ActionsHandler } from '../util/Actions';
-import { AccountingSystem } from './AccountingSystem';
+import { AccountingSystem, InMemoryAccountingSystemHandler } from './AccountingSystem';
 import { userError } from '../util/UserMessages';
 import { GroupedItemManager, ItemGroups } from '../util/GroupedItemManager';
 import { getYMDDateString } from '../util/YMDDate';
@@ -66,6 +66,17 @@ const HISTORY_GROUPS_TAG = 'mimon-historyGroups';
 //  - History
 //      - Need to think about this a bit more.
 
+
+
+/**
+ * The accounting system handler implementation.
+ */
+class JSONGzipAccountingSystemHandler extends InMemoryAccountingSystemHandler {
+    constructor(accountingFile) {
+        super();
+        this._accountingFile = accountingFile;
+    }
+}
 
 
 /**
@@ -523,11 +534,10 @@ class JSONGzipLedgerFile {
         this._pathName = JSONGzipLedgerFile.buildLedgerPathName(
             accountingFile.getPathName());
 
+        this._accountingSystemHandler = accountingFile._accountingSystemHandler;
         this._accountsHandler = accountingFile._accountsHandler;
         this._pricedItemsHandler = accountingFile._pricedItemsHandler;
         this._lotsHandler = accountingFile._lotsHandler;
-
-        this._accountingSystemOptions = {};
     }
 
     static buildLedgerPathName(pathName) {
@@ -536,21 +546,20 @@ class JSONGzipLedgerFile {
 
 
     cleanIsModified() {
+        this._accountingSystemChangeId = this._accountingSystemHandler.getLastChangeId();
         this._accountsChangeId = this._accountsHandler.getLastChangeId();
         this._pricedItemsChangeId = this._pricedItemsHandler.getLastChangeId();
         this._lotsChangeId = this._lotsHandler.getLastChangeId();
     }
 
     isModified() {
-        return (this._accountsChangeId !== this._accountsHandler.getLastChangeId())
+        return (this._accountingSystemChangeId 
+                !== this._accountingSystemHandler.getLastChangeId())
+            || (this._accountsChangeId !== this._accountsHandler.getLastChangeId())
             || (this._pricedItemsChangeId !== this._pricedItemsHandler.getLastChangeId())
             || (this._lotsChangeId !== this._lotsHandler.getLastChangeId());
     }
 
-
-    getAccountingSystemOptions() {
-        return this._accountingSystemOptions;
-    }
 
     async asyncRead() {
         const pathName = this._pathName;
@@ -573,11 +582,10 @@ class JSONGzipLedgerFile {
                 pathName);
         }
 
+        this._accountingSystemHandler.fromJSON(json.accountingSystemHandler);
         this._accountsHandler.fromJSON(json.accountsHandler);
         this._pricedItemsHandler.fromJSON(json.pricedItemsHandler);
         this._lotsHandler.fromJSON(json.lotsHandler);
-
-        this._accountingSystemOptions = json.accountingSystemOptions;
 
         this.cleanIsModified();
 
@@ -590,11 +598,10 @@ class JSONGzipLedgerFile {
             tag: LEDGER_TAG,
             fileVersion: '1.0',
             stateId: stateId,
+            accountingSystemHandler: this._accountingSystemHandler.toJSON(),
             accountsHandler: this._accountsHandler.toJSON(),
             pricedItemsHandler: this._pricedItemsHandler.toJSON(),
             lotsHandler: this._lotsHandler.toJSON(),
-            accountingSystemOptions: 
-                this._accountingFile.getAccountingSystem().getOptions(),
         };
 
         // Write out the file...
@@ -617,6 +624,7 @@ class JSONGzipLedgerFile {
     }
 
     async asyncClose() {
+        this._accountingSystemHandler = undefined;
         this._accountsHandler = undefined;
         this._pricedItemsHandler = undefined;
         this._lotsHandler = undefined;
@@ -1029,6 +1037,8 @@ class JSONGzipAccountingFile extends AccountingFile {
 
 
         // Set up the accounting system.
+        this._accountingSystemHandler = new JSONGzipAccountingSystemHandler(this);
+
         this._accountsHandler = new JSONGzipAccountsHandler(this);
         this._pricedItemsHandler = new JSONGzipPricedItemsHandler(this);
         this._lotsHandler = new JSONGzipLotsHandler(this);
@@ -1054,8 +1064,9 @@ class JSONGzipAccountingFile extends AccountingFile {
 
     async _asyncSetupAccountingSystem() {
         const options = Object.assign({}, 
-            this._ledgerFile.getAccountingSystemOptions(), 
             {
+                handler: this._accountingSystemHandler,
+
                 accountManager: { handler: this._accountsHandler },
                 pricedItemManager: { handler: this._pricedItemsHandler },
                 lotManager: { handler: this._lotsHandler },
@@ -1135,6 +1146,7 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._historyFiles = undefined;
         
         this._accountingSystem = undefined;
+        this._accountingSystemHandler = undefined;
         this._accountsHandler = undefined;
         this._pricedItemsHandler = undefined;
         this._lotsHandler = undefined;

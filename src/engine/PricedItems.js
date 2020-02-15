@@ -332,7 +332,7 @@ export class PricedItemManager extends EventEmitter {
         this._requiredCurrencyPricedItemIds.add(eurPricedItem.id);
 
 
-        this._baseCurrency = this._accountingSystem.getBaseCurrency();
+        this._baseCurrency = this._accountingSystem.getBaseCurrencyCode();
         let baseCurrencyPricedItem 
             = this.getCurrencyPricedItemDataItem(this._baseCurrency);
         if (!baseCurrencyPricedItem) {
@@ -351,9 +351,9 @@ export class PricedItemManager extends EventEmitter {
 
     /**
      * @returns {Currency}  The base currency, from 
-     * {@link AccountingSystem#getBaseCurrency}.
+     * {@link AccountingSystem#getBaseCurrencyCode}.
      */
-    getBaseCurrency() { return this._baseCurrency; }
+    getBaseCurrencyCode() { return this._baseCurrency; }
 
     /**
      * @returns {number}    The id of the base currency priced item.
@@ -374,7 +374,9 @@ export class PricedItemManager extends EventEmitter {
     /**
      * @returns {PricedItemDataItem}    The priced item for the USD currency.
      */
-    getCurrencyUSDPricedItem() { return Object.assign({}, this._currencyUSDPricedItem); }
+    getCurrencyUSDPricedItem() { 
+        return getPricedItemDataItem(this._currencyUSDPricedItem, true); 
+    }
 
 
     /**
@@ -385,32 +387,32 @@ export class PricedItemManager extends EventEmitter {
     /**
      * @returns {PricedItemDataItem}    The priced item for the EUR currency.
      */
-    getCurrencyEURPricedItem() { return Object.assign({}, this._currencyEURPricedItem); }
+    getCurrencyEURPricedItem() { 
+        return getPricedItemDataItem(this._currencyEURPricedItem, true); 
+    }
 
     
 
     async _asyncAddPricedItem(pricedItem) {
-        pricedItem = getPricedItemDataItem(pricedItem);
-
-        const pricedItemData = Object.assign({}, pricedItem);
+        const pricedItemDataItem = getPricedItemDataItem(pricedItem, true);
         
         const id = this._idGenerator.generateId();
-        pricedItemData.id = id;
+        pricedItemDataItem.id = id;
         const idGeneratorOptions = this._idGenerator.toJSON();
 
-        const updatedDataItems = [[id, pricedItemData]];
+        const updatedDataItems = [[id, pricedItemDataItem]];
         await this._handler.asyncUpdatePricedItemDataItems(updatedDataItems, 
             idGeneratorOptions);
 
-        this._pricedItemDataItemsById.set(id, pricedItemData);
+        this._pricedItemDataItemsById.set(id, pricedItemDataItem);
 
         if (getPricedItemType(pricedItem.type) === PricedItemType.CURRENCY) {
-            const currencyName = this._getCurrencyName(pricedItemData.currency, 
-                pricedItemData.quantityDefinition);
+            const currencyName = this._getCurrencyName(pricedItemDataItem.currency, 
+                pricedItemDataItem.quantityDefinition);
             this._currencyPricedItemIdsByCurrency.set(currencyName, id);
         }
 
-        return pricedItemData;
+        return pricedItemDataItem;
     }
 
     _getPricedItem(id) {
@@ -433,7 +435,7 @@ export class PricedItemManager extends EventEmitter {
      */
     getPricedItemDataItemWithId(id) {
         const pricedItem = this._getPricedItem(id);
-        return (pricedItem) ? Object.assign({}, pricedItem) : undefined;
+        return (pricedItem) ? getPricedItemDataItem(pricedItem, true) : undefined;
     }
 
 
