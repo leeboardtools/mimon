@@ -98,6 +98,24 @@ test('YMDDate-getLastDateOfMonth', () => {
 //
 //-----------------------------------------------
 //
+test('YMDDate-monthsAfterMe', () => {
+    const refYMDDate = new YMDDate('2020-06-15');
+    expect(refYMDDate.monthsAfterMe(new YMDDate('2020-06-15'))).toEqual(0);
+    expect(refYMDDate.monthsAfterMe(new YMDDate('2020-07-15'))).toEqual(1);
+    expect(refYMDDate.monthsAfterMe(new YMDDate('2020-08-15'))).toEqual(2);
+    expect(refYMDDate.monthsAfterMe(new YMDDate('2020-05-15'))).toEqual(-1);
+    expect(refYMDDate.monthsAfterMe(new YMDDate('2020-04-15'))).toEqual(-2);
+
+    // Year differences
+    expect(refYMDDate.monthsAfterMe(new YMDDate('2021-06-15'))).toEqual(12);
+    expect(refYMDDate.monthsAfterMe(new YMDDate('2021-07-15'))).toEqual(13);
+    expect(refYMDDate.monthsAfterMe(new YMDDate('2019-06-15'))).toEqual(-12);
+    expect(refYMDDate.monthsAfterMe(new YMDDate('2019-05-15'))).toEqual(-13);
+});
+
+//
+//-----------------------------------------------
+//
 test('YMDDate-quarter', () => {
     expect(getYMDDate('2019-01-01').getCalendarQuarter()).toEqual(1);
     expect(getYMDDate('2019-03-31').getCalendarQuarter()).toEqual(1);
