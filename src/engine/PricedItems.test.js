@@ -126,6 +126,9 @@ test('PricedItemManager-currencies', async () => {
 
     // Undo Add
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(removeEventArg).toEqual(
+        { removedPricedItemDataItem: itemA }
+    );
     expect(manager.getCurrencyPricedItemDataItem('BMD')).toBeUndefined();
 
     await manager.asyncAddCurrencyPricedItem('BMD');
@@ -161,6 +164,8 @@ test('PricedItemManager-currencies', async () => {
 
     // Undo modify
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(modifyEventArg).toEqual(
+        { newPricedItemDataItem: oldItemC, oldPricedItemDataItem: itemC });
     expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB))
         .toEqual(itemB);
     expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC))
@@ -185,6 +190,7 @@ test('PricedItemManager-currencies', async () => {
 
     // Undo remove
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(addEventArg).toEqual({ newPricedItemDataItem: removedA });
     expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC))
         .toEqual(itemC);
 

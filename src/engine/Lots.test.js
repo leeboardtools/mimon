@@ -74,7 +74,13 @@ test('LotManager-other types', async () => {
 
 
     // Undo add
+    let removeEventArgs;
+    manager.on('lotRemove', (args) => { removeEventArgs = args; });
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(removeEventArgs).toEqual(
+        { removedLotDataItem: lotB, }
+    );
+
     expect(manager.getLotIds()).toEqual([ lotA.id, ]);
     expect(manager.getLotDataItemWithId(lotB.id)).toBeUndefined();
 
@@ -96,10 +102,6 @@ test('LotManager-other types', async () => {
     await expect(manager.asyncAddLot({ pricedItemId: -1, })).rejects.toThrow();
 
     // Remove Lot
-    let removeEventArgs;
-    manager.on('lotRemove', (args) => {
-        removeEventArgs = args;
-    });
     expect(manager.getLotDataItemWithId(lotB.id)).toEqual(settingsB);
     result = await manager.asyncRemoveLot(lotB.id);
     const removedB = result.removedLotDataItem;
@@ -111,6 +113,9 @@ test('LotManager-other types', async () => {
     
     // Undo remove
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(addEventArgs).toEqual(
+        { newLotDataItem: lotB, }
+    );
     expect(manager.getLotDataItemWithId(lotB.id)).toEqual(settingsB);
 
     await manager.asyncRemoveLot(lotB.id);
@@ -149,6 +154,11 @@ test('LotManager-other types', async () => {
 
     // Test undo modify
     await accountingSystem.getUndoManager().asyncUndoToId(resultCa);
+    expect(modifyEventArgs).toEqual({
+        newLotDataItem: settingsC,
+        oldLotDataItem: settingsCa,
+    });
+    
     expect(manager.getLotDataItemWithId(settingsC.id)).toEqual(settingsC);
 
     result = await manager.asyncModifyLot({

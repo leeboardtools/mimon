@@ -174,6 +174,9 @@ test('PriceManager', async () => {
 
     // Test undo add
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(removeEventArg.removedPriceDataItems).toEqual(
+        expect.arrayContaining(pricesB));
+
     expect(await manager.asyncGetPriceDataItemsInDateRange('2018-12-21', '2018-12-24'))
         .toEqual([]);
 
@@ -330,6 +333,8 @@ test('PriceManager', async () => {
 
     // Undo delete.
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(addEventArg.newPriceDataItems)
+        .toEqual(expect.arrayContaining(removeResult));
     expect(await manager.asyncGetPriceDataItemsInDateRange(2, 
         '2018-01-24', '2018-01-22')).toEqual([
         { ymdDate: '2018-01-23', close: 123.45 },
