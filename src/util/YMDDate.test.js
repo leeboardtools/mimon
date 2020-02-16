@@ -79,6 +79,28 @@ test('YMDDate-addMonths', () => {
 //
 //-----------------------------------------------
 //
+test('YMDDate-addYears', () => {
+    const refDate = new YMDDate('2020-05-31');
+    expect(refDate.addYears(0)).toEqual(refDate);
+
+    expect(refDate.addYears(1)).toEqual(new YMDDate('2021-05-31'));
+    expect(refDate.addYears(10)).toEqual(new YMDDate('2030-05-31'));
+    expect(refDate.addYears(-1)).toEqual(new YMDDate('2019-05-31'));
+    expect(refDate.addYears(-10)).toEqual(new YMDDate('2010-05-31'));
+
+
+    const leapDate = new YMDDate('2020-02-29');
+    expect(leapDate.addYears(0)).toEqual(leapDate);
+
+    expect(leapDate.addYears(1)).toEqual(new YMDDate('2021-02-28'));
+    expect(leapDate.addYears(4)).toEqual(new YMDDate('2024-02-29'));
+    expect(leapDate.addYears(-1)).toEqual(new YMDDate('2019-02-28'));
+    expect(leapDate.addYears(-4)).toEqual(new YMDDate('2016-02-29'));
+});
+
+//
+//-----------------------------------------------
+//
 test('YMDDate-getLastDateOfMonth', () => {
     expect(new YMDDate('2020-01-15').getLastDateOfMonth()).toEqual(31);
     expect(new YMDDate('2020-02-15').getLastDateOfMonth()).toEqual(29); // Leap year!
