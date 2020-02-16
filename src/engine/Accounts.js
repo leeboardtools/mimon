@@ -611,16 +611,19 @@ export class AccountManager extends EventEmitter {
                 this._accountsByRefId.set(accountDataItem.refId, accountDataItem);
             }
         });
+
+        this.emit('accountAdd', { newAccountDataItem: removedAccountDataItem });
     }
 
 
     async _asyncApplyUndoModifyAccount(undoDataItem) {
         const { oldAccountDataItem, oldParentChildIndex } = undoDataItem;
 
+        const newAccountDataItem = this.getAccountDataItemWithId(
+            oldAccountDataItem.id);
+
         const updatedAccountEntries = [ [oldAccountDataItem.id, oldAccountDataItem] ];
         if (oldParentChildIndex !== undefined) {
-            const newAccountDataItem = this.getAccountDataItemWithId(
-                oldAccountDataItem.id);
             const newParentAccountDataItem = this.getAccountDataItemWithId(
                 newAccountDataItem.parentAccountId);
             newParentAccountDataItem.childAccountIds.splice(
@@ -643,6 +646,11 @@ export class AccountManager extends EventEmitter {
             if (accountDataItem.refId) {
                 this._accountsByRefId.set(accountDataItem.refId, accountDataItem);
             }
+        });
+
+        this.emit('accountsModify', {
+            newAccountDataItems: [oldAccountDataItem],
+            oldAccountDataItems: [newAccountDataItem],
         });
     }
 
@@ -680,6 +688,8 @@ export class AccountManager extends EventEmitter {
         }
 
         this._idGenerator.fromJSON(idGeneratorOptions);
+
+        this.emit('accountRemove', { removedAccountDataItem: accountDataItem });
     }
 
 

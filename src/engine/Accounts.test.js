@@ -249,9 +249,15 @@ test('AccountManager-add', async () => {
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([bankA.id]));
 
 
-    // Check undo.
+    let removeArg;
+    accountManager.on('accountRemove', (result) => { removeArg = result; });
+
+    // Check undo addAccount.
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
     expect(accountManager.getAccountDataItemWithId(bankA.id)).toBeUndefined();
+
+    expect(removeArg).toEqual({ removedAccountDataItem: bankA });
+
 
     accountDataItem = accountManager.getAccountDataItemWithId(assetA.id);
     expect(accountDataItem.childAccountIds).not
@@ -650,7 +656,13 @@ test('AccountManager-modify', async () => {
 
 
     // Undo...
+    let modifyArg;
+    accountManager.on('accountsModify', (result) => { modifyArg = result; });
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(modifyArg).toEqual(
+        { oldAccountDataItems: [result.newAccountDataItem], 
+            newAccountDataItems: [result.oldAccountDataItem], });
+
     account = accountManager.getAccountDataItemWithId(sys.iraId);
 
     expect(account.parentAccountId).toEqual(sys.investmentsId);
@@ -799,7 +811,13 @@ test('AccountManager-removeAccount', async () => {
 
 
     // We should be able to add back the account.
+    let removeResult;
+    accountManager.on('accountAdd', (result) => { removeResult = result; });
+
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(removeResult).toEqual(
+        { newAccountDataItem: eventArgs.removedAccountDataItem });
+
     account = accountManager.getAccountDataItemWithId(sys.iraId);
     parentAccount = accountManager.getAccountDataItemWithId(sys.investmentsId);
     expect(parentAccount.childAccountIds).toEqual(expect.arrayContaining([sys.iraId]));
