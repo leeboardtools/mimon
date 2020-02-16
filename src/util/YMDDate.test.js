@@ -1,6 +1,6 @@
 import { YMDDate, getYMDDate } from './YMDDate';
 
-function expectODate(oDate, year, month, dom) {
+function expectYMDDate(oDate, year, month, dom) {
     expect(oDate.getFullYear()).toEqual(year);
     expect(oDate.getMonth()).toEqual(month);
     expect(oDate.getDOM()).toEqual(dom);
@@ -12,13 +12,13 @@ function expectODate(oDate, year, month, dom) {
 //
 test('YMDDate', () => {
 
-    expectODate(new YMDDate(2019, 8, 7), 2019, 8, 7);
-    expectODate(new YMDDate(new Date(2019, 8, 7)), 2019, 8, 7);
+    expectYMDDate(new YMDDate(2019, 8, 7), 2019, 8, 7);
+    expectYMDDate(new YMDDate(new Date(2019, 8, 7)), 2019, 8, 7);
     expect(new YMDDate(2019, 8, 7).toString()).toEqual('2019-09-07');
-    expectODate(new YMDDate('2019-09-07'), 2019, 8, 7);
+    expectYMDDate(new YMDDate('2019-09-07'), 2019, 8, 7);
 
     expect(new YMDDate(2019, 10, 20).toString()).toEqual('2019-11-20');
-    expectODate(new YMDDate('2019-11-20'), 2019, 10, 20);
+    expectYMDDate(new YMDDate('2019-11-20'), 2019, 10, 20);
 
     const dateA = new YMDDate(2019, 9, 31);
     const dateB = new YMDDate(2019, 10, 1);
@@ -50,6 +50,50 @@ test('YMDDate', () => {
     expect(dateE).toEqual(dateB);
 });
 
+//
+//-----------------------------------------------
+//
+test('YMDDate-addMonths', () => {
+    const refDate = new YMDDate('2020-05-31');
+    expect(refDate.addMonths(0)).toEqual(refDate);
+
+    expect(refDate.addMonths(1)).toEqual(new YMDDate('2020-06-30'));
+    expect(refDate.addMonths(2)).toEqual(new YMDDate('2020-07-31'));
+
+    expect(refDate.addMonths(12)).toEqual(new YMDDate('2021-05-31'));
+    expect(refDate.addMonths(13)).toEqual(new YMDDate('2021-06-30'));
+    expect(refDate.addMonths(14)).toEqual(new YMDDate('2021-07-31'));
+
+    // Subtract...
+    expect(refDate.addMonths(-1)).toEqual(new YMDDate('2020-04-30'));
+    expect(refDate.addMonths(-2)).toEqual(new YMDDate('2020-03-31'));
+    expect(refDate.addMonths(-3)).toEqual(new YMDDate('2020-02-29'));   // Leap year!
+
+    expect(refDate.addMonths(-12)).toEqual(new YMDDate('2019-05-31'));
+    expect(refDate.addMonths(-13)).toEqual(new YMDDate('2019-04-30'));
+    expect(refDate.addMonths(-14)).toEqual(new YMDDate('2019-03-31'));
+    expect(refDate.addMonths(-15)).toEqual(new YMDDate('2019-02-28'));
+
+});
+
+//
+//-----------------------------------------------
+//
+test('YMDDate-getLastDateOfMonth', () => {
+    expect(new YMDDate('2020-01-15').getLastDateOfMonth()).toEqual(31);
+    expect(new YMDDate('2020-02-15').getLastDateOfMonth()).toEqual(29); // Leap year!
+    expect(new YMDDate('2019-02-15').getLastDateOfMonth()).toEqual(28);
+    expect(new YMDDate('2020-03-15').getLastDateOfMonth()).toEqual(31);
+    expect(new YMDDate('2020-04-15').getLastDateOfMonth()).toEqual(30);
+    expect(new YMDDate('2020-05-15').getLastDateOfMonth()).toEqual(31);
+    expect(new YMDDate('2020-06-15').getLastDateOfMonth()).toEqual(30);
+    expect(new YMDDate('2020-07-15').getLastDateOfMonth()).toEqual(31);
+    expect(new YMDDate('2020-08-15').getLastDateOfMonth()).toEqual(31);
+    expect(new YMDDate('2020-09-15').getLastDateOfMonth()).toEqual(30);
+    expect(new YMDDate('2020-10-15').getLastDateOfMonth()).toEqual(31);
+    expect(new YMDDate('2020-11-15').getLastDateOfMonth()).toEqual(30);
+    expect(new YMDDate('2020-12-15').getLastDateOfMonth()).toEqual(31);
+});
 
 //
 //-----------------------------------------------

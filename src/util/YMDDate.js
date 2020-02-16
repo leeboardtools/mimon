@@ -140,6 +140,20 @@ export class YMDDate {
     getDate() { return this._date.getUTCDate(); }
 
     /**
+     * @returns {number}    The last day of the month, 28, 29, 30, or 31
+     */
+    getLastDateOfMonth() {
+        const year = this.getFullYear();
+        const month = this.getMonth();
+
+        const testYMDDate = new Date(year, month, 32);
+        // For 31 days DOM will be 1
+        // For 30 days DOM will be 2
+        // For 29 days DOM will be 3
+        return 32 - testYMDDate.getDate();
+    }
+
+    /**
      * @returns {number}    The day of the week, 0 is Sunday.
      */
     getDayOfWeek() { return this._date.getUTCDay(); }
@@ -227,6 +241,32 @@ export class YMDDate {
 
 
     /**
+     * Creates a new date only object a given number of months away from this date.
+     * If the date of the month of this date falls beyond the end of the offset month,
+     * the last date of the offset month is returned. For example, adding one month
+     * to 2020-05-31 will return 2020-06-30, not 2020-07-01.
+     * @param {number} months 
+     * @returns {YMDDate}
+     */
+    addMonths(months) {
+        let totalMonth = Math.round(this.getMonth() + months);
+        const yearAdjust = Math.floor(totalMonth / 12);
+
+        const year = this.getFullYear() + yearAdjust;
+        const month = totalMonth - yearAdjust * 12;
+
+        let dom = this.getDOM();
+        let newYMDDate = new YMDDate(year, month, dom);
+        if (newYMDDate.getMonth() !== month) {
+            // Need to pin to the desired month.
+            newYMDDate = new YMDDate(year, month, dom - newYMDDate.getDOM());
+        }
+
+        return newYMDDate;
+    }
+
+
+    /**
      * Determines the number of days ymdDate is after this date.
      * @param {YMDDate} ymdDate
      * @return {number} The number of days ymdDate is after this date, if ymdDate is 
@@ -287,6 +327,17 @@ export class YMDDate {
             return [a, b];
         }
         return [b, a];
+    }
+
+    /**
+     * Determines if an object represent a valid YMD date.
+     * @param {object} ymdDate 
+     * @returns {boolean}
+     */
+    static isValidDate(ymdDate) {
+        if (ymdDate instanceof YMDDate) {
+            return !isNaN(ymdDate.valueOf());
+        }
     }
 }
 
