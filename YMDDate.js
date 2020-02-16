@@ -232,10 +232,14 @@ export class YMDDate {
 
     /**
      * Creates a new date only object a given number of days away from this date.
+     * Will return <code>this</code> if days is zero.
      * @param {number} days The number of days to add.
      * @returns {YMDDate}
      */
     addDays(days) {
+        if (!days) { 
+            return this; 
+        }
         return new YMDDate(this.valueOf() + millisecondsPerDay * days);
     }
 
@@ -245,10 +249,15 @@ export class YMDDate {
      * If the date of the month of this date falls beyond the end of the offset month,
      * the last date of the offset month is returned. For example, adding one month
      * to 2020-05-31 will return 2020-06-30, not 2020-07-01.
+     * Will return <code>this</code> if months is zero.
      * @param {number} months 
      * @returns {YMDDate}
      */
     addMonths(months) {
+        if (!months) {
+            return this;
+        }
+
         let totalMonth = Math.round(this.getMonth() + months);
         const yearAdjust = Math.floor(totalMonth / 12);
 
@@ -262,6 +271,27 @@ export class YMDDate {
             newYMDDate = new YMDDate(year, month, dom - newYMDDate.getDOM());
         }
 
+        return newYMDDate;
+    }
+
+
+    /**
+     * Creates a new date only object a given number of years away from this date.
+     * If the current date is Feb. 29 and the adjusted year is not a leap
+     * year this will return Feb. 28.
+     * Will return <code>this</code> if years is zero.
+     * @param {number} years 
+     */
+    addYears(years) {
+        if (!years) {
+            return this;
+        }
+
+        const month = this.getMonth();
+        let newYMDDate = new YMDDate(this.getFullYear() + years, month, this.getDOM());
+        if (newYMDDate.getMonth() !== month) {
+            return new YMDDate(this.getFullYear() + years, month, 28);
+        }
         return newYMDDate;
     }
 
