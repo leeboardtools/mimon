@@ -356,8 +356,7 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
 - Reminders
 
 - Add accounting action for:
-    - Setting options.
-    - Price retrieval.
+    - Price retrieval???
 
 
 - Action Recovery

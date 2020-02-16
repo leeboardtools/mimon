@@ -131,7 +131,7 @@ export class AccountingActions extends EventEmitter {
      * @param {object} optionChanges
      * @returns {ActionDataItem}
      */
-    createModifyOptions(optionChanges) {
+    createModifyOptionsAction(optionChanges) {
         return { 
             type: 'modifyOptions',
             optionChanges: optionChanges,
@@ -141,7 +141,7 @@ export class AccountingActions extends EventEmitter {
 
     async _asyncModifyOptionsApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.asyncModifyOptions(
-            action.modifyOptions, isValidateOnly);
+            action.optionChanges, isValidateOnly);
         this._emitActionEvent(isValidateOnly, action, result);
     }
 

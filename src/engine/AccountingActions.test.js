@@ -520,3 +520,57 @@ test('AccountingActions-Tranasctions', async () => {
 
     await expect(actionManager.asyncApplyAction(invalidModifyAction)).rejects.toThrow();
 });
+
+
+
+//
+//---------------------------------------------------------
+//
+test('AccountingActions-AccountingSystem', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    const { accountingSystem } = sys;
+    const actions = accountingSystem.getAccountingActions();
+    const actionManager = accountingSystem.getActionManager();
+
+    let lastResult;
+    actions.on('modifyOptions', (action, result) => {
+        lastResult = result;
+    });
+
+
+    const settingsA = {
+        a: { b: 'A String', c: [1, 2, '3'], },
+        b: 123,
+    };
+
+    // Modify options
+    const modifyOptionsActionA = actions.createModifyOptionsAction(settingsA);
+    await actionManager.asyncApplyAction(modifyOptionsActionA);
+    
+    expect(accountingSystem.getOptions()).toEqual(settingsA);
+    expect(lastResult).toEqual(expect.objectContaining(
+        { newOptions: settingsA, oldOptions: {} }));
+
+
+    const settingsB = {
+        a: { b: [123, 'abc']},
+    };
+    const optionsB = Object.assign({}, settingsA, settingsB);
+
+    const modifyOptionsActionB = actions.createModifyOptionsAction(settingsB);
+    await actionManager.asyncApplyAction(modifyOptionsActionB);
+
+    expect(accountingSystem.getOptions()).toEqual(optionsB);
+    expect(lastResult).toEqual(expect.objectContaining(
+        { newOptions: optionsB, oldOptions: settingsA }));
+    
+
+    await actionManager.asyncUndoLastAppliedAction();
+    expect(accountingSystem.getOptions()).toEqual(settingsA);
+
+    lastResult = undefined;
+    await actionManager.asyncReapplyLastUndoneAction();
+    expect(accountingSystem.getOptions()).toEqual(optionsB);
+    expect(lastResult).toEqual(expect.objectContaining(
+        { newOptions: optionsB, oldOptions: settingsA }));
+});
