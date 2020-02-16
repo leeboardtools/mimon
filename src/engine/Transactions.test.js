@@ -577,6 +577,9 @@ test('TransactionManager-add_modify', async () => {
     let addEventArgs;
     manager.on('transactionsAdd', (arg) => addEventArgs = arg);
 
+    let removeEventArg;
+    manager.on('transactionsRemove', (arg) => removeEventArg = arg);
+
     let result;
     result = await manager.asyncAddTransactions([settingsB]);
     const newTransactionDataItemsB = result.newTransactionDataItems;
@@ -603,6 +606,9 @@ test('TransactionManager-add_modify', async () => {
 
     // test undo add.
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(removeEventArg).toEqual({
+        removedTransactionDataItems: newTransactionDataItemsB
+    });
 
     expect(await manager.asyncGetTransactionDataItemsInDateRange(0, '2019-10-05'))
         .toEqual([settingsA]);
@@ -791,6 +797,10 @@ test('TransactionManager-add_modify', async () => {
 
     // Test undo modify
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(modifyEventArg).toEqual({ oldTransactionDataItems: resultDE1, 
+        newTransactionDataItems: [ settingsD, settingsE ]}
+    );
+
     expect(await manager.asyncGetTransactionDataItemWithId(settingsD1.id))
         .toEqual(settingsD);
     expect(await manager.asyncGetTransactionDataItemWithId(settingsE1.id))
@@ -991,8 +1001,19 @@ test('TransactionManager~remove', async () => {
         .toEqual(householdNonReconciledIds);
 
     
+    let removeEventArg;
+    manager.on('transactionsRemove', (arg) => removeEventArg = arg);
+
+    let addEventArgs;
+    manager.on('transactionsAdd', (arg) => addEventArgs = arg);
+
+        
     // Test undo remove.
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(addEventArgs).toEqual({ 
+        newTransactionDataItems: [removeD]
+    });
+
     expect(resultABCDE).toEqual(
         [settingsA, settingsB, settingsC, settingsD, settingsE ]);
 
@@ -1002,9 +1023,6 @@ test('TransactionManager~remove', async () => {
     expect(await manager.asyncGetTransactionDataItemsWithIds(settingsD.id))
         .toBeUndefined();
 
-
-    let removeEventArg;
-    manager.on('transactionsRemove', (arg) => removeEventArg = arg);
 
     const removedAE = (await manager.asyncRemoveTransactions([settingsA.id, 
         settingsE.id])).removedTransactionDataItems;

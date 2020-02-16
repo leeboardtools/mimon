@@ -1354,7 +1354,7 @@ export class TransactionManager extends EventEmitter {
 
         oldTransactionDataItems = oldTransactionDataItems.map(
             (dataItem) => getTransactionDataItem(dataItem, true));
-        this.emit('transactionsAdd', 
+        this.emit('transactionsModify', 
             { newTransactionDataItems: oldTransactionDataItems, 
                 oldTransactionDataItems: currentTransactionDataItems, 
             });
