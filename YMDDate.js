@@ -278,6 +278,27 @@ export class YMDDate {
 
 
     /**
+     * Determines the number of calendar months ymdDate is after this date. The day of
+     * the months are ignored.
+     * @param {YMDDate} ymdDate 
+     * @returns {number}    The number of months ymdDate is after this date, if ymdDate
+     * is before this date then the value is negative.
+     */
+    monthsAfterMe(ymdDate) {
+        const compare = ymdDate.valueOf() - this.valueOf();
+        if (compare < 0) {
+            return -ymdDate.monthsAfterMe(this);
+        }
+        else if (!compare) {
+            return 0;
+        }
+
+        return ymdDate.getMonth() - this.getMonth()
+            + 12 * (ymdDate.getFullYear() - this.getFullYear());
+    }
+
+
+    /**
      * Compares two {@link YMDDate} objects.
      * @param {YMDDate} a
      * @param {YMDDate} b
