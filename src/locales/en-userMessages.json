@@ -161,7 +161,23 @@
 
 
     "EngineAccess-create_file_not_found": ["The file '", "' could not be created, a supported file type was not found."],
-    
+ 
+
+    "Repeats-weekly_offset_dayOfWeek_invalid": "The weekly offset must have a valid day of week.",
+    "Repeats-month_NTH_DAY_offset_invalid": "The offset for monthly repeats with day offset must be a number between -31 and 31.",
+    "Repeats-month_NTH_WEEK_offset_invalid": "The offset for monthly repeats with week offset must be a number between -5 and 5.",
+    "Repeats-monthly_offset_type_missing": "The monthly repeat type is missing or invalid.",
+    "Repeats-year_NTH_DAY_offset_invalid": "The offset for yearly repeats with day offset is invalid.",
+    "Repeats-year_NTH_DAY_month_invalid": "The optional month for yearly repeats with day offset is invalid.",
+    "Repeats-year_NTH_WEEK_offset_invalid": "The offset for yearly repeats with week offset is invalid.",
+    "Repeats-year_NTH_WEEK_month_invalid": "The optional month for yearly repeats with week offset is invalid.",
+    "Repeats-year_NTH_WEEK_dayOfWeek_invalid": "A valid day of week must be specified for yearly repeats with week offset.",
+    "Repeats-year_month_offset_invalid": "A valid month must be specified for yearly repeats with month.",
+    "Repeats-yearly_offset_type_missing": "The yearly repeat type is missing or invalid.",
+    "Repeats-validate_type_missing": "The repeat type is missing or invalid.",
+    "Repeats-period_invalid": "The repetition period must be >= 1.",
+    "Repeats-start_date_invalid": "The start date is is missing or invalid.",
+
 
     "": ""
 }
