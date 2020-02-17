@@ -4,6 +4,7 @@ import { JSONGzipAccountingFileFactory } from './JSONGzipAccountingFile';
 import * as A from './Accounts';
 import * as PI from './PricedItems';
 import * as ASTH from './AccountingSystemTestHelpers';
+import * as RE from '../util/Repeats';
 import { getQuantityDefinition, getDecimalDefinition } from '../util/Quantities';
 
 const path = require('path');
@@ -32,6 +33,8 @@ test('JSONGzipAccountingFile-simple', async () => {
         expect(file1.isModified()).toBeTruthy();
 
         const accountManager1 = accountingSystem1.getAccountManager();
+
+        let result;
 
         // Assets
         const checking = accountManager1.getAccountDataItemWithId(sys.checkingId);
@@ -73,6 +76,52 @@ test('JSONGzipAccountingFile-simple', async () => {
             name: 'PricedItemA', 
             quantityDefinition: getDecimalDefinition(-4),
         })).newPricedItemDataItem;
+
+
+        // Reminders
+        const reminderManager1 = accountingSystem1.getReminderManager();
+        const reminderA = {
+            repeatDefinition: {
+                type: RE.RepeatType.DAILY.name,
+                period: 12,
+                offset: 10,
+                startYMDDate: '2010-01-01',
+            },
+            description: 'Hello',
+            transactionTemplate: {
+                splits: [
+                    { accountId: 123, },
+                    { accountId: 234, },
+                ]
+            },
+            isEnabled: true,
+            lastAppliedDate: '2010-06-01',    
+        };
+        result = await reminderManager1.asyncAddReminder(reminderA);
+        reminderA.id = result.newReminderDataItem.id;
+
+        const reminderB = {
+            repeatDefinition: {
+                type: RE.RepeatType.MONTHLY.name,
+                period: 12,
+                offset: { 
+                    type: RE.MonthOffsetType.NTH_DAY.name,
+                    offset: 1,
+                },
+                startYMDDate: '2010-01-10',
+            },
+            description: 'Good-bye',
+            transactionTemplate: {
+                splits: [
+                    { accountId: 1, },
+                    { accountId: 2, },
+                ]
+            },
+            isEnabled: true,
+            lastAppliedDate: '2015-01-21',    
+        };
+        result = await reminderManager1.asyncAddReminder(reminderB);
+        reminderB.id = result.newReminderDataItem.id;
 
 
         await file1.asyncWriteFile();
@@ -122,6 +171,17 @@ test('JSONGzipAccountingFile-simple', async () => {
         await pricedItemManager2.asyncRemovePricedItem(newPricedItemA.id);
         expect(pricedItemManager2.getPricedItemDataItemWithId(newPricedItemA.id))
             .toBeUndefined();
+        
+        
+        const reminderManager2 = accountingSystem2.getReminderManager();
+        expect(reminderManager2.getReminderDataItemWithId(reminderA.id))
+            .toEqual(reminderA);
+        expect(reminderManager2.getReminderDataItemWithId(reminderB.id))
+            .toEqual(reminderB);
+        await reminderManager2.asyncRemoveReminder(reminderA.id);
+        expect(reminderManager2.getReminderDataItemWithId(reminderA.id))
+            .toBeUndefined();
+        
 
         expect(file2.isModified()).toBeTruthy();
 
@@ -131,6 +191,8 @@ test('JSONGzipAccountingFile-simple', async () => {
         await file2.asyncCloseFile();
 
 
+        //
+        // Read back in modified file...
         const file3 = await factory.asyncOpenFile(pathName1);
         const accountingSystem3 = file3.getAccountingSystem();
         const accountManager3 = accountingSystem3.getAccountManager();
@@ -140,6 +202,12 @@ test('JSONGzipAccountingFile-simple', async () => {
         const pricedItemManager3 = accountingSystem3.getPricedItemManager();
         expect(pricedItemManager3.getPricedItemDataItemWithId(newPricedItemA.id))
             .toBeUndefined();
+        
+        const reminderManager3 = accountingSystem3.getReminderManager();
+        expect(reminderManager3.getReminderDataItemWithId(reminderA.id))
+            .toBeUndefined();
+        expect(reminderManager3.getReminderDataItemWithId(reminderB.id))
+            .toEqual(reminderB);
 
         await file3.asyncCloseFile();
     }

@@ -356,7 +356,6 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
 - Auto complete
 
 - Reminders
-    - Test file read/write.
 
 - Add accounting action for:
     - Price retrieval???
