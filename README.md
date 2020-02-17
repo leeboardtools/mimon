@@ -3,6 +3,7 @@ A personal accounting application written in Javascript and [React](https://reac
 
 I had been using [jGnash](https://sourceforge.net/projects/jgnash/), which is great, but there are enough annoying things with Java and different versions of Java that I'm trying to escape from Java.
 
+This is very much a work in progress, I've been working on the engine, there is no UI.
 
 The project was created from my boilerplate [new_electron_react_bootstrap](<https://github.com/leeboardtools/new_electron_react_bootstrap).>
 
