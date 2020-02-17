@@ -397,10 +397,11 @@ export class YMDDate {
  * Returns either the arg if the arg is a {@link YMDDate} or converts the arg to a 
  * {@link YMDDate}.
  * @param {(string|YMDDate)} date 
- * @returns {YMDDate}
+ * @returns {YMDDate|undefined} <code>undefined</code> is returned if date is
+ * <code>undefined</code>.
  */
 export function getYMDDate(date) {
-    return (date instanceof YMDDate) ? date : new YMDDate(date);
+    return ((date instanceof YMDDate) || (date === undefined)) ? date : new YMDDate(date);
 }
 
 /**

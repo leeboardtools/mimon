@@ -867,12 +867,8 @@ export function getRepeatDefinition(definitionDataItem, alwaysCopy) {
         if (type) {
             offset = type.getOffset(definitionDataItem.offset, alwaysCopy);
         }
-        const startYMDDate = (definitionDataItem.startYMDDate) 
-            ? getYMDDate(definitionDataItem.startYMDDate)
-            : undefined;
-        const lastYMDDate = (definitionDataItem.lastYMDDate)
-            ? getYMDDate(definitionDataItem.lastYMDDate)
-            : undefined;
+        const startYMDDate = getYMDDate(definitionDataItem.startYMDDate);
+        const lastYMDDate = getYMDDate(definitionDataItem.lastYMDDate);
         if (alwaysCopy || (type !== definitionDataItem.type)
          || (offset !== definitionDataItem.offset)
          || (startYMDDate !== definitionDataItem.startYMDDate)
