@@ -181,7 +181,7 @@ test('Repeats-MONTHLY_NTH_DAY', () => {
         type: R.RepeatType.MONTHLY,
         period: 2,
         offset: {
-            typeName: R.MonthOffsetType.NTH_DAY.name,
+            type: R.MonthOffsetType.NTH_DAY,
             offset: 3,
         },
         startYMDDate: getYMDDate('2020-02-01'),
@@ -197,13 +197,13 @@ test('Repeats-MONTHLY_NTH_DAY', () => {
     invalid.offset = { offset: 3};
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: 'abc', offset: 3, };
+    invalid.offset = { type: 'abc', offset: 3, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: R.MonthOffsetType.NTH_DAY.name, };
+    invalid.offset = { type: R.MonthOffsetType.NTH_DAY, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: R.MonthOffsetType.NTH_DAY.name, offset: 32, };
+    invalid.offset = { type: R.MonthOffsetType.NTH_DAY, offset: 32, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
 
@@ -255,7 +255,7 @@ test('Repeats-MONTHLY_NTH_WEEK', () => {
         type: R.RepeatType.MONTHLY,
         period: 2,
         offset: {
-            typeName: R.MonthOffsetType.NTH_WEEK.name,
+            type: R.MonthOffsetType.NTH_WEEK,
             offset: 3,
             dayOfWeek: 2,   // Tuesday
         },
@@ -272,17 +272,17 @@ test('Repeats-MONTHLY_NTH_WEEK', () => {
     invalid.offset = { offset: 3};
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: 'abc', offset: 3, };
+    invalid.offset = { type: 'abc', offset: 3, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: R.MonthOffsetType.NTH_WEEK.name, };
+    invalid.offset = { type: R.MonthOffsetType.NTH_WEEK, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: R.MonthOffsetType.NTH_WEEK.name, 
+    invalid.offset = { type: R.MonthOffsetType.NTH_WEEK, 
         dayOfWeek: 2, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.object = { typeName: R.MonthOffsetType.NTH_WEEK.name,
+    invalid.object = { type: R.MonthOffsetType.NTH_WEEK,
         dayOfWeek:2,
         offset: 6, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
@@ -366,7 +366,7 @@ test('Repeats-YEARLY_NTH_DAY', () => {
         type: R.RepeatType.YEARLY,
         period: 2,
         offset: {
-            typeName: R.YearOffsetType.NTH_DAY,
+            type: R.YearOffsetType.NTH_DAY,
             offset: 3,
         },
         startYMDDate: getYMDDate('2020-02-01'),
@@ -382,19 +382,19 @@ test('Repeats-YEARLY_NTH_DAY', () => {
     invalid.offset = { offset: 3};
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: 'abc', offset: 3, };
+    invalid.offset = { type: 'abc', offset: 3, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: R.YearOffsetType.NTH_DAY, };
+    invalid.offset = { type: R.YearOffsetType.NTH_DAY, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: R.YearOffsetType.NTH_DAY, offset: 367, };
+    invalid.offset = { type: R.YearOffsetType.NTH_DAY, offset: 367, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
 
     //
     // + offset
-    definition.offset.typeName = R.YearOffsetType.NTH_DAY;
+    definition.offset.type = R.YearOffsetType.NTH_DAY;
     definition.offset.offset = 1 + new YMDDate('2020-01-01')
         .daysAfterMe(getYMDDate('2020-02-24'));
     expect(R.getNextRepeatYMDDate(definition, '2020-01-31')).toEqual(
@@ -455,7 +455,7 @@ test('Repeats-YEARLY_NTH_DAY_month', () => {
         type: R.RepeatType.YEARLY,
         period: 2,
         offset: {
-            typeName: R.YearOffsetType.NTH_DAY,
+            type: R.YearOffsetType.NTH_DAY,
             offset: 3,
             month: 4,
         },
@@ -472,7 +472,7 @@ test('Repeats-YEARLY_NTH_DAY_month', () => {
 
     //
     // + offset
-    definition.offset.typeName = R.YearOffsetType.NTH_DAY;
+    definition.offset.type = R.YearOffsetType.NTH_DAY;
     definition.offset.month = 1;
     definition.offset.offset = 29;
     expect(R.getNextRepeatYMDDate(definition, '2020-01-31')).toEqual(
@@ -520,7 +520,7 @@ test('Repeats-YEARLY_NTH_WEEK', () => {
         type: R.RepeatType.YEARLY,
         period: 2,
         offset: {
-            typeName: R.YearOffsetType.NTH_WEEK,
+            type: R.YearOffsetType.NTH_WEEK,
             offset: 3,
             dayOfWeek: 4,
         },
@@ -537,19 +537,19 @@ test('Repeats-YEARLY_NTH_WEEK', () => {
     invalid.offset = { offset: 3};
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: 'abc', offset: 3, };
+    invalid.offset = { type: 'abc', offset: 3, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: R.YearOffsetType.NTH_WEEK, };
+    invalid.offset = { type: R.YearOffsetType.NTH_WEEK, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: R.YearOffsetType.NTH_WEEK, offset: 53, };
+    invalid.offset = { type: R.YearOffsetType.NTH_WEEK, offset: 53, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: R.YearOffsetType.NTH_WEEK, offset: 50, };
+    invalid.offset = { type: R.YearOffsetType.NTH_WEEK, offset: 50, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
 
-    invalid.offset = { typeName: R.YearOffsetType.NTH_WEEK, 
+    invalid.offset = { type: R.YearOffsetType.NTH_WEEK, 
         offset: 53, 
         dayOfWeek: -1, };
     expect(R.validateRepeatDefinition(invalid)).toBeInstanceOf(Error);
@@ -559,7 +559,7 @@ test('Repeats-YEARLY_NTH_WEEK', () => {
     // 2020-01-01 is a Wednesday.
     // 2020-12-31 is a Thursday.
     definition.startYMDDate = new YMDDate('2020-01-01');
-    definition.offset.typeName = R.YearOffsetType.NTH_WEEK;
+    definition.offset.type = R.YearOffsetType.NTH_WEEK;
     definition.offset.offset = 4;
     definition.offset.dayOfWeek = 2;    // 4th Tuesday of the year.
     expect(R.getNextRepeatYMDDate(definition, '2020-01-27')).toEqual(
@@ -633,7 +633,7 @@ test('Repeats-YEARLY_NTH_WEEK_month', () => {
         type: R.RepeatType.YEARLY,
         period: 2,
         offset: {
-            typeName: R.YearOffsetType.NTH_WEEK,
+            type: R.YearOffsetType.NTH_WEEK,
             offset: 3,
             dayOfWeek: 4,
             month: 1,
@@ -646,7 +646,7 @@ test('Repeats-YEARLY_NTH_WEEK_month', () => {
 
     const invalid = Object.assign({}, definition);
 
-    invalid.offset = { typeName: R.YearOffsetType.NTH_WEEK, 
+    invalid.offset = { type: R.YearOffsetType.NTH_WEEK, 
         offset: 53, 
         dayOfWeek: 1,
         month: -1,
@@ -658,7 +658,7 @@ test('Repeats-YEARLY_NTH_WEEK_month', () => {
     // 2020-01-01 is a Wednesday.
     // 2020-12-31 is a Thursday.
     definition.startYMDDate = new YMDDate('2020-01-01');
-    definition.offset.typeName = R.YearOffsetType.NTH_WEEK;
+    definition.offset.type = R.YearOffsetType.NTH_WEEK;
     // 3rd Tuesday of February.
     definition.offset.offset = 3;
     definition.offset.dayOfWeek = 2;

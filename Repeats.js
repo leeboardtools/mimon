@@ -247,13 +247,53 @@ export function getMonthOffsetTypeName(ref) {
 
 /**
  * @typedef {object} MonthlyOffset
- * @property {string} typeName    The name property of the type of monthly offset,
+ * @property {string} type    The name property of the type of monthly offset,
  * one of {@link MonthlyOffsetType}.
  * @property {number}   offset  The offset value, depends upon type.
  * @property {number}   [dayOfWeek] The day of the week for the
  * NTH_WEEK type. This along with the offset value may be interpreted
  * along the lines of 'second Tuesday' or 'last Thursday'.
  */
+
+
+/**
+ * Retrieves a {@link MonthlyOffset} representation of a {@link MonthlyOffsetDataItem}
+ * @param {(MonthlyOffsetDataItem|MonthlyOffset)} monthlyOffsetDataItem 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will 
+ * always be created.
+ * @returns {MonthlyOffset}
+ */
+export function getMonthlyOffset(monthlyOffsetDataItem, alwaysCopy) {
+    if (monthlyOffsetDataItem) {
+        const type = getMonthOffsetType(monthlyOffsetDataItem.type);
+        if (alwaysCopy || (type !== monthlyOffsetDataItem.type)) {
+            monthlyOffsetDataItem = Object.assign({}, monthlyOffsetDataItem);
+            monthlyOffsetDataItem.type = type;
+            return monthlyOffsetDataItem;
+        }
+    }
+    return monthlyOffsetDataItem;
+}
+
+/**
+ * Retrieves a {@link MonthlyOffsetDataItem} representation of a {@link MonthlyOffset}.
+ * @param {(MonthlyOffset|MonthlyOffsetDataItem)} monthlyOffset 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will 
+ * always be created.
+ * @returns {MonthlyOffsetDataItem}
+ */
+export function getMonthlyOffsetDataItem(monthlyOffset, alwaysCopy) {
+    if (monthlyOffset) {
+        const type = getMonthOffsetTypeName(monthlyOffset.type);
+        if (alwaysCopy || (type !== monthlyOffset.type)) {
+            monthlyOffset = Object.assign({}, monthlyOffset);
+            monthlyOffset.type = type;
+            return monthlyOffset;
+        }
+    }
+    return monthlyOffset;
+}
+
 
 /**
  * Validates a {@link MonthlyOffset}
@@ -262,7 +302,7 @@ export function getMonthOffsetTypeName(ref) {
  * an Error otherwise.
  */
 export function validateMonthlyOffset(monthlyOffset) {
-    const type = getMonthOffsetType(monthlyOffset.typeName);
+    const type = getMonthOffsetType(monthlyOffset.type);
     if (type) {
         return type.validate(monthlyOffset);
     }
@@ -274,7 +314,7 @@ export function validateMonthlyOffset(monthlyOffset) {
 //
 //---------------------------------------------------------
 function nextMonthlyOffsetYMDDate(monthlyOffset, afterYMDDate, monthCount, startYMDDate) {
-    const type = MonthOffsetType[monthlyOffset.typeName];
+    const type = getMonthOffsetType(monthlyOffset.type);
     if (!type) {
         throw userError('Repeats-monthly_offset_type_missing');
     }
@@ -537,12 +577,51 @@ export function getYearOffsetTypeName(ref) {
 
 /**
  * @typedef {object} YearlyOffset
- * @property {YearlyOffsetType} typeName    The name property of the 
+ * @property {YearlyOffsetType} type    The name property of the 
  * type of yearly offset, one of {@link YearOffsetType}.
  * @property {number}    offset  The offset, depends on the type.
  * @property {number}   [month] Optional 0 based month, restricts the offset
  * to a specific month.
  */
+
+
+/**
+ * Retrieves a {@link YearlyOffset} representation of a {@link YearlyOffsetDataItem}
+ * @param {(YearlyOffsetDataItem|YearlyOffset)} yearlyOffsetDataItem 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will 
+ * always be created.
+ * @returns {YearlyOffset}
+ */
+export function getYearlyOffset(yearlyOffsetDataItem, alwaysCopy) {
+    if (yearlyOffsetDataItem) {
+        const type = getYearOffsetType(yearlyOffsetDataItem.type);
+        if (alwaysCopy || (type !== yearlyOffsetDataItem.type)) {
+            yearlyOffsetDataItem = Object.assign({}, yearlyOffsetDataItem);
+            yearlyOffsetDataItem.type = type;
+            return yearlyOffsetDataItem;
+        }
+    }
+    return yearlyOffsetDataItem;
+}
+
+/**
+ * Retrieves a {@link YearlyOffsetDataItem} representation of a {@link YearlyOffset}.
+ * @param {(YearlyOffset|YearlyOffsetDataItem)} yearlyOffset 
+ * @param {boolean} [alwaysCopy=false]  If <code>true</code> a new object will 
+ * always be created.
+ * @returns {YearlyOffsetDataItem}
+ */
+export function getYearlyOffsetDataItem(yearlyOffset, alwaysCopy) {
+    if (yearlyOffset) {
+        const type = getYearOffsetTypeName(yearlyOffset.type);
+        if (alwaysCopy || (type !== yearlyOffset.type)) {
+            yearlyOffset = Object.assign({}, yearlyOffset);
+            yearlyOffset.type = type;
+            return yearlyOffset;
+        }
+    }
+    return yearlyOffset;
+}
 
 /**
  * Validates a {@link YearlyOffset}
@@ -551,7 +630,7 @@ export function getYearOffsetTypeName(ref) {
  * an Error otherwise.
  */
 export function validateYearlyOffset(yearlyOffset) {
-    const type = getYearOffsetType(yearlyOffset.typeName);
+    const type = getYearOffsetType(yearlyOffset.type);
     if (type) {
         return type.validate(yearlyOffset);
     }
@@ -563,7 +642,7 @@ export function validateYearlyOffset(yearlyOffset) {
 //
 //---------------------------------------------------------
 function nextYearlyOffsetYMDDate(yearlyOffset, afterYMDDate, monthCount, startYMDDate) {
-    const type = getYearOffsetType(yearlyOffset.typeName);
+    const type = getYearOffsetType(yearlyOffset.type);
     if (!type) {
         throw userError('Repeats-yearly_offset_type_missing');
     }
@@ -598,22 +677,32 @@ export const RepeatType = {
     NONE: { name: 'NONE', 
         validate: validateNone, 
         nextRepeatYMDDate: nextNoneRepeatYMDDate, 
+        getOffset: getNoneOffset,
+        getOffsetDataItem: getNoneOffsetDataItem,
     },
     DAILY: { name: 'DAILY', 
         validate: validateDaily, 
         nextRepeatYMDDate: nextDailyRepeatYMDDate, 
+        getOffset: getDailyOffset,
+        getOffsetDataItem: getDailyOffsetDataItem,
     },
     WEEKLY: { name: 'WEEKLY', 
         validate: validateWeekly,
         nextRepeatYMDDate: nextWeeklyRepeatYMDDate, 
+        getOffset: getWeeklyOffset,
+        getOffsetDataItem: getWeeklyOffsetDataItem,
     },
     MONTHLY: { name: 'MONTHLY', 
         validate: validateMonthly,
         nextRepeatYMDDate: nextMonthlyRepeatYMDDate, 
+        getOffset: getMonthlyOffset,
+        getOffsetDataItem: getMonthlyOffsetDataItem,
     },
     YEARLY: { name: 'YEARLY', 
         validate: validateYearly,
         nextRepeatYMDDate: nextYearlyRepeatYMDDate, 
+        getOffset: getYearlyOffset,
+        getOffsetDataItem: getYearlyOffsetDataItem,
     },
 };
 
@@ -627,6 +716,22 @@ function validateNone(definition) {
 //---------------------------------------------------------
 function nextNoneRepeatYMDDate(definition, afterYMDDate) {
 }
+
+//
+//---------------------------------------------------------
+function getNoneOffset(offsetDataItem, alwaysCopy) {
+    return (alwaysCopy && (typeof offsetDataItem === 'object')) 
+        ? Object.assign({}, offsetDataItem) : offsetDataItem;
+}
+
+//
+//---------------------------------------------------------
+function getNoneOffsetDataItem(offset, alwaysCopy) {
+    return (alwaysCopy && (typeof offset === 'object')) 
+        ? Object.assign({}, offset) : offset;
+}
+
+
 
 
 //
@@ -642,6 +747,20 @@ function nextDailyRepeatYMDDate(definition, afterYMDDate) {
         definition.startYMDDate);
 }
 
+//
+//---------------------------------------------------------
+function getDailyOffset(offsetDataItem, alwaysCopy) {
+    return (alwaysCopy && (typeof offsetDataItem === 'object')) 
+        ? Object.assign({}, offsetDataItem) : offsetDataItem;
+}
+
+//
+//---------------------------------------------------------
+function getDailyOffsetDataItem(offset, alwaysCopy) {
+    return (alwaysCopy && (typeof offset === 'object')) 
+        ? Object.assign({}, offset) : offset;
+}
+
 
 //
 //---------------------------------------------------------
@@ -654,6 +773,20 @@ function validateWeekly(definition) {
 function nextWeeklyRepeatYMDDate(definition, afterYMDDate) {
     return nextWeeklyOffsetYMDDate(definition.offset, afterYMDDate, 
         definition.period, definition.startYMDDate);
+}
+
+//
+//---------------------------------------------------------
+function getWeeklyOffset(offsetDataItem, alwaysCopy) {
+    return (alwaysCopy && (typeof offsetDataItem === 'object')) 
+        ? Object.assign({}, offsetDataItem) : offsetDataItem;
+}
+
+//
+//---------------------------------------------------------
+function getWeeklyOffsetDataItem(offset, alwaysCopy) {
+    return (alwaysCopy && (typeof offset === 'object')) 
+        ? Object.assign({}, offset) : offset;
 }
 
 
@@ -689,6 +822,7 @@ function nextYearlyRepeatYMDDate(definition, afterYMDDate) {
     return nextYearlyOffsetYMDDate(definition.offset, afterYMDDate, 
         definition.period, definition.startYMDDate);
 }
+
 
 
 /**
@@ -729,6 +863,10 @@ export function getRepeatTypeName(type) {
 export function getRepeatDefinition(definitionDataItem, alwaysCopy) {
     if (definitionDataItem) {
         const type = getRepeatType(definitionDataItem.type);
+        let offset;
+        if (type) {
+            offset = type.getOffset(definitionDataItem.offset, alwaysCopy);
+        }
         const startYMDDate = (definitionDataItem.startYMDDate) 
             ? getYMDDate(definitionDataItem.startYMDDate)
             : undefined;
@@ -736,10 +874,14 @@ export function getRepeatDefinition(definitionDataItem, alwaysCopy) {
             ? getYMDDate(definitionDataItem.lastYMDDate)
             : undefined;
         if (alwaysCopy || (type !== definitionDataItem.type)
+         || (offset !== definitionDataItem.offset)
          || (startYMDDate !== definitionDataItem.startYMDDate)
          || (lastYMDDate !== definitionDataItem.lastYMDDate)) {
             definitionDataItem = Object.assign({}, definitionDataItem);
             definitionDataItem.type = type;
+            if (offset !== undefined) {
+                definitionDataItem.offset = offset;
+            }
             if (startYMDDate) {
                 definitionDataItem.startYMDDate = startYMDDate;
             }
@@ -778,6 +920,13 @@ export function getRepeatDefinition(definitionDataItem, alwaysCopy) {
 export function getRepeatDefinitionDataItem(definition, alwaysCopy) {
     if (definition) {
         const type = getRepeatTypeName(definition.type);
+        let offset;
+        if (type) {
+            const typeObject = getRepeatType(definition.type);
+            if (typeObject) {
+                offset = typeObject.getOffsetDataItem(definition.offset, alwaysCopy);
+            }
+        }
         const startYMDDate = (definition.startYMDDate)
             ? getYMDDateString(definition.startYMDDate)
             : undefined;
@@ -785,10 +934,14 @@ export function getRepeatDefinitionDataItem(definition, alwaysCopy) {
             ? getYMDDateString(definition.lastYMDDate)
             : undefined;
         if (alwaysCopy || (type !== definition.type)
+         || (offset !== definition.offset)
          || (startYMDDate !== definition.startYMDDate)
          || (lastYMDDate !== definition.lastYMDDate)) {
             definition = Object.assign({}, definition);
             definition.type = type;
+            if (offset !== undefined) {
+                definition.offset = offset;
+            }
             if (startYMDDate) {
                 definition.startYMDDate = startYMDDate;
             }
