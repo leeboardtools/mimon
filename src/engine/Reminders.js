@@ -270,14 +270,14 @@ export class ReminderManager extends EventEmitter {
 
 
     _validate(reminderDataItem) {
-    /*
-        const pricedItemManager = this._accountingSystem.getPricedItemManager();
-        if (!pricedItemManager.getPricedItemDataItemWithId(
-            reminderDataItem.pricedItemId)) {
-            return userError('ReminderManager-invalid_pricedItem_id', 
-                reminderDataItem.pricedItemId);
+        const { repeatDefinition } = reminderDataItem;
+        if (!repeatDefinition) {
+            return userError('ReminderManager-repeat_definition_required');
         }
-*/
+        let error = R.validateRepeatDefinition(repeatDefinition);
+        if (error) {
+            return error;
+        }
     }
 
     /**

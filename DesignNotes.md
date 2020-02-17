@@ -356,9 +356,7 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
 - Auto complete
 
 - Reminders
-    - Add getDueReminders(ymdDate)
     - Test file read/write.
-    - Need validation.
 
 - Add accounting action for:
     - Price retrieval???

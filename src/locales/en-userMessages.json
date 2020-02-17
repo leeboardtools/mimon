@@ -109,6 +109,11 @@
     "PricedItemManager-modify_no_change_currency_currency": "The currency of a currency priced item cannot be changed.",
 
 
+    "ReminderManager-repeat_definition_required": "A repeat definition must be defined.",
+    "ReminderManager-remove_no_id": ["The reminder cannot be deleted. An item with id '", "' was not found."],
+    "ReminderManager-modify_no_id": ["The reminder could not be modified. An item with id '", "' was not found."],
+
+
     "ReconcileState-NOT_RECONCILED": "Not reconciled",
     "ReconcileState-PENDING": "Pending",
     "ReconcileState-RECONCILED": "Reconciled",

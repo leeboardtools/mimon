@@ -89,7 +89,7 @@ test('Reminders-add_modify', async () => {
         repeatDefinition: {
             type: RE.RepeatType.WEEKLY.name,
             period: 3,
-            dayOfWeek: 10,
+            offset: { dayOfWeek: 3, },
             startYMDDate: '2010-01-01',
         },
         transactionTemplate: {
@@ -100,6 +100,10 @@ test('Reminders-add_modify', async () => {
         },
         isEnabled: false,
     };
+
+    // Only validate.
+    result = await manager.asyncAddReminder(settingsB, true);
+    expect(manager.getReminderIds()).toEqual([reminderA.id]);
 
     result = await manager.asyncAddReminder(settingsB);
     const reminderB = result.newReminderDataItem;
@@ -123,6 +127,28 @@ test('Reminders-add_modify', async () => {
     expect(manager.getReminderIds()).toEqual([reminderA.id, reminderB.id]);
     expect(manager.getReminderDataItemWithIds([reminderA.id, reminderB.id]))
         .toEqual([settingsA, settingsB]);
+    
+
+    // Test validation
+    const invalidSettings = {
+        repeatDefinition: {
+            type: RE.RepeatType.WEEKLY.name,
+            period: 3,
+            offset: { dayOfWeek: 13, },
+            startYMDDate: '2010-01-01',
+        },
+        transactionTemplate: {
+            splits: [
+                { accountId: 123, },
+                { accountId: 234, },
+            ]
+        },
+        isEnabled: false,
+    };
+    await expect(manager.asyncAddReminder(invalidSettings)).rejects.toThrow(Error);
+
+    invalidSettings.repeatDefinition = undefined;
+    await expect(manager.asyncAddReminder(invalidSettings)).rejects.toThrow(Error);
 
 
     //
@@ -136,6 +162,11 @@ test('Reminders-add_modify', async () => {
         lastAppliedDate: '2020-05-04',
     };
     const settingsB1 = Object.assign({}, settingsB, changesB1);
+
+    // Validate only
+    result = await manager.asyncModifyReminder(changesB1, true);
+    expect(manager.getReminderDataItemWithId(reminderB.id)).toEqual(settingsB);
+
     result = await manager.asyncModifyReminder(changesB1);
     expect(result.newReminderDataItem).toEqual(settingsB1);
     expect(result.oldReminderDataItem).toEqual(settingsB);
@@ -152,9 +183,30 @@ test('Reminders-add_modify', async () => {
     await manager.asyncModifyReminder(changesB1);
     expect(manager.getReminderDataItemWithId(reminderB.id)).toEqual(settingsB1);
 
+    //
+    // Test validation.
+    const invalidChanges = {
+        id: settingsB.id,
+        repeatDefinition: undefined,
+    };
+    await expect(manager.asyncModifyReminder(invalidChanges)).rejects.toThrow(Error);
 
+    invalidChanges.repeatDefinition = {
+        type: RE.RepeatType.WEEKLY.name,
+        period: 3,
+        offset: { dayOfWeek: 13, },
+        startYMDDate: '2010-01-01',
+    };
+    await expect(manager.asyncModifyReminder(invalidChanges)).rejects.toThrow(Error);
+
+ 
     //
     // Remove.
+
+    // Validate only
+    result = await manager.asyncRemoveReminder(reminderA.id, true);
+    expect(manager.getReminderDataItemWithId(reminderA.id)).toEqual(settingsA);
+
     result = await manager.asyncRemoveReminder(reminderA.id);
     expect(result.removedReminderDataItem).toEqual(reminderA);
     expect(removeResult.removedReminderDataItem).toEqual(reminderA);
