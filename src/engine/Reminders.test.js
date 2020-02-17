@@ -228,7 +228,7 @@ test('Reminders-getDueReminderDataItems', async () => {
             type: RE.RepeatType.MONTHLY.name,
             period: 1,
             offset: {
-                typeName: RE.MonthOffsetType.NTH_DAY.name,
+                type: RE.MonthOffsetType.NTH_DAY.name,
                 offset: 15,
             },
             dayOfWeek: 6,
