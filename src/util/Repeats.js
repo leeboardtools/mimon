@@ -846,6 +846,10 @@ export function getNextRepeatYMDDate(definition, afterYMDDate) {
         return;
     }
 
+    if (afterYMDDate === undefined) {
+        afterYMDDate = definition.startYMDDate.addDays(-1);
+    }
+    
     afterYMDDate = getYMDDate(afterYMDDate);
     if (definition.lastYMDDate) {
         // We want the date after afterYMDDate, so if afterYMDDate is the last date

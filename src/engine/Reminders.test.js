@@ -169,3 +169,89 @@ test('Reminders-add_modify', async () => {
     expect(manager.getReminderDataItemWithId(reminderB.id)).toEqual(settingsB1);
     expect(manager.getReminderIds()).toEqual([reminderB.id, reminderA.id]);
 });
+
+
+//
+//---------------------------------------------------------
+//
+test('Reminders-getDueReminderDataItems', async () => {
+    const accountingSystem = await ASTH.asyncCreateAccountingSystem();
+    const manager = accountingSystem.getReminderManager();
+
+    let result;
+
+    const settingsA = {
+        repeatDefinition: {
+            type: RE.RepeatType.DAILY,
+            period: 30,
+            startYMDDate: '2015-06-01',
+        },
+        transactionTemplate: {
+            splits: [
+                { accountId: 123, },
+                { accountId: 234, },
+            ]
+        },
+        isEnabled: false,
+        lastAppliedDate: '2019-10-01',
+    };
+    result = await manager.asyncAddReminder(settingsA);
+    const reminderA = result.newReminderDataItem;
+    settingsA.id = reminderA.id;
+
+
+    // Next due date is 2019-10-11
+    const settingsB = {
+        repeatDefinition:  {
+            type: RE.RepeatType.WEEKLY.name,
+            period: 2,
+            offset: { dayOfWeek: 5, },
+            startYMDDate: '2019-06-01',
+        },
+        transactionTemplate: {
+            splits: [
+                { accountId: 123, },
+                { accountId: 234, },
+            ]
+        },
+        isEnabled: true,
+        lastAppliedDate: '2019-10-01',
+    };
+    result = await manager.asyncAddReminder(settingsB);
+    const reminderB = result.newReminderDataItem;
+    settingsB.id = reminderB.id;
+
+
+    // No lastAppliedDate, so next due date is 2019-06-15.
+    const settingsC = {
+        repeatDefinition:  {
+            type: RE.RepeatType.MONTHLY.name,
+            period: 1,
+            offset: {
+                typeName: RE.MonthOffsetType.NTH_DAY.name,
+                offset: 15,
+            },
+            dayOfWeek: 6,
+            startYMDDate: '2019-06-01',
+        },
+        transactionTemplate: {
+            splits: [
+                { accountId: 123, },
+                { accountId: 234, },
+            ]
+        },
+        isEnabled: true,
+    };
+    result = await manager.asyncAddReminder(settingsC);
+    const reminderC = result.newReminderDataItem;
+    settingsC.id = reminderC.id;
+
+
+    expect(manager.getDueReminderDataItems('2019-06-14')).toEqual([]);
+    expect(manager.getDueReminderDataItems('2019-06-15'))
+        .toEqual([settingsC]);
+    expect(manager.getDueReminderDataItems('2019-10-10'))
+        .toEqual([settingsC]);
+    expect(manager.getDueReminderDataItems('2019-10-11'))
+        .toEqual([settingsB, settingsC]);
+});

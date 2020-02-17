@@ -3,7 +3,7 @@ import { userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
 import * as R from '../util/Repeats';
 import { getTransaction, getTransactionDataItem } from './Transactions';
-import { getYMDDate, getYMDDateString } from '../util/YMDDate';
+import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 
 
 
@@ -192,6 +192,36 @@ export class ReminderManager extends EventEmitter {
         });
 
         return result;
+    }
+
+
+    /**
+     * Retrieves an array containing the {@link ReminderDataItem}s of all the
+     * reminders that are enabled and due based on ymdDate.
+     * @param {YMDDate|string} ymdDate 
+     * @returns {ReminderDataItem[]}
+     */
+    getDueReminderDataItems(ymdDate) {
+        ymdDate = getYMDDate(ymdDate);
+
+        const reminderDataItems = [];
+        this._reminderDataItemsById.forEach((reminderDataItem, id) => {
+            if (!reminderDataItem.isEnabled) {
+                return;
+            }
+
+            const nextYMDDate = R.getNextRepeatYMDDate(reminderDataItem.repeatDefinition,
+                reminderDataItem.lastAppliedDate);
+            if (!nextYMDDate) {
+                return;
+            }
+
+            if (YMDDate.compare(ymdDate, nextYMDDate) >= 0) {
+                reminderDataItems.push(reminderDataItem);
+            }
+        });
+
+        return reminderDataItems;
     }
 
 

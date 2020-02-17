@@ -333,6 +333,8 @@ The manager employs a handler to provide the underlying storage system. This all
 
 ### NumericIdGenerator
 
+### Repeats
+
 ### UndoManager
 Utility class for managing undo. Things that support undo register an applier with the manager, then when something they can undo occurs, they register an undo data item with the manager.
 
@@ -354,10 +356,13 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
 - Auto complete
 
 - Reminders
+    - Add getDueReminders(ymdDate)
+    - Test file read/write.
+    - Need validation.
 
 - Add accounting action for:
     - Price retrieval???
-
+    - Reminders
 
 - Action Recovery
     - Option to save applied actions to a recovery file.
