@@ -70,6 +70,7 @@ export class EngineAccessor {
             this._priceManager = _accountingSystem.getPriceManager();
             this._lotManager = _accountingSystem.getLotManager();
             this._transactionManager = _accountingSystem.getTransactionManager();
+            this._reminderManager = _accountingSystem.getReminderManager();
         }
         else {
             this._fileFactoryIndex = undefined;
@@ -85,6 +86,7 @@ export class EngineAccessor {
             this._priceManager = undefined;
             this._lotManager = undefined;
             this._transactionManager = undefined;
+            this._reminderManager = undefined;
         }
     }
 
@@ -931,9 +933,23 @@ export class EngineAccessor {
     }
 
 
-    //
-    // Reminders
-    //
+
+    /**
+     * @returns {number[]}  Array containing the ids of all the reminders.
+     */
+    getReminderIds() {
+        return this._reminderManager.getReminderIds();
+    }
+
+
+    /**
+     * Retrieves a reminder data item with a given id.
+     * @param {number} id The id of the reminder to retrieve.
+     * @returns {(ReminderDataItem|undefined)}    A copy of the reminder's data.
+     */
+    getReminderDataItemWithId(id) {
+        return this._reminderManager.getReminderDataItemWithId(id);
+    }
 
 
     //

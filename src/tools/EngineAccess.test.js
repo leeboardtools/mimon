@@ -3,6 +3,7 @@ import { EngineAccessor } from './EngineAccess';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
 import * as T from '../engine/Transactions';
+import * as RE from '../util/Repeats';
 import { getDecimalDefinition } from '../util/Quantities';
 import { getYMDDate } from '../util/YMDDate';
 
@@ -470,6 +471,41 @@ test('EngineAccessor-actions', async () => {
             aaplPricedItem.id, '2014-06-12');
         expect(result).toEqual(priceSettingsA[1]);
 
+
+        //
+        // Reminders
+        //
+        const reminderSettingsA = {
+            repeatDefinition: {
+                type: RE.RepeatType.YEARLY.name,
+                period: 12,
+                offset: {
+                    type: RE.YearOffsetType.NTH_WEEK.name,
+                    offset: 2,
+                    dayOfWeek: 1,
+                },
+                startYMDDate: '2010-01-01',
+            },
+            description: 'Hello',
+            transactionTemplate: {
+                splits: [
+                    { accountId: 123, },
+                    { accountId: 234, },
+                ]
+            },
+            isEnabled: true,
+            lastAppliedDate: '2010-06-01',
+        };
+    
+        // New Reminder
+        const reminderActionA = accountingActions.createAddReminderAction(
+            reminderSettingsA);
+        result = await accessor.asyncApplyAction(reminderActionA);
+        const reminderA = result.newReminderDataItem;
+        reminderSettingsA.id = reminderA.id;
+        expect(reminderA).toEqual(reminderSettingsA);
+        expect(accessor.getReminderIds()).toEqual([reminderA.id]);
+        expect(accessor.getReminderDataItemWithId(reminderA.id)).toEqual(reminderA);
 
         //
         // All done...
