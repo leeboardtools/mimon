@@ -283,7 +283,9 @@ export function getSplits(splitDataItems, alwaysCopy) {
  */
 export function getTransactionDataItem(transaction, alwaysCopy) {
     if (transaction) {
-        const ymdDateString = getYMDDateString(transaction.ymdDate);
+        const ymdDateString = (transaction.ymdDate) 
+            ? getYMDDateString(transaction.ymdDate)
+            : undefined;
         const splitDataItems = getSplitDataItems(transaction.splits, alwaysCopy);
         if (alwaysCopy
          || (ymdDateString !== transaction.ymdDate)
@@ -312,7 +314,9 @@ export function getTransactionDataItem(transaction, alwaysCopy) {
  */
 export function getTransaction(transactionDataItem, alwaysCopy) {
     if (transactionDataItem) {
-        const ymdDate = getYMDDate(transactionDataItem.ymdDate);
+        const ymdDate = (transactionDataItem.ymdDate) 
+            ? getYMDDate(transactionDataItem.ymdDate)
+            : undefined;
         const splits = getSplits(transactionDataItem.splits, alwaysCopy);
         if (alwaysCopy
          || (ymdDate !== transactionDataItem.ymdDate)

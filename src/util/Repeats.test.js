@@ -725,39 +725,6 @@ test('Repeats-YEARLY_NTH_WEEK_month', () => {
     expect(R.getNextRepeatYMDDate(definition, '2020-02-04')).toEqual(
         getYMDDate('2022-02-01')
     );
-/*
-    //
-    // - offset
-    definition.offset.offset = -3;
-    definition.offset.dayOfWeek = 2;
-    expect(R.getNextRepeatYMDDate(definition, '2016-01-01')).toEqual(
-        getYMDDate('2020-12-08')
-    );
-    expect(R.getNextRepeatYMDDate(definition, '2020-12-07')).toEqual(
-        getYMDDate('2020-12-08')
-    );
-    expect(R.getNextRepeatYMDDate(definition, '2020-12-08')).toEqual(
-        getYMDDate('2022-12-06')
-    );
-    expect(R.getNextRepeatYMDDate(definition, '2022-12-05')).toEqual(
-        getYMDDate('2022-12-06')
-    );
-    expect(R.getNextRepeatYMDDate(definition, '2022-12-06')).toEqual(
-        getYMDDate('2024-12-10')
-    );
-
-    // Check Friday
-    definition.offset.dayOfWeek = 5;
-    expect(R.getNextRepeatYMDDate(definition, '2016-01-01')).toEqual(
-        getYMDDate('2020-12-04')
-    );
-    expect(R.getNextRepeatYMDDate(definition, '2020-12-03')).toEqual(
-        getYMDDate('2020-12-04')
-    );
-    expect(R.getNextRepeatYMDDate(definition, '2020-12-04')).toEqual(
-        getYMDDate('2022-12-09')
-    );
-*/
 });
 
 

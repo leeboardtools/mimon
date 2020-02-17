@@ -3,6 +3,7 @@ import { InMemoryUndoHandler } from '../util/Undo';
 import { InMemoryAccountsHandler } from './Accounts';
 import { InMemoryPricedItemsHandler } from './PricedItems';
 import { InMemoryPricesHandler } from './Prices';
+import { InMemoryRemindersHandler } from './Reminders';
 import { InMemoryTransactionsHandler } from './Transactions';
 import { InMemoryLotsHandler } from './Lots';
 
@@ -26,6 +27,7 @@ test('AccountingSystem', async () => {
             accountManager: { handler: new InMemoryAccountsHandler(), },
             pricedItemManager: { handler: new InMemoryPricedItemsHandler(), },
             priceManager: { handler: new InMemoryPricesHandler(), },
+            reminderManager: { handler: new InMemoryRemindersHandler(), },
             lotManager: { handler: new InMemoryLotsHandler(), },
             transactionManager: { handler: new InMemoryTransactionsHandler(), },
         });

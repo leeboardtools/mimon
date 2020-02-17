@@ -10,6 +10,7 @@ import * as T from './Transactions';
 import { getDecimalDefinition } from '../util/Quantities';
 import { InMemoryPricesHandler } from './Prices';
 import { InMemoryTransactionsHandler } from './Transactions';
+import { InMemoryRemindersHandler } from './Reminders';
 import { InMemoryUndoHandler } from '../util/Undo';
 import { InMemoryActionsHandler } from '../util/Actions';
 import { getYMDDate } from '../util/YMDDate';
@@ -41,6 +42,10 @@ export async function asyncCreateAccountingSystem(options) {
 
             transactionManager: {
                 handler: new InMemoryTransactionsHandler(),
+            },
+
+            reminderManager: {
+                handler: new InMemoryRemindersHandler(),
             },
 
             actionManager: {

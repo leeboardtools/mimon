@@ -4,6 +4,7 @@ import { PricedItemManager } from './PricedItems';
 import { LotManager } from './Lots';
 import { TransactionManager } from './Transactions';
 import { PriceManager } from './Prices';
+import { ReminderManager } from './Reminders';
 import { UndoManager } from '../util/Undo';
 import { ActionManager } from '../util/Actions';
 import { AccountingActions } from './AccountingActions';
@@ -40,6 +41,8 @@ export class AccountingSystem extends EventEmitter {
         this._priceManager = new PriceManager(this, options.priceManager);
         this._transactionManager 
             = new TransactionManager(this, options.transactionManager);
+        
+        this._reminderManager = new ReminderManager(this, options.reminderManager);
 
         this._accountingActions = new AccountingActions(this);
 
@@ -61,6 +64,7 @@ export class AccountingSystem extends EventEmitter {
         await this._accountManager.asyncSetupForUse();
         await this._lotManager.asyncSetupForUse();
         await this._transactionManager.asyncSetupForUse();
+        await this._reminderManager.asyncSetupForUse();
         await this._actionManager.asyncSetupForUse();
     }
 
@@ -73,6 +77,11 @@ export class AccountingSystem extends EventEmitter {
         if (this.undoManager) {
             this._undoManager.shutDownFromUse();
             this._undoManager = undefined;
+        }
+
+        if (this._reminderManager) {
+            this._reminderManager.shutDownFromUse();
+            this._reminderManager = undefined;
         }
 
         if (this._transactionManager) {
@@ -125,6 +134,11 @@ export class AccountingSystem extends EventEmitter {
      * @returns {TransactionManager}
      */
     getTransactionManager() { return this._transactionManager; }
+
+    /**
+     * @returns {ReminderManager}
+     */
+    getReminderManager() { return this._reminderManager; }
 
     /**
      * @returns {UndoManager}
