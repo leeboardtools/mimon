@@ -7,7 +7,7 @@ This is very much a work in progress, I've been working on the engine, there is 
 
 The project was created from my boilerplate [new_electron_react_bootstrap](<https://github.com/leeboardtools/new_electron_react_bootstrap).>
 
-## Atrributions
+## Attributions
 This project incorporates the following (I may have missed some projects, especially build related dependencies):
 
 - [Electron](https://electronjs.org/)
