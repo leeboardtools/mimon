@@ -127,6 +127,13 @@ test('EngineAccessor-actions', async () => {
         const checkingId = accountA.id;
 
 
+        // Test quantity conversion.
+        result = accessor.accountQuantityBaseValueToText(checkingId, -1234);
+        expect(result).toEqual('-12.34');
+        result = accessor.accountQuantityTextToBaseValue(checkingId, '-10,987.65');
+        expect(result).toEqual(-1098765);
+
+
         const settingsB = { type: A.AccountType.EXPENSE.name,
             parentAccountId: accessor.getRootExpenseAccountId(),
             pricedItemId: accessor.getBaseCurrencyPricedItemId(),

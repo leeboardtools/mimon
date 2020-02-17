@@ -1,4 +1,5 @@
 import { JSONGzipAccountingFileFactory } from '../engine/JSONGzipAccountingFile';
+import { getQuantityDefinition } from '../util/Quantities';
 import { userError } from '../util/UserMessages';
 import deepEqual from 'deep-equal';
 
@@ -570,6 +571,32 @@ export class EngineAccessor {
 
 
     /**
+     * Helper that converts a quantity in an account's quantity definition
+     * to a user-presentable string.
+     * @param {*} quantityBaseValue 
+     * @returns {string}
+     */
+    accountQuantityBaseValueToText(id, quantityBaseValue) {
+        const accountDataItem = this._accountManager.getAccountDataItemWithId(id);
+        return this.pricedItemQuantityBaseValueToText(
+            accountDataItem.pricedItemId, quantityBaseValue);
+    }
+
+    /**
+     * Helper that converts a user-presentable string into a base value for the
+     * quantity definition of an account.
+     * @param {number} id The id of the account.
+     * @param {string} quantityText 
+     * @returns {number|undefined}
+     */
+    accountQuantityTextToBaseValue(id, quantityText) {
+        const accountDataItem = this._accountManager.getAccountDataItemWithId(id);
+        return this.pricedItemQuantityTextToBaseValue(
+            accountDataItem.pricedItemId, quantityText);
+    }
+
+
+    /**
      * @returns {Currency}  The base currency.
      */
     getBaseCurrencyCode() { 
@@ -663,6 +690,40 @@ export class EngineAccessor {
         return this._pricedItemManager.getPricedItemDataItemWithId(id);
     }
 
+
+    /**
+     * Helper that converts a quantity in a priced item's quantity definition
+     * to a user-presentable string.
+     * @param {nmber} id 
+     * @param {number} quantityBaseValue 
+     * @returns {string}
+     */
+    pricedItemQuantityBaseValueToText(id, quantityBaseValue) {
+        const pricedItemDataItem 
+            = this._pricedItemManager.getPricedItemDataItemWithId(id);
+        const quantityDefinition 
+            = getQuantityDefinition(pricedItemDataItem.quantityDefinition);
+        return quantityDefinition.baseValueToValueText(quantityBaseValue);
+    }
+
+    /**
+     * Helper that converts a user-presentable string to a base value in a
+     * priced item's quantity definition.
+     * @param {nmber} id 
+     * @param {string} quantityText 
+     * @returns {number|undefined}
+     */
+    pricedItemQuantityTextToBaseValue(id, quantityText) {
+        const pricedItemDataItem 
+            = this._pricedItemManager.getPricedItemDataItemWithId(id);
+        const quantityDefinition 
+            = getQuantityDefinition(pricedItemDataItem.quantityDefinition);
+        const result = quantityDefinition.fromValueText(quantityText);
+        if (!result || !result.quantity) {
+            return;
+        }
+        return result.quantity.getBaseValue();
+    }
 
 
     /**
