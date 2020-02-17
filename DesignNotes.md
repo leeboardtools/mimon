@@ -347,7 +347,6 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
 
 
 ## TODOs
-- Need to add event emitting to account manager undo.
 - Need to test event emitting for various undos.
 
 - Reconciler
@@ -355,11 +354,9 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
 
 - Auto complete
 
-- Reminders
 
 - Add accounting action for:
     - Price retrieval???
-    - Reminders
 
 - Action Recovery
     - Option to save applied actions to a recovery file.

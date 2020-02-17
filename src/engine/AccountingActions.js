@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import * as A from './Accounts';
 import * as PI from './PricedItems';
+import * as R from './Reminders';
 import * as L from './Lots';
 import * as P from './Prices';
 import * as T from './Transactions';
@@ -106,6 +107,21 @@ export class AccountingActions extends EventEmitter {
         actionManager.registerAsyncActionApplier('modifyTransactions', 
             this._asyncModifyTransactionsApplier);
 
+
+        this._asyncAddReminderApplier = this._asyncAddReminderApplier.bind(this);
+        actionManager.registerAsyncActionApplier('addReminder', 
+            this._asyncAddReminderApplier);
+
+        this._asyncRemoveReminderApplier 
+            = this._asyncRemoveReminderApplier.bind(this);
+        actionManager.registerAsyncActionApplier('removeReminder', 
+            this._asyncRemoveReminderApplier);
+
+        this._asyncModifyReminderApplier 
+            = this._asyncModifyReminderApplier.bind(this);
+        actionManager.registerAsyncActionApplier('modifyReminder', 
+            this._asyncModifyReminderApplier);
+    
         
         // Some synonyms
         this.createAddTransactionAction = this.createAddTransactionsAction;
@@ -276,6 +292,7 @@ export class AccountingActions extends EventEmitter {
                 action.pricedItemDataItem, isValidateOnly);
         this._emitActionEvent(isValidateOnly, action, result);
     }
+
 
 
     /**
@@ -493,4 +510,71 @@ export class AccountingActions extends EventEmitter {
     // - Buy Transactions
     // - Merge/Split Transaction?
     // - Reconcile Transactions?
+
+
+    /**
+     * Creates an action for adding a new reminder.
+     * @param {Reminder|ReminderDataItem} reminder The information for the new 
+     * reminder.
+     * @returns {ActionDataItem}
+     */
+    createAddReminderAction(reminder) {
+        const reminderDataItem = R.getReminderDataItem(reminder, true);
+        return { 
+            type: 'addReminder', 
+            reminderDataItem: reminderDataItem, 
+            name: userMsg('Actions-addReminder'), 
+        };
+    }
+
+    async _asyncAddReminderApplier(isValidateOnly, action) {
+        const result 
+            = await this._accountingSystem.getReminderManager().asyncAddReminder(
+                action.reminderDataItem, isValidateOnly);
+        this._emitActionEvent(isValidateOnly, action, result);
+    }
+
+
+    /**
+     * Creates an action for removing a reminder.
+     * @param {number} reminderId 
+     * @returns {ActionDataItem}
+     */
+    createRemoveReminderAction(reminderId) {
+        return { 
+            type: 'removeReminder', 
+            reminderId: reminderId, 
+            name: userMsg('Actions-removeReminder'), 
+        };
+    }
+
+    async _asyncRemoveReminderApplier(isValidateOnly, action) {
+        const result 
+            = await this._accountingSystem.getReminderManager().asyncRemoveReminder(
+                action.reminderId, isValidateOnly);
+        this._emitActionEvent(isValidateOnly, action, result);
+    }
+
+
+    /**
+     * Creates an action for modifying a reminder.
+     * @param {Reminder|ReminderDataItem} reminderUpdates The updates to the 
+     * reminder, the id property is required.
+     * @returns {ActionDataItem}
+     */
+    createModifyReminderAction(reminderUpdates) {
+        const reminderDataItem = R.getReminderDataItem(reminderUpdates, true);
+        return { 
+            type: 'modifyReminder', 
+            reminderDataItem: reminderDataItem, 
+            name: userMsg('Actions-modifyReminder'), 
+        };
+    }
+
+    async _asyncModifyReminderApplier(isValidateOnly, action) {
+        const result 
+            = await this._accountingSystem.getReminderManager().asyncModifyReminder(
+                action.reminderDataItem, isValidateOnly);
+        this._emitActionEvent(isValidateOnly, action, result);
+    }
 }

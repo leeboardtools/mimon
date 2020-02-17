@@ -1,6 +1,7 @@
 import * as ASTH from './AccountingSystemTestHelpers';
 import * as A from './Accounts';
 import * as PI from './PricedItems';
+import * as RE from '../util/Repeats';
 import * as T from './Transactions';
 
 
@@ -573,4 +574,108 @@ test('AccountingActions-AccountingSystem', async () => {
     expect(accountingSystem.getOptions()).toEqual(optionsB);
     expect(lastResult).toEqual(expect.objectContaining(
         { newOptions: optionsB, oldOptions: settingsA }));
+});
+
+
+//
+//---------------------------------------------------------
+//
+test('AccountingActions-Reminders', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    const { accountingSystem } = sys;
+    const reminderManager = accountingSystem.getReminderManager();
+    const actions = accountingSystem.getAccountingActions();
+    const actionManager = accountingSystem.getActionManager();
+
+    let currentSettings;
+    actions.on('addReminder', (action, result) => {
+        if (currentSettings) {
+            currentSettings.id = result.newReminderDataItem.id;
+        }
+    });
+
+    const settingsA = {
+        repeatDefinition: {
+            type: RE.RepeatType.YEARLY.name,
+            period: 12,
+            offset: {
+                type: RE.YearOffsetType.NTH_WEEK.name,
+                offset: 2,
+                dayOfWeek: 1,
+            },
+            startYMDDate: '2010-01-01',
+        },
+        description: 'Hello',
+        transactionTemplate: {
+            splits: [
+                { accountId: 123, },
+                { accountId: 234, },
+            ]
+        },
+        isEnabled: true,
+        lastAppliedDate: '2010-06-01',
+    };
+
+    // New Reminder
+    const newReminderAction = actions.createAddReminderAction(settingsA);
+    
+    currentSettings = settingsA;
+    await actionManager.asyncApplyAction(newReminderAction);
+    expect(reminderManager.getReminderDataItemWithId(settingsA.id))
+        .toEqual(expect.objectContaining(settingsA));
+
+
+    // Remove Reminder
+    const removeReminderAction = actions.createRemoveReminderAction(settingsA.id);
+    await actionManager.asyncApplyAction(removeReminderAction);
+    expect(reminderManager.getReminderDataItemWithId(settingsA.id)).toBeUndefined();
+
+    await actionManager.asyncUndoLastAppliedActions(1);
+    expect(reminderManager.getReminderDataItemWithId(settingsA.id))
+        .toEqual(expect.objectContaining(settingsA));
+
+    await actionManager.asyncUndoLastAppliedActions(1);
+    expect(reminderManager.getReminderDataItemWithId(settingsA.id)).toBeUndefined();
+
+    await actionManager.asyncReapplyLastUndoneActions(1);
+    expect(reminderManager.getReminderDataItemWithId(settingsA.id))
+        .toEqual(expect.objectContaining(settingsA));
+
+
+    // Modify Reminder.
+    const settingsA1 = {
+        id: settingsA.id,
+        repeatDefinition: {
+            type: RE.RepeatType.MONTHLY.name,
+            period: 4,
+            offset: {
+                type: RE.MonthOffsetType.NTH_DAY.name,
+                offset: 3,
+            },
+            startYMDDate: '2015-12-31',
+        },
+    };
+    const modifyReminderAction = actions.createModifyReminderAction(settingsA1);
+    await actionManager.asyncApplyAction(modifyReminderAction);
+    expect(reminderManager.getReminderDataItemWithId(settingsA.id))
+        .toEqual(expect.objectContaining(settingsA1));
+
+    await actionManager.asyncUndoLastAppliedActions();
+    expect(reminderManager.getReminderDataItemWithId(settingsA.id))
+        .toEqual(expect.objectContaining(settingsA));
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(reminderManager.getReminderDataItemWithId(settingsA.id))
+        .toEqual(expect.objectContaining(settingsA1));
+
+
+    // Invalid modify.
+    const invalidA1 = {
+        id: settingsA.id,
+        repeatDefinition: undefined,
+    };
+    const invalidModifyAction = actions.createModifyReminderAction(invalidA1);
+    await expect(actionManager.asyncApplyAction(invalidModifyAction)).rejects.toThrow();
+    expect(reminderManager.getReminderDataItemWithId(settingsA.id))
+        .toEqual(expect.objectContaining(settingsA1));
 });
