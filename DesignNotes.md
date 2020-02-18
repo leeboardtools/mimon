@@ -298,6 +298,11 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
 
 
 ### Reminder
+A reminder represents a transaction that is repeated at defined periods of time. A reminder has the following properties:
+- [RepeatDefinition](#repeatdefinition)
+- [Transaction](#transaction) template.
+- isEnabled
+- lastAppliedDate
 
 ### ReminderManager
 Manages all the [Reminder](#reminder)s in an accounting system.
@@ -361,7 +366,19 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
 - Action Recovery
     - Option to save applied actions to a recovery file.
 
+- YMDDate
+    - Add locale based toString(). Maybe add to UserMessages.js instead of YMDDate.js
+
 
 - dataDeepCopy
     - Add support for Set and Map, prevent recursion.
 
+
+- Account, Priced Item removal
+    - Prevent removal if the account/priced items are in use.
+    - How? At the action level?
+        - Could check at the action level:
+        - Accounts: Transactions referring to it.
+        - Priced Items: Accounts, Prices referring to it.
+        - Could add special actions that delete all the 
+        transactions, accounts, etc.

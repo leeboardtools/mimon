@@ -1,7 +1,9 @@
+import { EventEmitter } from 'events';
 import { JSONGzipAccountingFileFactory } from '../engine/JSONGzipAccountingFile';
 import { getQuantityDefinition } from '../util/Quantities';
 import { userError } from '../util/UserMessages';
 import deepEqual from 'deep-equal';
+import { Reconciler } from './Reconciler';
 
 
 /**
@@ -19,11 +21,17 @@ import deepEqual from 'deep-equal';
  * to temporarily update their reconcile state while the Reconciler
  * is active.
  */
-export class EngineAccessor {
+export class EngineAccessor extends EventEmitter {
     constructor(options) {
+        super(options);
+
         options = options || {};
 
         this._handleActionApply = this._handleActionApply.bind(this);
+        this._handleAccountRemove = this._handleAccountRemove.bind(this);
+        this._handleTransactionsAdd = this._handleTransactionsAdd.bind(this);
+        this._handleTransactionsModify = this._handleTransactionsModify.bind(this);
+        this._handleTransactionsRemove = this._handleTransactionsRemove.bind(this);
 
         // Some synonyms.
         this.asyncUndoLastAppliedAction = this.asyncUndoLastAppliedActions;
@@ -49,6 +57,11 @@ export class EngineAccessor {
                 this._fileNameFilters.push(i);
             });
         }
+
+        this._reconcilersByAccountId = new Map();
+        this._removeReconciler = this._removeReconciler.bind(this);
+
+        this._getTransactionDataItemCallbacks = [];
     }
 
 
@@ -65,12 +78,24 @@ export class EngineAccessor {
             this._accountingActions.on('actionApply', this._handleActionApply);
 
             this._actionManager = _accountingSystem.getActionManager();
+
             this._accountManager = _accountingSystem.getAccountManager();
+            this._accountManager.on('accountRemove', this._handleAccountRemove);
+
             this._pricedItemManager = _accountingSystem.getPricedItemManager();
             this._priceManager = _accountingSystem.getPriceManager();
             this._lotManager = _accountingSystem.getLotManager();
+
             this._transactionManager = _accountingSystem.getTransactionManager();
+            this._transactionManager.on('transactionsAdd', 
+                this._handleTransactionsAdd);
+            this._transactionManager.on('transactionsModify', 
+                this._handleTransactionsModify);
+            this._transactionManager.on('transactionsRemove', 
+                this._handleTransactionsRemove);
+
             this._reminderManager = _accountingSystem.getReminderManager();
+
         }
         else {
             this._fileFactoryIndex = undefined;
@@ -80,12 +105,25 @@ export class EngineAccessor {
                 this._accountingActions = undefined;
             }
 
+            if (this._accountManager) {
+                this._accountManager.off('accountRemove', this._handleAccountRemove);
+            }
+
+            if (this._transactionManager) {
+                this._transactionManager.off('transactionsAdd', 
+                    this._handleTransactionsAdd);
+                this._transactionManager.off('transactionsModify', 
+                    this._handleTransactionsModify);
+                this._transactionManager.off('transactionsRemove', 
+                    this._handleTransactionsRemove);
+                this._transactionManager = undefined;
+            }
+
             this._accountingSystem = undefined;
             this._actionManager = undefined;
             this._pricedItemManager = undefined;
             this._priceManager = undefined;
             this._lotManager = undefined;
-            this._transactionManager = undefined;
             this._reminderManager = undefined;
         }
     }
@@ -837,7 +875,65 @@ export class EngineAccessor {
      * have their corresponding element set to <code>undefined</code>.
      */
     async asyncGetTransactionDataItemsWithIds(ids) {
-        return this._transactionManager.asyncGetTransactionDataItemsWithIds(ids);
+        let transactionDataItems 
+            = this._transactionManager.asyncGetTransactionDataItemsWithIds(ids);
+        if (Array.isArray(transactionDataItems)) {
+            this._applyGetTransactionDataItemCallbacks(transactionDataItems);
+        }
+        else if (transactionDataItems) {
+            transactionDataItems = this._applyGetTransactionDataItemCallbacks(
+                [transactionDataItems]
+            )[0];
+        }
+        return transactionDataItems;
+    }
+
+    _applyGetTransactionDataItemCallbacks(transactionDataItems) {
+        this._getTransactionDataItemCallbacks.forEach((callback) => {
+            callback(transactionDataItems);
+        });
+        return transactionDataItems;
+    }
+
+
+    async asyncFireTransactionsModified(transactionIds) {
+        const transactionDataItems = await this.asyncGetTransactionDataItemsWithIds(
+            transactionIds);
+        
+        this.emit('transactionsModify', {
+            newTransactionDataItems: transactionDataItems,
+            oldTransactionDataItems: transactionDataItems,
+        });
+    }
+
+
+    /**
+     * Used by {@link EngineAccessor#asyncGetTransactionDataItemsWithIds}
+     * to filter transaction data items being retrieved.
+     * @callback EngineAccessor#getTransactionDataItemCallback
+     * @param {TransactionDataItem[]} transactionDataItems
+     * @returns {TransactionDataItem}
+     */
+
+    /**
+     * Adds a callback for filtering transaction data items in 
+     * {@link EngineAccessor#asyncGetTransactionDataItemsWithIds}
+     * @param {EngineAccessor#getTransactionDataItemCallback} filter 
+     */
+    addGetTransactionDataItemCallback(callback) {
+        this._getTransactionDataItemCallbacks.push(callback);
+    }
+
+    /**
+     * Removes a callback added with 
+     * {@link EngineAccessor#addGetTransactionDataItemCallback}
+     * @param {EngineAccess#getTransactionDataItemCallback} callback 
+     */
+    removeGetTransactionDataItemCallback(callback) {
+        const index = this._getTransactionDataItemCallbacks.indexOf(callback);
+        if (index >= 0) {
+            this._getTransactionDataItemCallbacks.splice(index, 1);
+        }
     }
 
 
@@ -914,7 +1010,7 @@ export class EngineAccessor {
      * @param {number} accountId 
      * @returns {number[]}
      */
-    async asyncGetNonReconciledIdsForAccountId(accountId) {
+    async asyncGetNonReconciledTransactionIdsForAccountId(accountId) {
         return this._transactionManager.asyncGetNonReconciledIdsForAccountId(accountId);
     }
 
@@ -949,6 +1045,63 @@ export class EngineAccessor {
      */
     getReminderDataItemWithId(id) {
         return this._reminderManager.getReminderDataItemWithId(id);
+    }
+
+
+
+    /**
+     * Retrieves a reconciler for an account. An account may only have one reconciler,
+     * this will return an existing reconciler if one has already been opened.
+     * @param {number} accountId 
+     * @returns {Reconciler}
+     */
+    async asyncGetAccountReconciler(accountId) {
+        let reconciler = this._reconcilersByAccountId.get(accountId);
+        if (!reconciler) {
+            const accountDataItem = this.getAccountDataItemWithId(accountId);
+            if (!accountDataItem) {
+                throw userError('EngineAccess-reconcile_account_id_not_found', accountId);
+            }
+
+            reconciler = new Reconciler(this, accountDataItem, this._removeReconciler);
+
+            this._reconcilersByAccountId.set(accountId, reconciler);
+            this.addGetTransactionDataItemCallback(
+                reconciler.filterGetTransactionDataItems);
+        }
+        return reconciler;
+    }
+
+
+    _removeReconciler(reconciler) {
+        this.removeGetTransactionDataItemCallback(
+            reconciler.filterGetTransactionDataItems);
+        this._reconcilersByAccountId.delete(reconciler.getAccountId());
+    }
+
+
+    _handleAccountRemove(result) {
+        const { removedAccountDataItem } = result;
+        const reconciler = this._reconcilersByAccountId.get(removedAccountDataItem.id);
+        if (reconciler) {
+            reconciler.cancelReconcile();
+        }
+    }
+
+
+    _handleTransactionsAdd(result) {
+        // TODO: Apply filtering.
+        this.emit('transactionAdd', result);
+    }
+
+    _handleTransactionsModify(result) {
+        // TODO: Apply filtering.
+        this.emit('transactionsModify', result);
+    }
+
+    _handleTransactionsRemove(result) {
+        // TODO: Apply filtering.
+        this.emit('transactionsRemove', result);
     }
 
 

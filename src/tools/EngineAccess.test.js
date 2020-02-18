@@ -423,7 +423,8 @@ test('EngineAccessor-actions', async () => {
             { ymdDate: '2018-01-23', quantityBaseValue: checkingOpeningBalance, }
         ]);
 
-        result = await accessor.asyncGetNonReconciledIdsForAccountId(checkingId);
+        result = await accessor.asyncGetNonReconciledTransactionIdsForAccountId(
+            checkingId);
         expect(result).toEqual([ transG.id, ]);
 
 

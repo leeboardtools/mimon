@@ -109,6 +109,11 @@
     "PricedItemManager-modify_no_change_currency_currency": "The currency of a currency priced item cannot be changed.",
 
 
+    "Reconciler-invalid_closing_date": "A closing date is required.",
+    "Reconciler-closing_date_before_last": ["The closing date must be after the last closing date, which was ", "."],
+    "Reconciler-account_not_balanced": ["The reconciled balance, ", ", does not match the closing balance, ", "."],
+
+
     "ReminderManager-repeat_definition_required": "A repeat definition must be defined.",
     "ReminderManager-remove_no_id": ["The reminder cannot be deleted. An item with id '", "' was not found."],
     "ReminderManager-modify_no_id": ["The reminder could not be modified. An item with id '", "' was not found."],
@@ -167,7 +172,7 @@
 
 
     "EngineAccess-create_file_not_found": ["The file '", "' could not be created, a supported file type was not found."],
- 
+    "EngineAccess-reconcile_account_id_not_found": ["Could not obtain a reconciler, an account with id ", " was not found."],
 
     "Repeats-weekly_offset_dayOfWeek_invalid": "The weekly offset must have a valid day of week.",
     "Repeats-month_NTH_DAY_offset_invalid": "The offset for monthly repeats with day offset must be a number between -31 and 31.",

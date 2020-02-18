@@ -158,3 +158,16 @@ export function userError(key, ...args) {
     error.msgCode = key;
     return error;
 }
+
+
+/**
+ * Returns a string representation of a date.
+ * @param {YMDDate|Date} date 
+ * @returns {string}
+ */
+export function userDateString(date) {
+    if (date) {
+        // FIX ME!!!
+        return date.toString();
+    }
+}
