@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import { userMsg, userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
 import { PricedItemType, getPricedItemType } from './PricedItems';
+import { getYMDDate, getYMDDateString } from '../util/YMDDate';
 import deepEqual from 'deep-equal';
 
 
@@ -259,6 +260,10 @@ export function loadAccountsUserMessages() {
  * represents.
  * @property {string}   [name]  The name of the account.
  * @property {string}   [description]   The description of the account.
+ * @property {string}   [lastReconcileYMDDate] The closing date of the last 
+ * account reconciliation.
+ * @property {number}   [lastReconcileBalanceBaseValue]  The closing balance quantity
+ * of the last account reconciliation.
  */
 
 /**
@@ -271,6 +276,10 @@ export function loadAccountsUserMessages() {
  * represents.
  * @property {string}   [name]  The name of the account.
  * @property {string}   [description]   The description of the account.
+ * @property {YMDDate}   [lastReconcileYMDDate] The closing date of the last 
+ * account reconciliation.
+ * @property {number}   [lastReconcileBalanceBaseValue]  The closing balance quantity
+ * of the last account reconciliation.
  */
 
 /**
@@ -284,11 +293,16 @@ export function loadAccountsUserMessages() {
 export function getAccount(accountDataItem, alwaysCopy) {
     if (accountDataItem) {
         const type = getAccountType(accountDataItem.type);
+        const lastReconcileYMDDate = getYMDDate(accountDataItem.lastReconcileYMDDate);
         if (alwaysCopy
-         || (type !== accountDataItem.type)) {
+         || (type !== accountDataItem.type)
+         || (lastReconcileYMDDate !== accountDataItem.lastReconcileYMDDate)) {
             const account = Object.assign({}, accountDataItem);
             if (type !== undefined) {
                 account.type = type;
+            }
+            if (lastReconcileYMDDate !== undefined) {
+                account.lastReconcileYMDDate = lastReconcileYMDDate;
             }
             if (accountDataItem.childAccountIds !== undefined) {
                 account.childAccountIds = Array.from(accountDataItem.childAccountIds);
@@ -310,11 +324,16 @@ export function getAccount(accountDataItem, alwaysCopy) {
 export function getAccountDataItem(account, alwaysCopy) {
     if (account) {
         const typeName = getAccountTypeName(account.type);
+        const lastReconcileYMDDate = getYMDDateString(account.lastReconcileYMDDate);
         if (alwaysCopy
-         || (typeName !== account.type)) {
+         || (typeName !== account.type)
+         || (lastReconcileYMDDate !== account.lastReconcileYMDDate)) {
             const accountDataItem = Object.assign({}, account);
             if (typeName !== undefined) {
                 accountDataItem.type = typeName;
+            }
+            if (lastReconcileYMDDate !== undefined) {
+                accountDataItem.lastReconcileYMDDate = lastReconcileYMDDate;
             }
             if (account.childAccountIds !== undefined) {
                 accountDataItem.childAccountIds = Array.from(account.childAccountIds);

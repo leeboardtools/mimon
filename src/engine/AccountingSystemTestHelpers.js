@@ -462,7 +462,9 @@ export async function asyncAddOpeningBalances(sys) {
     await transactionManager.asyncAddTransaction([
         { ymdDate: initialYMDDate, 
             splits: [
-                { accountId: sys.checkingId, quantityBaseValue: sys.checkingOBQuantityBaseValue, },
+                { accountId: sys.checkingId, 
+                    quantityBaseValue: sys.checkingOBQuantityBaseValue, 
+                    reconcileState: T.ReconcileState.RECONCILED.name, },
                 { accountId: openingBalancesId, quantityBaseValue: sys.checkingOBQuantityBaseValue, },
             ], 
         },
@@ -497,15 +499,73 @@ export async function asyncAddOpeningBalances(sys) {
 
 //
 //---------------------------------------------------------
+// The transactions:
+//  - transA    2000-01-24
+//      - Cash:         -1000       N
+//      - Groceries     +1000       N
+//  - transB    2000-01-24
+//      - Checking:     -10000      R
+//      - Cash:         +10000      N
 //
+//  - transC    2000-01-25
+//      - amexCard:     +15000      N
+//      - household:    +15000      N
+//  - transD    2000-01-25
+//      - checking:     -5000       R
+//      - electricity:  +5000       N
+//  - transE    2000-01-25
+//      - checking:     -7000       R
+//      - phone:        +7000       N
+//
+//  - transF    2000-01-26
+//      - salary:       100000      N
+//      - federalTaxes: 25000       N
+//      - stateTaxes:   10000       N
+//      - medicareTaxes 2500        N
+//      - socSecTaxes   2000        N
+//      - stateTaxes    500         N
+//      - checking:     60000       N
+//
+//  - transG    2005-02-11
+//      - ira                       N
+//      - aaplIRA                   N
+//
+//  - transH    2005-02-28
+//      2 for 1 split               N
+//
+//  - transI    2014-06-09
+//      7 for 1 split               N
+//
+//  - transJ    2015-03-12
+//      - ira                       N
+//      - aaplIRA                   N
+//
+//  - transK    2020-01-24
+//      Sell 10 shares              N
+//      - 
+//
+//  - transL    2010-12-01
+//      - checking:     -5000       P
+//      - charity:      +5000       N
+//
+//  - transM    2011-12-10
+//      - checking:     -15000      N
+//      - charity:      +15000      N
+//
+//  - transI    2013-12-15
+//      - checking:     -20000      N
+//      - charity:      +20000      N
 export async function asyncAddBasicTransactions(sys) {
     const { accountingSystem, initialYMDDate } = sys;
     const transactionManager = accountingSystem.getTransactionManager();
 
     let ymdDate = getYMDDate(initialYMDDate);
 
+    let result;
+
     ymdDate = ymdDate.addDays(1);
-    await transactionManager.asyncAddTransactions([
+    result = await transactionManager.asyncAddTransactions([
+        // transA
         {
             ymdDate: ymdDate,
             description: 'Lunch',
@@ -514,6 +574,8 @@ export async function asyncAddBasicTransactions(sys) {
                 { accountId: sys.cashId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -1000, },
             ],
         },
+
+        // transB
         {
             ymdDate: ymdDate,
             description: 'Cash',
@@ -523,9 +585,12 @@ export async function asyncAddBasicTransactions(sys) {
             ],
         },
     ]);
+    sys.transAId = result.newTransactionDataItems[0].id;
+    sys.transBId = result.newTransactionDataItems[1].id;
 
     ymdDate = ymdDate.addDays(1);
-    await transactionManager.asyncAddTransactions([
+    result = await transactionManager.asyncAddTransactions([
+        // transC
         {
             ymdDate: ymdDate,
             description: 'Shopping',
@@ -534,6 +599,8 @@ export async function asyncAddBasicTransactions(sys) {
                 { accountId: sys.amexCardId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 15000, },
             ],
         },
+
+        // transD
         {
             ymdDate: ymdDate,
             description: 'Power bill',
@@ -542,18 +609,24 @@ export async function asyncAddBasicTransactions(sys) {
                 { accountId: sys.checkingId, reconcileState: T.ReconcileState.RECONCILED.name, quantityBaseValue: -5000, },
             ],
         },
+
+        // transE
         {
             ymdDate: ymdDate,
             description: 'Phone bill',
             splits: [
-                { accountId: sys.electricityId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 7000, },
-                { accountId: sys.phoneId, reconcileState: T.ReconcileState.RECONCILED.name, quantityBaseValue: -7000, },
+                { accountId: sys.phoneId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 7000, },
+                { accountId: sys.checkingId, reconcileState: T.ReconcileState.RECONCILED.name, quantityBaseValue: -7000, },
             ],
         },
     ]);
+    sys.transCId = result.newTransactionDataItems[0].id;
+    sys.transDId = result.newTransactionDataItems[1].id;
+    sys.transEId = result.newTransactionDataItems[2].id;
 
     ymdDate = ymdDate.addDays(1);
-    await transactionManager.asyncAddTransactions([
+    result = await transactionManager.asyncAddTransactions([
+        // transF
         {
             ymdDate: ymdDate,
             description: 'Paycheck',
@@ -568,7 +641,7 @@ export async function asyncAddBasicTransactions(sys) {
             ],
         },
     ]);
-
+    sys.transFId = result.newTransactionDataItems[0].id;
 
     const priceManager = accountingSystem.getPriceManager();
 
@@ -653,7 +726,8 @@ export async function asyncAddBasicTransactions(sys) {
     const aaplCostBasisBaseValue1 = priceQuantityDefinition.numberToBaseValue(aaplCostBasis1);
 
     const aaplLotChange1 = { lotId: aaplLot1.id, quantityBaseValue: aaplQuantityBaseValue1, costBasisBaseValue: aaplCostBasisBaseValue1, };
-    await transactionManager.asyncAddTransaction([
+    result = await transactionManager.asyncAddTransaction([
+        // transG
         {
             ymdDate: '2005-02-11',
             splits: [
@@ -668,12 +742,13 @@ export async function asyncAddBasicTransactions(sys) {
             ]
         }
     ]);
-    
+    sys.transGId = result.newTransactionDataItems[0].id;
 
 
     // Add the stock splits.
     const aaplChangeSplit2005_02_28 = { lotId: aaplLot1.id, isSplitMerge: true, quantityBaseValue: aaplQuantityBaseValue1, };
     const aaplTrans2005_02_28 = (await transactionManager.asyncAddTransaction(
+        // transH
         {
             ymdDate: '2005-02-28',
             description: '2 for 1 split',
@@ -687,9 +762,11 @@ export async function asyncAddBasicTransactions(sys) {
             ],
         }
     )).newTransactionDataItem;
+    sys.transHId = aaplTrans2005_02_28.id;
 
     const aaplChangeSplit2014_06_09 = { lotId: aaplLot1.id, isSplitMerge: true, quantityBaseValue: 6 * (aaplChangeSplit2005_02_28.quantityBaseValue + aaplQuantityBaseValue1), };
     const aaplTrans2014_06_09 = (await transactionManager.asyncAddTransaction(
+        // transI
         {
             ymdDate: '2014-06-09',
             description: '7 for 1 split',
@@ -703,7 +780,7 @@ export async function asyncAddBasicTransactions(sys) {
             ],
         }
     )).newTransactionDataItem;
-
+    sys.transIId = aaplChangeSplit2014_06_09.id;
 
 
     const aaplLot2 = (await lotManager.asyncAddLot({ pricedItemId: sys.aaplPricedItemId, description: 'Lot 2015-03-12'})).newLotDataItem;
@@ -715,7 +792,8 @@ export async function asyncAddBasicTransactions(sys) {
     const aaplQuantityBaseValue2 = lotQuantityDefinition.numberToBaseValue(aaplQuantity2);
     const aaplCostBasisBaseValue2 = priceQuantityDefinition.numberToBaseValue(aaplCostBasis2);
     const aaplLotChange2 = { lotId: aaplLot2.id, quantityBaseValue: aaplQuantityBaseValue2, costBasisBaseValue: aaplCostBasisBaseValue2, };
-    await transactionManager.asyncAddTransaction([
+    result = await transactionManager.asyncAddTransaction([
+        // transJ
         {
             ymdDate: aaplPrice2.ymdDate,
             splits: [
@@ -729,6 +807,7 @@ export async function asyncAddBasicTransactions(sys) {
             ]
         }
     ]);
+    sys.transJId = result.newTransactionDataItems[0].id;
 
 
     // Sell 10 shares
@@ -738,7 +817,8 @@ export async function asyncAddBasicTransactions(sys) {
     const aaplQuantityBaseValue3 = lotQuantityDefinition.numberToBaseValue(aaplQuantity3);
     const aaplCostBasisBaseValue3 = priceQuantityDefinition.numberToBaseValue(aaplCostBasis3);
     const aaplLotChange3 = { lotId: aaplLot2.id, quantityBaseValue: aaplQuantityBaseValue3, costBasisBaseValue: aaplCostBasisBaseValue3, };
-    await transactionManager.asyncAddTransaction([
+    result = await transactionManager.asyncAddTransaction([
+        // transK
         {
             ymdDate: aaplPrice3.ymdDate,
             splits: [
@@ -753,17 +833,20 @@ export async function asyncAddBasicTransactions(sys) {
             ]
         }
     ]);
+    sys.transKId = result.newTransactionDataItems[0].id;
 
-
-    await transactionManager.asyncAddTransactions([
+    result = await transactionManager.asyncAddTransactions([
+        // transL
         {
             ymdDate: '2010-12-01',
             description: 'Charity donation',
             splits: [
-                { accountId: sys.charityId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 15000, },
-                { accountId: sys.checkingId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -15000, refNum: '123' },
+                { accountId: sys.charityId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 5000, },
+                { accountId: sys.checkingId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: -5000, refNum: '123' },
             ],
         },
+
+        // transM
         {
             ymdDate: '2011-12-10',
             description: 'Charity donation',
@@ -772,6 +855,8 @@ export async function asyncAddBasicTransactions(sys) {
                 { accountId: sys.checkingId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: -15000, refNum: '456' },
             ],
         },
+
+        // transN
         {
             ymdDate: '2013-12-15',
             description: 'Charity donation',
@@ -781,5 +866,19 @@ export async function asyncAddBasicTransactions(sys) {
             ],
         },
     ]);
+    sys.transLId = result.newTransactionDataItems[0].id;
+    sys.transMId = result.newTransactionDataItems[1].id;
+    sys.transNId = result.newTransactionDataItems[2].id;
 
+    const accountManager = accountingSystem.getAccountManager();
+
+    sys.checkingLastReconcileInfo = {
+        lastReconcileYMDDate: '2010-12-01',
+        lastReconcileBalanceBaseValue: 78000,
+    };
+    await accountManager.asyncModifyAccount({
+        id: sys.checkingId,
+        lastReconcileYMDDate: sys.checkingLastReconcileInfo.lastReconcileYMDDate,
+        lastReconcileBalanceBaseValue: sys.checkingLastReconcileInfo.lastReconcileBalanceBaseValue,
+    });
 }
