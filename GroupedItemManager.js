@@ -156,9 +156,10 @@ export class GroupedItemManager {
                 groupEntry.ids);
 
             for (let i = 0; i < groupEntry.indices.length; ++i) {
-                items[groupEntry.indices[i]] = groupItems[i];
+                const index = groupEntry.indices[i];
+                items[index] = groupItems[i];
                 if (!this._noCache) {
-                    groupEntry.loadedItemGroup.itemsById.set(ids[i], groupItems[i]);
+                    groupEntry.loadedItemGroup.itemsById.set(ids[index], groupItems[i]);
                 }
             }
         }
