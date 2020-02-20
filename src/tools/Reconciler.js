@@ -1,6 +1,8 @@
-import { userError, userDateString } from '../util/UserMessages';
+import { userError, userDateString, userMsg } from '../util/UserMessages';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
 import * as T from '../engine/Transactions';
+import * as AS from '../engine/AccountStates';
+import { createCompositeAction } from '../util/Actions';
 
 /**
  * Manages reconciling an individual account.
@@ -39,7 +41,7 @@ export class Reconciler {
 
     /**
      * @typedef {object} Reconciler~SplitEntry
-     * @property {number}   index
+     * @property {number}   splitIndex
      * @property {boolean}  markReconciled
      */
 
@@ -153,14 +155,14 @@ export class Reconciler {
         const splitEntries = this._getTransactionEntry(transactionId).splitEntries;
         const markReconciled = (reconcileState !== T.ReconcileState.NOT_RECONCILED.name);
         for (let s = 0; s < splitEntries.length; ++s) {
-            if (splitEntries[s].index === splitIndex) {
+            if (splitEntries[s].splitIndex === splitIndex) {
                 splitEntries[s].markReconciled = markReconciled;
                 return;
             }
         }
 
         splitEntries.push({
-            index: splitIndex,
+            splitIndex: splitIndex,
             markReconciled: markReconciled,
         });
     }
@@ -171,7 +173,7 @@ export class Reconciler {
         if (transactionEntry) {
             const { splitEntries } = transactionEntry;
             for (let s = 0; s < splitEntries.length; ++s) {
-                if (splitEntries[s].index === splitIndex) {
+                if (splitEntries[s].splitIndex === splitIndex) {
                     splitEntries.splice(s, 1);
                     break;
                 }
@@ -189,7 +191,7 @@ export class Reconciler {
         if (transactionEntry) {
             const { splitEntries } = transactionEntry;
             for (let s = 0; s < splitEntries.length; ++s) {
-                if (splitEntries[s].index === splitIndex) {
+                if (splitEntries[s].splitIndex === splitIndex) {
                     return splitEntries[s];
                 }
             }
@@ -213,7 +215,7 @@ export class Reconciler {
      */
     async asyncCanApplyReconcile() {
         const currentBalanceBaseValue 
-            = await this.asyncGetNonReconciledBalanceBaseValue();
+            = await this.asyncGetMarkedReconciledBalanceBaseValue();
         return currentBalanceBaseValue === this._closingInfo.closingBalanceBaseValue;
     }
 
@@ -228,7 +230,7 @@ export class Reconciler {
         if (!await this.asyncCanApplyReconcile()) {
             const currentBalance = this._accessor.accountQuantityBaseValueToText(
                 this._accountId,
-                await this.asyncGetNonReconciledBalanceBaseValue());
+                await this.asyncGetMarkedReconciledBalanceBaseValue());
             const closingBalance = this._accessor.accountQuantityBaseValueToText(
                 this._accountId,
                 this._closingBalanceInfo.closingBalanceBaseValue);
@@ -238,8 +240,61 @@ export class Reconciler {
 
         // Create a composite action for updating the transactions and the
         // account reconciliation info.
+        const allTransactionDataItems 
+            = await this._accessor.asyncGetTransactionDataItemsWithIds(
+                Array.from(this._transactionEntriesByTransactionId.keys())
+            );
+        const allTransactionDataItemsById = new Map();
+        allTransactionDataItems.forEach((dataItem) => {
+            allTransactionDataItemsById.set(dataItem.id, dataItem);
+        });
+
+        const transactionDataItemsToChange = [];
+        this._transactionEntriesByTransactionId.forEach((transactionEntry, id) => {
+            const { splitEntries } = transactionEntry;
+            let transactionDataItem;
+            splitEntries.forEach((splitEntry) => {
+                if (!splitEntry.markReconciled) {
+                    return;
+                }
+
+                if (!transactionDataItem) {
+                    transactionDataItem = allTransactionDataItemsById.get(id);
+                    transactionDataItemsToChange.push(transactionDataItem);
+                }
+
+                transactionDataItem.splits[splitEntry.splitIndex].reconcileState
+                    = T.ReconcileState.RECONCILED;
+            });
+        });
+
+        const accountingActions = this._accessor.getAccountingActions();
+        const transactionModifyAction = accountingActions.createModifyTransactionAction(
+            transactionDataItemsToChange
+        );
+
+        const accountDataItem = this._accessor.getAccountDataItemWithId(this._accountId);
+        accountDataItem.lastReconcileBalanceBaseValue 
+            = this._closingInfo.closingBalanceBaseValue;
+        accountDataItem.lastReconcileYMDDate = this._closingInfo.closingYMDDate;
+
+        const accountModifyAction = accountingActions.createModifyAccountAction(
+            accountDataItem
+        );
+
+        const mainAction = createCompositeAction(
+            {
+                name: userMsg('Reconciler-reconcile_action_name', accountDataItem.name 
+                    | ''),
+            },
+            [
+                transactionModifyAction,
+                accountModifyAction,
+            ]
+        );
 
         // Appy the action.
+        await this._accessor.asyncApplyAction(mainAction);
 
         this._shutDown();
     }
@@ -289,7 +344,7 @@ export class Reconciler {
             splitEntries.forEach((splitEntry) => {
                 splitInfos.push({
                     transactionId: id,
-                    splitIndex: splitEntry.index,
+                    splitIndex: splitEntry.splitIndex,
                     markReconciled: splitEntry.markReconciled,
                 });
             });
@@ -299,12 +354,48 @@ export class Reconciler {
 
 
     /**
-     * Retrieves the current non-reconciled balance base value, reflecting
-     * any reconciler changes. 
+     * Retrieves the balance representing all transaction splits that are marked
+     * reconciled.
      * @returns {number}
      */
-    async asyncGetNonReconciledBalanceBaseValue() {
+    async asyncGetMarkedReconciledBalanceBaseValue() {
+        // Start with the current account state, remove all splits not marked as
+        // reconciled up to the oldest split we have that's not marked as reconciled.
+        let oldestDateValue = Number.MAX_VALUE;
+        let transactionDataItems 
+            = await this._accessor.asyncGetTransactionDataItemsWithIds(
+                Array.from(this._transactionEntriesByTransactionId.keys())
+            );
+        transactionDataItems.forEach((transactionDataItem) => {
+            const ymdDate = getYMDDate(transactionDataItem.ymdDate);
+            const dateValue = ymdDate.valueOf();
+            if (dateValue < oldestDateValue) {
+                oldestDateValue = dateValue;
+            }
+        });
 
+        let accountState = this._accessor.getCurrentAccountStateDataItem(this._accountId);
+
+        const dateRange = await this._accessor.asyncGetTransactionDateRange(
+            this._accountId);
+        dateRange[0] = new YMDDate(oldestDateValue);
+
+        transactionDataItems 
+            = await this._accessor.asyncGetTransactionDataItemsInDateRange(
+                this._accountId, dateRange);
+        
+        for (let i = transactionDataItems.length - 1; i >= 0; --i) {
+            const { splits } = transactionDataItems[i];
+            splits.forEach((split) => {
+                if ((split.accountId === this._accountId)
+                 && (split.reconcileState === T.ReconcileState.NOT_RECONCILED.name)) {
+                    accountState = AS.removeSplitFromAccountStateDataItem(
+                        accountState, split, dateRange[0]);
+                }
+            });
+        }
+
+        return accountState.quantityBaseValue;
     }
 
 
@@ -361,7 +452,7 @@ export class Reconciler {
      * {@link Reconciler#asyncGetNonReconciledSplitInfos}
      * @param {Reconciler~SplitInfo}    splitInfo
      */
-    async asyncIsTransactionSplitMarkedReconciled(splitInfo) {
+    isTransactionSplitMarkedReconciled(splitInfo) {
         const splitEntry = this._getSplitEntry(splitInfo.transactionId, 
             splitInfo.splitIndex);
         if (splitEntry) {
@@ -394,7 +485,7 @@ export class Reconciler {
             const { splitEntries } = transactionEntry;
             for (let i = 0; i < splitEntries.length; ++i) {
                 const splitEntry = splitEntries[i];
-                splits[splitEntry.index].reconcileState
+                splits[splitEntry.splitIndex].reconcileState
                     = (splitEntry.markReconciled)
                         ? T.ReconcileState.PENDING.name
                         : T.ReconcileState.NOT_RECONCILED.name;
@@ -406,8 +497,10 @@ export class Reconciler {
 
 
     _handleTransactionsAdd(result) {
-        const { newTransactionDataItems } = result;
+        this._doTransactionsAdd(result.newTransactionDataItems);
+    }
 
+    _doTransactionsAdd(newTransactionDataItems) {
         // Look for transactions that have our account id.
         newTransactionDataItems.forEach((transactionDataItem) => {
             const { splits } = transactionDataItem;
@@ -422,11 +515,18 @@ export class Reconciler {
         if (this._ignoreTransactionsModified) {
             return;
         }
+
+        const { oldTransactionDataItems, newTransactionDataItems } = result;
+        this._doTransactionsRemove(oldTransactionDataItems);
+        this._doTransactionsAdd(newTransactionDataItems);
     }
 
 
     _handleTransactionsRemove(result) {
-        const { removedTransactionDataItems } = result;
+        this._doTransactionsRemove(result.removedTransactionDataItems);
+    }
+     
+    _doTransactionsRemove(removedTransactionDataItems) {
         const accountId = this._accountId;
 
         // Look for transactions that have our account id.

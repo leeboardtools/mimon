@@ -354,6 +354,17 @@ export function deepCopyTransaction(transaction) {
 }
 
 
+function copyTransactionDataItems(transactionDataItems) {
+    if (transactionDataItems) {
+        for (let i = transactionDataItems.length - 1; i >= 0; --i) {
+            transactionDataItems[i] 
+            = getTransactionDataItem(transactionDataItems[i], true);
+        }
+    }
+    return transactionDataItems;
+}
+
+
 /**
  * @typedef {object} TransactionKey
  * Primarily used for sorting transactions.
@@ -860,6 +871,10 @@ export class TransactionManager extends EventEmitter {
 
 
     _resolveDateRange(ymdDateA, ymdDateB) {
+        if (Array.isArray(ymdDateA)) {
+            ymdDateB = ymdDateA[1];
+            ymdDateA = ymdDateA[0];
+        }
         ymdDateA = (ymdDateA !== undefined) ? getYMDDate(ymdDateA) : ymdDateA;
         ymdDateB = (ymdDateB !== undefined) ? getYMDDate(ymdDateB) : ymdDateB;
         return YMDDate.orderYMDDatePair(ymdDateA, ymdDateB);
@@ -893,8 +908,9 @@ export class TransactionManager extends EventEmitter {
      */
     async asyncGetTransactionDataItemsInDateRange(accountId, ymdDateA, ymdDateB) {
         [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
-        return this._handler.asyncGetTransactionDataItemsInDateRange(accountId, 
-            ymdDateA, ymdDateB);
+        const result = await this._handler.asyncGetTransactionDataItemsInDateRange(
+            accountId, ymdDateA, ymdDateB);
+        return copyTransactionDataItems(result);
     }
 
 
@@ -913,7 +929,12 @@ export class TransactionManager extends EventEmitter {
             return (result) ? result[0] : result;
         }
 
-        return this._handler.asyncGetTransactionDataItemsWithIds(ids);
+        return this._asyncGetTransactionDataItemsCopiesWithIds(ids);
+    }
+
+    async _asyncGetTransactionDataItemsCopiesWithIds(ids) {
+        const result = await this._handler.asyncGetTransactionDataItemsWithIds(ids);
+        return copyTransactionDataItems(result);
     }
 
 
@@ -2054,6 +2075,7 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                 id: Number.MAX_VALUE });
             const ids = sortedEntries.getValues().slice(indexA, indexB + 1).map(
                 (entry) => entry.id);
+            
             return this.asyncGetTransactionDataItemsWithIds(ids);
         }
 

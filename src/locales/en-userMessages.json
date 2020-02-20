@@ -189,6 +189,7 @@
     "Repeats-period_invalid": "The repetition period must be >= 1.",
     "Repeats-start_date_invalid": "The start date is is missing or invalid.",
 
+    "Reconciler-reconcile_action_name": ["Reconcile ", ""],
 
     "": ""
 }

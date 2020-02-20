@@ -382,3 +382,5 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
         - Priced Items: Accounts, Prices referring to it.
         - Could add special actions that delete all the 
         transactions, accounts, etc.
+
+- Verify all manager get data item methods in fact return copies.

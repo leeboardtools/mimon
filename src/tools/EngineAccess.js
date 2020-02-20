@@ -860,8 +860,18 @@ export class EngineAccessor extends EventEmitter {
      * items, sorted from earliest to latest date.
      */
     async asyncGetTransactionDataItemsInDateRange(accountId, ymdDateA, ymdDateB) {
-        return this._transactionManager.asyncGetTransactionDataItemsInDateRange(
-            accountId, ymdDateA, ymdDateB);
+        let transactionDataItems 
+            = await this._transactionManager.asyncGetTransactionDataItemsInDateRange(
+                accountId, ymdDateA, ymdDateB);
+        if (Array.isArray(transactionDataItems)) {
+            this._applyGetTransactionDataItemCallbacks(transactionDataItems);
+        }
+        else if (transactionDataItems) {
+            transactionDataItems = this._applyGetTransactionDataItemCallbacks(
+                [transactionDataItems]
+            )[0];
+        }
+        return transactionDataItems;
     }
 
 
@@ -876,7 +886,7 @@ export class EngineAccessor extends EventEmitter {
      */
     async asyncGetTransactionDataItemsWithIds(ids) {
         let transactionDataItems 
-            = this._transactionManager.asyncGetTransactionDataItemsWithIds(ids);
+            = await this._transactionManager.asyncGetTransactionDataItemsWithIds(ids);
         if (Array.isArray(transactionDataItems)) {
             this._applyGetTransactionDataItemCallbacks(transactionDataItems);
         }
@@ -892,6 +902,7 @@ export class EngineAccessor extends EventEmitter {
         this._getTransactionDataItemCallbacks.forEach((callback) => {
             callback(transactionDataItems);
         });
+
         return transactionDataItems;
     }
 
@@ -1091,7 +1102,7 @@ export class EngineAccessor extends EventEmitter {
 
     _handleTransactionsAdd(result) {
         // TODO: Apply filtering.
-        this.emit('transactionAdd', result);
+        this.emit('transactionsAdd', result);
     }
 
     _handleTransactionsModify(result) {

@@ -501,21 +501,21 @@ export async function asyncAddOpeningBalances(sys) {
 //---------------------------------------------------------
 // The transactions:
 //  - transA    2000-01-24
-//      - Cash:         -1000       N
 //      - Groceries     +1000       N
+//      - Cash:         -1000       N
 //  - transB    2000-01-24
 //      - Checking:     -10000      R
 //      - Cash:         +10000      N
 //
 //  - transC    2000-01-25
-//      - amexCard:     +15000      N
 //      - household:    +15000      N
+//      - amexCard:     +15000      N
 //  - transD    2000-01-25
-//      - checking:     -5000       R
 //      - electricity:  +5000       N
+//      - checking:     -5000       P
 //  - transE    2000-01-25
-//      - checking:     -7000       R
 //      - phone:        +7000       N
+//      - checking:     -7000       R
 //
 //  - transF    2000-01-26
 //      - salary:       100000      N
@@ -545,16 +545,16 @@ export async function asyncAddOpeningBalances(sys) {
 //      - 
 //
 //  - transL    2010-12-01
-//      - checking:     -5000       P
 //      - charity:      +5000       N
+//      - checking:     -5000       R
 //
 //  - transM    2011-12-10
-//      - checking:     -15000      N
 //      - charity:      +15000      N
+//      - checking:     -15000      N
 //
 //  - transI    2013-12-15
-//      - checking:     -20000      N
 //      - charity:      +20000      N
+//      - checking:     -20000      N
 export async function asyncAddBasicTransactions(sys) {
     const { accountingSystem, initialYMDDate } = sys;
     const transactionManager = accountingSystem.getTransactionManager();
@@ -606,7 +606,7 @@ export async function asyncAddBasicTransactions(sys) {
             description: 'Power bill',
             splits: [
                 { accountId: sys.electricityId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 5000, },
-                { accountId: sys.checkingId, reconcileState: T.ReconcileState.RECONCILED.name, quantityBaseValue: -5000, },
+                { accountId: sys.checkingId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: -5000, },
             ],
         },
 
@@ -842,7 +842,7 @@ export async function asyncAddBasicTransactions(sys) {
             description: 'Charity donation',
             splits: [
                 { accountId: sys.charityId, reconcileState: T.ReconcileState.NOT_RECONCILED.name, quantityBaseValue: 5000, },
-                { accountId: sys.checkingId, reconcileState: T.ReconcileState.PENDING.name, quantityBaseValue: -5000, refNum: '123' },
+                { accountId: sys.checkingId, reconcileState: T.ReconcileState.RECONCILED.name, quantityBaseValue: -5000, refNum: '123' },
             ],
         },
 
