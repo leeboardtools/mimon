@@ -116,12 +116,20 @@ test('PricedItemManager-currencies', async () => {
     // Add.
     let result;
     result = await manager.asyncAddCurrencyPricedItem('BMD');
-    const itemA = result.newPricedItemDataItem;
+    let itemA = result.newPricedItemDataItem;
     expect(manager.getCurrencyPricedItemDataItem('BMD')).toEqual(itemA);
 
     // pricedItemAdd event test
     expect(addEventArg).toEqual({ newPricedItemDataItem: itemA });
     expect(addEventArg.newPricedItemDataItem).toBe(itemA);
+
+    // Make sure the data item returned is a copy.
+    itemA = PI.getPricedItemDataItem(itemA, true);
+    result.newPricedItemDataItem.type = 'abc';
+    expect(manager.getCurrencyPricedItemDataItem('BMD')).toEqual(itemA);
+
+    manager.getCurrencyPricedItemDataItem('BMD').type = 1234;
+    expect(manager.getCurrencyPricedItemDataItem('BMD')).toEqual(itemA);
 
 
     // Undo Add
@@ -148,8 +156,8 @@ test('PricedItemManager-currencies', async () => {
     const quantityDefinitionC = getDecimalDefinition(-5);
     result = await manager.asyncModifyPricedItem(
         { id: itemB.id, quantityDefinition: quantityDefinitionC });
-    const itemC = result.newPricedItemDataItem;
-    const oldItemC = result.oldPricedItemDataItem;
+    let itemC = result.newPricedItemDataItem;
+    let oldItemC = result.oldPricedItemDataItem;
     expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB))
         .toBeUndefined();
     expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC))
@@ -160,6 +168,17 @@ test('PricedItemManager-currencies', async () => {
         { newPricedItemDataItem: itemC, oldPricedItemDataItem: oldItemC });
     expect(modifyEventArg.newPricedItemDataItem).toBe(itemC);
     expect(modifyEventArg.oldPricedItemDataItem).toBe(oldItemC);
+
+
+    itemC = PI.getPricedItemDataItem(itemC, true);
+    oldItemC = PI.getPricedItemDataItem(oldItemC, true);
+
+    // Make sure the data items returned are copies.
+    result.newPricedItemDataItem.type = 'abc';
+    result.oldPricedItemDataItem.type = 'def';
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionC))
+        .toEqual(itemC);
+
 
 
     // Undo modify
@@ -181,12 +200,16 @@ test('PricedItemManager-currencies', async () => {
 
     // Remove.
     result = await manager.asyncRemovePricedItem(itemA.id);
-    const removedA = result.removedPricedItemDataItem;
+    let removedA = result.removedPricedItemDataItem;
     expect(manager.getCurrencyPricedItemDataItem('BMD')).toBeUndefined();
 
     // pricedItemRemove event test
     expect(removeEventArg).toEqual({ removedPricedItemDataItem: removedA });
     expect(removeEventArg.removedPricedItemDataItem).toBe(removedA);
+
+    // Make sure the data item returned is a copy.
+    removedA = PI.getPricedItemDataItem(removedA, true);
+    result.removedPricedItemDataItem.type = 'zzz';
 
     // Undo remove
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
@@ -240,8 +263,17 @@ test('PricedItemManager-other types', async () => {
         currency: 'JPY', 
         quantityDefinition: getDecimalDefinition(-3), 
     };
-    const itemB = (await manager.asyncAddPricedItem(optionsB)).newPricedItemDataItem;
+    let itemB = (await manager.asyncAddPricedItem(optionsB)).newPricedItemDataItem;
     expectPricedItemToMatch(itemB, optionsB);
+
+    // Make sure the item returned is a copy.
+    result = itemB;
+    itemB = PI.getPricedItemDataItem(itemB, true);
+    result.type = 'abc';
+    expect(manager.getPricedItemDataItemWithId(itemB.id)).toEqual(itemB);
+
+    manager.getPricedItemDataItemWithId(itemB.id).type = 123;
+    expect(manager.getPricedItemDataItemWithId(itemB.id)).toEqual(itemB);
 
     
     const optionsC = { type: PI.PricedItemType.REAL_ESTATE, 
@@ -300,6 +332,8 @@ test('PricedItemManager-other types', async () => {
     result = await manager.asyncModifyPricedItem(changeB1);
     const itemB1 = result.newPricedItemDataItem;
     expectPricedItemToMatch(itemB1, optionsB1);
+
+    // We already tested asynModifyPricedItem() returning copies in the currency tests.
 
     // Undo modify
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);

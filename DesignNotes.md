@@ -352,11 +352,6 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
 
 
 ## TODOs
-- Need to test event emitting for various undos.
-
-- Reconciler
-    - Add data item filtering to EngineAccessor.
-
 - Auto complete
 
 
@@ -383,4 +378,6 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
         - Could add special actions that delete all the 
         transactions, accounts, etc.
 
-- Verify all manager get data item methods in fact return copies.
+
+- Need to test event emitting for various undos.
+

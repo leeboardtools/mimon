@@ -335,25 +335,6 @@ export function getTransaction(transactionDataItem, alwaysCopy) {
 }
 
 
-/**
- * Performs a deep copy of either an {@link Transaction} or an 
- * {@link TransactionDataItem}.
- * @param {(Transaction|TransactionDataItem)} transaction 
- * @returns {(Transaction|TransactionDataItem)} The type returned is the same as 
- * the arg.
- */
-export function deepCopyTransaction(transaction) {
-    const transactionDataItem = getTransactionDataItem(transaction);
-    if (transactionDataItem === transaction) {
-        transaction = getTransaction(transactionDataItem, true);
-        return getTransactionDataItem(transaction, true);
-    }
-    else {
-        return getTransaction(transactionDataItem, true);
-    }
-}
-
-
 function copyTransactionDataItems(transactionDataItems) {
     if (transactionDataItems) {
         for (let i = transactionDataItems.length - 1; i >= 0; --i) {
@@ -1105,7 +1086,7 @@ export class TransactionManager extends EventEmitter {
                     { quantityBaseValue: 0 }, type.hasLots);
             }
         }
-        return accountStateDataItem;
+        return AS.getAccountStateDataItem(accountStateDataItem, true);
     }
 
 

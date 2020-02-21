@@ -147,8 +147,18 @@ test('PriceManager', async () => {
 
     // Single price passed in.
     const priceDataItemA = { ymdDate: '2018-01-23', close: 123.456 };
-    expect((await manager.asyncAddPrices(1, priceDataItemA))
-        .newPriceDataItems).toEqual([priceDataItemA]);
+    result = await manager.asyncAddPrices(1, priceDataItemA);
+    expect(result.newPriceDataItems).toEqual([priceDataItemA]);
+    expect(await manager.asyncGetPriceDataItemsInDateRange(1, '2018-01-23'))
+        .toEqual([priceDataItemA]);
+    
+    // Make sure data item returned is a copy.
+    result.newPriceDataItems[0].ymdDate = 'abc';
+    expect(await manager.asyncGetPriceDataItemsInDateRange(1, '2018-01-23'))
+        .toEqual([priceDataItemA]);
+
+    result = await manager.asyncGetPriceDataItemsInDateRange(1, '2018-01-23');
+    result[0].ymdDate = 'abc';
     expect(await manager.asyncGetPriceDataItemsInDateRange(1, '2018-01-23'))
         .toEqual([priceDataItemA]);
 
@@ -203,6 +213,11 @@ test('PriceManager', async () => {
     const priceDataItemD = { ymdDate: '2018-12-21', close: 123.45 };
     result = await manager.asyncAddPrices(1, priceDataItemD);
     expect(result.newPriceDataItems).toEqual([priceDataItemD]);
+    expect(await manager.asyncGetPriceDataItemsInDateRange(1, '2018-12-21'))
+        .toEqual([priceDataItemD]);
+    
+    // Test data item returned is a copy.
+    result.newPriceDataItems[0].ymdDate = 1234;
     expect(await manager.asyncGetPriceDataItemsInDateRange(1, '2018-12-21'))
         .toEqual([priceDataItemD]);
 
@@ -319,7 +334,7 @@ test('PriceManager', async () => {
     expect(await manager.asyncGetPriceDataItemsInDateRange(1, '2018-12-23')).toEqual([]);
 
     result = await manager.asyncRemovePricesInDateRange(2, '2018-01-24', '2018-01-22');
-    const removeResult = result.removedPriceDataItems;
+    let removeResult = result.removedPriceDataItems;
     expect(removeResult).toEqual([
         { ymdDate: '2018-01-23', close: 123.45 },
         { ymdDate: '2018-01-24', close: 124.45 },
@@ -330,6 +345,12 @@ test('PriceManager', async () => {
     // pricesRemove event test
     expect(removeEventArg).toEqual({ removedPriceDataItems: removeResult });
     expect(removeEventArg.removedPriceDataItems).toBe(removeResult);
+
+    const oldRemoveResult = removeResult;
+    removeResult = removeResult.map(
+        (priceDataItem) => P.getPriceDataItem(priceDataItem, true));
+    oldRemoveResult[0].ymdDate = 'abc';
+    oldRemoveResult[1].close = 'xyz';
 
     // Undo delete.
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);

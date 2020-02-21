@@ -171,7 +171,7 @@ test('Transaction-Data Items', () => {
 
 
     //
-    // Test deepCopyTransaction()
+    // Test copying
     const settingsX = {
         ymdDate: new YMDDate('2019-10-11'),
         splits: [
@@ -202,7 +202,7 @@ test('Transaction-Data Items', () => {
         memo: 'A memo',
     };
     const settingsXDataItem = T.getTransactionDataItem(settingsX);
-    const deepCopyDataItem = T.deepCopyTransaction(settingsXDataItem);
+    const deepCopyDataItem = T.getTransactionDataItem(settingsXDataItem, true);
     expect(deepCopyDataItem).toEqual(settingsXDataItem);
     expect(deepCopyDataItem.splits).not.toBe(settingsXDataItem.splits);
 
@@ -212,7 +212,7 @@ test('Transaction-Data Items', () => {
     expect(testDataItemSplits2.lotChanges[0]).not.toBe(refDataItemSplits2.lotChanges[0]);
 
     const ref = T.getTransaction(settingsXDataItem);
-    const deepCopy = T.deepCopyTransaction(ref);
+    const deepCopy = T.getTransaction(ref, true);
     expect(deepCopy).toEqual(ref);
     expect(deepCopy.splits).not.toBe(ref.splits);
 
@@ -551,6 +551,13 @@ test('TransactionManager-add_modify', async () => {
         .toEqual([new YMDDate('2019-10-05'), new YMDDate('2019-10-05')]);
     expect(await manager.asyncGetTransactionDateRange(sys.checkingId))
         .toEqual([new YMDDate('2019-10-05'), new YMDDate('2019-10-05')]);
+
+    // Make sure asyncGetTransactionDataItemsInDateRange() returns copies.
+    result = await manager.asyncGetTransactionDataItemsInDateRange(0, '2019-10-05');
+    result[0].splits[0].accountId = 'abcd';
+    expect(await manager.asyncGetTransactionDataItemsInDateRange(0, '2019-10-05'))
+        .toEqual([settingsA]);
+
     
     const cashNonReconciledIds = [settingsA.id];
     const checkingNonReconciledIds = [settingsA.id];
@@ -582,7 +589,7 @@ test('TransactionManager-add_modify', async () => {
 
     let result;
     result = await manager.asyncAddTransactions([settingsB]);
-    const newTransactionDataItemsB = result.newTransactionDataItems;
+    let newTransactionDataItemsB = result.newTransactionDataItems;
     const [ transactionB ] = newTransactionDataItemsB;
     settingsB.id = transactionB.id;
     //settingsC.id = transactionC.id;
@@ -604,8 +611,22 @@ test('TransactionManager-add_modify', async () => {
     expect(addEventArgs.newTransactionDataItems).toBe(newTransactionDataItemsB);
 
 
+    // Make sure a copy was returned.
+    const undoId = result.undoId;
+    newTransactionDataItemsB = newTransactionDataItemsB.map(
+        (transactionDataItem) => T.getTransactionDataItem(transactionDataItem, true));
+    result.newTransactionDataItems[0].splits[0].accountId = 999999;
+
+    expect(await manager.asyncGetTransactionDataItemWithId(transactionB.id))
+        .toEqual(settingsB);
+    result = await manager.asyncGetTransactionDataItemWithId(transactionB.id);
+    result.splits[0].accountId = 'abc';
+    expect(await manager.asyncGetTransactionDataItemWithId(transactionB.id))
+        .toEqual(settingsB);
+    
+
     // test undo add.
-    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    await accountingSystem.getUndoManager().asyncUndoToId(undoId);
     expect(removeEventArg).toEqual({
         removedTransactionDataItems: newTransactionDataItemsB
     });
@@ -771,7 +792,7 @@ test('TransactionManager-add_modify', async () => {
 
     const settingsE1 = Object.assign({}, settingsE, changesE1);
     result = await manager.asyncModifyTransactions([changesD1, changesE1]);
-    const resultDE1 = result.newTransactionDataItems;
+    let resultDE1 = result.newTransactionDataItems;
     expect(resultDE1).toEqual(expect.arrayContaining([settingsD1, settingsE1]));
 
     expect(await manager.asyncGetTransactionDateRange(sys.checkingId))
@@ -782,6 +803,20 @@ test('TransactionManager-add_modify', async () => {
         oldTransactionDataItems: [ settingsD, settingsE ]}
     );
     expect(modifyEventArg.newTransactionDataItems).toBe(resultDE1);
+
+
+    // Make sure copies were returned.
+    const originalResultDE1 = resultDE1;
+    resultDE1 = resultDE1.map(
+        (transactionDataItem) => T.getTransactionDataItem(transactionDataItem, true));
+    originalResultDE1[0].splits[0].accountId = 'abcd';
+    expect(await manager.asyncGetTransactionDataItemWithId(settingsD1.id))
+        .toEqual(settingsD1);
+    expect(await manager.asyncGetTransactionDataItemWithId(settingsE1.id))
+        .toEqual(settingsE1);
+
+    result.oldTransactionDataItems[0].splits[0].accountId = 'abc';
+
 
     brokerageANonReconciledIds.push(settingsD.id);
     cashNonReconciledIds.splice(cashNonReconciledIds.indexOf(settingsD.id), 1);
@@ -987,6 +1022,9 @@ test('TransactionManager~remove', async () => {
     expect(removeD).toEqual(settingsD);
     expect(await manager.asyncGetTransactionDataItemsWithIds(settingsD.id))
         .toBeUndefined();
+    
+    // Make sure data item is a copy.
+    removeD.splits[0].accountId = 'abc';
 
     cashNonReconciledIds.splice(cashNonReconciledIds.indexOf(settingsD.id), 1);
     householdNonReconciledIds.splice(householdNonReconciledIds.indexOf(settingsD.id), 1);
@@ -1011,7 +1049,7 @@ test('TransactionManager~remove', async () => {
     // Test undo remove.
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
     expect(addEventArgs).toEqual({ 
-        newTransactionDataItems: [removeD]
+        newTransactionDataItems: [settingsD]
     });
 
     expect(resultABCDE).toEqual(
@@ -1379,8 +1417,15 @@ test('Transactions-lotTransactions', async () => {
 
     expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(
         aaplId))).toEqual(aaplStateA);
+    
+    // Make sure the account state is a copy.
+    result = transactionManager.getCurrentAccountStateDataItem(
+        aaplId);
+    result.lotStates[0] = 1234;
+    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(
+        aaplId))).toEqual(aaplStateA);
 
-
+    
     //
     // Multiple lots in single split.
     const lot2 = (await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, 
@@ -1652,6 +1697,12 @@ test('Transactions-lotTransactions', async () => {
     settingsE.id = transE.id;
     settingsE.ymdDate = transD.ymdDate;
     expect(transE).toEqual(settingsE);
+
+    // Make sure a copy was returned.
+    transE.splits[1].lotChanges[0].lotId = 'abc';
+    result.oldTransactionDataItem.splits[1].lotChanges[0].quantityBaseValue = 'abcdef';
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsE.id))
+        .toEqual(settingsE);
 
     const lot1StateE = lot1StateD;
     const lot2StateE = lot2StateD;

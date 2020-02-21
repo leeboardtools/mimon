@@ -344,22 +344,6 @@ export function getAccountDataItem(account, alwaysCopy) {
     return account;
 }
 
-/**
- * Performs a deep copy of either an {@link Account} or an {@link AccountDataItem}.
- * @param {(Account|AccountDataItem)} account 
- * @returns {(Account|AccountDataItem)} The type returned is the same as the arg.
- */
-export function deepCopyAccount(account) {
-    const accountDataItem = getAccountDataItem(account);
-    if (accountDataItem === account) {
-        account = getAccount(accountDataItem);
-        return getAccountDataItem(account);
-    }
-    else {
-        return getAccount(accountDataItem);
-    }
-}
-
 
 /**
  * Retrieves the id from an account reference, which may be an id already, an 
@@ -1032,7 +1016,7 @@ export class AccountManager extends EventEmitter {
         }
 
         const newAccountDataItem = getAccountDataItem(
-            deepCopyAccount(Object.assign({}, oldAccountDataItem, account)));
+            Object.assign({}, oldAccountDataItem, account), true);
 
         // Can't change the type nor parent of the root and opening balance accounts.
         const oldParentAccountId = oldAccountDataItem.parentAccountId;

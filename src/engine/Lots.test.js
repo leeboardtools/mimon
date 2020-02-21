@@ -72,20 +72,24 @@ test('LotManager-other types', async () => {
 
     expect(addEventArgs).toEqual({ newLotDataItem: lotB });
 
+    // Make sure the lot returned is a copy.
+    lotB.description = 'abc';
+    expect(manager.getLotDataItemWithId(lotB.id)).toEqual(settingsB);
+
 
     // Undo add
     let removeEventArgs;
     manager.on('lotRemove', (args) => { removeEventArgs = args; });
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
     expect(removeEventArgs).toEqual(
-        { removedLotDataItem: lotB, }
+        { removedLotDataItem: settingsB, }
     );
 
     expect(manager.getLotIds()).toEqual([ lotA.id, ]);
     expect(manager.getLotDataItemWithId(lotB.id)).toBeUndefined();
 
     result = await manager.asyncAddLot(settingsB);
-    expect(result.newLotDataItem).toEqual(lotB);
+    expect(result.newLotDataItem).toEqual(settingsB);
 
     
 
@@ -108,13 +112,16 @@ test('LotManager-other types', async () => {
     expect(manager.getLotDataItemWithId(lotB.id)).toBeUndefined();
     expect(removedB).toEqual(settingsB);
 
-    expect(removeEventArgs).toEqual({ removedLotDataItem: lotB });
+    expect(removeEventArgs).toEqual({ removedLotDataItem: settingsB });
+
+    // Make sure returned lot data item is a copy.
+    removedB.description = 'Bleh';
 
     
     // Undo remove
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
     expect(addEventArgs).toEqual(
-        { newLotDataItem: lotB, }
+        { newLotDataItem: settingsB, }
     );
     expect(manager.getLotDataItemWithId(lotB.id)).toEqual(settingsB);
 
@@ -151,6 +158,11 @@ test('LotManager-other types', async () => {
         newLotDataItem: settingsCa,
         oldLotDataItem: settingsC,
     });
+
+    // Make sure lot data items returned are copies.
+    testCa.description = 'Blah';
+    oldCa.description = 'Egk';
+    expect(manager.getLotDataItemWithId(settingsC.id)).toEqual(settingsCa);
 
     // Test undo modify
     await accountingSystem.getUndoManager().asyncUndoToId(resultCa);

@@ -183,7 +183,7 @@ export class LotManager extends EventEmitter {
      * @fires {LotManager~lotAdd}
      */
     async asyncAddLot(lot, validateOnly) {
-        const lotDataItem = getLotDataItem(lot, true);
+        let lotDataItem = getLotDataItem(lot, true);
 
         const error = this._validate(lotDataItem);
         if (error) {
@@ -210,6 +210,8 @@ export class LotManager extends EventEmitter {
                 { lotId: lotDataItem.id, 
                     idGeneratorOptions: originalIdGeneratorOptions, 
                 });
+
+        lotDataItem = getLotDataItem(lotDataItem, true);
 
         this.emit('lotAdd', { newLotDataItem: lotDataItem, });
         return { newLotDataItem: lotDataItem, undoId: undoId };
@@ -239,7 +241,7 @@ export class LotManager extends EventEmitter {
      * @fires {LotManager~lotRemove}
      */
     async asyncRemoveLot(id, validateOnly) {
-        const lotDataItem = this._lotDataItemsById.get(id);
+        let lotDataItem = this._lotDataItemsById.get(id);
         if (!lotDataItem) {
             throw userError('LotManager-remove_no_id', id);
         }
@@ -255,8 +257,9 @@ export class LotManager extends EventEmitter {
 
         const undoId = await this._accountingSystem.getUndoManager()
             .asyncRegisterUndoDataItem('removeLot', 
-                { removedLotDataItem: getLotDataItem(lotDataItem, true), });
+                { removedLotDataItem: lotDataItem, });
 
+        lotDataItem = getLotDataItem(lotDataItem, true);
         this.emit('lotRemove', { removedLotDataItem: lotDataItem });
         return { removedLotDataItem: lotDataItem, undoId: undoId, };
     }

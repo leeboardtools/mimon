@@ -48,7 +48,8 @@ import { userError } from '../util/UserMessages';
 export function getAccountState(accountStateDataItem, alwaysCopy) {
     if (accountStateDataItem) {
         const ymdDate = getYMDDate(accountStateDataItem.ymdDate);
-        const lotStates = LS.getLotStates(accountStateDataItem.lotStates);
+        const lotStates = LS.getLotStates(accountStateDataItem.lotStates, 
+            alwaysCopy);
         if (alwaysCopy 
          || (ymdDate !== accountStateDataItem.ymdDate)
          || (lotStates !== accountStateDataItem.lotStates)) {
@@ -77,7 +78,8 @@ export function getAccountState(accountStateDataItem, alwaysCopy) {
 export function getAccountStateDataItem(accountState, alwaysCopy) {
     if (accountState) {
         const ymdDateString = getYMDDateString(accountState.ymdDate);
-        const lotStateDataItems = LS.getLotStateDataItems(accountState.lotStates);
+        const lotStateDataItems = LS.getLotStateDataItems(accountState.lotStates, 
+            alwaysCopy);
         if (alwaysCopy 
          || (ymdDateString !== accountState.ymdDate)
          || (lotStateDataItems !== accountState.lotStates)) {

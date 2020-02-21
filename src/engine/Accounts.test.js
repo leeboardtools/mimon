@@ -82,11 +82,11 @@ test('Account-Data Items', () => {
 
 
     const lotsAccountDataItem = A.getAccountDataItem(lotsAccount);
-    const deepCopyDataItem = A.deepCopyAccount(lotsAccountDataItem);
+    const deepCopyDataItem = A.getAccountDataItem(lotsAccountDataItem, true);
     expect(deepCopyDataItem).toEqual(lotsAccountDataItem);
 
     const lotsAccount2 = A.getAccount(lotsAccount);
-    const deepCopyAccount2 = A.deepCopyAccount(lotsAccount2);
+    const deepCopyAccount2 = A.getAccount(lotsAccount2, true);
     expect(deepCopyAccount2).toEqual(lotsAccount2);
 });
 
@@ -215,6 +215,9 @@ test('AccountManager-add', async () => {
     let accountDataItem;
     let result;
 
+    let eventResult;
+    accountManager.on('accountAdd', (result) => eventResult = result);
+
     //
     // ASSET
     //
@@ -228,8 +231,16 @@ test('AccountManager-add', async () => {
         .newAccountDataItem;
     ATH.expectAccount(assetA, assetOptionsA);
 
+    ATH.expectAccount(eventResult.newAccountDataItem, assetOptionsA);
+
     expect(accountManager.getRootAssetAccountDataItem()
         .childAccountIds.includes(assetA.id)).toBeTruthy();
+    
+
+    // Verify that the account data items returned are copies.,
+    assetA.name = 'blah blah';
+    ATH.expectAccount(accountManager.getAccountDataItemWithId(assetA.id), assetOptionsA);
+
 
     //
     // BANK
@@ -645,6 +656,11 @@ test('AccountManager-modify', async () => {
     expect(eventArgs.newAccountDataItems[0]).toBe(account);
     expect(eventArgs.oldAccountDataItems[0]).toBe(oldAccount);
 
+    const newAccountDataItem 
+        = A.getAccountDataItem(eventArgs.newAccountDataItems[0], true);
+    const oldAccountDataItem 
+        = A.getAccountDataItem(eventArgs.oldAccountDataItems[0], true);
+
 
     // Now a child of fixedAssetsId
     account = accountManager.getAccountDataItemWithId(sys.fixedAssetsId);
@@ -654,14 +670,20 @@ test('AccountManager-modify', async () => {
     account = accountManager.getAccountDataItemWithId(sys.investmentsId);
     expect(account.childAccountIds).not.toEqual(expect.arrayContaining([sys.iraId]));
 
+    // Make sure the account data items returned were a copies.
+    eventArgs.newAccountDataItems[0].name = 'Blah';
+    eventArgs.oldAccountDataItems[0].name = 'Ugh';
+    expect(accountManager.getAccountDataItemWithId(newAccountDataItem.id))
+        .toEqual(newAccountDataItem);
+
 
     // Undo...
     let modifyArg;
     accountManager.on('accountsModify', (result) => { modifyArg = result; });
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
     expect(modifyArg).toEqual(
-        { oldAccountDataItems: [result.newAccountDataItem], 
-            newAccountDataItems: [result.oldAccountDataItem], });
+        { oldAccountDataItems: [newAccountDataItem], 
+            newAccountDataItems: [oldAccountDataItem], });
 
     account = accountManager.getAccountDataItemWithId(sys.iraId);
 
@@ -742,6 +764,11 @@ test('AccountManager-modify', async () => {
 
     expect(accountManager.getAccountDataItemWithRefId('1234')).toEqual(account);
 
+    // Make sure getAccountDataItemWithRefId() returns a copy.
+    result = accountManager.getAccountDataItemWithRefId('1234');
+    result.name = 'blah';
+    expect(accountManager.getAccountDataItemWithRefId('1234')).toEqual(account);
+
     account = (await accountManager.asyncModifyAccount(
         { id: sys.checkingId, refId: '9', })).newAccountDataItem;
     expect(accountManager.getAccountDataItemWithRefId('1234')).toBeUndefined();
@@ -810,13 +837,17 @@ test('AccountManager-removeAccount', async () => {
     expect(aaplIRA.parentAccountId).toEqual(parentAccount.id);
 
 
+    // Make sure the account data item returned was a copy.
+    eventArgs.removedAccountDataItem.name = 'Hey';
+
+
     // We should be able to add back the account.
     let removeResult;
     accountManager.on('accountAdd', (result) => { removeResult = result; });
 
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
     expect(removeResult).toEqual(
-        { newAccountDataItem: eventArgs.removedAccountDataItem });
+        { newAccountDataItem: originalAccount });
 
     account = accountManager.getAccountDataItemWithId(sys.iraId);
     parentAccount = accountManager.getAccountDataItemWithId(sys.investmentsId);
@@ -828,6 +859,8 @@ test('AccountManager-removeAccount', async () => {
         .toEqual(sys.iraId);
     expect(accountManager.getAccountDataItemWithId(sys.tibexIRAId).parentAccountId)
         .toEqual(sys.iraId);
+    
+    expect(account).toEqual(originalAccount);
 
     //
     // Test JSON.
