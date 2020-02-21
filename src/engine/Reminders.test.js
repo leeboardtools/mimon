@@ -106,7 +106,7 @@ test('Reminders-add_modify', async () => {
     expect(manager.getReminderIds()).toEqual([reminderA.id]);
 
     result = await manager.asyncAddReminder(settingsB);
-    const reminderB = result.newReminderDataItem;
+    const reminderB = RI.getReminderDataItem(result.newReminderDataItem, true);
     settingsB.id = reminderB.id;
     expect(reminderB).toEqual(settingsB);
     expect(addResult.newReminderDataItem).toEqual(settingsB);
@@ -116,7 +116,18 @@ test('Reminders-add_modify', async () => {
         .toEqual([settingsA, settingsB]);
     expect(manager.getReminderDataItemWithId(reminderA.id))
         .toEqual(settingsA);
+    
 
+    // Make sure copies are returned.
+    result.newReminderDataItem.repeatDefinition = 'abc';
+    expect(manager.getReminderDataItemWithId(reminderB.id))
+        .toEqual(settingsB);
+    manager.getReminderDataItemWithId(reminderB.id).repeatDefinition = 1234;
+    expect(manager.getReminderDataItemWithId(reminderB.id))
+        .toEqual(settingsB);
+
+    
+    // Undo Add
     await undoManager.asyncUndoToId(result.undoId);
     expect(manager.getReminderDataItemWithId(reminderB.id)).toBeUndefined();
     expect(manager.getReminderDataItemWithId(reminderA.id))
@@ -175,6 +186,14 @@ test('Reminders-add_modify', async () => {
 
     expect(manager.getReminderDataItemWithId(reminderB.id)).toEqual(settingsB1);
 
+    //
+    // Make sure data items were returned.
+    result.newReminderDataItem.repeatDefinition = 1234;
+    result.oldReminderDataItem.repeatDefinition = 'abc';
+
+
+    //
+    // Undo modify
     await undoManager.asyncUndoToId(result.undoId);
     expect(manager.getReminderDataItemWithId(reminderB.id)).toEqual(settingsB);
     expect(modifyResult.newReminderDataItem).toEqual(settingsB);
@@ -214,6 +233,9 @@ test('Reminders-add_modify', async () => {
     expect(manager.getReminderDataItemWithId(reminderA.id)).toBeUndefined();
     expect(manager.getReminderDataItemWithId(reminderB.id)).toEqual(settingsB1);
     expect(manager.getReminderIds()).toEqual([reminderB.id]);
+
+    // Make sure a copy was returned.
+    result.removedReminderDataItem.repeatDefinition = 'abc';
 
     await undoManager.asyncUndoToId(result.undoId);
     expect(addResult.newReminderDataItem).toEqual(reminderA);
@@ -306,4 +328,9 @@ test('Reminders-getDueReminderDataItems', async () => {
         .toEqual([settingsC]);
     expect(manager.getDueReminderDataItems('2019-10-11'))
         .toEqual([settingsB, settingsC]);
+    
+    // Make sure copies are returned.
+    manager.getDueReminderDataItems('2019-10-10')[0].repeatDefinition = 'abc';
+    expect(manager.getDueReminderDataItems('2019-10-10'))
+        .toEqual([settingsC]);
 });

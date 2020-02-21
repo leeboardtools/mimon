@@ -217,7 +217,7 @@ export class ReminderManager extends EventEmitter {
             }
 
             if (YMDDate.compare(ymdDate, nextYMDDate) >= 0) {
-                reminderDataItems.push(reminderDataItem);
+                reminderDataItems.push(getReminderDataItem(reminderDataItem, true));
             }
         });
 
@@ -305,7 +305,7 @@ export class ReminderManager extends EventEmitter {
      * @fires {ReminderManager~reminderAdd}
      */
     async asyncAddReminder(reminder, validateOnly) {
-        const reminderDataItem = getReminderDataItem(reminder, true);
+        let reminderDataItem = getReminderDataItem(reminder, true);
 
         const error = this._validate(reminderDataItem);
         if (error) {
@@ -334,6 +334,7 @@ export class ReminderManager extends EventEmitter {
                     idGeneratorOptions: originalIdGeneratorOptions, 
                 });
 
+        reminderDataItem = getReminderDataItem(reminderDataItem, true);
         this.emit('reminderAdd', { newReminderDataItem: reminderDataItem, });
         return { newReminderDataItem: reminderDataItem, undoId: undoId };
     }
