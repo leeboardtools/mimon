@@ -1,4 +1,6 @@
-import { setMsgs, userMsg, userError } from './UserMessages';
+import { setMsgs, userMsg, userError, 
+    userDateString, setDateFormatter } from './UserMessages';
+import { YMDDate } from './YMDDate';
 
 test('UserMessages', () => {
     const msgs = {
@@ -23,6 +25,20 @@ test('UserMessages', () => {
         testError.mscCode = 'Abc';
         expect(userError('Abc', 'ZYX', 'MNO', 'QRS')).toEqual(testError);
 
+
+        const ymdDateA = new YMDDate('2020-02-13');
+        expect(userDateString(ymdDateA)).toEqual(ymdDateA.toString());
+
+        const dateA = new Date(2020, 1, 13);
+        expect(userDateString(dateA)).toEqual(dateA.toString());
+
+        setDateFormatter((date) => {
+            return '' + (date.getMonth() + 1) 
+                + '/' + date.getDate() 
+                + '/' + date.getFullYear();
+        });
+        expect(userDateString(ymdDateA)).toEqual('2/13/2020');
+        expect(userDateString(dateA)).toEqual('2/13/2020');
     }
     finally {
         setMsgs(prevMsgs);
