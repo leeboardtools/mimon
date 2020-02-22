@@ -965,6 +965,7 @@ export class TransactionManager extends EventEmitter {
      * @property {TransactionKey[]} sortedTransactionKeys   The result from 
      * {@link TransactionHandler#asyncGetSortedTransactionKeysForAccount}.
      * @property {number[]} nonReconciledTransactionIds The result from
+     * {@link TransactionHandler#asyncGetNonReconciledIdsForAccountId}.
      */
     
 
