@@ -65,14 +65,17 @@ function AppOpenScreen(props) {
     let mruPathNamesItem = '';
     if (props.mruPathNames && (props.mruPathNames.length > 0)) {
         const namesItem = props.mruPathNames.map((pathName) =>
-            <div key={pathName} className="list-group-item list-group-item-action" onClick={() => props.onRecentClick(pathName)}>
+            <div key={pathName} className="list-group-item list-group-item-action" 
+                onClick={() => props.onRecentClick(pathName)}>
                 <span>{pathName}</span>
                 <button
                     type="button"
                     className="close ml-3"
                     data-dismiss="modal"
                     aria-label="Remove Path Name"
-                    onClick={(event) => { props.onRemoveRecentClick(pathName); event.stopPropagation(); }}
+                    onClick={(event) => { 
+                        props.onRemoveRecentClick(pathName); event.stopPropagation(); 
+                    }}
                 >
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -90,8 +93,10 @@ function AppOpenScreen(props) {
                 <div className="row">
                     <div className="col"> </div>
                     <div className="col-6">
-                        <button className="btn btn-primary btn-lg btn-block" onClick={props.onNewClick}>New...</button>
-                        <button className="btn btn-primary btn-lg btn-block" onClick={props.onOpenClick}>Open...</button>
+                        <button className="btn btn-primary btn-lg btn-block" 
+                            onClick={props.onNewClick}>New...</button>
+                        <button className="btn btn-primary btn-lg btn-block" 
+                            onClick={props.onOpenClick}>Open...</button>
                     </div>
                     <div className="col"> </div>
                 </div>
@@ -158,7 +163,8 @@ function getMainMenuTemplate(mainSetup) {
                 { type: 'separator' },
                 createMenuItemTemplate('MenuItem-reconcile'),
                 { type: 'separator' },
-                createMenuItemTemplate('MenuItem-toggleShowHiddenAccounts', { type: 'checkbox' }),
+                createMenuItemTemplate('MenuItem-toggleShowHiddenAccounts', 
+                    { type: 'checkbox' }),
                 createMenuItemTemplate('MenuItem-hideAccount'),
                 createMenuItemTemplate('MenuItem-showAccount', { visible: false }),
                 { type: 'separator' },
@@ -187,12 +193,15 @@ function getMainMenuTemplate(mainSetup) {
                 createMenuItemTemplate('MenuItem-view_SECURITY'),
                 createMenuItemTemplate('MenuItem-downloadPrices'),
                 { type: 'separator' },
-                createMenuItemTemplate('MenuItem-toggleShowAccounts_SECURITY', { type: 'checkbox' }),
-                createMenuItemTemplate('MenuItem-toggleShowQuantityZero_SECURITY', { type: 'checkbox' }),
+                createMenuItemTemplate('MenuItem-toggleShowAccounts_SECURITY', 
+                    { type: 'checkbox' }),
+                createMenuItemTemplate('MenuItem-toggleShowQuantityZero_SECURITY', 
+                    { type: 'checkbox' }),
                 createMenuItemTemplate('MenuItem-open_SECURITY'),
                 createMenuItemTemplate('MenuItem-close_SECURITY'),
                 { type: 'separator' },
-                createMenuItemTemplate('MenuItem-toggleShowHidden_SECURITY', { type: 'checkbox' }),
+                createMenuItemTemplate('MenuItem-toggleShowHidden_SECURITY', 
+                    { type: 'checkbox' }),
                 createMenuItemTemplate('MenuItem-hide_SECURITY'),
                 createMenuItemTemplate('MenuItem-show_SECURITY', { visible: false }),
                 { type: 'separator' },
@@ -268,12 +277,15 @@ function addContextMenuTemplates(menuManager) {
         createMenuItemTemplate('MenuItem-view_SECURITY'),
         createMenuItemTemplate('MenuItem-downloadPrices'),
         { type: 'separator' },
-        createMenuItemTemplate('MenuItem-toggleShowAccounts_SECURITY', { type: 'checkbox' }),
-        createMenuItemTemplate('MenuItem-toggleShowQuantityZero_SECURITY', { type: 'checkbox' }),
+        createMenuItemTemplate('MenuItem-toggleShowAccounts_SECURITY', 
+            { type: 'checkbox' }),
+        createMenuItemTemplate('MenuItem-toggleShowQuantityZero_SECURITY', 
+            { type: 'checkbox' }),
         createMenuItemTemplate('MenuItem-open_SECURITY'),
         createMenuItemTemplate('MenuItem-close_SECURITY'),
         { type: 'separator' },
-        createMenuItemTemplate('MenuItem-toggleShowHidden_SECURITY', { type: 'checkbox' }),
+        createMenuItemTemplate('MenuItem-toggleShowHidden_SECURITY', 
+            { type: 'checkbox' }),
         createMenuItemTemplate('MenuItem-hide_SECURITY'),
         createMenuItemTemplate('MenuItem-show_SECURITY', { visible: false }),
         { type: 'separator' },
@@ -308,7 +320,8 @@ export default class App extends React.Component {
         const mainSetup = ipcRenderer.sendSync('sync-get-main-setup');
         this.setState({ mainSetup: mainSetup, });
 
-        const settingsPathName = path.join(app.getPath('appData'), app.getName(), 'user.json');
+        const settingsPathName = path.join(app.getPath('appData'), 
+            app.getName(), 'user.json');
         await Engine.initializeEngine(settingsPathName);
 
         // await UIHelpers.setup();
@@ -320,6 +333,8 @@ export default class App extends React.Component {
 
         await this.asyncPostEngineInitialized();
     }
+
+
     async asyncPostEngineInitialized() {
         const startupOptions = await asyncGetStartupOptions();
 
@@ -332,7 +347,8 @@ export default class App extends React.Component {
                 const wasSilenced = this._isSilenced;
                 try {
                     this._isSilenced = true;
-                    if (await this.asyncOpenAccountingFile(startupOptions.mruPathNames[0])) {
+                    if (await this.asyncOpenAccountingFile(
+                        startupOptions.mruPathNames[0])) {
                         return;
                     }
                 }

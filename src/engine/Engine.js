@@ -20,8 +20,9 @@ export async function initializeEngine(settingsPathName) {
 
     const locale = (noElectron) ? undefined : require('electron').remote.app.getLocale();
     const userMsgsPathName 
-        = path.normalize(`${__dirname}/../locales/en-UserMessages.json`);
+        = path.normalize(`${__dirname}/../locales/en-userMessages.json`);
     const loadedUserMsgsPathName = await loadLocaleMsgsFile(locale, userMsgsPathName);
+
     if (loadedUserMsgsPathName && !noElectron) {
         console.log('Loaded user messages from ' + loadedUserMsgsPathName);
     }
