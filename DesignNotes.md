@@ -353,7 +353,9 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
 
 ## TODOs
 - Auto complete
-
+    - This will be performed on an account basis, basically look for an existing transaction.
+    - Therefore it should come out of TransactionManager.
+    - Based on the transaction name.
 
 - Add accounting action for:
     - Price retrieval???
@@ -378,6 +380,4 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
         - Could add special actions that delete all the 
         transactions, accounts, etc.
 
-
-- Need to test event emitting for various undos.
 
