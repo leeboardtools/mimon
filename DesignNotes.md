@@ -377,7 +377,7 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
         - Could check at the action level:
         - Accounts: Transactions referring to it.
         - Priced Items: Accounts, Prices referring to it.
-        - Could add special actions that delete all the 
+        - Could add special actions that delete all the
         transactions, accounts, etc.
 
 
