@@ -6,6 +6,8 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 
 const path = require('path');
 
+const { session } = require('electron');
+
 const isDevMode = process.execPath.match(/[\\/]electron/);
 if (isDevMode) {
     installExtension(REACT_DEVELOPER_TOOLS);
@@ -50,6 +52,27 @@ let mainWindow;
 let menuManager;
 
 const createWindow = () => {
+
+    // TODO isDevMode test is a hack to get the devTools to show up, as it's
+    // currently broken
+    if (!isDevMode) {
+        session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+            callback({
+                responseHeaders: {
+                    ...details.responseHeaders,
+                    'Content-Security-Policy': ['default-src child-src \'self\''
+                     + ' object-src \'none\''
+                     + ' script-src \'self\';'
+                     + ' frame-src \'self\';'
+                    // + ' style-src \'unsafe-inline\';'
+                     + ' worker-src \'self\''
+                    ]
+                }
+            });
+        });
+    }
+
+
     // Create the browser window.
     mainWindow = new BrowserWindow({
         width: 800,
@@ -69,6 +92,7 @@ const createWindow = () => {
         mainWindow.webContents.openDevTools();
     }
 
+    
     // Emitted when the window is closed.
     mainWindow.on('closed', () => {
     // Dereference the window object, usually you would store windows
