@@ -160,6 +160,23 @@ export function userError(key, ...args) {
 }
 
 
+let dateFormatter;
+
+/**
+ * @callback DateFormatterCallback
+ * @param {YMDDate|Date} date
+ * @returns {string}
+ */
+
+/**
+ * Installs a callback for {@link userDateString} to use for formatting dates.
+ * @param {DateForamtterCallback} formatter 
+ */
+export function setDateFormatter(formatter) {
+    dateFormatter = formatter;
+}
+
+
 /**
  * Returns a string representation of a date.
  * @param {YMDDate|Date} date 
@@ -167,7 +184,9 @@ export function userError(key, ...args) {
  */
 export function userDateString(date) {
     if (date) {
-        // FIX ME!!!
+        if (dateFormatter) {
+            return dateFormatter(date);
+        }
         return date.toString();
     }
 }
