@@ -1,15 +1,11 @@
 import { loadLocaleMsgsFile } from '../util/UserMessages';
 import { setUserSettingsPathName } from '../util/UserSettings';
-//import { JSONGzipAccountingFileFactory } from './JSONGzipAccountingFile';
-//import { AccountingSystem } from './AccountingSystem';
 import { loadAccountsUserMessages } from './Accounts';
 import { loadPricedItemUserMessages } from './PricedItems';
 import { loadTransactionsUserMessages } from './Transactions';
-//import { loadPricesUserMessages } from './Prices';
 
 const path = require('path');
 
-//const fileFactories = [];
 
 /**
  * Main engine initialization function.
@@ -34,7 +30,4 @@ export async function initializeEngine(settingsPathName) {
     loadAccountsUserMessages();
     loadPricedItemUserMessages();
     loadTransactionsUserMessages();
-    //loadPricesUserMessages();
-
-    //fileFactories.push(new JSONGzipAccountingFileFactory());
 }

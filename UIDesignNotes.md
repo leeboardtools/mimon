@@ -2,7 +2,7 @@
 - React is used for managing UI compoents.
 - Bootstrap will be used for styling.
 
-## Opening Window
+## Opening Screen
     - MRU list of files.
     - Open button
     - Create button
@@ -60,3 +60,7 @@
 ## Reminders Editor
     - For editing reminders.
 
+
+
+# TODO
+- Move main menu out of App.jsx

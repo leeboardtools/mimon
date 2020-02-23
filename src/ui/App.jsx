@@ -61,8 +61,8 @@ AppOpenScreen.propTypes = {
 };
 
 function AppOpenScreen(props) {
-    let mruTitle = '';
-    let mruPathNamesItem = '';
+    let buttonClassName = 'btn btn-primary btn-lg btn-block';
+    let mruComponent;
     if (props.mruPathNames && (props.mruPathNames.length > 0)) {
         const namesItem = props.mruPathNames.map((pathName) =>
             <div key={pathName} className="list-group-item list-group-item-action" 
@@ -81,8 +81,20 @@ function AppOpenScreen(props) {
                 </button>
             </div>
         );
-        mruTitle = <span>Previously on LBMiMon...</span>;
-        mruPathNamesItem = <div className="list-group">{namesItem}</div>;
+
+        mruComponent = <React.Fragment>
+            <div className="row justify-content-md-center">
+                {<span>Previously on LBMiMon...</span>}
+            </div>
+            <div className="row justify-content-md-center">
+                {<div className="list-group">{namesItem}</div>}
+            </div>
+            <div className="row justify-content-md-center">
+                &nbsp;
+            </div>
+        </React.Fragment>;
+
+        buttonClassName = 'btn btn-secondary btn-sm btn-block';
     }
 
     return (
@@ -93,21 +105,13 @@ function AppOpenScreen(props) {
                 <div className="row">
                     <div className="col"> </div>
                     <div className="col-6">
-                        <button className="btn btn-primary btn-lg btn-block" 
+                        {mruComponent}
+                        <button className={buttonClassName}
                             onClick={props.onNewClick}>New...</button>
-                        <button className="btn btn-primary btn-lg btn-block" 
+                        <button className={buttonClassName}
                             onClick={props.onOpenClick}>Open...</button>
                     </div>
                     <div className="col"> </div>
-                </div>
-                <div className="row justify-content-md-center">
-                    &nbsp;
-                </div>
-                <div className="row justify-content-md-center">
-                    {mruTitle}
-                </div>
-                <div className="row justify-content-md-center">
-                    {mruPathNamesItem}
                 </div>
             </div>
         </div>
@@ -311,6 +315,11 @@ export default class App extends React.Component {
             menuManager: new MenuManager(),
         };
 
+        this.onNewClick = this.onNewClick.bind(this);
+        this.onOpenClick = this.onOpenClick.bind(this);
+        this.onRecentClick = this.onRecentClick.bind(this);
+        this.onRemoveRecentClick = this.onRemoveRecentClick.bind(this);
+
         process.nextTick(async () => { this.asyncInitialize(); });
     }
 
@@ -326,10 +335,12 @@ export default class App extends React.Component {
 
         // await UIHelpers.setup();
 
+        /*
         this._mainMenuTemplate = getMainMenuTemplate(this.state.mainSetup);
         this.state.menuManager.setMenuTemplate(this._mainMenuTemplate);
 
         addContextMenuTemplates(this.state.menuManager);
+        */
 
         await this.asyncPostEngineInitialized();
     }
@@ -341,6 +352,12 @@ export default class App extends React.Component {
         if (startupOptions.mruPathNames) {
             // Do something
         }
+
+        // TEST!!!
+        startupOptions.mruPathNames = [
+            'Abc',
+            '/home/me/Def',
+        ];
 
         if (startupOptions.autoOpen) {
             if (startupOptions.mruPathNames && (startupOptions.mruPathNames.length > 0)) {
@@ -385,14 +402,47 @@ export default class App extends React.Component {
     }
 
 
+    onNewClick() {
+        console.log('onNewClick');
+    }
+    onOpenClick() {
+        console.log('onOpenClick');
+    }
+    onRecentClick(pathName) {
+        console.log('onRecentClick: ' + pathName);
+    }
+    onRemoveRecentClick(pathName) {
+        console.log('onRemoveRecentClick: ' + pathName);
+    }
 
 
     render() {
-        return <div className="container-fluid">
-            <div>I am the React App</div>
-            <div className="alert alert-primary">
-                This is Bootstrap
+        let mainComponent;
+        const { appState, mruPathNames } = this.state;
+        switch (appState) {
+        case 'openingScreen' :
+            mainComponent = <AppOpenScreen
+                mruPathNames = {mruPathNames}
+                onNewClick = {this.onNewClick}
+                onOpenClick = {this.onOpenClick}
+                onRecentClick = {this.onRecentClick}
+                onRemoveRecentClick = {this.onRemoveRecentClick}
+            />;
+            break;
+        
+        default :
+            mainComponent = <div>
+                <div>I am the React App</div>
+                <div className="alert alert-primary">
+                    This is Bootstrap
+                </div>
             </div>
+            ;
+            break;
+        }
+
+        return <div className="container-fluid">
+            {mainComponent}
         </div>;
     }
 }
