@@ -1,9 +1,13 @@
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
+import 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './index.css';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import 'regenerator-runtime/runtime';
+import App from './ui/App';
 
 const render = () => {
-    const App = require('./ui/App').default;
     ReactDOM.render(<App />, document.getElementById('App'));
 };
 

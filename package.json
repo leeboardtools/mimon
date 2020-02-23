@@ -3,9 +3,9 @@
   "productName": "Leeboard Tool's Mimon",
   "version": "0.0.1",
   "description": "A Personal Accounting Package",
-  "main": "app/main.js",
+  "main": ".webpack/main",
   "scripts": {
-    "start": "gulp start",
+    "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
@@ -24,7 +24,7 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "test"
+            "name": "webpack_test"
           }
         },
         {
@@ -41,42 +41,64 @@
           "name": "@electron-forge/maker-rpm",
           "config": {}
         }
+      ],
+      "plugins": [
+        [
+          "@electron-forge/plugin-webpack",
+          {
+            "mainConfig": "./webpack.main.config.js",
+            "renderer": {
+              "config": "./webpack.renderer.config.js",
+              "entryPoints": [
+                {
+                  "html": "./src/index.html",
+                  "js": "./src/renderer.js",
+                  "name": "main_window"
+                }
+              ]
+            }
+          }
+        ]
       ]
     }
   },
   "dependencies": {
     "bootstrap": "^4.4.1",
+    "core-js": "^3.6.4",
     "deep-equal": "^2.0.1",
     "electron-squirrel-startup": "^1.0.0",
     "jquery": "^3.4.1",
     "popper.js": "^1.16.0",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "regenerator-runtime": "^0.13.3",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.7.7",
-    "@babel/preset-env": "^7.7.7",
-    "@babel/preset-react": "^7.7.4",
-    "@electron-forge/cli": "^6.0.0-beta.47",
-    "@electron-forge/maker-deb": "^6.0.0-beta.47",
-    "@electron-forge/maker-rpm": "^6.0.0-beta.47",
-    "@electron-forge/maker-squirrel": "^6.0.0-beta.47",
-    "@electron-forge/maker-zip": "^6.0.0-beta.47",
-    "babel-jest": "^24.9.0",
-    "electron": "7.1.7",
+    "@babel/core": "^7.8.4",
+    "@babel/preset-env": "^7.8.4",
+    "@babel/preset-react": "^7.8.3",
+    "@electron-forge/cli": "^6.0.0-beta.49",
+    "@electron-forge/maker-deb": "^6.0.0-beta.49",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.49",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.49",
+    "@electron-forge/maker-zip": "^6.0.0-beta.49",
+    "@electron-forge/plugin-webpack": "^6.0.0-beta.49",
+    "@marshallofsound/webpack-asset-relocator-loader": "^0.5.0",
+    "babel-jest": "^25.1.0",
+    "babel-loader": "^8.0.6",
+    "css-loader": "^3.4.2",
+    "electron": "8.0.1",
     "electron-devtools-installer": "^2.2.4",
     "eslint": "^6.8.0",
-    "eslint-plugin-react": "^7.17.0",
-    "gulp": "^4.0.2",
-    "gulp-babel": "^8.0.0",
-    "gulp-sourcemaps": "^2.6.5",
-    "jest": "^24.9.0",
+    "eslint-plugin-react": "^7.18.3",
+    "jest": "^25.1.0",
     "jest-environment-jsdom-fourteen": "^1.0.1",
     "jest-watch-typeahead": "^0.4.2",
     "jsdoc": "^3.6.3",
-    "react": "^16.12.0",
-    "react-app-polyfill": "^1.0.5",
-    "react-dom": "^16.12.0",
-    "regenerator-runtime": "^0.13.3"
+    "node-loader": "^0.6.0",
+    "react-app-polyfill": "^1.0.6",
+    "style-loader": "^0.23.1"
   },
   "jest": {
     "collectCoverageFrom": [
