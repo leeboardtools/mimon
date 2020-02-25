@@ -330,7 +330,7 @@ export default class App extends React.Component {
         this.setState({ mainSetup: mainSetup, });
 
         const settingsPathName = path.join(app.getPath('appData'), 
-            app.getName(), 'user.json');
+            app.name, 'user.json');
         await Engine.initializeEngine(settingsPathName);
 
         // await UIHelpers.setup();

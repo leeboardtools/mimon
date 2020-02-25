@@ -3,14 +3,15 @@ import { MenuManagerMain } from './util/MenuManagerMain';
 // import 'regenerator-runtime/runtime';
 
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+app.allowRendererProcessReuse = true;
 
-const path = require('path');
+//const path = require('path');
 
 const { session } = require('electron');
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
 if (isDevMode) {
-    installExtension(REACT_DEVELOPER_TOOLS);
+    //installExtension(REACT_DEVELOPER_TOOLS);
 }
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -39,7 +40,7 @@ ipcMain.on('showOpenDialog', (event, options) => {
 
 
 ipcMain.on('setMainTitle', (event, title) => {
-    title = title || app.getName();
+    title = title || app.name;
     mainWindow.setTitle(title);
 });
 
@@ -64,7 +65,7 @@ const createWindow = () => {
                      + ' object-src \'none\''
                      + ' script-src \'self\';'
                      + ' frame-src \'self\';'
-                    // + ' style-src \'unsafe-inline\';'
+                     + ' style-src \'unsafe-inline\';'
                      + ' worker-src \'self\''
                     ]
                 }
