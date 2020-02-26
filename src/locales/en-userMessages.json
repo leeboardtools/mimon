@@ -193,6 +193,9 @@
     "Repeats-start_date_invalid": "The start date is is missing or invalid.",
 
 
+
+
+
     "MainMenu-file": "File",
     "MainMenu-edit": "Edit",
     "MainMenu-account": "Accounts",
@@ -204,6 +207,12 @@
     "MainMenu-window": "Window",
     "MainMenu-debug": "Debug",
     
+
+    "AppOpeningScreen-mru_title": "Recently Opened:",
+    "AppOpeningScreen-new_file": "Create a New Accounting System...",
+    "AppOpeningScreen-open_file": "Open an Existing Accounting System...",
+    "AppOpeningScreen-exit":"Exit Mimon",
+
 
     "": ""
 }

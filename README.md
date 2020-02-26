@@ -12,9 +12,10 @@ This project incorporates the following (I may have missed some projects, especi
 
 - [Electron](https://electronjs.org/), the main framework that makes desktop apps from Javascript.
 - [Electron Forge 5.x](https://github.com/electron-userland/electron-forge/tree/5.x)
+- [webpack](https://webpack.js.org/), the module bundler we use.
 - [React](https://reactjs.org/), the declarative UI library for managing UI components.
 - [Jest](https://jestjs.io/) for unit testing.
-- [ESLint](https://eslint.org/)
+- [ESLint](https://eslint.org/) for linting.
 - [Bootstrap](https://getbootstrap.com/), responsive CSS and more for styling the UI.
 - [deep-equal](https://www.npmjs.com/package/deep-equal) for performing deep object comparisons.
 - [uuid](https://github.com/kelektiv/node-uuid#readme) for generating UUIDs.

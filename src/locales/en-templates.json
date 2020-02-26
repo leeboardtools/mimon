@@ -1,0 +1,422 @@
+[
+    {
+        "type": "createAccountTemplate",
+        "name": "Basic Accounts",
+        "pricedItems": [
+            {
+                "type": "REAL_ESTATE",
+                "name": "House",
+                "id": "House"
+            }
+        ],
+        "accounts": [
+            {
+                "type": "ASSET",
+                "name": "Current Assets",
+                "id": "Current Assets",
+                "parentAccountId": "Root-Asset"
+            },
+                {
+                    "type": "BANK",
+                    "name": "Checking Account",
+                    "parentAccountId": "Current Assets"
+                },
+                {
+                    "type": "CASH",
+                    "name": "Cash",
+                    "parentAccountId": "Current Assets"
+                },
+                {
+                    "type": "BANK",
+                    "name": "Savings Account",
+                    "parentAccountId": "Current Assets"
+                },
+            {
+                "type": "ASSET",
+                "name": "Investments",
+                "id": "Investments",
+                "parentAccountId": "Root-Asset"
+            },
+                {
+                    "type": "BROKERAGE",
+                    "name": "Brokerage Account",
+                    "parentAccountId": "Investments"
+                },
+                {
+                    "type": "BROKERAGE",
+                    "name": "IRA Account",
+                    "parentAccountId": "Investments"
+                },
+                {
+                    "type": "BROKERAGE",
+                    "name": "401(k) Account",
+                    "parentAccountId": "Investments"
+                },
+            {
+                "type": "ASSET",
+                "name": "Fixed Assets",
+                "id": "Fixed Assets",
+                "parentAccountId": "Root-Asset"
+            },
+                {
+                    "type": "REAL_ESTATE",
+                    "name": "House",
+                    "pricedItemId": "House",
+                    "parentAccountId": "Fixed Assets",
+                    "id": "House"
+                },
+            {
+                "type": "LIABILITY",
+                "name": "Credit Cards",
+                "id": "Credit Cards",
+                "parentAccountId": "Root-Liability"
+            },
+                {
+                    "type": "CREDIT_CARD",
+                    "name": "American Express",
+                    "parentAccountId": "Credit Cards"
+                },
+                {
+                    "type": "CREDIT_CARD",
+                    "name": "Discover Card",
+                    "parentAccountId": "Credit Cards"
+                },
+                {
+                    "type": "CREDIT_CARD",
+                    "name": "Mastercard",
+                    "parentAccountId": "Credit Cards"
+                },
+                {
+                    "type": "CREDIT_CARD",
+                    "name": "VISA",
+                    "parentAccountId": "Credit Cards"
+                },
+
+            {
+                "type": "LIABILITY",
+                "name": "Loans",
+                "id": "Loans",
+                "parentAccountId": "Root-Liability"
+            },
+                {
+                    "type": "LOAN",
+                    "name": "Auto Loan",
+                    "parentAccountId": "Loans"
+                },
+                {
+                    "type": "LOAN",
+                    "name": "College Loan",
+                    "parentAccountId": "Loans"
+                },
+                {
+                    "type": "MORTGAGE",
+                    "name": "Mortgage",
+                    "pricedItemId": "House",
+                    "parentAccountId": "Loans"
+                },
+            {
+                "type": "INCOME",
+                "name": "Bonus",
+                "parentAccountId": "Root-Income"
+            },
+            {
+                "type": "INCOME",
+                "name": "Interest and Dividends",
+                "id": "Interest",
+                "parentAccountId": "Root-Income"
+            },
+                {
+                    "type": "INCOME",
+                    "name": "Checking Account",
+                    "parentAccountId": "Interest"
+                },
+                {
+                    "type": "INCOME",
+                    "name": "Savings Account",
+                    "parentAccountId": "Interest"
+                },
+                {
+                    "type": "INCOME",
+                    "name": "Brokerage Account",
+                    "parentAccountId": "Interest"
+                },
+                {
+                    "type": "INCOME",
+                    "name": "IRA Account",
+                    "parentAccountId": "Interest"
+                },
+                {
+                    "type": "INCOME",
+                    "name": "401(k) Account",
+                    "parentAccountId": "Interest"
+                },
+            {
+                "type": "INCOME",
+                "name": "Salary",
+                "parentAccountId": "Root-Income"
+            },
+            {
+                "type": "INCOME",
+                "name": "Gifts",
+                "parentAccountId": "Root-Income"
+            },
+            {
+                "type": "INCOME",
+                "name": "Other Income",
+                "parentAccountId": "Root-Income"
+            },
+
+            {
+                "type": "EXPENSE",
+                "name": "Auto",
+                "id": "Auto",
+                "parentAccountId": "Root-Expense"
+            },
+                {
+                    "type": "EXPENSE",
+                    "name": "Maintenance",
+                    "parentAccountId": "Auto"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Gas",
+                    "parentAccountId": "Auto"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Fees",
+                    "parentAccountId": "Auto"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Auto Insurance",
+                    "parentAccountId": "Auto"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Parking",
+                    "parentAccountId": "Auto"
+                },
+            {
+                "type": "EXPENSE",
+                "name": "Bank Service Charges",
+                "parentAccountId": "Root-Expense"
+            },
+            {
+                "type": "EXPENSE",
+                "name": "Charity",
+                "id": "Charity",
+                "parentAccountId": "Root-Expense"
+            },
+                {
+                    "type": "EXPENSE",
+                    "name": "Cash Donations",
+                    "parentAccountId": "Charity"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Monthly Donations",
+                    "parentAccountId": "Charity"
+                },
+            {
+                "type": "EXPENSE",
+                "name": "Childcare",
+                "id": "Childcare",
+                "parentAccountId": "Root-Expense"
+            },
+            {
+                "type": "EXPENSE",
+                "name": "Dining",
+                "id": "Dining",
+                "parentAccountId": "Root-Expense"
+            },
+            {
+                "type": "EXPENSE",
+                "name": "Entertainment",
+                "id": "Entertainment",
+                "parentAccountId": "Root-Expense"
+            },
+            {
+                "type": "EXPENSE",
+                "name": "Gifts",
+                "id": "Gifts",
+                "parentAccountId": "Root-Expense"
+            },
+            {
+                "type": "EXPENSE",
+                "name": "Groceries",
+                "id": "Groceries",
+                "parentAccountId": "Root-Expense"
+            },
+            {
+                "type": "EXPENSE",
+                "name": "Home Repair",
+                "parentAccountId": "Root-Expense"
+            },
+            {
+                "type": "EXPENSE",
+                "name": "Household",
+                "id": "Household",
+                "parentAccountId": "Root-Expense"
+            },
+                {
+                    "type": "EXPENSE",
+                    "name": "Dry Cleaning",
+                    "parentAccountId": "Household"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Subscriptions",
+                    "parentAccountId": "Entertainment"
+                },
+            {
+                "type": "EXPENSE",
+                "name": "Insurance",
+                "id": "Insurance",
+                "parentAccountId": "Root-Expense"
+            },
+                {
+                    "type": "EXPENSE",
+                    "name": "Dental Insurance",
+                    "parentAccountId": "Insurance"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Health Insurance",
+                    "parentAccountId": "Insurance"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Homeowner Insurance",
+                    "parentAccountId": "Insurance"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Life Insurance",
+                    "parentAccountId": "Insurance"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Renters Insurance",
+                    "parentAccountId": "Insurance"
+                },
+            {
+                "type": "EXPENSE",
+                "name": "Interest",
+                "id": "Interest",
+                "parentAccountId": "Root-Expense"
+            },
+                {
+                    "type": "EXPENSE",
+                    "name": "Auto Loan Interest",
+                    "parentAccountId": "Interest"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "School Loan Interest",
+                    "parentAccountId": "Interest"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Credit Card Interest",
+                    "parentAccountId": "Interest"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Mortgage Interest",
+                    "parentAccountId": "Interest"
+                },
+            {
+                "type": "EXPENSE",
+                "name": "Medical",
+                "id": "Medical",
+                "parentAccountId": "Root-Expense"
+            },
+            {
+                "type": "EXPENSE",
+                "name": "Rent",
+                "id": "Rent",
+                "parentAccountId": "Root-Expense"
+            },
+            {
+                "type": "EXPENSE",
+                "name": "Taxes",
+                "id": "Taxes",
+                "parentAccountId": "Root-Expense"
+            },
+                {
+                    "type": "EXPENSE",
+                    "name": "Federal Income Tax",
+                    "parentAccountId": "Taxes"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Medicare",
+                    "parentAccountId": "Taxes"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Other Taxes",
+                    "parentAccountId": "Taxes"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Property Taxes",
+                    "parentAccountId": "Taxes"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Social Security",
+                    "parentAccountId": "Taxes"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "State Income Tax",
+                    "parentAccountId": "Taxes"
+                },
+            {
+                "type": "EXPENSE",
+                "name": "Travel",
+                "id": "Travel",
+                "parentAccountId": "Root-Expense"
+            },
+            {
+                "type": "EXPENSE",
+                "name": "Utilities",
+                "id": "Utilities",
+                "parentAccountId": "Root-Expense"
+            },
+                {
+                    "type": "EXPENSE",
+                    "name": "Cable",
+                    "parentAccountId": "Utilities"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Electricity",
+                    "parentAccountId": "Utilities"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Gas",
+                    "parentAccountId": "Utilities"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Internet",
+                    "parentAccountId": "Utilities"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Oil",
+                    "parentAccountId": "Utilities"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Phone",
+                    "id": "Phone",
+                    "parentAccountId": "Utilities"
+                }
+        ]
+    }
+]

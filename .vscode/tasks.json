@@ -22,6 +22,16 @@
             "type": "npm",
             "script": "jsdoc",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "make-deb",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "make",
+            "problemMatcher": []
         }
     ]
 }

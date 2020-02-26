@@ -28,7 +28,7 @@ async function tryLocalePathName(prefix, parts) {
  * Loads the user messages from a locale specific JSON file.
  * @param {string} locale The locale.
  * @param {string} pathName The default path name, if it contains a '-' the portion 
- * of the name before the '-' is presumed to be a locale and is stripped of when 
+ * of the name before the '-' is presumed to be a locale and is stripped off when 
  * trying to find a locale specific file.
  * @returns {string}    The path name that was actually loaded.
  */

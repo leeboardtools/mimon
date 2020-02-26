@@ -58,10 +58,11 @@ AppOpenScreen.propTypes = {
     onOpenClick: PropTypes.func.isRequired,
     onRecentClick: PropTypes.func.isRequired,
     onRemoveRecentClick: PropTypes.func.isRequired,
+    onExitClick: PropTypes.func.isRequired,
 };
 
 function AppOpenScreen(props) {
-    let buttonClassName = 'btn btn-primary btn-lg btn-block';
+    let buttonClassName = 'btn btn-primary btn-md btn-block';
     let mruComponent;
     if (props.mruPathNames && (props.mruPathNames.length > 0)) {
         const namesItem = props.mruPathNames.map((pathName) =>
@@ -84,7 +85,7 @@ function AppOpenScreen(props) {
 
         mruComponent = <React.Fragment>
             <div className="row justify-content-md-center">
-                {<span>Previously on LBMiMon...</span>}
+                {<span>{userMsg('AppOpeningScreen-mru_title')}</span>}
             </div>
             <div className="row justify-content-md-center">
                 {<div className="list-group">{namesItem}</div>}
@@ -99,17 +100,24 @@ function AppOpenScreen(props) {
 
     return (
         <div>
-            <h2>LBMiMon</h2>
-            <h4>LeeboardTools&apos; Personal Money Manager</h4>
+            <h2 className="text-center">LBMiMon</h2>
+            <h4 className="text-center">A Personal Money Manager</h4>
+            <h5 className="text-center">From Leeboard Tools</h5>
             <div className="container">
+                <div className="row"></div>
                 <div className="row">
                     <div className="col"> </div>
-                    <div className="col-6">
+                    <div className="col-10">
                         {mruComponent}
                         <button className={buttonClassName}
-                            onClick={props.onNewClick}>New...</button>
+                            onClick={props.onNewClick}>
+                            {userMsg('AppOpeningScreen-new_file')}</button>
                         <button className={buttonClassName}
-                            onClick={props.onOpenClick}>Open...</button>
+                            onClick={props.onOpenClick}>
+                            {userMsg('AppOpeningScreen-open_file')}</button>
+                        <button className="btn btn-secondary btn-sm btn-block"
+                            onClick={props.onExitClick}>
+                            {userMsg('AppOpeningScreen-exit')}</button>
                     </div>
                     <div className="col"> </div>
                 </div>
@@ -319,6 +327,7 @@ export default class App extends React.Component {
         this.onOpenClick = this.onOpenClick.bind(this);
         this.onRecentClick = this.onRecentClick.bind(this);
         this.onRemoveRecentClick = this.onRemoveRecentClick.bind(this);
+        this.onExitClick = this.onExitClick.bind(this);
 
         process.nextTick(async () => { this.asyncInitialize(); });
     }
@@ -331,7 +340,8 @@ export default class App extends React.Component {
 
         const settingsPathName = path.join(app.getPath('appData'), 
             app.name, 'user.json');
-        await Engine.initializeEngine(settingsPathName);
+
+        await Engine.initializeEngine(settingsPathName, app.getAppPath());
 
         // await UIHelpers.setup();
 
@@ -352,12 +362,6 @@ export default class App extends React.Component {
         if (startupOptions.mruPathNames) {
             // Do something
         }
-
-        // TEST!!!
-        startupOptions.mruPathNames = [
-            'Abc',
-            '/home/me/Def',
-        ];
 
         if (startupOptions.autoOpen) {
             if (startupOptions.mruPathNames && (startupOptions.mruPathNames.length > 0)) {
@@ -414,6 +418,9 @@ export default class App extends React.Component {
     onRemoveRecentClick(pathName) {
         console.log('onRemoveRecentClick: ' + pathName);
     }
+    onExitClick() {
+        app.quit();
+    }
 
 
     render() {
@@ -427,6 +434,7 @@ export default class App extends React.Component {
                 onOpenClick = {this.onOpenClick}
                 onRecentClick = {this.onRecentClick}
                 onRemoveRecentClick = {this.onRemoveRecentClick}
+                onExitClick = {this.onExitClick}
             />;
             break;
         

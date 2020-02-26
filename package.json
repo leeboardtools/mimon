@@ -1,6 +1,6 @@
 {
   "name": "mimon",
-  "productName": "Leeboard Tool's Mimon",
+  "productName": "mimon",
   "version": "0.0.1",
   "description": "A Personal Accounting Package",
   "main": ".webpack/main",
@@ -35,10 +35,6 @@
         },
         {
           "name": "@electron-forge/maker-deb",
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
           "config": {}
         }
       ],
