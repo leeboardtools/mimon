@@ -214,5 +214,21 @@
     "AppOpeningScreen-exit":"Exit Mimon",
 
 
+    "FileCreator-default_project_name": "Untitled",
+
+    "CreateFileName-heading": "Accounting Project Location",
+    "CreateFileName-baseDir_selector_label": "Main Folder",
+    "CreateFileName-browse_btn": "Browse",
+    "CreateFileName-dir_projectName_label": "Project Folder Name",
+    "CreateFileName-dir_projectNameHelpBlock": "The folder should not contain any files.",
+
+
+    "SequentialPages-next_btn": "Next",
+    "SequentialPages-finish-btn": "Finish",
+    "SequentialPages-back_btn": "Back",
+
+    "cancel": "Cancel",
+
+
     "": ""
 }

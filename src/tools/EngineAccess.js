@@ -138,6 +138,16 @@ export class EngineAccessor extends EventEmitter {
 
 
     /**
+     * 
+     * @param {number} index 
+     * @returns {AccountingFileFactory}
+     */
+    getFileFactoryAtIndex(index) {
+        return this._fileFactories[index];
+    }
+
+
+    /**
      * Called to retrieve an array of Electron 
      * [FileFilter]{@link https://electronjs.org/docs/api/structures/file-filter} objects
      * for use with file open dialog boxes.

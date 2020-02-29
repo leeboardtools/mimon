@@ -319,3 +319,10 @@ Common menus:
 ## TODO
 - Move main menu out of App.jsx
 
+- Add a FrameHandler.
+    - Handles the main menus.
+    - Handles the system dialogs.
+    - At the App level, but would be passed around to the components.
+
+- Redo SequentialPages to have Back, Next, Finish, Cancel buttons along the bottom.
+Should it be renamed Wizard? No, keep SequentialPages.

@@ -5,12 +5,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import * as Engine from '../engine/Engine';
 import { getUserSetting, setUserSetting } from '../util/UserSettings';
-//import { WIPAccounting } from '../tools/WIPAccounting';
 import { userMsg } from '../util/UserMessages';
-//import CreateNewAccountingFile from './CreateNewAccountingFile';
-//import AccountingFileEditor from './AccountingFileEditor';
-//import * as UIHelpers from './UIHelpers';
+import { EngineAccessor } from '../tools/EngineAccess';
+import { FileCreator } from './FileCreator';
 import { MenuManager } from '../util/MenuManagerRenderer';
+import * as FM from '../util/FrameManager';
 
 
 const electron = require('electron');
@@ -99,47 +98,43 @@ function AppOpenScreen(props) {
     }
 
     return (
-        <div>
-            <h2 className="text-center">LBMiMon</h2>
-            <h4 className="text-center">A Personal Money Manager</h4>
-            <h5 className="text-center">From Leeboard Tools</h5>
+        <div className="d-flex w-100 h-100 p-1 mx-auto flex-column">
+            <div className="mb-4">
+                <h2 className="text-center">LBMiMon</h2>
+                <h4 className="text-center">A Personal Money Manager</h4>
+                <h5 className="text-center">From Leeboard Tools</h5>
+            </div>
             <div className="container">
-                <div className="row"></div>
                 <div className="row">
                     <div className="col"> </div>
-                    <div className="col-10">
+                    <div className="col-8">
                         {mruComponent}
                         <button className={buttonClassName}
-                            onClick={props.onNewClick}>
+                            onClick={props.onNewClick}
+                            aria-label="New File">
                             {userMsg('AppOpeningScreen-new_file')}</button>
                         <button className={buttonClassName}
-                            onClick={props.onOpenClick}>
+                            onClick={props.onOpenClick}
+                            aria-label="Open File">
                             {userMsg('AppOpeningScreen-open_file')}</button>
-                        <button className="btn btn-secondary btn-sm btn-block"
-                            onClick={props.onExitClick}>
-                            {userMsg('AppOpeningScreen-exit')}</button>
                     </div>
                     <div className="col"> </div>
                 </div>
             </div>
+            <div className="container mt-auto">
+                <div className="row">
+                    <div className="col"></div>
+                    <div className="col">
+                        <button className="btn btn-secondary btn-sm btn-block mb-4"
+                            onClick={props.onExitClick}
+                            aria-label="Exit">
+                            {userMsg('AppOpeningScreen-exit')}</button>
+                    </div>
+                    <div className="col"></div>
+                </div>
+            </div>
         </div>
     );
-}
-
-export function createMenuItemTemplate(id, options) {
-    return Object.assign({
-        id: id,
-        idRenderer: id,
-        label: userMsg(id),
-    },
-    options);
-}
-
-export function createRoleMenuItemTemplate(role) {
-    return {
-        idRenderer: 'MenuItem-' + role,
-        role: role,
-    };
 }
 
 function getMainMenuTemplate(mainSetup) {
@@ -147,8 +142,8 @@ function getMainMenuTemplate(mainSetup) {
         {
             label: userMsg('MainMenu-file'),
             submenu: [
-                createMenuItemTemplate('MenuItem-revertFile'),
-                createMenuItemTemplate('MenuItem-closeFile'),
+                FM.createMenuItemTemplate('MenuItem-revertFile'),
+                FM.createMenuItemTemplate('MenuItem-closeFile'),
                 { type: 'separator' },
                 { role: 'quit' },
             ],
@@ -156,70 +151,70 @@ function getMainMenuTemplate(mainSetup) {
         {
             label: userMsg('MainMenu-edit'),
             submenu: [
-                createRoleMenuItemTemplate('undo'),
-                createRoleMenuItemTemplate('redo'),
+                FM.createRoleMenuItemTemplate('undo'),
+                FM.createRoleMenuItemTemplate('redo'),
                 { type: 'separator' },
-                createRoleMenuItemTemplate('cut'),
-                createRoleMenuItemTemplate('copy'),
-                createRoleMenuItemTemplate('paste'),
+                FM.createRoleMenuItemTemplate('cut'),
+                FM.createRoleMenuItemTemplate('copy'),
+                FM.createRoleMenuItemTemplate('paste'),
                 { type: 'separator' },
-                createMenuItemTemplate('MenuItem-copyTransaction'),
-                createMenuItemTemplate('MenuItem-pasteTransaction'),
+                FM.createMenuItemTemplate('MenuItem-copyTransaction'),
+                FM.createMenuItemTemplate('MenuItem-pasteTransaction'),
             ],
         },
         {
             label: userMsg('MainMenu-account'),
             submenu: [
-                createMenuItemTemplate('MenuItem-openAccount'),
-                createMenuItemTemplate('MenuItem-closeAccount'),
+                FM.createMenuItemTemplate('MenuItem-openAccount'),
+                FM.createMenuItemTemplate('MenuItem-closeAccount'),
                 { type: 'separator' },
-                createMenuItemTemplate('MenuItem-reconcile'),
+                FM.createMenuItemTemplate('MenuItem-reconcile'),
                 { type: 'separator' },
-                createMenuItemTemplate('MenuItem-toggleShowHiddenAccounts', 
+                FM.createMenuItemTemplate('MenuItem-toggleShowHiddenAccounts', 
                     { type: 'checkbox' }),
-                createMenuItemTemplate('MenuItem-hideAccount'),
-                createMenuItemTemplate('MenuItem-showAccount', { visible: false }),
+                FM.createMenuItemTemplate('MenuItem-hideAccount'),
+                FM.createMenuItemTemplate('MenuItem-showAccount', { visible: false }),
                 { type: 'separator' },
-                createMenuItemTemplate('MenuItem-moveAccountUp'),
-                createMenuItemTemplate('MenuItem-moveAccountDown'),
+                FM.createMenuItemTemplate('MenuItem-moveAccountUp'),
+                FM.createMenuItemTemplate('MenuItem-moveAccountDown'),
                 { type: 'separator' },
-                createMenuItemTemplate('MenuItem-newAccount'),
-                createMenuItemTemplate('MenuItem-modifyAccount'),
-                createMenuItemTemplate('MenuItem-removeAccount'),
+                FM.createMenuItemTemplate('MenuItem-newAccount'),
+                FM.createMenuItemTemplate('MenuItem-modifyAccount'),
+                FM.createMenuItemTemplate('MenuItem-removeAccount'),
             ],
         },
         {
             label: userMsg('MainMenu-transaction'),
             submenu: [
-                createMenuItemTemplate('MenuItem-newTransaction'),
-                createMenuItemTemplate('MenuItem-copyTransaction'),
-                createMenuItemTemplate('MenuItem-pasteTransaction'),
-                createMenuItemTemplate('MenuItem-removeTransaction'),
+                FM.createMenuItemTemplate('MenuItem-newTransaction'),
+                FM.createMenuItemTemplate('MenuItem-copyTransaction'),
+                FM.createMenuItemTemplate('MenuItem-pasteTransaction'),
+                FM.createMenuItemTemplate('MenuItem-removeTransaction'),
                 { type: 'separator' },
-                createMenuItemTemplate('MenuItem-findTransaction'),
+                FM.createMenuItemTemplate('MenuItem-findTransaction'),
             ],
         },
         {
             label: userMsg('MainMenu-securities'),
             submenu: [
-                createMenuItemTemplate('MenuItem-view_SECURITY'),
-                createMenuItemTemplate('MenuItem-downloadPrices'),
+                FM.createMenuItemTemplate('MenuItem-view_SECURITY'),
+                FM.createMenuItemTemplate('MenuItem-downloadPrices'),
                 { type: 'separator' },
-                createMenuItemTemplate('MenuItem-toggleShowAccounts_SECURITY', 
+                FM.createMenuItemTemplate('MenuItem-toggleShowAccounts_SECURITY', 
                     { type: 'checkbox' }),
-                createMenuItemTemplate('MenuItem-toggleShowQuantityZero_SECURITY', 
+                FM.createMenuItemTemplate('MenuItem-toggleShowQuantityZero_SECURITY', 
                     { type: 'checkbox' }),
-                createMenuItemTemplate('MenuItem-open_SECURITY'),
-                createMenuItemTemplate('MenuItem-close_SECURITY'),
+                FM.createMenuItemTemplate('MenuItem-open_SECURITY'),
+                FM.createMenuItemTemplate('MenuItem-close_SECURITY'),
                 { type: 'separator' },
-                createMenuItemTemplate('MenuItem-toggleShowHidden_SECURITY', 
+                FM.createMenuItemTemplate('MenuItem-toggleShowHidden_SECURITY', 
                     { type: 'checkbox' }),
-                createMenuItemTemplate('MenuItem-hide_SECURITY'),
-                createMenuItemTemplate('MenuItem-show_SECURITY', { visible: false }),
+                FM.createMenuItemTemplate('MenuItem-hide_SECURITY'),
+                FM.createMenuItemTemplate('MenuItem-show_SECURITY', { visible: false }),
                 { type: 'separator' },
-                createMenuItemTemplate('MenuItem-new_SECURITY'),
-                createMenuItemTemplate('MenuItem-modify_SECURITY'),
-                createMenuItemTemplate('MenuItem-remove_SECURITY'),
+                FM.createMenuItemTemplate('MenuItem-new_SECURITY'),
+                FM.createMenuItemTemplate('MenuItem-modify_SECURITY'),
+                FM.createMenuItemTemplate('MenuItem-remove_SECURITY'),
             ],
         },
         {
@@ -268,42 +263,43 @@ function getMainMenuTemplate(mainSetup) {
 
 function addContextMenuTemplates(menuManager) {
     menuManager.addContextMenuTemplate('MasterAccountsEditor', [
-        createMenuItemTemplate('MenuItem-openAccount'),
-        createMenuItemTemplate('MenuItem-closeAccount'),
+        FM.createMenuItemTemplate('MenuItem-openAccount'),
+        FM.createMenuItemTemplate('MenuItem-closeAccount'),
         { type: 'separator' },
-        createMenuItemTemplate('MenuItem-reconcile'),
+        FM.createMenuItemTemplate('MenuItem-reconcile'),
         { type: 'separator' },
-        createMenuItemTemplate('MenuItem-toggleShowHiddenAccounts', { type: 'checkbox' }),
-        createMenuItemTemplate('MenuItem-hideAccount'),
-        createMenuItemTemplate('MenuItem-showAccount', { visible: false }),
+        FM.createMenuItemTemplate('MenuItem-toggleShowHiddenAccounts', 
+            { type: 'checkbox' }),
+        FM.createMenuItemTemplate('MenuItem-hideAccount'),
+        FM.createMenuItemTemplate('MenuItem-showAccount', { visible: false }),
         { type: 'separator' },
-        createMenuItemTemplate('MenuItem-moveAccountUp'),
-        createMenuItemTemplate('MenuItem-moveAccountDown'),
+        FM.createMenuItemTemplate('MenuItem-moveAccountUp'),
+        FM.createMenuItemTemplate('MenuItem-moveAccountDown'),
         { type: 'separator' },
-        createMenuItemTemplate('MenuItem-newAccount'),
-        createMenuItemTemplate('MenuItem-modifyAccount'),
-        createMenuItemTemplate('MenuItem-removeAccount'),
+        FM.createMenuItemTemplate('MenuItem-newAccount'),
+        FM.createMenuItemTemplate('MenuItem-modifyAccount'),
+        FM.createMenuItemTemplate('MenuItem-removeAccount'),
     ]);
 
     menuManager.addContextMenuTemplate('MasterPricedItemsEditor_SECURITY', [
-        createMenuItemTemplate('MenuItem-view_SECURITY'),
-        createMenuItemTemplate('MenuItem-downloadPrices'),
+        FM.createMenuItemTemplate('MenuItem-view_SECURITY'),
+        FM.createMenuItemTemplate('MenuItem-downloadPrices'),
         { type: 'separator' },
-        createMenuItemTemplate('MenuItem-toggleShowAccounts_SECURITY', 
+        FM.createMenuItemTemplate('MenuItem-toggleShowAccounts_SECURITY', 
             { type: 'checkbox' }),
-        createMenuItemTemplate('MenuItem-toggleShowQuantityZero_SECURITY', 
+        FM.createMenuItemTemplate('MenuItem-toggleShowQuantityZero_SECURITY', 
             { type: 'checkbox' }),
-        createMenuItemTemplate('MenuItem-open_SECURITY'),
-        createMenuItemTemplate('MenuItem-close_SECURITY'),
+        FM.createMenuItemTemplate('MenuItem-open_SECURITY'),
+        FM.createMenuItemTemplate('MenuItem-close_SECURITY'),
         { type: 'separator' },
-        createMenuItemTemplate('MenuItem-toggleShowHidden_SECURITY', 
+        FM.createMenuItemTemplate('MenuItem-toggleShowHidden_SECURITY', 
             { type: 'checkbox' }),
-        createMenuItemTemplate('MenuItem-hide_SECURITY'),
-        createMenuItemTemplate('MenuItem-show_SECURITY', { visible: false }),
+        FM.createMenuItemTemplate('MenuItem-hide_SECURITY'),
+        FM.createMenuItemTemplate('MenuItem-show_SECURITY', { visible: false }),
         { type: 'separator' },
-        createMenuItemTemplate('MenuItem-new_SECURITY'),
-        createMenuItemTemplate('MenuItem-modify_SECURITY'),
-        createMenuItemTemplate('MenuItem-remove_SECURITY'),
+        FM.createMenuItemTemplate('MenuItem-new_SECURITY'),
+        FM.createMenuItemTemplate('MenuItem-modify_SECURITY'),
+        FM.createMenuItemTemplate('MenuItem-remove_SECURITY'),
     ]);
 }
 
@@ -319,8 +315,6 @@ export default class App extends React.Component {
 
         this.state = {
             appState: 'initializing',
-            accountingFile: undefined,
-            menuManager: new MenuManager(),
         };
 
         this.onNewClick = this.onNewClick.bind(this);
@@ -328,6 +322,12 @@ export default class App extends React.Component {
         this.onRecentClick = this.onRecentClick.bind(this);
         this.onRemoveRecentClick = this.onRemoveRecentClick.bind(this);
         this.onExitClick = this.onExitClick.bind(this);
+
+        this.onCreateFile = this.onCreateFile.bind(this);
+        this.onCancel = this.onCancel.bind(this);
+
+        this._accessor = new EngineAccessor();
+        this._frameManager = new FM.FrameManager();
 
         process.nextTick(async () => { this.asyncInitialize(); });
     }
@@ -391,9 +391,6 @@ export default class App extends React.Component {
 
 
     componentWillUnmount() {
-        if (this._mainMenuTemplate) {
-            this.state.menuManager.setMenuTemplate(undefined);
-        }
     }
 
 
@@ -406,9 +403,23 @@ export default class App extends React.Component {
     }
 
 
-    onNewClick() {
-        console.log('onNewClick');
+    onCreateFile(fileName, fileFactoryIndex, fileContents) {
+        alert('Creating: ' + fileName);
     }
+
+    onCancel() {
+        this.setState({
+            appState: 'openingScreen'
+        });
+    }
+
+
+    onNewClick() {
+        this.setState({
+            appState: 'newFile',
+        });
+    }
+
     onOpenClick() {
         console.log('onOpenClick');
     }
@@ -428,7 +439,7 @@ export default class App extends React.Component {
         const { appState, mruPathNames } = this.state;
         switch (appState) {
         case 'openingScreen' :
-            mainComponent = <AppOpenScreen
+            return <AppOpenScreen
                 mruPathNames = {mruPathNames}
                 onNewClick = {this.onNewClick}
                 onOpenClick = {this.onOpenClick}
@@ -436,7 +447,15 @@ export default class App extends React.Component {
                 onRemoveRecentClick = {this.onRemoveRecentClick}
                 onExitClick = {this.onExitClick}
             />;
-            break;
+        
+        case 'newFile': 
+            return <FileCreator
+                accessor = {this._accessor}
+                frameManager = {this._frameManager}
+                onCreate = {this.onCreateFile}
+                onCancel = {this.onCancel}
+            />;
+            //break;
         
         default :
             mainComponent = <div>
