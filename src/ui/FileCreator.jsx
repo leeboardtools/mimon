@@ -77,14 +77,6 @@ class CreateFileName extends React.Component {
 
 
     renderFileTypeSelector() {
-/*        const { accessor } = this.props;
-
-        let fileTypeSelector;
-        if (accessor.getFileFactoryCount() > 1) {
-            // TODO:
-            // Put in a file type selector.
-        }
-*/
     }
 
 
