@@ -2,7 +2,7 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { MenuManagerMain } from './util/MenuManagerMain';
 // import 'regenerator-runtime/runtime';
 
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 app.allowRendererProcessReuse = true;
 
 //const path = require('path');
@@ -11,7 +11,7 @@ const { session } = require('electron');
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
 if (isDevMode) {
-    //installExtension(REACT_DEVELOPER_TOOLS);
+    installExtension(REACT_DEVELOPER_TOOLS);
 }
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -25,23 +25,6 @@ ipcMain.on('sync-get-main-setup', (event, arg) => {
     event.returnValue = {
         isDevMode: isDevMode,
     };
-});
-
-
-ipcMain.on('showOpenDialog', (event, options) => {
-    try {
-        const result = dialog.showOpenDialog(mainWindow, options);
-        mainWindow.webContents.send('showOpenDialog-result', result);
-    }
-    catch (err) {
-        mainWindow.webContents.send('showOpenDialog-result', err);
-    }
-});
-
-
-ipcMain.on('setMainTitle', (event, title) => {
-    title = title || app.name;
-    mainWindow.setTitle(title);
 });
 
 
@@ -80,10 +63,12 @@ const createWindow = () => {
         height: 600,
         webPreferences: {
             nodeIntegration: true,
+            defaultFontSize: 14,
         }
     });
 
     // and load the index.html of the app.
+    // eslint-disable-next-line no-undef
     mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
     menuManager = new MenuManagerMain();
