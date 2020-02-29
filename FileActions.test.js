@@ -1,6 +1,7 @@
 import { createDir, cleanupDir, writeFile, expectFileToBe } from './FileTestHelpers';
 import { DeleteFileAction, RenameFileAction, ReplaceFileAction, 
-    performFileActions, KeepFileAction, getFullPathName, CopyFileAction } from './FileActions';
+    performFileActions, KeepFileAction, getFullPathName, CopyFileAction 
+} from './FileActions';
 import { fileExists } from './Files';
 
 const path = require('path');
