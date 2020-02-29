@@ -2,6 +2,48 @@ const path = require('path');
 const fsPromises = require('fs').promises;
 
 /**
+ * Determines if a file or directory exists.
+ * @async
+ * @param {string} pathName The name of the file/directory to check for.
+ * @returns {Promise<boolean>}  <code>true</code> if the file exists.
+ */
+export async function fileOrDirExists(pathName) {
+    try {
+        if (!pathName) {
+            return false;
+        }
+        const stat = await fsPromises.stat(pathName);
+        return stat.isFile() || stat.isDirectory();
+    }
+    catch (e) {
+        if (e.code === 'ENOENT') {
+            return false;
+        }
+    }
+}
+
+/**
+ * Determines if a directory exists.
+ * @async
+ * @param {string} dirName The name of the file to check for.
+ * @returns {Promise<boolean>}  <code>true</code> if the file exists.
+ */
+export async function dirExists(dirName) {
+    try {
+        if (!dirName) {
+            return false;
+        }
+        const stat = await fsPromises.stat(dirName);
+        return stat.isDirectory();
+    }
+    catch (e) {
+        if (e.code === 'ENOENT') {
+            return false;
+        }
+    }
+}
+
+/**
  * Determines if a file exists.
  * @async
  * @param {string} fileName The name of the file to check for.
@@ -41,6 +83,27 @@ export async function allFilesExist(fileNames) {
 
     return true;
 }
+
+
+/**
+ * Retrieves a unique file name by appending '-#' on to a base name until
+ * a file/directory does not exist with that name.
+ * @param {string} baseDir 
+ * @param {string} initialName 
+ * @returns {string}    The unique name, does not include the directory.
+ * @async
+ */
+export async function getUniqueFileName(baseDir, initialName) {
+    let name = initialName;
+    let i = 0;
+    while (await fileOrDirExists(path.join(baseDir, name))) {
+        ++i;
+        name = initialName + '-' + i;
+    }
+
+    return name;
+}
+
 
 /**
  * Retrieves all the files in a directory, prepending the directory name to the 
