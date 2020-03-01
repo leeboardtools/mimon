@@ -154,7 +154,7 @@
 
     
     "JSONGzipAccountingFile-not_dir": ["'", "' is an existing file. It must be an empty folder."],
-    "JSONGzipAccountingFile-dir_not_empty": ["The folder '", "' must be empty in order to create a new accounting file system there."],
+    "JSONGzipAccountingFile-dir_not_empty": ["The folder '", "' is not empty. Folders for new accounting file projects must be empty."],
     "JSONGzipAccountingFile-dir_name_invalid": ["'", "' could not be created, it might not be a valid path name."],
     "JSONGzipAccountingFile-ledger_tag_missing": ["The file '", "' is not a valid MiMon ledger file, the tag is incorrect or missing."],
     "JSONGzipAccountingFile-accountsHandler_tag_missing": ["The file '", "' is not a valid MiMon ledger file, the accountsHandler section is missing."],
@@ -211,19 +211,19 @@
     
 
     "AppOpeningScreen-mru_title": "Recently Opened:",
-    "AppOpeningScreen-new_file": "Create a New Accounting System...",
-    "AppOpeningScreen-open_file": "Open an Existing Accounting System...",
+    "AppOpeningScreen-new_file": "Create a New Accounting Project...",
+    "AppOpeningScreen-open_file": "Open an Existing Accounting Project...",
     "AppOpeningScreen-exit":"Exit Mimon",
 
 
     "FileCreator-default_project_name": "Untitled",
+    "FileCreator-project_name_required": "A project name is required.",
     "FileCreator-cannot_make_base_dir": ["Could not create the main folder. ", ""],
 
     "CreateFileName-heading": "Accounting Project Location",
     "CreateFileName-baseDir_selector_label": "Main Folder",
     "CreateFileName-browse_btn": "Browse",
     "CreateFileName-dir_projectName_label": "Project Folder Name",
-    "CreateFileName-dir_projectNameHelpBlock": "The folder should not contain any files.",
 
 
     "SequentialPages-next_btn": "Next",

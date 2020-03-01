@@ -326,3 +326,5 @@ Common menus:
 
 - Redo SequentialPages to have Back, Next, Finish, Cancel buttons along the bottom.
 Should it be renamed Wizard? No, keep SequentialPages.
+
+- Rename AccountingSystem to AccountingProject???

@@ -17,7 +17,7 @@ export class SequentialPages extends React.Component {
     }
 
 
-    onClickBack() {
+    onClickBack(event) {
         this.setState((state, props) => {
             const newPageIndex = state.activePageIndex - 1;
             if (newPageIndex >= 0) {
@@ -81,18 +81,18 @@ export class SequentialPages extends React.Component {
         }
 
         const btnClassName = 'btn btn-primary m-2';
-        let nextBtnClassName = btnClassName;
+        let nextBtnDisabled;
         if (this.props.isNextDisabled) {
-            nextBtnClassName += ' disabled';
+            nextBtnDisabled = 'disabled';
         }
 
         const nextText = ((activePageIndex + 1) < pageCount)
             ? userMsg('SequentialPages-next_btn') 
             : userMsg('SequentialPages-finish-btn');
 
-        let backBtnClassName = btnClassName;
+        let backBtnDisabled;
         if (this.props.isBackDisabled || !activePageIndex) {
-            backBtnClassName += ' disabled';
+            backBtnDisabled = 'disabled';
         }
 
         return <div className="d-flex w-100 h-100 p-1 mx-auto flex-column">
@@ -103,12 +103,14 @@ export class SequentialPages extends React.Component {
                         {cancelBtn}
                     </div>
                     <div className="col text-right mt-2">
-                        <button className={backBtnClassName}
-                            onClick={this.onClickBack}>
+                        <button className={btnClassName}
+                            onClick={this.onClickBack}
+                            disabled={backBtnDisabled}>
                             {userMsg('SequentialPages-back_btn')}
                         </button>
-                        <button className={nextBtnClassName}
-                            onClick={this.onClickNext}>
+                        <button className={btnClassName}
+                            onClick={this.onClickNext} 
+                            disabled={nextBtnDisabled}>
                             {nextText}
                         </button>
                     </div>

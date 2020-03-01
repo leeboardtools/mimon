@@ -403,11 +403,12 @@ export default class App extends React.Component {
     }
 
 
-    onCreateFile(fileName, fileFactoryIndex, fileContents) {
-        alert('Creating: ' + fileName);
+    onCreateFile() {
+        alert('AccountingFile Created');
     }
 
     onCancel() {
+        console.log('onCancel');
         this.setState({
             appState: 'openingScreen'
         });

@@ -3,18 +3,12 @@ import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { SequentialPages } from './SequentialPages';
 import { getUniqueFileName } from '../util/Files';
+import { ErrorReporter } from './ErrorReporter';
 
 const os = require('os');
 const path = require('path');
+const fsPromises = require('fs').promises;
 
-
-/**
- * @callback FileCreator~onCreateCallback
- * @param {string}  fileName
- * @param {number}  fileFactoryIndex    The index of the file factory to use from
- * {@link EngineAccessor}
- * @param {object}  fileContents
- */
 
 //
 // CreateFileName
@@ -25,6 +19,7 @@ class CreateFileName extends React.Component {
         super(props);
 
         this.onBrowse = this.onBrowse.bind(this);
+        this.onProjectNameChange = this.onProjectNameChange.bind(this);
     }
 
 
@@ -44,6 +39,11 @@ class CreateFileName extends React.Component {
         }).catch((err) => {
             console.log('failed: ' + JSON.stringify(err));
         });
+    }
+
+
+    onProjectNameChange(event) {
+        this.props.onSetProjectName(event.target.value);
     }
 
 
@@ -82,15 +82,22 @@ class CreateFileName extends React.Component {
 
     renderProjectNameEditor() {
         let label;
-        let helperLabel;
 
-        const { accessor } = this.props;
+        const { accessor, projectNameErrorMsg } = this.props;
         if (accessor.isFileFactoryAtIndexDirBased(this.props.fileFactoryIndex)) {
             label = userMsg('CreateFileName-dir_projectName_label');
-            helperLabel = userMsg('CreateFileName-dir_projectNameHelpBlock');
         }
 
         let projectName = this.props.projectName || '';
+
+        let inputClassName = 'form-control';
+        let errorMsgComponent;
+        if (projectNameErrorMsg) {
+            inputClassName += ' is-invalid';
+            errorMsgComponent = <div className="invalid-feedback">
+                {projectNameErrorMsg}
+            </div>;
+        }
 
         return <div className="form-group text-left">
             <label className="mb-0" htmlFor="CreateFileName-projectName">
@@ -99,15 +106,12 @@ class CreateFileName extends React.Component {
             <div className="input-group mb-0">
                 <input type="text"
                     id="CreateFileName-projectName"
-                    className="form-control"
-                    aria-describedby="CreateFileName-projectNameHelpBlock"
+                    className={inputClassName}
+                    onChange={this.onProjectNameChange}
+                    aria-label="Project Name"
                     value={projectName}/>
+                {errorMsgComponent}
             </div>
-            <small 
-                id="CreateFileName-projectNameHelpBlock"
-                className="form-text text-muted">
-                {helperLabel}
-            </small>
         </div>;
     }
 
@@ -134,6 +138,7 @@ CreateFileName.propTypes = {
     frameManager: PropTypes.object.isRequired,
     baseDirName: PropTypes.string,
     projectName: PropTypes.string,
+    projectNameErrorMsg: PropTypes.string,
     fileFactoryIndex: PropTypes.number,
     onSetBaseDirName: PropTypes.func.isRequired,
     onSetProjectName: PropTypes.func.isRequired,
@@ -162,6 +167,7 @@ export class FileCreator extends React.Component {
             fileFactoryIndex: 0,
             baseDirName: path.join(os.homedir(), 'Mimon'),
             projectName: undefined,
+            activePageIndex: 0,
         };
 
         this._pages = [
@@ -184,7 +190,6 @@ export class FileCreator extends React.Component {
         this.onActivatePage = this.onActivatePage.bind(this);
         this.onCreate = this.onCreate.bind(this);
 
-
         process.nextTick(async () => {
             const defaultProjectName = userMsg('FileCreator-default_project_name');
             this.setState({
@@ -195,20 +200,65 @@ export class FileCreator extends React.Component {
     }
 
 
+    updateFileInfo(settings) {
+        process.nextTick(async () => {
+            let baseDirName = settings.baseDirName || this.state.baseDirName;
+            let projectName = settings.projectName || this.state.projectName;
+            let fileFactoryIndex = (settings.fileFactoryIndex === undefined)
+                ? this.state.fileFactoryIndex : settings.fileFactoryIndex;
+            
+            const { accessor } = this.props;
+            const fileFactoryCount = accessor.getFileFactoryCount();
+            fileFactoryIndex = Math.max(fileFactoryIndex, 0);
+            fileFactoryIndex = Math.min(fileFactoryIndex, fileFactoryCount - 1);
+
+            const pathName = path.join(baseDirName, projectName);
+
+            let projectNameErrorMsg;
+            let result;
+            if (!projectName) {
+                projectNameErrorMsg = userMsg('FileCreator-project_name_required');
+            }
+            else {
+                try {
+                    await fsPromises.mkdir(baseDirName, {
+                        recursive: true,
+                    });
+    
+                    result = await accessor.asyncCanCreateAccountingFile(
+                        pathName, fileFactoryIndex);
+                    if (result instanceof Error) {
+                        projectNameErrorMsg = result.message;
+                    }
+                }
+                catch (e) {
+                    projectNameErrorMsg = userMsg('FileCreator-cannot_make_base_dir', e);
+                }
+            }
+
+            this.setState({
+                baseDirName: baseDirName,
+                projectName: projectName,
+                projectNameErrorMsg: projectNameErrorMsg,
+                fileFactoryIndex: fileFactoryIndex,
+            });
+        });
+    }
+
     onSetBaseDirName(name) {
-        this.setState({
+        this.updateFileInfo({
             baseDirName: name,
         });
     }
 
     onSetProjectName(name) {
-        this.setState({
+        this.updateFileInfo({
             projectName: name,
         });
     }
 
     onSetFileFactoryIndex(index) {
-        this.setState({
+        this.updateFileInfo({
             fileFactoryIndex: index,
         });
     }
@@ -231,6 +281,7 @@ export class FileCreator extends React.Component {
                 frameManager={this.props.frameManager}
                 baseDirName={this.state.baseDirName}
                 projectName={this.state.projectName}
+                projectNameErrorMsg={this.state.projectNameErrorMsg}
                 fileFactoryIndex={this.state.fileFactoryIndex}
                 onSetBaseDirName={this.onSetBaseDirName}
                 onSetProjectName={this.onSetProjectName}
@@ -254,12 +305,46 @@ export class FileCreator extends React.Component {
 
 
     onCreate() {
-        const { fileName, fileFactoryIndex, fileContents } = this.state;
-        this.props.onCreate(fileName, fileFactoryIndex, fileContents);
+        process.nextTick(async () => {
+            const { baseDirName, projectName, fileFactoryIndex, 
+                fileContents } = this.state;
+            const pathName = path.join(baseDirName, projectName);
+            try {
+                const { accessor } = this.props;
+
+                await accessor.asyncCreateAccountingFile(pathName, fileFactoryIndex, 
+                    fileContents);
+
+                this.props.onCreate();
+            }
+            catch (e) {
+                this.setState({
+                    errorMsg: e.message,
+                });
+            }
+        });
     }
 
 
     render() {
+        const { activePageIndex, errorMsg } = this.state;
+        if (errorMsg) {
+            return <ErrorReporter message={errorMsg} 
+                onClose={this.props.onCancel}
+            />;
+        }
+        
+        const activePage = this._pages[activePageIndex];
+
+        let isBackDisabled;
+        let isNextDisabled;
+
+        switch (activePage.pageId) {
+        case 'fileName' :
+            isNextDisabled = this.state.projectNameErrorMsg;
+            break;
+        }
+
         return <SequentialPages
             pageCount={this._pages.length}
             activePageIndex={this.state.activePageIndex}
@@ -267,6 +352,8 @@ export class FileCreator extends React.Component {
             onRenderPage={this.onRenderPage}
             onFinish={this.onCreate}
             onCancel={this.props.onCancel}
+            isBackDisabled={isBackDisabled}
+            isNextDisabled={isNextDisabled}
         />;
     }
 }
