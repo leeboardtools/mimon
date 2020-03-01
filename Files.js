@@ -150,3 +150,51 @@ export async function getDirectoriesOnlyInDir(dir) {
     });
     return names;
 }
+
+
+/**
+ * Determines if a directory can be created, this does so by actually trying to create
+ * the directories, cleaning up afterward.
+ * @param {string} dir The directory of interest.
+ * @returns {boolean}   <code>true</code> if dir can be created or already exists.
+ */
+export async function canCreateDir(dir) {
+    if (await dirExists(dir)) {
+        return true;
+    }
+
+    // We need to figure out what needs creating.
+    dir = path.normalize(dir);
+    const dirs = [];
+    let parts = path.parse(dir);
+    while (parts.base) {
+        dirs.push(parts.base);
+        parts = path.parse(parts.dir);
+    }
+
+    const createdDirs = [];
+    try {
+        dir = '';
+        for (let i = dirs.length - 1; i >= 0; --i) {
+            dir = path.join(dir, dirs[i]);
+            if (!await dirExists(dir)) {
+                await fsPromises.mkdir(dir);
+                createdDirs.push(dir);
+            }
+        }
+        return true;
+    }
+    catch (e) {
+        return e;
+    }
+    finally {
+        for (let i = createdDirs.length - 1; i >= 0; --i) {
+            try {
+                await fsPromises.rmdir(createdDirs[i]);
+            }
+            catch (e) {
+                // Ignore failures, not much we can do...
+            }
+        }
+    }
+}
