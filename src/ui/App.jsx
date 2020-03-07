@@ -8,7 +8,6 @@ import { getUserSetting, setUserSetting } from '../util/UserSettings';
 import { userMsg } from '../util/UserMessages';
 import { EngineAccessor } from '../tools/EngineAccess';
 import { FileCreator } from './FileCreator';
-import { MenuManager } from '../util/MenuManagerRenderer';
 import * as FM from '../util/FrameManager';
 
 
@@ -408,7 +407,6 @@ export default class App extends React.Component {
     }
 
     onCancel() {
-        console.log('onCancel');
         this.setState({
             appState: 'openingScreen'
         });

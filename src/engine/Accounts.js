@@ -255,6 +255,7 @@ export function loadAccountsUserMessages() {
  * @property {number}   id  The account's id.
  * @property {string}   [refId] Optional user reference id, these must be unique.
  * @property {number}   parentAccountId The account id of the parent account.
+ * @property {number[]} childAccountIds Array containing the ids of any child accounts.
  * @property {string}   type    The name property of one of {@link AccountType}.
  * @property {number}   pricedItemId   The local id of the priced item the account 
  * represents.
@@ -271,6 +272,7 @@ export function loadAccountsUserMessages() {
  * @property {number}   id  The account's id.
  * @property {string}   [refId] Optional user reference id, these must be unique.
  * @property {number}   parentAccountId The account id of the parent account.
+ * @property {number[]} childAccountIds Array containing the ids of any child accounts.
  * @property {AccountType}  type    The account's type.
  * @property {number}   pricedItemId   The local id of the priced item the account 
  * represents.

@@ -1,20 +1,21 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { SequentialPages } from './SequentialPages';
+import { SequentialPages } from '../util-ui/SequentialPages';
 import { getUniqueFileName } from '../util/Files';
 import { ErrorReporter } from './ErrorReporter';
+import { asyncGetNewFileTemplates } from '../tools/Templates';
+import { NewFileConfigurator} from './NewFileConfigurator';
 
 const os = require('os');
 const path = require('path');
 const fsPromises = require('fs').promises;
 
 
-//
-// CreateFileName
-//
-
-class CreateFileName extends React.Component {
+/**
+ * Component for specifying the file name/type of a new accounting project file.
+ */
+class NewFileName extends React.Component {
     constructor(props) {
         super(props);
 
@@ -48,16 +49,16 @@ class CreateFileName extends React.Component {
 
 
     renderBaseDirSelector() {
-        const label = userMsg('CreateFileName-baseDir_selector_label');
-        const browseText = userMsg('CreateFileName-browse_btn');
+        const label = userMsg('NewFileName-baseDir_selector_label');
+        const browseText = userMsg('NewFileName-browse_btn');
 
         return <div className="form-group text-left">
-            <label className="mb-0" htmlFor="CreateFileName-baseDir">
+            <label className="mb-0" htmlFor="NewFileName-baseDir">
                 {label}
             </label>
             <div className="input-group mb-0">
                 <input type="text"
-                    id="CreateFileName-baseDir"
+                    id="NewFileName-baseDir"
                     className="form-control"
                     readOnly
                     aria-label="Base Folder"
@@ -85,7 +86,7 @@ class CreateFileName extends React.Component {
 
         const { accessor, projectNameErrorMsg } = this.props;
         if (accessor.isFileFactoryAtIndexDirBased(this.props.fileFactoryIndex)) {
-            label = userMsg('CreateFileName-dir_projectName_label');
+            label = userMsg('NewFileName-dir_projectName_label');
         }
 
         let projectName = this.props.projectName || '';
@@ -100,12 +101,12 @@ class CreateFileName extends React.Component {
         }
 
         return <div className="form-group text-left">
-            <label className="mb-0" htmlFor="CreateFileName-projectName">
+            <label className="mb-0" htmlFor="NewFileName-projectName">
                 {label}
             </label>
             <div className="input-group mb-0">
                 <input type="text"
-                    id="CreateFileName-projectName"
+                    id="NewFileName-projectName"
                     className={inputClassName}
                     onChange={this.onProjectNameChange}
                     aria-label="Project Name"
@@ -124,7 +125,7 @@ class CreateFileName extends React.Component {
 
         return <div className="container-fluid mt-auto mb-auto">
             <h4 className="pageTitle pb-3 mb-4 border-bottom">
-                {userMsg('CreateFileName-heading')}
+                {userMsg('NewFileName-heading')}
             </h4>
             {baseDirSelector}
             {projectNameEditor}
@@ -133,7 +134,7 @@ class CreateFileName extends React.Component {
     }
 }
 
-CreateFileName.propTypes = {
+NewFileName.propTypes = {
     accessor: PropTypes.object.isRequired,
     frameManager: PropTypes.object.isRequired,
     baseDirName: PropTypes.string,
@@ -146,18 +147,10 @@ CreateFileName.propTypes = {
 };
 
 
-//
-// Accounts
-//
-
-//
-// Priced Items
-//
-
 
 
 /**
- * Component for creating new account system files.
+ * Component for creating new accounting project files.
  */
 export class FileCreator extends React.Component {
     constructor(props) {
@@ -168,6 +161,10 @@ export class FileCreator extends React.Component {
             baseDirName: path.join(os.homedir(), 'Mimon'),
             projectName: undefined,
             activePageIndex: 0,
+            newFileContents: { 
+                accounts: [], 
+                pricedItems: [], 
+            },
         };
 
         this._pages = [
@@ -177,14 +174,13 @@ export class FileCreator extends React.Component {
             {
                 pageId: 'accounts',
             },
-            {
-                pageId: 'pricedItems',
-            },
         ];
 
         this.onSetBaseDirName = this.onSetBaseDirName.bind(this);
         this.onSetProjectName = this.onSetProjectName.bind(this);
         this.onSetFileFactoryIndex = this.onSetFileFactoryIndex.bind(this);
+
+        this.onUpdateFileContents = this.onUpdateFileContents.bind(this);
 
         this.onRenderPage = this.onRenderPage.bind(this);
         this.onActivatePage = this.onActivatePage.bind(this);
@@ -192,9 +188,13 @@ export class FileCreator extends React.Component {
 
         process.nextTick(async () => {
             const defaultProjectName = userMsg('FileCreator-default_project_name');
+
+            this._newFileTemplates = await asyncGetNewFileTemplates();
+
             this.setState({
                 projectName: await getUniqueFileName(this.state.baseDirName, 
-                    defaultProjectName)
+                    defaultProjectName),
+                newFileContents: this._newFileTemplates[0],
             });
         });
     }
@@ -263,6 +263,12 @@ export class FileCreator extends React.Component {
         });
     }
 
+    onUpdateFileContents(newFileContents) {
+        this.setState({
+            newFileContents: newFileContents
+        });
+    }
+
 
     onActivatePage(pageIndex) {
         this.setState({
@@ -276,7 +282,7 @@ export class FileCreator extends React.Component {
         let component;
         switch (page.pageId) {
         case 'fileName':
-            component = <CreateFileName
+            component = <NewFileName
                 accessor={this.props.accessor}
                 frameManager={this.props.frameManager}
                 baseDirName={this.state.baseDirName}
@@ -290,12 +296,13 @@ export class FileCreator extends React.Component {
             break;
 
         case 'accounts':
-            component = <div>Accounts</div>;
+            component = <NewFileConfigurator
+                accessor={this.props.accessor}
+                newFileContents={this.state.newFileContents}
+                onUpdateFileContents={this.onUpdateFileContents}
+            />;
             break;
 
-        case 'pricedItems':
-            component = <span>Priced Items</span>;
-            break;
         }
 
         return <div className="container-fluid mt-3">
@@ -307,13 +314,13 @@ export class FileCreator extends React.Component {
     onCreate() {
         process.nextTick(async () => {
             const { baseDirName, projectName, fileFactoryIndex, 
-                fileContents } = this.state;
+                newFileContents } = this.state;
             const pathName = path.join(baseDirName, projectName);
             try {
                 const { accessor } = this.props;
 
                 await accessor.asyncCreateAccountingFile(pathName, fileFactoryIndex, 
-                    fileContents);
+                    newFileContents);
 
                 this.props.onCreate();
             }
@@ -342,6 +349,10 @@ export class FileCreator extends React.Component {
         switch (activePage.pageId) {
         case 'fileName' :
             isNextDisabled = this.state.projectNameErrorMsg;
+            break;
+        
+        case 'accounts' :
+            isNextDisabled = this.state.accountsErrorMsg;
             break;
         }
 

@@ -220,11 +220,22 @@
     "FileCreator-project_name_required": "A project name is required.",
     "FileCreator-cannot_make_base_dir": ["Could not create the main folder. ", ""],
 
-    "CreateFileName-heading": "Accounting Project Location",
-    "CreateFileName-baseDir_selector_label": "Main Folder",
-    "CreateFileName-browse_btn": "Browse",
-    "CreateFileName-dir_projectName_label": "Project Folder Name",
+    "NewFileName-heading": "Accounting Project Location",
+    "NewFileName-baseDir_selector_label": "Main Folder",
+    "NewFileName-browse_btn": "Browse",
+    "NewFileName-dir_projectName_label": "Project Folder Name",
 
+    "NewFileConfigurator-assets_tab": "Assets",
+    "NewFileConfigurator-liabilities_tab": "Liabilities",
+    "NewFileConfigurator-income_tab": "Income",
+    "NewFileConfigurator-expense_tab": "Expenses",
+
+    "NewFileAccountsEditor-account_name": "Name",
+    "NewFileAccountsEditor-description": "Description",
+    "NewFileAccountsEditor-type": "Type",
+    "NewFileAccountsEditor-opening_balance": "Opening Balance",
+    "NewFileAccountsEditor-name_required": "An account name is required.",
+    "NewFileAccountsEditor-invalid_opening_balance": "The opening balance must either be empty or a valid monetary value.",
 
     "SequentialPages-next_btn": "Next",
     "SequentialPages-finish-btn": "Finish",

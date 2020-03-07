@@ -7,6 +7,16 @@ import defUserMessages from '../locales/en-userMessages.json';
 
 const path = require('path');
 
+let locale;
+
+
+/**
+ * @returns {string}    Returns the locale currently being used by the engine.
+ */
+export function getEngineLocal() {
+    return locale;
+}
+
 
 /**
  * Main engine initialization function.
@@ -15,7 +25,7 @@ const path = require('path');
 export async function initializeEngine(settingsPathName, appPathName) {
     const noElectron = (settingsPathName === undefined);
 
-    const locale = (noElectron) ? undefined : require('electron').remote.app.getLocale();
+    locale = (noElectron) ? undefined : require('electron').remote.app.getLocale();
     appPathName = appPathName || `${__dirname}/..`;
     const userMsgsPathName 
         = path.normalize(appPathName + '/locales/en-userMessages.json');

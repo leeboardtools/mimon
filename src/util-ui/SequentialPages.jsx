@@ -3,7 +3,10 @@ import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 
 
-
+/**
+ * A Wizard style component, for advancing sequentially through child pages,
+ * with Back, Next, and an optional Cancel buttons along the bottom of the component.
+ */
 export class SequentialPages extends React.Component {
     constructor(props) {
         super(props);
@@ -120,6 +123,45 @@ export class SequentialPages extends React.Component {
     }
 }
 
+/**
+ * @callback SequentialPages~onRenderPage
+ * @param {number}  pageIndex   The index of the page to be rendered.
+ * @param {boolean} isActive    <code>true</code> if the page is the active page.
+ * @returns {object}
+ */
+
+/**
+ * @callback SequentialPages~onActivatePage
+ * @param {number}  pageIndex   The index of the page becoming active.
+ */
+
+/**
+ * @callback SequentialPages~onFinish
+ * Called when the Finish (Next) button is chosen when the last page is active.
+ */
+
+/**
+ * @callback SequentialPages~onCancel
+ * Called when the Cancel button is chosen.
+ */
+
+/**
+ * @typedef {object} SequentialPages~propTypes
+ * @property {number}   pageCount   The number of pages.
+ * @property {number}   [activePageIndex]   The index of the active page
+ * @property {SequentialPages~onRenderPage} onRenderPage    The page rendering
+ * callback.
+ * @property {SequentialPages~onActivatePage}   [onActivatePage]    Called when
+ * the active page changes.
+ * @property {SequentialPages~onFinish} onFinish    Called when the Next button
+ * is chosen when the last page is active.
+ * @property {SequentialPages~onCancel} [onCancel]  Called when the Cancel button
+ * is chosen. If this is <code>undefined</code> no Cancel button is displayed.
+ * @property {boolean}  [isNextDisabled]    If <code>true</code> the Next button
+ * is disabled.
+ * @property {boolean}  [isBackDisabled]    If <code>true</code> the Back button
+ * is disabled.
+ */
 SequentialPages.propTypes = {
     pageCount: PropTypes.number.isRequired,
     activePageIndex: PropTypes.number,

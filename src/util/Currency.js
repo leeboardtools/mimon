@@ -94,9 +94,10 @@ export class Currency {
 
     /**
      * Parses an internationalized currency string into a currency decimal value 
-     * ($12.34 woudl be 12.34).
+     * ($12.34 would be 12.34).
      * @param {string} string The string to parse.
      * @return {number}
+     * @throws Error
      */
     decimalValueFromString(string) {
         return this.baseValueFromString(string) / this._valueScale;
@@ -118,6 +119,7 @@ export class Currency {
      * Parses an internationalized currency string into a currency base value.
      * @param {string} string The string to parse.
      * @return {number}
+     * @throws Error
      */
     baseValueFromString(string) {
         let sign = 1;
