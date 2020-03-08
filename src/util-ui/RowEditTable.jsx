@@ -257,7 +257,7 @@ export function rowEditTable(WrappedTable) {
             const rowEditBuffer = {};
             if (onStartEditRow) {
                 onStartEditRow(rowEntry, cellEditBuffers, 
-                    rowEditBuffer, async () => this.asyncEndEdit(true));
+                    rowEditBuffer, async (isSave) => this.asyncEndEdit(isSave));
             }
 
             this.setState({
@@ -408,7 +408,16 @@ export function rowEditTable(WrappedTable) {
      */
 
     /**
+     * Callback passed as an arg to {@link RowEditTable~onStartEditRow} that
+     * can be used to end editing.
      * @callback RowEditTable~asyncEndEditRow
+     * @param {boolean} isSave  Set to <code>true</code> to save the current edit
+     * contents, the {@link RowEditTable~asyncOnSaveEditRow} callback from the props
+     * will eventually be called. If <code>false</code> then the current edit
+     * contents will be discarded, and the {@link RowEditTable~onCancelEditRow}
+     * callback, if present, will be called.
+     * @returns {boolean}   <code>false</code> if isSave was <code>true</code>
+     * and the {@link RowEditTable~asyncOnSaveEditRow} callback failed.
      */
 
     /**

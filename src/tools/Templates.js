@@ -33,7 +33,7 @@ function addIdsToAccounts(accounts, nextId) {
     if (accounts) {
         accounts.forEach((account) => {
             if (!account.id) {
-                account.id = nextId++;
+                account.id = (nextId++).toString();
             }
             nextId = addIdsToAccounts(account.childAccounts, nextId);
         });
@@ -45,7 +45,7 @@ function addIdsToPricedItems(pricedItems, nextId) {
     if (pricedItems) {
         pricedItems.forEach((pricedItem) => {
             if (!pricedItem.id) {
-                pricedItem.id = nextId++;
+                pricedItem.id = (nextId++).toString();
             }
         });
     }

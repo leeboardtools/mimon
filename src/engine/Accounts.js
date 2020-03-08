@@ -15,6 +15,8 @@ import deepEqual from 'deep-equal';
  * @property {boolean}  isAle   <code>true</code> if the category is an asset, 
  * liability, or equity.
  * the account balance.
+ * @property {AccountType}  rootAccountType The account type of the root account
+ * for the account category.
  */
 
 /**
@@ -237,6 +239,13 @@ AccountType.EQUITY.allowedChildTypes = [
 ];
 
 AccountType.OPENING_BALANCE.allowedChildTypes = [];
+
+
+AccountCategory.ASSET.rootAccountType = AccountType.ASSET;
+AccountCategory.LIABILITY.rootAccountType = AccountType.LIABILITY;
+AccountCategory.INCOME.rootAccountType = AccountType.INCOME;
+AccountCategory.EXPENSE.rootAccountType = AccountType.EXPENSE;
+AccountCategory.EQUITY.rootAccountType = AccountType.EQUITY;
 
 
 export function loadAccountsUserMessages() {

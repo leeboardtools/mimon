@@ -236,6 +236,13 @@
     "NewFileAccountsEditor-opening_balance": "Opening Balance",
     "NewFileAccountsEditor-name_required": "An account name is required.",
     "NewFileAccountsEditor-invalid_opening_balance": "The opening balance must either be empty or a valid monetary value.",
+    "NewFileAccountsEditor-add_account": "Add",
+    "NewFileAccountsEditor-remove_account": "Delete",
+    "NewFileAccountsEditor-move_up": "Up",
+    "NewFileAccountsEditor-move_down": "Down",
+    "NewFileAccountsEditor-undo": "Undo",
+    "NewFileAccountsEditor-redo": "Redo",
+    "NewFileAccountsEditor-new_account_name": "New Account",
 
     "SequentialPages-next_btn": "Next",
     "SequentialPages-finish-btn": "Finish",
