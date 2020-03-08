@@ -332,7 +332,5 @@ Should it be renamed Wizard? No, keep SequentialPages.
 
 - NewFileConfigurator.jsx:
     - NewFileAccountsEditor - editor for opening balance
-    - Error handling in RowEditTable.jsx.
 
     - Add base currency selection.
-

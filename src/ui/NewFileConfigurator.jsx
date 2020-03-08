@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { TabbedPages } from '../util-ui/TabbedPages';
 import * as A from '../engine/Accounts';
+import { PricedItemType } from '../engine/PricedItems';
 import deepEqual from 'deep-equal';
 import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
 import { RowEditCollapsibleTable } from '../util-ui/RowEditTable';
@@ -54,6 +55,20 @@ function findAccountDataItemWithId(accountDataItems, id) {
     }
 }
 
+
+function removeAccountDataItemFromParent(accountDataItems, parentId, id) {
+    const parent = findAccountDataItemWithId(accountDataItems, parentId);
+    if (parent) {
+        accountDataItems = parent.childAccounts;
+    }
+    for (let i = 0; i < accountDataItems.length; ++i) {
+        if (accountDataItems[i].id === id) {
+            accountDataItems.splice(i, 1);
+            return true;
+        }
+    }
+}
+
 function removeAccountDataItemWithId(accountDataItems, id) {
     for (let i = 0; i < accountDataItems.length; ++i) {
         const accountDataItem = accountDataItems[i];
@@ -99,7 +114,7 @@ class NewFileAccountsEditor extends React.Component {
         this.onRowToggleCollapse = this.onRowToggleCollapse.bind(this);
 
 
-        const cellClassName = 'p-0 m-0';
+        const cellClassName = 'm-0';
         this._columnInfos = [
             { key: 'name',
                 label: userMsg('NewFileAccountsEditor-account_name'),
@@ -153,14 +168,17 @@ class NewFileAccountsEditor extends React.Component {
         const parentType = A.AccountCategory[this.props.accountCategory]
             .rootAccountType.name;
         rootAccountDataItems.forEach((accountDataItem) => {
-            this.addToRowEntries(rowEntries, accountDataItem, parentType, undefined, 0);
+            this.addToRowEntries(rowEntries, accountDataItem, parentType, 
+                undefined, undefined, 0);
         });
 
         return rowEntries;
     }
     
 
-    addToRowEntries(rowEntries, accountDataItem, parentType, parentIndex, depth) {
+    addToRowEntries(rowEntries, accountDataItem, 
+        parentType, parentIndex, parentId, depth) {
+
         const { childAccounts } = accountDataItem;
 
         const key = accountDataItem.id.toString();
@@ -172,6 +190,7 @@ class NewFileAccountsEditor extends React.Component {
             index: index,
             parentType: parentType,
             parentIndex: parentIndex,
+            parentId: parentId,
             expandCollapseState: (childAccounts && childAccounts.length)
                 ? ((isCollapsed) ? ExpandCollapseState.COLLAPSED
                     : ExpandCollapseState.EXPANDED)
@@ -183,7 +202,7 @@ class NewFileAccountsEditor extends React.Component {
         if (childAccounts && !isCollapsed) {
             childAccounts.forEach((childDataItem) => {
                 this.addToRowEntries(rowEntries, childDataItem, 
-                    accountDataItem.type, index, depth + 1);
+                    accountDataItem.type, index, accountDataItem.id, depth + 1);
             });
         }
     }
@@ -238,10 +257,7 @@ class NewFileAccountsEditor extends React.Component {
                 }
                 else {
                     // parentId may be 0/undefined...
-                    const { parentIndex } = activeRowEntry;
-                    if (parentIndex !== undefined) {
-                        parentId = this.state.rowEntries[parentIndex].accountDataItem.id;
-                    }
+                    parentId = activeRowEntry.parentId;
                     afterSiblingId = activeRowEntry.accountDataItem.id;
                 }
             }
@@ -313,14 +329,107 @@ class NewFileAccountsEditor extends React.Component {
         });
     }
 
+    getMoveNewRootAccountDataItems(delta) {
+        const activeRowEntry = this.getActiveRowEntry();
+        if (activeRowEntry) {
+            const { rowEntries } = this.state;
+
+            const newRootAccountDataItems 
+                = cloneAccountDataItems(this.props.rootAccountDataItems);
+            
+            removeAccountDataItemFromParent(newRootAccountDataItems,
+                activeRowEntry.parentId,
+                activeRowEntry.accountDataItem.id);
+            
+            let afterRowEntry;
+            if (delta > 0) {
+                // Skip over any kids...
+                const descendantIds 
+                    = getDescendantIds(activeRowEntry.accountDataItem);
+                for (let i = activeRowEntry.index + 1; i < rowEntries.length; ++i) {
+                    const rowEntry = rowEntries[i];
+                    if (!descendantIds.has(rowEntry.accountDataItem.id)) {
+                        afterRowEntry = rowEntry;
+                        break;
+                    }
+                }
+                if (!afterRowEntry) {
+                    return;
+                }
+            }
+            else {
+                afterRowEntry = rowEntries[activeRowEntry.index - 2];
+            }
+
+            // We want the same parent as this row entry, and want to appear
+            // after the row entry in its parent list.
+            if (afterRowEntry) {
+                const activeType = A.AccountType[activeRowEntry.accountDataItem.type];
+                if (afterRowEntry.expandCollapseState === ExpandCollapseState.EXPANDED) {
+                    // Add as the first child.
+                    const account = findAccountDataItemWithId(newRootAccountDataItems, 
+                        afterRowEntry.accountDataItem.id);
+                    const parentType = A.AccountType[account.type];
+                    if (parentType.allowedChildTypes.indexOf(activeType) < 0) {
+                        return;
+                    }
+
+                    account.childAccounts.splice(0, 0, activeRowEntry.accountDataItem);
+                }
+                else {
+                    // Otherwise, add it after the account in the parent's child list.
+                    const parent = findAccountDataItemWithId(newRootAccountDataItems,
+                        afterRowEntry.parentId);
+                    if (parent) {
+                        // Make sure we're compatible with the parent.
+                        const parentType = A.AccountType[parent.type];
+                        if (parentType.allowedChildTypes.indexOf(activeType) < 0) {
+                            return;
+                        }
+                    }
+                    const accountDataItems = (parent)
+                        ? parent.childAccounts
+                        : newRootAccountDataItems;
+                    const nextId = afterRowEntry.accountDataItem.id;
+                    for (let i = 0; i < accountDataItems.length; ++i) {
+                        if (accountDataItems[i].id === nextId) {
+                            accountDataItems.splice(i + 1, 0, 
+                                activeRowEntry.accountDataItem);
+                            break;
+                        }
+                    }
+                }
+            }
+            else {
+                newRootAccountDataItems.splice(0, 0, activeRowEntry.accountDataItem);
+            }
+
+            return newRootAccountDataItems;
+        }
+    }
+
+
+    moveActiveRowEntry(delta) {
+        const newRootAccountDataItems = this.getMoveNewRootAccountDataItems(delta);
+        if (newRootAccountDataItems) {
+            this.saveForUndo();
+
+            this.props.onUpdateRootAccountDataItems(this.props.accountCategory, 
+                newRootAccountDataItems);
+        }
+    }
 
     onMoveAccountUp() {
-        console.log('Move Up');
+        this.actAfterEndEdit(() => {
+            this.moveActiveRowEntry(-1);
+        });
     }
 
 
     onMoveAccountDown() {
-        console.log('Move Down');
+        this.actAfterEndEdit(() => {
+            this.moveActiveRowEntry(1);
+        });
     }
 
 
@@ -491,6 +600,7 @@ class NewFileAccountsEditor extends React.Component {
         return msg;
     }
 
+ 
     async asyncOnSaveEditRow(rowEntry, cellEditBuffers, rowEditBuffer) {
         const currency = C.USD;
         const newRootAccountDataItems 
@@ -586,8 +696,30 @@ class NewFileAccountsEditor extends React.Component {
         const { cellInfo, rowEditBuffer } = renderArgs;
         const { rowEntry } = cellInfo;
         const parentType = A.AccountType[rowEntry.parentType];
-        const options = parentType.allowedChildTypes.map((childType) =>
-            [childType.name, childType.description]);
+
+        // If the account has kids, we need to restrict the allowed types.
+        const { childAccounts } = rowEntry.accountDataItem;
+        const options = [];
+        parentType.allowedChildTypes.forEach((type) => {
+            if (type.pricedItemType !== PricedItemType.CURRENCY) {
+                return;
+            }
+
+            let allowsChildren = true;
+            if (childAccounts) {
+                for (let i = childAccounts.length - 1; i >= 0; --i) {
+                    const childType = A.AccountType[childAccounts[i].type];
+                    if (type.allowedChildTypes.indexOf(childType) < 0) {
+                        allowsChildren = false;
+                        break;
+                    }
+                }
+            }
+            if (!allowsChildren) {
+                return;
+            }
+            options.push([type.name, type.description]);
+        });
 
         return <CellSelectEditor
             ariaLabel="Account Type"
@@ -657,13 +789,7 @@ class NewFileAccountsEditor extends React.Component {
 
 
     renderControlBar() {
-        // Can always add.
-        // Can only remove if there is an account selected.
-        // Can only move up if there is an account selected and it is not the 
-        // first account.
-        // Can only move down if there is an account selected and it is not the
-        // last account.
-        const { activeRowKey, rowEntries, undoList, redoList } = this.state;
+        const { activeRowKey, undoList, redoList } = this.state;
 
         let removeDisabled = true;
         let upDisabled = true;
@@ -672,8 +798,8 @@ class NewFileAccountsEditor extends React.Component {
         const redoDisabled = !redoList.length;
         if (activeRowKey) {
             removeDisabled = false;
-            upDisabled = (activeRowKey === rowEntries[0].key);
-            downDisabled = (activeRowKey === rowEntries[rowEntries.length - 1].key);
+            upDisabled = this.getMoveNewRootAccountDataItems(-1) === undefined;
+            downDisabled = this.getMoveNewRootAccountDataItems(1) === undefined;
         }
 
         const divClassName = 'col';
