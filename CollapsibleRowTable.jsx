@@ -110,6 +110,12 @@ function CollapsibleRowTableRow(props) {
         cellInfo.columnIndex = i;
         cellInfo.columnInfo = columnInfo;
 
+        let className = columnInfo.className;
+        const { cellClassName } = columnInfo;
+        if (cellClassName) {
+            className += ' ' + cellClassName;
+        }
+
         const cellSettings = {};
         const cell = onRenderCell(cellInfo, cellSettings);
         if (cellSettings.indent) {
@@ -120,7 +126,7 @@ function CollapsibleRowTableRow(props) {
 
         columnEntries.push(
             <td
-                className={columnInfo.className}
+                className={className}
                 key={columnInfo.key}
                 style={style}
             >
@@ -255,6 +261,8 @@ export class CollapsibleRowTable extends React.Component {
  * @property {string}   key Unique identifier for the column, used by React.
  * @property {string}   [className]   Optional class name for the &lt;th&gt; 
  * and &lt;td&gt; entries.
+ * @property {string}   [cellClassName] Optional class name for the &lt;td&gt;
+ * entity.
  */
 
 /**
