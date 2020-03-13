@@ -10,6 +10,8 @@ import { userError } from '../util/UserMessages';
  * @typedef {object}    PricedItemTypeDef
  * @property {string}   name    The name of the priced item type.
  * @property {strign}   description The user readable description of the priced item type.
+ * @property {boolean}  [hasTickerSymbol]   If <code>true</code> priced items of this
+ * type have a ticker symbol property.
  */
 
 /**
@@ -149,6 +151,8 @@ export function getPricedItemOnlineUpdateTypeName(type) {
  * @property {string}   [name]  The user supplied name of the priced item.
  * @property {string}   [description]   The user supplied description of the 
  * priced item.
+ * @property {string}   [ticker]    The ticker symbol, only for priced item types
+ * that have hasTickerSymbol.
  * @property {string}   [onlineUpdateType]  The online update type, only for 
  * priced item types that have hasTickerSymbol.
  */
@@ -163,6 +167,8 @@ export function getPricedItemOnlineUpdateTypeName(type) {
  * defining the priced item's quantities.
  * @property {string}   [name]  The user supplied name of the priced item.
  * @property {string}   [description]   The user supplied description of the priced item.
+ * @property {string}   [ticker]    The ticker symbol, only for priced item types
+ * that have hasTickerSymbol.
  * @property {PricedItemOnlineUpdateType}   [onlineUpdateType]  The online update 
  * type, only for priced item types that have hasTickerSymbol.
  */
