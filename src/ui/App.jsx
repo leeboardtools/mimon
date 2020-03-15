@@ -9,6 +9,7 @@ import { userMsg } from '../util/UserMessages';
 import { EngineAccessor } from '../tools/EngineAccess';
 import { FileCreator } from './FileCreator';
 import * as FM from '../util/FrameManager';
+import { MainWindow } from './MainWindow';
 
 
 const electron = require('electron');
@@ -322,7 +323,7 @@ export default class App extends React.Component {
         this.onRemoveRecentClick = this.onRemoveRecentClick.bind(this);
         this.onExitClick = this.onExitClick.bind(this);
 
-        this.onCreateFile = this.onCreateFile.bind(this);
+        this.onFileCreated = this.onFileCreated.bind(this);
         this.onCancel = this.onCancel.bind(this);
 
         this._accessor = new EngineAccessor();
@@ -402,8 +403,11 @@ export default class App extends React.Component {
     }
 
 
-    onCreateFile() {
-        alert('AccountingFile Created');
+    onFileCreated() {
+        // TODO: Add to the MRU.
+        this.setState({
+            appState: 'mainWindow',
+        });
     }
 
     onCancel() {
@@ -451,10 +455,16 @@ export default class App extends React.Component {
             return <FileCreator
                 accessor = {this._accessor}
                 frameManager = {this._frameManager}
-                onCreate = {this.onCreateFile}
+                onFileCreated = {this.onFileCreated}
                 onCancel = {this.onCancel}
             />;
             //break;
+        
+        case 'mainWindow' :
+            return <MainWindow
+                accessor = {this._accessor}
+                frameManager = { this._frameManager}
+            />;
         
         default :
             mainComponent = <div>

@@ -334,3 +334,8 @@ Should it be renamed Wizard? No, keep SequentialPages.
     - NewFileAccountsEditor - editor for opening balance
 
     - Add base currency selection.
+
+- Add heading to NewFileConfigurator.
+    - Need to adjust TabbedPages, it currently forces the tabs to the top of the page,
+    not the top of its parent.
+    

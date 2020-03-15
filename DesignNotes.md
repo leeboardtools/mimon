@@ -381,3 +381,12 @@ Represents a year-month-date. Currently uses a Date object to manage the actual 
         transactions, accounts, etc.
 
 
+- Rethink Opening Balances.
+    - Problem with using transactions:
+        - Transactions are dated.
+        -
+
+- EngineAccessor
+    - Update pricedItemQuantityTextToBaseValue() to support
+    currency, commas, simple equations.
+

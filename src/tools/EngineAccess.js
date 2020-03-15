@@ -4,6 +4,7 @@ import { getQuantityDefinition } from '../util/Quantities';
 import { userError } from '../util/UserMessages';
 import deepEqual from 'deep-equal';
 import { Reconciler } from './Reconciler';
+import { asyncSetupNewFile } from './NewFileSetup';
 
 
 /**
@@ -255,6 +256,10 @@ export class EngineAccessor extends EventEmitter {
      * this particular file factory will be used, otherwise the first file factory
      * whose {@link AccountingFile#asyncCanCreateFile} returns <code>true</code>
      * will be used.
+     * @param {object}  [initlaContents]    Optional initial contents to set up the file
+     * with, passed to {@link asyncSetupNewFile}.
+     * @returns {string []} An array containing any warning messages. These are primarily
+     * from the attempt to set up the initial contents.
      * @throws {Error}
      */
     async asyncCreateAccountingFile(pathName, fileFactoryIndex, initialContents) {
@@ -278,7 +283,15 @@ export class EngineAccessor extends EventEmitter {
             throw userError('EngineAccess-create_file_not_found', pathName);
         }
 
+        let warnings = [];
+        if (initialContents) {
+            warnings = await asyncSetupNewFile(this, accountingFile, initialContents);
+            await accountingFile.asyncWriteFile(true);
+        }
+
         this._setupForAccountingFile(accountingFile, fileFactoryIndex);
+
+        return warnings;
     }
 
 
@@ -766,8 +779,17 @@ export class EngineAccessor extends EventEmitter {
     pricedItemQuantityTextToBaseValue(id, quantityText) {
         const pricedItemDataItem 
             = this._pricedItemManager.getPricedItemDataItemWithId(id);
+
+        // Remove any thousands separators.
+        //
+        // TODO: Support simple math...
+        //
+
         const quantityDefinition 
             = getQuantityDefinition(pricedItemDataItem.quantityDefinition);
+        if (typeof quantityText === 'number') {
+            return quantityDefinition.numberToBaseValue(quantityText);
+        }
         const result = quantityDefinition.fromValueText(quantityText);
         if (!result || !result.quantity) {
             return;

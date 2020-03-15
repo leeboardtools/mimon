@@ -3,9 +3,12 @@ import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { SequentialPages } from '../util-ui/SequentialPages';
 import { getUniqueFileName } from '../util/Files';
-import { ErrorReporter } from './ErrorReporter';
+import { ErrorReporter } from '../util-ui/ErrorReporter';
+import { InfoReporter } from '../util-ui/InfoReporter';
 import { asyncGetNewFileTemplates } from '../tools/Templates';
 import { NewFileConfigurator} from './NewFileConfigurator';
+import { YMDDate } from '../util/YMDDate';
+import { CurrencySelector } from '../util-ui/CurrencySelector';
 
 const os = require('os');
 const path = require('path');
@@ -148,6 +151,84 @@ NewFileName.propTypes = {
 
 
 
+class GeneralSettingsEditor extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.onOpeningBalancesDateChange 
+            = this.onOpeningBalancesDateChange.bind(this);
+    }
+
+
+    onOpeningBalancesDateChange(event) {
+        this.props.onSetOpeningBalancesDate(event.target.value);
+    }
+
+
+    renderOpeningBalancesDateEditor() {
+        const label = userMsg('GeneraSettingsEditor-openingBalancesDate_label');
+        const inputClassName = 'form-control';
+
+        return <div className="form-row text-left">
+            <div className="form-col">
+                <label className="mb-0" 
+                    htmlFor="GeneralSettingsEditor-openingBalancesDate">
+                    {label}
+                </label>
+                <div className="mb-0">
+                    <input type="date"
+                        id="GeneralSettingsEditor-openingBalancesDate"
+                        className={inputClassName}
+                        onChange={this.onOpeningBalancesDateChange}
+                        aria-label="Opening Balance Date"
+                        value={this.props.openingBalancesDate}/>
+                </div>
+            </div>
+        </div>;
+    }
+
+    
+    renderDefaultCurrency() {
+        const label = userMsg('GeneraSettingsEditor-defaultCurrency_label');
+        return <div className="form-row text-left">
+            <div className="form-col">
+                <label className="mb-0" 
+                    htmlFor="GeneralSettingsEditor-defaultCurrency">
+                    {label}
+                </label>
+                <div className="mb-0">
+                    <CurrencySelector
+                        id="GeneralSettingsEditor-defaultCurrency"
+                        onChange={this.props.onSetDefaultCurrency}
+                        aria-label="Default Currency"
+                        value={this.props.defaultCurrency}/>
+                </div>
+            </div>
+        </div>;
+    }
+
+
+    render() {
+        const openingBalancesDateEditor = this.renderOpeningBalancesDateEditor();
+        const defaultCurrency = this.renderDefaultCurrency();
+        return <div className="container-fluid mt-auto mb-auto">
+            <h4 className="pageTitle pb-3 mb-4 border-bottom">
+                {userMsg('GeneraSettingsEditor-heading')}
+            </h4>
+            {openingBalancesDateEditor}
+            <div className="row mb-2">&nbsp;</div>
+            {defaultCurrency}
+        </div>;
+    }
+}
+
+GeneralSettingsEditor.propTypes = {
+    openingBalancesDate: PropTypes.string.isRequired,
+    onSetOpeningBalancesDate: PropTypes.func.isRequired,
+    defaultCurrency: PropTypes.string.isRequired,
+    onSetDefaultCurrency: PropTypes.func.isRequired,
+};
+
 
 /**
  * Component for creating new accounting project files.
@@ -164,12 +245,19 @@ export class FileCreator extends React.Component {
             newFileContents: { 
                 accounts: [], 
                 pricedItems: [], 
+                openingBalancesDate: (new YMDDate()).toString(),
+                baseCurrency: 'USD',
             },
+            openingBalancesDate: (new YMDDate()).toString(),
+            baseCurrency: 'USD',
         };
 
         this._pages = [
             {
                 pageId: 'fileName',
+            },
+            {
+                pageId: 'generalSettings',
             },
             {
                 pageId: 'accounts',
@@ -180,21 +268,26 @@ export class FileCreator extends React.Component {
         this.onSetProjectName = this.onSetProjectName.bind(this);
         this.onSetFileFactoryIndex = this.onSetFileFactoryIndex.bind(this);
 
+        this.onSetOpeningBalancesDate = this.onSetOpeningBalancesDate.bind(this);
+        this.onSetDefaultCurrency = this.onSetDefaultCurrency.bind(this);
+
         this.onUpdateFileContents = this.onUpdateFileContents.bind(this);
 
         this.onRenderPage = this.onRenderPage.bind(this);
         this.onActivatePage = this.onActivatePage.bind(this);
-        this.onCreate = this.onCreate.bind(this);
+        this.onFileCreated = this.onFileCreated.bind(this);
 
         process.nextTick(async () => {
             const defaultProjectName = userMsg('FileCreator-default_project_name');
 
             this._newFileTemplates = await asyncGetNewFileTemplates();
 
+            const newFileContents = this._newFileTemplates[0];
+
             this.setState({
                 projectName: await getUniqueFileName(this.state.baseDirName, 
                     defaultProjectName),
-                newFileContents: this._newFileTemplates[0],
+                newFileContents: newFileContents,
             });
         });
     }
@@ -263,6 +356,18 @@ export class FileCreator extends React.Component {
         });
     }
 
+    onSetOpeningBalancesDate(date) {
+        this.setState({
+            openingBalancesDate: date,
+        });
+    }
+
+    onSetDefaultCurrency(currency) {
+        this.setState({
+            baseCurrency: currency,
+        });
+    }
+
     onUpdateFileContents(newFileContents) {
         this.setState({
             newFileContents: newFileContents
@@ -294,6 +399,15 @@ export class FileCreator extends React.Component {
                 onSetFileFactoryIndex={this.onSetFileFactoryIndex}
             />;
             break;
+        
+        case 'generalSettings':
+            component = <GeneralSettingsEditor
+                openingBalancesDate={this.state.openingBalancesDate}
+                onSetOpeningBalancesDate={this.onSetOpeningBalancesDate}
+                defaultCurrency={this.state.baseCurrency}
+                onSetDefaultCurrency={this.onSetDefaultCurrency}
+            />;
+            break;
 
         case 'accounts':
             component = <NewFileConfigurator
@@ -311,18 +425,31 @@ export class FileCreator extends React.Component {
     }
 
 
-    onCreate() {
+    onFileCreated() {
         process.nextTick(async () => {
             const { baseDirName, projectName, fileFactoryIndex, 
                 newFileContents } = this.state;
+            newFileContents.openingBalancesDate = this.state.openingBalancesDate;
+            newFileContents.baseCurrency = this.state.baseCurrency;
+            
             const pathName = path.join(baseDirName, projectName);
             try {
                 const { accessor } = this.props;
 
-                await accessor.asyncCreateAccountingFile(pathName, fileFactoryIndex, 
-                    newFileContents);
+                const warnings = await accessor.asyncCreateAccountingFile(
+                    pathName, fileFactoryIndex, newFileContents);
 
-                this.props.onCreate();
+                if (warnings.length) {
+                    this.setState({
+                        warningTitle: 
+                            userMsg('FileCreator-file_create_warnings', pathName),
+                        warningMsg: warnings,
+                    });
+                }
+                else {
+                    this.props.onFileCreated();
+                }
+
             }
             catch (e) {
                 this.setState({
@@ -334,10 +461,16 @@ export class FileCreator extends React.Component {
 
 
     render() {
-        const { activePageIndex, errorMsg } = this.state;
+        const { activePageIndex, errorMsg, warningMsg } = this.state;
         if (errorMsg) {
             return <ErrorReporter message={errorMsg} 
                 onClose={this.props.onCancel}
+            />;
+        }
+        if (warningMsg) {
+            return <InfoReporter message={warningMsg} 
+                title={this.state.warningTitle}
+                onClose={this.props.onFileCreated}
             />;
         }
         
@@ -361,7 +494,7 @@ export class FileCreator extends React.Component {
             activePageIndex={this.state.activePageIndex}
             onActivatePage={this.onActivatePage}
             onRenderPage={this.onRenderPage}
-            onFinish={this.onCreate}
+            onFinish={this.onFileCreated}
             onCancel={this.props.onCancel}
             isBackDisabled={isBackDisabled}
             isNextDisabled={isNextDisabled}
@@ -372,6 +505,6 @@ export class FileCreator extends React.Component {
 FileCreator.propTypes = {
     accessor: PropTypes.object.isRequired,
     frameManager: PropTypes.object.isRequired,
-    onCreate: PropTypes.func.isRequired,
+    onFileCreated: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,
 };

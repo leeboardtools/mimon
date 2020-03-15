@@ -208,6 +208,15 @@
     "MainMenu-view": "View",
     "MainMenu-window": "Window",
     "MainMenu-debug": "Debug",
+
+
+    "NewFileSetup-setBaseCurrency_failed": ["Could not set the default currency to '", "'. ", ""],
+    "NewFileSetup-invalid_currency": ["Could not set up the priced item '", "'. '", "' is not a valid currency."],
+    "NewFileSetup-addPricedItem_failed": ["Could not add the priced item '", "'. ", ""],
+    "NewFileSetup-addAccount_failed": ["Could not add the account '", "'. ", ""],
+    "NewFileSetup-addOpeningBalance_failed": ["The opening balance of '", "' could not be set to '", "'. ", ""],
+    "NewFileSetup-pricedItem_not_found": ["The priced item '", "' was not defined."],
+    "NewFileSetup-openingBalance_Description": "Opening balance",
     
 
     "AppOpeningScreen-mru_title": "Recently Opened:",
@@ -219,12 +228,18 @@
     "FileCreator-default_project_name": "Untitled",
     "FileCreator-project_name_required": "A project name is required.",
     "FileCreator-cannot_make_base_dir": ["Could not create the main folder. ", ""],
+    "FileCreator-file_create_warnings": ["The file '", "' was created, but with the following issues:"],
 
-    "NewFileName-heading": "Accounting Project Location",
+    "NewFileName-heading": "Accounting File",
     "NewFileName-baseDir_selector_label": "Main Folder",
     "NewFileName-browse_btn": "Browse",
     "NewFileName-dir_projectName_label": "Project Folder Name",
 
+    "GeneraSettingsEditor-heading": "General Settings",
+    "GeneraSettingsEditor-openingBalancesDate_label": "Opening Balances Date",
+    "GeneraSettingsEditor-defaultCurrency_label": "Default Currency",
+
+    "NewFileConfigurator-heading": "Account Setup",
     "NewFileConfigurator-assets_tab": "Assets",
     "NewFileConfigurator-liabilities_tab": "Liabilities",
     "NewFileConfigurator-income_tab": "Income",
@@ -244,12 +259,14 @@
     "NewFileAccountsEditor-redo": "Redo",
     "NewFileAccountsEditor-new_account_name": "New Account",
 
+
+
     "SequentialPages-next_btn": "Next",
     "SequentialPages-finish-btn": "Finish",
     "SequentialPages-back_btn": "Back",
 
     "cancel": "Cancel",
-
+    "ok": "OK",
 
     "": ""
 }

@@ -25,7 +25,8 @@ export async function asyncGetTemplatesWithType(type) {
         await asyncLoadTemplates();
     }
 
-    return templatesByType.get(type);
+    // Return a copy...
+    return JSON.parse(JSON.stringify(templatesByType.get(type)));
 }
 
 

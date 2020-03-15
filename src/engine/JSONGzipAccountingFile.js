@@ -1134,7 +1134,7 @@ class JSONGzipAccountingFile extends AccountingFile {
 
 
 
-    async _asyncWriteFileImpl(stateId) {
+    async _asyncWriteFileImpl(stateId, noBackup) {
         const ledgerFileActions = await this._ledgerFile.asyncCreateWriteFileActions();
         const journalFilesActions 
             = await this._journalFiles.asyncCreateWriteFileActions();
@@ -1146,8 +1146,10 @@ class JSONGzipAccountingFile extends AccountingFile {
             priceFilesActions, historyFilesActions);
 
         // Apply the backup mechanism.
-        const fileBackups = new FileBackups();
-        await fileBackups.applyToFileActions(fileActions);
+        if (!noBackup) {
+            const fileBackups = new FileBackups();
+            await fileBackups.applyToFileActions(fileActions);
+        }
 
         await FA.performFileActions(fileActions);
 
