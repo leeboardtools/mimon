@@ -1,0 +1,52 @@
+import React from 'react';
+import PropTypes from 'prop-types';
+import { Currencies, USD, EUR } from '../util/Currency';
+
+CurrencySelector.propTypes = {
+    id: PropTypes.string,
+    value: PropTypes.string.isRequired,
+    onChange: PropTypes.func.isRequired,
+    ariaLabel: PropTypes.string,
+    classExtras: PropTypes.string,
+    disabled: PropTypes.bool,
+};
+
+export function CurrencySelector(props) {
+    const { id, value, onChange, ariaLabel, classExtras, disabled } = props;
+
+    const divClassName = 'input-group mb-0 ';
+    let className = 'form-control cellSelectEditor-select ' + classExtras;
+
+    let optionComponents = [];
+    optionComponents.push(
+        <option key="USD-1" value="USD">{'USD - ' + USD.getName()}</option>
+    );
+    optionComponents.push(
+        <option key="EUR-1" value="EUR">{'EUR - ' + EUR.getName()}</option>
+    );
+    
+    for (let code in Currencies) {
+        const currency = Currencies[code];
+        optionComponents.push(
+            <option
+                key={code}
+                value={code}
+            >
+                {currency.getCode() + ' - ' + currency.getName()}
+            </option>
+        );
+    }
+
+    return <div className={divClassName}>
+        <select
+            className={className}
+            id={id}
+            aria-label={ariaLabel}
+            value={value}
+            disabled={disabled}
+            onChange={(event) => onChange(event.target.value)}
+        >
+            {optionComponents}
+        </select>
+    </div>;
+}
