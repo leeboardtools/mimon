@@ -61,12 +61,14 @@ class AppOpenScreen extends React.Component {
 
     render() {
         const { props } = this;
-        let buttonClassName = 'btn btn-primary btn-md btn-block';
+        let buttonClassName = 'btn btn-outline-primary btn-md btn-block';
         let mruComponent;
         const { validPathNames } = this.state;
         if (validPathNames && (validPathNames.length > 0)) {
+            const className = buttonClassName;
             const namesItem = validPathNames.map((pathName) =>
-                <div key={pathName} className="list-group-item list-group-item-action" 
+                <div key={pathName} 
+                    className= {className}
                     onClick={() => props.onRecentClick(pathName)}>
                     <span>{pathName}</span>
                     <button
@@ -88,14 +90,14 @@ class AppOpenScreen extends React.Component {
                     {<span>{userMsg('AppOpeningScreen-mru_title')}</span>}
                 </div>
                 <div className="row justify-content-md-center">
-                    {<div className="list-group">{namesItem}</div>}
+                    {namesItem}
                 </div>
                 <div className="row justify-content-md-center">
                     &nbsp;
                 </div>
             </React.Fragment>;
 
-            buttonClassName = 'btn btn-secondary btn-sm btn-block';
+            buttonClassName = 'btn btn-outline-secondary btn-sm btn-block';
         }
 
         return (
@@ -201,10 +203,6 @@ export default class App extends React.Component {
 
     async asyncPostEngineInitialized() {
         const startupOptions = await asyncGetStartupOptions();
-
-        if (startupOptions.mruPathNames) {
-            // Do something?
-        }
 
         if (startupOptions.autoOpen) {
             if (startupOptions.mruPathNames && (startupOptions.mruPathNames.length > 0)) {
