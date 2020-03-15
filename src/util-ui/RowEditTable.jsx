@@ -71,13 +71,14 @@ export function rowEditTable(WrappedTable) {
                         for (let subCellIndex = 0; subCellIndex < refs.length; 
                             ++subCellIndex) {
 
-                            if (refs[subCellIndex]) {
+                            const subCellRef = refs[subCellIndex];
+                            if (subCellRef) {
                                 if ((focusCellIndex === cellIndex)
                                  && (focusSubCellIndex === subCellIndex)) {
                                     validEditCellInfoIndex = validEditCellInfos.length;
                                 }
                                 validEditCellInfos.push({
-                                    ref: refs[subCellIndex],
+                                    ref: subCellRef,
                                     cellIndex: cellIndex,
                                     subCellIndex: subCellIndex,
                                 });
@@ -130,6 +131,10 @@ export function rowEditTable(WrappedTable) {
 
 
         activateEditCell(editCellInfo) {
+            if (!editCellInfo) {
+                // eslint-disable-next-line max-len
+                console.error('setCellRef was not called for any edit components in the active row.');
+            }
             if (editCellInfo.ref) {
                 editCellInfo.ref.focus();
             }
@@ -389,20 +394,27 @@ export function rowEditTable(WrappedTable) {
 
     /**
      * @callback RowEditTable~setCellRef
+     * This is normally called from the 'ref' property of an edit component in
+     * a row. See {@link https://reactjs.org/docs/refs-and-the-dom.html#callback-refs}.
      * @param {object}  ref
-     * @param {number}  [refIndex=0]
+     * @param {number}  [refIndex=0]    If a column has more than one editor, this
+     * is the index of the editor within the column.
      */
 
     /**
      * @typedef {object}    RowEditTable~renderArgs
+     * Used to pass all sorts of info for editing a row.
      *
      * @property {CollapsibleRowTable~CellInfo} cellInfo
      * @property {CollapsibleRowTable~CellSettings} cellSettings
      * @property {object}  cellEditBuffer
      * @property {object}  rowEditBuffer
      * @property {RowEditTable~updateCellEditBuffer}    updateCellEditBuffer
+     * Call to change the contents of an individual cell edit buffer.
      * @property {RowEditTable~updateRowEditBuffer}     updateRowEditBuffer
-     * @property {RowEditTable~setCellRef} setCellRef
+     * Call to change the contents of the row edit buffer.
+     * @property {RowEditTable~setCellRef} setCellRef   This should be called
+     * for each edit component in the row, it's used to manage tab focus.
      * @property {function} onFocus
      * @property {function} onBlur
      */

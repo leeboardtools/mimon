@@ -659,7 +659,7 @@ class NewFileAccountsEditor extends React.Component {
 
     renderTextEditor(columnInfo, renderArgs) {
         const { propertyName, ariaLabel, inputClassExtras } = columnInfo;
-        const { rowEditBuffer } = renderArgs;
+        const { rowEditBuffer, setCellRef, onFocus, onBlur } = renderArgs;
         const errorMsg = this.state.errorMsgs 
             ? this.state.errorMsgs[propertyName]
             : undefined;
@@ -672,6 +672,9 @@ class NewFileAccountsEditor extends React.Component {
             onChange={(event) => { 
                 this.onTextEditorChange(event, propertyName, renderArgs);
             }}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            ref={setCellRef}
         />;
     }
 
@@ -693,7 +696,8 @@ class NewFileAccountsEditor extends React.Component {
     }
 
     renderAccountTypeEditor(renderArgs) {
-        const { cellInfo, rowEditBuffer } = renderArgs;
+        const { cellInfo, rowEditBuffer, setCellRef,
+            onFocus, onBlur } = renderArgs;
         const { rowEntry } = cellInfo;
         const parentType = A.AccountType[rowEntry.parentType];
 
@@ -728,6 +732,9 @@ class NewFileAccountsEditor extends React.Component {
             onChange={(event) => { 
                 this.onAccountTypeChange(event, renderArgs); 
             }}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            ref={setCellRef}
         />;
     }
 

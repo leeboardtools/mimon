@@ -2,6 +2,42 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 /**
+ * React component for editing text in a table cell. Works with 
+ * {@link RowEditCollapsibleTable}
+ * @param {*} props 
+ */
+export const CellTextEditor = React.forwardRef(
+    function CellTextEditorImpl(props, ref) {
+        const { ariaLabel, value, inputClassExtras, errorMsg, 
+            onChange, onFocus, onBlur, disabled } = props;
+
+        const divClassName = 'input-group mb-0 ';
+        let className = 'form-control cellTextEditor-textInput ' + inputClassExtras;
+
+        let errorMsgComponent;
+        if (errorMsg) {
+            className += ' is-invalid';
+            errorMsgComponent = <div className="invalid-feedback">
+                {errorMsg}
+            </div>;
+        }
+        return <div className={divClassName}>
+            <input type="text"
+                className={className}
+                aria-label={ariaLabel}
+                value={value || ''}
+                disabled={disabled}
+                onChange={onChange}
+                onFocus={onFocus}
+                onBlur={onBlur}
+                ref={ref}
+            />
+            {errorMsgComponent}
+        </div>;
+    }
+);
+
+/**
  * @callback CellTextEditor~onChange
  * @param {Event}   event
  */
@@ -23,53 +59,9 @@ CellTextEditor.propTypes = {
     inputClassExtras: PropTypes.string,
     errorMsg: PropTypes.string,
     onChange: PropTypes.func,
+    onFocus: PropTypes.func,
+    onBlur: PropTypes.func,
     disabled: PropTypes.bool,
-};
-
-/**
- * React component for editing text in a table cell. Works with 
- * {@link RowEditCollapsibleTable}
- * @param {*} props 
- */
-export function CellTextEditor(props) {
-    const { ariaLabel, value, inputClassExtras, errorMsg, 
-        onChange, disabled } = props;
-
-    const divClassName = 'input-group mb-0 ';
-    let className = 'form-control cellTextEditor-textInput ' + inputClassExtras;
-
-    let errorMsgComponent;
-    if (errorMsg) {
-        className += ' is-invalid';
-        errorMsgComponent = <div className="invalid-feedback">
-            {errorMsg}
-        </div>;
-    }
-    return <div className={divClassName}>
-        <input type="text"
-            className={className}
-            aria-label={ariaLabel}
-            value={value || ''}
-            disabled={disabled}
-            onChange={onChange}
-        />
-        {errorMsgComponent}
-    </div>;
-}
-
-
-
-/**
- * @typedef {object} CellTextDisplay~propTypes
- * @property {string}   [ariaLabel]
- * @property {string}   [value]
- * @property {string}   [inputClassExtras]  If specified additional CSS
- * classes to add to the &lt;input&gt; entity.
- */
-CellTextDisplay.propTypes = {
-    ariaLabel: PropTypes.string,
-    value: PropTypes.string,
-    inputClassExtras: PropTypes.string,
 };
 
 /**
@@ -95,3 +87,17 @@ export function CellTextDisplay(props) {
         />
     </div>;
 }
+
+
+/**
+ * @typedef {object} CellTextDisplay~propTypes
+ * @property {string}   [ariaLabel]
+ * @property {string}   [value]
+ * @property {string}   [inputClassExtras]  If specified additional CSS
+ * classes to add to the &lt;input&gt; entity.
+ */
+CellTextDisplay.propTypes = {
+    ariaLabel: PropTypes.string,
+    value: PropTypes.string,
+    inputClassExtras: PropTypes.string,
+};
