@@ -283,13 +283,13 @@ export class EngineAccessor extends EventEmitter {
             throw userError('EngineAccess-create_file_not_found', pathName);
         }
 
+        this._setupForAccountingFile(accountingFile, fileFactoryIndex);
+
         let warnings = [];
         if (initialContents) {
             warnings = await asyncSetupNewFile(this, accountingFile, initialContents);
             await accountingFile.asyncWriteFile(true);
         }
-
-        this._setupForAccountingFile(accountingFile, fileFactoryIndex);
 
         return warnings;
     }
