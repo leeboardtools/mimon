@@ -3,6 +3,19 @@ import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 
 
+/**
+ * @callback InfoReporter~onClose
+ */
+
+
+/**
+ * @typedef {object} InfoReporter~propTypes
+ * @property {string}   [title] Optional title.
+ * @property {string|string[]}   message The message to be displayed, may be an
+ * array of messages, in which case each message is listed separately.
+ * @property {InfoReporter~onClose}    onClose Called when the close button
+ * is chosen.
+ */
 InfoReporter.propTypes = {
     title: PropTypes.string,
     message: PropTypes.oneOfType([
@@ -12,6 +25,12 @@ InfoReporter.propTypes = {
     onClose: PropTypes.func.isRequired,
 };
 
+
+/**
+ * Reports one or more messages.
+ * @name InfoReporter
+ * @class
+ */
 export function InfoReporter(props) {
     let { title, message } = props;
     let titleComponent;
