@@ -285,7 +285,10 @@ export default class App extends React.Component {
     }
 
     onRemoveRecentClick(pathName) {
-        console.log('onRemoveRecentClick: ' + pathName);
+        process.nextTick(async () => {
+            const mruPathNames = await this.removeFromMRU(pathName);
+            this.setState({ mruPathNames: mruPathNames });
+        });
     }
 
     onExitClick() {
