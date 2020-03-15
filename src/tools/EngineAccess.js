@@ -258,7 +258,7 @@ export class EngineAccessor extends EventEmitter {
      * will be used.
      * @param {object}  [initlaContents]    Optional initial contents to set up the file
      * with, passed to {@link asyncSetupNewFile}.
-     * @returns {string []} An array containing any warning messages. These are primarily
+     * @returns {string[]} An array containing any warning messages. These are primarily
      * from the attempt to set up the initial contents.
      * @throws {Error}
      */
