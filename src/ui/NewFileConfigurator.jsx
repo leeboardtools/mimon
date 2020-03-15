@@ -576,6 +576,8 @@ class NewFileAccountsEditor extends React.Component {
         rowEditBuffer.description = accountDataItem.description;
         rowEditBuffer.openingBalance = accountDataItem.openingBalance;
 
+        this.props.onSetEndEditAsyncCallback(asyncEndEditRow);
+
         this.setState({
             asyncEndEditRow: asyncEndEditRow,
             errorMsgs: {}
@@ -584,6 +586,7 @@ class NewFileAccountsEditor extends React.Component {
 
 
     onCancelEditRow(rowEntry, cellEditBuffers, rowEditBuffers) {
+        this.props.onSetEndEditAsyncCallback(undefined);
         this.setState({
             asyncEndEditRow: undefined,
             errorMsgs: {}
@@ -633,6 +636,8 @@ class NewFileAccountsEditor extends React.Component {
         this.saveForUndo();
         this.props.onUpdateRootAccountDataItems(this.props.accountCategory, 
             newRootAccountDataItems);
+        
+        this.props.onSetEndEditAsyncCallback(undefined);
 
         this.setState({
             asyncEndEditRow: undefined,
@@ -907,6 +912,7 @@ NewFileAccountsEditor.propTypes = {
     onUpdateRootAccountDataItems: PropTypes.func.isRequired,
     onNewAccount: PropTypes.func.isRequired,
     onRemoveAccount: PropTypes.func.isRequired,
+    onSetEndEditAsyncCallback: PropTypes.func.isRequired,
 };
 
 
@@ -1029,6 +1035,7 @@ export class NewFileConfigurator extends React.Component {
                 onUpdateRootAccountDataItems={this.onUpdateRootAccountDataItems}
                 onNewAccount={this.onNewAccount}
                 onRemoveAccount={this.onRemoveAccount}
+                onSetEndEditAsyncCallback={this.props.onSetEndEditAsyncCallback}
             />;
         }
         return <div>{tabEntry.title}</div>;
@@ -1056,4 +1063,5 @@ NewFileConfigurator.propTypes = {
     accessor: PropTypes.object.isRequired,
     newFileContents: PropTypes.object.isRequired,
     onUpdateFileContents: PropTypes.func.isRequired,
+    onSetEndEditAsyncCallback: PropTypes.func.isRequired,
 };

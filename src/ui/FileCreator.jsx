@@ -272,10 +272,11 @@ export class FileCreator extends React.Component {
         this.onSetDefaultCurrency = this.onSetDefaultCurrency.bind(this);
 
         this.onUpdateFileContents = this.onUpdateFileContents.bind(this);
+        this.onSetEndEditAsyncCallback = this.onSetEndEditAsyncCallback.bind(this);
 
         this.onRenderPage = this.onRenderPage.bind(this);
         this.onActivatePage = this.onActivatePage.bind(this);
-        this.onFileCreated = this.onFileCreated.bind(this);
+        this.onFileCreate = this.onFileCreate.bind(this);
 
         process.nextTick(async () => {
             const defaultProjectName = userMsg('FileCreator-default_project_name');
@@ -375,6 +376,13 @@ export class FileCreator extends React.Component {
     }
 
 
+    onSetEndEditAsyncCallback(asyncCallback) {
+        this.setState({
+            asyncEndEditCallback: asyncCallback,
+        });
+    }
+
+
     onActivatePage(pageIndex) {
         this.setState({
             activePageIndex: pageIndex,
@@ -414,6 +422,7 @@ export class FileCreator extends React.Component {
                 accessor={this.props.accessor}
                 newFileContents={this.state.newFileContents}
                 onUpdateFileContents={this.onUpdateFileContents}
+                onSetEndEditAsyncCallback={this.onSetEndEditAsyncCallback}
             />;
             break;
 
@@ -425,10 +434,17 @@ export class FileCreator extends React.Component {
     }
 
 
-    onFileCreated() {
+    onFileCreate() {
         process.nextTick(async () => {
-            const { baseDirName, projectName, fileFactoryIndex, 
+            const { asyncEndEditCallback, baseDirName, projectName, fileFactoryIndex, 
                 newFileContents } = this.state;
+            
+            if (asyncEndEditCallback) {
+                if (!(await asyncEndEditCallback(true))) {
+                    return;
+                }
+            }
+            
             newFileContents.openingBalancesDate = this.state.openingBalancesDate;
             newFileContents.baseCurrency = this.state.baseCurrency;
             
@@ -494,7 +510,7 @@ export class FileCreator extends React.Component {
             activePageIndex={this.state.activePageIndex}
             onActivatePage={this.onActivatePage}
             onRenderPage={this.onRenderPage}
-            onFinish={this.onFileCreated}
+            onFinish={this.onFileCreate}
             onCancel={this.props.onCancel}
             isBackDisabled={isBackDisabled}
             isNextDisabled={isNextDisabled}
