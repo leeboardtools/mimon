@@ -1,6 +1,3 @@
-// TEMP!!!
-/* eslint-disable no-unused-vars */
-
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as Engine from '../engine/Engine';
@@ -31,20 +28,6 @@ async function asyncChangeStartupOptions(newOptions) {
 
     return options;
 }
-
-
-
-//
-// ---------------------------------------------------------
-//
-function AppInitializing(props) {
-    return (
-        <div>
-            <h2>...</h2>
-        </div>
-    );
-}
-
 
 
 
@@ -137,174 +120,6 @@ function AppOpenScreen(props) {
     );
 }
 
-function getMainMenuTemplate(mainSetup) {
-    const template = [
-        {
-            label: userMsg('MainMenu-file'),
-            submenu: [
-                FM.createMenuItemTemplate('MenuItem-revertFile'),
-                FM.createMenuItemTemplate('MenuItem-closeFile'),
-                { type: 'separator' },
-                { role: 'quit' },
-            ],
-        },
-        {
-            label: userMsg('MainMenu-edit'),
-            submenu: [
-                FM.createRoleMenuItemTemplate('undo'),
-                FM.createRoleMenuItemTemplate('redo'),
-                { type: 'separator' },
-                FM.createRoleMenuItemTemplate('cut'),
-                FM.createRoleMenuItemTemplate('copy'),
-                FM.createRoleMenuItemTemplate('paste'),
-                { type: 'separator' },
-                FM.createMenuItemTemplate('MenuItem-copyTransaction'),
-                FM.createMenuItemTemplate('MenuItem-pasteTransaction'),
-            ],
-        },
-        {
-            label: userMsg('MainMenu-account'),
-            submenu: [
-                FM.createMenuItemTemplate('MenuItem-openAccount'),
-                FM.createMenuItemTemplate('MenuItem-closeAccount'),
-                { type: 'separator' },
-                FM.createMenuItemTemplate('MenuItem-reconcile'),
-                { type: 'separator' },
-                FM.createMenuItemTemplate('MenuItem-toggleShowHiddenAccounts', 
-                    { type: 'checkbox' }),
-                FM.createMenuItemTemplate('MenuItem-hideAccount'),
-                FM.createMenuItemTemplate('MenuItem-showAccount', { visible: false }),
-                { type: 'separator' },
-                FM.createMenuItemTemplate('MenuItem-moveAccountUp'),
-                FM.createMenuItemTemplate('MenuItem-moveAccountDown'),
-                { type: 'separator' },
-                FM.createMenuItemTemplate('MenuItem-newAccount'),
-                FM.createMenuItemTemplate('MenuItem-modifyAccount'),
-                FM.createMenuItemTemplate('MenuItem-removeAccount'),
-            ],
-        },
-        {
-            label: userMsg('MainMenu-transaction'),
-            submenu: [
-                FM.createMenuItemTemplate('MenuItem-newTransaction'),
-                FM.createMenuItemTemplate('MenuItem-copyTransaction'),
-                FM.createMenuItemTemplate('MenuItem-pasteTransaction'),
-                FM.createMenuItemTemplate('MenuItem-removeTransaction'),
-                { type: 'separator' },
-                FM.createMenuItemTemplate('MenuItem-findTransaction'),
-            ],
-        },
-        {
-            label: userMsg('MainMenu-securities'),
-            submenu: [
-                FM.createMenuItemTemplate('MenuItem-view_SECURITY'),
-                FM.createMenuItemTemplate('MenuItem-downloadPrices'),
-                { type: 'separator' },
-                FM.createMenuItemTemplate('MenuItem-toggleShowAccounts_SECURITY', 
-                    { type: 'checkbox' }),
-                FM.createMenuItemTemplate('MenuItem-toggleShowQuantityZero_SECURITY', 
-                    { type: 'checkbox' }),
-                FM.createMenuItemTemplate('MenuItem-open_SECURITY'),
-                FM.createMenuItemTemplate('MenuItem-close_SECURITY'),
-                { type: 'separator' },
-                FM.createMenuItemTemplate('MenuItem-toggleShowHidden_SECURITY', 
-                    { type: 'checkbox' }),
-                FM.createMenuItemTemplate('MenuItem-hide_SECURITY'),
-                FM.createMenuItemTemplate('MenuItem-show_SECURITY', { visible: false }),
-                { type: 'separator' },
-                FM.createMenuItemTemplate('MenuItem-new_SECURITY'),
-                FM.createMenuItemTemplate('MenuItem-modify_SECURITY'),
-                FM.createMenuItemTemplate('MenuItem-remove_SECURITY'),
-            ],
-        },
-        {
-            label: userMsg('MainMenu-report'),
-            submenu: [
-            ],
-        },
-        {
-            label: userMsg('MainMenu-reminder'),
-            submenu: [
-            ],
-        },
-        {
-            label: userMsg('MainMenu-view'),
-            submenu: [
-                { role: 'resetzoom' },
-                { role: 'zoomin' },
-                { role: 'zoomout' },
-                { type: 'separator' },
-                { role: 'togglefullscreen' }
-            ],
-        },
-        {
-            label: userMsg('MainMenu-window'),
-            submenu: [
-                { role: 'minimize' },
-                { role: 'zoom' },
-            ]
-        },
-    ];
-
-    if (mainSetup.isDevMode) {
-        template.push({
-            label: userMsg('MainMenu-debug'),
-            submenu: [
-                { role: 'reload' },
-                { role: 'forcereload' },
-                { role: 'toggledevtools' },
-            ]
-        });
-    }
-
-    return template;
-}
-
-
-function addContextMenuTemplates(menuManager) {
-    menuManager.addContextMenuTemplate('MasterAccountsEditor', [
-        FM.createMenuItemTemplate('MenuItem-openAccount'),
-        FM.createMenuItemTemplate('MenuItem-closeAccount'),
-        { type: 'separator' },
-        FM.createMenuItemTemplate('MenuItem-reconcile'),
-        { type: 'separator' },
-        FM.createMenuItemTemplate('MenuItem-toggleShowHiddenAccounts', 
-            { type: 'checkbox' }),
-        FM.createMenuItemTemplate('MenuItem-hideAccount'),
-        FM.createMenuItemTemplate('MenuItem-showAccount', { visible: false }),
-        { type: 'separator' },
-        FM.createMenuItemTemplate('MenuItem-moveAccountUp'),
-        FM.createMenuItemTemplate('MenuItem-moveAccountDown'),
-        { type: 'separator' },
-        FM.createMenuItemTemplate('MenuItem-newAccount'),
-        FM.createMenuItemTemplate('MenuItem-modifyAccount'),
-        FM.createMenuItemTemplate('MenuItem-removeAccount'),
-    ]);
-
-    menuManager.addContextMenuTemplate('MasterPricedItemsEditor_SECURITY', [
-        FM.createMenuItemTemplate('MenuItem-view_SECURITY'),
-        FM.createMenuItemTemplate('MenuItem-downloadPrices'),
-        { type: 'separator' },
-        FM.createMenuItemTemplate('MenuItem-toggleShowAccounts_SECURITY', 
-            { type: 'checkbox' }),
-        FM.createMenuItemTemplate('MenuItem-toggleShowQuantityZero_SECURITY', 
-            { type: 'checkbox' }),
-        FM.createMenuItemTemplate('MenuItem-open_SECURITY'),
-        FM.createMenuItemTemplate('MenuItem-close_SECURITY'),
-        { type: 'separator' },
-        FM.createMenuItemTemplate('MenuItem-toggleShowHidden_SECURITY', 
-            { type: 'checkbox' }),
-        FM.createMenuItemTemplate('MenuItem-hide_SECURITY'),
-        FM.createMenuItemTemplate('MenuItem-show_SECURITY', { visible: false }),
-        { type: 'separator' },
-        FM.createMenuItemTemplate('MenuItem-new_SECURITY'),
-        FM.createMenuItemTemplate('MenuItem-modify_SECURITY'),
-        FM.createMenuItemTemplate('MenuItem-remove_SECURITY'),
-    ]);
-}
-
-
-
 //
 // ---------------------------------------------------------
 //
@@ -360,7 +175,7 @@ export default class App extends React.Component {
         const startupOptions = await asyncGetStartupOptions();
 
         if (startupOptions.mruPathNames) {
-            // Do something
+            // Do something?
         }
 
         if (startupOptions.autoOpen) {
@@ -394,20 +209,58 @@ export default class App extends React.Component {
     }
 
 
-    reportError(key, err) {
-        const msg = userMsg(key, err);
-        console.log(msg);
-        // eslint-disable-next-line no-undef
-        alert(msg);
-        return msg;
+    async addToMRU(pathName) {
+        const startupOptions = await asyncGetStartupOptions();
+        let mruPathNames = startupOptions.mruPathNames;
+        const { maxMRUCount } = startupOptions;
+
+        mruPathNames = (mruPathNames) ? Array.from(mruPathNames) : [];
+        const index = mruPathNames.indexOf(pathName);
+        if (index >= 0) {
+            mruPathNames.splice(index, 1);
+        }
+        mruPathNames.splice(0, 0, pathName);
+
+        if (maxMRUCount && (maxMRUCount > 0)) {
+            if (mruPathNames.length > maxMRUCount) {
+                mruPathNames.length = maxMRUCount;
+            }
+        }
+
+        await asyncChangeStartupOptions({ mruPathNames: mruPathNames });
+        return mruPathNames;
+    }
+
+    async removeFromMRU(pathName) {
+        const startupOptions = await asyncGetStartupOptions();
+        const mruPathNames = startupOptions.mruPathNames;
+
+        if (mruPathNames) {
+            const index = mruPathNames.indexOf(pathName);
+            if (index >= 0) {
+                mruPathNames.splice(index, 1);
+            }
+            await asyncChangeStartupOptions({ mruPathNames: mruPathNames });
+        }
+
+        return mruPathNames;
     }
 
 
-    onFileCreated() {
-        // TODO: Add to the MRU.
-        this.setState({
-            appState: 'mainWindow',
+    enterMainWindow() {
+        process.nextTick(async () => {
+            const pathName = this._accessor.getAccountingFilePathName();
+            const mruPathNames = await this.addToMRU(pathName);
+
+            this.setState({
+                mruPathNames: mruPathNames,
+                appState: 'mainWindow',
+            });    
         });
+    }
+
+    onFileCreated() {
+        this.enterMainWindow();
     }
 
     onCancel() {
@@ -426,12 +279,15 @@ export default class App extends React.Component {
     onOpenClick() {
         console.log('onOpenClick');
     }
+
     onRecentClick(pathName) {
         console.log('onRecentClick: ' + pathName);
     }
+
     onRemoveRecentClick(pathName) {
         console.log('onRemoveRecentClick: ' + pathName);
     }
+
     onExitClick() {
         app.quit();
     }
@@ -458,7 +314,6 @@ export default class App extends React.Component {
                 onFileCreated = {this.onFileCreated}
                 onCancel = {this.onCancel}
             />;
-            //break;
         
         case 'mainWindow' :
             return <MainWindow
