@@ -219,6 +219,8 @@
     "NewFileSetup-openingBalance_Description": "Opening balance",
     
 
+    "App-mru_open_failed": ["Could not open '", "'. ", ""],
+
     "AppOpeningScreen-mru_title": "Recently Opened:",
     "AppOpeningScreen-new_file": "Create a New Accounting Project...",
     "AppOpeningScreen-open_file": "Open an Existing Accounting Project...",

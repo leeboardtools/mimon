@@ -182,8 +182,9 @@ export class MainWindow extends React.Component {
     }
 
     render() {
+        const pathName = this.props.accessor.getAccountingFilePathName();
         return <div>
-            I am the main window...
+            I am the main window, editing {pathName}...
         </div>;
     }
 }

@@ -7,6 +7,8 @@ import { EngineAccessor } from '../tools/EngineAccess';
 import { FileCreator } from './FileCreator';
 import * as FM from '../util/FrameManager';
 import { MainWindow } from './MainWindow';
+import { ErrorReporter } from '../util-ui/ErrorReporter';
+import { fileOrDirExists } from '../util/Files';
 
 
 const electron = require('electron');
@@ -34,6 +36,109 @@ async function asyncChangeStartupOptions(newOptions) {
 //
 // ---------------------------------------------------------
 //
+class AppOpenScreen extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+        };
+
+        process.nextTick(async () => {
+            const validPathNames = [];
+            const { mruPathNames } = props;
+            for (let i = 0; i < mruPathNames.length; ++i) {
+                const pathName = mruPathNames[i];
+                if (await fileOrDirExists(pathName)) {
+                    validPathNames.push(pathName);
+                }
+            }
+
+            this.setState({
+                validPathNames: validPathNames,
+            });
+        });
+    }
+
+    render() {
+        const { props } = this;
+        let buttonClassName = 'btn btn-primary btn-md btn-block';
+        let mruComponent;
+        const { validPathNames } = this.state;
+        if (validPathNames && (validPathNames.length > 0)) {
+            const namesItem = validPathNames.map((pathName) =>
+                <div key={pathName} className="list-group-item list-group-item-action" 
+                    onClick={() => props.onRecentClick(pathName)}>
+                    <span>{pathName}</span>
+                    <button
+                        type="button"
+                        className="close ml-3"
+                        data-dismiss="modal"
+                        aria-label="Remove Path Name"
+                        onClick={(event) => { 
+                            props.onRemoveRecentClick(pathName); event.stopPropagation(); 
+                        }}
+                    >
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            );
+
+            mruComponent = <React.Fragment>
+                <div className="row justify-content-md-center">
+                    {<span>{userMsg('AppOpeningScreen-mru_title')}</span>}
+                </div>
+                <div className="row justify-content-md-center">
+                    {<div className="list-group">{namesItem}</div>}
+                </div>
+                <div className="row justify-content-md-center">
+                    &nbsp;
+                </div>
+            </React.Fragment>;
+
+            buttonClassName = 'btn btn-secondary btn-sm btn-block';
+        }
+
+        return (
+            <div className="d-flex w-100 h-100 p-1 mx-auto flex-column">
+                <div className="mb-4">
+                    <h2 className="text-center">LBMiMon</h2>
+                    <h4 className="text-center">A Personal Money Manager</h4>
+                    <h5 className="text-center">From Leeboard Tools</h5>
+                </div>
+                <div className="container">
+                    <div className="row">
+                        <div className="col"> </div>
+                        <div className="col-8">
+                            {mruComponent}
+                            <button className={buttonClassName}
+                                onClick={props.onNewClick}
+                                aria-label="New File">
+                                {userMsg('AppOpeningScreen-new_file')}</button>
+                            <button className={buttonClassName}
+                                onClick={props.onOpenClick}
+                                aria-label="Open File">
+                                {userMsg('AppOpeningScreen-open_file')}</button>
+                        </div>
+                        <div className="col"> </div>
+                    </div>
+                </div>
+                <div className="container mt-auto">
+                    <div className="row">
+                        <div className="col"></div>
+                        <div className="col">
+                            <button className="btn btn-secondary btn-sm btn-block mb-4"
+                                onClick={props.onExitClick}
+                                aria-label="Exit">
+                                {userMsg('AppOpeningScreen-exit')}</button>
+                        </div>
+                        <div className="col"></div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+}
+
 AppOpenScreen.propTypes = {
     mruPathNames: PropTypes.array,
     onNewClick: PropTypes.func.isRequired,
@@ -42,83 +147,6 @@ AppOpenScreen.propTypes = {
     onRemoveRecentClick: PropTypes.func.isRequired,
     onExitClick: PropTypes.func.isRequired,
 };
-
-function AppOpenScreen(props) {
-    let buttonClassName = 'btn btn-primary btn-md btn-block';
-    let mruComponent;
-    if (props.mruPathNames && (props.mruPathNames.length > 0)) {
-        const namesItem = props.mruPathNames.map((pathName) =>
-            <div key={pathName} className="list-group-item list-group-item-action" 
-                onClick={() => props.onRecentClick(pathName)}>
-                <span>{pathName}</span>
-                <button
-                    type="button"
-                    className="close ml-3"
-                    data-dismiss="modal"
-                    aria-label="Remove Path Name"
-                    onClick={(event) => { 
-                        props.onRemoveRecentClick(pathName); event.stopPropagation(); 
-                    }}
-                >
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        );
-
-        mruComponent = <React.Fragment>
-            <div className="row justify-content-md-center">
-                {<span>{userMsg('AppOpeningScreen-mru_title')}</span>}
-            </div>
-            <div className="row justify-content-md-center">
-                {<div className="list-group">{namesItem}</div>}
-            </div>
-            <div className="row justify-content-md-center">
-                &nbsp;
-            </div>
-        </React.Fragment>;
-
-        buttonClassName = 'btn btn-secondary btn-sm btn-block';
-    }
-
-    return (
-        <div className="d-flex w-100 h-100 p-1 mx-auto flex-column">
-            <div className="mb-4">
-                <h2 className="text-center">LBMiMon</h2>
-                <h4 className="text-center">A Personal Money Manager</h4>
-                <h5 className="text-center">From Leeboard Tools</h5>
-            </div>
-            <div className="container">
-                <div className="row">
-                    <div className="col"> </div>
-                    <div className="col-8">
-                        {mruComponent}
-                        <button className={buttonClassName}
-                            onClick={props.onNewClick}
-                            aria-label="New File">
-                            {userMsg('AppOpeningScreen-new_file')}</button>
-                        <button className={buttonClassName}
-                            onClick={props.onOpenClick}
-                            aria-label="Open File">
-                            {userMsg('AppOpeningScreen-open_file')}</button>
-                    </div>
-                    <div className="col"> </div>
-                </div>
-            </div>
-            <div className="container mt-auto">
-                <div className="row">
-                    <div className="col"></div>
-                    <div className="col">
-                        <button className="btn btn-secondary btn-sm btn-block mb-4"
-                            onClick={props.onExitClick}
-                            aria-label="Exit">
-                            {userMsg('AppOpeningScreen-exit')}</button>
-                    </div>
-                    <div className="col"></div>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 //
 // ---------------------------------------------------------
@@ -265,7 +293,8 @@ export default class App extends React.Component {
 
     onCancel() {
         this.setState({
-            appState: 'openingScreen'
+            appState: 'openingScreen',
+            errorMsg: undefined,
         });
     }
 
@@ -273,6 +302,7 @@ export default class App extends React.Component {
     onNewClick() {
         this.setState({
             appState: 'newFile',
+            errorMsg: undefined,
         });
     }
 
@@ -281,7 +311,17 @@ export default class App extends React.Component {
     }
 
     onRecentClick(pathName) {
-        console.log('onRecentClick: ' + pathName);
+        process.nextTick(async () => {
+            try {
+                await this._accessor.asyncOpenAccountingFile(pathName);
+                this.enterMainWindow();
+            }
+            catch (e) {
+                this.setState({
+                    errorMsg: userMsg('App-mru_open_failed', pathName, e.toString()),
+                });
+            }
+        });
     }
 
     onRemoveRecentClick(pathName) {
@@ -298,7 +338,13 @@ export default class App extends React.Component {
 
     render() {
         let mainComponent;
-        const { appState, mruPathNames } = this.state;
+        const { appState, mruPathNames, errorMsg } = this.state;
+        if (errorMsg) {
+            return <ErrorReporter message={errorMsg} 
+                onClose={this.onCancel}
+            />;
+        }
+
         switch (appState) {
         case 'openingScreen' :
             return <AppOpenScreen
