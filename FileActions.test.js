@@ -2,7 +2,7 @@ import { createDir, cleanupDir, writeFile, expectFileToBe } from './FileTestHelp
 import { DeleteFileAction, RenameFileAction, ReplaceFileAction, 
     performFileActions, KeepFileAction, getFullPathName, CopyFileAction 
 } from './FileActions';
-import { fileExists } from './Files';
+import { asyncFileExists } from './Files';
 
 const path = require('path');
 const fsPromises = require('fs').promises;
@@ -33,49 +33,49 @@ test('DeleteFileAction', async () => {
         await writeFile(pathA, 'Hello');
         await writeFile(pathB, 'Goodbye');
 
-        expect(await fileExists(pathA)).toBeTruthy();
-        expect(await fileExists(pathB)).toBeTruthy();
+        expect(await asyncFileExists(pathA)).toBeTruthy();
+        expect(await asyncFileExists(pathB)).toBeTruthy();
 
 
         // Test finalize()
         const deleteA = new DeleteFileAction(pathA);
         await deleteA.apply();
-        expect(await fileExists(pathA)).toBeFalsy();
+        expect(await asyncFileExists(pathA)).toBeFalsy();
 
         await deleteA.finalize();
-        expect(await fileExists(pathA)).toBeFalsy();
+        expect(await asyncFileExists(pathA)).toBeFalsy();
 
 
         // Test revert()
         const deleteB = new DeleteFileAction(pathB);
         await deleteB.apply();
-        expect(await fileExists(pathB)).toBeFalsy();
+        expect(await asyncFileExists(pathB)).toBeFalsy();
 
         await deleteB.revert();
-        expect(await fileExists(pathB)).toBeTruthy();
+        expect(await asyncFileExists(pathB)).toBeTruthy();
 
 
         // Test setBackup(), finalize()
         const deleteC = new DeleteFileAction(pathB);
         deleteC.setBackupFileName(pathC);
         await deleteC.apply();
-        expect(await fileExists(pathB)).toBeFalsy();
-        expect(await fileExists(pathC)).toBeTruthy();
+        expect(await asyncFileExists(pathB)).toBeFalsy();
+        expect(await asyncFileExists(pathC)).toBeTruthy();
 
         await deleteC.finalize();
-        expect(await fileExists(pathB)).toBeFalsy();
-        expect(await fileExists(pathC)).toBeTruthy();
+        expect(await asyncFileExists(pathB)).toBeFalsy();
+        expect(await asyncFileExists(pathC)).toBeTruthy();
 
         // Test setBackup(), revert().
         const deleteD = new DeleteFileAction(pathC);
         deleteD.setBackupFileName(pathB);
         await deleteD.apply();
-        expect(await fileExists(pathC)).toBeFalsy();
-        expect(await fileExists(pathB)).toBeTruthy();
+        expect(await asyncFileExists(pathC)).toBeFalsy();
+        expect(await asyncFileExists(pathB)).toBeTruthy();
 
         await deleteD.revert();
-        expect(await fileExists(pathB)).toBeFalsy();
-        expect(await fileExists(pathC)).toBeTruthy();
+        expect(await asyncFileExists(pathB)).toBeFalsy();
+        expect(await asyncFileExists(pathC)).toBeTruthy();
 
     }
     finally {
@@ -102,11 +102,11 @@ test('RenameFileAction', async () => {
         // Test finalize()
         const renameAToB = new RenameFileAction(pathA, pathB);
         await renameAToB.apply();
-        expect(await fileExists(pathA)).toBeFalsy();
+        expect(await asyncFileExists(pathA)).toBeFalsy();
         await expectFileToBe(pathB, 'Abc');
 
         await renameAToB.finalize();
-        expect(await fileExists(pathA)).toBeFalsy();
+        expect(await asyncFileExists(pathA)).toBeFalsy();
         await expectFileToBe(pathB, 'Abc');
 
 
@@ -116,7 +116,7 @@ test('RenameFileAction', async () => {
         const renameBToC = new RenameFileAction(pathB, pathC);
         await renameBToC.apply();
         await expectFileToBe(pathC, 'Abc');
-        expect(await fileExists(pathB)).toBeFalsy();
+        expect(await asyncFileExists(pathB)).toBeFalsy();
 
         await renameBToC.revert();
         await expectFileToBe(pathC, 'C');
@@ -148,13 +148,13 @@ test('ReplaceFileAction', async () => {
             },
         });
 
-        expect(await fileExists(pathA)).toBeFalsy();
+        expect(await asyncFileExists(pathA)).toBeFalsy();
 
         await actionA.apply();
         await expectFileToBe(pathA, 'A');
 
         await actionA.revert();
-        expect(await fileExists(pathA)).toBeFalsy();
+        expect(await asyncFileExists(pathA)).toBeFalsy();
 
         await actionA.apply();
         await actionA.finalize();
@@ -192,7 +192,7 @@ test('ReplaceFileAction', async () => {
 
         await actionC.revert();
         await expectFileToBe(pathA, 'A');
-        expect(await fileExists(pathC)).toBeFalsy();
+        expect(await asyncFileExists(pathC)).toBeFalsy();
         expect(isReverted).toBeTruthy();
 
         expect(await fsPromises.readdir(baseDir)).toEqual(['A.txt']);
@@ -210,8 +210,8 @@ test('ReplaceFileAction', async () => {
         await expectFileToBe(pathE, '');
 
         await actionD.revert();
-        expect(await fileExists(pathD)).toBeFalsy();
-        expect(await fileExists(pathE)).toBeFalsy();
+        expect(await asyncFileExists(pathD)).toBeFalsy();
+        expect(await asyncFileExists(pathE)).toBeFalsy();
 
     }
     finally {
@@ -268,7 +268,7 @@ test('KeepFileAction', async () => {
 
         await actionC.revert();
         await expectFileToBe(pathA, 'A');
-        expect(await fileExists(pathB)).toBeFalsy();
+        expect(await asyncFileExists(pathB)).toBeFalsy();
 
 
         // Backup finalize.
@@ -311,7 +311,7 @@ test('performFileActions', async () => {
         const actions = [actionA, actionB, actionC];
         await performFileActions(actions);
 
-        expect(await fileExists(pathB)).toBeFalsy();
+        expect(await asyncFileExists(pathB)).toBeFalsy();
         await expectFileToBe(pathA, 'B');
         await expectFileToBe(pathC, 'C');
 
@@ -370,7 +370,7 @@ test('CopyFileAction', async () => {
 
         await actionB.revert();
         await expectFileToBe(pathB, 'A');
-        expect(await fileExists(pathC)).toBeFalsy();
+        expect(await asyncFileExists(pathC)).toBeFalsy();
 
         // Test setBackup(), finalize()
         const pathD = path.join(baseDir, 'D.txt');
@@ -397,7 +397,7 @@ test('CopyFileAction', async () => {
 
         await actionD.revert();
         await expectFileToBe(pathB, 'B');
-        expect(await fileExists(pathD)).toBeFalsy();
+        expect(await asyncFileExists(pathD)).toBeFalsy();
 
     }
     finally {

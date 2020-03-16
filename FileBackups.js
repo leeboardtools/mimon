@@ -1,5 +1,5 @@
 import { performFileActions, DeleteFileAction, CopyFileAction } from './FileActions';
-import { getFilesOnlyInDir, fileExists } from './Files';
+import { asyncGetFilesOnlyInDir, asyncFileExists } from './Files';
 import { userError } from './UserMessages';
 
 const path = require('path');
@@ -309,7 +309,7 @@ export class FileBackups {
      * sorted with the newest backup sets at lower indices.
      */
     async getBackups(dir) {
-        const filesInDir = await getFilesOnlyInDir(dir);
+        const filesInDir = await asyncGetFilesOnlyInDir(dir);
         const backupsByDate = new Map();
         filesInDir.forEach((fileName) => {
             const nameParts = this._parseBackupFileName(fileName);
@@ -360,7 +360,7 @@ export class FileBackups {
         // Make sure all the files exist.
         let parts;
         for (const { pathName, originalFileName } of backupSet.fileNames) {
-            if (!await fileExists(pathName)) {
+            if (!await asyncFileExists(pathName)) {
                 throw userError('FileBackups-file_not_exist', pathName);
             }
             parts = path.parse(pathName);
