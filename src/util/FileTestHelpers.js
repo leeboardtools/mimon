@@ -1,4 +1,4 @@
-import { getFullPathsInDir, getDirectoriesOnlyInDir, } from './Files';
+import { asyncGetFullPathsInDir, asyncGetDirectoriesOnlyInDir, } from './Files';
 
 const os = require('os');
 const path = require('path');
@@ -29,7 +29,7 @@ export async function expectFileToBe(fileName, contents) {
 }
 
 export async function cleanupDir(dir, keepDir) {
-    const dirs = await getDirectoriesOnlyInDir(dir);
+    const dirs = await asyncGetDirectoriesOnlyInDir(dir);
     for (let innerDir of dirs) {
         try {
             innerDir = path.join(dir, innerDir);
@@ -40,7 +40,7 @@ export async function cleanupDir(dir, keepDir) {
         }
     }
 
-    const files = await getFullPathsInDir(dir);
+    const files = await asyncGetFullPathsInDir(dir);
     for (const file of files) {
         try {
             await fsPromises.unlink(file);

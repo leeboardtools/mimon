@@ -7,7 +7,7 @@ const fsPromises = require('fs').promises;
  * @param {string} pathName The name of the file/directory to check for.
  * @returns {Promise<boolean>}  <code>true</code> if the file exists.
  */
-export async function fileOrDirExists(pathName) {
+export async function asyncFileOrDirExists(pathName) {
     try {
         if (!pathName) {
             return false;
@@ -28,7 +28,7 @@ export async function fileOrDirExists(pathName) {
  * @param {string} dirName The name of the file to check for.
  * @returns {Promise<boolean>}  <code>true</code> if the file exists.
  */
-export async function dirExists(dirName) {
+export async function asyncDirExists(dirName) {
     try {
         if (!dirName) {
             return false;
@@ -49,7 +49,7 @@ export async function dirExists(dirName) {
  * @param {string} fileName The name of the file to check for.
  * @returns {Promise<boolean>}  <code>true</code> if the file exists.
  */
-export async function fileExists(fileName) {
+export async function asyncFileExists(fileName) {
     try {
         if (!fileName) {
             return false;
@@ -70,13 +70,13 @@ export async function fileExists(fileName) {
  * @param {string[]|string} fileNames The array of file names to check.
  * @returns {boolean}   <code>true</code> if all the files in fileNames exist.
  */
-export async function allFilesExist(fileNames) {
+export async function asyncAllFilesExist(fileNames) {
     if (typeof fileNames === 'string') {
-        return fileExists(fileNames);
+        return asyncFileExists(fileNames);
     }
 
     for (const fileName of fileNames) {
-        if (!await fileExists(fileName)) {
+        if (!await asyncFileExists(fileName)) {
             return false;
         }
     }
@@ -93,10 +93,10 @@ export async function allFilesExist(fileNames) {
  * @returns {string}    The unique name, does not include the directory.
  * @async
  */
-export async function getUniqueFileName(baseDir, initialName) {
+export async function asyncGetUniqueFileName(baseDir, initialName) {
     let name = initialName;
     let i = 0;
-    while (await fileOrDirExists(path.join(baseDir, name))) {
+    while (await asyncFileOrDirExists(path.join(baseDir, name))) {
         ++i;
         name = initialName + '-' + i;
     }
@@ -112,7 +112,7 @@ export async function getUniqueFileName(baseDir, initialName) {
  * @returns {string[]}  Array containing the path names to the files.
  * @async
  */
-export async function getFullPathsInDir(dir) {
+export async function asyncGetFullPathsInDir(dir) {
     const files = await fsPromises.readdir(dir);
     return files.map((file) => path.join(dir, file));
 }
@@ -123,7 +123,7 @@ export async function getFullPathsInDir(dir) {
  * @returns {string[]} Array containing the base file names (name.txt) of all the 
  * files in dir, no directories.
  */
-export async function getFilesOnlyInDir(dir) {
+export async function asyncGetFilesOnlyInDir(dir) {
     const dirEnts = await fsPromises.readdir(dir, { withFileTypes: true });
     const names = [];
     dirEnts.forEach((dirEnt) => {
@@ -140,7 +140,7 @@ export async function getFilesOnlyInDir(dir) {
  * @returns {string[]} Array containing the base file names (name.txt) of all the 
  * directories in dir, no files.
  */
-export async function getDirectoriesOnlyInDir(dir) {
+export async function asyncGetDirectoriesOnlyInDir(dir) {
     const dirEnts = await fsPromises.readdir(dir, { withFileTypes: true });
     const names = [];
     dirEnts.forEach((dirEnt) => {
@@ -158,8 +158,8 @@ export async function getDirectoriesOnlyInDir(dir) {
  * @param {string} dir The directory of interest.
  * @returns {boolean}   <code>true</code> if dir can be created or already exists.
  */
-export async function canCreateDir(dir) {
-    if (await dirExists(dir)) {
+export async function asyncCanCreateDir(dir) {
+    if (await asyncDirExists(dir)) {
         return true;
     }
 
@@ -177,7 +177,7 @@ export async function canCreateDir(dir) {
         dir = '';
         for (let i = dirs.length - 1; i >= 0; --i) {
             dir = path.join(dir, dirs[i]);
-            if (!await dirExists(dir)) {
+            if (!await asyncDirExists(dir)) {
                 await fsPromises.mkdir(dir);
                 createdDirs.push(dir);
             }

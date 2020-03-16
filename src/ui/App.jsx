@@ -8,7 +8,8 @@ import { FileCreator } from './FileCreator';
 import * as FM from '../util/FrameManager';
 import { MainWindow } from './MainWindow';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
-import { fileOrDirExists } from '../util/Files';
+import { asyncFileOrDirExists } from '../util/Files';
+import { FileSelector } from '../util-ui/FileSelector';
 
 
 const electron = require('electron');
@@ -48,7 +49,7 @@ class AppOpenScreen extends React.Component {
             const { mruPathNames } = props;
             for (let i = 0; i < mruPathNames.length; ++i) {
                 const pathName = mruPathNames[i];
-                if (await fileOrDirExists(pathName)) {
+                if (await asyncFileOrDirExists(pathName)) {
                     validPathNames.push(pathName);
                 }
             }
@@ -170,6 +171,9 @@ export default class App extends React.Component {
 
         this.onFileCreated = this.onFileCreated.bind(this);
         this.onCancel = this.onCancel.bind(this);
+
+        this.onOpenFile = this.onOpenFile.bind(this);
+        this.onFilterOpenFile = this.onFilterOpenFile.bind(this);
 
         this._accessor = new EngineAccessor();
         this._frameManager = new FM.FrameManager();
@@ -304,8 +308,24 @@ export default class App extends React.Component {
         });
     }
 
+
+    onFilterOpenFile(dirEnt, currentDirPath) {
+        if (!dirEnt.isDirectory()) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    onOpenFile(pathName) {
+
+    }
+
     onOpenClick() {
-        console.log('onOpenClick');
+        this.setState({
+            appState: 'openFile',
+            errorMsg: undefined,
+        });
     }
 
     onRecentClick(pathName) {
@@ -336,7 +356,7 @@ export default class App extends React.Component {
 
     render() {
         let mainComponent;
-        const { appState, mruPathNames, errorMsg } = this.state;
+        const { appState, mruPathNames, errorMsg, initialDir } = this.state;
         if (errorMsg) {
             return <ErrorReporter message={errorMsg} 
                 onClose={this.onCancel}
@@ -360,6 +380,15 @@ export default class App extends React.Component {
                 frameManager = {this._frameManager}
                 onFileCreated = {this.onFileCreated}
                 onCancel = {this.onCancel}
+            />;
+        
+        case 'openFile' :
+            return <FileSelector
+                title = {userMsg('App-open_file_title')}
+                initialDir = {initialDir}
+                onSelect = {this.onOpenFile}
+                onCancel = {this.onCancel}
+                onFilterDirEnt = {this.onFilterOpenFile}
             />;
         
         case 'mainWindow' :

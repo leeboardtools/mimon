@@ -7,7 +7,7 @@ const fsPromises = require('fs').promises;
  * @param {string} pathName The path name of the file to check for.
  * @returns {Promise<boolean>}  <code>true</code> if the file exists.
  */
-export async function fileExists(pathName) {
+export async function asyncFileExists(pathName) {
     try {
         if (!pathName) {
             return false;
@@ -96,7 +96,7 @@ export class FileAction {
     getBackupFileName() { return this._backupFileName; }
 
     async _applyForExistingFile() {
-        if (await fileExists(this._pathName)) {
+        if (await asyncFileExists(this._pathName)) {
             if (this._backupFileName) {
                 this._backupPathName = getFullPathName(this._backupFileName, 
                     this._pathName);
@@ -118,7 +118,7 @@ export class FileAction {
                     parts.base = 'to_delete' + index + '_' + originalBase;
                     ++index;
                     toDeletePathName = path.format(parts);
-                } while (await fileExists(toDeletePathName));
+                } while (await asyncFileExists(toDeletePathName));
 
                 await fsPromises.rename(this._pathName, toDeletePathName);
                 this._toDeletePathName = toDeletePathName;
@@ -252,8 +252,8 @@ export class RenameFileAction extends FileAction {
 
 
     async apply() {
-        if (await fileExists(this._oldPathName)) {
-            if (await fileExists(this._newPathName)) {
+        if (await asyncFileExists(this._oldPathName)) {
+            if (await asyncFileExists(this._newPathName)) {
                 this._existingFileAction = new DeleteFileAction(this._newPathName);
                 await this._existingFileAction.apply();
             }
@@ -271,7 +271,7 @@ export class RenameFileAction extends FileAction {
 
     async revert() {
         try {
-            if (await fileExists(this._newPathName)) {
+            if (await asyncFileExists(this._newPathName)) {
                 await fsPromises.rename(this._newPathName, this._oldPathName);
             }
         }
@@ -352,7 +352,7 @@ export class ReplaceFileAction extends FileAction {
         }
 
         if (this._noFileBackupFileName && !this._backupPathName) {
-            if (await fileExists(this._pathName)) {
+            if (await asyncFileExists(this._pathName)) {
                 const noFileBackupPathName 
                     = getFullPathName(this._noFileBackupFileName, this._pathName);
                 this._noFileBackupAction = new ReplaceFileAction(noFileBackupPathName,
@@ -388,7 +388,7 @@ export class ReplaceFileAction extends FileAction {
         }
 
         try {
-            if (await fileExists(this._pathName)) {
+            if (await asyncFileExists(this._pathName)) {
                 await fsPromises.unlink(this._pathName);
             }
         }
@@ -430,7 +430,7 @@ export class KeepFileAction extends FileAction {
     }
 
     async _revertMainAction() {
-        if (await fileExists(this._copiedFileName)) {
+        if (await asyncFileExists(this._copiedFileName)) {
             try {
                 await fsPromises.unlink(this._copiedFileName);
             }
@@ -466,7 +466,7 @@ export class CopyFileAction extends FileAction {
     }
 
     async _revertMainAction() {
-        if (await fileExists(this._copiedFileName)) {
+        if (await asyncFileExists(this._copiedFileName)) {
             try {
                 await fsPromises.unlink(this._copiedFileName);
             }

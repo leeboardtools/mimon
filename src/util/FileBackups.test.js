@@ -2,7 +2,7 @@ import { parseDecimalInteger, defMakeBackupFileName, defParseBackupFileName,
     FileBackups } from './FileBackups';
 import { createDir, cleanupDir, writeFile, expectFileToBe } from './FileTestHelpers';
 import { ReplaceFileAction, DeleteFileAction, performFileActions, 
-    fileExists } from './FileActions';
+    asyncFileExists } from './FileActions';
 
 const path = require('path');
 
@@ -165,7 +165,7 @@ test('FileBackups', async () => {
 
         await fileBackups.restoreBackup(backupsC[0], governedFiles);
         await expectFileToBe(pathA, 'A1');
-        expect(await fileExists(pathB)).toBeFalsy();
+        expect(await asyncFileExists(pathB)).toBeFalsy();
 
         await fileBackups.restoreBackup(backupsC[1], governedFiles);
         await expectFileToBe(pathA, 'A');
@@ -174,7 +174,7 @@ test('FileBackups', async () => {
         // Check removal of obsolete backup files.
         await fileBackups.restoreBackup(backupsC[0], governedFiles);
         await expectFileToBe(pathA, 'A1');
-        expect(await fileExists(pathB)).toBeFalsy();
+        expect(await asyncFileExists(pathB)).toBeFalsy();
 
         const fileActionsD = [
             new ReplaceFileAction(pathA, async (pathName) => {

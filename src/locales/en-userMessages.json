@@ -220,6 +220,7 @@
     
 
     "App-mru_open_failed": ["Could not open '", "'. ", ""],
+    "App-open_file_title": "Accounting File To Open",
 
     "AppOpeningScreen-mru_title": "Recently Opened:",
     "AppOpeningScreen-new_file": "Create a New Accounting Project...",
@@ -266,6 +267,10 @@
     "SequentialPages-next_btn": "Next",
     "SequentialPages-finish-btn": "Finish",
     "SequentialPages-back_btn": "Back",
+
+    "FileSelector-readdir_failed": ["Could not read the folder '", "'. ", ""],
+    "FileSelector-open": "Open",
+    "FileSelector-create": "Create",
 
     "cancel": "Cancel",
     "ok": "OK",

@@ -1,5 +1,5 @@
 import { AccountingFile, AccountingFileFactory } from './AccountingFile';
-import { allFilesExist, fileExists, dirExists, canCreateDir } from '../util/Files';
+import { asyncAllFilesExist, asyncFileExists, asyncDirExists, asyncCanCreateDir } from '../util/Files';
 import * as JGZ from '../util/JSONGzipFiles';
 import * as FA from '../util/FileActions';
 import { FileBackups } from '../util/FileBackups';
@@ -1238,7 +1238,7 @@ export class JSONGzipAccountingFileFactory extends AccountingFileFactory {
             path.join(pathName, LEDGER_FILE_NAME),
             path.join(pathName, JOURNAL_SUMMARY_FILE_NAME),
         ];
-        return allFilesExist(requiredFileNames);
+        return asyncAllFilesExist(requiredFileNames);
     }
 
 
@@ -1250,17 +1250,17 @@ export class JSONGzipAccountingFileFactory extends AccountingFileFactory {
      */
     async asyncCanCreateFile(pathName) {
         // We need the directory to be empty.
-        if (await fileExists(pathName)) {
+        if (await asyncFileExists(pathName)) {
             return userError('JSONGzipAccountingFile-not_dir', pathName);
         }
-        if (await dirExists(pathName)) {
+        if (await asyncDirExists(pathName)) {
             const itemsInDir = await fsPromises.readdir(pathName);
             if (itemsInDir || itemsInDir.length > 0) {
                 return userError('JSONGzipAccountingFile-dir_not_empty', pathName);
             }
         }
 
-        if (!await canCreateDir(pathName)) {
+        if (!await asyncCanCreateDir(pathName)) {
             return userError('JSONGzipAccountingFile-dir_name_invalid', pathName);
         }
 

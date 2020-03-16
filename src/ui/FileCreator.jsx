@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { SequentialPages } from '../util-ui/SequentialPages';
-import { getUniqueFileName } from '../util/Files';
+import { asyncGetUniqueFileName } from '../util/Files';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { InfoReporter } from '../util-ui/InfoReporter';
 import { asyncGetNewFileTemplates } from '../tools/Templates';
@@ -286,7 +286,7 @@ export class FileCreator extends React.Component {
             const newFileContents = this._newFileTemplates[0];
 
             this.setState({
-                projectName: await getUniqueFileName(this.state.baseDirName, 
+                projectName: await asyncGetUniqueFileName(this.state.baseDirName, 
                     defaultProjectName),
                 newFileContents: newFileContents,
             });
