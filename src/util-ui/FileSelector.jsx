@@ -1,20 +1,24 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { asyncDirExists } from '../util/Files';
+import { asyncDirExists, splitDirs } from '../util/Files';
+import folder from '../images/folder.png';
 
 const fsPromises = require('fs').promises;
 const path = require('path');
 
-
+/**
+ * A component for selecting files or folders.
+ */
 export class FileSelector extends React.Component {
     constructor(props) {
         super(props);
 
-        this.onOpen = this.onOpen.bind(this);
-        this.onClickDir = this.onClickDir.bind(this);
+        this.onOK = this.onOK.bind(this);
+        this.onSelectParentDir = this.onSelectParentDir.bind(this);
+        this.onSelectDir = this.onSelectDir.bind(this);
         this.onDoubleClickDir = this.onDoubleClickDir.bind(this);
-        this.onClickFile = this.onClickFile.bind(this);
+        this.onSelectFile = this.onSelectFile.bind(this);
         this.onDoubleClickFile = this.onDoubleClickFile.bind(this);
 
         this.state = {
@@ -67,6 +71,8 @@ export class FileSelector extends React.Component {
             });
         }
         catch (e) {
+            console.log('error! ' + e);
+
             this.setState({
                 errorMsg: userMsg('FileSelector-readdir_failed', currentDir, e),
             });
@@ -74,47 +80,146 @@ export class FileSelector extends React.Component {
     }
 
 
-    onOpen() {
+    onOK() {
+        this.props.onOK(this.state.activePathName);
     }
 
 
-    onClickDir(event, dirName) {
-
+    onSelectParentDir(dir) {
+        this.setState({
+            currentDir: dir,
+        });
+        process.nextTick(async () => await this.asyncUpdateCurrentDirList());
     }
 
-    onDoubleClickDir(event, dirName) {
 
+    onSelectDir(dirName) {
+        this.setState({
+            activePathName: dirName,
+        });
+
+        const { onDirSelect } = this.props;
+        if (onDirSelect) {
+            onDirSelect(dirName);
+        }
     }
 
-    onClickFile(event, fileName) {
 
+    onDoubleClickDir(event, dir) {
+        this.setState({
+            currentDir: dir,
+            activePathName: undefined,
+        });
+        process.nextTick(async () => await this.asyncUpdateCurrentDirList());
     }
+
+
+    onSelectFile(fileName) {
+        this.setState({
+            activePathName: fileName,
+        });
+
+        const { onFileSelect } = this.props;
+        if (onFileSelect) {
+            onFileSelect(fileName);
+        }
+    }
+
 
     onDoubleClickFile(event, fileName) {
 
     }
 
 
+    renderHeader() {
+        const { title } = this.props;
+        let titleComponent;
+        if (title) {
+            titleComponent = <h4 className="modal-title">
+                {title}
+            </h4>;
+        }
+
+        return <React.Fragment>
+            {titleComponent}
+            <button type="button" 
+                className="close" 
+                onClick={this.props.onCancel}
+                aria-label="Close"
+            >
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </React.Fragment>;
+    }
+
+
     renderBody() {
         const { currentDirPath, dirs, files } = this.state;
+
+        const currentDirParts = splitDirs(currentDirPath);
+        const currentDirComponents = [];
+        let builtDir = path.sep;
+        for (let i = 0; i < currentDirParts.length; ++i) {
+            const part = currentDirParts[i];
+            const myDir = path.join(builtDir, part);
+            let className = 'btn btn-outline-secondary btn-sm';
+            if ((i + 1) === currentDirParts.length) {
+                className += ' active';
+            }
+            builtDir = path.join(builtDir, part);
+            const component = <button type="button"
+                key={builtDir}
+                className={className}
+                onClick={(event) => this.onSelectParentDir(myDir)}
+            >{part}</button>;
+            currentDirComponents.push(component);
+        }
+
+
+        let { activePathName } = this.state;
+        if (!activePathName) {
+            if (files && files.length) {
+                activePathName = path.join(currentDirPath, files[0].name);
+            }
+            else if (dirs && dirs.length) {
+                activePathName = path.join(currentDirPath, dirs[0].name);
+            }
+        }
 
         const entityComponents = [];
         dirs.forEach((dir) => {
             const { name } = dir;
-            const component = <li key={name}
-                onClick={(event) => this.onClickDir(event, name)}
-                onDoubleClick={(event) => this.onDoubleClickDir(event, name)}
+            const pathName = path.join(currentDirPath, name);
+            let className = 'list-group-item list-group-item-action';
+            if (pathName === activePathName) {
+                className += ' active';
+            }
+            const component = <a href="#" key={name}
+                className={className}
+                onClick={() => this.onSelectDir(pathName)}
+                onDoubleClick={(event) => this.onDoubleClickDir(event, pathName)}
             >
-                {name}
-            </li>;
+                <div className="media">
+                    <img src={folder} className="mr-1"></img>
+                    <div className="media-body">
+                        {name}
+                    </div>
+                </div>
+            </a>;
             entityComponents.push(component);
         });
 
         files.forEach((file) => {
             const { name } = file;
+            const pathName = path.join(currentDirPath, name);
+            let className = 'list-group-item list-group-item-action';
+            if (pathName === activePathName) {
+                className += ' active';
+            }
             const component = <li key={name}
-                onClick={(event) => this.onClickFile(event, name)}
-                onDoubleClick={(event) => this.onDoubleClickFile(event, name)}
+                className={className}
+                onClick={() => this.onSelectFile(pathName)}
+                onDoubleClick={(event) => this.onDoubleClickFile(event, pathName)}
             >
                 {name}
             </li>;
@@ -122,67 +227,141 @@ export class FileSelector extends React.Component {
         });
 
 
-        return <div className="container-fluid">
-            <div className="row">{currentDirPath}</div>
-            <div className="text-left overflow-auto">
-                {entityComponents}
+        return <React.Fragment>
+            <div className="p-2 border-bottom">
+                {currentDirComponents}
             </div>
-        </div>;
+            <div className="modal-body">
+                <div className="container-fluid text-left">
+                    {entityComponents}
+                </div>
+            </div>
+        </React.Fragment>;
     }
+
 
     renderFilter() {
 
     }
 
     render() {
-        const { title } = this.props;
-
-        let titleComponent;
-        if (title) {
-            titleComponent = <h4 className="pageTitle pb-3 mb-4 border-bottom">
-                {title}
-            </h4>;
-        }
-
+        const header = this.renderHeader();
         const body = this.renderBody();
         const filter = this.renderFilter();
 
-        let { selectButtonText } = this.props;
-        selectButtonText = selectButtonText || userMsg('FileSelector-open');
-
-        let openBtnDisabled = false;
+        let { okButtonText, isOKDisabled,
+            onGetPreFileListComponent, onGetPostFileListComponent } = this.props;
+        okButtonText = okButtonText || userMsg('FileSelector-open');
 
         const btnClassName = 'btn btn-primary m-2';
-        return <div className="d-flex w-100 h-100 p-1 mx-auto flex-column">
-            {titleComponent}
-            {body}
-            <div className="mt-auto">
-                {filter}
-                <div className="row border-top m-2">
-                    <div className="col text-right mt-2">
-                        <button className={btnClassName}
-                            onClick={this.props.onCancel}
-                        >
-                            {userMsg('cancel')}
-                        </button>
-                        <button className={btnClassName}
-                            onClick={this.onOpen} 
-                            disabled={openBtnDisabled}>
-                            {selectButtonText}
-                        </button>
-                    </div>
+
+        let preFileListComponent = (onGetPreFileListComponent)
+            ? onGetPreFileListComponent() : undefined;
+        let postFileListComponent = (onGetPostFileListComponent)
+            ? onGetPostFileListComponent() : undefined;
+
+        return <div className="modal-dialog modal-dialog-scrollable modal-full-height" 
+            role="document">
+            <div className="modal-content">
+                <div className="modal-header">
+                    {header}
+                </div>
+                {preFileListComponent}
+                {body}
+                {postFileListComponent}
+                <div className="modal-footer">
+                    {filter}
+                    <button className={btnClassName} type="button"
+                        onClick={this.props.onCancel}
+                    >
+                        {userMsg('cancel')}
+                    </button>
+                    <button className={btnClassName} type="button"
+                        onClick={this.onOK} 
+                        disabled={isOKDisabled}>
+                        {okButtonText}
+                    </button>
                 </div>
             </div>
         </div>;
     }
 }
 
+/**
+ * @callback FileSelector~onOK
+ * @param {string}  pathName
+ */
+
+/**
+ * @callback FileSelector~onCancel
+ */
+
+/**
+ * @typedef {object} FileSelector~dirEnt
+ * This is a
+ *  {@link https://nodejs.org/dist/latest-v12.x/docs/api/fs.html#fs_class_fs_dirent}
+ */
+
+/**
+ * @callback FileSelector~onFilterDirEnt
+ * @param {FileSelector~dirEnt}  dirEnt
+ * @param {string}  pathName
+ * @returns {boolean}   <code>true</code> if the dirEnt should be included/displayed.
+ */
+
+/**
+ * @callback FileSelector~onDirSelect
+ * @param {string}  pathName
+ */
+
+/**
+ * @callback FileSelector~onFileSelect
+ * @param {string}  pathName
+ */
+
+/**
+ * @callback FileSelector~onGetPreFileListComponent
+ * @returns {object|undefined}  The React component to display before the 
+ * directory/file list.
+ */
+
+/**
+ * @callback FileSelector~onGetPostFileListComponent
+ * @returns {object|undefined}  The React component to display after the 
+ * directory/file list.
+ */
+
+/**
+ * @typedef {object} FileSelector~propTypes
+ * @property {string}   [title]   The title to appear at the top.
+ * @property {string}   [initialDir]    The initial folder to display.
+ * @property {FileSelector~onOK}    onOK    Called when the OK button is chosen.
+ * @property {FileSelector~onCancel}    onCancel    Called when the cancel or close
+ * button is chosen.
+ * @property {FileSelector~onFilterDirEnt}  [onFilterDirEnt]    If defined, called
+ * for each directory and file in the active directory to see if it should be
+ * included in the file list.
+ * @property {FileSelector~onDirSelect} [onDirSelect]   If defined, called when a
+ * directory is selected (becomes active)
+ * @property {FileSelector~onFileSelect}    [onFileSelect]  If defined, called when
+ * a file is selected (becomes active)
+ * @property {string}   [okButtonText]  Text for the OK button.
+ * @property {boolean}  [isOKDisabled]  If <code>true</code> the OK button is disabled.
+ * @property {FileSelector~onGetPreFileListComponent} [onGetPreFileListComponent]
+ * If defined, called to retrieve the component to display before the directory/file list.
+ * @property {FileSelector~onGetPostFileListComponent}  [onGetPostFileListComponent]
+ * If defined, called to retrieve the component to display after the directory/file list.
+ */
 FileSelector.propTypes = {
     title: PropTypes.string,
     initialDir: PropTypes.string,
-    onSelect: PropTypes.func.isRequired,
+    onOK: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,
     onFilterDirEnt: PropTypes.func,
-    onGetFilterComponent: PropTypes.func,
-    selectButtonText: PropTypes.string,
+    onDirSelect: PropTypes.func,
+    onFileSelect: PropTypes.func,
+    okButtonText: PropTypes.string,
+    isOKDisabled: PropTypes.bool,
+    onGetPreFileListComponent: PropTypes.func,
+    onGetPostFileListComponent: PropTypes.func,
 };

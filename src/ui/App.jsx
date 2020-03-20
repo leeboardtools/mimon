@@ -8,7 +8,7 @@ import { FileCreator } from './FileCreator';
 import * as FM from '../util/FrameManager';
 import { MainWindow } from './MainWindow';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
-import { asyncFileOrDirExists } from '../util/Files';
+import { asyncFileOrDirExists, asyncDirExists } from '../util/Files';
 import { FileSelector } from '../util-ui/FileSelector';
 
 
@@ -174,6 +174,7 @@ export default class App extends React.Component {
 
         this.onOpenFile = this.onOpenFile.bind(this);
         this.onFilterOpenFile = this.onFilterOpenFile.bind(this);
+        this.onOpenFileDirSelect = this.onOpenFileDirSelect.bind(this);
 
         this._accessor = new EngineAccessor();
         this._frameManager = new FM.FrameManager();
@@ -224,9 +225,16 @@ export default class App extends React.Component {
             }
         }
 
+        let currentDir = startupOptions.currentDir;
+        if (!currentDir || !asyncDirExists(currentDir)) {
+            currentDir = app.getPath('documents');
+        }
+
         this.setState({
             appState: 'openingScreen',
             mruPathNames: startupOptions.mruPathNames,
+            currentDir: currentDir,
+            fileFactoryIndex: 0,
         });
     }
 
@@ -282,9 +290,19 @@ export default class App extends React.Component {
             const pathName = this._accessor.getAccountingFilePathName();
             const mruPathNames = await this.addToMRU(pathName);
 
+            let currentDir = pathName;
+            if (!await asyncDirExists(currentDir)) {
+                const result = path.split(currentDir);
+                currentDir = result.dir;
+            }
+            if (currentDir !== this.state.currentDir) {
+                await asyncChangeStartupOptions({ currentDir: currentDir });
+            }
+
             this.setState({
                 mruPathNames: mruPathNames,
                 appState: 'mainWindow',
+                currentDir: currentDir,
             });    
         });
     }
@@ -317,9 +335,32 @@ export default class App extends React.Component {
         return true;
     }
 
-    onOpenFile(pathName) {
-
+    onOpenFileDirSelect(dir) {
+        process.nextTick(async () => {
+            const isPossibleFile = await this._accessor.asyncIsPossibleAccountingFile(
+                dir, this.state.fileFactoryIndex
+            );
+            this.setState({
+                isOpenFileEnabled: isPossibleFile,
+            });
+        });
     }
+
+    onOpenFile(pathName) {
+        process.nextTick(async () => {
+            try {
+                await this._accessor.asyncOpenAccountingFile(pathName, 
+                    this.state.fileFactoryIndex);
+                this.enterMainWindow();
+            }
+            catch (e) {
+                this.setState({
+                    errorMsg: userMsg('App-open_failed', pathName, e.toString()),
+                });
+            }
+        });
+    }
+
 
     onOpenClick() {
         this.setState({
@@ -356,7 +397,8 @@ export default class App extends React.Component {
 
     render() {
         let mainComponent;
-        const { appState, mruPathNames, errorMsg, initialDir } = this.state;
+        const { appState, mruPathNames, errorMsg, currentDir,
+            isOpenFileEnabled } = this.state;
         if (errorMsg) {
             return <ErrorReporter message={errorMsg} 
                 onClose={this.onCancel}
@@ -385,10 +427,13 @@ export default class App extends React.Component {
         case 'openFile' :
             return <FileSelector
                 title = {userMsg('App-open_file_title')}
-                initialDir = {initialDir}
-                onSelect = {this.onOpenFile}
+                initialDir = {currentDir}
+                onOK = {this.onOpenFile}
                 onCancel = {this.onCancel}
                 onFilterDirEnt = {this.onFilterOpenFile}
+                onDirSelect = {this.onOpenFileDirSelect}
+                okButtonText = {userMsg('FileSelector-open')}
+                isOKDisabled = {!isOpenFileEnabled}
             />;
         
         case 'mainWindow' :

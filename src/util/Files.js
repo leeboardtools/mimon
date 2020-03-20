@@ -198,3 +198,21 @@ export async function asyncCanCreateDir(dir) {
         }
     }
 }
+
+
+/**
+ * Splits a path name into an array containing the individual directories
+ * and file name.
+ * @param {string} pathName
+ * @returns {string[]}
+ */
+export function splitDirs(pathName) {
+    if (pathName) {
+        let parts = pathName.split(path.sep);
+        if (parts.length && !parts[0]) {
+            parts.splice(0, 1);
+        }
+        return parts;
+    }
+    return [];
+}

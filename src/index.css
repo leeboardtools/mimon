@@ -13,15 +13,11 @@ body {
 }
 
 
-.btn-new {
-  font-weight: bold;
-  color: green;
+/* Needed for util-ui/FileSelector.jsx */
+.modal-full-height {
+  height: calc(100% - 3.5em);
 }
-
-.btn-remove {
-  font-weight: bold;
-  color: red;
-}
+/* End util-ui/FileSelector.jsx */
 
 
 /* Needed for util-ui/TabbedPages.jsx */
