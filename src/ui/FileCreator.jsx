@@ -239,7 +239,7 @@ export class FileCreator extends React.Component {
 
         this.state = {
             fileFactoryIndex: 0,
-            baseDirName: path.join(os.homedir(), 'Mimon'),
+            baseDirName: props.initialDir || path.join(os.homedir(), 'Mimon'),
             projectName: undefined,
             activePageIndex: 0,
             newFileContents: { 
@@ -523,4 +523,5 @@ FileCreator.propTypes = {
     frameManager: PropTypes.object.isRequired,
     onFileCreated: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,
+    initialDir: PropTypes.string,
 };

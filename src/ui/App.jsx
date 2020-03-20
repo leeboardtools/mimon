@@ -290,11 +290,7 @@ export default class App extends React.Component {
             const pathName = this._accessor.getAccountingFilePathName();
             const mruPathNames = await this.addToMRU(pathName);
 
-            let currentDir = pathName;
-            if (!await asyncDirExists(currentDir)) {
-                const result = path.split(currentDir);
-                currentDir = result.dir;
-            }
+            let currentDir = path.parse(pathName).dir;
             if (currentDir !== this.state.currentDir) {
                 await asyncChangeStartupOptions({ currentDir: currentDir });
             }
@@ -422,6 +418,7 @@ export default class App extends React.Component {
                 frameManager = {this._frameManager}
                 onFileCreated = {this.onFileCreated}
                 onCancel = {this.onCancel}
+                initialDir = {currentDir}
             />;
         
         case 'openFile' :
