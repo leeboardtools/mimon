@@ -81,7 +81,8 @@ export class FileSelector extends React.Component {
 
 
     onOK() {
-        this.props.onOK(this.state.activePathName);
+        const { activePathName, currentDirPath } = this.state;
+        this.props.onOK(activePathName || currentDirPath);
     }
 
 
