@@ -10,6 +10,7 @@ import { MainWindow } from './MainWindow';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { asyncFileOrDirExists, asyncDirExists } from '../util/Files';
 import { FileSelector } from '../util-ui/FileSelector';
+import deepEqual from 'deep-equal';
 
 
 const electron = require('electron');
@@ -44,9 +45,14 @@ class AppOpenScreen extends React.Component {
         this.state = {
         };
 
+        this.updateMRUList();
+    }
+
+
+    updateMRUList() {
         process.nextTick(async () => {
             const validPathNames = [];
-            const { mruPathNames } = props;
+            const { mruPathNames } = this.props;
             for (let i = 0; i < mruPathNames.length; ++i) {
                 const pathName = mruPathNames[i];
                 if (await asyncFileOrDirExists(pathName)) {
@@ -59,6 +65,16 @@ class AppOpenScreen extends React.Component {
             });
         });
     }
+
+
+    componentDidUpdate(prevProps) {
+        const oldMRUPathNames = prevProps.mruPathNames || [];
+        const newMRUPathNames = this.props.mruPathNames || [];
+        if (!deepEqual(oldMRUPathNames, newMRUPathNames)) {
+            this.updateMRUList();
+        }
+    }
+
 
     render() {
         const { props } = this;
