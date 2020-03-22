@@ -1,0 +1,82 @@
+
+/* Needed for util-ui/FileSelector.jsx */
+.modal-full-height {
+    height: calc(100% - 3.5em);
+  }
+  /* End util-ui/FileSelector.jsx */
+  
+  
+  /* Needed for util-ui/TabbedPages.jsx */
+  .tabPage {
+    padding-top: 2rem;
+  }
+  /* End util-ui/TabbedPages.jsx */
+  
+  
+  /* Needed for util-ui/CellTextEditor.jsx */
+  .cellTextEditor-textInput {
+    margin: 0px;
+    padding: 0px 2px;
+    height: calc(1.5rem + .3rem + 2px);
+    border-radius: 0;
+  }
+  
+  .cellTextEditor-textDisplay {
+    border: none;
+    background-color: inherit;
+    border-radius: 0;
+  }
+  /* End util-ui/CellTextEditor.jsx */
+  
+  
+  /* Needed for util-ui/CellSelectEditor.jsx */
+  .cellSelectEditor-select {
+    margin: 0px;
+    padding: 0px 0px;
+    height: calc(1.5rem + .3rem + 2px);
+    border-radius: 0;
+  }
+  
+  .cellSelectEditor-display {
+    border: none;
+    background-color: inherit;
+    border-radius: 0;
+  }
+  /** End util-ui/CellSelectEditor.jsx */
+  
+  .w-10 {
+    width: 10%;
+  }
+  
+  .w-15 {
+    width: 15%;
+  }
+  
+  .w-20 {
+    width: 20%;
+  }
+  
+  .w-30 {
+    width: 30%;
+  }
+  
+  .w-40 {
+    width: 40%;
+  }
+  
+  .w-60 {
+    width: 60%;
+  }
+  
+  .w-70 {
+    width: 70%;
+  }
+  
+  .w-80 {
+    width: 80%;
+  }
+  
+  .w-90 {
+    width: 90%;
+  }
+  
