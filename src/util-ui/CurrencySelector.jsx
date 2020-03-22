@@ -2,15 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Currencies, USD, EUR } from '../util/Currency';
 
-CurrencySelector.propTypes = {
-    id: PropTypes.string,
-    value: PropTypes.string.isRequired,
-    onChange: PropTypes.func.isRequired,
-    ariaLabel: PropTypes.string,
-    classExtras: PropTypes.string,
-    disabled: PropTypes.bool,
-};
-
+/**
+ * A component for choosing a {@link Currency} from a drop-down list of all the
+ * currencies in {@link Currencies}.
+ * @class
+ */
 export function CurrencySelector(props) {
     const { id, value, onChange, ariaLabel, classExtras, disabled } = props;
 
@@ -50,3 +46,26 @@ export function CurrencySelector(props) {
         </select>
     </div>;
 }
+
+/**
+ * @callback CurrencySelector~onChange
+ * @param {string}  value   The chosen value.
+ */
+
+/**
+ * @typedef {object} CurrencySelector~propTypes
+ * @property {string}   [id]
+ * @property {string}   value   The currently selected currency.
+ * @property {CurrencySelector~onChange} onChange
+ * @property {string}   [ariaLabel]
+ * @property {string}   [classExtras]   Extra classes to add to the component.
+ * @property {boolean}  [disabled]
+ */
+CurrencySelector.propTypes = {
+    id: PropTypes.string,
+    value: PropTypes.string.isRequired,
+    onChange: PropTypes.func.isRequired,
+    ariaLabel: PropTypes.string,
+    classExtras: PropTypes.string,
+    disabled: PropTypes.bool,
+};

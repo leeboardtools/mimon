@@ -3,8 +3,11 @@ import PropTypes from 'prop-types';
 
 /**
  * React component for editing text in a table cell. Works with 
- * {@link RowEditCollapsibleTable}
- * @param {*} props 
+ * {@link RowEditCollapsibleTable}, return from the
+ * {@link RowEditTable~onRenderEditCell} callback. {@link CellTextDisplay} 
+ * would then normally be returned from the
+ * {@link RowEditTable~onRenderDisplayCell} callback.
+ * @class
  */
 export const CellTextEditor = React.forwardRef(
     function CellTextEditorImpl(props, ref) {
@@ -37,10 +40,6 @@ export const CellTextEditor = React.forwardRef(
     }
 );
 
-/**
- * @callback CellTextEditor~onChange
- * @param {Event}   event
- */
 
 /**
  * @typedef {object} CellTextEditor~propTypes
@@ -50,7 +49,13 @@ export const CellTextEditor = React.forwardRef(
  * classes to add to the &lt;input&gt; entity.
  * @property {string}   [errorMsg]  If specified an error message to be displayed
  * below the input box.
- * @property {CellTextEditor~onChange}  [onChange]
+ * @property {function} [onChange]  onChange event handler 
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/change_event}.
+ * @property {function} [onFocus]   onFocus event handler
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onfocus}.
+ * @property {function} [onBlur]    onBlur event handler
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onblur}.
+ * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
  * @property {boolean} [disabled]
  */
 CellTextEditor.propTypes = {
@@ -63,6 +68,7 @@ CellTextEditor.propTypes = {
     onBlur: PropTypes.func,
     disabled: PropTypes.bool,
 };
+
 
 /**
  * React component that's a display representation of {@link CellTextEditor},

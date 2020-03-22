@@ -44,6 +44,20 @@
 }
 /** End util-ui/CellSelectEditor.jsx */
 
+
+/** Needed for util-ui/CurrencyDisplay.jsx */
+.currencyDisplay {
+    text-align: right;
+}
+/** End util-ui/CurrencyyDisplay.jsx */
+
+
+/** Needed for util-ui/QuantityDisplay.jsx */
+.quantityDisplay {
+    text-align: right;
+}
+/** End util-ui/QuantityDisplay.jsx */
+
 .w-10 {
     width: 10%;
 }
