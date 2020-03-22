@@ -428,9 +428,7 @@ export class FileCreator extends React.Component {
 
         }
 
-        return <div className="container-fluid mt-3">
-            {component}
-        </div>;
+        return component;
     }
 
 

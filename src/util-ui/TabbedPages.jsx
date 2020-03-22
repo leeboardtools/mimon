@@ -85,7 +85,7 @@ export class TabbedPages extends React.Component {
             ));
         });
 
-        return <div className="container-fluid pl-0 pr-0">{pages}</div>;
+        return <div className="container-fluid pl-0 pr-0 mt-3">{pages}</div>;
     }
 
 
