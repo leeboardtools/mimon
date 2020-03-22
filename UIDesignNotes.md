@@ -317,25 +317,19 @@ Common menus:
 
 
 ## TODO
-- Move main menu out of App.jsx
-
-- Add a FrameHandler.
-    - Handles the main menus.
-    - Handles the system dialogs.
-    - At the App level, but would be passed around to the components.
-
-- Redo SequentialPages to have Back, Next, Finish, Cancel buttons along the bottom.
-Should it be renamed Wizard? No, keep SequentialPages.
-
 - Rename AccountingSystem to AccountingProject???
 
-
-- NewFileConfigurator.jsx:
-    - NewFileAccountsEditor - editor for opening balance
-
-    - Add base currency selection.
+- Make the buttons at the top of NewFileAccountsEditor look better.
 
 - Add heading to NewFileConfigurator.
     - Need to adjust TabbedPages, it currently forces the tabs to the top of the page,
     not the top of its parent.
-    
+
+
+- MainWindow
+    - AccountsList
+        - Generic, this may form the basis for reports that display summarized account info.
+        - Have a master accounts list in MainWindow
+        - Support customizing and saving customized versions.
+        - CollapsibleRowTable.
+        

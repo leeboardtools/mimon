@@ -5,6 +5,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import * as FM from '../util/FrameManager';
 import { userMsg } from '../util/UserMessages';
+import { AccountsList } from './AccountsList';
+import { TabbedPages } from '../util-ui/TabbedPages';
 
 
 function getMainMenuTemplate(mainSetup) {
@@ -179,13 +181,60 @@ export class MainWindow extends React.Component {
     constructor(props) {
         super(props);
 
+        this.onCloseTab = this.onCloseTab.bind(this);
+        this.onActivateTab = this.onActivateTab.bind(this);
+        this.onRenderPage = this.onRenderPage.bind(this);
+        
+        this.onOpenAccountRegister = this.onOpenAccountRegister.bind(this);
+
+        this.state = {
+            tabEntries: [
+                {
+                    tabId: 'masterAccountList',
+                    tabType: 'AccountsList',
+                    title: userMsg('MainWindow-masterAccountList_title'),
+                }
+            ],
+        };
     }
 
+
+    onCloseTab(tabEntry) {
+
+    }
+
+
+    onActivateTab(tabEntry) {
+
+    }
+
+
+    onOpenAccountRegister(accountDataItem) {
+
+    }
+
+
+    onRenderPage(tabEntry, isActive) {
+        const { accessor } = this.props;
+        switch (tabEntry.tabType) {
+        case 'AccountsList':
+            return <AccountsList
+                accessor={accessor}
+                onChooseAccount={this.onOpenAccountRegister}
+            />;
+        }
+    }
+
+
     render() {
-        const pathName = this.props.accessor.getAccountingFilePathName();
-        return <div>
-            I am the main window, editing {pathName}...
-        </div>;
+        const { state } = this;
+        return <TabbedPages
+            tabEntries={state.tabEntries}
+            activeTabId={state.activeTabId}
+            onRenderPage={this.onRenderPage}
+            onCloseTab={this.onCloseTab}
+            onActiveTab={this.onActiveTab}
+        />;
     }
 }
 

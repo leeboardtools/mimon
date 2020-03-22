@@ -265,6 +265,15 @@
 
 
 
+    "MainWindow-masterAccountList_title": "Accounts",
+
+    
+    "AccountsList-name": "Name",
+    "AccountsList-type": "Type",
+    "AccountsList-balance": "Balance",
+    "AccountsList-shares": "Shares",
+
+
     "SequentialPages-next_btn": "Next",
     "SequentialPages-finish-btn": "Finish",
     "SequentialPages-back_btn": "Back",
