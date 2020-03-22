@@ -2,6 +2,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 
+/**
+ * Component normally used with {@link RowEditTable} for a cell that offers a drop-down
+ * list to choose from in edit mode, return from the {@link RowEditTable~onRenderEditCell}
+ * callback. {@link CellSelectDisplay} is normally returned from the
+ * {@link RowEditTable~onRenderDisplayCell} callback.
+ * @class
+ */
 export const CellSelectEditor = React.forwardRef(
     function myCellSelectEditor(props, ref) {
         const { selectedValue, options, errorMsg, ariaLabel, classExtras, 
@@ -45,6 +52,22 @@ export const CellSelectEditor = React.forwardRef(
     }
 );
 
+/**
+ * @typedef {object} CellSelectEditor~propTypes
+ * @property {string}   [selectedValue]
+ * @property {string[]|Array[]} options The array of options to be displayed.
+ * @property {string}   [errorMsg]  If defined an error message to be displayed
+ * beneath the selector.
+ * @property {string}   [ariaLabel]
+ * @property {string}   [classExtras]   Extra classes to add to the component.
+ * @property {function} [onChange]  onChange event handler 
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/change_event}.
+ * @property {function} [onFocus]   onFocus event handler
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onfocus}.
+ * @property {function} [onBlur]    onBlur event handler
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onblur}.
+ * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
+ */
 CellSelectEditor.propTypes = {
     selectedValue: PropTypes.string,
     options: PropTypes.oneOfType([
@@ -62,6 +85,12 @@ CellSelectEditor.propTypes = {
 
 
 
+/**
+ * Component normally used with {@link RowEditTable} for a cell that offers a drop-down
+ * list to choose from in display mode, return from the 
+ * {@link RowEditTable~onRenderDisplayCell} callback.
+ * @class
+ */
 export function CellSelectDisplay(props) {
     const { selectedValue, ariaLabel, classExtras, } = props;
 
@@ -81,6 +110,12 @@ export function CellSelectDisplay(props) {
     </div>;
 }
 
+/**
+ * @typedef {object} CellSelectDisplay~propTypes
+ * @property {string}   [selectedValue]
+ * @property {string}   [ariaLabel]
+ * @property {string}   [classExtras]   Extra classes to add to the component.
+ */
 CellSelectDisplay.propTypes = {
     selectedValue: PropTypes.string,
     ariaLabel: PropTypes.string,
