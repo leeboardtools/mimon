@@ -223,7 +223,6 @@ export class AccountsList extends React.Component {
         
         if (pricedItemDataItem 
          && ((pricedItemDataItem.type === PI.PricedItemType.SECURITY.name)
-          || (pricedItemDataItem.type === PI.PricedItemType.CURRENCY.name)
           || (pricedItemDataItem.type === PI.PricedItemType.MUTUAL_FUND.name))) {
             const accountState = accessor.getCurrentAccountStateDataItem(
                 accountDataItem.id);
