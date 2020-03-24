@@ -62,7 +62,7 @@ export function QuestionPrompter(props) {
             key={button.id}
             onClick={() => onButton(button.id)}
         >
-            {button.label}
+            {button.label || userMsg(button.labelId)}
         </button>;
         buttonsComponents.push(component);
     }
@@ -108,7 +108,8 @@ QuestionPrompter.propTypes = {
 /**
  * @typedef {QuestionPrompter~ButtonDef}
  * @property {string}   id
- * @property {string}   label
+ * @property {string}   [label] If specified, the label.
+ * @property {string}   [labelId]   If sepcified, the id to pass to {@link userMsg}
  */
 
 /**
@@ -122,23 +123,23 @@ QuestionPrompter.propTypes = {
  */
 export const StandardButton = {
     YES_NO_CANCEL: [
-        { id: 'yes', label: userMsg('yes'), },
-        { id: 'no', label: userMsg('no'), },
-        { id: 'cancel', label: userMsg('cancel'), },
+        { id: 'yes', labelId: 'yes', },
+        { id: 'no', labelId: 'no', },
+        { id: 'cancel', labelId: 'cancel', },
     ],
     YES_NO: [
-        { id: 'yes', label: userMsg('yes'), },
-        { id: 'no', label: userMsg('no'), },
+        { id: 'yes', labelId: 'yes', },
+        { id: 'no', labelId: 'no', },
     ],
     YES_CANCEL: [
-        { id: 'yes', label: userMsg('yes'), },
-        { id: 'cancel', label: userMsg('cancel'), },
+        { id: 'yes', labelId: 'yes', },
+        { id: 'cancel', labelId: 'cancel', },
     ],
     OK_CANCEL: [
-        { id: 'ok', label: userMsg('ok'), },
-        { id: 'cancel', label: userMsg('cancel'), },
+        { id: 'ok', labelId: 'ok', },
+        { id: 'cancel', labelId: 'cancel', },
     ],
     OK: [
-        { id: 'ok', label: userMsg('ok'), },
+        { id: 'ok', labelId: 'ok', },
     ]
 };
