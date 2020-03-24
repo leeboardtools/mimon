@@ -25,7 +25,7 @@ export function CurrencyDisplay(props) {
         }
         return <div 
             className={className}
-            arialLabel={ariaLabel}
+            aria-label={ariaLabel}
         >
             {text}
         </div>;
@@ -42,7 +42,7 @@ export function CurrencyDisplay(props) {
  */
 CurrencyDisplay.propTypes = {
     quantityBaseValue: PropTypes.number,
-    currency: PropTypes.oneOf([
+    currency: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object]),
     displayCurrencySymbol: PropTypes.bool,

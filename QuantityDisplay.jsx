@@ -21,7 +21,7 @@ export function QuantityDisplay(props) {
         let text = quantityDefinition.baseValueToValueText(quantityBaseValue);
         return <div 
             className={className}
-            arialLabel={ariaLabel}
+            aria-label={ariaLabel}
         >
             {text}
         </div>;
@@ -37,7 +37,7 @@ export function QuantityDisplay(props) {
  */
 QuantityDisplay.propTypes = {
     quantityBaseValue: PropTypes.number,
-    quantityDefinition: PropTypes.oneOf([
+    quantityDefinition: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object,
     ]),
