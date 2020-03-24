@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import * as Engine from '../engine/Engine';
 import { getUserSetting, setUserSetting } from '../util/UserSettings';
-import { userMsg } from '../util/UserMessages';
+import { userMsg, isUserMsg } from '../util/UserMessages';
 import { EngineAccessor } from '../tools/EngineAccess';
 import { FileCreator } from './FileCreator';
 import * as FM from '../util/FrameManager';
@@ -11,6 +11,7 @@ import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { asyncFileOrDirExists, asyncDirExists } from '../util/Files';
 import { FileSelector } from '../util-ui/FileSelector';
 import deepEqual from 'deep-equal';
+import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 
 
 const electron = require('electron');
@@ -183,7 +184,6 @@ export default class App extends React.Component {
         this.onOpenClick = this.onOpenClick.bind(this);
         this.onRecentClick = this.onRecentClick.bind(this);
         this.onRemoveRecentClick = this.onRemoveRecentClick.bind(this);
-        this.onExitClick = this.onExitClick.bind(this);
 
         this.onFileCreated = this.onFileCreated.bind(this);
         this.onCancel = this.onCancel.bind(this);
@@ -191,6 +191,13 @@ export default class App extends React.Component {
         this.onOpenFile = this.onOpenFile.bind(this);
         this.onFilterOpenFile = this.onFilterOpenFile.bind(this);
         this.onOpenFileDirSelect = this.onOpenFileDirSelect.bind(this);
+
+        this.onMainWindowDidMount = this.onMainWindowDidMount.bind(this);
+        this.onMainWindowWillUnmount = this.onMainWindowWillUnmount.bind(this);
+
+        this.onRevertFile = this.onRevertFile.bind(this);
+        this.onCloseFile = this.onCloseFile.bind(this);
+        this.onExit = this.onExit.bind(this);
 
         this._accessor = new EngineAccessor();
         this._frameManager = new FM.FrameManager();
@@ -300,6 +307,13 @@ export default class App extends React.Component {
         return mruPathNames;
     }
 
+    setModalRenderer(renderer) {
+        this.setState({
+            modalRenderer: renderer,
+        });
+    }
+    
+
 
     enterMainWindow() {
         process.nextTick(async () => {
@@ -315,9 +329,153 @@ export default class App extends React.Component {
                 mruPathNames: mruPathNames,
                 appState: 'mainWindow',
                 currentDir: currentDir,
-            });    
+            });
         });
     }
+
+
+    exitMainWindow() {
+        process.nextTick(async () => {
+            const pathName = this._accessor.getAccountingFilePathName();
+            try {
+                if (pathName) {
+                    await this._accessor.asyncCloseAccountingFile();
+                }
+                this.onCancel();
+            }
+            catch (e) {
+                this.setState({
+                    errorMsg: userMsg('App-close_failed', pathName, e.toString()),
+                });
+            }
+        });
+    }
+
+
+    onMainWindowDidMount() {
+        const menuManager = this._frameManager.getMenuManager();
+        menuManager.on('MenuItem-closeFile', this.onCloseFile);
+        menuManager.on('MenuItem-revertFile', this.onRevertFile);
+        menuManager.on('MenuItem-exit', this.onExit);
+    }
+
+    onMainWindowWillUnmount() {
+        const menuManager = this._frameManager.getMenuManager();
+        menuManager.off('MenuItem-closeFile', this.onCloseFile);
+        menuManager.off('MenuItem-revertFile', this.onRevertFile);
+        menuManager.off('MenuItem-exit', this.onExit);
+    }
+
+
+    onCloseFile(postClose, noButtonLabel) {
+        postClose = postClose || this.exitMainWindow;
+        noButtonLabel = noButtonLabel || userMsg('App-save_ignore_button');
+
+        process.nextTick(async () => {
+            let retry = true;
+            while (retry) {
+                retry = false;
+                try {
+                    if (this._accessor.isAccountingFileModified()) {
+                        await this._accessor.asyncWriteAccountingFile();
+                    }
+                    postClose();
+                }
+                catch (e) {
+                    const name = path.parse(
+                        this._accessor.getAccountingFilePathName()).base;
+                    const msg = userMsg('App-save_failed_msg', name, e.toString());
+                    const buttons = [
+                        { id: 'yes', label: userMsg('App-save_retry_button'), },
+                        { id: 'no', label: noButtonLabel, },
+                        { id: 'cancel', label: userMsg('cancel'), },
+                    ];
+                    this.setModalRenderer(() => {
+                        return <QuestionPrompter
+                            title={userMsg('App-save_failed_title')}
+                            message={msg}
+                            buttons={buttons}
+                            onButton={(id) => {
+                                switch (id) {
+                                case 'yes' :
+                                    retry = true;
+                                    break;
+
+                                case 'no' :
+                                    this.setModalRenderer();
+                                    postClose();
+                                    break;
+
+                                case 'cancel' :
+                                    this.setModalRenderer();
+                                    break;
+                                }
+                            }}
+                        />;
+                    });
+                }
+            }
+        });
+    }
+
+
+    onExit() {
+        this.onCloseFile(() => { app.exit(); }, userMsg('App-save_exit_button'));
+    }
+
+
+    revertFile() {
+        process.nextTick(async () => {
+            const pathName = this._accessor.getAccountingFilePathName();
+            const fileFactoryIndex = this._accessor.getAccountingFileFactoryIndex();
+            try {
+                await this._accessor.asyncCloseAccountingFile();
+            }
+            catch (e) {
+                this.setState({
+                    errorMsg: userMsg('App-close_failed', pathName, e.toString()),
+                });
+                return;
+            }
+
+            try {
+                await this._accessor.asyncOpenAccountingFile(pathName, fileFactoryIndex);
+                this.enterMainWindow();
+            }
+            catch (e) {
+                this.setState({
+                    errorMsg: userMsg('App-open_failed', pathName, e.toString()),
+                });
+            }
+        });
+    }
+
+
+    onRevertFile() {
+        if (this._accessor.isAccountingFileModified()) {
+            this.setModalRenderer(() => {
+                const name = path.parse(
+                    this._accessor.getAccountingFilePathName()).base;
+                return <QuestionPrompter
+                    title={userMsg('App-confirm_revert_title', name)}
+                    message={userMsg('App-confirm_revert_msg', name)}
+                    buttons={StandardButton.YES_CANCEL}
+                    onButton={(id) => {
+                        switch (id) {
+                        case 'yes' :
+                            this.revertFile();
+                            break;
+
+                        case 'cancel' :
+                            this.setModalRenderer();
+                            break;
+                        }
+                    }}
+                />;
+            });
+        }
+    }
+
 
     onFileCreated() {
         this.enterMainWindow();
@@ -402,19 +560,19 @@ export default class App extends React.Component {
         });
     }
 
-    onExitClick() {
-        app.quit();
-    }
-
 
     render() {
         let mainComponent;
         const { appState, mruPathNames, errorMsg, currentDir,
-            isOpenFileEnabled } = this.state;
+            isOpenFileEnabled, modalRenderer } = this.state;
         if (errorMsg) {
             return <ErrorReporter message={errorMsg} 
                 onClose={this.onCancel}
             />;
+        }
+
+        if (modalRenderer) {
+            return modalRenderer();
         }
 
         switch (appState) {
@@ -425,7 +583,7 @@ export default class App extends React.Component {
                 onOpenClick = {this.onOpenClick}
                 onRecentClick = {this.onRecentClick}
                 onRemoveRecentClick = {this.onRemoveRecentClick}
-                onExitClick = {this.onExitClick}
+                onExitClick = {this.onExit}
             />;
         
         case 'newFile': 
@@ -453,6 +611,10 @@ export default class App extends React.Component {
             return <MainWindow
                 accessor = {this._accessor}
                 frameManager = { this._frameManager}
+                mainSetup = {this.state.mainSetup}
+                onClose = {this.onCancel}
+                onDidMount={this.onMainWindowDidMount}
+                onWillUnmount={this.onMainWindowWillUnmount}
             />;
         
         default :

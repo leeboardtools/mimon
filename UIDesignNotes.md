@@ -332,4 +332,9 @@ Common menus:
         - Have a master accounts list in MainWindow
         - Support customizing and saving customized versions.
         - CollapsibleRowTable.
-        
+    
+    - Support for new/modify/delete account, priced items
+
+- Test Revert
+- Test Save
+- Add support for multiple userMsgs files, separate out engine, util-ui portions.

@@ -209,6 +209,10 @@
     "MainMenu-window": "Window",
     "MainMenu-debug": "Debug",
 
+    "MenuItem-revertFile": "Revert Accounting File Changes",
+    "MenuItem-closeFile": "Close Accounting File",
+    "MenuItem-exit": "Exit",
+
 
     "NewFileSetup-setBaseCurrency_failed": ["Could not set the default currency to '", "'. ", ""],
     "NewFileSetup-invalid_currency": ["Could not set up the priced item '", "'. '", "' is not a valid currency."],
@@ -221,7 +225,16 @@
 
     "App-mru_open_failed": ["Could not open '", "'. ", ""],
     "App-open_file_title": "Accounting File To Open",
-    "App-open_failed": ["Could not open '", "' ", ""],
+    "App-open_failed": ["Could not open '", "'. ", ""],
+    "App-save_failed_title": "Save Failed",
+    "App-save_failed_msg": ["Could not save '", "'. ", "\nDo you want to try again?"],
+    "App-save_retry_button": "Retry Save",
+    "App-save_ignore_button": "Lose Changes",
+    "App-save_exit_button": "Lose Changes and Exit",
+    "App-close_failed": ["An error occurred closing '", "'. ", ""],
+    "App-confirm_revert_title": "Confirm Revert",
+    "App-confirm_revert_msg": ["Are you sure you want to revert all changes made to '", "'?", "\nThe changes will be permanently lost."],
+
 
     "AppOpeningScreen-mru_title": "Recently Opened:",
     "AppOpeningScreen-new_file": "Create a New Accounting Project...",
@@ -284,6 +297,8 @@
 
     "cancel": "Cancel",
     "ok": "OK",
+    "yes": "Yes",
+    "no": "No",
 
     "": ""
 }

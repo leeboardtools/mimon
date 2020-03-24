@@ -161,17 +161,29 @@ export class AccountsList extends React.Component {
 
 
     onRowClick(rowEntry) {
-
+        const { onSelectAccount } = this.props;
+        if (onSelectAccount) {
+            const { accountDataItem } = rowEntry;
+            onSelectAccount(accountDataItem ? accountDataItem.id : undefined);
+        }
     }
 
 
     onRowDoubleClick(rowEntry) {
-
+        const { onChooseAccount } = this.props;
+        const { accountDataItem } = rowEntry;
+        if (onChooseAccount && accountDataItem) {
+            onChooseAccount(accountDataItem.id);
+        }
     }
 
 
     onContextMenu(rowEntry) {
-
+        const { onContextMenu } = this.props;
+        if (onContextMenu) {
+            const { accountDataItem } = rowEntry;
+            onContextMenu(accountDataItem ? accountDataItem.id : undefined);
+        }
     }
 
 
@@ -278,5 +290,7 @@ export class AccountsList extends React.Component {
 
 AccountsList.propTypes = {
     accessor: PropTypes.object.isRequired,
+    onSelectAccount: PropTypes.func,
     onChooseAccount: PropTypes.func,
+    onContextMenu: PropTypes.func,
 };
