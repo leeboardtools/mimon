@@ -11,19 +11,19 @@ import PropTypes from 'prop-types';
  */
 export const CellSelectEditor = React.forwardRef(
     function myCellSelectEditor(props, ref) {
-        const { selectedValue, options, errorMsg, ariaLabel, classExtras, 
+        const { selectedValue, items, errorMsg, ariaLabel, classExtras, 
             onChange, onFocus, onBlur, disabled } = props;
 
         const divClassName = 'input-group mb-0 ';
         let className = 'form-control cellSelectEditor-select ' + classExtras;
 
         let optionComponents;
-        if (options.length && (typeof options[0] === 'string')) {
-            optionComponents = options.map((option) =>
+        if (items.length && (typeof items[0] === 'string')) {
+            optionComponents = items.map((option) =>
                 <option key={option}>{option}</option>);
         }
         else {
-            optionComponents = options.map(([key, option]) =>
+            optionComponents = items.map(([key, option]) =>
                 <option key={key} value={key}>{option}</option>);
         }
 
@@ -55,7 +55,7 @@ export const CellSelectEditor = React.forwardRef(
 /**
  * @typedef {object} CellSelectEditor~propTypes
  * @property {string}   [selectedValue]
- * @property {string[]|Array[]} options The array of options to be displayed.
+ * @property {string[]|Array[]} items The array of items to be displayed.
  * @property {string}   [errorMsg]  If defined an error message to be displayed
  * beneath the selector.
  * @property {string}   [ariaLabel]
@@ -70,7 +70,7 @@ export const CellSelectEditor = React.forwardRef(
  */
 CellSelectEditor.propTypes = {
     selectedValue: PropTypes.string,
-    options: PropTypes.oneOfType([
+    items: PropTypes.oneOfType([
         PropTypes.arrayOf(PropTypes.string),
         PropTypes.arrayOf(PropTypes.array),
     ]).isRequired,
