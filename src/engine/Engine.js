@@ -1,9 +1,11 @@
-import { loadLocaleMsgsFile, setMsgs } from '../util/UserMessages';
+import { loadLocaleMsgsFile } from '../util/UserMessages';
 import { setUserSettingsPathName } from '../util/UserSettings';
 import { loadAccountsUserMessages } from './Accounts';
 import { loadPricedItemUserMessages } from './PricedItems';
 import { loadTransactionsUserMessages } from './Transactions';
 import defUserMessages from '../locales/en-userMessages.json';
+import defUserMessagesUtil from '../locales/en-userMessages-util.json';
+import defUserMessagesEngine from '../locales/en-userMessages-engine.json';
 
 const path = require('path');
 
@@ -27,12 +29,19 @@ export async function initializeEngine(settingsPathName, appPathName) {
 
     locale = (noElectron) ? undefined : require('electron').remote.app.getLocale();
     appPathName = appPathName || `${__dirname}/..`;
-    const userMsgsPathName 
-        = path.normalize(appPathName + '/locales/en-userMessages.json');
-    let loadedUserMsgsPathName = await loadLocaleMsgsFile(locale, userMsgsPathName);
-    if (!loadedUserMsgsPathName) {
-        setMsgs(defUserMessages);
-    }
+    const basePathName = path.normalize(appPathName + '/locales');
+    const userMsgsPathNames = [
+        [ path.join(basePathName, 'en-userMessages-util.json'),
+            defUserMessagesUtil
+        ],
+        [ path.join(basePathName, 'en-userMessages-engine.json'),
+            defUserMessagesEngine,
+        ],
+        [ path.join(basePathName, 'en-userMessages.json'),
+            defUserMessages
+        ],
+    ];
+    await loadLocaleMsgsFile(locale, userMsgsPathNames);
 
     if (settingsPathName) {
         await setUserSettingsPathName(settingsPathName);

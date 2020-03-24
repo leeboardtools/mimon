@@ -1,0 +1,21 @@
+{
+    "cancel": "Cancel",
+    "ok": "OK",
+    "yes": "Yes",
+    "no": "No",
+
+    "FileSelector-readdir_failed": ["Could not read the folder '", "'. ", ""],
+    "FileSelector-open": "Open",
+    "FileSelector-create": "Create",
+
+    "SequentialPages-next_btn": "Next",
+    "SequentialPages-finish-btn": "Finish",
+    "SequentialPages-back_btn": "Back",
+
+    "UndoManager-id_invalid": ["Cannot undo. The undo id '", "' was not found."],
+    "UndoManager-applier_not_registered": ["Bug: The undo applier '", "' has not been registered."],
+    "UndoManager-undo_id_invalid": ["The undo data for undo id '", "' is not available."],
+    "UndoManager-applier_not_found": ["The undo applier '", "' is not available."],
+
+    "": ""
+}

@@ -27,45 +27,72 @@ async function tryLocalePathName(prefix, parts) {
 /**
  * Loads the user messages from a locale specific JSON file.
  * @param {string} locale The locale.
- * @param {string} pathName The default path name, if it contains a '-' the portion 
- * of the name before the '-' is presumed to be a locale and is stripped off when 
- * trying to find a locale specific file.
- * @returns {string}    The path name that was actually loaded.
+ * @param {string|string[]|Array} pathName The default path name, 
+ * if it contains a '-' the portion of the name before the '-' is presumed 
+ * to be a locale and is stripped off when trying to find a locale specific file.
+ * This may also be an array of path names to load from different files,.
+ * This may also be an array of two element sub-arrays, where the first
+ * element of each sub-array is a path name, and the second element
+ * an optional object to be passed to {@link setMsgs} if the path name
+ * could not be loaded.
  */
-export async function loadLocaleMsgsFile(locale, pathName) {
+export async function loadLocaleMsgsFile(locale, pathNames) {
     locale = locale || 'en';
     
-    const parts = path.parse(pathName);
+    setMsgs({});
 
-    let result;
-    // Try locale-baseName
-    result = await tryLocalePathName(locale, parts);
-
-    // Try partial locale-baseName
-    if (!result) {
-        const index = locale.indexOf('-');
-        if (index >= 0) {
-            result = await tryLocalePathName(locale.slice(0, index), parts);
-        }
+    if (!Array.isArray(pathNames)) {
+        pathNames = [pathNames];
     }
 
-    // Try pathName
-    if (!result) {
-        result = await tryLocalePathName(undefined, parts);
-    }
+    for (let i = 0; i < pathNames.length; ++i) {
+        const entry = pathNames[i];
+        let pathName;
+        let defMessages;
+        if (typeof entry === 'string') {
+            pathName = entry;
+        }
+        else {
+            pathName = entry[0];
+            defMessages = entry[1];
+        }
 
-    if (result && result.fileHandle) {
-        try {
-            const text = await result.fileHandle.readFile({ encoding: 'utf8' });
-            const json = JSON.parse(text);
-            setMsgs(json);
-            return result.pathName;
+        const parts = path.parse(pathName);
+
+        let result;
+        // Try locale-baseName
+        result = await tryLocalePathName(locale, parts);
+
+        // Try partial locale-baseName
+        if (!result) {
+            const index = locale.indexOf('-');
+            if (index >= 0) {
+                result = await tryLocalePathName(locale.slice(0, index), parts);
+            }
         }
-        catch (e) {
-            // Ignore.
+
+        // Try pathName
+        if (!result) {
+            result = await tryLocalePathName(undefined, parts);
         }
-        finally {
-            await result.fileHandle.close();
+
+        if (result && result.fileHandle) {
+            try {
+                const text = await result.fileHandle.readFile({ encoding: 'utf8' });
+                const json = JSON.parse(text);
+                setMsgs(json, true);
+                continue;
+            }
+            catch (e) {
+                // Ignore.
+            }
+            finally {
+                await result.fileHandle.close();
+            }
+        }
+
+        if (defMessages) {
+            setMsgs(defMessages, true);
         }
     }
 }
@@ -75,11 +102,15 @@ export async function loadLocaleMsgsFile(locale, pathName) {
  * Installs a messages object. The properties of the object are the keys, the values 
  * are the strings.
  * @param {object} msgsToSet The messages object.
+ * @param {boolean} [append=false]
  */
-export function setMsgs(msgsToSet) {
-    const prevMsgs = msgs;
-    msgs = msgsToSet;
-    return prevMsgs;
+export function setMsgs(msgsToSet, append) {
+    if (append) {
+        msgs = Object.assign(msgs, msgsToSet);
+    }
+    else {
+        msgs = msgsToSet;
+    }
 }
 
 
