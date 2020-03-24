@@ -708,7 +708,7 @@ class NewFileAccountsEditor extends React.Component {
 
         // If the account has kids, we need to restrict the allowed types.
         const { childAccounts } = rowEntry.accountDataItem;
-        const options = [];
+        const items = [];
         parentType.allowedChildTypes.forEach((type) => {
             if (type.pricedItemType !== PricedItemType.CURRENCY) {
                 return;
@@ -727,13 +727,13 @@ class NewFileAccountsEditor extends React.Component {
             if (!allowsChildren) {
                 return;
             }
-            options.push([type.name, type.description]);
+            items.push([type.name, type.description]);
         });
 
         return <CellSelectEditor
             ariaLabel="Account Type"
             selectedValue={rowEditBuffer.type}
-            options={options}
+            items={items}
             onChange={(event) => { 
                 this.onAccountTypeChange(event, renderArgs); 
             }}
