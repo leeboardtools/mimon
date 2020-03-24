@@ -409,6 +409,7 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * Writes any changes that have been made to the accounting system.
+     * @throws {Error}
      */
     async asyncWriteAccountingFile() {
         return this._accountingFile.asyncWriteFile();

@@ -49,6 +49,7 @@ export class AccountingFile {
      * Writes any changes that have been made to the accounting system.
      * @param {boolean} [noBackup]  If <code>true</code> no backup should be made
      * if possible.
+     * @throws {Error}
      */
     async asyncWriteFile(noBackup) {
 
