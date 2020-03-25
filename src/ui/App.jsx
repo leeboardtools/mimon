@@ -2,11 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import * as Engine from '../engine/Engine';
 import { getUserSetting, setUserSetting } from '../util/UserSettings';
-import { userMsg, isUserMsg } from '../util/UserMessages';
+import { userMsg } from '../util/UserMessages';
 import { EngineAccessor } from '../tools/EngineAccess';
 import { FileCreator } from './FileCreator';
 import * as FM from '../util/FrameManager';
-import { MainWindow } from './MainWindow';
+import { MainWindow, getStartupMenuTemplate } from './MainWindow';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { asyncFileOrDirExists, asyncDirExists } from '../util/Files';
 import { FileSelector } from '../util-ui/FileSelector';
@@ -216,14 +216,7 @@ export default class App extends React.Component {
 
         await Engine.initializeEngine(settingsPathName, app.getAppPath());
 
-        // await UIHelpers.setup();
-
-        /*
-        this._mainMenuTemplate = getMainMenuTemplate(this.state.mainSetup);
-        this.state.menuManager.setMenuTemplate(this._mainMenuTemplate);
-
-        addContextMenuTemplates(this.state.menuManager);
-        */
+        this.installStartupMenu();
 
         await this.asyncPostEngineInitialized();
     }
@@ -312,7 +305,15 @@ export default class App extends React.Component {
             modalRenderer: renderer,
         });
     }
-    
+
+
+    installStartupMenu() {
+        const template = getStartupMenuTemplate(this.state.mainSetup);
+        this._frameManager.setMainMenuTemplate(template);
+
+        const menuManager = this._frameManager.getMenuManager();
+        menuManager.on('MenuItem-exit', this.onExit);
+    }
 
 
     enterMainWindow() {
@@ -363,14 +364,12 @@ export default class App extends React.Component {
         const menuManager = this._frameManager.getMenuManager();
         menuManager.off('MenuItem-closeFile', this.onCloseFile);
         menuManager.off('MenuItem-revertFile', this.onRevertFile);
-        menuManager.off('MenuItem-exit', this.onExit);
+
+        this.installStartupMenu();
     }
 
 
-    onCloseFile(postClose, noButtonLabel) {
-        postClose = postClose || this.exitMainWindow;
-        noButtonLabel = noButtonLabel || userMsg('App-save_ignore_button');
-
+    closeFile(postClose, noButtonLabel) {
         process.nextTick(async () => {
             let retry = true;
             while (retry) {
@@ -419,8 +418,14 @@ export default class App extends React.Component {
     }
 
 
+    onCloseFile() {
+        this.closeFile(() => { this.exitMainWindow(); }, 
+            userMsg('App-save_ignore_button'));
+    }
+
     onExit() {
-        this.onCloseFile(() => { app.exit(); }, userMsg('App-save_exit_button'));
+        this.closeFile(() => { app.exit(); }, 
+            userMsg('App-save_exit_button'));
     }
 
 

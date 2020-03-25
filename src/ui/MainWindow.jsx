@@ -10,33 +10,64 @@ import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { TabbedPages } from '../util-ui/TabbedPages';
 
 
+function getFileMenuTemplate() {
+    return {
+        label: userMsg('MainMenu-file'),
+        submenu: [
+            FM.createMenuItemTemplate('MenuItem-revertFile'),
+            FM.createMenuItemTemplate('MenuItem-closeFile'),
+            { type: 'separator' },
+            FM.createMenuItemTemplate('MenuItem-exit'),
+        ],
+    };
+}
+
+function getEditMenuTemplate() {
+    return {
+        label: userMsg('MainMenu-edit'),
+        submenu: [
+            FM.createRoleMenuItemTemplate('undo'),
+            FM.createRoleMenuItemTemplate('redo'),
+            { type: 'separator' },
+            FM.createRoleMenuItemTemplate('cut'),
+            FM.createRoleMenuItemTemplate('copy'),
+            FM.createRoleMenuItemTemplate('paste'),
+            { type: 'separator' },
+            FM.createMenuItemTemplate('MenuItem-copyTransaction'),
+            FM.createMenuItemTemplate('MenuItem-pasteTransaction'),
+        ],
+    };
+}
+
+function getDebugMenuTemplate(mainSetup) {
+    if (mainSetup.isDevMode) {
+        return {
+            label: userMsg('MainMenu-debug'),
+            submenu: [
+                { role: 'reload' },
+                { role: 'forcereload' },
+                { role: 'toggledevtools' },
+            ]
+        };
+    }
+}
+
+
+export function getStartupMenuTemplate(mainSetup) {
+    return [
+        getFileMenuTemplate(),
+        getEditMenuTemplate(),
+        getDebugMenuTemplate(mainSetup),
+    ];
+}
+
+
 function getMainMenuTemplate(mainSetup) {
     mainSetup = mainSetup || {};
 
     const template = [
-        {
-            label: userMsg('MainMenu-file'),
-            submenu: [
-                FM.createMenuItemTemplate('MenuItem-revertFile'),
-                FM.createMenuItemTemplate('MenuItem-closeFile'),
-                { type: 'separator' },
-                FM.createMenuItemTemplate('MenuItem-exit'),
-            ],
-        },
-        {
-            label: userMsg('MainMenu-edit'),
-            submenu: [
-                FM.createRoleMenuItemTemplate('undo'),
-                FM.createRoleMenuItemTemplate('redo'),
-                { type: 'separator' },
-                FM.createRoleMenuItemTemplate('cut'),
-                FM.createRoleMenuItemTemplate('copy'),
-                FM.createRoleMenuItemTemplate('paste'),
-                { type: 'separator' },
-                FM.createMenuItemTemplate('MenuItem-copyTransaction'),
-                FM.createMenuItemTemplate('MenuItem-pasteTransaction'),
-            ],
-        },
+        getFileMenuTemplate(),
+        getEditMenuTemplate(),
         {
             label: userMsg('MainMenu-account'),
             submenu: [
@@ -121,15 +152,9 @@ function getMainMenuTemplate(mainSetup) {
         },
     ];
 
-    if (mainSetup.isDevMode) {
-        template.push({
-            label: userMsg('MainMenu-debug'),
-            submenu: [
-                { role: 'reload' },
-                { role: 'forcereload' },
-                { role: 'toggledevtools' },
-            ]
-        });
+    const debugMenuTemplate = getDebugMenuTemplate(mainSetup);
+    if (debugMenuTemplate) {
+        template.push(debugMenuTemplate);
     }
 
     return template;
