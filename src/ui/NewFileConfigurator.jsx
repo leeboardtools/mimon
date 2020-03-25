@@ -814,8 +814,8 @@ class NewFileAccountsEditor extends React.Component {
             downDisabled = this.getMoveNewRootAccountDataItems(1) === undefined;
         }
 
-        const divClassName = 'col';
-        const btnClassName = 'btn btn-outline-secondary btn-sm w-100';
+        const divClassName = 'ml-2';
+        const btnClassName = 'btn btn-outline-secondary btn-sm fixed-width-button';
         return <div className="row pl-2 pr-2 pb-2">
             <div className={divClassName}>
                 <button type="button" 

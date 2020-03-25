@@ -12,3 +12,6 @@ body {
   display: flex;
 }
 
+.fixed-width-button {
+  width: 5rem;
+}
