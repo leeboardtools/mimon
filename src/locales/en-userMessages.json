@@ -18,6 +18,9 @@
     "MenuItem-closeFile": "Close Accounting File",
     "MenuItem-exit": "Exit",
 
+    "MenuItem-undo": "Undo",
+    "MenuItem-redo": "Redo",
+
 
     "NewFileSetup-setBaseCurrency_failed": ["Could not set the default currency to '", "'. ", ""],
     "NewFileSetup-invalid_currency": ["Could not set up the priced item '", "'. '", "' is not a valid currency."],

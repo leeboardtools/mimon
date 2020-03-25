@@ -195,6 +195,8 @@ export default class App extends React.Component {
         this.onMainWindowDidMount = this.onMainWindowDidMount.bind(this);
         this.onMainWindowWillUnmount = this.onMainWindowWillUnmount.bind(this);
 
+        this.onActionChange = this.onActionChange.bind(this);
+
         this.onRevertFile = this.onRevertFile.bind(this);
         this.onCloseFile = this.onCloseFile.bind(this);
         this.onExit = this.onExit.bind(this);
@@ -356,16 +358,31 @@ export default class App extends React.Component {
     onMainWindowDidMount() {
         const menuManager = this._frameManager.getMenuManager();
         menuManager.on('MenuItem-closeFile', this.onCloseFile);
-        menuManager.on('MenuItem-revertFile', this.onRevertFile);
         menuManager.on('MenuItem-exit', this.onExit);
+
+        this._accessor.on('actionChange', this.onActionChange);
+
+        this.onActionChange();
     }
 
     onMainWindowWillUnmount() {
+        this._accessor.off('actionChange', this.onActionChange);
+
         const menuManager = this._frameManager.getMenuManager();
         menuManager.off('MenuItem-closeFile', this.onCloseFile);
-        menuManager.off('MenuItem-revertFile', this.onRevertFile);
 
         this.installStartupMenu();
+    }
+
+
+    onActionChange() {
+        const menuManager = this._frameManager.getMenuManager();
+        if (this._accessor.isAccountingFileModified()) {
+            menuManager.on('MenuItem-revertFile', this.onRevertFile);
+        }
+        else {
+            menuManager.off('MenuItem-revertFile', this.onRevertFile);
+        }
     }
 
 

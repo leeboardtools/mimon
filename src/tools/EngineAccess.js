@@ -8,6 +8,12 @@ import { asyncSetupNewFile } from './NewFileSetup';
 
 
 /**
+ * @event EngineAccessor#actionChange
+ * This is fired whenever an action is performed, undone, or the undo/redo action
+ * lists change.
+ */
+
+/**
  * This provides an almost single point of access to an accounting system
  * and underlying accounting file. It's almost single point because it
  * primarily provides the read access to the database and relies upon
@@ -28,6 +34,7 @@ export class EngineAccessor extends EventEmitter {
 
         options = options || {};
 
+        this._fireActionChange = this._fireActionChange.bind(this);
         this._handleActionApply = this._handleActionApply.bind(this);
         this._handleAccountRemove = this._handleAccountRemove.bind(this);
         this._handleTransactionsAdd = this._handleTransactionsAdd.bind(this);
@@ -79,6 +86,11 @@ export class EngineAccessor extends EventEmitter {
             this._accountingActions.on('actionApply', this._handleActionApply);
 
             this._actionManager = _accountingSystem.getActionManager();
+            this._actionManager.on('actionApply', this._fireActionChange);
+            this._actionManager.on('actionUndo', this._fireActionChange);
+            this._actionManager.on('actionReapply', this._fireActionChange);
+            this._actionManager.on('appliedActionsClear', this._fireActionChange);
+            this._actionManager.on('undoneActionsClear', this._fireActionChange);
 
             this._accountManager = _accountingSystem.getAccountManager();
             this._accountManager.on('accountRemove', this._handleAccountRemove);
@@ -121,7 +133,16 @@ export class EngineAccessor extends EventEmitter {
             }
 
             this._accountingSystem = undefined;
-            this._actionManager = undefined;
+
+            if (this._actionManager) {
+                this._actionManager.off('actionApply', this._fireActionChange);
+                this._actionManager.off('actionUndo', this._fireActionChange);
+                this._actionManager.off('actionReapply', this._fireActionChange);
+                this._actionManager.off('appliedActionsClear', this._fireActionChange);
+                this._actionManager.off('undoneActionsClear', this._fireActionChange);
+                this._actionManager = undefined;
+            }
+
             this._pricedItemManager = undefined;
             this._priceManager = undefined;
             this._lotManager = undefined;
@@ -476,6 +497,7 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * Removes all applied actions from the manager.
+     * @fires {EngineAccessor#actionChange}
      */
     async asyncClearAppliedActions() {
         this._clearLastAppliedAction();
@@ -485,6 +507,7 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * Removes all undone actions from the manager.
+     * @fires {EngineAccessor#actionChange}
      */
     async asyncClearUndoneActions() {
         this._clearLastAppliedAction();
@@ -508,6 +531,7 @@ export class EngineAccessor extends EventEmitter {
      * at index {@link ActionManager#getAppliedActionCount} - 1.
      * @param {ActionDataItem} action 
      * @returns {object}    The result of the action.
+     * @fires {EngineAccessor#actionChange}
      */
     async asyncApplyAction(action) {
         this._clearLastAppliedAction();
@@ -524,6 +548,10 @@ export class EngineAccessor extends EventEmitter {
     _handleActionApply(action, result) {
         this._lastAppliedAction = action;
         this._lastAppliedActionResult = result;
+    }
+
+    _fireActionChange() {
+        this.emit('actionChange');
     }
 
     /**
@@ -551,6 +579,7 @@ export class EngineAccessor extends EventEmitter {
      * undone action list.
      * @param {number} [actionCount=1]  The number of applied actions to undo, if 
      * greater than the number of applied actions then all applied actions are undone.
+     * @fires {EngineAccessor#actionChange}
      */
     async asyncUndoLastAppliedActions(actionCount) {
         this._clearLastAppliedAction();
@@ -563,6 +592,7 @@ export class EngineAccessor extends EventEmitter {
      * undone action list to the applied action list as they are reapplied.
      * @param {number} [actionCount=1]  The number of undone actions to reapply. 
      * If greater than the number of undone actions then all undone actions are reapplied.
+     * @fires {EngineAccessor#actionChange}
      */
     async asyncReapplyLastUndoneActions(actionCount) {
         this._clearLastAppliedAction();

@@ -137,7 +137,7 @@ actions.
 MainWindow also provides the mechanism for reporting messages and prompts.
 
 There is quite a bit of commonality between the different views. There appears to be
-to main types of list/table style views:
+two main types of list/table style views:
 - The Summary List
     - This is represented by the Accounts List, Priced Items List
     - The main features are:

@@ -3,6 +3,30 @@ import { bug } from './Bug';
 
 
 /**
+ * @event ActionManager#actionApply
+ * @param {ActionDataItem}  action
+ */
+
+/**
+ * @event ActionManager#actionUndo
+ * @param {ActionDataItem}  lastAction
+ */
+
+/**
+ * @event ActionManager#actionReapply
+ * @param {ActionDataItem}  lastAction
+ */
+
+/**
+ * @event ActionManager#appliedActionsClear
+ */
+
+/**
+ * @event ActionManager#undoneActionsClear
+ */
+
+
+/**
  * @typedef {object}    ActionDataItem
  * @property {string}   type    String used to identify the callback to use for 
  * applying the action.
@@ -98,6 +122,7 @@ export class ActionManager extends EventEmitter {
 
     /**
      * Removes all applied actions from the manager.
+     * @fires {ActionManager#appliedActionsClear}
      */
     async asyncClearAppliedActions() {
         const firstEntry = await this._handler.asyncGetAppliedActionEntryAtIndex(0);
@@ -105,15 +130,23 @@ export class ActionManager extends EventEmitter {
             await this._handler.asyncRemoveLastAppliedActionEntries(
                 this._handler.getAppliedActionCount());
             await this._undoManager.asyncUndoToId(firstEntry.undoId, true);
+
+            this.emit('appliedActionsClear');
         }
     }
 
 
     /**
      * Removes all undone actions from the manager.
+     * @fires {ActionManager#undoneActionsClear}
      */
     async asyncClearUndoneActions() {
-        this._handler.asyncRemoveLastUndoneActions(this._handler.getUndoneActionCount());
+        const count = this._handler.getUndoneActionCount();
+        if (count) {
+            this._handler.asyncRemoveLastUndoneActions(count);
+            
+            this.emit('undoneActionsClear');
+        }
     }
 
 
@@ -167,6 +200,7 @@ export class ActionManager extends EventEmitter {
      * Applies an action. After application the action is in the applied actions list 
      * at index {@link ActionManager#getAppliedActionCount} - 1.
      * @param {ActionDataItem} action 
+     * @fires {ActionManager#actionApply}
      */
     async asyncApplyAction(action) {
         const undoId = this._undoManager.getNextUndoId();
@@ -178,6 +212,8 @@ export class ActionManager extends EventEmitter {
         try {
             await this._asyncApplyAction(action);
             await this._handler.asyncAddAppliedActionEntry(actionEntry);
+
+            this.emit('actionApply', action);
         }
         catch (e) {
             if (this._undoManager.getNextUndoId() !== undoId) {
@@ -193,6 +229,7 @@ export class ActionManager extends EventEmitter {
      * undone action list.
      * @param {number} [actionCount=1]  The number of applied actions to undo, if 
      * greater than the number of applied actions then all applied actions are undone.
+     * @fires {ActionManager#actionUndo}
      */
     async asyncUndoLastAppliedActions(actionCount) {
         const totalCount = this._handler.getAppliedActionCount();
@@ -209,12 +246,16 @@ export class ActionManager extends EventEmitter {
                 = await this._handler.asyncGetAppliedActionEntryAtIndex(lastIndex);
             await this._undoManager.asyncUndoToId(actionEntry.undoId);
 
+            let lastAction;
             for (let index = totalCount - 1; index >= lastIndex; --index) {
                 const actionEntry 
                     = await this._handler.asyncGetAppliedActionEntryAtIndex(index);
                 await this._handler.asyncRemoveLastAppliedActionEntries(1);
                 await this._handler.asyncAddUndoneAction(actionEntry.action);
+                lastAction = actionEntry.action;
             }
+
+            this.emit('actionUndo', lastAction);
         }
     }
 
@@ -224,6 +265,7 @@ export class ActionManager extends EventEmitter {
      * undone action list to the applied action list as they are reapplied.
      * @param {number} [actionCount=1]  The number of undone actions to reapply. 
      * If greater than the number of undone actions then all undone actions are reapplied.
+     * @fires {ActionManager#actionReapply}
      */
     async asyncReapplyLastUndoneActions(actionCount) {
         const totalCount = this._handler.getUndoneActionCount();
@@ -234,12 +276,16 @@ export class ActionManager extends EventEmitter {
 
             const lastIndex = Math.max(totalCount - actionCount, 0);
 
+            let lastAction;
             for (let index = totalCount - 1; index >= lastIndex; --index) {
                 const action = await this.asyncGetUndoneActionAtIndex(index);
 
                 await this._handler.asyncRemoveLastUndoneActions(1);
                 await this.asyncApplyAction(action);
+                lastAction = action;
             }
+
+            this.emit('actionReapply', lastAction);
         }
     }
 
