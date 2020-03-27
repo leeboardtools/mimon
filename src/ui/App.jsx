@@ -103,8 +103,8 @@ class AppOpenScreen extends React.Component {
                 </div>
             );
 
-            mruComponent = <React.Fragment>
-                <div className="row justify-content-md-center">
+            mruComponent = <div className="mb-4">
+                <div className="row justify-content-md-center mb-2">
                     {<span>{userMsg('AppOpeningScreen-mru_title')}</span>}
                 </div>
                 <div className="row justify-content-md-center">
@@ -113,14 +113,14 @@ class AppOpenScreen extends React.Component {
                 <div className="row justify-content-md-center">
                     &nbsp;
                 </div>
-            </React.Fragment>;
+            </div>;
 
             buttonClassName = 'btn btn-outline-secondary btn-sm btn-block';
         }
 
         return (
             <div className="d-flex w-100 h-100 p-1 mx-auto flex-column">
-                <div className="mb-4">
+                <div className="mb-4 mt-4">
                     <h2 className="text-center">LBMiMon</h2>
                     <h4 className="text-center">A Personal Money Manager</h4>
                     <h5 className="text-center">From Leeboard Tools</h5>
