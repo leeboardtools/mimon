@@ -190,7 +190,7 @@ export class MenuManagerMain {
         }
         else {
             this._mainMenuHandler = undefined;
-            Menu.setApplicationMenu(undefined);
+            Menu.setApplicationMenu(null);
         }
     }
 
