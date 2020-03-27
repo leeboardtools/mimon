@@ -179,7 +179,7 @@ export function activeRowTable(WrappedTable) {
     /**
      * @callback ActiveRowTable~onGetRowAtIndex
      * @param {number}  index
-     * @returns {number}
+     * @returns {CollapsibleRowTable~RowEntry}
      */
 
     /**
