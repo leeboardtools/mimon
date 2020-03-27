@@ -32,8 +32,6 @@ import { bug } from './Bug';
  * applying the action.
  * @property {string}   name    Simple name for the action.
  * @property {string}   [description]
- * @property {string}   [undoName]    Simple name for undoing the action.
- * @property {string}   [undoDescription]
  */
 
 
