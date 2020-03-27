@@ -11,7 +11,9 @@ const { session } = require('electron');
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
 if (isDevMode) {
-    installExtension(REACT_DEVELOPER_TOOLS);
+    installExtension(REACT_DEVELOPER_TOOLS)
+        .then((name) => {})
+        .catch((err) => {});
 }
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
