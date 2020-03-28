@@ -1,26 +1,29 @@
 {
     
+    "AccountsList-openAccount": "Open Account Register",
+    "AccountsList-reconcile": "Reconcile Account",
+    "AccountsList-newAccount": "New Account...",
+    "AccountsList-modifyAccount": "Modify Account...",
+    "AccountsList-removeAccount": "Delete Account",
 
 
+    "MainWindow-checkReminders": "Check Reminders",
+    "MainWindow-updatePrices": "Retrieve Prices",
 
-    "MainMenu-file": "File",
-    "MainMenu-edit": "Edit",
-    "MainMenu-account": "Accounts",
-    "MainMenu-transaction": "Transactions",
-    "MainMenu-securities": "Securities",
-    "MainMenu-report": "Reports",
-    "MainMenu-reminder": "Reminders",
-    "MainMenu-view": "View",
-    "MainMenu-window": "Window",
-    "MainMenu-debug": "Debug",
+    "MainWindow-viewAccountsList": "Accounts List",
+    "MainWindow-viewSecuritiesList": "Securities List",
+    "MainWindow-viewPricesList": "Prices List",
+    "MainWindow-viewRemindersList": "Reminders List",
+    "MainWindow-viewPricedItemsList": "Priced Items List",
 
-    "MenuItem-revertFile": "Revert Accounting File Changes",
-    "MenuItem-closeFile": "Close Accounting File",
-    "MenuItem-exit": "Exit",
+    "MainWindow-revertChanges": "Revert Project Changes",
+    "MainWindow-closeFile": "Close Project",
 
-    "MenuItem-undo": "Undo",
-    "MenuItem-redo": "Redo",
+    "MainWindow-exit": "Exit",
+    "MainWindow-forceReload": "Force Reload",
 
+
+    
 
     "NewFileSetup-setBaseCurrency_failed": ["Could not set the default currency to '", "'. ", ""],
     "NewFileSetup-invalid_currency": ["Could not set up the priced item '", "'. '", "' is not a valid currency."],

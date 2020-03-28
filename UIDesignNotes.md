@@ -337,3 +337,63 @@ Common menus:
 
 - Test Revert
 - Test Save
+
+- Think about transitioning to a Navbar based or other entirely render side based menu system.
+    - Cleaner appearance.
+    - Need to think over the command structure.
+
+    - Main Window:
+        - Would provide the main menu button.
+
+            - Menu items:
+                - Undo (button)
+                - Redo (button)
+
+                - Check Reminders
+                - View
+                    - Accounts
+                    - Priced Items
+                    - Prices
+                    - Securities
+                    - Reminders
+                    - Reports
+
+                - File
+                    - Revert File
+                    - Close File
+                    - Exit
+        
+
+        - Active tabs would have their own menu.
+
+            - Drop-down from the tab...
+
+            - Accounts List menu items
+                - Open Account Register
+                - Reconcile Account
+                - New Account
+                - Modify Account
+                - Delete Account
+                - Show/Hide accounts
+            
+            - Account Register menu items
+                - New transaction
+                - Copy transaction
+                - Paste transaction
+                - Delete transaction
+                - Reconcile Account
+            
+            - Securites List menu items
+                - New Security
+                - Modify Security
+                - Delete Security
+                - Open Prices
+                - Open Transactions
+            
+            - Reminders menu items
+                - Check Reminders
+                - New Reminder
+                - Modify Reminder
+                - Delete Reminder
+
+        

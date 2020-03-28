@@ -1,7 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { CollapsibleRowTable, ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
+import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
+import { ActiveRowCollapsibleTable } from '../util-ui/ActiveRowTable';
 import { CellTextDisplay } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay } from '../util-ui/CellSelectEditor';
 import * as A from '../engine/Accounts';
@@ -16,8 +17,9 @@ export class AccountsList extends React.Component {
 
         this.onRenderCell = this.onRenderCell.bind(this);
         this.onGetRowExpandCollapseState = this.onGetRowExpandCollapseState.bind(this);
-        this.onRowClick = this.onRowClick.bind(this);
-        this.onRowDoubleClick = this.onRowDoubleClick.bind(this);
+        this.onGetRowAtIndex = this.onGetRowAtIndex.bind(this);
+        this.onActivateRow = this.onActivateRow.bind(this);
+        this.onOpenRow = this.onOpenRow.bind(this);
         this.onRowToggleCollapse = this.onRowToggleCollapse.bind(this);
         this.onContextMenu = this.onContextMenu.bind(this);
 
@@ -140,6 +142,10 @@ export class AccountsList extends React.Component {
         return rowEntry.expandCollapseState;
     }
 
+    onGetRowAtIndex(index) {
+        return this.state.rowEntries[index];
+    }
+
 
     onRowToggleCollapse(rowEntry, newExpandCollapseState) {
         switch (rowEntry.expandCollapseState) {
@@ -160,7 +166,7 @@ export class AccountsList extends React.Component {
     }
 
 
-    onRowClick(rowEntry) {
+    onActivateRow(rowEntry) {
         const { onSelectAccount } = this.props;
         if (onSelectAccount) {
             const { accountDataItem } = rowEntry;
@@ -169,7 +175,7 @@ export class AccountsList extends React.Component {
     }
 
 
-    onRowDoubleClick(rowEntry) {
+    onOpenRow(rowEntry) {
         const { onChooseAccount } = this.props;
         const { accountDataItem } = rowEntry;
         if (onChooseAccount && accountDataItem) {
@@ -274,14 +280,15 @@ export class AccountsList extends React.Component {
 
     render() {
         const { state } = this;
-        return <CollapsibleRowTable
+        return <ActiveRowCollapsibleTable
             columnInfos={state.columnInfos}
             rowEntries={state.rowEntries}
             activeRowKey={state.activeRowKey}
             onRenderCell={this.onRenderCell}
             onGetRowExpandCollapseState={this.onGetRowExpandCollapseState}
-            onRowClick={this.onRowClick}
-            onRowDoubleClick={this.onRowDoubleClick}
+            onGetRowAtIndex={this.onGetRowAtIndex}
+            onActivateRow={this.onActivateRow}
+            onOpenRow={this.onOpenRow}
             onRowToggleCollapse={this.onRowToggleCollapse}
             onContextMenu={this.onContextMenu}
         />;

@@ -1,8 +1,8 @@
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
-import { MenuManagerMain } from './util/MenuManagerMain';
+//import { MenuManagerMain } from './util/MenuManagerMain';
 // import 'regenerator-runtime/runtime';
 
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, Menu, BrowserWindow, ipcMain } = require('electron');
 app.allowRendererProcessReuse = true;
 
 //const path = require('path');
@@ -35,7 +35,11 @@ ipcMain.on('sync-get-main-setup', (event, arg) => {
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 // eslint-disable-next-line no-unused-vars
-let menuManager;
+//let menuManager;
+if (!isDevMode) {
+    // Don't clear the menu bar in dev mode so we always have access to the debug menu
+    Menu.setApplicationMenu(null);
+}
 
 const createWindow = () => {
 
@@ -73,7 +77,7 @@ const createWindow = () => {
     // eslint-disable-next-line no-undef
     mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-    menuManager = new MenuManagerMain();
+    //menuManager = new MenuManagerMain();
 
     if (isDevMode) {
     // Open the DevTools.
@@ -87,7 +91,7 @@ const createWindow = () => {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
         mainWindow = null;
-        menuManager = null;
+        //menuManager = null;
     });
 };
 

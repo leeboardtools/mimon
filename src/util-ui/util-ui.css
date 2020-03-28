@@ -6,13 +6,6 @@
 /* End util-ui/FileSelector.jsx */
 
 
-/* Needed for util-ui/TabbedPages.jsx */
-.tabPage {
-    padding-top: 2rem;
-}
-/* End util-ui/TabbedPages.jsx */
-
-
 /* Needed for util-ui/CellTextEditor.jsx */
 .cellTextEditor-textInput {
     margin: 0px;

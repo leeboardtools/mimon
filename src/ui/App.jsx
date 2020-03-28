@@ -6,7 +6,7 @@ import { userMsg } from '../util/UserMessages';
 import { EngineAccessor } from '../tools/EngineAccess';
 import { FileCreator } from './FileCreator';
 import * as FM from '../util/FrameManager';
-import { MainWindow, getStartupMenuTemplate } from './MainWindow';
+import { MainWindow } from './MainWindow';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { asyncFileOrDirExists, asyncDirExists } from '../util/Files';
 import { FileSelector } from '../util-ui/FileSelector';
@@ -105,7 +105,7 @@ class AppOpenScreen extends React.Component {
 
             mruComponent = <div className="mb-4">
                 <div className="row justify-content-md-center mb-2">
-                    {<span>{userMsg('AppOpeningScreen-mru_title')}</span>}
+                    <span>{userMsg('AppOpeningScreen-mru_title')}</span>
                 </div>
                 <div className="row justify-content-md-center">
                     {namesItem}
@@ -121,7 +121,7 @@ class AppOpenScreen extends React.Component {
         return (
             <div className="d-flex w-100 h-100 p-1 mx-auto flex-column">
                 <div className="mb-4 mt-4">
-                    <h2 className="text-center">LBMiMon</h2>
+                    <h2 className="text-center">MiMon</h2>
                     <h4 className="text-center">A Personal Money Manager</h4>
                     <h5 className="text-center">From Leeboard Tools</h5>
                 </div>
@@ -192,11 +192,6 @@ export default class App extends React.Component {
         this.onFilterOpenFile = this.onFilterOpenFile.bind(this);
         this.onOpenFileDirSelect = this.onOpenFileDirSelect.bind(this);
 
-        this.onMainWindowDidMount = this.onMainWindowDidMount.bind(this);
-        this.onMainWindowWillUnmount = this.onMainWindowWillUnmount.bind(this);
-
-        this.onActionChange = this.onActionChange.bind(this);
-
         this.onRevertFile = this.onRevertFile.bind(this);
         this.onCloseFile = this.onCloseFile.bind(this);
         this.onExit = this.onExit.bind(this);
@@ -217,8 +212,6 @@ export default class App extends React.Component {
             app.name, 'user.json');
 
         await Engine.initializeEngine(settingsPathName, app.getAppPath());
-
-        this.installStartupMenu();
 
         await this.asyncPostEngineInitialized();
     }
@@ -309,15 +302,6 @@ export default class App extends React.Component {
     }
 
 
-    installStartupMenu() {
-        const template = getStartupMenuTemplate(this.state.mainSetup);
-        this._frameManager.setMainMenuTemplate(template);
-
-        const menuManager = this._frameManager.getMenuManager();
-        menuManager.on('MenuItem-exit', this.onExit);
-    }
-
-
     enterMainWindow() {
         process.nextTick(async () => {
             const pathName = this._accessor.getAccountingFilePathName();
@@ -352,37 +336,6 @@ export default class App extends React.Component {
                 });
             }
         });
-    }
-
-
-    onMainWindowDidMount() {
-        const menuManager = this._frameManager.getMenuManager();
-        menuManager.on('MenuItem-closeFile', this.onCloseFile);
-        menuManager.on('MenuItem-exit', this.onExit);
-
-        this._accessor.on('actionChange', this.onActionChange);
-
-        this.onActionChange();
-    }
-
-    onMainWindowWillUnmount() {
-        this._accessor.off('actionChange', this.onActionChange);
-
-        const menuManager = this._frameManager.getMenuManager();
-        menuManager.off('MenuItem-closeFile', this.onCloseFile);
-
-        this.installStartupMenu();
-    }
-
-
-    onActionChange() {
-        const menuManager = this._frameManager.getMenuManager();
-        if (this._accessor.isAccountingFileModified()) {
-            menuManager.on('MenuItem-revertFile', this.onRevertFile);
-        }
-        else {
-            menuManager.off('MenuItem-revertFile', this.onRevertFile);
-        }
     }
 
 
@@ -635,8 +588,9 @@ export default class App extends React.Component {
                 frameManager = { this._frameManager}
                 mainSetup = {this.state.mainSetup}
                 onClose = {this.onCancel}
-                onDidMount={this.onMainWindowDidMount}
-                onWillUnmount={this.onMainWindowWillUnmount}
+                onRevertFile={this.onRevertFile}
+                onCloseFile={this.onCloseFile}
+                onExit={this.onExit}
             />;
         
         default :

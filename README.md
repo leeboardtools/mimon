@@ -19,4 +19,5 @@ This project incorporates the following (I may have missed some projects, especi
 - [Bootstrap](https://getbootstrap.com/), responsive CSS and more for styling the UI.
 - [deep-equal](https://www.npmjs.com/package/deep-equal) for performing deep object comparisons.
 - [uuid](https://github.com/kelektiv/node-uuid#readme) for generating UUIDs.
+- [Material Design Icons](https://material.io/resources/icons/?style=baseline), Google's Material icons
 
