@@ -218,7 +218,7 @@ export class MenuManager {
      * @param {string} id
      * @param {MenuManager~ClickListener} listener
      */
-    listenOnCondition(condition, id, listener) {
+    onCondition(condition, id, listener) {
         if (condition) {
             this.on(id, listener, true);
         }
