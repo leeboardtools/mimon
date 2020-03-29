@@ -149,24 +149,24 @@ export class TabbedPages extends React.Component {
  */
 
 /**
- * @callback {TabbedPages~onRenderPage}
+ * @callback TabbedPages~onRenderPage
  * @param {TappedPages~TabEntry}    tabEntry    The tab entry to be rendered.
  * @param {boolean} isActive    If <code>true</code> the page is the active page.
  * @returns {object}
  */
 
 /**
- * @callback {TabbedPages~onCloseTab}
+ * @callback TabbedPages~onCloseTab
  * @param {TappedPages~TabEntry}    tabEntry    The tab entry to be closed.
  */
 
 /**
- * @callback {TabbedPages~onActivateTab}
+ * @callback TabbedPages~onActivateTab
  * @param {TappedPages~TabEntry}    tabEntry    The tab entry to be closed.
  */
 
 /**
- * @callback {TabbedPages~onPostRenderTabs}
+ * @callback TabbedPages~onPostRenderTabs
  * This can be used to add things like menu buttons to the tab bar.
  * @param {object}    tabs  The component representing the tabs.
  * @return {object} The component to render, this would normally be a parent component

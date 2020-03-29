@@ -87,12 +87,12 @@ export function Dropdown(props) {
 
 
 /**
- * @callback {Dropdown~onChooseItem}
+ * @callback Dropdown~onChooseItem
  * @param {*}   id  The id of the chosen item.
  */
 
 /**
- * @callback {Dropdown~onRenderItem}
+ * @callback Dropdown~onRenderItem
  * @param {Dropdown~Item} item
  * @returns {object}
  */
