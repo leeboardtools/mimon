@@ -53,14 +53,14 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
 
     onNewAccount(tabId) {
-
+        this.setErrorMsg('onNewAccount is not yet implemented.');
     }
 
 
     onModifyAccount(tabId) {
         const { activeAccountId} = this.getTabIdState(tabId);
         if (activeAccountId) {
-            console.log('onModifyAccount: ' + activeAccountId);
+            this.setErrorMsg('onModifyAccount is not yet implemented.');
         }
     }
 
@@ -68,7 +68,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     onRemoveAccount(tabId) {
         const { activeAccountId} = this.getTabIdState(tabId);
         if (activeAccountId) {
-            console.log('onRemoveAccount: ' + activeAccountId);
+            this.setErrorMsg('onRemoveAccount is not yet implemented.');
         }
     }
 

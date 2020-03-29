@@ -158,7 +158,6 @@ export class MainWindow extends React.Component {
             activeTabId: tabId,
         });
 
-        console.log('onActivateTab: ' + tabId);
         return tabId;
     }
 
@@ -211,12 +210,12 @@ export class MainWindow extends React.Component {
 
 
     onCheckReminders() {
-        console.log('Check Reminders');
+        this.setErrorMsg('onCheckReminders is not yet implemented.');
     }
 
 
     onUpdatePrices() {
-        console.log('Update Prices');
+        this.setErrorMsg('onUpdatePrices is not yet implemented.');
     }
 
 
@@ -275,7 +274,6 @@ export class MainWindow extends React.Component {
         this.setState({
             activeTabId: tabId,
         });
-        console.log('openAccountRegister: ' + tabId);
     }
 
 
@@ -428,8 +426,6 @@ export class MainWindow extends React.Component {
 
     renderTabbedPages() {
         const { state } = this;
-        console.log('renderTabbedPages: ' + state.activeTabId);
-
         return <TabbedPages
             tabEntries={state.tabEntries}
             activeTabId={state.activeTabId}

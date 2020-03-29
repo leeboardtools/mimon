@@ -89,11 +89,17 @@
     "AccountsListHandler-modifyAccount": "Modify Account Settings...",
     "AccountsListHandler-removeAccount": "Delete Account...",
 
-    
     "AccountsList-name": "Name",
     "AccountsList-type": "Type",
     "AccountsList-balance": "Balance",
     "AccountsList-shares": "Shares",
+
+
+    "AccountRegisterHandler-newTransaction": "New Transaction",
+    "AccountRegisterHandler-modifyTransaction": "Modify Transaction",
+    "AccountRegisterHandler-removeTransaction": "Delete Transaction",
+    "AccountRegisterHandler-copyTransaction": "Copy Transaction",
+    "AccountRegisterHandler-pasteTransaction": "Paste Transaction",
 
 
     "": ""

@@ -1,5 +1,5 @@
 import React from 'react';
-//import { userMsg } from '../util/UserMessages';
+import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountRegister } from './AccountRegister';
 
@@ -14,15 +14,88 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         super(props);
 
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
+
+        this.onNewTransaction = this.onNewTransaction.bind(this);
+        this.onModifyTransaction = this.onModifyTransaction.bind(this);
+        this.onRemoveTransaction = this.onRemoveTransaction.bind(this);
+
+        this.onCopyTransaction = this.onCopyTransaction.bind(this);
+        this.onPasteTransaction = this.onPasteTransaction.bind(this);
+
+        this.onReconcileAccount = this.onReconcileAccount.bind(this);
+    }
+
+    onReconcileAccount(tabId) {
+        const { accountId} = this.getTabIdState(tabId);
+        if (accountId) {
+            this.openTab('reconcileAccount', accountId);
+        }
     }
 
 
-    getTabDropdownInfo(tabId, accountId) {
-        // New Transaction
-        // Modify Transaction
-        // Delete Transaction
-        // Copy Transaction
-        // Paste Transaction
+    onNewTransaction(tabId) {
+        this.setErrorMsg('onNewTransaction is not yet implemented.');
+    }
+
+
+    onModifyTransaction(tabId) {
+        this.setErrorMsg('onMpdifyTransaction is not yet implemented.');
+    }
+    
+
+    onRemoveTransaction(tabId) {
+        this.setErrorMsg('onRemoveTransaction is not yet implemented.');
+    }
+    
+
+    onCopyTransaction(tabId) {
+        this.setErrorMsg('onCopyTransaction is not yet implemented.');
+    }
+    
+
+    onPasteTransaction(tabId) {
+        this.setErrorMsg('onPasteTransaction is not yet implemented.');
+    }
+    
+
+    getTabDropdownInfo(tabId) {
+        let activeTransactionId;
+
+        const menuItems = [
+            { id: 'newTransaction',
+                label: userMsg('AccountRegisterHandler-newTransaction'),
+                onChooseItem: () => this.onNewTransaction(tabId),
+            },
+            { id: 'modifyTransaction',
+                label: userMsg('AccountRegisterHandler-modifyTransaction'),
+                disabled: !activeTransactionId,
+                onChooseItem: () => this.onModifyTransaction(tabId),
+            },
+            { id: 'removeTransaction',
+                label: userMsg('AccountRegisterHandler-removeTransaction'),
+                disabled: !activeTransactionId,
+                onChooseItem: () => this.onRemoveTransaction(tabId),
+            },
+            {},
+            { id: 'copyTransaction',
+                label: userMsg('AccountRegisterHandler-copyTransaction'),
+                disabled: !activeTransactionId,
+                onChooseItem: () => this.onCopyTransaction(tabId),
+            },
+            { id: 'pasteTransaction',
+                label: userMsg('AccountRegisterHandler-pasteTransaction'),
+                disabled: !activeTransactionId,
+                onChooseItem: () => this.onPasteTransaction(tabId),
+            },
+            {},
+            { id: 'reconcileAccount',
+                label: userMsg('AccountsListHandler-reconcileAccount'),
+                onChooseItem: () => this.onReconcileAccount(tabId),
+            },
+        ];
+        return {
+            items: menuItems,
+        };
     }
 
 

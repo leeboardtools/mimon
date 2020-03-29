@@ -33,8 +33,9 @@ export class TabbedPages extends React.Component {
     handleTabClick(tabEntry) {
         let tabId = tabEntry.tabId;
         if (this.props.onActivateTab) {
+            const newTabId = tabId;
             tabId = this.props.onActivateTab(tabId);
-            tabId = (tabId === undefined) ? tabEntry.tabId : tabId;
+            tabId = tabId || newTabId;
         }
         this.setState({
             activeTabId: tabId,
@@ -43,7 +44,6 @@ export class TabbedPages extends React.Component {
 
 
     renderTabs() {
-        console.log('tabs: ' + this.state.activeTabId);
         const items = this.props.tabEntries.map((tabEntry) => {
             const ariaLabel = tabEntry.title + ' Tab';
 
@@ -174,6 +174,8 @@ export class TabbedPages extends React.Component {
 /**
  * @callback TabbedPages~onActivateTab
  * @param {string}    tabId    The id of tab entry that was activated.
+ * @returns {undefined|string}  If a different tab id should be activated, it should
+ * be returned.
  */
 
 /**
