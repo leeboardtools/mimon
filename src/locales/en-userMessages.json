@@ -16,13 +16,6 @@
     "MainWindow-forceReload": "Force Reload",
 
 
-    "AccountsListPage-reconcileAccount": "Reconcile Account",
-    "AccountsListPage-openAccountRegister": "Open Account Register",
-    "AccountsListPage-newAccount": "New Account...",
-    "AccountsListPage-modifyAccount": "Modify Account Settings...",
-    "AccountsListPage-removeAccount": "Delete Account...",
-
-
     
 
     "NewFileSetup-setBaseCurrency_failed": ["Could not set the default currency to '", "'. ", ""],
@@ -89,7 +82,12 @@
 
 
 
-    "MainWindow-masterAccountList_title": "Accounts",
+    "AccountsListHandler-masterAccountList_title": "Accounts",
+    "AccountsListHandler-reconcileAccount": "Reconcile Account",
+    "AccountsListHandler-openAccountRegister": "Open Account Register",
+    "AccountsListHandler-newAccount": "New Account...",
+    "AccountsListHandler-modifyAccount": "Modify Account Settings...",
+    "AccountsListHandler-removeAccount": "Delete Account...",
 
     
     "AccountsList-name": "Name",

@@ -1,5 +1,6 @@
 import React from 'react';
 import { userMsg } from '../util/UserMessages';
+import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountsList } from './AccountsList';
 //import * as A from '../engine/Accounts';
 
@@ -8,16 +9,9 @@ import { AccountsList } from './AccountsList';
  * Handler for {@link AccountsList} components and their pages in the 
  * {@link MainWindow}, this manages all the account related commands.
  */
-export class AccountsListHandler {
+export class AccountsListHandler extends MainWindowHandlerBase {
     constructor(props) {
-        this.props = props;
-
-        this.getTabIdState = props.onGetTabIdState;
-        this.setTabIdState = props.onSetTabIdState;
-        this.setErrorMsg = props.onSetErrorMsg;
-        this.setModal = props.onSetModal;
-        this.openTab = props.onOpenTab;
-
+        super(props);
 
         this.onReconcileAccount = this.onReconcileAccount.bind(this);
         this.onOpenAccountRegister = this.onOpenAccountRegister.bind(this);
@@ -29,6 +23,9 @@ export class AccountsListHandler {
         this.onChooseAccount = this.onChooseAccount.bind(this);
 
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
+
+        // TO ADD;
+        // Show/ hide accounts
     }
 
 
@@ -77,31 +74,29 @@ export class AccountsListHandler {
 
     
     getTabDropdownInfo(tabId, activeAccountId) {
-        console.log('menu: ' + activeAccountId);
-
         const menuItems = [
             { id: 'reconcileAccount',
-                label: userMsg('AccountsListPage-reconcileAccount'),
+                label: userMsg('AccountsListHandler-reconcileAccount'),
                 disabled: !activeAccountId,
                 onChooseItem: () => this.onReconcileAccount(tabId),
             },
             { id: 'openAccountRegister',
-                label: userMsg('AccountsListPage-openAccountRegister'),
+                label: userMsg('AccountsListHandler-openAccountRegister'),
                 disabled: !activeAccountId,
                 onChooseItem: () => this.onOpenAccountRegister(tabId),
             },
             {},
             { id: 'newAccount',
-                label: userMsg('AccountsListPage-newAccount'),
+                label: userMsg('AccountsListHandler-newAccount'),
                 onChooseItem: () => this.onNewAccount(tabId),
             },                        
             { id: 'modifyAccount',
-                label: userMsg('AccountsListPage-modifyAccount'),
+                label: userMsg('AccountsListHandler-modifyAccount'),
                 disabled: !activeAccountId,
                 onChooseItem: () => this.onModifyAccount(tabId),
             },                        
             { id: 'removeAccount',
-                label: userMsg('AccountsListPage-removeAccount'),
+                label: userMsg('AccountsListHandler-removeAccount'),
                 disabled: !activeAccountId,
                 onChooseItem: () => this.onRemoveAccount(tabId),
             },                        
@@ -146,7 +141,7 @@ export class AccountsListHandler {
     createTabEntry(tabId) {
         return {
             tabId: tabId,
-            title: userMsg('MainWindow-masterAccountList_title'),
+            title: userMsg('AccountsListHandler-masterAccountList_title'),
             dropdownInfo: this.getTabDropdownInfo(tabId),
             onRenderTabPage: this.onRenderTabPage,
         };
@@ -154,7 +149,8 @@ export class AccountsListHandler {
 
 
     /**
-     * Called by {@link MainWindow} to render the account list page for a tab entry.
+     * Called by {@link MainWindow} via the tab entry's onRenderTabPage to render the 
+     * account list page for a tab entry.
      * @param {TabbedPages~TabEntry} tabEntry 
      * @param {boolean} isActive 
      */

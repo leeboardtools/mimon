@@ -6,6 +6,7 @@ import { TabbedPages } from '../util-ui/TabbedPages';
 import { Dropdown } from '../util-ui/Dropdown';
 import deepEqual from 'deep-equal';
 import { AccountsListHandler } from './AccountsListHandler';
+import { AccountRegisterHandler } from './AccountRegisterHandler';
 
 
 /**
@@ -51,20 +52,29 @@ export class MainWindow extends React.Component {
             onOpenTab: this.onOpenTab,
         });
 
+        this._accountRegisterHandler = new AccountRegisterHandler({
+            accessor: this.props.accessor,
+            onGetTabIdState: this.onGetTabIdState,
+            onSetTabIdState: this.onSetTabIdState,
+            onSetErrorMsg: this.onSetErrorMsg,
+            onSetModal: this.onSetModal,
+            onOpenTab: this.onOpenTab,
+        });
+
         this.state = {
             tabEntries: [],
         };
         this._tabEntriesById = new Map();
-
+        this._accountRegistersByAccountId = new Map();
 
         const masterAccountsList = this._accountsListHandler.createTabEntry(
-            'masterAccountList'
+            'masterAccountsList'
         );
         this.state.tabEntries.push(masterAccountsList);
         this._tabEntriesById.set(masterAccountsList.tabId, masterAccountsList);
 
 
-        this.state.activeTabEntry = this.state.tabEntries[0];
+        this.state.activeTabId = this.state.tabEntries[0].tabId;
     }
 
 
@@ -95,19 +105,32 @@ export class MainWindow extends React.Component {
     }
 
 
-    onCloseTab(tabEntry) {
-        if (tabEntry === this.state.activeTabEntry) {
+    addTabEntry(tabEntry) {
+        this.setState((oldState) => {
+            const newTabEntries = Array.from(oldState.tabEntries);
+            newTabEntries.push(tabEntry);
+            this._tabEntriesById.set(tabEntry.tabId, tabEntry);
+            return {
+                tabEntries: newTabEntries,
+            };
+        });
+    }
+
+    onCloseTab(tabId) {
+        if (tabId === this.state.activeTabId) {
             this.setState({
-                activeTabEntry: undefined,
+                activeTabId: undefined,
             });
         }
 
-        const { tabId, onCloseTab } = tabEntry;
-        if (onCloseTab) {
-            onCloseTab(tabEntry.tabId);
-        }
+        const tabEntry = this._tabEntriesById.get(tabId);
+        if (tabEntry) {
+            const { onCloseTab } = tabEntry;
+            if (onCloseTab) {
+                onCloseTab(tabId);
+            }
 
-        if (this._tabEntriesById.delete(tabId)) {
+            this._tabEntriesById.delete(tabId);
             this.setState((oldState) => {
                 const oldTabEntries = oldState.tabEntries;
                 const newTabEntries = [];
@@ -130,10 +153,13 @@ export class MainWindow extends React.Component {
     }
 
 
-    onActivateTab(tabEntry) {
+    onActivateTab(tabId) {
         this.setState({
-            activeTabEntry: tabEntry,
+            activeTabId: tabId,
         });
+
+        console.log('onActivateTab: ' + tabId);
+        return tabId;
     }
 
 
@@ -236,6 +262,23 @@ export class MainWindow extends React.Component {
     }
 
 
+    openAccountRegister(accountId) {
+        let tabId = this._accountRegistersByAccountId.get(accountId);
+        if (!tabId) {
+            tabId = 'accountRegister_' + accountId;
+            this._accountRegistersByAccountId.set(accountId, tabId);
+            const tabEntry = this._accountRegisterHandler.createTabEntry(
+                tabId, accountId);
+            this.addTabEntry(tabEntry);
+        }
+
+        this.setState({
+            activeTabId: tabId,
+        });
+        console.log('openAccountRegister: ' + tabId);
+    }
+
+
     onOpenTab(type, ...args) {
         switch (type) {
         case 'reconcileAccount' :
@@ -243,7 +286,7 @@ export class MainWindow extends React.Component {
             break;
         
         case 'accountRegister' :
-            this.onSetErrorMsg('Sorry, Account Register is not yet implemented...');
+            this.openAccountRegister(args[0]);
             break;
     
         default :
@@ -307,23 +350,27 @@ export class MainWindow extends React.Component {
             {},
             { id: 'viewAccountsList', 
                 label: userMsg('MainWindow-viewAccountsList'),
-                disabled: true,
+                onChooseItem: () => this.onActivateTab('masterAccountsList')
             },
             { id: 'viewRemindersList', 
                 label: userMsg('MainWindow-viewRemindersList'),
-                disabled: true,
+                disabled: !this._tabEntriesById.get('remindersList'),
+                onChooseItem: () => this.onActivateTab('remindersList'),
             },
             { id: 'viewSecuritiesList', 
                 label: userMsg('MainWindow-viewSecuritiesList'),
-                disabled: true,
+                disabled: !this._tabEntriesById.get('securitiesList'),
+                onChooseItem: () => this.onActivateTab('securitiesList'),
             },
             { id: 'viewPricesList', 
                 label: userMsg('MainWindow-viewPricesList'),
-                disabled: true,
+                disabled: !this._tabEntriesById.get('pricesList'),
+                onChooseItem: () => this.onActivateTab('pricesList'),
             },
             { id: 'viewPricedItemsList', 
                 label: userMsg('MainWindow-viewPricedItemsList'),
-                disabled: true,
+                disabled: !this._tabEntriesById.get('pricedItemsList'),
+                onChooseItem: () => this.onActivateTab('pricedItemsList'),
             },
             {},
             { id: 'revertChanges',
@@ -381,12 +428,14 @@ export class MainWindow extends React.Component {
 
     renderTabbedPages() {
         const { state } = this;
+        console.log('renderTabbedPages: ' + state.activeTabId);
+
         return <TabbedPages
             tabEntries={state.tabEntries}
             activeTabId={state.activeTabId}
             onRenderPage={this.onRenderPage}
             onCloseTab={this.onCloseTab}
-            onActiveTab={this.onActiveTab}
+            onActivateTab={this.onActivateTab}
             onPostRenderTabs={this.onPostRenderTabs}
         />;
     }
