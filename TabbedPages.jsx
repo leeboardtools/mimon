@@ -20,6 +20,16 @@ export class TabbedPages extends React.Component {
     }
 
 
+    componentDidUpdate(oldProps) {
+        if (oldProps.activeTabId !== this.props.activeTabId) {
+            // This is necessary if the parent wants to change the active tab, as
+            // we need to keep track of the active tab ourselves as well.
+            this.setState({
+                activeTabId: this.props.activeTabId,
+            });
+        }
+    }
+
     handleTabClick(tabEntry) {
         let tabId = tabEntry.tabId;
         if (this.props.onActivateTab) {
@@ -33,6 +43,7 @@ export class TabbedPages extends React.Component {
 
 
     renderTabs() {
+        console.log('tabs: ' + this.state.activeTabId);
         const items = this.props.tabEntries.map((tabEntry) => {
             const ariaLabel = tabEntry.title + ' Tab';
 
@@ -157,12 +168,12 @@ export class TabbedPages extends React.Component {
 
 /**
  * @callback TabbedPages~onCloseTab
- * @param {TappedPages~TabEntry}    tabEntry    The tab entry to be closed.
+ * @param {string}    tabId    The id of tab entry to be closed.
  */
 
 /**
  * @callback TabbedPages~onActivateTab
- * @param {TappedPages~TabEntry}    tabEntry    The tab entry to be closed.
+ * @param {string}    tabId    The id of tab entry that was activated.
  */
 
 /**
