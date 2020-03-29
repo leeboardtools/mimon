@@ -17,6 +17,7 @@ const fsPromises = require('fs').promises;
 
 /**
  * Component for specifying the file name/type of a new accounting project file.
+ * @private
  */
 class NewFileName extends React.Component {
     constructor(props) {
@@ -150,7 +151,10 @@ NewFileName.propTypes = {
 };
 
 
-
+/**
+ * Component for editing the general settings.
+ * @private
+ */
 class GeneralSettingsEditor extends React.Component {
     constructor(props) {
         super(props);
@@ -516,6 +520,23 @@ export class FileCreator extends React.Component {
     }
 }
 
+/**
+ * @callback FileCreator~onFileCreated
+ */
+
+/**
+ * @callback FileCreator~onCancel
+ */
+
+/**
+ * @typedef {object}    FileCreator~propTypes
+ * @property {EngineAccessor}   accessor
+ * @property {FrameManager} frameManager    Used for the file open dialog box
+ * @property {FileCreator~onFileCreated}    onFileCreated Called once the file has
+ * been created.
+ * @property {FileCreator~onCancel} onCancel    Called if the file creation is cancelled.
+ * @property {string}   [initialDir]    If specified the initial folder.
+ */
 FileCreator.propTypes = {
     accessor: PropTypes.object.isRequired,
     frameManager: PropTypes.object.isRequired,

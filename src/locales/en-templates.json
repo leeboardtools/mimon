@@ -2,13 +2,17 @@
     {
         "type": "newFileTemplate",
         "name": "Basic Accounts",
-        "pricedItems": [
-            {
-                "type": "REAL_ESTATE",
-                "name": "House",
-                "id": "House"
-            }
-        ],
+
+        "pricedItems": {
+            "pricedItems": [
+                {
+                    "type": "REAL_ESTATE",
+                    "name": "House",
+                    "id": "House"
+                }
+            ]
+        },
+        
         "accounts": {
             "ASSET": [
                 {

@@ -8,10 +8,10 @@ import deepEqual from 'deep-equal';
 import { AccountsListHandler } from './AccountsListHandler';
 
 
-
-//
-//---------------------------------------------------------
-//
+/**
+ * The main window component. This is responsible for managing the normal
+ * accounting system editing process.
+ */
 export class MainWindow extends React.Component {
     constructor(props) {
         super(props);
@@ -411,11 +411,30 @@ export class MainWindow extends React.Component {
     }
 }
 
+
+/**
+ * @callback MainWindow~onRevertFile
+ */
+
+/**
+ * @callback MainWindow~onCloseFile
+ */
+
+/**
+ * @callback MainWindow~onExit
+ */
+
+/**
+ * @typedef {object} MainWindow~propTypes
+ * @property {EngineAccessor}   accessor
+ * @property {App~MainSetup}    [mainSetup]
+ * @property {MainWindow~onRevertFile}  [onRevertFile]  Called to revert the file.
+ * @property {MainWindow~onCloseFile}   [onCloseFile]   Called to close the file.
+ * @property {MainWindow~onExit}    [onExit]    Called to exit.
+ */
 MainWindow.propTypes = {
     accessor: PropTypes.object.isRequired,
-    frameManager: PropTypes.object.isRequired,
     mainSetup: PropTypes.object,
-    onClose: PropTypes.func,
     onRevertFile: PropTypes.func,
     onCloseFile: PropTypes.func,
     onExit: PropTypes.func,

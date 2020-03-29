@@ -58,7 +58,8 @@ export async function asyncGetNewFileTemplates() {
     const templates = await asyncGetTemplatesWithType('newFileTemplate');
     if (templates) {
         templates.forEach((template) => {
-            template.nextPricedItemId = addIdsToPricedItems(template.pricedItems, 1);
+            const { pricedItems } = template;
+            template.nextPricedItemId = addIdsToPricedItems(pricedItems.pricedItems, 1);
 
             const { accounts } = template;
             if (accounts) {

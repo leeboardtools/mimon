@@ -4,6 +4,42 @@ import * as T from '../engine/Transactions';
 import { YMDDate } from '../util/YMDDate';
 import { userMsg, userError } from '../util/UserMessages';
 
+/**
+ * @typedef {object}    NewFileContents_PricedItem
+ * @property {string}   type
+ * @property {string}   name
+ * @property {string}   [id]
+ * @property {string}   [ticker]
+ */
+
+/**
+ * @typedef {object}    NewFileContents_PricedItems
+ * @property {NewFileContents_PricedItem[]}    [pricedItems]
+ */
+
+/**
+ * @typedef {object}    NewFileContents_Account
+ * @property {string}   type
+ * @property {string}   name
+ * @property {string}   [id]
+ * @property {NewFileContents_Account[]}    [childAccounts]
+ */
+
+/**
+ * @typedef {object}    NewFileContents_Accounts
+ * @property {NewFileContents_Account[]}    ASSETS
+ * @property {NewFileContents_Account[]}    LIABILITIES
+ * @property {NewFileContents_Account[]}    INCOME
+ * @property {NewFileContents_Account[]}    EXPENSES
+ * @property {NewFileContents_Account[]}    EQUITY
+ */
+
+/**
+ * @typedef {object} NewFileContents
+ * @property {string}   [openingBalancesDate]
+ * @property {NewFileContents_PricedItems}    [pricedItems]
+ * @property {NewFileContents_Accounts} [accounts]
+ */
 
 //
 //---------------------------------------------------------
@@ -200,7 +236,7 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item) {
  * Sets up a blank accounting file from JSON template data.
  * @param {EngineAccessor} accessor
  * @param {AccountingFile} accountingFile 
- * @param {object} initialContents 
+ * @param {NewFileContents} initialContents 
  * @returns {string[]}  An array containing any warning messages.
  */
 export async function asyncSetupNewFile(accessor, accountingFile, initialContents) {

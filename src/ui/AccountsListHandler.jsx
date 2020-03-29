@@ -4,6 +4,10 @@ import { AccountsList } from './AccountsList';
 //import * as A from '../engine/Accounts';
 
 
+/**
+ * Handler for {@link AccountsList} components and their pages in the 
+ * {@link MainWindow}, this manages all the account related commands.
+ */
 export class AccountsListHandler {
     constructor(props) {
         this.props = props;
@@ -71,16 +75,6 @@ export class AccountsListHandler {
         }
     }
 
-
-    createTabEntry(tabId) {
-        return {
-            tabId: tabId,
-            title: userMsg('MainWindow-masterAccountList_title'),
-            dropdownInfo: this.getTabDropdownInfo(tabId),
-            onRenderTabPage: this.onRenderTabPage,
-        };
-    }
-
     
     getTabDropdownInfo(tabId, activeAccountId) {
         console.log('menu: ' + activeAccountId);
@@ -143,6 +137,27 @@ export class AccountsListHandler {
     }
 
 
+    /**
+     * Called by {@link MainWindow} to create the {@link TabbedPages~TabEntry}
+     * object for an accounts list page.
+     * @param {string} tabId 
+     * @returns {TabbedPages~TabEntry}
+     */
+    createTabEntry(tabId) {
+        return {
+            tabId: tabId,
+            title: userMsg('MainWindow-masterAccountList_title'),
+            dropdownInfo: this.getTabDropdownInfo(tabId),
+            onRenderTabPage: this.onRenderTabPage,
+        };
+    }
+
+
+    /**
+     * Called by {@link MainWindow} to render the account list page for a tab entry.
+     * @param {TabbedPages~TabEntry} tabEntry 
+     * @param {boolean} isActive 
+     */
     onRenderTabPage(tabEntry, isActive) {
         const { accessor } = this.props;
         return <AccountsList

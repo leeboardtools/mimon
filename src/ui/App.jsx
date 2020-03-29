@@ -36,9 +36,10 @@ async function asyncChangeStartupOptions(newOptions) {
 
 
 
-//
-// ---------------------------------------------------------
-//
+/**
+ * The opening screen component.
+ * @private
+ */
 class AppOpenScreen extends React.Component {
     constructor(props) {
         super(props);
@@ -168,10 +169,11 @@ AppOpenScreen.propTypes = {
     onExitClick: PropTypes.func.isRequired,
 };
 
-//
-// ---------------------------------------------------------
-//
-
+/**
+ * The main application component.
+ * @class
+ * @name App
+ */
 export default class App extends React.Component {
     constructor(props) {
         super(props);
@@ -585,7 +587,6 @@ export default class App extends React.Component {
         case 'mainWindow' :
             return <MainWindow
                 accessor = {this._accessor}
-                frameManager = { this._frameManager}
                 mainSetup = {this.state.mainSetup}
                 onClose = {this.onCancel}
                 onRevertFile={this.onRevertFile}
@@ -609,3 +610,8 @@ export default class App extends React.Component {
         </div>;
     }
 }
+
+/**
+ * @typedef {object}    App~MainSetup
+ * @property {boolean}  [isDevMode] <code>true</code> if in developer mode.
+ */

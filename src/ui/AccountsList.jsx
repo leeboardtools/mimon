@@ -11,6 +11,9 @@ import { CurrencyDisplay } from '../util-ui/CurrencyDisplay';
 import { QuantityDisplay } from '../util-ui/QuantityDisplay';
 
 
+/**
+ * Component for displaying a list of accounts.
+ */
 export class AccountsList extends React.Component {
     constructor(props) {
         super(props);
@@ -299,6 +302,27 @@ export class AccountsList extends React.Component {
     }
 }
 
+/**
+ * @callback AccountsList~onSelectAccount
+ * @param {number}  accountId
+ */
+
+/**
+ * @callback AccountsList~onChooseAccount
+ * @param {number}  accountId
+ */
+
+
+/**
+ * @typedef {object} AccountsList~propTypes
+ * @property {EngineAccessor}   accessor
+ * @property {AccountsList~onSelectAccount} [onSelectAccount]   Called when an account
+ * is selected.
+ * @property {AccountsList~onChooseAccount} [onChooseAccount]   Called when an account
+ * is 'chosen', either double-clicked or enter is pressed.
+ * @property {function} [onContextMenu] Event handler for 
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/contextmenu_event}
+ */
 AccountsList.propTypes = {
     accessor: PropTypes.object.isRequired,
     onSelectAccount: PropTypes.func,

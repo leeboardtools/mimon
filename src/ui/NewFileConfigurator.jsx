@@ -87,6 +87,11 @@ function removeAccountDataItemWithId(accountDataItems, id) {
 }
 
 
+/**
+ * Component for editing the accounts for a particular root account
+ * in a new accounting file.
+ * @private
+ */
 class NewFileAccountsEditor extends React.Component {
     constructor(props) {
         super(props);
@@ -1059,6 +1064,29 @@ export class NewFileConfigurator extends React.Component {
     }
 }
 
+/**
+ * @callback NewFileConfigurator~onUpdateFileContents
+ * @param {NewFileContents}  newFileContents
+ */
+
+/**
+ * @callback NewFileConfigurator~asyncEndEditCallback
+ * @param {boolean} saveChanges
+ * @async
+ */
+
+/**
+ * @callback NewFileConfigurator~onSetEndEditAsyncCallback
+ * @param {NewFileConfigurator~asyncEndEditCallback|undefined}    callback
+ */
+
+/**
+ * @typedef {object} NewFileConfigurator~propTypes
+ * @property {EngineAccessor}   accessor
+ * @property {NewFileContents}   newFileContents
+ * @property {NewFileConfigurator~onUpdateFileContents} onUpdateFileContents
+ * @property {NewFileConfigurator~onSetEndEditAsyncCallback}    onSetEndEditAsyncCallback
+ */
 NewFileConfigurator.propTypes = {
     accessor: PropTypes.object.isRequired,
     newFileContents: PropTypes.object.isRequired,
