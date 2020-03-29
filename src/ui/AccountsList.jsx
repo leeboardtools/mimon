@@ -167,6 +167,10 @@ export class AccountsList extends React.Component {
 
 
     onActivateRow(rowEntry) {
+        this.setState({
+            activeRowKey: rowEntry.key,
+        });
+
         const { onSelectAccount } = this.props;
         if (onSelectAccount) {
             const { accountDataItem } = rowEntry;

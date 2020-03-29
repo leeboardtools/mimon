@@ -1,12 +1,5 @@
 {
     
-    "AccountsList-openAccount": "Open Account Register",
-    "AccountsList-reconcile": "Reconcile Account",
-    "AccountsList-newAccount": "New Account...",
-    "AccountsList-modifyAccount": "Modify Account...",
-    "AccountsList-removeAccount": "Delete Account",
-
-
     "MainWindow-checkReminders": "Check Reminders",
     "MainWindow-updatePrices": "Retrieve Prices",
 
@@ -21,6 +14,13 @@
 
     "MainWindow-exit": "Exit",
     "MainWindow-forceReload": "Force Reload",
+
+
+    "AccountsListPage-reconcileAccount": "Reconcile Account",
+    "AccountsListPage-openAccountRegister": "Open Account Register",
+    "AccountsListPage-newAccount": "New Account...",
+    "AccountsListPage-modifyAccount": "Modify Account Settings...",
+    "AccountsListPage-removeAccount": "Delete Account...",
 
 
     

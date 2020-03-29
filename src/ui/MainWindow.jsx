@@ -1,15 +1,12 @@
-// TEMP!!! For the menus...
-/* eslint-disable no-unused-vars */
-
 import React from 'react';
 import PropTypes from 'prop-types';
-import * as FM from '../util/FrameManager';
 import { userMsg } from '../util/UserMessages';
-import { AccountsList } from './AccountsList';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { TabbedPages } from '../util-ui/TabbedPages';
-import * as A from '../engine/Accounts';
-import { DropDown } from '../util-ui/DropDown';
+import { Dropdown } from '../util-ui/Dropdown';
+import deepEqual from 'deep-equal';
+import { AccountsListHandler } from './AccountsListHandler';
+
 
 
 //
@@ -34,29 +31,38 @@ export class MainWindow extends React.Component {
         this.onCheckReminders = this.onCheckReminders.bind(this);
         this.onUpdatePrices = this.onUpdatePrices.bind(this);
 
-        this.onNewAccount = this.onNewAccount.bind(this);
-        this.onModifyAccount = this.onModifyAccount.bind(this);
-        this.onRemoveAccount = this.onRemoveAccount.bind(this);
-        
-        this.onSelectAccount = this.onSelectAccount.bind(this);
-        this.onOpenAccountRegister = this.onOpenAccountRegister.bind(this);
-        this.openAccountRegister = this.openAccountRegister.bind(this);
-        this.onCloseAccountRegister = this.onCloseAccountRegister.bind(this);
 
+        this.onGetTabIdState = this.onGetTabIdState.bind(this);
+        this.onSetTabIdState = this.onSetTabIdState.bind(this);
+        this.onSetErrorMsg = this.onSetErrorMsg.bind(this);
+        this.onSetModal = this.onSetModal.bind(this);
+        this.onOpenTab = this.onOpenTab.bind(this);
+    
 
         this.onPostRenderTabs = this.onPostRenderTabs.bind(this);
 
 
+        this._accountsListHandler = new AccountsListHandler({
+            accessor: this.props.accessor,
+            onGetTabIdState: this.onGetTabIdState,
+            onSetTabIdState: this.onSetTabIdState,
+            onSetErrorMsg: this.onSetErrorMsg,
+            onSetModal: this.onSetModal,
+            onOpenTab: this.onOpenTab,
+        });
+
         this.state = {
-            tabEntries: [
-                {
-                    tabId: 'masterAccountList',
-                    tabType: 'AccountsList',
-                    title: userMsg('MainWindow-masterAccountList_title'),
-                    isAccountEditor: true,
-                }
-            ],
+            tabEntries: [],
         };
+        this._tabEntriesById = new Map();
+
+
+        const masterAccountsList = this._accountsListHandler.createTabEntry(
+            'masterAccountList'
+        );
+        this.state.tabEntries.push(masterAccountsList);
+        this._tabEntriesById.set(masterAccountsList.tabId, masterAccountsList);
+
 
         this.state.activeTabEntry = this.state.tabEntries[0];
     }
@@ -78,21 +84,13 @@ export class MainWindow extends React.Component {
 
 
     componentDidUpdate(prevProps, prevState) {
-        const { state } = this;
-        const { selectedAccountId, isAccountEditor } = state;
-
-        if ((prevState.selectedAccountId !== selectedAccountId)
-         || (prevState.isAccountEditor !== isAccountEditor)) {
-            this.updateAccountMenus();
-        }
     }
-
 
 
     onCancel() {
         this.setState({
             errorMsg: undefined,
-            modalState: undefined,
+            modal: undefined,
         });
     }
 
@@ -103,7 +101,34 @@ export class MainWindow extends React.Component {
                 activeTabEntry: undefined,
             });
         }
+
+        const { tabId, onCloseTab } = tabEntry;
+        if (onCloseTab) {
+            onCloseTab(tabEntry.tabId);
+        }
+
+        if (this._tabEntriesById.delete(tabId)) {
+            this.setState((oldState) => {
+                const oldTabEntries = oldState.tabEntries;
+                const newTabEntries = [];
+                let i = 0;
+                for (; i < oldTabEntries.length; ++i) {
+                    newTabEntries.push(oldTabEntries[i]);
+                    if (oldTabEntries[i].tabId === tabId) {
+                        break;
+                    }
+                }
+                ++i;
+                for (; i < oldTabEntries.length; ++i) {
+                    newTabEntries.push(oldTabEntries[i]);
+                }
+                return {
+                    tabEntries: newTabEntries,
+                };
+            });
+        }
     }
+
 
     onActivateTab(tabEntry) {
         this.setState({
@@ -174,133 +199,62 @@ export class MainWindow extends React.Component {
     }
 
 
-    isAccountEditorActive() {
-        const { activeTabEntry } = this.state;
-        return activeTabEntry && activeTabEntry.isAccountEditor;
-    }
-
-    isNewAccountEnabled() {
-        return this.isAccountEditorActive();
-    }
-
-    onNewAccount() {
-        if (this.isNewAccountEnabled()) {
-            this.setState({
-                modalState: 'newAccount',
-            });
-        }
+    onGetTabIdState(tabId) {
+        return this._tabEntriesById.get(tabId);
     }
 
 
-    isModifyAccountEnabled() {
-        if (this.isAccountEditorActive()) {
-            const { accessor } = this.props;
-            const { selectedAccountId } = this.state;
-            return accessor.getAccountDataItemWithId(
-                selectedAccountId);
-        }
-    }
+    onSetTabIdState(tabId, state) {
+        const oldTabEntry = this._tabEntriesById.get(tabId);
+        if (oldTabEntry) {
+            const newTabEntry = Object.assign({}, oldTabEntry, state);
+            if (!deepEqual(oldTabEntry, newTabEntry)) {
+                this._tabEntriesById.set(tabId, newTabEntry);
 
-    onModifyAccount() {
-        if (this.isModifyAccountEnabled()) {
-            this.setState({
-                modalState: 'modifyAccount',
-            });
-        }
-    }
-
-
-    isRemoveAccountEnabled() {
-        if (this.isAccountEditorActive()) {
-            const { accessor } = this.props;
-            const { selectedAccountId } = this.state;
-            const accountDataItem = accessor.getAccountDataItemWithId(
-                selectedAccountId);
-            if (accountDataItem) {
-                return accountDataItem.parentAccountId;
+                this.setState((oldState) => {
+                    const newTabEntries = oldState.tabEntries.map((tabEntry) => 
+                        (tabEntry.tabId === tabId) ? newTabEntry : tabEntry);
+                    return {
+                        tabEntries: newTabEntries,
+                    };
+                });
             }
         }
     }
 
-    onRemoveAccount() {
-        if (this.isRemoveAccountEnabled()) {
-            this.setState({
-                modalState: 'removeAccount',
-            });
-        }
+
+    onSetErrorMsg(errorMsg) {
+        this.setState({
+            errorMsg: errorMsg,
+        });
     }
 
-    onSelectAccount(accountId) {
+    onSetModal(modal) {
         this.setState({
-            selectedAccountId: accountId,
+            modal: modal,
         });
     }
 
 
-    isOpenAccountRegisterEnabled() {
-        if (this.isAccountEditorActive()) {
-            const { accessor } = this.props;
-            const { selectedAccountId } = this.state;
-            return accessor.getAccountDataItemWithId(
-                selectedAccountId);
+    onOpenTab(type, ...args) {
+        switch (type) {
+        case 'reconcileAccount' :
+            this.onSetErrorMsg('Sorry, Reconcile Account is not yet implemented...');
+            break;
+        
+        case 'accountRegister' :
+            this.onSetErrorMsg('Sorry, Account Register is not yet implemented...');
+            break;
+    
+        default :
+            this.onSetErrorMsg('Sorry, ' + type + ' is not yet implemented...');
+            break;
         }
-    }
-
-    onOpenAccountRegister() {
-        if (this.isOpenAccountRegisterEnabled()) {
-            this.openAccountRegister(this.state.selectedAccountId);
-        }
-    }
-
-    openAccountRegister(accountId) {
-        console.log('openAccountRegister: ' + accountId);
-    }
-
-
-    isCloseAccountRegisterEnabled() {
-
-    }
-    onCloseAccountRegister() {
-
     }
 
 
     onRenderPage(tabEntry, isActive) {
-        const { accessor } = this.props;
-        switch (tabEntry.tabType) {
-        case 'AccountsList':
-            return <AccountsList
-                accessor={accessor}
-                onSelectAccount={this.onSelectAccount}
-                onChooseAccount={this.openAccountRegister}
-            />;
-        
-        case 'AccountRegister':
-
-        }
-    }
-
-
-    renderModal(modalState) {
-        switch (modalState) {
-        case 'newAccount' :
-            break;
-
-        case 'modifyAccount' :
-            break;
-
-        case 'removeAccount' :
-            break;
-
-        case 'newPricedItem' :
-            break;
-
-        case 'modifyPricedItem' :
-            break;
-
-        case 'removePricedItem' :
-            break;
-        }
+        return tabEntry.onRenderTabPage(tabEntry, isActive);
     }
 
 
@@ -344,11 +298,11 @@ export class MainWindow extends React.Component {
         const mainMenuItems = [
             { id: 'checkReminders', 
                 label: userMsg('MainWindow-checkReminders'),
-                onClick: this.onCheckReminders,
+                onChooseItem: this.onCheckReminders,
             },
             { id: 'updatePrices', 
                 label: userMsg('MainWindow-updatePrices'),
-                onClick: this.onUpdatePrices,
+                onChooseItem: this.onUpdatePrices,
             },
             {},
             { id: 'viewAccountsList', 
@@ -375,16 +329,16 @@ export class MainWindow extends React.Component {
             { id: 'revertChanges',
                 label: userMsg('MainWindow-revertChanges'),
                 disabled: !accessor.isAccountingFileModified(),
-                onClick: this.props.onRevertFile,
+                onChooseItem: this.props.onRevertFile,
             },
             { id: 'closeFile',
                 label: userMsg('MainWindow-closeFile'),
-                onClick: this.props.onCloseFile,
+                onChooseItem: this.props.onCloseFile,
             },
             {},
             { id: 'exit',
                 label: userMsg('MainWindow-exit'),
-                onClick: this.props.onExit,
+                onChooseItem: this.props.onExit,
             },
         ];
 
@@ -398,7 +352,7 @@ export class MainWindow extends React.Component {
             });
         }
 
-        const mainMenu = <DropDown
+        const mainMenu = <Dropdown
             title={mainMenuTitle}
             items={mainMenuItems}
             topClassExtras="mt-2 ml-2"
@@ -424,6 +378,7 @@ export class MainWindow extends React.Component {
     }
 
 
+
     renderTabbedPages() {
         const { state } = this;
         return <TabbedPages
@@ -438,17 +393,17 @@ export class MainWindow extends React.Component {
 
 
     render() {
-        const { errorMsg, modalState } = this.state;
+        const { errorMsg, modal } = this.state;
         if (errorMsg) {
             return <ErrorReporter message={errorMsg} 
                 onClose={this.onCancel}
             />;
         }
 
-        if (modalState) {
-            const modal = this.renderModal(modalState);
-            if (modal) {
-                return modal;
+        if (modal) {
+            const modalComponent = modal();
+            if (modalComponent) {
+                return modalComponent;
             }
         }
 

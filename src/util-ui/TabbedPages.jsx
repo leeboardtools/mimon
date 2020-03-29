@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { DropDown } from './DropDown';
+import { Dropdown } from './Dropdown';
 
 
 
@@ -38,9 +38,36 @@ export class TabbedPages extends React.Component {
 
             let className = 'nav-item nav-link tabText';
             let tabComponent;
+            let isActive;
             if (tabEntry.tabId === this.state.activeTabId) {
                 className += ' active';
+                isActive = true;
+
             }
+            
+            const { dropdownInfo } = tabEntry;
+
+            if (dropdownInfo) {
+                // We only want the menu enabled if we're the active tab, so when
+                // you click on an inactive tab the menu doesn't drop down.
+                if (isActive) {
+                    tabComponent = <Dropdown
+                        title={tabEntry.title}
+                        aria-label={ariaLabel}
+                        items={dropdownInfo.items}
+                    />;
+                }
+                else {
+                    tabComponent = <a href="#" 
+                        className="dropdown-toggle"
+                        onClick={() => this.handleTabClick(tabEntry)}
+                        aria-label={ariaLabel}
+                    >
+                        {tabEntry.title}
+                    </a>;
+                }
+            }
+
 
             if (!tabComponent) {
                 tabComponent = <a href="#" onClick={() => this.handleTabClick(tabEntry)}
@@ -68,64 +95,6 @@ export class TabbedPages extends React.Component {
                 </div>
             );
         });
-
-        if (!items) {
-            // The format is:
-            //  <nav className="nav nav-tabs bg-light">
-            //      <div className="nav-item nav-link tabText">
-            //          <a href="#"...>{tabEntry.title}
-            //          <button type="button" className="close tabCloseButton">
-            //              <span aria-hidden="true">&times;</span>
-            //          </button>
-            //      </div>
-            //      ...
-            //      ...
-            //  </nav>
-            const menuItems = [
-                { id: 'a', label: 'A', },
-                { id: 'b', label: 'B', disabled: true, },
-                { },
-                { id: 'c', label: 'C', },
-            ];
-            const menu = <DropDown title="Menu"
-                id = "Abc"
-                buttonClassExtras="btn btn-primary"
-                items = { menuItems}
-                onChooseItem={(id) => { console.log('choose: ' + id)}}
-            />;
-/*
-            const menu = <div className="">
-                <div className="dropdown">
-                    <button className="btn btn-secondary dropdown-toggle"
-                        type="button"
-                        id="dropdownMenuButton"
-                        data-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                    >
-                        My Menu
-                    </button>
-                    <div className="dropdown-menu"
-                        aria-labelledby="dropdownMenuButton"
-                    >
-                        <a className="dropdown-item" href="#">Item A</a>
-                        <a className="dropdown-item" href="#">Item B</a>
-                        <a className="dropdown-item" href="#">Item C</a>
-                    </div>
-                </div>
-            </div>;
-*/
-            const navBar = <nav className="nav nav-tabs bg-light">
-                {items}
-            </nav>;
-
-            return <div className="d-flex">
-                <div className="flex-grow-1">
-                    {navBar}
-                </div>
-                {menu}
-            </div>;
-        }
 
         let className = this.props.tabClassName || 'nav nav-tabs bg-light';
         if (this.props.tabExtras) {
@@ -198,9 +167,16 @@ export class TabbedPages extends React.Component {
 
 /**
  * @callback {TabbedPages~onPostRenderTabs}
+ * This can be used to add things like menu buttons to the tab bar.
  * @param {object}    tabs  The component representing the tabs.
  * @return {object} The component to render, this would normally be a parent component
  * around tabs.
+ */
+
+/**
+ * @typedef {object} TabbedPages~TabDropdownInfo
+ * @property {Dropdown~Item[]}  items
+ * @property {Dropdown~onChooseItem}    onChooseItem
  */
 
 /**

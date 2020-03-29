@@ -2,7 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 
-export function DropDown(props) {
+/**
+ * Component for a dropdown.
+ * @class
+ */
+export function Dropdown(props) {
     const itemClassExtras = props.itemClassExtras || '';
 
     let dividerCount = 0;
@@ -22,8 +26,8 @@ export function DropDown(props) {
             className += ' disabled';
         }
         else {
-            onClick = (item.onClick) 
-                ? item.onClick
+            onClick = (item.onChooseItem) 
+                ? () => item.onChooseItem(item.id)
                 : () => props.onChooseItem(item.id);
         }
 
@@ -81,7 +85,47 @@ export function DropDown(props) {
     </div>;
 }
 
-DropDown.propTypes = {
+
+/**
+ * @callback {Dropdown~onChooseItem}
+ * @param {*}   id  The id of the chosen item.
+ */
+
+/**
+ * @callback {Dropdown~onRenderItem}
+ * @param {Dropdown~Item} item
+ * @returns {object}
+ */
+
+/**
+ * @typedef {object} Dropdown~Item
+ * @property {*}    [id]  The id, if falsy then the item represents a separator.
+ * @property {string}   [label] If onRender is not given, the label that's rendered.
+ * @property {string}   [classExtras]   Class names to add to the item's class list.
+ * @property {boolean} [disabled]
+ * @property {Dropdown~onChooseItem} [onChooseItem]   If specified the callback called
+ * when the item is selected, otherwise the dropdown's onChooseItem is called.
+ * @property {Dropdown~onRenderItem}    [onRender]  If specified called to render 
+ * the item, otherwise the item should have a label property, which is displayed.
+ */
+
+/**
+ * @typedef {object} Dropdown~PropTypes
+ * @property {string|object}    title   The title of the dropdown, if an object then
+ * it must be a react component.
+ * @property {string}   [id]
+ * @property {string}   [ariaLabel]
+ * @property {Dropdown~Item[]}  items
+ * @property {boolean} [disabled]
+ * @property {string}   [topClassExtras]    Extra classes to add to the top level.
+ * @property {boolean} [noArrow]    If truthy no dropdrown arrow is displayed.
+ * @property {string} [buttonClassExtras]   Extra classes to add to the button.
+ * @property {string} [menuClassExtras] Extra classes to add to the menu item container
+ * @property {string} [itemClassExtras] Extra classes to add to the individual items.
+ * @property {Dropdown~onChooseItem}    [onChooseItem] Callback called when an item
+ * is chosen if the item does not have an onChooseItem property.
+ */
+Dropdown.propTypes = {
     title: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object,
