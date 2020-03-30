@@ -82,17 +82,26 @@
 
 
 
+    "AccountsList-name": "Name",
+    "AccountsList-type": "Type",
+    "AccountsList-balance": "Balance",
+    "AccountsList-shares": "Shares",
+
     "AccountsListHandler-masterAccountList_title": "Accounts",
     "AccountsListHandler-reconcileAccount": "Reconcile Account",
     "AccountsListHandler-openAccountRegister": "Open Account Register",
     "AccountsListHandler-newAccount": "New Account...",
     "AccountsListHandler-modifyAccount": "Modify Account Settings...",
     "AccountsListHandler-removeAccount": "Delete Account...",
+    "AccountsListHandler-view_assets": "Show Assets",
+    "AccountsListHandler-view_liabilities": "Show Liabilities",
+    "AccountsListHandler-view_income": "Show Income",
+    "AccountsListHandler-view_expenses": "Show Expenses",
+    "AccountsListHandler-view_equity": "Show Equity",
+    "AccountsListHandler-showAccount": "Show Account",
+    "AccountsListHandler-hideAccount": "Hide Account",
+    "AccountsListHandler-showHiddenAccounts": "Show Hidden Accounts",
 
-    "AccountsList-name": "Name",
-    "AccountsList-type": "Type",
-    "AccountsList-balance": "Balance",
-    "AccountsList-shares": "Shares",
 
 
     "AccountRegisterHandler-newTransaction": "New Transaction",

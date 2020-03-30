@@ -2,7 +2,7 @@ import React from 'react';
 import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountsList } from './AccountsList';
-//import * as A from '../engine/Accounts';
+import * as A from '../engine/Accounts';
 
 
 /**
@@ -18,6 +18,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         this.onNewAccount = this.onNewAccount.bind(this);
         this.onModifyAccount = this.onModifyAccount.bind(this);
         this.onRemoveAccount = this.onRemoveAccount.bind(this);
+
+        this.onToggleViewAccountType = this.onToggleViewAccountType.bind(this);
 
         this.onSelectAccount = this.onSelectAccount.bind(this);
         this.onChooseAccount = this.onChooseAccount.bind(this);
@@ -72,8 +74,38 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         }
     }
 
+
+    onToggleViewAccountType(tabId, accountType) {
+        const state = this.getTabIdState(tabId);
+        const hiddenRootAccountTypes = Array.from(state.hiddenRootAccountTypes);
+        const index = hiddenRootAccountTypes.indexOf(accountType);
+        if (index >= 0) {
+            hiddenRootAccountTypes.splice(index, 1);
+        }
+        else {
+            hiddenRootAccountTypes.push(accountType);
+        }
+
+        // TODO: Add callback for saving the state?
+
+        this.setTabIdState(tabId, {
+            hiddenRootAccountTypes: hiddenRootAccountTypes,
+            dropdownInfo: this.getTabDropdownInfo(tabId, 
+                state.activeAccountId, hiddenRootAccountTypes),
+        });
+    }
+
     
-    getTabDropdownInfo(tabId, activeAccountId) {
+    getTabDropdownInfo(tabId, activeAccountId, hiddenRootAccountTypes) {
+        if (!hiddenRootAccountTypes) {
+            const state = this.getTabIdState(tabId);
+            if (state) {
+                hiddenRootAccountTypes = state.hiddenRootAccountTypes;
+            }
+        }
+
+        hiddenRootAccountTypes = hiddenRootAccountTypes || [];
+
         const menuItems = [
             { id: 'reconcileAccount',
                 label: userMsg('AccountsListHandler-reconcileAccount'),
@@ -99,7 +131,38 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 label: userMsg('AccountsListHandler-removeAccount'),
                 disabled: !activeAccountId,
                 onChooseItem: () => this.onRemoveAccount(tabId),
-            },                        
+            },
+            {},
+            { id: 'viewAssets',
+                label: userMsg('AccountsListHandler-view_assets'),
+                checked: (hiddenRootAccountTypes.indexOf('ASSET') < 0),
+                onChooseItem: () => this.onToggleViewAccountType(
+                    tabId, A.AccountType.ASSET.name),
+            },
+            { id: 'viewLiabilities',
+                label: userMsg('AccountsListHandler-view_liabilities'),
+                checked: (hiddenRootAccountTypes.indexOf('LIABILITY') < 0),
+                onChooseItem: () => this.onToggleViewAccountType(
+                    tabId, A.AccountType.LIABILITY.name),
+            },
+            { id: 'viewIncome',
+                label: userMsg('AccountsListHandler-view_income'),
+                checked: (hiddenRootAccountTypes.indexOf('INCOME') < 0),
+                onChooseItem: () => this.onToggleViewAccountType(
+                    tabId, A.AccountType.INCOME.name),
+            },
+            { id: 'viewExpenses',
+                label: userMsg('AccountsListHandler-view_expenses'),
+                checked: (hiddenRootAccountTypes.indexOf('EXPENSE') < 0),
+                onChooseItem: () => this.onToggleViewAccountType(
+                    tabId, A.AccountType.EXPENSE.name),
+            },
+            { id: 'viewEquity',
+                label: userMsg('AccountsListHandler-view_equity'),
+                checked: (hiddenRootAccountTypes.indexOf('EQUITY') < 0),
+                onChooseItem: () => this.onToggleViewAccountType(
+                    tabId, A.AccountType.EQUITY.name),
+            },
         ];
 
         return {
@@ -144,6 +207,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             title: userMsg('AccountsListHandler-masterAccountList_title'),
             dropdownInfo: this.getTabDropdownInfo(tabId),
             onRenderTabPage: this.onRenderTabPage,
+            hiddenRootAccountTypes: [],
         };
     }
 
@@ -162,6 +226,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 this.onSelectAccount(tabEntry.tabId, accountId)}
             onChooseAccount={(accountId) => 
                 this.onChooseAccount(tabEntry.tabId, accountId)}
+            hiddenRootAccountTypes={tabEntry.hiddenRootAccountTypes}
+            hiddenAccountIds={tabEntry.hiddenAccountIds}
         />;
     }
 }

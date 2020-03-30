@@ -463,7 +463,7 @@ export class AccountManager extends EventEmitter {
             const account = (await this._asyncAddAccount({
                 type: AccountType.EXPENSE,
                 pricedItemId: currencyPricedItemId, 
-                name: userMsg('Account-Root_Expense_name'),
+                name: userMsg('Account-Root_Expenses_name'),
                 description: userMsg('Account-Root_Expense_desc'),
             })).newAccountDataItem;
             this._rootExpenseAccountId = account.id;

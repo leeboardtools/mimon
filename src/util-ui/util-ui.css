@@ -45,6 +45,14 @@
 /** End util-ui/CurrencyyDisplay.jsx */
 
 
+.dropdown-item-checked::before {
+    position: absolute;
+    left: .4rem;
+    content: '✓';
+    font-weight: 600;
+  }
+  
+
 /** Needed for util-ui/QuantityDisplay.jsx */
 .quantityDisplay {
     text-align: right;

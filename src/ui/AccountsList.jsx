@@ -9,6 +9,7 @@ import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
 import { CurrencyDisplay } from '../util-ui/CurrencyDisplay';
 import { QuantityDisplay } from '../util-ui/QuantityDisplay';
+import deepEqual from 'deep-equal';
 
 
 /**
@@ -73,7 +74,32 @@ export class AccountsList extends React.Component {
 
         this._collapsedRowIds = new Set();
 
+        this._hiddenRootAccountTypes = new Set(props.hiddenRootAccountTypes);
+        this._hiddenAccountIds = new Set(props.hiddenAccountIds);
+
+
         this.state.rowEntries = this.buildRowEntries();
+    }
+
+
+    componentDidUpdate(prevProps) {
+        const { hiddenRootAccountTypes, hiddenAccountIds } = this.props;
+        let rowsNeedUpdating = false;
+        if (!deepEqual(prevProps.hiddenRootAccountTypes, hiddenRootAccountTypes)) {
+            this._hiddenRootAccountTypes = new Set(hiddenRootAccountTypes);
+            rowsNeedUpdating = true;
+        }
+
+        if (!deepEqual(prevProps.hiddenAccountIds, hiddenAccountIds)) {
+            this._hiddenAccountIds = new Set(hiddenAccountIds);
+            rowsNeedUpdating = true;
+        }
+
+        if (rowsNeedUpdating) {
+            this.setState({
+                rowEntries: this.buildRowEntries(),
+            });
+        }
     }
 
 
@@ -126,6 +152,20 @@ export class AccountsList extends React.Component {
 
 
     isAccountIdDisplayed(accountId) {
+        if (this._hiddenAccountIds.has(accountId)) {
+            return false;
+        }
+        
+        const accountDataItem = this.props.accessor.getAccountDataItemWithId(
+            accountId);
+        if (!accountDataItem) {
+            return false;
+        }
+
+        if (this._hiddenRootAccountTypes.has(accountDataItem.type)) {
+            return false;
+        }
+
         return true;
     }
 
@@ -328,4 +368,6 @@ AccountsList.propTypes = {
     onSelectAccount: PropTypes.func,
     onChooseAccount: PropTypes.func,
     onContextMenu: PropTypes.func,
+    hiddenRootAccountTypes: PropTypes.arrayOf(PropTypes.string),
+    hiddenAccountIds: PropTypes.arrayOf(PropTypes.number),
 };
