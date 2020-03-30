@@ -21,6 +21,10 @@ export function Dropdown(props) {
             className += ' ' + item.classExtras;
         }
 
+        if (item.checked) {
+            className += ' dropdown-item-checked';
+        }
+
         let onClick;
         if (item.disabled) {
             className += ' disabled';
@@ -28,7 +32,9 @@ export function Dropdown(props) {
         else {
             onClick = (item.onChooseItem) 
                 ? () => item.onChooseItem(item.id)
-                : () => props.onChooseItem(item.id);
+                : ((props.onChooseItem)
+                    ? () => props.onChooseItem(item.id)
+                    : undefined);
         }
 
         let itemComponent;
