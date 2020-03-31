@@ -45,12 +45,14 @@
 /** End util-ui/CurrencyyDisplay.jsx */
 
 
+/** Needed for util-ui/Dropdown.jsx */
 .dropdown-item-checked::before {
     position: absolute;
     left: .4rem;
     content: '✓';
     font-weight: 600;
-  }
+}
+/** End util-ui/Dropdown.jsx */
   
 
 /** Needed for util-ui/QuantityDisplay.jsx */
@@ -58,6 +60,14 @@
     text-align: right;
 }
 /** End util-ui/QuantityDisplay.jsx */
+
+
+/** Used by util-ui/TabbedPages.jsx */
+.tabCloseButton {
+    margin-left: 0.5rem;
+}
+/** End util-ui/TabbedPages.jsx */
+
 
 .w-10 {
     width: 10%;

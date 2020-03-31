@@ -88,6 +88,7 @@ export function Dropdown(props) {
         <div className={menuClassName}>
             {items}
         </div>
+        {props.children}
     </div>;
 }
 
@@ -146,4 +147,5 @@ Dropdown.propTypes = {
     menuClassExtras: PropTypes.string,
     itemClassExtras: PropTypes.string,
     onChooseItem: PropTypes.func,
+    children: PropTypes.any,
 };

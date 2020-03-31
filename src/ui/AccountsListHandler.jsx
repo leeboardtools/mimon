@@ -20,14 +20,13 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         this.onRemoveAccount = this.onRemoveAccount.bind(this);
 
         this.onToggleViewAccountType = this.onToggleViewAccountType.bind(this);
+        this.onToggleAccountVisible = this.onToggleAccountVisible.bind(this);
+        this.onToggleShowHiddenAccounts = this.onToggleShowHiddenAccounts.bind(this);
 
         this.onSelectAccount = this.onSelectAccount.bind(this);
         this.onChooseAccount = this.onChooseAccount.bind(this);
 
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
-
-        // TO ADD;
-        // Show/ hide accounts
     }
 
 
@@ -86,25 +85,67 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             hiddenRootAccountTypes.push(accountType);
         }
 
-        // TODO: Add callback for saving the state?
+        const hiddenInfo = Object.assign({}, state, {
+            hiddenRootAccountTypes: hiddenRootAccountTypes,
+        });
 
         this.setTabIdState(tabId, {
             hiddenRootAccountTypes: hiddenRootAccountTypes,
             dropdownInfo: this.getTabDropdownInfo(tabId, 
-                state.activeAccountId, hiddenRootAccountTypes),
+                state.activeAccountId, hiddenInfo),
         });
     }
 
-    
-    getTabDropdownInfo(tabId, activeAccountId, hiddenRootAccountTypes) {
-        if (!hiddenRootAccountTypes) {
-            const state = this.getTabIdState(tabId);
-            if (state) {
-                hiddenRootAccountTypes = state.hiddenRootAccountTypes;
-            }
+
+    onToggleAccountVisible(tabId, accountId) {
+        const state = this.getTabIdState(tabId);
+        const hiddenAccountIds = Array.from(state.hiddenAccountIds);
+        const index = hiddenAccountIds.indexOf(accountId);
+        if (index >= 0) {
+            hiddenAccountIds.splice(index, 1);
+        }
+        else {
+            hiddenAccountIds.push(accountId);
+            // TODO: Also need to set the active account to something else
+            // if we're not showing hidden accounts.
         }
 
-        hiddenRootAccountTypes = hiddenRootAccountTypes || [];
+        const hiddenInfo = Object.assign({}, state, {
+            hiddenAccountIds: hiddenAccountIds,
+        });
+
+        this.setTabIdState(tabId, {
+            hiddenAccountIds: hiddenAccountIds,
+            dropdownInfo: this.getTabDropdownInfo(tabId, 
+                state.activeAccountId, hiddenInfo),
+        });
+    }
+
+
+    onToggleShowHiddenAccounts(tabId) {
+        const state = this.getTabIdState(tabId);
+
+        const hiddenInfo = Object.assign({}, state, {
+            showHiddenAccounts: !state.showHiddenAccounts,
+        });
+
+        this.setTabIdState(tabId, {
+            showHiddenAccounts: !state.showHiddenAccounts,
+            dropdownInfo: this.getTabDropdownInfo(tabId, 
+                state.activeAccountId, hiddenInfo),
+        });
+
+    }
+
+
+    
+    getTabDropdownInfo(tabId, activeAccountId, hiddenInfo) {
+        const { hiddenRootAccountTypes, hiddenAccountIds, showHiddenAccounts }
+            = hiddenInfo;
+
+        const showAccountLabelId = (hiddenAccountIds.indexOf(activeAccountId) >= 0)
+            ? 'AccountsListHandler-showAccount'
+            : 'AccountsListHandler-hideAccount';
 
         const menuItems = [
             { id: 'reconcileAccount',
@@ -163,6 +204,19 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 onChooseItem: () => this.onToggleViewAccountType(
                     tabId, A.AccountType.EQUITY.name),
             },
+            {},
+            { id: 'toggleAccountVisible',
+                label: userMsg(showAccountLabelId),
+                disabled: !activeAccountId,
+                onChooseItem: () => this.onToggleAccountVisible(
+                    tabId, activeAccountId),
+            },
+            { id: 'toggleShowHiddenAccounts',
+                label: userMsg('AccountsListHandler-showHiddenAccounts'),
+                checked: showHiddenAccounts,
+                onChooseItem: () => this.onToggleShowHiddenAccounts(
+                    tabId),
+            }
         ];
 
         return {
@@ -172,13 +226,14 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
 
     onSelectAccount(tabId, accountId) {
-        const prevActiveAccountId = this.getTabIdState(tabId).activeAccountId;
+        const state = this.getTabIdState(tabId);
+        const prevActiveAccountId = state.activeAccountId;
         if ((!prevActiveAccountId && accountId)
          || (prevActiveAccountId && !accountId)) {
             this.setTabIdState(tabId,
                 {
                     activeAccountId: accountId,
-                    dropdownInfo: this.getTabDropdownInfo(tabId, accountId),
+                    dropdownInfo: this.getTabDropdownInfo(tabId, accountId, state),
                 });
         }
         else {
@@ -202,12 +257,19 @@ export class AccountsListHandler extends MainWindowHandlerBase {
      * @returns {TabbedPages~TabEntry}
      */
     createTabEntry(tabId) {
+        const hiddenInfo = {
+            hiddenRootAccountTypes: [],
+            hiddenAccountIds: [],
+            showHiddenAccounts: false,
+        };
+
         return {
             tabId: tabId,
             title: userMsg('AccountsListHandler-masterAccountList_title'),
-            dropdownInfo: this.getTabDropdownInfo(tabId),
+            dropdownInfo: this.getTabDropdownInfo(tabId, undefined, hiddenInfo),
             onRenderTabPage: this.onRenderTabPage,
             hiddenRootAccountTypes: [],
+            hiddenAccountIds: [],
         };
     }
 
@@ -228,6 +290,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 this.onChooseAccount(tabEntry.tabId, accountId)}
             hiddenRootAccountTypes={tabEntry.hiddenRootAccountTypes}
             hiddenAccountIds={tabEntry.hiddenAccountIds}
+            showHiddenAccounts={tabEntry.showHiddenAccounts}
         />;
     }
 }

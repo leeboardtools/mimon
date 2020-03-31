@@ -545,6 +545,32 @@ export class AccountManager extends EventEmitter {
 
 
     /**
+     * Retrieves the account id of the root account for a given category.
+     * @param {AccountCategory|string} category 
+     * @returns {number}
+     */
+    getCategoryRootAccountId(category) {
+        category = accountCategory(category);
+        switch (category) {
+        case AccountCategory.ASSET :
+            return this.getRootAssetAccountId();
+        
+        case AccountCategory.LIABILITY :
+            return this.getRootLiabilityAccountId();
+        
+        case AccountCategory.INCOME :
+            return this.getRootIncomeAccountId();
+
+        case AccountCategory.EXPENSE :
+            return this.getRootExpenseAccountId();
+        
+        case AccountCategory.EQUITY :
+            return this.getRootEquityAccountId();
+        }
+    }
+
+
+    /**
      * Retrieves the account with a given id.
      * @param {number} id
      * @returns {(AccountDataItem|undefined)}

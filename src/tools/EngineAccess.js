@@ -635,6 +635,17 @@ export class EngineAccessor extends EventEmitter {
         return this._accountManager.getRootEquityAccountId();
     }
 
+    
+    /**
+     * Retrieves the account id of the root account for a given category.
+     * @param {AccountCategory|string} category 
+     * @returns {number}
+     */
+    getCategoryRootAccountId(category) {
+        return this._accountManager.getCategoryRootAccountId(category);
+    }
+
+
     /**
      * @returns {number}   The account id of the opening balances account.
      */

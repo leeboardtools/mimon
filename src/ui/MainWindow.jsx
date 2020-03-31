@@ -116,6 +116,7 @@ export class MainWindow extends React.Component {
         });
     }
 
+
     onCloseTab(tabId) {
         if (tabId === this.state.activeTabId) {
             this.setState({
@@ -130,23 +131,44 @@ export class MainWindow extends React.Component {
                 onCloseTab(tabId);
             }
 
+            if (tabId.startsWith('accountRegister_')) {
+                this._accountRegistersByAccountId.delete(tabEntry.accountId);
+            }
+
             this._tabEntriesById.delete(tabId);
             this.setState((oldState) => {
                 const oldTabEntries = oldState.tabEntries;
                 const newTabEntries = [];
                 let i = 0;
                 for (; i < oldTabEntries.length; ++i) {
-                    newTabEntries.push(oldTabEntries[i]);
                     if (oldTabEntries[i].tabId === tabId) {
                         break;
                     }
+                    newTabEntries.push(oldTabEntries[i]);
                 }
                 ++i;
+
+                let { activeTabId } = oldState;
+                
+                if ((activeTabId === tabId) || !activeTabId) {
+                    if (i < oldTabEntries.length) {
+                        activeTabId = oldTabEntries[i].tabId;
+                    }
+                    else if (newTabEntries.length) {
+                        activeTabId = newTabEntries[newTabEntries.length - 1].tabId;
+                    }
+                    else {
+                        activeTabId = undefined;
+                    }
+                }
+
                 for (; i < oldTabEntries.length; ++i) {
                     newTabEntries.push(oldTabEntries[i]);
                 }
+
                 return {
                     tabEntries: newTabEntries,
+                    activeTabId: activeTabId,
                 };
             });
         }

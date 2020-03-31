@@ -78,12 +78,13 @@ export class AccountsList extends React.Component {
         this._hiddenAccountIds = new Set(props.hiddenAccountIds);
 
 
-        this.state.rowEntries = this.buildRowEntries();
+        this.state.rowEntries = this.buildRowEntries().rowEntries;
     }
 
 
     componentDidUpdate(prevProps) {
-        const { hiddenRootAccountTypes, hiddenAccountIds } = this.props;
+        const { hiddenRootAccountTypes, hiddenAccountIds, 
+            showHiddenAccounts } = this.props;
         let rowsNeedUpdating = false;
         if (!deepEqual(prevProps.hiddenRootAccountTypes, hiddenRootAccountTypes)) {
             this._hiddenRootAccountTypes = new Set(hiddenRootAccountTypes);
@@ -95,10 +96,27 @@ export class AccountsList extends React.Component {
             rowsNeedUpdating = true;
         }
 
+        if (prevProps.showHiddenAccounts !== showHiddenAccounts) {
+            rowsNeedUpdating = true;
+        }
+
         if (rowsNeedUpdating) {
+            const { prevActiveRowKey } = this.state;
+            const result = this.buildRowEntries();
             this.setState({
-                rowEntries: this.buildRowEntries(),
+                rowEntries: result.rowEntries,
+                activeRowKey: result.activeRowKey,
             });
+
+            if (prevActiveRowKey !== result.activeRowKey) {
+                const { onSelectAccount } = this.props;
+                if (onSelectAccount) {
+                    const accountDataItem = (result.activeRowEntry)
+                        ? result.activeRowEntry.accountDataItem
+                        : undefined;
+                    onSelectAccount(accountDataItem ? accountDataItem.id : undefined);
+                }
+            }
         }
     }
 
@@ -114,7 +132,27 @@ export class AccountsList extends React.Component {
             this.addAccountIdToRowEntries(rowEntries, id, 0, 0);
         });
 
-        return rowEntries;
+        let { activeRowKey } = this.state;
+        let activeRowEntry;
+        if (activeRowKey) {
+            let currentIndex;
+            for (currentIndex = 0; currentIndex < rowEntries.length; ++currentIndex) {
+                if (rowEntries[currentIndex].key === activeRowKey) {
+                    activeRowEntry = rowEntries[currentIndex];
+                    break;
+                }
+            }
+            if (currentIndex >= rowEntries.length) {
+                // The active row is no longer visible...
+                activeRowKey = undefined;
+            }
+        }
+
+        return {
+            rowEntries: rowEntries,
+            activeRowKey: activeRowKey,
+            activeRowEntry: activeRowEntry,
+        };
     }
 
 
@@ -152,7 +190,8 @@ export class AccountsList extends React.Component {
 
 
     isAccountIdDisplayed(accountId) {
-        if (this._hiddenAccountIds.has(accountId)) {
+        const { showHiddenAccounts } = this.props;
+        if (!showHiddenAccounts && this._hiddenAccountIds.has(accountId)) {
             return false;
         }
         
@@ -172,7 +211,7 @@ export class AccountsList extends React.Component {
 
     updateRowEntries(activeRowKey) {
         this.setState((state) => {
-            const rowEntries = this.buildRowEntries();
+            const rowEntries = this.buildRowEntries().rowEntries;
             return {
                 rowEntries: rowEntries,
                 activeRowKey: activeRowKey || state.activeRowKey,
@@ -311,6 +350,10 @@ export class AccountsList extends React.Component {
         const { columnInfo } = cellInfo;
         switch (columnInfo.key) {
         case 'name' :
+            if (this.props.showAccountIds) {
+                return this.renderTextDisplay(columnInfo, 
+                    accountDataItem.name + ' ' + accountDataItem.id);
+            }
             return this.renderTextDisplay(columnInfo, accountDataItem.name);
         
         case 'type' :
@@ -370,4 +413,6 @@ AccountsList.propTypes = {
     onContextMenu: PropTypes.func,
     hiddenRootAccountTypes: PropTypes.arrayOf(PropTypes.string),
     hiddenAccountIds: PropTypes.arrayOf(PropTypes.number),
+    showHiddenAccounts: PropTypes.bool,
+    showAccountIds: PropTypes.bool,
 };

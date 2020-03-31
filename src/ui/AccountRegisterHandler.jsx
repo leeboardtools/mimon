@@ -112,6 +112,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         return {
             tabId: tabId,
             title: accountDataItem.name,
+            hasClose: true,
             accountId: accountId,
             dropdownInfo: this.getTabDropdownInfo(tabId),
             onRenderTabPage: this.onRenderTabPage,
