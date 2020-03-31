@@ -55,6 +55,17 @@ export class TabbedPages extends React.Component {
                 isActive = true;
 
             }
+
+            let closeButton;
+            if (tabEntry.hasClose && this.props.onCloseTab) {
+                closeButton = <button type="button" 
+                    className="close tabCloseButton" 
+                    data-dismiss="modal" 
+                    aria-label="Close Tab" 
+                    onClick={() => this.props.onCloseTab(tabEntry.tabId)}>
+                    <span aria-hidden="true">&times;</span>
+                </button>;
+            }
             
             const { dropdownInfo } = tabEntry;
 
@@ -65,8 +76,10 @@ export class TabbedPages extends React.Component {
                     tabComponent = <Dropdown
                         title={tabEntry.title}
                         aria-label={ariaLabel}
-                        items={dropdownInfo.items}
-                    />;
+                        items={dropdownInfo.items}>
+                        {closeButton}
+                    </Dropdown>;
+                    closeButton = undefined;
                 }
                 else {
                     tabComponent = <a href="#" 
@@ -86,17 +99,6 @@ export class TabbedPages extends React.Component {
                 >
                     {tabEntry.title}
                 </a>;
-            }
-
-            let closeButton;
-            if (tabEntry.hasClose && this.props.onCloseTab) {
-                closeButton = <button type="button" 
-                    className="close tabCloseButton" 
-                    data-dismiss="modal" 
-                    aria-label="Close Tab" 
-                    onClick={() => this.onCloseTab(tabEntry.tabId)}>
-                    <span aria-hidden="true">&times;</span>
-                </button>;
             }
 
             return (
