@@ -72,7 +72,7 @@ export class SequentialPages extends React.Component {
     render() {
         const body = this.renderBody();
 
-        const { pageCount } = this.props;
+        const { pageCount, title } = this.props;
         const { activePageIndex } = this.state;
 
         let cancelBtn;
@@ -82,6 +82,32 @@ export class SequentialPages extends React.Component {
                 {userMsg('cancel')}
             </button>;
         }
+
+        let titleComponent;
+        if (title) {
+            let titleCloseBtn;
+            if (cancelBtn) {
+                titleCloseBtn = <button type="button" 
+                    className="close" 
+                    aria-label="Close"
+                    onClick={this.props.onCancel}
+                >
+                    <span aria-hidden="true">&times;</span>
+                </button>;
+            }
+
+            titleComponent = <div className=" border-bottom m-2">
+                <div className="row justify-content-between">
+                    <div className="col-11 text-center">
+                        <h4 className="">{title}</h4>
+                    </div>
+                    <div className="col">
+                        {titleCloseBtn}
+                    </div>
+                </div>
+            </div>;
+        }
+
 
         const btnClassName = 'btn btn-primary m-2';
         let nextBtnDisabled;
@@ -98,7 +124,17 @@ export class SequentialPages extends React.Component {
             backBtnDisabled = 'disabled';
         }
 
+        let backButton;
+        if (pageCount > 1) {
+            backButton = <button className={btnClassName}
+                onClick={this.onClickBack}
+                disabled={backBtnDisabled}>
+                {userMsg('SequentialPages-back_btn')}
+            </button>;
+        }
+
         return <div className="d-flex w-100 h-100 p-1 mx-auto flex-column">
+            {titleComponent}
             {body}
             <div className="mt-auto">
                 <div className="row border-top m-2">
@@ -106,11 +142,7 @@ export class SequentialPages extends React.Component {
                         {cancelBtn}
                     </div>
                     <div className="col text-right mt-2">
-                        <button className={btnClassName}
-                            onClick={this.onClickBack}
-                            disabled={backBtnDisabled}>
-                            {userMsg('SequentialPages-back_btn')}
-                        </button>
+                        {backButton}
                         <button className={btnClassName}
                             onClick={this.onClickNext} 
                             disabled={nextBtnDisabled}>
@@ -161,6 +193,7 @@ export class SequentialPages extends React.Component {
  * is disabled.
  * @property {boolean}  [isBackDisabled]    If <code>true</code> the Back button
  * is disabled.
+ * @property {string}   [title] Optional title.
  */
 SequentialPages.propTypes = {
     pageCount: PropTypes.number.isRequired,
@@ -171,4 +204,5 @@ SequentialPages.propTypes = {
     onCancel: PropTypes.func,
     isNextDisabled: PropTypes.bool,
     isBackDisabled: PropTypes.bool,
+    title: PropTypes.string,
 };
