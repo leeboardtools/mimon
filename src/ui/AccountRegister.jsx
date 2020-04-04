@@ -16,6 +16,7 @@ export class AccountRegister extends React.Component {
             this.props.accountId);
         return <div>
             I am the account register for account {accountDataItem.name}
+            {this.props.children}
         </div>;
     }
 }
@@ -23,4 +24,5 @@ export class AccountRegister extends React.Component {
 AccountRegister.propTypes = {
     accessor: PropTypes.object.isRequired,
     accountId: PropTypes.number.isRequired,
+    children: PropTypes.any,
 };

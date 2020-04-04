@@ -153,12 +153,19 @@ export class TabbedPages extends React.Component {
     }
 }
 
+
+/**
+ * @typedef {object}    TabbedPages~DropdownInfo
+ * @property {MenuList~Item[]}  items
+ */
+
 /**
  * @typedef {object}    TabbedPages~TabEntry
  * @property {string}   tabId
  * @property {string}   title   The text that appears in the tab.
  * @property {boolean}  [hasClose=false]    If <code>true</code> the tab has a
  * close button.
+ * @property {TabbedPages~DropdownInfo} [dropdownInfo]
  */
 
 /**

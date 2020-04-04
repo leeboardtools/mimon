@@ -15,3 +15,9 @@ body {
 .fixed-width-button {
   width: 5rem;
 }
+
+
+/* Make this a little darker than Bootstrap's */
+.dropdown-item:hover {
+  background-color: rgba(0,0,0,0.075);
+}

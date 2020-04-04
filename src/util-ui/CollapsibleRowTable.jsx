@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { ContextMenu } from './ContextMenu';
 
 
 /**
@@ -200,8 +201,70 @@ export class CollapsibleRowTable extends React.Component {
     constructor(props) {
         super(props);
 
+        this.onContextMenu = this.onContextMenu.bind(this);
+        this.onContextMenuClose = this.onContextMenuClose.bind(this);
+
         this.state = {};
     }
+
+
+    onContextMenuClose() {
+        this.setState({
+            contextMenuInfo: undefined,
+        });
+    }
+
+
+    onContextMenu(e) {
+        const { onContextMenu, contextMenuItems } = this.props;
+        if (onContextMenu) {
+            if (contextMenuItems) {
+                console.log('Both onContextMenu and contextMenuItems specified, '
+                    + 'only one or the other should be used, not both.');
+            }
+            onContextMenu(e);
+        }
+
+        if (contextMenuItems) {
+            this.setState({
+                contextMenuInfo: {
+                    x: e.clientX,
+                    y: e.clientY,
+                }
+            });
+        }
+        else {
+            this.setState({
+                contextMenuInfo: undefined,
+            });
+        }
+    }
+
+
+    renderContextMenu() {
+        const { contextMenuItems, onChooseContextMenuItem } = this.props;
+        if (contextMenuItems) {
+            const { contextMenuInfo } = this.state;
+            let x;
+            let y;
+            let show;
+            if (contextMenuInfo) {
+                x = contextMenuInfo.x;
+                y = contextMenuInfo.y;
+                show = true;
+            }
+
+            return <ContextMenu
+                x={x}
+                y={y}
+                show={show}
+                items={contextMenuItems}
+                onChooseItem={onChooseContextMenuItem}
+                onMenuClose={this.onContextMenuClose}
+            />;
+        }
+    }
+
 
     renderTableHeader() {
         const columns = this.props.columnInfos.map((columnInfo) =>
@@ -243,14 +306,17 @@ export class CollapsibleRowTable extends React.Component {
     render() {
         const tableHeader = this.renderTableHeader();
         const tableBody = this.renderTableBody();
-        return (
+        const contextMenu = this.renderContextMenu();
+        return <div className=""
+            onContextMenu={(e) => this.onContextMenu(e)}
+        >
             <table className="table table-sm text-left table-hover pl-0 pr-0" 
-                onContextMenu={this.props.onContextMenu}
             >
                 {tableHeader}
                 {tableBody}
             </table>
-        );
+            {contextMenu}
+        </div>;
     }
 }
 
@@ -368,6 +434,8 @@ export class CollapsibleRowTable extends React.Component {
  * @property {CollapsibleRowTable~onRowToggleCollapse} [onRowToggleCollapse]
  * @property {function} [onContextMenu] Event handler for 
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/contextmenu_event}
+ * @property {MenuList~Item[]}  [contextMenuItems]
+ * @property {Dropdown~onChooseItem}    [onChooseContextMenuItem]
  */
 CollapsibleRowTable.propTypes = {
     columnInfos: PropTypes.array.isRequired,
@@ -381,4 +449,6 @@ CollapsibleRowTable.propTypes = {
     onRowDoubleClick: PropTypes.func,
     onRowToggleCollapse: PropTypes.func,
     onContextMenu: PropTypes.func,
+    contextMenuItems: PropTypes.array,
+    onChooseContextMenuItem: PropTypes.func,
 };

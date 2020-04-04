@@ -25,7 +25,6 @@ export class AccountsList extends React.Component {
         this.onActivateRow = this.onActivateRow.bind(this);
         this.onOpenRow = this.onOpenRow.bind(this);
         this.onRowToggleCollapse = this.onRowToggleCollapse.bind(this);
-        this.onContextMenu = this.onContextMenu.bind(this);
 
         const { accessor } = this.props;
 
@@ -270,15 +269,6 @@ export class AccountsList extends React.Component {
     }
 
 
-    onContextMenu(rowEntry) {
-        const { onContextMenu } = this.props;
-        if (onContextMenu) {
-            const { accountDataItem } = rowEntry;
-            onContextMenu(accountDataItem ? accountDataItem.id : undefined);
-        }
-    }
-
-
     renderTextDisplay(columnInfo, value) {
         const { ariaLabel, inputClassExtras } = columnInfo;
         
@@ -370,18 +360,22 @@ export class AccountsList extends React.Component {
 
     render() {
         const { state } = this;
-        return <ActiveRowCollapsibleTable
-            columnInfos={state.columnInfos}
-            rowEntries={state.rowEntries}
-            activeRowKey={state.activeRowKey}
-            onRenderCell={this.onRenderCell}
-            onGetRowExpandCollapseState={this.onGetRowExpandCollapseState}
-            onGetRowAtIndex={this.onGetRowAtIndex}
-            onActivateRow={this.onActivateRow}
-            onOpenRow={this.onOpenRow}
-            onRowToggleCollapse={this.onRowToggleCollapse}
-            onContextMenu={this.onContextMenu}
-        />;
+        return <div>
+            <ActiveRowCollapsibleTable
+                columnInfos={state.columnInfos}
+                rowEntries={state.rowEntries}
+                activeRowKey={state.activeRowKey}
+                onRenderCell={this.onRenderCell}
+                onGetRowExpandCollapseState={this.onGetRowExpandCollapseState}
+                onGetRowAtIndex={this.onGetRowAtIndex}
+                onActivateRow={this.onActivateRow}
+                onOpenRow={this.onOpenRow}
+                onRowToggleCollapse={this.onRowToggleCollapse}
+                contextMenuItems={this.props.contextMenuItems}
+                onChooseContextMenuItem={this.props.onChooseContextMenuItem}
+            />
+            {this.props.children}
+        </div>;
     }
 }
 
@@ -403,16 +397,16 @@ export class AccountsList extends React.Component {
  * is selected.
  * @property {AccountsList~onChooseAccount} [onChooseAccount]   Called when an account
  * is 'chosen', either double-clicked or enter is pressed.
- * @property {function} [onContextMenu] Event handler for 
- * {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/contextmenu_event}
  */
 AccountsList.propTypes = {
     accessor: PropTypes.object.isRequired,
     onSelectAccount: PropTypes.func,
     onChooseAccount: PropTypes.func,
-    onContextMenu: PropTypes.func,
+    contextMenuItems: PropTypes.array,
+    onChooseContextMenuItem: PropTypes.func,
     hiddenRootAccountTypes: PropTypes.arrayOf(PropTypes.string),
     hiddenAccountIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenAccounts: PropTypes.bool,
     showAccountIds: PropTypes.bool,
+    children: PropTypes.any,
 };

@@ -4,7 +4,6 @@ import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountsList } from './AccountsList';
 import * as A from '../engine/Accounts';
 
-
 /**
  * Handler for {@link AccountsList} components and their pages in the 
  * {@link MainWindow}, this manages all the account related commands.
@@ -250,6 +249,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     }
 
 
+
     /**
      * Called by {@link MainWindow} to create the {@link TabbedPages~TabEntry}
      * object for an accounts list page.
@@ -282,6 +282,14 @@ export class AccountsListHandler extends MainWindowHandlerBase {
      */
     onRenderTabPage(tabEntry, isActive) {
         const { accessor } = this.props;
+
+        const state = this.getTabIdState(tabEntry.tabId);
+        const { dropdownInfo } = state;
+        let contextMenuItems;
+        if (dropdownInfo) {
+            contextMenuItems = dropdownInfo.items;
+        }
+
         return <AccountsList
             accessor={accessor}
             onSelectAccount={(accountId) => 
@@ -291,6 +299,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             hiddenRootAccountTypes={tabEntry.hiddenRootAccountTypes}
             hiddenAccountIds={tabEntry.hiddenAccountIds}
             showHiddenAccounts={tabEntry.showHiddenAccounts}
+            contextMenuItems={contextMenuItems}
         />;
     }
 }
