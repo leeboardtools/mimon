@@ -113,13 +113,13 @@ QuestionPrompter.propTypes = {
  */
 
 /**
- * @enum {QuestionPromperter~ButtonDef} StandardButton
+ * @enum {QuestionPrompter~ButtonDef} StandardButton
  * @readonly
- * @property {QuestionPromperter~ButtonDef} YES_NO_CANCEL
- * @property {QuestionPromperter~ButtonDef} YES_NO
- * @property {QuestionPromperter~ButtonDef} YES_CANCEL
- * @property {QuestionPromperter~ButtonDef} OK_CANCEL
- * @property {QuestionPromperter~ButtonDef} OK
+ * @property {QuestionPrompter~ButtonDef} YES_NO_CANCEL
+ * @property {QuestionPrompter~ButtonDef} YES_NO
+ * @property {QuestionPrompter~ButtonDef} YES_CANCEL
+ * @property {QuestionPrompter~ButtonDef} OK_CANCEL
+ * @property {QuestionPrompter~ButtonDef} OK
  */
 export const StandardButton = {
     YES_NO_CANCEL: [
