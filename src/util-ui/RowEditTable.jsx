@@ -361,14 +361,10 @@ export function rowEditTable(WrappedTable) {
 
 
         render() {
-            // Don't yet have the spread operator working for:
-            // const { onRenderDisplayCell, onRenderEditCell, onStartEditRow, 
-            // asyncOnSaveEditRow, ...passThroughProps } = this.props;
-            const passThroughProps = Object.assign({}, this.props);
-            delete passThroughProps.onRenderDisplayCell;
-            delete passThroughProps.onRenderEditCell;
-            delete passThroughProps.onStartEditRow;
-            delete passThroughProps.asyncOnSaveEditRow;
+            // eslint-disable-next-line no-unused-vars
+            const { onRenderDisplayCell, onRenderEditCell, onStartEditRow, 
+                // eslint-disable-next-line no-unused-vars
+                asyncOnSaveEditRow, ...passThroughProps } = this.props;
 
             return (
                 <ActiveRowWrappedTable
