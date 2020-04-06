@@ -159,14 +159,9 @@ export function activeRowTable(WrappedTable) {
 
 
         render() {
-            // Don't yet have the spread operator working for:
-            // const { onGetRowAtIndex, onActivateRow, onOpenRow, onRowToggleCollapse, 
-            // ...passThroughProps } = this.props;
-            const passThroughProps = Object.assign({}, this.props);
-            delete passThroughProps.onGetRowAtIndex;
-            delete passThroughProps.onActivateRow;
-            delete passThroughProps.onOpenRow;
-            // delete passThroughProps.onRowToggleCollapse;
+            // eslint-disable-next-line no-unused-vars
+            const { onGetRowAtIndex, onActivateRow, onOpenRow, 
+                ...passThroughProps } = this.props;
 
             return (
                 <WrappedTable
