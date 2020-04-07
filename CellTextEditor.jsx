@@ -15,7 +15,8 @@ export const CellTextEditor = React.forwardRef(
             onChange, onFocus, onBlur, disabled } = props;
 
         const divClassName = 'input-group mb-0 ';
-        let className = 'form-control cellTextEditor-textInput ' + inputClassExtras;
+        let className = 'form-control cellTextEditor-textInput ' 
+            + (inputClassExtras || '');
 
         let errorMsgComponent;
         if (errorMsg) {
@@ -80,7 +81,7 @@ export function CellTextDisplay(props) {
 
     const divClassName = 'input-group mb-0 ';
     const className = 'form-control cellTextEditor-textInput cellTextEditor-textDisplay ' 
-        + inputClassExtras;
+        + (inputClassExtras || '');
 
     return <div className={divClassName}>
         <input type="text"
