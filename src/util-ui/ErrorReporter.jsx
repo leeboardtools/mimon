@@ -13,7 +13,8 @@ import PropTypes from 'prop-types';
  * is chosen.
  */
 ErrorReporter.propTypes = {
-    message: PropTypes.string.isRequired,
+    message: PropTypes.oneOfType([PropTypes.string.isRequired, 
+        PropTypes.instanceOf(Error)]),
     onClose: PropTypes.func.isRequired,
 };
 
@@ -25,7 +26,7 @@ ErrorReporter.propTypes = {
 export function ErrorReporter(props) {
     return <div className="container-fluid mt-5">
         <div className="alert alert-error alert-dismissible fade show" role="alert">
-            {props.message}
+            {props.message.toString()}
             <button type="button" 
                 className="close" 
                 aria-label="Close"
