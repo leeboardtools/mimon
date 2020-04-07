@@ -7,6 +7,7 @@ import { Dropdown } from '../util-ui/Dropdown';
 import deepEqual from 'deep-equal';
 import { AccountsListHandler } from './AccountsListHandler';
 import { AccountRegisterHandler } from './AccountRegisterHandler';
+import { AccountEditorHandler } from './AccountEditorHandler';
 
 
 /**
@@ -61,11 +62,21 @@ export class MainWindow extends React.Component {
             onOpenTab: this.onOpenTab,
         });
 
+        this._accountEditorHandler = new AccountEditorHandler({
+            accessor: this.props.accessor,
+            onGetTabIdState: this.onGetTabIdState,
+            onSetTabIdState: this.onSetTabIdState,
+            onSetErrorMsg: this.onSetErrorMsg,
+            onSetModal: this.onSetModal,
+            onOpenTab: this.onOpenTab,
+            onCloseTab: this.onCloseTab,
+        });
         this.state = {
             tabEntries: [],
         };
         this._tabEntriesById = new Map();
         this._accountRegistersByAccountId = new Map();
+        this._accountEditorsByAccountId = new Map();
 
         const masterAccountsList = this._accountsListHandler.createTabEntry(
             'masterAccountsList'
@@ -118,13 +129,19 @@ export class MainWindow extends React.Component {
 
 
     onCloseTab(tabId) {
+        const tabEntry = this._tabEntriesById.get(tabId);
+        if (tabEntry.onCanCloseTab) {
+            if (!tabEntry.onCanCloseTab()) {
+                return;
+            }
+        }
+
         if (tabId === this.state.activeTabId) {
             this.setState({
                 activeTabId: undefined,
             });
         }
 
-        const tabEntry = this._tabEntriesById.get(tabId);
         if (tabEntry) {
             const { onCloseTab } = tabEntry;
             if (onCloseTab) {
@@ -133,6 +150,9 @@ export class MainWindow extends React.Component {
 
             if (tabId.startsWith('accountRegister_')) {
                 this._accountRegistersByAccountId.delete(tabEntry.accountId);
+            }
+            else if (tabId.startsWith('accountEditor_')) {
+                this._accountEditorsByAccountId.delete(tabEntry.accountId);
             }
 
             this._tabEntriesById.delete(tabId);
@@ -299,6 +319,22 @@ export class MainWindow extends React.Component {
     }
 
 
+    openAccountEditor(accountId, parentAccountId) {
+        let tabId = this._accountEditorsByAccountId.get(accountId);
+        if (!tabId) {
+            tabId = 'accountEditor_' + (accountId || '_new');
+            this._accountEditorsByAccountId.set(accountId, tabId);
+            const tabEntry = this._accountEditorHandler.createTabEntry(
+                tabId, accountId, parentAccountId);
+            this.addTabEntry(tabEntry);
+        }
+
+        this.setState({
+            activeTabId: tabId,
+        });
+    }
+
+
     onOpenTab(type, ...args) {
         switch (type) {
         case 'reconcileAccount' :
@@ -307,6 +343,10 @@ export class MainWindow extends React.Component {
         
         case 'accountRegister' :
             this.openAccountRegister(args[0]);
+            break;
+        
+        case 'accountEditor' :
+            this.openAccountEditor(args[0], args[1]);
             break;
     
         default :

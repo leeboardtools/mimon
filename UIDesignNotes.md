@@ -338,7 +338,7 @@ Common menus:
 - Test Revert
 - Test Save
 
-- Think about transitioning to a Navbar based or other entirely render side based menu system.
+a- Think about transitioning to a Navbar based or other entirely render side based menu system.
     - Cleaner appearance.
     - Need to think over the command structure.
 
@@ -396,4 +396,8 @@ Common menus:
                 - Modify Reminder
                 - Delete Reminder
 
-        
+
+- Need to figure out how to get indent support into DropdownField.
+    - Most likely convert to <div> based, also want to support arbitrary
+    components.
+    

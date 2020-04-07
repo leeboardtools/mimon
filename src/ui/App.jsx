@@ -361,6 +361,9 @@ export default class App extends React.Component {
                         { id: 'no', label: noButtonLabel, },
                         { id: 'cancel', label: userMsg('cancel'), },
                     ];
+
+                    // FIX ME!!!
+                    // The retry in this loop will not work, it's async!
                     this.setModalRenderer(() => {
                         return <QuestionPrompter
                             title={userMsg('App-save_failed_title')}

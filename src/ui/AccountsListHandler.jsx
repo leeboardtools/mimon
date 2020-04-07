@@ -53,14 +53,19 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
 
     onNewAccount(tabId) {
-        this.setErrorMsg('onNewAccount is not yet implemented.');
+        let parentAccountId;
+        const { activeAccountId} = this.getTabIdState(tabId);
+        if (activeAccountId) {
+            parentAccountId = activeAccountId.parentAccountId;
+        }
+        this.openTab('accountEditor', undefined, parentAccountId);
     }
 
 
     onModifyAccount(tabId) {
         const { activeAccountId} = this.getTabIdState(tabId);
         if (activeAccountId) {
-            this.setErrorMsg('onModifyAccount is not yet implemented.');
+            this.openTab('accountEditor', activeAccountId);
         }
     }
 

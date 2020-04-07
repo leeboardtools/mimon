@@ -10,6 +10,7 @@ export class MainWindowHandlerBase {
         this.setErrorMsg = props.onSetErrorMsg;
         this.setModal = props.onSetModal;
         this.openTab = props.onOpenTab;
+        this.closeTab = props.onCloseTab;
     }
     
 }

@@ -103,6 +103,18 @@
     "AccountsListHandler-showHiddenAccounts": "Show Hidden Accounts",
 
 
+    "AccountEditorHandler-newAccount_title": "New Account",
+    "AccountEditorHandler-modifyAccount_title": ["Edit '", "'"],
+
+
+    "AccountEditor-prompt_cancel_title": "Confirm Cancel",
+    "AccountEditor-prompt_cancel_msg": "Are you sure you want to cancel?\nAny changes will be lost.",
+    "AccountEditor-parent_label": "Parent account",
+    "AccountEditor-name_label": "Account name",
+    "AccountEditor-name_required": "An account name must be specified.",
+    "AccountEditor-name_duplicate": "There is already an account with the name and the same parent.",
+    "AccountEditor-description_label": "Description",
+
 
     "AccountRegisterHandler-newTransaction": "New Transaction",
     "AccountRegisterHandler-modifyTransaction": "Modify Transaction",
