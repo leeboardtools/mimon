@@ -4,6 +4,8 @@ import { MenuList } from './MenuList';
 
 import Popper from 'popper.js';
 
+// This is to keep the drop down from being blurry...
+// See https://github.com/twbs/bootstrap/issues/27955
 Popper.Defaults.modifiers.computeStyle.gpuAcceleration = false;
 
 /**
