@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Field } from './Field';
 
+let useNew = true;
 
 /**
  * React component for basic text editing
@@ -9,10 +10,12 @@ import { Field } from './Field';
  */
 export const DropdownField = React.forwardRef(
     function DropdownFieldImpl(props, ref) {
-        const { label, id, ariaLabel, value, inputClassExtras, errorMsg, 
+        const { label, id, ariaLabel, inputClassExtras, errorMsg, 
             onChange, onFocus, onBlur, disabled, items } = props;
-        
+
         const itemComponents = [];
+        let valueText = '';
+
         items.forEach((item) => {
             const { value, text, classExtras, onRenderItem, indent } = item;
             let component;
@@ -20,27 +23,58 @@ export const DropdownField = React.forwardRef(
                 component = onRenderItem(item);
             }
             else {
-                component = ((indent) ? '-'.repeat(indent) : '') + text;
+                component = text;
             }
 
             let style;
-            if (indent) {
+            if (indent !== undefined) {
                 style = {
-                    paddingLeft: indent + 'rem',
+                    paddingLeft: indent + 0.5 + 'rem',
                 };
             }
 
+            let className = 'dropdown-item ';
+            if (props.value === value) {
+                className += 'active ';
+                valueText = text;
+            }
+            if (classExtras) {
+                className += classExtras;
+            }
+
             itemComponents.push(
-                <option 
+                <a 
                     value={value} 
                     key={value} 
-                    className={classExtras}
+                    className={className}
                     style={style}
+                    onClick={(e) => {
+                        e.target.value = value;
+                        onChange(e);
+                    }}
                 >
                     {component}
-                </option>
+                </a>
             );
         });
+
+        const menu = <div className="dropdown-menu"
+            aria-labelledby={id}
+        >
+            {itemComponents}
+        </div>;
+
+        let buttonClassName = 'btn btn-block border ';
+        const button = <button className={buttonClassName} 
+            type="button"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+        >
+            <div className="d-flex justify-content-between">
+                <span>{valueText}</span><span className="text-right">&#x25BE;</span>
+            </div>
+        </button>;
 
         return <Field
             id={id}
@@ -48,19 +82,18 @@ export const DropdownField = React.forwardRef(
             errorMsg={errorMsg}
             editorClassExtras={inputClassExtras}
             onRenderEditor={(inputClassName) =>
-                <select
+                <div
                     id={id}
-                    className={inputClassName}
+                    className={'dropdown' + inputClassName}
                     aria-label={ariaLabel}
-                    value={value || ''}
                     disabled={disabled}
-                    onChange={onChange}
                     onFocus={onFocus}
                     onBlur={onBlur}
                     ref={ref}
                 >
-                    {itemComponents}
-                </select>
+                    {button}
+                    {menu}
+                </div>
             }
         />;
     }

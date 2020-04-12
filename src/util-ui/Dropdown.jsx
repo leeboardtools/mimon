@@ -2,6 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { MenuList } from './MenuList';
 
+import Popper from 'popper.js';
+
+Popper.Defaults.modifiers.computeStyle.gpuAcceleration = false;
 
 /**
  * Component for a dropdown.
