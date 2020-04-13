@@ -245,7 +245,7 @@ export class MainWindow extends React.Component {
         if (this.state.isRedoEnabled) {
             process.nextTick(async () => {
                 const { accessor } = this.props;
-                await accessor.asyncReapplyLastAppliedActions();
+                await accessor.asyncReapplyLastUndoneAction();
             });
         }
     }
