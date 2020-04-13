@@ -56,7 +56,15 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         let parentAccountId;
         const { activeAccountId} = this.getTabIdState(tabId);
         if (activeAccountId) {
-            parentAccountId = activeAccountId.parentAccountId;
+            const { accessor } = this.props;
+            const accountDataItem = accessor.getAccountDataItemWithId(activeAccountId);
+            const accountType = A.getAccountType(accountDataItem.type);
+            if (accountType.allowedChildTypes.length) {
+                parentAccountId = activeAccountId;
+            }
+            else if (accountDataItem) {
+                parentAccountId = accountDataItem.parentAccountId;
+            }
         }
         this.openTab('accountEditor', undefined, parentAccountId);
     }
