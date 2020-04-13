@@ -120,7 +120,7 @@ export const DropdownField = React.forwardRef(
  * @typedef {object} DropdownField~propTypes
  * @property {string}   [ariaLabel]
  * @property {string}   [label]
- * @property {DropdownFiled~Item[]}
+ * @property {DropdownField~Item[]} items
  * @property {string}   [value]
  * @property {string}   [inputClassExtras]  If specified additional CSS
  * classes to add to the &lt;select&gt; entity.
