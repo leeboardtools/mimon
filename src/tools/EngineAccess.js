@@ -36,6 +36,8 @@ export class EngineAccessor extends EventEmitter {
 
         this._fireActionChange = this._fireActionChange.bind(this);
         this._handleActionApply = this._handleActionApply.bind(this);
+        this._handleAccountAdd = this._handleAccountAdd.bind(this);
+        this._handleAccountsModify = this._handleAccountsModify.bind(this);
         this._handleAccountRemove = this._handleAccountRemove.bind(this);
         this._handleTransactionsAdd = this._handleTransactionsAdd.bind(this);
         this._handleTransactionsModify = this._handleTransactionsModify.bind(this);
@@ -93,6 +95,8 @@ export class EngineAccessor extends EventEmitter {
             this._actionManager.on('undoneActionsClear', this._fireActionChange);
 
             this._accountManager = _accountingSystem.getAccountManager();
+            this._accountManager.on('accountAdd', this._handleAccountAdd);
+            this._accountManager.on('accountsModify', this._handleAccountsModify);
             this._accountManager.on('accountRemove', this._handleAccountRemove);
 
             this._pricedItemManager = _accountingSystem.getPricedItemManager();
@@ -119,6 +123,8 @@ export class EngineAccessor extends EventEmitter {
             }
 
             if (this._accountManager) {
+                this._accountManager.off('accountAdd', this._handleAccountAdd);
+                this._accountManager.off('accountsModify', this._handleAccountsModify);
                 this._accountManager.off('accountRemove', this._handleAccountRemove);
             }
 
@@ -1165,12 +1171,22 @@ export class EngineAccessor extends EventEmitter {
     }
 
 
+    _handleAccountAdd(result) {
+        this.emit('accountAdd', result);
+    }
+
+    _handleAccountsModify(result) {
+        this.emit('accountsModify', result);
+    }
+
     _handleAccountRemove(result) {
         const { removedAccountDataItem } = result;
         const reconciler = this._reconcilersByAccountId.get(removedAccountDataItem.id);
         if (reconciler) {
             reconciler.cancelReconcile();
         }
+        
+        this.emit('accountRemove', result);
     }
 
 

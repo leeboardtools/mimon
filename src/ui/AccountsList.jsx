@@ -19,6 +19,10 @@ export class AccountsList extends React.Component {
     constructor(props) {
         super(props);
 
+        this.onAccountAdd = this.onAccountAdd.bind(this);
+        this.onAccountsModify = this.onAccountsModify.bind(this);
+        this.onAccountRemove = this.onAccountRemove.bind(this);
+
         this.onRenderCell = this.onRenderCell.bind(this);
         this.onGetRowExpandCollapseState = this.onGetRowExpandCollapseState.bind(this);
         this.onGetRowAtIndex = this.onGetRowAtIndex.bind(this);
@@ -78,6 +82,50 @@ export class AccountsList extends React.Component {
 
 
         this.state.rowEntries = this.buildRowEntries().rowEntries;
+    }
+
+
+    onAccountAdd(result) {
+        if (this.isAccountIdDisplayed(result.newAccountDataItem.id)) {
+            this.updateRowEntries();
+        }
+    }
+
+    
+    onAccountsModify(result) {
+        for (let accountDataItem of result.newAccountDataItems) {
+            const { id } = accountDataItem;
+            for (let rowEntry of this.state.rowEntries) {
+                if (rowEntry.accountDataItem.id === id) {
+                    this.updateRowEntries();
+                    return;
+                }
+            }
+        }
+    }
+
+
+    onAccountRemove(result) {
+        const { id } = result.removedAccountDataItem;
+        for (let rowEntry of this.state.rowEntries) {
+            if (rowEntry.accountDataItem.id === id) {
+                this.updateRowEntries();
+                return;
+            }
+        }
+    }
+
+
+    componentDidMount() {
+        this.props.accessor.on('accountAdd', this.onAccountAdd);
+        this.props.accessor.on('accountsModify', this.onAccountsModify);
+        this.props.accessor.on('accountRemove', this.onAccountRemove);
+    }
+
+    componentWillUnmount() {
+        this.props.accessor.off('accountAdd', this.onAccountAdd);
+        this.props.accessor.off('accountsModify', this.onAccountsModify);
+        this.props.accessor.off('accountRemove', this.onAccountRemove);
     }
 
 

@@ -15,6 +15,8 @@ export class AccountEditor extends React.Component {
     constructor(props) {
         super(props);
 
+        this.onAccountsModify = this.onAccountsModify.bind(this);
+
         this.onFinish = this.onFinish.bind(this);
         this.onCancel = this.onCancel.bind(this);
 
@@ -55,7 +57,29 @@ export class AccountEditor extends React.Component {
         this.state = {
             accountDataItem: accountDataItem,
             originalAccountDataItem: A.getAccountDataItem(accountDataItem, true),
+            isOKToSave: (accountId !== undefined),
         };
+    }
+
+
+    onAccountsModify(result) {
+        const { newAccountDataItems } = result;
+        for (let newAccountDataItem of newAccountDataItems) {
+            if (newAccountDataItem.id === this.props.accountId) {
+                this.updateAccountDataItem(newAccountDataItem);
+                break;
+            }
+        }
+    }
+
+
+    componentDidMount() {
+        this.props.accessor.on('accountsModify', this.onAccountsModify);
+    }
+
+
+    componentWillUnmount() {
+        this.props.accessor.off('accountsModify', this.onAccountsModify);
     }
 
 
@@ -133,12 +157,16 @@ export class AccountEditor extends React.Component {
     }
 
 
-    updateAccountDataItem(changes) {
+    updateAccountDataItem(changes, reloadOriginal) {
         this.setState((state) => {
             const newAccountDataItem 
                 = Object.assign({}, state.accountDataItem, changes);
             
             const { accessor } = this.props;
+            let { originalAccountDataItem } = state;
+            if (reloadOriginal) {
+                originalAccountDataItem = A.getAccountDataItem(newAccountDataItem, true);
+            }
 
             // TODO:
             // Update isOKToSave
@@ -151,7 +179,6 @@ export class AccountEditor extends React.Component {
             }
             else {
                 // Check if name is already used in parent.
-                const { originalAccountDataItem } = state;
                 if (!originalAccountDataItem
                  || (originalAccountDataItem.parentAccountId 
                   !== newAccountDataItem.parentAccountId)
@@ -185,12 +212,13 @@ export class AccountEditor extends React.Component {
                     }
                 }
             }
-            
+
             return {
                 accountDataItem: newAccountDataItem,
                 isOKToSave: isOKToSave,
                 nameErrorMsg: nameErrorMsg,
                 refIdErrorMsg: refIdErrorMsg,
+                originalAccountDataItem: originalAccountDataItem,
             };
         });
     }
