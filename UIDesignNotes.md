@@ -397,7 +397,5 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
                 - Delete Reminder
 
 
-- Need to figure out how to get indent support into DropdownField.
-    - Most likely convert to <div> based, also want to support arbitrary
-    components.
-    
+- Need to update AccountList entries when account is updated.
+- Need to reload account editor if account changed (such as undo/redo).

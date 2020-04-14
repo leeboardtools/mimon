@@ -8,6 +8,7 @@ import { TextField } from '../util-ui/TextField';
 import deepEqual from 'deep-equal';
 import { AccountSelector } from './AccountSelector';
 import * as A from '../engine/Accounts';
+import { DropdownField } from '../util-ui/DropdownField';
 
 
 export class AccountEditor extends React.Component {
@@ -19,8 +20,11 @@ export class AccountEditor extends React.Component {
 
         this.onParentChange = this.onParentChange.bind(this);
 
+        this.onTypeChange = this.onTypeChange.bind(this);
+
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
+        this.onRefIdChange = this.onRefIdChange.bind(this);
 
         this.onRenderPage = this.onRenderPage.bind(this);
 
@@ -50,6 +54,7 @@ export class AccountEditor extends React.Component {
 
         this.state = {
             accountDataItem: accountDataItem,
+            originalAccountDataItem: A.getAccountDataItem(accountDataItem, true),
         };
     }
 
@@ -146,17 +151,37 @@ export class AccountEditor extends React.Component {
             }
             else {
                 // Check if name is already used in parent.
-                const parentAccountDataItem = accessor.getAccountDataItemWithId(
-                    newAccountDataItem.parentAccountId);
-                const { childAccountIds } = parentAccountDataItem;
-                for (let i = 0; i < childAccountIds.length; ++i) {
-                    const siblingAccountDataItem = accessor.getAccountDataItemWithId(
-                        childAccountIds[i]
-                    );
-                    if (siblingAccountDataItem.name === newAccountDataItem.name) {
+                const { originalAccountDataItem } = state;
+                if (!originalAccountDataItem
+                 || (originalAccountDataItem.parentAccountId 
+                  !== newAccountDataItem.parentAccountId)
+                 || (originalAccountDataItem.name !== newAccountDataItem.name)) {
+                    const parentAccountDataItem = accessor.getAccountDataItemWithId(
+                        newAccountDataItem.parentAccountId);
+                    const { childAccountIds } = parentAccountDataItem;
+                    for (let i = 0; i < childAccountIds.length; ++i) {
+                        const siblingAccountDataItem = accessor.getAccountDataItemWithId(
+                            childAccountIds[i]
+                        );
+                        if (siblingAccountDataItem.name === newAccountDataItem.name) {
+                            isOKToSave = false;
+                            nameErrorMsg = userMsg('AccountEditor-name_duplicate');
+                            break;
+                        }
+                    }
+                }
+            }
+
+            let refIdErrorMsg;
+            if (newAccountDataItem.refId) {
+                const refIdAccountDataItem = accessor.getAccountDataItemWithRefId(
+                    newAccountDataItem.refId);
+                if (refIdAccountDataItem) {
+                    const { accountId } = this.props;
+                    if (!accountId
+                     || (refIdAccountDataItem.id !== accountId)) {
                         isOKToSave = false;
-                        nameErrorMsg = userMsg('AccountEditor-name_duplicate');
-                        break;
+                        refIdErrorMsg = userMsg('AccountEditor-refId_duplicate');
                     }
                 }
             }
@@ -165,6 +190,7 @@ export class AccountEditor extends React.Component {
                 accountDataItem: newAccountDataItem,
                 isOKToSave: isOKToSave,
                 nameErrorMsg: nameErrorMsg,
+                refIdErrorMsg: refIdErrorMsg,
             };
         });
     }
@@ -195,12 +221,6 @@ export class AccountEditor extends React.Component {
     }
 
     renderParentEditor() {
-        // Rules:
-        // New account:
-        //  - can pick any account.
-        // Existing account:
-        //  - Limited to current tree
-        //  - Limited to parent accounts that support the current account type.
         const { accessor, accountId } = this.props;
         const { accountDataItem } = this.state;
         const accountEntries = [];
@@ -241,9 +261,43 @@ export class AccountEditor extends React.Component {
     }
 
 
+
+    onTypeChange(e) {
+        this.updateAccountDataItem({
+            type: e.target.value,
+        });
+    }
+
     renderTypeEditor() {
         // Rules:
         //  - Cannot change a lot based account.
+        const { accessor } = this.props;
+        const { accountDataItem } = this.state;
+        const parentAccountDataItem = accessor.getAccountDataItemWithId(
+            accountDataItem.parentAccountId);
+        
+        const typeItems = [];
+        if (parentAccountDataItem) {
+            const parentType = A.getAccountType(parentAccountDataItem.type);
+            parentType.allowedChildTypes.forEach((type) => 
+                typeItems.push({
+                    value: type.name,
+                    text: type.description,
+                }) );
+        }
+
+        const type = A.getAccountType(accountDataItem.type);
+        const disabled = type.hasLots;
+
+        return <DropdownField
+            id={this._idBase + '_type'}
+            ariaLabel="Account Type"
+            label={userMsg('AccountEditor-type_label')}
+            items={typeItems}
+            value={type.name}
+            onChange={this.onTypeChange}
+            disabled={disabled}
+        />;
     }
 
 
@@ -287,8 +341,21 @@ export class AccountEditor extends React.Component {
     }
 
 
-    renderRefIdEditor() {
+    onRefIdChange(e) {
+        this.updateAccountDataItem({
+            refId: e.target.value,
+        });
+    }
 
+    renderRefIdEditor() {
+        return <TextField
+            id={this._idBase + '_refId'}
+            ariaLabel="Reference Id"
+            label={userMsg('AccountEditor-refId_label')}
+            value={this.state.accountDataItem.refId}
+            errorMsg={this.state.refIdErrorMsg}
+            onChange={this.onRefIdChange}
+        />;
     }
 
 
@@ -301,12 +368,24 @@ export class AccountEditor extends React.Component {
         const refIdEditor = this.renderRefIdEditor();
 
         return <div className="container-fluid mt-auto mb-auto text-left">
-            {parentEditor}
-            {typeEditor}
-            {nameEditor}
+            <div className="row">
+                <div className="col">
+                    {parentEditor}
+                </div>
+                <div className="col">
+                    {typeEditor}
+                </div>
+            </div>
+            <div className="row">
+                <div className="col">
+                    {nameEditor}
+                </div>
+                <div className="col">
+                    {refIdEditor}
+                </div>
+            </div>
             {descriptionEditor}
             {pricedItemEditor}
-            {refIdEditor}
         </div>;
     }
 
