@@ -733,7 +733,7 @@ export class AccountManager extends EventEmitter {
     }
 
 
-    async _asyncAddAccount(account) {
+    async _asyncAddAccount(account, childListIndex) {
         account = getAccountDataItem(account);
         
         const accountDataItem = Object.assign({}, account);
@@ -750,7 +750,14 @@ export class AccountManager extends EventEmitter {
         if (accountDataItem.parentAccountId) {
             const parentAccountDataItem = this.getAccountDataItemWithId(
                 accountDataItem.parentAccountId);
-            parentAccountDataItem.childAccountIds.push(id);
+            
+            if ((childListIndex === undefined) || (childListIndex < 0) 
+             || (childListIndex >= parentAccountDataItem.childAccountIds.length)) {
+                parentAccountDataItem.childAccountIds.push(id);
+            }
+            else {
+                parentAccountDataItem.childAccountIds.splice(childListIndex, 0, id);
+            }
 
             updatedAccountEntries.push([account.parentAccountId, parentAccountDataItem]);
         }
@@ -838,12 +845,15 @@ export class AccountManager extends EventEmitter {
      * Adds a new account.
      * @param {(Account|AccountDataItem)} account   The account to add.
      * @param {boolean} validateOnly 
+     * @param {number}  [childListIndex]  If specified, the index in the parent's
+     * childAccountIds where the account should be placed. If this is out of range
+     * the account is added to the end of the child list.
      * @returns {AccountManager~AddAccountResult|undefined} <code>undefined</code> 
      * is returned if validateOnly is true.
      * @throws {Error}
      * @fires {AccountManager~accountAdd}
      */
-    async asyncAddAccount(account, validateOnly) {
+    async asyncAddAccount(account, validateOnly, childListIndex) {
         const accountDataItem = getAccountDataItem(account, true);
 
         const parentAccountDataItem = this.getAccountDataItemWithId(
@@ -890,7 +900,8 @@ export class AccountManager extends EventEmitter {
 
         const originalIdGeneratorOptions = this._idGenerator.toJSON();
 
-        let { newAccountDataItem, } = (await this._asyncAddAccount(accountDataItem));
+        let { newAccountDataItem, } 
+            = (await this._asyncAddAccount(accountDataItem, childListIndex));
         newAccountDataItem = getAccountDataItem(newAccountDataItem, true);
 
         const undoId = await this._accountingSystem.getUndoManager()

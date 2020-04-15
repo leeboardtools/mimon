@@ -165,20 +165,23 @@ export class AccountingActions extends EventEmitter {
     /**
      * Creates an action for adding a new account.
      * @param {Account|AccountDataItem} account The information for the new account.
+     * @param {number}  [childListIndex]  If specified, the index in the parent's
+     * childAccountIds where the account should be placed.
      * @returns {ActionDataItem}
      */
-    createAddAccountAction(account) {
-        const accountDataItem = A.getAccountDataItem(account, true);
+    createAddAccountAction(account, childListIndex) {
+        const accountDataItem = A.getAccountDataItem(account, true, childListIndex);
         return { 
             type: 'addAccount', 
             accountDataItem: accountDataItem, 
+            childListIndex: childListIndex,
             name: userMsg('Actions-addAccount'), 
         };
     }
 
     async _asyncAddAccountApplier(isValidateOnly, action) {
         const result = await this._accountingSystem.getAccountManager().asyncAddAccount(
-            action.accountDataItem, isValidateOnly);
+            action.accountDataItem, isValidateOnly, action.childListIndex);
         this._emitActionEvent(isValidateOnly, action, result);
     }
 

@@ -309,9 +309,40 @@ test('AccountManager-add', async () => {
         .newAccountDataItem;
     ATH.expectAccount(brokerageA, brokerageOptionsA);
 
+    
+
+    //
+    // Check new account with childListIndex
     accountDataItem = accountManager.getAccountDataItemWithId(assetA.id);
-    expect(accountDataItem.childAccountIds)
-        .toEqual(expect.arrayContaining([brokerageA.id]));
+    expect(accountDataItem.childAccountIds).toEqual([
+        bankA.id, cashA.id, brokerageA.id
+    ]);
+
+    const testA = {
+        parentAccountId: assetA.id,
+        type: A.AccountType.CASH,
+        pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
+        name: 'Test Account',
+    };
+    result = await accountManager.asyncAddAccount(testA, false, 1);
+        
+    accountDataItem = accountManager.getAccountDataItemWithId(assetA.id);
+    expect(accountDataItem.childAccountIds).toEqual([
+        bankA.id, result.newAccountDataItem.id, cashA.id, brokerageA.id
+    ]);
+
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    
+
+    // Check out of bounds.
+    result = await accountManager.asyncAddAccount(testA, false, 3);
+    accountDataItem = accountManager.getAccountDataItemWithId(assetA.id);
+    expect(accountDataItem.childAccountIds).toEqual([
+        bankA.id, cashA.id, brokerageA.id, result.newAccountDataItem.id
+    ]);
+
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+
 
 
     //

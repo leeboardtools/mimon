@@ -11,6 +11,9 @@ import * as A from '../engine/Accounts';
 import { DropdownField } from '../util-ui/DropdownField';
 
 
+/**
+ * The main component for editing a new or an existing account.
+ */
 export class AccountEditor extends React.Component {
     constructor(props) {
         super(props);
@@ -120,7 +123,8 @@ export class AccountEditor extends React.Component {
                     action = accountingActions.createModifyAccountAction(accountDataItem);
                 }
                 else {
-                    action = accountingActions.createAddAccountAction(accountDataItem);
+                    action = accountingActions.createAddAccountAction(
+                        accountDataItem, this.props.childListIndex);
                 }
 
                 accessor.asyncApplyAction(action)
@@ -445,5 +449,6 @@ AccountEditor.propTypes = {
     accessor: PropTypes.object.isRequired,
     accountId: PropTypes.number,
     parentAccountId: PropTypes.number,
+    childListIndex: PropTypes.number,
     onClose: PropTypes.func.isRequired,
 };

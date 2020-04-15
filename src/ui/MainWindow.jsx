@@ -319,13 +319,13 @@ export class MainWindow extends React.Component {
     }
 
 
-    openAccountEditor(accountId, parentAccountId) {
+    openAccountEditor(accountId, parentAccountId, childListIndex) {
         let tabId = this._accountEditorsByAccountId.get(accountId);
         if (!tabId) {
             tabId = 'accountEditor_' + (accountId || '_new');
             this._accountEditorsByAccountId.set(accountId, tabId);
             const tabEntry = this._accountEditorHandler.createTabEntry(
-                tabId, accountId, parentAccountId);
+                tabId, accountId, parentAccountId, childListIndex);
             this.addTabEntry(tabEntry);
         }
 
@@ -346,7 +346,7 @@ export class MainWindow extends React.Component {
             break;
         
         case 'accountEditor' :
-            this.openAccountEditor(args[0], args[1]);
+            this.openAccountEditor(...args);
             break;
     
         default :

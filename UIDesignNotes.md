@@ -397,5 +397,3 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
                 - Delete Reminder
 
 
-- Need to update AccountList entries when account is updated.
-- Need to reload account editor if account changed (such as undo/redo).

@@ -28,7 +28,7 @@ export class AccountEditorHandler extends MainWindowHandlerBase {
      * @param {number}  accountId
      * @returns {TabbedPages~TabEntry}
      */
-    createTabEntry(tabId, accountId, parentAccountId) {
+    createTabEntry(tabId, accountId, parentAccountId, childListIndex) {
         const accountDataItem = this.props.accessor.getAccountDataItemWithId(
             accountId);
         const title = (accountDataItem) 
@@ -40,6 +40,7 @@ export class AccountEditorHandler extends MainWindowHandlerBase {
             //hasClose: true,
             accountId: accountId,
             parentAccountId: parentAccountId,
+            childListIndex: childListIndex,
             //dropdownInfo: this.getTabDropdownInfo(tabId),
             onRenderTabPage: this.onRenderTabPage,
         };
@@ -53,11 +54,12 @@ export class AccountEditorHandler extends MainWindowHandlerBase {
      */
     onRenderTabPage(tabEntry, isActive) {
         const { accessor } = this.props;
-        const { accountId, parentAccountId } = tabEntry;
+        const { accountId, parentAccountId, childListIndex } = tabEntry;
         return <AccountEditor
             accessor={accessor}
             accountId={accountId}
             parentAccountId={parentAccountId}
+            childListIndex={childListIndex}
             onClose={() => this.closeTab(tabEntry.tabId)}
         />;
     }
