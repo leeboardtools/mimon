@@ -3,6 +3,10 @@ import PropTypes from 'prop-types';
 import { DropdownField } from '../util-ui/DropdownField';
 
 
+/**
+ * Dropdown field component for selecting an account.
+ * @class
+ */
 export function AccountSelector(props) {
     const { accessor, accountEntries, selectedAccountId, 
         ...passThroughProps } = props;
@@ -38,6 +42,14 @@ export function AccountSelector(props) {
     />;
 }
 
+/**
+ * @typedef {object}    AccountSelector~AccountEntry
+ * @property {number}   accountId
+ */
+
+/**
+ * @typedef {object}    AccountSelector~propTypes
+ */
 AccountSelector.propTypes = {
     accessor: PropTypes.object.isRequired,
     id: PropTypes.string,

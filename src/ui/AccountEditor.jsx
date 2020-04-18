@@ -9,6 +9,7 @@ import deepEqual from 'deep-equal';
 import { AccountSelector } from './AccountSelector';
 import * as A from '../engine/Accounts';
 import { DropdownField } from '../util-ui/DropdownField';
+import { PricedItemSelector } from './PricedItemSelector';
 
 
 /**
@@ -26,6 +27,7 @@ export class AccountEditor extends React.Component {
         this.onParentChange = this.onParentChange.bind(this);
 
         this.onTypeChange = this.onTypeChange.bind(this);
+        this.onPricedItemChange = this.onPricedItemChange.bind(this);
 
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
@@ -78,6 +80,7 @@ export class AccountEditor extends React.Component {
 
     componentDidMount() {
         this.props.accessor.on('accountsModify', this.onAccountsModify);
+        this.updateAccountDataItem({});
     }
 
 
@@ -333,8 +336,42 @@ export class AccountEditor extends React.Component {
     }
 
 
-    renderPricedItemEditor() {
+    onPricedItemChange(e) {
+        this.updateAccountDataItem({
+            pricedItemId: parseInt(e.target.value),
+        });
+    }
 
+    renderPricedItemEditor() {
+        const { accessor } = this.props;
+        const { accountDataItem } = this.state;
+        const accountType = A.getAccountType(accountDataItem.type);
+        const pricedItemTypeName = accountType.pricedItemType.name;
+
+        const items = [];
+        const pricedItemIds = accessor.getPricedItemIds();
+        console.log('pricedItemIds: ' + pricedItemIds);
+
+        pricedItemIds.forEach((pricedItemId) => {
+            const pricedItemDataItem 
+                = accessor.getPricedItemDataItemWithId(pricedItemId);
+
+            if (pricedItemDataItem.type === pricedItemTypeName) {
+                items.push({
+                    pricedItemId: pricedItemId,
+                });
+            }
+        });
+
+        return <PricedItemSelector
+            accessor={accessor}
+            id={this._idBase + '_parent'}
+            pricedItemEntries={items}
+            ariaLabel={pricedItemTypeName}
+            label={userMsg('AccountEditor-pricedItem_' + pricedItemTypeName + '_label')}
+            selectedAccountId={accountDataItem.pricedItemId}
+            onChange={this.onPricedItemChange}
+        />;
     }
 
 

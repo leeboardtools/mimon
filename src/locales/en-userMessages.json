@@ -112,11 +112,16 @@
     "AccountEditor-parent_label": "Parent account",
     "AccountEditor-type_label": "Account type",
     "AccountEditor-name_label": "Account name",
-    "AccountEditor-name_required": "An account name must be specified.",
-    "AccountEditor-name_duplicate": "There is already an account with the name and the same parent.",
+    "AccountEditor-name_required": "Please enter an account name.",
+    "AccountEditor-name_duplicate": "There is already an account with this name and the same parent.",
     "AccountEditor-description_label": "Description",
     "AccountEditor-refId_label": "Ref. Id",
     "AccountEditor-refId_duplicate": "There is already an account with the reference id.",
+    "AccountEditor-pricedItem_CURRENCY_label": "Currency",
+    "AccountEditor-pricedItem_SECURITY_label": "Security",
+    "AccountEditor-pricedItem_MUTUAL_FUND_label": "Mutual Fund",
+    "AccountEditor-pricedItem_REAL_ESTATE_label": "Real Estate",
+    "AccountEditor-pricedItem_PROPERTY_label": "Property",
 
 
     "AccountRegisterHandler-newTransaction": "New Transaction",
