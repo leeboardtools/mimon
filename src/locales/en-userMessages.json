@@ -131,5 +131,9 @@
     "AccountRegisterHandler-pasteTransaction": "Paste Transaction",
 
 
+    "PricedItemSelector-baseCurrency_label": ["Default Currency (", ")" ],
+    "PricedItemSelector-ticker_label": ["", " ", "" ],
+
+
     "": ""
 }

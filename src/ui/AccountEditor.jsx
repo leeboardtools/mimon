@@ -369,7 +369,7 @@ export class AccountEditor extends React.Component {
             pricedItemEntries={items}
             ariaLabel={pricedItemTypeName}
             label={userMsg('AccountEditor-pricedItem_' + pricedItemTypeName + '_label')}
-            selectedAccountId={accountDataItem.pricedItemId}
+            selectedPricedItemId={accountDataItem.pricedItemId}
             onChange={this.onPricedItemChange}
         />;
     }

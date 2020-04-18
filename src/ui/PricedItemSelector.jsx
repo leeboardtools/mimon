@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { DropdownField } from '../util-ui/DropdownField';
+import { userMsg } from '../util/UserMessages';
+import * as PI from '../engine/PricedItems';
 
 /**
  * Dropdown component for selecting a priced item.
@@ -9,16 +11,44 @@ import { DropdownField } from '../util-ui/DropdownField';
 export function PricedItemSelector(props) {
     const { accessor, pricedItemEntries, selectedPricedItemId, 
         ...passThroughProps } = props;
+
+    const baseCurrencyId = accessor.getBaseCurrencyPricedItemId();
+
     const items = [];
     pricedItemEntries.forEach((entry) => {
         const { pricedItemId } = entry;
 
         const pricedItemDataItem = accessor.getPricedItemDataItemWithId(pricedItemId);
+        const type = PI.getPricedItemType(pricedItemDataItem.type);
+        let text;
+        switch (type) {
+        case PI.PricedItemType.CURRENCY :
+            text = pricedItemDataItem.currency;
+            if (pricedItemId === baseCurrencyId) {
+                text = userMsg('PricedItemSelector-baseCurrency_label',
+                    text);
+            }
+            break;
+        
+        default :
+            if (type.hasTickerSymbol) {
+                text = userMsg('PricedItemSelector-ticker_label', 
+                    pricedItemDataItem.ticker,
+                    pricedItemDataItem.name);
+            }
+            else {
+                text = pricedItemDataItem.name;
+            }
+        }
         items.push({
             value: pricedItemId,
-            text: pricedItemDataItem.name || pricedItemDataItem.currency,
+            text: text,
         });
     });
+
+    console.log('items: ' + JSON.stringify(items));
+    console.log('activeItem: ' + selectedPricedItemId);
+    console.log('defaultCurrency: ' + accessor.getBaseCurrencyPricedItemId());
 
     return <DropdownField
         {...passThroughProps}
@@ -49,3 +79,5 @@ PricedItemSelector.propTypes = {
     onBlur: PropTypes.func,
     disabled: PropTypes.bool,
 };
+
+
