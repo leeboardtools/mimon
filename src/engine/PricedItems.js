@@ -367,7 +367,7 @@ export class PricedItemManager extends EventEmitter {
         const baseOptions = {
             currencyUSDPricedItemId: this._currencyUSDPricedItemId,
             currencyEURPricedItemId: this._currencyEURPricedItemId,
-            baseCurrencyPricedItemId: this._currencyBasePricedItemId,
+            currencyBasePricedItemId: this._currencyBasePricedItemId,
         };
         await this._handler.asyncSetBaseOptions(baseOptions);
     }

@@ -16,7 +16,7 @@ test('AccountingActions-Accounts', async () => {
     const actions = accountingSystem.getAccountingActions();
     const actionManager = accountingSystem.getActionManager();
 
-    const baseCurrencyPricedItemId 
+    const currencyBasePricedItemId 
         = accountingSystem.getPricedItemManager().getBaseCurrencyPricedItemId();
 
     let currentSettings;
@@ -29,7 +29,7 @@ test('AccountingActions-Accounts', async () => {
     const settingsA = {
         parentAccountId: sys.currentAssetsId,
         type: A.AccountType.BANK.name,
-        pricedItemId: baseCurrencyPricedItemId,
+        pricedItemId: currencyBasePricedItemId,
         name: 'New Bank Account',
     };
 
