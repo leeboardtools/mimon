@@ -198,7 +198,7 @@ export function activeRowTable(WrappedTable) {
      */
 
     /**
-     * @typedef {object} ActiveRowTable~Props
+     * @typedef {object} ActiveRowTable~propTypes
      *
      * @property {ActiveRowTable~onGetRowAtIndex} onGetRowAtIndex This is used primarily 
      * to obtain the next or previous row when handling arrow and enter keys.
