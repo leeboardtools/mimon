@@ -79,6 +79,8 @@ PricedItemSelector.propTypes = {
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
     disabled: PropTypes.bool,
+    prependComponent: PropTypes.object,
+    appendComponent: PropTypes.object,
 };
 
 

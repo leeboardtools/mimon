@@ -28,9 +28,36 @@ export function Field(props) {
         </div>;
     }
 
+    let prepend;
+    if (props.prependComponent) {
+        prepend = <div className="input-group-prepend">
+            {props.prependComponent}
+        </div>;
+    }
+
+    let append;
+    if (props.appendComponent) {
+        append = <div className="input-group-append">
+            {props.appendComponent}
+        </div>;
+    }
+
+    if (prepend || append) {
+        editorClassName += ' field-input-form-control';
+    }
+
+    let inputComponent = onRenderEditor(editorClassName);
+    if (prepend || append) {
+        inputComponent = <div className="input-group">
+            {prepend}
+            {inputComponent}
+            {append}
+        </div>;
+    }
+
     return <div className={divClassName}>
         {labelComponent}
-        {onRenderEditor(editorClassName)}
+        {inputComponent}
         {errorMsgComponent}
     </div>;
 }
@@ -59,4 +86,6 @@ Field.propTypes = {
     errorMsg: PropTypes.string,
     editorClassExtras: PropTypes.string,
     onRenderEditor: PropTypes.func.isRequired,
+    prependComponent: PropTypes.object,
+    appendComponent: PropTypes.object,
 };

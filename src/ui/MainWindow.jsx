@@ -335,6 +335,11 @@ export class MainWindow extends React.Component {
     }
 
 
+    openPricedItemEditor(pricedItemId) {
+        this.onSetErrorMsg('Sorry, Priced Item Editor is not yet implemented...');
+    }
+
+
     onOpenTab(type, ...args) {
         switch (type) {
         case 'reconcileAccount' :
@@ -342,11 +347,15 @@ export class MainWindow extends React.Component {
             break;
         
         case 'accountRegister' :
-            this.openAccountRegister(args[0]);
+            this.openAccountRegister(...args);
             break;
         
         case 'accountEditor' :
             this.openAccountEditor(...args);
+            break;
+        
+        case 'pricedItemEditor' :
+            this.openPricedItemEditor(...args);
             break;
     
         default :

@@ -28,6 +28,7 @@ export class AccountEditor extends React.Component {
 
         this.onTypeChange = this.onTypeChange.bind(this);
         this.onPricedItemChange = this.onPricedItemChange.bind(this);
+        this.onNewPricedItem = this.onNewPricedItem.bind(this);
 
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
@@ -342,6 +343,13 @@ export class AccountEditor extends React.Component {
         });
     }
 
+    onNewPricedItem() {
+        const { onNewPricedItem } = this.props;
+        if (onNewPricedItem) {
+            onNewPricedItem();
+        }
+    }
+
     renderPricedItemEditor() {
         const { accessor } = this.props;
         const { accountDataItem } = this.state;
@@ -362,6 +370,16 @@ export class AccountEditor extends React.Component {
             }
         });
 
+        const buttonLabel = userMsg('AccountEditor-newPricedItem_' 
+            + pricedItemTypeName + '_label');
+        const button = <button className="btn btn-outline-secondary"
+            aria-label={'New ' + pricedItemTypeName}
+            type="button"
+            onClick={this.onNewPricedItem}
+        >
+            {buttonLabel}
+        </button>;
+
         return <PricedItemSelector
             accessor={accessor}
             id={this._idBase + '_parent'}
@@ -370,6 +388,7 @@ export class AccountEditor extends React.Component {
             label={userMsg('AccountEditor-pricedItem_' + pricedItemTypeName + '_label')}
             selectedPricedItemId={accountDataItem.pricedItemId}
             onChange={this.onPricedItemChange}
+            appendComponent={button}
         />;
     }
 
@@ -487,4 +506,5 @@ AccountEditor.propTypes = {
     parentAccountId: PropTypes.number,
     childListIndex: PropTypes.number,
     onClose: PropTypes.func.isRequired,
+    onNewPricedItem: PropTypes.func,
 };

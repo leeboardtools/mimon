@@ -122,6 +122,11 @@
     "AccountEditor-pricedItem_MUTUAL_FUND_label": "Mutual Fund",
     "AccountEditor-pricedItem_REAL_ESTATE_label": "Real Estate",
     "AccountEditor-pricedItem_PROPERTY_label": "Property",
+    "AccountEditor-newPricedItem_CURRENCY_label": "New Currency",
+    "AccountEditor-newPricedItem_SECURITY_label": "New Security",
+    "AccountEditor-newPricedItem_MUTUAL_FUND_label": "New Mutual Fund",
+    "AccountEditor-newPricedItem_REAL_ESTATE_label": "New Real Estate",
+    "AccountEditor-newPricedItem_PROPERTY_label": "New Property",
 
 
     "AccountRegisterHandler-newTransaction": "New Transaction",

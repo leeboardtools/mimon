@@ -55,6 +55,12 @@
 /** End util-ui/Dropdown.jsx */
 
 
+.field-input-form-control {
+    flex: 1 1 0%;
+    width: 100%;
+}
+
+
 /** Needed for util-ui/DropdownField.jsx */
 .scrollable-menu {
     height: auto;

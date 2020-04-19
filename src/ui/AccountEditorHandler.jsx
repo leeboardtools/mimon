@@ -13,11 +13,17 @@ export class AccountEditorHandler extends MainWindowHandlerBase {
     constructor(props) {
         super(props);
 
+        this.onNewPricedItem = this.onNewPricedItem.bind(this);
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
     }
 
 
     getTabDropdownInfo(tabId) {
+    }
+
+
+    onNewPricedItem() {
+        this.openTab('pricedItemEditor');
     }
 
 
@@ -61,6 +67,7 @@ export class AccountEditorHandler extends MainWindowHandlerBase {
             parentAccountId={parentAccountId}
             childListIndex={childListIndex}
             onClose={() => this.closeTab(tabEntry.tabId)}
+            onNewPricedItem={this.onNewPricedItem}
         />;
     }
 }

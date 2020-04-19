@@ -94,6 +94,8 @@ export const DropdownField = React.forwardRef(
                     {menu}
                 </div>
             }
+            prependComponent={props.prependComponent}
+            appendComponent={props.appendComponent}
         />;
     }
 );
@@ -146,4 +148,6 @@ DropdownField.propTypes = {
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
     disabled: PropTypes.bool,
+    prependComponent: PropTypes.object,
+    appendComponent: PropTypes.object,
 };
