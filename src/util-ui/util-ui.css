@@ -53,6 +53,15 @@
     font-weight: 600;
 }
 /** End util-ui/Dropdown.jsx */
+
+
+/** Needed for util-ui/DropdownField.jsx */
+.scrollable-menu {
+    height: auto;
+    max-height: 90vh;
+    overflow-x: hidden;
+}
+/** End util-ui/DropdownField.jsx */
   
 
 /** Needed for util-ui/QuantityDisplay.jsx */

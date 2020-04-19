@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { DropdownField } from '../util-ui/DropdownField';
 import { userMsg } from '../util/UserMessages';
 import * as PI from '../engine/PricedItems';
+import { getCurrency } from '../util/Currency';
 
 /**
  * Dropdown component for selecting a priced item.
@@ -23,10 +24,14 @@ export function PricedItemSelector(props) {
         let text;
         switch (type) {
         case PI.PricedItemType.CURRENCY :
-            text = pricedItemDataItem.currency;
             if (pricedItemId === baseCurrencyId) {
                 text = userMsg('PricedItemSelector-baseCurrency_label',
-                    text);
+                    pricedItemDataItem.currency);
+            }
+            else {
+                const currency = getCurrency(pricedItemDataItem.currency);
+                text = userMsg('PricedItemSelector-currency_label',
+                    currency.getCode(), currency.getName());
             }
             break;
         
@@ -45,10 +50,6 @@ export function PricedItemSelector(props) {
             text: text,
         });
     });
-
-    console.log('items: ' + JSON.stringify(items));
-    console.log('activeItem: ' + selectedPricedItemId);
-    console.log('defaultCurrency: ' + accessor.getBaseCurrencyPricedItemId());
 
     return <DropdownField
         {...passThroughProps}

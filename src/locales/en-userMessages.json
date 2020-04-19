@@ -132,6 +132,7 @@
 
 
     "PricedItemSelector-baseCurrency_label": ["Default Currency (", ")" ],
+    "PricedItemSelector-currency_label": ["", " - ", ""],
     "PricedItemSelector-ticker_label": ["", " ", "" ],
 
 

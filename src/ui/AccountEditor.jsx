@@ -350,7 +350,6 @@ export class AccountEditor extends React.Component {
 
         const items = [];
         const pricedItemIds = accessor.getPricedItemIds();
-        console.log('pricedItemIds: ' + pricedItemIds);
 
         pricedItemIds.forEach((pricedItemId) => {
             const pricedItemDataItem 
