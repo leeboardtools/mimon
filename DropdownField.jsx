@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Field } from './Field';
 
-let useNew = true;
 
 /**
  * React component for basic text editing
@@ -58,7 +57,7 @@ export const DropdownField = React.forwardRef(
             );
         });
 
-        const menu = <div className="dropdown-menu"
+        const menu = <div className="dropdown-menu scrollable-menu"
             aria-labelledby={id}
         >
             {itemComponents}
