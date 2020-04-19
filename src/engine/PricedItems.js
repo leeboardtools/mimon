@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { userMsg } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
-import { getCurrencyCode, getCurrency } from '../util/Currency';
+import { getCurrencyCode, getCurrency, Currencies } from '../util/Currency';
 import { getQuantityDefinition, getQuantityDefinitionName } from '../util/Quantities';
 import { userError } from '../util/UserMessages';
 
@@ -50,14 +50,17 @@ function validateCurrencyDataItem(manager, item, isModify) {
         const currency = getCurrency(item.currency);
         item.quantityDefinition = getQuantityDefinitionName(
             currency.getQuantityDefinition());
+        if (item.id !== manager._currencyBasePricedItemId) {
+            item.isStandardCurrency = true;
+        }
     }
 
-    const currencyName = manager._getCurrencyName(item.currency, item.quantityDefinition);
+    const currencyName = manager._getCurrencyPricedItemCurrencyName(item);
     const existingId = manager._currencyPricedItemIdsByCurrency.get(currencyName);
     if (existingId) {
         if ((item.id !== manager._currencyBasePricedItemId)
          && (!isModify || (existingId !== item.id))) {
-            return userError('PricedItemManager-currency_already_exists', item.currency);
+            return userError('PricedItemManager-currency_already_exists', currencyName);
         }
     }
 }
@@ -146,6 +149,8 @@ export function getPricedItemOnlineUpdateTypeName(type) {
  * @property {string}   type    name property of one of {@link PricedItemType}.
  * @property {string}   currency    The 3 letter currency name of the currency 
  * underlying the priced item.
+ * @property {boolean}  [isStandardCurrency]    If <code>true</code> the priced
+ * item is a standard built-in currency and cannot be modified nor removed.
  * @property {string}   quantityDefinition  The name of the {@link QuantityDefinition} 
  * defining quantities of the priced item.
  * @property {string}   [name]  The user supplied name of the priced item.
@@ -163,6 +168,8 @@ export function getPricedItemOnlineUpdateTypeName(type) {
  * @property {PricedItemType}   type    The priced item's type.
  * @property {Currency} currency    The currency object of the currency underlying 
  * the priced item.
+ * @property {boolean}  [isStandardCurrency]    If <code>true</code> the priced
+ * item is a standard built-in currency and cannot be modified nor removed.
  * @property {QuantityDefinition}   quantityDefinition  The quantity definition 
  * defining the priced item's quantities.
  * @property {string}   [name]  The user supplied name of the priced item.
@@ -266,9 +273,12 @@ export function getPricedItemDataItem(pricedItem, alwaysCopy) {
  * it will be reflected by all the data items that refer to the base
  * currency priced item.
  * <p>
- * All other currencies, on the other hand, are defined by a combination
- * of currency code and quantity definition. The priced items for
- * these can be looked up by currency code and quantity definition.
+ * All other currencies are available in one of two forms. The first is
+ * the default currency form, each currency is automatically added from
+ * Currencies. These priced items cannot be modified nor removed.
+ * <p>
+ * In addition, specialized currencies with specific quantity definitions may
+ * be added. These are treated as normal priced items.
  */
 export class PricedItemManager extends EventEmitter {
 
@@ -316,8 +326,6 @@ export class PricedItemManager extends EventEmitter {
         this._requiredCurrencyPricedItemIds = new Set();
 
         const baseOptions = this._handler.getBaseOptions() || {};
-        this._currencyUSDPricedItemId = baseOptions.currencyUSDPricedItemId;
-        this._currencyEURPricedItemId = baseOptions.currencyEURPricedItemId;
         this._currencyBasePricedItemId = baseOptions.currencyBasePricedItemId;
 
         const pricedItems = this._handler.getPricedItemDataItems();
@@ -325,8 +333,8 @@ export class PricedItemManager extends EventEmitter {
             this._pricedItemDataItemsById.set(pricedItem.id, pricedItem);
             if ((pricedItem.type === PricedItemType.CURRENCY.name)
              && (pricedItem.id !== this._currencyBasePricedItemId)) {
-                const currencyName = this._getCurrencyName(pricedItem.currency, 
-                    pricedItem.quantityDefinition);
+                const currencyName = this._getCurrencyPricedItemCurrencyName(
+                    pricedItem);
                 this._currencyPricedItemIdsByCurrency.set(currencyName, pricedItem.id);
             }
         });
@@ -347,26 +355,23 @@ export class PricedItemManager extends EventEmitter {
         }
         this._requiredCurrencyPricedItemIds.add(this._currencyBasePricedItemId);
 
-        
-        if (!this._currencyUSDPricedItemId) {
-            const pricedItem = (await this.asyncAddCurrencyPricedItem('USD'))
-                .newPricedItemDataItem;
-            this._currencyUSDPricedItemId = pricedItem.id;
+        this._addingStandardCurrency = true;
+        try {
+            for (let code in Currencies) {
+                let id = this._currencyPricedItemIdsByCurrency.get(code);
+                if (!id) {
+                    const pricedItem = (await this.asyncAddCurrencyPricedItem(code))
+                        .newPricedItemDataItem;
+                    id = pricedItem.id;
+                }
+                this._requiredCurrencyPricedItemIds.add(id);
+            }
         }
-        this._requiredCurrencyPricedItemIds.add(this._currencyUSDPricedItemId);
-
-
-        if (!this._currencyEURPricedItemId) {
-            const pricedItem = (await this.asyncAddCurrencyPricedItem('EUR'))
-                .newPricedItemDataItem;
-            this._currencyEURPricedItemId = pricedItem.id;
+        finally {
+            delete this._addingStandardCurrency;
         }
-        this._requiredCurrencyPricedItemIds.add(this._currencyEURPricedItemId);
-
 
         const baseOptions = {
-            currencyUSDPricedItemId: this._currencyUSDPricedItemId,
-            currencyEURPricedItemId: this._currencyEURPricedItemId,
             currencyBasePricedItemId: this._currencyBasePricedItemId,
         };
         await this._handler.asyncSetBaseOptions(baseOptions);
@@ -374,8 +379,6 @@ export class PricedItemManager extends EventEmitter {
 
 
     shutDownFromUse() {
-        this._requiredCurrencyPricedItemIds.clear();
-
         this._currencyPricedItemIdsByCurrency.clear();
         this._pricedItemDataItemsById.clear();
         this._requiredCurrencyPricedItemIds.clear();
@@ -415,35 +418,12 @@ export class PricedItemManager extends EventEmitter {
     }
 
 
-    /**
-     * @returns {number}    The id of the priced item for the USD currency.
-     */
-    getCurrencyUSDPricedItemId() { return this._currencyUSDPricedItemId; }
-
-    /**
-     * @returns {PricedItemDataItem}    The priced item for the USD currency.
-     */
-    getCurrencyUSDPricedItemDataItem() { 
-        return this.getPricedItemDataItemWithId(this._currencyUSDPricedItemId); 
-    }
-
-
-    /**
-     * @returns {number}    The id of the priced item for the EUR currency.
-     */
-    getCurrencyEURPricedItemDataItem() { return this._currencyEURPricedItemId; }
-
-    /**
-     * @returns {PricedItemDataItem}    The priced item for the EUR currency.
-     */
-    getCurrencyEURPricedItem() { 
-        return this.getPricedItemDataItemWithId(this._currencyEURPricedItemId); 
-    }
-
-    
 
     async _asyncAddPricedItem(pricedItem) {
         const pricedItemDataItem = getPricedItemDataItem(pricedItem, true);
+        if (this._addingStandardCurrency) {
+            pricedItemDataItem.isStandardCurrency = true;
+        }
         
         const id = this._idGenerator.generateId();
         pricedItemDataItem.id = id;
@@ -457,8 +437,8 @@ export class PricedItemManager extends EventEmitter {
 
         if (!this._addingBaseCurrency
          && (getPricedItemType(pricedItem.type) === PricedItemType.CURRENCY)) {
-            const currencyName = this._getCurrencyName(pricedItemDataItem.currency, 
-                pricedItemDataItem.quantityDefinition);
+            const currencyName = this._getCurrencyPricedItemCurrencyName(
+                pricedItemDataItem);
             this._currencyPricedItemIdsByCurrency.set(currencyName, id);
         }
 
@@ -492,12 +472,20 @@ export class PricedItemManager extends EventEmitter {
     _getCurrencyName(currency, quantityDefinition) {
         const code = getCurrencyCode(currency);
         if (!quantityDefinition) {
-            currency = getCurrency(code);
-            quantityDefinition = currency.getQuantityDefinition();
+            return code;
         }
 
         const definitionName = getQuantityDefinitionName(quantityDefinition);
         return code + '_' + definitionName;
+    }
+
+    _getCurrencyPricedItemCurrencyName(pricedItemDataItem) {
+        const quantityDefinition = (pricedItemDataItem.isStandardCurrency) 
+            ? undefined 
+            : pricedItemDataItem.quantityDefinition;
+        return this._getCurrencyName(pricedItemDataItem.currency, 
+            quantityDefinition);
+
     }
 
     /**
@@ -539,8 +527,8 @@ export class PricedItemManager extends EventEmitter {
         const type = getPricedItemType(pricedItemDataItem.type);
         if ((type === PricedItemType.CURRENCY) 
          && (pricedItemDataItem.id !== this._currencyBasePricedItemId)) {
-            const currencyName = this._getCurrencyName(pricedItemDataItem.currency, 
-                pricedItemDataItem.quantityDefinition);
+            const currencyName = this._getCurrencyPricedItemCurrencyName(
+                pricedItemDataItem);
             this._currencyPricedItemIdsByCurrency.delete(currencyName);
         }
 
@@ -602,7 +590,7 @@ export class PricedItemManager extends EventEmitter {
      * @throws {Error}
      * @fires {PricedItemManager~pricedItemAdd}
      */
-    async asyncAddCurrencyPricedItem(currency, validateOnly, options) {
+    async asyncAddCurrencyPricedItem(currency, options, validateOnly) {
         const pricedItem = Object.assign({}, options);
         pricedItem.type = PricedItemType.CURRENCY;
         pricedItem.currency = currency;
@@ -774,6 +762,10 @@ export class PricedItemManager extends EventEmitter {
         const oldPricedItemDataItem = this._pricedItemDataItemsById.get(id);
         if (!oldPricedItemDataItem) {
             throw userError('PricedItemManager-modify_no_id', id);
+        }
+
+        if (oldPricedItemDataItem.isStandardCurrency) {
+            throw userError('PricedItemManager-modify_standard_currency');
         }
 
         let newPricedItemDataItem = Object.assign({}, oldPricedItemDataItem, pricedItem);

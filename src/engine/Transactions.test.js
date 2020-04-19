@@ -458,17 +458,13 @@ test('TransactionManager-validateSplits', async () => {
     // Currency exchange.
     const accountManager = accountingSystem.getAccountManager();
     const pricedItemManager = accountingSystem.getPricedItemManager();
-    const cadPricedItemDataItem 
-        = (await pricedItemManager.asyncAddCurrencyPricedItem('CAD'))
-            .newPricedItemDataItem;
+    const cadPricedItemDataItem = pricedItemManager.getCurrencyPricedItemDataItem('CAD');
     const cadCashAccountDataItem = (await accountManager.asyncAddAccount({
         parentAccountId: sys.currentAssetsId,
         type: A.AccountType.CASH,
         pricedItemId: cadPricedItemDataItem.id,
     })).newAccountDataItem;
-    const jpyPricedItemDataItem 
-        = (await pricedItemManager.asyncAddCurrencyPricedItem('JPY'))
-            .newPricedItemDataItem;
+    const jpyPricedItemDataItem = pricedItemManager.getCurrencyPricedItemDataItem('JPY');
     const jpyCashAccountDataItem = (await accountManager.asyncAddAccount({
         parentAccountId: sys.currentAssetsId,
         type: A.AccountType.CASH,

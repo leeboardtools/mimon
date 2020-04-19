@@ -730,36 +730,6 @@ export class EngineAccessor extends EventEmitter {
 
 
     /**
-     * @returns {number}    The id of the priced item for the USD currency.
-     */
-    getCurrencyUSDPricedItemId() {
-        return this._pricedItemManager.getCurrencyUSDPricedItemId();
-    }
-
-    /**
-     * @returns {PricedItemDataItem}    The priced item for the USD currency.
-     */
-    getCurrencyUSDPricedItemDataItem() {
-        return this._pricedItemManager.getCurrencyUSDPricedItemDataItem();
-    }
-
-
-    /**
-     * @returns {number}    The id of the priced item for the EUR currency.
-     */
-    getCurrencyEURPricedItemDataItem() {
-        return this._pricedItemManager.getCurrencyEURPricedItemDataItem();
-    }
-
-    /**
-     * @returns {PricedItemDataItem}    The priced item for the EUR currency.
-     */
-    getCurrencyEURPricedItem() {
-        return this._pricedItemManager.getCurrencyEURPricedItem();
-    }
-
-
-    /**
      * Retrieves the priced item for a currency.
      * @param {(string|Currency)} currency Either a currency code or a {@link Currency}.
      * @param {(string|QuantityDefinition)} [quantityDefinition]    Optional quantity 

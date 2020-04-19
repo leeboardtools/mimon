@@ -88,24 +88,25 @@ test('PricedItemManager-currencies', async () => {
     
     const usdPricedItem = manager.getCurrencyPricedItemDataItem('USD');
     expect(usdPricedItem.currency).toEqual('USD');
-    expect(usdPricedItem).toEqual(manager.getCurrencyUSDPricedItemDataItem());
-    expect(usdPricedItem.id).toEqual(manager.getCurrencyUSDPricedItemId());
 
     const eurPricedItem = manager.getCurrencyPricedItemDataItem('EUR');
     expect(eurPricedItem.currency).toEqual('EUR');
-    expect(eurPricedItem).toEqual(manager.getCurrencyEURPricedItem());
-    expect(eurPricedItem.id).toEqual(manager.getCurrencyEURPricedItemDataItem());
 
 
     // Can't remove the built-in currency priced items...
     await expect(manager.asyncRemovePricedItem(manager.getBaseCurrencyPricedItemId()))
         .rejects.toThrow();
-    await expect(manager.asyncRemovePricedItem(manager.getCurrencyUSDPricedItemId()))
-        .rejects.toThrow();
-    await expect(manager.asyncRemovePricedItem(
-        manager.getCurrencyEURPricedItemDataItem()))
+    await expect(manager.asyncRemovePricedItem(usdPricedItem.id))
         .rejects.toThrow();
 
+    // Can't modify standard currency priced items...
+    await expect(manager.asyncModifyPricedItem({
+        id: eurPricedItem.id,
+        currency: 'JPY',
+    }))
+        .rejects.toThrow();
+    
+    
     let addEventArg;
     let modifyEventArg;
     let removeEventArg;
@@ -115,9 +116,12 @@ test('PricedItemManager-currencies', async () => {
 
     // Add.
     let result;
-    result = await manager.asyncAddCurrencyPricedItem('BMD');
+    const quantityDefinitionA = getDecimalDefinition(-3);
+    result = await manager.asyncAddCurrencyPricedItem('BMD', 
+        { quantityDefinition: quantityDefinitionA });
     let itemA = result.newPricedItemDataItem;
-    expect(manager.getCurrencyPricedItemDataItem('BMD')).toEqual(itemA);
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionA))
+        .toEqual(itemA);
 
     // pricedItemAdd event test
     expect(addEventArg).toEqual({ newPricedItemDataItem: itemA });
@@ -126,10 +130,12 @@ test('PricedItemManager-currencies', async () => {
     // Make sure the data item returned is a copy.
     itemA = PI.getPricedItemDataItem(itemA, true);
     result.newPricedItemDataItem.type = 'abc';
-    expect(manager.getCurrencyPricedItemDataItem('BMD')).toEqual(itemA);
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionA))
+        .toEqual(itemA);
 
-    manager.getCurrencyPricedItemDataItem('BMD').type = 1234;
-    expect(manager.getCurrencyPricedItemDataItem('BMD')).toEqual(itemA);
+    manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionA).type = 1234;
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionA))
+        .toEqual(itemA);
 
 
     // Undo Add
@@ -137,19 +143,24 @@ test('PricedItemManager-currencies', async () => {
     expect(removeEventArg).toEqual(
         { removedPricedItemDataItem: itemA }
     );
-    expect(manager.getCurrencyPricedItemDataItem('BMD')).toBeUndefined();
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionA))
+        .toBeUndefined();
 
-    await manager.asyncAddCurrencyPricedItem('BMD');
-    expect(manager.getCurrencyPricedItemDataItem('BMD')).toEqual(itemA);
+    await manager.asyncAddCurrencyPricedItem('BMD',
+        { quantityDefinition: quantityDefinitionA });
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionA))
+        .toEqual(itemA);
 
 
     const quantityDefinitionB = getDecimalDefinition(-4);
-    const itemB = (await manager.asyncAddCurrencyPricedItem('BMD', false, 
-        { quantityDefinition: quantityDefinitionB })).newPricedItemDataItem;
+    const itemB = (await manager.asyncAddCurrencyPricedItem('BMD',
+        { quantityDefinition: quantityDefinitionB },
+        false)).newPricedItemDataItem;
     expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionB))
         .toEqual(itemB);
 
-    expect(manager.getCurrencyPricedItemDataItem('BMD')).toEqual(itemA);
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionA))
+        .toEqual(itemA);
 
 
     // Modify
@@ -201,7 +212,8 @@ test('PricedItemManager-currencies', async () => {
     // Remove.
     result = await manager.asyncRemovePricedItem(itemA.id);
     let removedA = result.removedPricedItemDataItem;
-    expect(manager.getCurrencyPricedItemDataItem('BMD')).toBeUndefined();
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionA))
+        .toBeUndefined();
 
     // pricedItemRemove event test
     expect(removeEventArg).toEqual({ removedPricedItemDataItem: removedA });
@@ -218,7 +230,8 @@ test('PricedItemManager-currencies', async () => {
         .toEqual(itemC);
 
     await manager.asyncRemovePricedItem(itemA.id);
-    expect(manager.getCurrencyPricedItemDataItem('BMD')).toBeUndefined();
+    expect(manager.getCurrencyPricedItemDataItem('BMD', quantityDefinitionA))
+        .toBeUndefined();
 
 
     // Validate remove

@@ -105,6 +105,7 @@
     "PricedItemManager-remove_required_currency": "The priced item is a required currency priced item and cannot be removed.",
     "PricedItemManager-remove_no_id": ["The priced item cannot be deleted. An item with id '", "' was not found."],
     "PricedItemManager-modify_no_id": ["The priced item could not be modified. An item with id '", "' was not found."],
+    "PricedItemManager-modify_standard_currency": "The currency is a standard currency and cannot be modified.",
     "PricedItemManager-modify_type_change": "The priced item could not be modified. The type cannot be changed.",
     "PricedItemManager-modify_no_change_currency_currency": "The currency of a currency priced item cannot be changed.",
 

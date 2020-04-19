@@ -397,3 +397,10 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
                 - Delete Reminder
 
 
+- Next Up:
+    - Account Editor
+        - Priced Item Selector - Add New PricedItem button.
+
+    - NewFileConfigurator.jsx
+        - Change opening balance renderer to use a CellQuantityEditor/Display.
+    
