@@ -702,6 +702,28 @@ class DecimalDefinition extends QuantityDefinition {
     }
 
 
+    /**
+     * @returns {string}    A text representation of the definition, in the form x.xxxx
+     */
+    getDisplayText() {
+        if (!this._displayText) {
+            let toReplace;
+            let value;
+            if (this._decimalPlaces >= 0) {
+                value = 0;
+                toReplace = /0/g;
+            }
+            else {
+                value = 1;
+                toReplace = /1/g;
+            }
+            const text = this.baseValueToValueText(value);
+            this._displayText = text.replace(toReplace, 'x');
+        }
+        return this._displayText;
+    }
+
+
     compareDefinitionResolution(otherDefinition) {
         if (!(otherDefinition instanceof DecimalDefinition)) {
             throw Error('Incompatible definition!');
@@ -736,7 +758,7 @@ class DecimalDefinition extends QuantityDefinition {
         }
 
         const decimalPos = text.length - this._decimalPlaces;
-        if (decimalPos < 0) {
+        if (decimalPos <= 0) {
             // Need leading 0s.
             return sign + '0.' + '0'.repeat(-decimalPos) + text;
         }

@@ -263,3 +263,20 @@ test('QuantityDefinition-singletons', () => {
     const defF = getQuantityDefinition(defC.getName());
     expect(defF === defC).toBeTruthy();
 });
+
+
+test('QuantityDefinition-displaText', () => {
+    expect(getDecimalDefinition(1).getDisplayText()).toEqual('x.x');
+
+    expect(getDecimalDefinition(2).getDisplayText()).toEqual('x.xx');
+
+    expect(getDecimalDefinition(-4).getDisplayText()).toEqual('x0000');
+
+    expect(getDecimalDefinition(0).getDisplayText()).toEqual('x');
+
+    const defD = getDecimalDefinition({
+        decimalPlaces: -4,
+        groupMark: ','
+    });
+    expect(defD.getDisplayText()).toEqual('x0,000');
+});
