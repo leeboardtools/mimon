@@ -672,7 +672,7 @@ class DecimalDefinition extends QuantityDefinition {
         }
 
         return new DecimalDefinition(
-            { deicmalPlaces: decimalPlaces, groupMark: groupMark });
+            { decimalPlaces: decimalPlaces, groupMark: groupMark });
     }
 
     toJSON(arg) {
