@@ -13,6 +13,7 @@ import { PricedItemEditorHandler } from './PricedItemEditorHandler';
 import * as PI from '../engine/PricedItems';
 
 
+
 /**
  * The main window component. This is responsible for managing the normal
  * accounting system editing process.
@@ -250,7 +251,9 @@ export class MainWindow extends React.Component {
             }
             this.setState({
                 isUndoEnabled: lastAppliedAction !== undefined,
+                lastAppliedAction: lastAppliedAction,
                 isRedoEnabled: lastUndoneAction !== undefined,
+                lastUndoneAction: lastUndoneAction,
             });
 
         });
@@ -453,13 +456,19 @@ export class MainWindow extends React.Component {
     renderMainMenu() {
         // Have the undo/redo buttons...
         const baseClassName = 'nav nav-link pl-2 pr-2';
+        const { accessor } = this.props;
+        const { lastAppliedAction, lastUndoneAction } = this.state;
 
-        let undoClassName = baseClassName;
-        if (!this.isUndoEnabled()) {
+        let undoClassName = baseClassName + ' undo-tooltip';
+        let undoLabel;
+        if (lastAppliedAction) {
+            undoLabel = userMsg('MainWindow-undo_label', lastAppliedAction.name);
+        }
+        else {
             undoClassName += ' disabled';
         }
 
-        const undo = <a
+        let undo = <a
             className={undoClassName}
             onClick={this.onUndo}
             aria-label="Undo"
@@ -467,11 +476,16 @@ export class MainWindow extends React.Component {
             role="button"
         >
             <i className="material-icons">undo</i>
+            <span className="undo-tooltiptext">{undoLabel}</span>
         </a>;
 
 
-        let redoClassName = baseClassName;
-        if (!this.isRedoEnabled()) {
+        let redoClassName = baseClassName + ' undo-tooltip';
+        let redoLabel;
+        if (lastUndoneAction) {
+            redoLabel = userMsg('MainWindow-redo_label', lastUndoneAction.name);
+        }
+        else {
             redoClassName += ' disabled';
         }
         const redo = <a
@@ -482,10 +496,10 @@ export class MainWindow extends React.Component {
             role="button"
         >
             <i className="material-icons">redo</i>
+            <span className="undo-tooltiptext">{redoLabel}</span>
         </a>;
 
 
-        const { accessor } = this.props;
         const mainMenuTitle = <i className="material-icons">menu</i>;
         const mainMenuItems = [
             { id: 'checkReminders', 

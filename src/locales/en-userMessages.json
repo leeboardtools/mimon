@@ -1,4 +1,7 @@
 {
+
+    "MainWindow-undo_label": ["Undo ", ""],
+    "MainWindow-redo_label": ["Redo ", ""],
     
     "MainWindow-checkReminders": "Check Reminders",
     "MainWindow-updatePrices": "Retrieve Prices",

@@ -263,12 +263,14 @@ export class AccountingActions extends EventEmitter {
      */
     createAddPricedItemAction(pricedItem) {
         const pricedItemDataItem = PI.getPricedItemDataItem(pricedItem, true);
-        const { typeDescription } = PI.getPricedItemType(pricedItemDataItem.type);
+        const typeDescription = PI.getPricedItemType(pricedItemDataItem.type)
+            .description;
+        const name = pricedItemDataItem.name || pricedItemDataItem.ticker;
         return { 
             type: 'addPricedItem', 
             pricedItemDataItem: pricedItemDataItem, 
             name: userMsg('Actions-addPricedItem', 
-                typeDescription, pricedItemDataItem.name), 
+                typeDescription, name), 
         };
     }
 
@@ -288,12 +290,15 @@ export class AccountingActions extends EventEmitter {
     async asyncCreateRemovePricedItemAction(pricedItemId) {
         const pricedItemDataItem = this._accountingSystem.getPricedItemManager()
             .getPricedItemDataItemWithId(pricedItemId);
-        const { typeDescription } = PI.getPricedItemType(pricedItemDataItem.type);
+        const typeDescription = PI.getPricedItemType(pricedItemDataItem.type)
+            .description;
+        const name = pricedItemDataItem.name || pricedItemDataItem.ticker;
+
         let action = { 
             type: 'removePricedItem', 
             pricedItemId: pricedItemId, 
             name: userMsg('Actions-removePricedItem', 
-                typeDescription, pricedItemDataItem.name), 
+                typeDescription, name), 
         };
 
         const accountIds = [];
@@ -330,7 +335,7 @@ export class AccountingActions extends EventEmitter {
             action = createCompositeAction(
                 {
                     name: userMsg('Actions-remove_accounts_and_pricedItem',
-                        typeDescription, pricedItemDataItem.name), 
+                        typeDescription, name), 
                 },
                 actions);
         }
@@ -355,13 +360,15 @@ export class AccountingActions extends EventEmitter {
     createModifyPricedItemAction(pricedItemUpdates) {
         const originalPricedItemDataItem = this._accountingSystem.getPricedItemManager()
             .getPricedItemDataItemWithId(pricedItemUpdates.id);
-        const { typeDescription } = PI.getPricedItemType(originalPricedItemDataItem.type);
+        const typeDescription = PI.getPricedItemType(originalPricedItemDataItem.type)
+            .description;
+        const name = originalPricedItemDataItem.name || originalPricedItemDataItem.ticker;
+        
         const pricedItemDataItem = PI.getPricedItemDataItem(pricedItemUpdates, true);
         return { 
             type: 'modifyPricedItem', 
             pricedItemDataItem: pricedItemDataItem, 
-            name: userMsg('Actions-modifyPricedItem', 
-                typeDescription, originalPricedItemDataItem.name), 
+            name: userMsg('Actions-modifyPricedItem', typeDescription, name), 
         };
     }
 
