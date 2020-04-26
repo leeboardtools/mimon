@@ -43,7 +43,7 @@ test('AccountingActions-Accounts', async () => {
 
 
     // Remove Account
-    const removeAccountAction = actions.createRemoveAccountAction(settingsA.id);
+    const removeAccountAction = await actions.asyncCreateRemoveAccountAction(settingsA.id);
     await actionManager.asyncApplyAction(removeAccountAction);
     expect(accountManager.getAccountDataItemWithId(settingsA.id)).toBeUndefined();
 
@@ -678,4 +678,39 @@ test('AccountingActions-Reminders', async () => {
     await expect(actionManager.asyncApplyAction(invalidModifyAction)).rejects.toThrow();
     expect(reminderManager.getReminderDataItemWithId(settingsA.id))
         .toEqual(expect.objectContaining(settingsA1));
+});
+
+
+
+
+//
+//---------------------------------------------------------
+//
+test('AccountingActions-removeAccounts With Transactions', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    await ASTH.asyncAddOpeningBalances(sys);
+    await ASTH.asyncAddBasicTransactions(sys);
+
+    const { accountingSystem } = sys;
+    const accountManager = accountingSystem.getAccountManager();
+    const actions = accountingSystem.getAccountingActions();
+    const actionManager = accountingSystem.getActionManager();
+    const transactionManager = accountingSystem.getTransactionManager();
+
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(
+        sys.transAId))
+        .toBeDefined();
+
+    const removeAccountAction = await actions.asyncCreateRemoveAccountAction(sys.cashId);
+    await actionManager.asyncApplyAction(removeAccountAction);
+
+    expect(accountManager.getAccountDataItemWithId(sys.cashId)).toBeUndefined();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(
+        sys.transAId))
+        .toBeUndefined();
+
+    await actionManager.asyncUndoLastAppliedActions();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(
+        sys.transAId))
+        .toBeDefined();
 });

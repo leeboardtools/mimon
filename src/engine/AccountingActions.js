@@ -7,6 +7,7 @@ import * as P from './Prices';
 import * as T from './Transactions';
 import { getYMDDateString, YMDDate } from '../util/YMDDate';
 import { userMsg } from '../util/UserMessages';
+import { createCompositeAction } from '../util/Actions';
 
 /**
  * @event AccountingActions#actionApply
@@ -175,7 +176,7 @@ export class AccountingActions extends EventEmitter {
             type: 'addAccount', 
             accountDataItem: accountDataItem, 
             childListIndex: childListIndex,
-            name: userMsg('Actions-addAccount'), 
+            name: userMsg('Actions-addAccount', accountDataItem.name), 
         };
     }
 
@@ -191,12 +192,35 @@ export class AccountingActions extends EventEmitter {
      * @param {number} accountId 
      * @returns {ActionDataItem}
      */
-    createRemoveAccountAction(accountId) {
-        return { 
+    async asyncCreateRemoveAccountAction(accountId) {
+        const accountDataItem = this._accountingSystem.getAccountManager()
+            .getAccountDataItemWithId(accountId);
+        let action = { 
             type: 'removeAccount', 
             accountId: accountId, 
-            name: userMsg('Actions-removeAccount'), 
+            name: userMsg('Actions-removeAccount', accountDataItem.name), 
         };
+
+        const transactionManager = this._accountingSystem.getTransactionManager();
+        const transactionKeys 
+            = await transactionManager.asyncGetSortedTransactionKeysForAccount(
+                accountId) || [];
+        
+        if (transactionKeys.length) {
+            const transactionIds = transactionKeys.map((key) => key.id);
+            const transactionsAction 
+                = this.createRemoveTransactionsAction(transactionIds);
+            action = createCompositeAction({
+                name: userMsg('Actions-remove_transactions_and_account',
+                    accountDataItem.name)
+            },
+            [
+                transactionsAction,
+                action,
+            ]);
+        }
+
+        return action;
     }
 
     async _asyncRemoveAccountApplier(isValidateOnly, action) {
@@ -238,10 +262,12 @@ export class AccountingActions extends EventEmitter {
      */
     createAddPricedItemAction(pricedItem) {
         const pricedItemDataItem = PI.getPricedItemDataItem(pricedItem, true);
+        const { typeDescription } = PI.getPricedItemType(pricedItemDataItem.type);
         return { 
             type: 'addPricedItem', 
             pricedItemDataItem: pricedItemDataItem, 
-            name: userMsg('Actions-addPricedItem'), 
+            name: userMsg('Actions-addPricedItem', 
+                typeDescription, pricedItemDataItem.name), 
         };
     }
 
@@ -259,10 +285,14 @@ export class AccountingActions extends EventEmitter {
      * @returns {ActionDataItem}
      */
     createRemovePricedItemAction(pricedItemId) {
+        const pricedItemDataItem = this._accountingSystem.getPricedItemManager()
+            .getPricedItemDataItemWithId(pricedItemId);
+        const { typeDescription } = PI.getPricedItemType(pricedItemDataItem.type);
         return { 
             type: 'removePricedItem', 
             pricedItemId: pricedItemId, 
-            name: userMsg('Actions-removePricedItem'), 
+            name: userMsg('Actions-removePricedItem', 
+                typeDescription, pricedItemDataItem.name), 
         };
     }
 
@@ -281,11 +311,15 @@ export class AccountingActions extends EventEmitter {
      * @returns {ActionDataItem}
      */
     createModifyPricedItemAction(pricedItemUpdates) {
+        const originalPricedItemDataItem = this._accountingSystem.getPricedItemManager()
+            .getPricedItemDataItemWithId(pricedItemUpdates.id);
+        const { typeDescription } = PI.getPricedItemType(originalPricedItemDataItem.type);
         const pricedItemDataItem = PI.getPricedItemDataItem(pricedItemUpdates, true);
         return { 
             type: 'modifyPricedItem', 
             pricedItemDataItem: pricedItemDataItem, 
-            name: userMsg('Actions-modifyPricedItem'), 
+            name: userMsg('Actions-modifyPricedItem', 
+                typeDescription, originalPricedItemDataItem.name), 
         };
     }
 
