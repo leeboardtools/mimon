@@ -103,6 +103,9 @@ export function loadPricedItemUserMessages() {
     for (const type of Object.values(PricedItemType)) {
         type.description = userMsg('PricedItemType-' + type.name);
     }
+    for (const type of Object.values(PricedItemOnlineUpdateType)) {
+        type.description = userMsg('PricedItemOnlineUpdateType-' + type.name);
+    }
 }
 
 
@@ -111,6 +114,7 @@ export function loadPricedItemUserMessages() {
  * @typedef PricedItemOnlineUpdateTypeDef
  * @property {string}   name
  * @property {boolean}  hasUpdate
+ * @property {string}   description
  */
 
 /**
@@ -147,8 +151,10 @@ export function getPricedItemOnlineUpdateTypeName(type) {
  * @typedef {object} PricedItemDataItem
  * @property {number}   id  The priced item's id.
  * @property {string}   type    name property of one of {@link PricedItemType}.
- * @property {string}   currency    The 3 letter currency name of the currency 
- * underlying the priced item.
+ * @property {string}   [currency]  The 3 letter currency name of the currency 
+ * underlying the priced item. If <code>undefined</code> the base currency from 
+ * the priced item manager is to be used. Required if type is 
+ * {@link PrciedItemType~CURRENCY}
  * @property {boolean}  [isStandardCurrency]    If <code>true</code> the priced
  * item is a standard built-in currency and cannot be modified nor removed.
  * @property {string}   quantityDefinition  The name of the {@link QuantityDefinition} 
@@ -166,8 +172,9 @@ export function getPricedItemOnlineUpdateTypeName(type) {
  * @typedef {object} PricedItem
  * @property {number}   id  The priced item's id.
  * @property {PricedItemType}   type    The priced item's type.
- * @property {Currency} currency    The currency object of the currency underlying 
- * the priced item.
+ * @property {Currency} [currency]  The currency object of the currency underlying 
+ * the priced item. If <code>undefined</code> the base currency from the priced item
+ * manager is to be used. Required if type is {@link PrciedItemType~CURRENCY}
  * @property {boolean}  [isStandardCurrency]    If <code>true</code> the priced
  * item is a standard built-in currency and cannot be modified nor removed.
  * @property {QuantityDefinition}   quantityDefinition  The quantity definition 
@@ -455,6 +462,23 @@ export class PricedItemManager extends EventEmitter {
      */
     getPricedItemIds() {
         return Array.from(this._pricedItemDataItemsById.keys());
+    }
+
+
+    /**
+     * @param {string|PricedItemType} type 
+     * @returns {number[]}  Array containing the ids of all the priced items
+     * with type type.
+     */
+    getPricedItemIdsForType(type) {
+        const typeName = getPricedItemTypeName(type);
+        const ids = [];
+        this._pricedItemDataItemsById.forEach((pricedItemDataItem, id) => {
+            if (pricedItemDataItem.type === typeName) {
+                ids.push(id);
+            }
+        });
+        return ids;
     }
 
 

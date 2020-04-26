@@ -98,6 +98,9 @@
     "PricedItemType-REAL_ESTATE": "Real Estate",
     "PricedItemType-PROPERTY": "Property",
 
+    "PricedItemOnlineUpdateType-NONE": "Not Updated",
+    "PricedItemOnlineUpdateType-YAHOO_FINANCE": "Yahoo Finance",
+
     "PricedItemManager-invalid_currency": ["The currency code '", "' is not a supported currency code."],
     "PricedItemManager-invalid_type": ["The priced item type '", "' is not supported."],
     "PricedItemManager-quantity_definition_missing": "The priced item is missing a valid quantity definition.",

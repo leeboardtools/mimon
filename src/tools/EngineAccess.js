@@ -763,6 +763,16 @@ export class EngineAccessor extends EventEmitter {
 
 
     /**
+     * @param {string|PricedItemType} type 
+     * @returns {number[]}  Array containing the ids of all the priced items
+     * with type type.
+     */
+    getPricedItemIdsForType(type) {
+        return this._pricedItemManager.getPricedItemIdsForType(type);
+    }
+
+
+    /**
      * Retrieves a priced item data item with a given id.
      * @param {number} id The id of the priced item to retrieve.
      * @returns {(PricedItemDataItem|undefined)}    A copy of the priced item's data.
