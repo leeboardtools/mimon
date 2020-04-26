@@ -36,6 +36,9 @@ export class EngineAccessor extends EventEmitter {
 
         this._fireActionChange = this._fireActionChange.bind(this);
         this._handleActionApply = this._handleActionApply.bind(this);
+        this._handlePricedItemAdd = this._handlePricedItemAdd.bind(this);
+        this._handlePricedItemModify = this._handlePricedItemModify.bind(this);
+        this._handlePricedItemRemove = this._handlePricedItemRemove.bind(this);
         this._handleAccountAdd = this._handleAccountAdd.bind(this);
         this._handleAccountsModify = this._handleAccountsModify.bind(this);
         this._handleAccountRemove = this._handleAccountRemove.bind(this);
@@ -100,6 +103,13 @@ export class EngineAccessor extends EventEmitter {
             this._accountManager.on('accountRemove', this._handleAccountRemove);
 
             this._pricedItemManager = _accountingSystem.getPricedItemManager();
+            this._pricedItemManager.on('pricedItemAdd', 
+                this._handlePricedItemAdd);
+            this._pricedItemManager.on('pricedItemModify', 
+                this._handlePricedItemModify);
+            this._pricedItemManager.on('pricedItemRemove', 
+                this._handlePricedItemRemove);
+
             this._priceManager = _accountingSystem.getPriceManager();
             this._lotManager = _accountingSystem.getLotManager();
 
@@ -126,6 +136,15 @@ export class EngineAccessor extends EventEmitter {
                 this._accountManager.off('accountAdd', this._handleAccountAdd);
                 this._accountManager.off('accountsModify', this._handleAccountsModify);
                 this._accountManager.off('accountRemove', this._handleAccountRemove);
+            }
+
+            if (this._pricedItemManager) {
+                this._pricedItemManager.off('pricedItemAdd', 
+                    this._handlePricedItemAdd);
+                this._pricedItemManager.off('pricedItemModify', 
+                    this._handlePricedItemModify);
+                this._pricedItemManager.off('pricedItemRemove', 
+                    this._handlePricedItemRemove);    
             }
 
             if (this._transactionManager) {
@@ -1148,6 +1167,19 @@ export class EngineAccessor extends EventEmitter {
         this.removeGetTransactionDataItemCallback(
             reconciler.filterGetTransactionDataItems);
         this._reconcilersByAccountId.delete(reconciler.getAccountId());
+    }
+
+
+    _handlePricedItemAdd(result) {
+        this.emit('pricedItemAdd', result);
+    }
+
+    _handlePricedItemModify(result) {
+        this.emit('pricedItemModify', result);
+    }
+
+    _handlePricedItemRemove(result) {
+        this.emit('pricedItemRemove', result);
     }
 
 

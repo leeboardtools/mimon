@@ -35,7 +35,7 @@ export class PricedItemEditorHandler extends MainWindowHandlerBase {
             pricedItemId);
         const title = (pricedItemDataItem) 
             ? userMsg('PricedItemEditorHandler-modifyPricedItem_title'
-                , pricedItemDataItem.name)
+                , pricedItemDataItem.name || pricedItemDataItem.ticker)
             : userMsg('PricedItemEditorHandler-newPricedItem_title'
                 , pricedItemType.description);
         return {

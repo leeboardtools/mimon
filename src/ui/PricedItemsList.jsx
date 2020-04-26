@@ -5,6 +5,7 @@ import { ActiveRowCollapsibleTable } from '../util-ui/ActiveRowTable';
 import { CellTextDisplay } from '../util-ui/CellTextEditor';
 import * as PI from '../engine/PricedItems';
 import deepEqual from 'deep-equal';
+import { getQuantityDefinition } from '../util/Quantities';
 
 
 /**
@@ -26,57 +27,72 @@ export class PricedItemsList extends React.Component {
         const { pricedItemTypeName } = this.props;
         const pricedItemType = PI.getPricedItemType(pricedItemTypeName);
 
-        const columnInfos = [
-            { key: 'name',
+        const cellClassName = 'm-0';
+        const inputClassExtras = 'text-center';
+
+        this._columnInfoDefs = {
+            name: { key: 'name',
                 label: userMsg('PricedItemsList-name'),
                 ariaLabel: 'Name',
                 propertyName: 'name',
-                className: 'w-30',
+                className: '',
                 cellClassName: cellClassName,
             },
-            { key: 'description',
+            description: { key: 'description',
                 label: userMsg('PricedItemsList-description'),
                 ariaLabel: 'Description',
                 propertyName: 'description',
-                className: 'w-50',
+                className: '',
                 cellClassName: cellClassName,
             },
-            { key: 'currency',
+            currency: { key: 'currency',
                 label: userMsg('PricedItemsList-currency'),
                 ariaLabel: 'Currency',
                 propertyName: 'currency',
-                className: 'text-center',
+                className: 'text-center w-10',
                 cellClassName: cellClassName,
+                inputClassExtras: inputClassExtras,
             },
-            { key: 'quantityDefinition',
+            quantityDefinition: { key: 'quantityDefinition',
                 label: userMsg('PricedItemsList-quantityDefinition'),
                 ariaLabel: 'Quantity Definition',
                 propertyName: 'quantityDefinition',
-                className: 'text-center',
+                className: 'text-center w-10',
                 cellClassName: cellClassName,
+                inputClassExtras: inputClassExtras,
             },
-        ];
-
-        if (pricedItemType.hasTickerSymbol) {
-            columnInfos.push({ key: 'ticker',
+            ticker: { key: 'ticker',
                 label: userMsg('PricedItemsList-ticker'),
                 ariaLabel: 'Ticker Symbol',
                 propertyName: 'ticker',
-                className: 'text-center',
+                className: 'text-center w-10',
                 cellClassName: cellClassName,
-            });
-            columnInfos.push({ key: 'onlineSource',
+                inputClassExtras: inputClassExtras,
+            },
+            onlineSource: { key: 'onlineSource',
                 label: userMsg('PricedItemsList-onlineSource'),
                 ariaLabel: 'Online Source',
                 propertyName: 'onlineSource',
                 className: 'text-center',
                 cellClassName: cellClassName,
-            });
+                inputClassExtras: inputClassExtras,
+            }
+        };
+
+        const columnInfos = [];
+        if (pricedItemType.hasTickerSymbol) {
+            columnInfos.push(this._columnInfoDefs.ticker);
+            columnInfos.push(this._columnInfoDefs.onlineSource);
         }
+
+        columnInfos.push(this._columnInfoDefs.name);
+        columnInfos.push(this._columnInfoDefs.description);
+        columnInfos.push(this._columnInfoDefs.currency);
+        columnInfos.push(this._columnInfoDefs.quantityDefinition);
+
 
         this._hiddenPricedItemIds = new Set();
 
-        const cellClassName = 'm-0';
         this.state = {
             columnInfos: columnInfos,
             rowEntries: [],
@@ -302,12 +318,21 @@ export class PricedItemsList extends React.Component {
 
 
     renderQuantityDefinition(columnInfo, pricedItemDataItem) {
-
+        const quantityDefinition 
+            = getQuantityDefinition(pricedItemDataItem.quantityDefinition);
+        if (quantityDefinition) {
+            return this.renderTextDisplay(columnInfo, 
+                quantityDefinition.getDisplayText());
+        }
     }
 
 
     renderOnlineSource(columnInfo, pricedItemDataItem) {
-
+        const onlineUpdateType = PI.getPricedItemOnlineUpdateType(
+            pricedItemDataItem.onlineUpdateType);
+        if (onlineUpdateType) {
+            return this.renderTextDisplay(columnInfo, onlineUpdateType.description);
+        }
     }
 
 
@@ -367,7 +392,7 @@ export class PricedItemsList extends React.Component {
         
         case 'onlineSource' :
             return this.renderOnlineSource(
-                columnInfo, pricedItemDataItem.onlineUpdateType);
+                columnInfo, pricedItemDataItem);
         
         case 'shares' :
             return this.renderShares(columnInfo, pricedItemDataItem);

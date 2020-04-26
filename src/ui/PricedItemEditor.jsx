@@ -72,12 +72,9 @@ export class PricedItemEditor extends React.Component {
 
 
     onPricedItemModify(result) {
-        const { newPricedItemDataItems } = result;
-        for (let newPricedItemDataItem of newPricedItemDataItems) {
-            if (newPricedItemDataItem.id === this.props.pricedItemId) {
-                this.updatePricedItemDataItem(newPricedItemDataItem);
-                break;
-            }
+        const { newPricedItemDataItem } = result;
+        if (newPricedItemDataItem.id === this.props.pricedItemId) {
+            this.updatePricedItemDataItem(newPricedItemDataItem);
         }
     }
 
@@ -123,8 +120,6 @@ export class PricedItemEditor extends React.Component {
             if (this.isSomethingToSave()) {
                 const { pricedItemId, accessor } = this.props;
                 const { pricedItemDataItem } = this.state;
-
-                console.log('onFinish: ' + JSON.stringify(pricedItemDataItem));
                 
                 let action;
                 const accountingActions = accessor.getAccountingActions();

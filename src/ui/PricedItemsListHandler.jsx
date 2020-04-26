@@ -49,9 +49,10 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
 
     onModifyPricedItem(tabId) {
-        const { activePricedItemId} = this.getTabIdState(tabId);
+        const { activePricedItemId, pricedItemTypeName } = this.getTabIdState(tabId);
         if (activePricedItemId) {
-            this.openTab('pricedItemEditor', activePricedItemId);
+            this.openTab('pricedItemEditor', 
+                activePricedItemId, pricedItemTypeName);
         }
     }
 
@@ -166,7 +167,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     }
 
 
-    onSelectPricedItem(tabId, pricedItemId) {
+    onSelectPricedItem(tabId, pricedItemId, pricedItemTypeName) {
         const state = this.getTabIdState(tabId);
         const prevActivePricedItemId = state.activePricedItemId;
         if ((!prevActivePricedItemId && pricedItemId)
@@ -174,7 +175,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             this.setTabIdState(tabId,
                 {
                     activePricedItemId: pricedItemId,
-                    dropdownInfo: this.getTabDropdownInfo(tabId, pricedItemId, state),
+                    dropdownInfo: this.getTabDropdownInfo(tabId, 
+                        pricedItemId, pricedItemTypeName, state),
                 });
         }
         else {
@@ -239,7 +241,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             accessor={accessor}
             pricedItemTypeName={tabEntry.pricedItemTypeName}
             onSelectPricedItem={(pricedItemId) => 
-                this.onSelectPricedItem(tabEntry.tabId, pricedItemId)}
+                this.onSelectPricedItem(tabEntry.tabId, pricedItemId, 
+                    tabEntry.pricedItemTypeName)}
             onChoosePricedItem={(pricedItemId) => 
                 this.onChoosePricedItem(tabEntry.tabId, pricedItemId)}
             hiddenPricedItemIds={tabEntry.hiddenPricedItemIds}

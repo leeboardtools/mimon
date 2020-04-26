@@ -152,9 +152,9 @@
     "PricedItemsList-name": "Name",
     "PricedItemsList-description": "Description",
     "PricedItemsList-currency": "Currency",
-    "PricedItemsList-quantityDefinition": "Quantity",
+    "PricedItemsList-quantityDefinition": "Format",
     "PricedItemsList-ticker": "Ticker",
-    "PricedItemsList-onlineSource": "Online",
+    "PricedItemsList-onlineSource": "Online Update",
     "PricedItemsList-default_currency": ["(", ")"],
 
     "PricedItemsListHandler-showPricedItem": ["Show ", ""],
