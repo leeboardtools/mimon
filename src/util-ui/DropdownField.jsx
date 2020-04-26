@@ -69,6 +69,7 @@ export const DropdownField = React.forwardRef(
             data-toggle="dropdown"
             aria-haspopup="true"
             aria-expanded="false"
+            disabled={disabled}
         >
             <div className="d-flex justify-content-between">
                 <span>{valueText}</span><span className="text-right">&#x25BE;</span>
@@ -85,7 +86,6 @@ export const DropdownField = React.forwardRef(
                     id={id}
                     className={'dropdown' + inputClassName}
                     aria-label={ariaLabel}
-                    disabled={disabled}
                     onFocus={onFocus}
                     onBlur={onBlur}
                     ref={ref}
