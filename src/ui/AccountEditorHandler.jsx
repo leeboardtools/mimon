@@ -22,8 +22,8 @@ export class AccountEditorHandler extends MainWindowHandlerBase {
     }
 
 
-    onNewPricedItem() {
-        this.openTab('pricedItemEditor');
+    onNewPricedItem(pricedItemTypeName) {
+        this.openTab('pricedItemEditor', undefined, pricedItemTypeName);
     }
 
 

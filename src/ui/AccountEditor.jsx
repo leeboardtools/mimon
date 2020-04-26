@@ -8,6 +8,7 @@ import { TextField } from '../util-ui/TextField';
 import deepEqual from 'deep-equal';
 import { AccountSelector } from './AccountSelector';
 import * as A from '../engine/Accounts';
+import * as PI from '../engine/PricedItems';
 import { DropdownField } from '../util-ui/DropdownField';
 import { PricedItemSelector } from './PricedItemSelector';
 
@@ -346,7 +347,10 @@ export class AccountEditor extends React.Component {
     onNewPricedItem() {
         const { onNewPricedItem } = this.props;
         if (onNewPricedItem) {
-            onNewPricedItem();
+            const { accountDataItem } = this.state;
+            const accountType = A.getAccountType(accountDataItem.type);
+            const pricedItemTypeName = accountType.pricedItemType.name;
+            onNewPricedItem(pricedItemTypeName);
         }
     }
 
@@ -355,37 +359,32 @@ export class AccountEditor extends React.Component {
         const { accountDataItem } = this.state;
         const accountType = A.getAccountType(accountDataItem.type);
         const pricedItemTypeName = accountType.pricedItemType.name;
+        const pricedItemType = PI.getPricedItemType(pricedItemTypeName);
+        const { description } = pricedItemType;
 
-        const items = [];
-        const pricedItemIds = accessor.getPricedItemIds();
+        const items = accessor.getPricedItemIdsForType(pricedItemTypeName).map(
+            (id) => {
+                return { pricedItemId: id, };
+            });
 
-        pricedItemIds.forEach((pricedItemId) => {
-            const pricedItemDataItem 
-                = accessor.getPricedItemDataItemWithId(pricedItemId);
-
-            if (pricedItemDataItem.type === pricedItemTypeName) {
-                items.push({
-                    pricedItemId: pricedItemId,
-                });
-            }
-        });
-
-        const buttonLabel = userMsg('AccountEditor-newPricedItem_' 
-            + pricedItemTypeName + '_label');
-        const button = <button className="btn btn-outline-secondary"
-            aria-label={'New ' + pricedItemTypeName}
-            type="button"
-            onClick={this.onNewPricedItem}
-        >
-            {buttonLabel}
-        </button>;
+        let button;
+        if (pricedItemType !== PI.PricedItemType.CURRENCY) {
+            const buttonLabel = userMsg('AccountEditor-newPricedItem_label', description);
+            button = <button className="btn btn-outline-secondary"
+                aria-label={'New ' + pricedItemTypeName}
+                type="button"
+                onClick={this.onNewPricedItem}
+            >
+                {buttonLabel}
+            </button>;
+        }
 
         return <PricedItemSelector
             accessor={accessor}
             id={this._idBase + '_parent'}
             pricedItemEntries={items}
             ariaLabel={pricedItemTypeName}
-            label={userMsg('AccountEditor-pricedItem_' + pricedItemTypeName + '_label')}
+            label={userMsg('AccountEditor-pricedItem_label', description)}
             selectedPricedItemId={accountDataItem.pricedItemId}
             onChange={this.onPricedItemChange}
             appendComponent={button}

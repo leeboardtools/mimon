@@ -8,6 +8,9 @@ import deepEqual from 'deep-equal';
 import { AccountsListHandler } from './AccountsListHandler';
 import { AccountRegisterHandler } from './AccountRegisterHandler';
 import { AccountEditorHandler } from './AccountEditorHandler';
+import { PricedItemsListHandler } from './PricedItemsListHandler';
+import { PricedItemEditorHandler } from './PricedItemEditorHandler';
+import * as PI from '../engine/PricedItems';
 
 
 /**
@@ -71,12 +74,38 @@ export class MainWindow extends React.Component {
             onOpenTab: this.onOpenTab,
             onCloseTab: this.onCloseTab,
         });
+
+
+        this._pricedItemsListHandler = new PricedItemsListHandler({
+            accessor: this.props.accessor,
+            onGetTabIdState: this.onGetTabIdState,
+            onSetTabIdState: this.onSetTabIdState,
+            onSetErrorMsg: this.onSetErrorMsg,
+            onSetModal: this.onSetModal,
+            onOpenTab: this.onOpenTab,
+        });
+
+        this._pricedItemEditorHandler = new PricedItemEditorHandler({
+            accessor: this.props.accessor,
+            onGetTabIdState: this.onGetTabIdState,
+            onSetTabIdState: this.onSetTabIdState,
+            onSetErrorMsg: this.onSetErrorMsg,
+            onSetModal: this.onSetModal,
+            onOpenTab: this.onOpenTab,
+            onCloseTab: this.onCloseTab,
+        });
+        
+        
         this.state = {
             tabEntries: [],
         };
         this._tabEntriesById = new Map();
         this._accountRegistersByAccountId = new Map();
         this._accountEditorsByAccountId = new Map();
+        this._pricedItemEditorsByPricedItemId = {};
+        for (const name in PI.PricedItemType) {
+            this._pricedItemEditorsByPricedItemId[name] = new Map();
+        }
 
         const masterAccountsList = this._accountsListHandler.createTabEntry(
             'masterAccountsList'
@@ -153,6 +182,10 @@ export class MainWindow extends React.Component {
             }
             else if (tabId.startsWith('accountEditor_')) {
                 this._accountEditorsByAccountId.delete(tabEntry.accountId);
+            }
+            else if (tabId.startsWith('pricedItemEditor_')) {
+                this._pricedItemEditorsByPricedItemId[tabEntry.pricedItemTypeName].delete(
+                    tabEntry.pricedItemId);
             }
 
             this._tabEntriesById.delete(tabId);
@@ -335,8 +368,35 @@ export class MainWindow extends React.Component {
     }
 
 
-    openPricedItemEditor(pricedItemId) {
-        this.onSetErrorMsg('Sorry, Priced Item Editor is not yet implemented...');
+    openPricedItemsList(pricedItemTypeName) {
+        const tabId = 'pricedItemsList_' + pricedItemTypeName;
+        if (!this._tabEntriesById.has(tabId)) {
+            const tabEntry = this._pricedItemsListHandler.createTabEntry(
+                tabId, pricedItemTypeName);
+            this.addTabEntry(tabEntry);
+        }
+
+        this.setState({
+            activeTabId: tabId,
+        });
+    }
+
+
+    openPricedItemEditor(pricedItemId, pricedItemTypeName) {
+        const editorsByPricedItemId 
+            = this._pricedItemEditorsByPricedItemId[pricedItemTypeName];
+        let tabId = editorsByPricedItemId.get(pricedItemId);
+        if (!tabId) {
+            tabId = 'pricedItemEditor_' + (pricedItemId || (pricedItemTypeName + '_new'));
+            editorsByPricedItemId.set(pricedItemId, tabId);
+            const tabEntry = this._pricedItemEditorHandler.createTabEntry(
+                tabId, pricedItemId, pricedItemTypeName);
+            this.addTabEntry(tabEntry);
+        }
+
+        this.setState({
+            activeTabId: tabId,
+        });
     }
 
 
@@ -352,6 +412,26 @@ export class MainWindow extends React.Component {
         
         case 'accountEditor' :
             this.openAccountEditor(...args);
+            break;
+        
+        case 'securitiesList' :
+            this.openPricedItemsList(PI.PricedItemType.SECURITY.name);
+            break;
+        
+        case 'mutualFundsList' :
+            this.openPricedItemsList(PI.PricedItemType.MUTUAL_FUND.name);
+            break;
+        
+        case 'currenciesList' :
+            this.openPricedItemsList(PI.PricedItemType.CURRENCY.name);
+            break;
+
+        case 'realEstateList' :
+            this.openPricedItemsList(PI.PricedItemType.REAL_ESTATE.name);
+            break;
+
+        case 'propertiesList' :
+            this.openPricedItemsList(PI.PricedItemType.PROPERTY.name);
             break;
         
         case 'pricedItemEditor' :
@@ -416,6 +496,11 @@ export class MainWindow extends React.Component {
                 label: userMsg('MainWindow-updatePrices'),
                 onChooseItem: this.onUpdatePrices,
             },
+            { id: 'viewPricesList', 
+                label: userMsg('MainWindow-viewPricesList'),
+                disabled: !this._tabEntriesById.get('pricesList'),
+                onChooseItem: () => this.onOpenTab('pricesList'),
+            },
             {},
             { id: 'viewAccountsList', 
                 label: userMsg('MainWindow-viewAccountsList'),
@@ -424,22 +509,28 @@ export class MainWindow extends React.Component {
             { id: 'viewRemindersList', 
                 label: userMsg('MainWindow-viewRemindersList'),
                 disabled: !this._tabEntriesById.get('remindersList'),
-                onChooseItem: () => this.onActivateTab('remindersList'),
+                onChooseItem: () => this.onOpenTab('remindersList'),
             },
+            {},
             { id: 'viewSecuritiesList', 
                 label: userMsg('MainWindow-viewSecuritiesList'),
-                disabled: !this._tabEntriesById.get('securitiesList'),
-                onChooseItem: () => this.onActivateTab('securitiesList'),
+                onChooseItem: () => this.onOpenTab('securitiesList'),
             },
-            { id: 'viewPricesList', 
-                label: userMsg('MainWindow-viewPricesList'),
-                disabled: !this._tabEntriesById.get('pricesList'),
-                onChooseItem: () => this.onActivateTab('pricesList'),
+            { id: 'viewMutualFundsList', 
+                label: userMsg('MainWindow-viewMutualFundsList'),
+                onChooseItem: () => this.onOpenTab('mutualFundsList'),
             },
-            { id: 'viewPricedItemsList', 
-                label: userMsg('MainWindow-viewPricedItemsList'),
-                disabled: !this._tabEntriesById.get('pricedItemsList'),
-                onChooseItem: () => this.onActivateTab('pricedItemsList'),
+            { id: 'viewCurrenciesList', 
+                label: userMsg('MainWindow-viewCurrenciesList'),
+                onChooseItem: () => this.onOpenTab('currenciesList'),
+            },
+            { id: 'viewRealEstateList', 
+                label: userMsg('MainWindow-viewRealEstateList'),
+                onChooseItem: () => this.onOpenTab('realEstateList'),
+            },
+            { id: 'viewPropertiesList', 
+                label: userMsg('MainWindow-viewPropertiesList'),
+                onChooseItem: () => this.onOpenTab('propertiesList'),
             },
             {},
             { id: 'revertChanges',

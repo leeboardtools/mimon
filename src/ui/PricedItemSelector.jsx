@@ -10,7 +10,7 @@ import { getCurrency } from '../util/Currency';
  * @class
  */
 export function PricedItemSelector(props) {
-    const { accessor, pricedItemEntries, selectedPricedItemId, 
+    const { accessor, pricedItemEntries, selectedPricedItemId, shortNames,
         ...passThroughProps } = props;
 
     const baseCurrencyId = accessor.getBaseCurrencyPricedItemId();
@@ -30,8 +30,9 @@ export function PricedItemSelector(props) {
             }
             else {
                 const currency = getCurrency(pricedItemDataItem.currency);
-                text = userMsg('PricedItemSelector-currency_label',
-                    currency.getCode(), currency.getName());
+                text = (shortNames) ? currency.getCode()
+                    : userMsg('PricedItemSelector-currency_label',
+                        currency.getCode(), currency.getName());
             }
             break;
         
@@ -73,6 +74,7 @@ PricedItemSelector.propTypes = {
     ariaLabel: PropTypes.string,
     label: PropTypes.string,
     selectedPricedItemId: PropTypes.number,
+    shortNames: PropTypes.bool,
     inputClassExtras: PropTypes.string,
     errorMsg: PropTypes.string,
     onChange: PropTypes.func,
@@ -82,5 +84,3 @@ PricedItemSelector.propTypes = {
     prependComponent: PropTypes.object,
     appendComponent: PropTypes.object,
 };
-
-
