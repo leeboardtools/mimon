@@ -128,7 +128,8 @@ test('AccountingActions-PricedItems', async () => {
 
 
     // Remove PricedItem
-    const removePricedItemAction = actions.createRemovePricedItemAction(settingsA.id);
+    const removePricedItemAction 
+        = await actions.asyncCreateRemovePricedItemAction(settingsA.id);
     await actionManager.asyncApplyAction(removePricedItemAction);
     expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id)).toBeUndefined();
 
@@ -212,7 +213,7 @@ test('AccountingActions-Lots', async () => {
 
 
     // Remove Lot
-    const removeLotAction = actions.createRemoveLotAction(settingsA.id);
+    const removeLotAction = await actions.asyncCreateRemoveLotAction(settingsA.id);
     await actionManager.asyncApplyAction(removeLotAction);
     expect(lotManager.getLotDataItemWithId(settingsA.id)).toBeUndefined();
 
@@ -682,7 +683,6 @@ test('AccountingActions-Reminders', async () => {
 
 
 
-
 //
 //---------------------------------------------------------
 //
@@ -713,4 +713,110 @@ test('AccountingActions-removeAccounts With Transactions', async () => {
     expect(await transactionManager.asyncGetTransactionDataItemWithId(
         sys.transAId))
         .toBeDefined();
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(
+        sys.transAId))
+        .toBeUndefined();
+        
+});
+
+
+//
+//---------------------------------------------------------
+//
+test('AccountingActions-removeLots With Accounts', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    await ASTH.asyncAddOpeningBalances(sys);
+    await ASTH.asyncAddBasicTransactions(sys);
+
+    const { accountingSystem } = sys;
+    const actions = accountingSystem.getAccountingActions();
+    const actionManager = accountingSystem.getActionManager();
+    const transactionManager = accountingSystem.getTransactionManager();
+
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(
+        sys.transGId))
+        .toBeDefined();
+
+    const removeAccountAction = await actions.asyncCreateRemoveLotAction(sys.aaplLot1.id);
+    await actionManager.asyncApplyAction(removeAccountAction);
+
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(
+        sys.transGId))
+        .toBeUndefined();
+
+    await actionManager.asyncUndoLastAppliedActions();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(
+        sys.transGId))
+        .toBeDefined();
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(
+        sys.transGId))
+        .toBeUndefined();
+});
+
+
+
+//
+//---------------------------------------------------------
+//
+test('AccountingActions-removePricedItems With Accounts and Lots', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    await ASTH.asyncAddOpeningBalances(sys);
+    await ASTH.asyncAddBasicTransactions(sys);
+
+    const { accountingSystem } = sys;
+    const pricedItemManager = accountingSystem.getPricedItemManager();
+    const accountManager = accountingSystem.getAccountManager();
+    const actions = accountingSystem.getAccountingActions();
+    const actionManager = accountingSystem.getActionManager();
+    const transactionManager = accountingSystem.getTransactionManager();
+    const lotManager = accountingSystem.getLotManager();
+
+    expect(accountManager.getAccountDataItemWithId(sys.aaplIRAId))
+        .toBeDefined();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(
+        sys.transGId))
+        .toBeDefined();
+    expect(lotManager.getLotDataItemWithId(sys.aaplLot1.id))
+        .toBeDefined();
+
+    const removeAccountAction = await actions.asyncCreateRemovePricedItemAction(
+        sys.aaplPricedItemId);
+    await actionManager.asyncApplyAction(removeAccountAction);
+
+    expect(pricedItemManager.getPricedItemDataItemWithId(sys.aaplPricedItemId))
+        .toBeUndefined();
+    expect(accountManager.getAccountDataItemWithId(sys.aaplIRAId))
+        .toBeUndefined();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(
+        sys.transGId))
+        .toBeUndefined();
+    expect(lotManager.getLotDataItemWithId(sys.aaplLot1.id))
+        .toBeUndefined();
+
+    await actionManager.asyncUndoLastAppliedActions();
+    expect(pricedItemManager.getPricedItemDataItemWithId(sys.aaplPricedItemId))
+        .toBeDefined();
+    expect(accountManager.getAccountDataItemWithId(sys.aaplIRAId))
+        .toBeDefined();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(
+        sys.transGId))
+        .toBeDefined();
+    expect(lotManager.getLotDataItemWithId(sys.aaplLot1.id))
+        .toBeDefined();
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    expect(pricedItemManager.getPricedItemDataItemWithId(sys.aaplPricedItemId))
+        .toBeUndefined();
+    expect(accountManager.getAccountDataItemWithId(sys.aaplIRAId))
+        .toBeUndefined();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(
+        sys.transGId))
+        .toBeUndefined();
+    expect(lotManager.getLotDataItemWithId(sys.aaplLot1.id))
+        .toBeUndefined();
+        
 });

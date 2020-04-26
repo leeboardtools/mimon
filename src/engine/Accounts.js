@@ -571,6 +571,14 @@ export class AccountManager extends EventEmitter {
 
 
     /**
+     * @returns {number[]}  Array containing the ids of all the accounts.
+     */
+    getAccountIds() {
+        return Array.from(this._accountsById.keys());
+    }
+
+
+    /**
      * Retrieves the account with a given id.
      * @param {number} id
      * @returns {(AccountDataItem|undefined)}
