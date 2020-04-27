@@ -84,29 +84,16 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     }
 
 
-    removeAccount(accountId) {
-        process.nextTick(async () => {
-            const { accessor } = this.props;
-            const accountingActions = accessor.getAccountingActions();
-            const action = await accountingActions.asyncCreateRemoveAccountAction(
-                accountId);
-            accessor.asyncApplyAction(action)
-                .catch((e) => {
-                    this.setErrorMsg(e);
-                });
-        });
-    }
-
-
     onRemoveAccount(tabId) {
         const { activeAccountId} = this.getTabIdState(tabId);
         if (activeAccountId) {
             // Want to prompt if there are transactions for the account.
             process.nextTick(async () => {
                 const { accessor } = this.props;
-                const transactionKeys = await accessor
-                    .asyncGetSortedTransactionKeysForAccount(activeAccountId);
-                if (transactionKeys && transactionKeys.length) {
+                const accountingActions = accessor.getAccountingActions();
+                const action = await accountingActions.asyncCreateRemoveAccountAction(
+                    activeAccountId);
+                if (action.dependees && action.dependees.length) {
                     const accountDataItem = accessor.getAccountDataItemWithId(
                         activeAccountId);
                     
@@ -120,7 +107,10 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                             message={message}
                             onButton={(id) => {
                                 if (id === 'yes') {
-                                    this.removeAccount(activeAccountId);
+                                    accessor.asyncApplyAction(action)
+                                        .catch((e) => {
+                                            this.setErrorMsg(e);
+                                        });
                                 }
                                 this.setModal();
                             }}
@@ -129,7 +119,10 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                     });
                 }
                 else {
-                    this.removeAccount(activeAccountId);
+                    accessor.asyncApplyAction(action)
+                        .catch((e) => {
+                            this.setErrorMsg(e);
+                        });
                 }
             });
         }
