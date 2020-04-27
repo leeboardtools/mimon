@@ -3,6 +3,7 @@ import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountsList } from './AccountsList';
 import * as A from '../engine/Accounts';
+import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 
 /**
  * Handler for {@link AccountsList} components and their pages in the 
@@ -83,10 +84,54 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     }
 
 
+    removeAccount(accountId) {
+        process.nextTick(async () => {
+            const { accessor } = this.props;
+            const accountingActions = accessor.getAccountingActions();
+            const action = await accountingActions.asyncCreateRemoveAccountAction(
+                accountId);
+            accessor.asyncApplyAction(action)
+                .catch((e) => {
+                    this.setErrorMsg(e);
+                });
+        });
+    }
+
+
     onRemoveAccount(tabId) {
         const { activeAccountId} = this.getTabIdState(tabId);
         if (activeAccountId) {
-            this.setErrorMsg('onRemoveAccount is not yet implemented.');
+            // Want to prompt if there are transactions for the account.
+            process.nextTick(async () => {
+                const { accessor } = this.props;
+                const transactionKeys = await accessor
+                    .asyncGetSortedTransactionKeysForAccount(activeAccountId);
+                if (transactionKeys && transactionKeys.length) {
+                    const accountDataItem = accessor.getAccountDataItemWithId(
+                        activeAccountId);
+                    
+                    const message = userMsg(
+                        'AccountsListHandler-prompt_remove_account_with_transactions',
+                        accountDataItem.name);
+                    this.setModal(() => {
+                        return <QuestionPrompter
+                            // eslint-disable-next-line max-len
+                            title={userMsg('AccountsListHandler-prompt_remove_account_with_transactions_title')}
+                            message={message}
+                            onButton={(id) => {
+                                if (id === 'yes') {
+                                    this.removeAccount(activeAccountId);
+                                }
+                                this.setModal();
+                            }}
+                            buttons={StandardButton.YES_NO}
+                        />;
+                    });
+                }
+                else {
+                    this.removeAccount(activeAccountId);
+                }
+            });
         }
     }
 

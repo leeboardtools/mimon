@@ -108,6 +108,9 @@
     "AccountsListHandler-hideAccount": "Hide Account",
     "AccountsListHandler-showHiddenAccounts": "Show Hidden Accounts",
 
+    "AccountsListHandler-prompt_remove_account_with_transactions_title": "Confirm Delete Account",
+    "AccountsListHandler-prompt_remove_account_with_transactions": ["Account '", "' has transactions referring to it.\nDeleting the account will delete those transactions. Continue?"],
+
 
     "AccountEditorHandler-newAccount_title": "New Account",
     "AccountEditorHandler-modifyAccount_title": ["Edit '", "'"],
