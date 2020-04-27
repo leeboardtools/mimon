@@ -15,6 +15,8 @@ import { createCompositeAction } from '../util/Actions';
  * @param {object}  result  The result returned by the corresponding manager function.
  */
 
+
+
 /**
  * Class that creates the various actions that apply to an {@link AccountingSystem}.
  * <p>
@@ -189,6 +191,8 @@ export class AccountingActions extends EventEmitter {
 
     /**
      * Creates an action for removing an account.
+     * <p>If the account has dependees, the action will have a
+     * dependees property set to an array containing the types of dependees.
      * @param {number} accountId 
      * @returns {ActionDataItem}
      */
@@ -219,6 +223,7 @@ export class AccountingActions extends EventEmitter {
                     transactionsAction,
                     action,
                 ]);
+            action.dependees = [ 'TRANSACTION' ];
         }
 
         return action;
@@ -284,6 +289,9 @@ export class AccountingActions extends EventEmitter {
 
     /**
      * Creates an action for removing a priced item.
+     * <p>
+     * If the priced item has dependees, the action will have a dependees
+     * property that's an array containing the types of dependees.
      * @param {number} pricedItemId 
      * @returns {ActionDataItem}
      */
@@ -321,12 +329,23 @@ export class AccountingActions extends EventEmitter {
 
         if (accountIds.length || lotIds.length) {
             const actions = [];
+            const dependees = new Set();
             for (let i = 0; i < accountIds.length; ++i) {
-                actions.push(await this.asyncCreateRemoveAccountAction(accountIds[i]));
+                const action = await this.asyncCreateRemoveAccountAction(accountIds[i]);
+                if (action.dependees) {
+                    action.dependees.forEach((dependee) => dependees.add(dependee));
+                }
+                dependees.add('ACCOUNT');
+                actions.push(action);
             }
 
             for (let i = 0; i < lotIds.length; ++i) {
-                actions.push(await this.asyncCreateRemoveLotAction(lotIds[i], true));
+                const action = await this.asyncCreateRemoveLotAction(lotIds[i], true);
+                if (action.dependees) {
+                    action.dependees.forEach((dependee) => dependees.add(dependee));
+                }
+                dependees.add('LOT');
+                actions.push(action);
             }
 
             // The remove priced item action...
@@ -338,6 +357,7 @@ export class AccountingActions extends EventEmitter {
                         typeDescription, name), 
                 },
                 actions);
+            action.dependees = Array.from(dependees.values());
         }
 
         return action;
@@ -405,6 +425,8 @@ export class AccountingActions extends EventEmitter {
 
     /**
      * Creates an action for removing a lot.
+     * <p>If the lot has dependees, the action will have a dependees property that's
+     * an array containing the types of dependees.
      * @param {number} lotId 
      * @returns {ActionDataItem}
      */
@@ -433,6 +455,7 @@ export class AccountingActions extends EventEmitter {
                         transactionsAction,
                         action,
                     ]);
+                action.dependees = ['TRANSACTION'];
             }
         }
 

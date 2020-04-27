@@ -44,6 +44,8 @@ test('AccountingActions-Accounts', async () => {
 
     // Remove Account
     const removeAccountAction = await actions.asyncCreateRemoveAccountAction(settingsA.id);
+    expect(removeAccountAction.dependees).toBeUndefined();
+
     await actionManager.asyncApplyAction(removeAccountAction);
     expect(accountManager.getAccountDataItemWithId(settingsA.id)).toBeUndefined();
 
@@ -130,6 +132,8 @@ test('AccountingActions-PricedItems', async () => {
     // Remove PricedItem
     const removePricedItemAction 
         = await actions.asyncCreateRemovePricedItemAction(settingsA.id);
+    expect(removePricedItemAction.dependees).toBeUndefined();
+
     await actionManager.asyncApplyAction(removePricedItemAction);
     expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id)).toBeUndefined();
 
@@ -214,6 +218,8 @@ test('AccountingActions-Lots', async () => {
 
     // Remove Lot
     const removeLotAction = await actions.asyncCreateRemoveLotAction(settingsA.id);
+    expect(removeLotAction.dependees).toBeUndefined();
+
     await actionManager.asyncApplyAction(removeLotAction);
     expect(lotManager.getLotDataItemWithId(settingsA.id)).toBeUndefined();
 
@@ -702,6 +708,8 @@ test('AccountingActions-removeAccounts With Transactions', async () => {
         .toBeDefined();
 
     const removeAccountAction = await actions.asyncCreateRemoveAccountAction(sys.cashId);
+    expect(removeAccountAction.dependees).toEqual(['TRANSACTION']);
+
     await actionManager.asyncApplyAction(removeAccountAction);
 
     expect(accountManager.getAccountDataItemWithId(sys.cashId)).toBeUndefined();
@@ -739,8 +747,10 @@ test('AccountingActions-removeLots With Accounts', async () => {
         sys.transGId))
         .toBeDefined();
 
-    const removeAccountAction = await actions.asyncCreateRemoveLotAction(sys.aaplLot1.id);
-    await actionManager.asyncApplyAction(removeAccountAction);
+    const removeLotAction = await actions.asyncCreateRemoveLotAction(sys.aaplLot1.id);
+    expect(removeLotAction.dependees).toEqual(['TRANSACTION']);
+
+    await actionManager.asyncApplyAction(removeLotAction);
 
     expect(await transactionManager.asyncGetTransactionDataItemWithId(
         sys.transGId))
@@ -783,9 +793,15 @@ test('AccountingActions-removePricedItems With Accounts and Lots', async () => {
     expect(lotManager.getLotDataItemWithId(sys.aaplLot1.id))
         .toBeDefined();
 
-    const removeAccountAction = await actions.asyncCreateRemovePricedItemAction(
+    const removeAction = await actions.asyncCreateRemovePricedItemAction(
         sys.aaplPricedItemId);
-    await actionManager.asyncApplyAction(removeAccountAction);
+    expect(removeAction.dependees).toEqual(expect.arrayContaining([
+        'TRANSACTION',
+        'ACCOUNT',
+        'LOT',
+    ]));
+
+    await actionManager.asyncApplyAction(removeAction);
 
     expect(pricedItemManager.getPricedItemDataItemWithId(sys.aaplPricedItemId))
         .toBeUndefined();
