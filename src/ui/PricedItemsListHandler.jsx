@@ -67,9 +67,6 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                 const action = await accountingActions.asyncCreateRemovePricedItemAction(
                     activePricedItemId);
 
-                // TEST!!!
-                action.dependees = [1];
-
                 if (action.dependees && action.dependees.length) {
                     const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
                         activePricedItemId);
