@@ -399,8 +399,18 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
 
 - Next Up:
     - Account Editor
-        - Priced Item Selector - Add New PricedItem button.
 
     - NewFileConfigurator.jsx
         - Change opening balance renderer to use a CellQuantityEditor/Display.
     
+    - Accounts List
+        - Want quantity, market value, cost basis, cash-in columns
+
+    - Priced Item List
+    
+    - Securites/Mutual Fund List
+        - Want quantity, market value, cost basis, cash-in columns
+
+
+
+

@@ -132,6 +132,7 @@
     "AccountEditor-refId_duplicate": "There is already an account with the reference id.",
     "AccountEditor-pricedItem_label": ["", ""],
     "AccountEditor-newPricedItem_label": ["New ", ""],
+    "AccountEditor-pricedItem_required": ["Please select a ", "."],
 
 
     "AccountRegisterHandler-newTransaction": "New Transaction",

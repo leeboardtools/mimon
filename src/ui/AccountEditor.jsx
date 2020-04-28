@@ -57,8 +57,12 @@ export class AccountEditor extends React.Component {
 
             const parentAccountDataItem = accessor.getAccountDataItemWithId(
                 parentAccountId);
-            accountDataItem.type = parentAccountDataItem.type;
-            accountDataItem.pricedItemId = parentAccountDataItem.pricedItemId;
+            const parentType = A.getAccountType(parentAccountDataItem.type);
+            const type = parentType.allowedChildTypes[0];
+            accountDataItem.type = type.name;
+            if (type.pricedItemType === PI.PricedItemType.CURRENCY) {
+                accountDataItem.pricedItemId = parentAccountDataItem.pricedItemId;
+            }
         }
 
         this.state = {
@@ -222,11 +226,23 @@ export class AccountEditor extends React.Component {
                 }
             }
 
+            let pricedItemErrorMsg;
+            if (!newAccountDataItem.pricedItemId) {
+                isOKToSave = false;
+                const accountType = A.getAccountType(newAccountDataItem.type);
+                const pricedItemTypeName = accountType.pricedItemType.name;
+                const pricedItemType = PI.getPricedItemType(pricedItemTypeName);
+                const { description } = pricedItemType;
+                pricedItemErrorMsg = userMsg('AccountEditor-pricedItem_required',
+                    description);
+            }
+
             return {
                 accountDataItem: newAccountDataItem,
                 isOKToSave: isOKToSave,
                 nameErrorMsg: nameErrorMsg,
                 refIdErrorMsg: refIdErrorMsg,
+                pricedItemErrorMsg: pricedItemErrorMsg,
                 originalAccountDataItem: originalAccountDataItem,
             };
         });
@@ -308,7 +324,7 @@ export class AccountEditor extends React.Component {
     renderTypeEditor() {
         // Rules:
         //  - Cannot change a lot based account.
-        const { accessor } = this.props;
+        const { accessor, accountId } = this.props;
         const { accountDataItem } = this.state;
         const parentAccountDataItem = accessor.getAccountDataItemWithId(
             accountDataItem.parentAccountId);
@@ -324,7 +340,7 @@ export class AccountEditor extends React.Component {
         }
 
         const type = A.getAccountType(accountDataItem.type);
-        const disabled = type.hasLots;
+        const disabled = type.hasLots && accountId;
 
         return <DropdownField
             id={this._idBase + '_type'}
@@ -381,12 +397,13 @@ export class AccountEditor extends React.Component {
 
         return <PricedItemSelector
             accessor={accessor}
-            id={this._idBase + '_parent'}
+            id={this._idBase + '_pricedItem'}
             pricedItemEntries={items}
             ariaLabel={pricedItemTypeName}
             label={userMsg('AccountEditor-pricedItem_label', description)}
             selectedPricedItemId={accountDataItem.pricedItemId}
             onChange={this.onPricedItemChange}
+            errorMsg={this.state.pricedItemErrorMsg}
             appendComponent={button}
         />;
     }

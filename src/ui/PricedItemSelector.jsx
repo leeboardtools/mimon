@@ -40,7 +40,7 @@ export function PricedItemSelector(props) {
             if (type.hasTickerSymbol) {
                 text = userMsg('PricedItemSelector-ticker_label', 
                     pricedItemDataItem.ticker,
-                    pricedItemDataItem.name);
+                    pricedItemDataItem.name || '');
             }
             else {
                 text = pricedItemDataItem.name;
