@@ -48,7 +48,11 @@ export function Field(props) {
 
     let inputComponent = onRenderEditor(editorClassName);
     if (prepend || append) {
-        inputComponent = <div className="input-group">
+        let inputClassName = 'input-group';
+        if (errorMsg) {
+            inputClassName += ' is-invalid';
+        }
+        inputComponent = <div className={inputClassName}>
             {prepend}
             {inputComponent}
             {append}
