@@ -109,7 +109,11 @@
     "AccountsListHandler-showHiddenAccounts": "Show Hidden Accounts",
 
     "AccountsListHandler-prompt_remove_account_with_transactions_title": "Confirm Delete Account",
-    "AccountsListHandler-prompt_remove_account_with_transactions": ["Account '", "' has transactions referring to it.\nDeleting the account will delete those transactions. Continue?"],
+    "AccountsListHandler-prompt_remove_account_with_transactions": 
+        ["Account '", "' has transactions referring to it.\nDeleting the account will delete those transactions. Continue?"],
+    "AccountsListHandler-prompt_remove_priced_item_with_dependees_title": ["Confirm Delete ", ""],
+    "AccountsListHandler-prompt_remove_priced_item_with_dependees": 
+        ["", " '", "' has one or more accounts that refer to it.\nDeleting it will delete those accounts. Continue?"],
 
 
     "AccountEditorHandler-newAccount_title": "New Account",

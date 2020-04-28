@@ -3,6 +3,7 @@ import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { PricedItemsList } from './PricedItemsList';
 import * as PI from '../engine/PricedItems';
+import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 
 /**
  * Handler for {@link PricedItemsList} components and their pages in the 
@@ -57,10 +58,53 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     }
 
 
-    onRemovePricedItem(tabId) {
+    onRemovePricedItem(tabId, pricedItemTypeName) {
         const { activePricedItemId} = this.getTabIdState(tabId);
         if (activePricedItemId) {
-            this.setErrorMsg('onRemovePricedItem is not yet implemented.');
+            process.nextTick(async () => {
+                const { accessor } = this.props;
+                const accountingActions = accessor.getAccountingActions();
+                const action = await accountingActions.asyncCreateRemovePricedItemAction(
+                    activePricedItemId);
+
+                // TEST!!!
+                action.dependees = [1];
+
+                if (action.dependees && action.dependees.length) {
+                    const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
+                        activePricedItemId);
+                    const type = PI.getPricedItemType(pricedItemTypeName);
+                    const title = userMsg(
+                        // eslint-disable-next-line max-len
+                        'AccountsListHandler-prompt_remove_priced_item_with_dependees_title',
+                        type.description);
+                    const message = userMsg(
+                        'AccountsListHandler-prompt_remove_priced_item_with_dependees',
+                        type.description, pricedItemDataItem.name);
+                    this.setModal(() => {
+                        return <QuestionPrompter
+                            title={title}
+                            message={message}
+                            onButton={(id) => {
+                                if (id === 'yes') {
+                                    accessor.asyncApplyAction(action)
+                                        .catch((e) => {
+                                            this.setErrorMsg(e);
+                                        });
+                                }
+                                this.setModal();
+                            }}
+                            buttons={StandardButton.YES_NO}
+                        />;
+                    });
+                }
+                else {
+                    accessor.asyncApplyAction(action)
+                        .catch((e) => {
+                            this.setErrorMsg(e);
+                        });
+                }
+            });
         }
     }
 
@@ -142,7 +186,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                 label: userMsg('PricedItemsListHandler-removePricedItem', 
                     typeDescription),
                 disabled: !activePricedItemId,
-                onChooseItem: () => this.onRemovePricedItem(tabId),
+                onChooseItem: () => this.onRemovePricedItem(tabId, pricedItemTypeName),
             },
             {},
             { id: 'togglePricedItemVisible',
