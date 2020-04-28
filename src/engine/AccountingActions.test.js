@@ -43,7 +43,8 @@ test('AccountingActions-Accounts', async () => {
 
 
     // Remove Account
-    const removeAccountAction = await actions.asyncCreateRemoveAccountAction(settingsA.id);
+    const removeAccountAction = await actions.asyncCreateRemoveAccountAction(
+        settingsA.id);
     expect(removeAccountAction.dependees).toBeUndefined();
 
     await actionManager.asyncApplyAction(removeAccountAction);
