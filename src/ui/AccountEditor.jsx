@@ -22,6 +22,8 @@ export class AccountEditor extends React.Component {
 
         this.onAccountsModify = this.onAccountsModify.bind(this);
 
+        this.onPricedItemAdd = this.onPricedItemAdd.bind(this);
+
         this.onFinish = this.onFinish.bind(this);
         this.onCancel = this.onCancel.bind(this);
 
@@ -83,15 +85,24 @@ export class AccountEditor extends React.Component {
         }
     }
 
+    onPricedItemAdd(result) {
+        const { accountDataItem } = this.state;
+        if (!accountDataItem.pricedItemId) {
+            this.updateAccountDataItem({});
+        }
+    }
+
 
     componentDidMount() {
         this.props.accessor.on('accountsModify', this.onAccountsModify);
+        this.props.accessor.on('pricedItemAdd', this.onPricedItemAdd);
         this.updateAccountDataItem({});
     }
 
 
     componentWillUnmount() {
         this.props.accessor.off('accountsModify', this.onAccountsModify);
+        this.props.accessor.off('pricedItemAdd', this.onPricedItemAdd);
     }
 
 
@@ -181,8 +192,6 @@ export class AccountEditor extends React.Component {
                 originalAccountDataItem = A.getAccountDataItem(newAccountDataItem, true);
             }
 
-            // TODO:
-            // Update isOKToSave
             let isOKToSave = true;
 
             let nameErrorMsg;
@@ -226,12 +235,32 @@ export class AccountEditor extends React.Component {
                 }
             }
 
+
+            const accountType = A.getAccountType(newAccountDataItem.type);
+            const pricedItemTypeName = accountType.pricedItemType.name;
+            const pricedItemType = PI.getPricedItemType(pricedItemTypeName);
+
+            if (newAccountDataItem.pricedItemId) {
+                const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
+                    newAccountDataItem.pricedItemId);
+                if (!pricedItemDataItem 
+                 || (pricedItemDataItem.type !== pricedItemTypeName)) {
+                    newAccountDataItem.pricedItemId = undefined;
+                }
+            }
+
+            if (!newAccountDataItem.pricedItemId) {
+                // Try to select something....
+                const pricedItemIds = accessor.getPricedItemIdsForType(
+                    pricedItemType);
+                if (pricedItemIds && pricedItemIds.length) {
+                    newAccountDataItem.pricedItemId = pricedItemIds[0];
+                }
+            }
+
             let pricedItemErrorMsg;
             if (!newAccountDataItem.pricedItemId) {
                 isOKToSave = false;
-                const accountType = A.getAccountType(newAccountDataItem.type);
-                const pricedItemTypeName = accountType.pricedItemType.name;
-                const pricedItemType = PI.getPricedItemType(pricedItemTypeName);
                 const { description } = pricedItemType;
                 pricedItemErrorMsg = userMsg('AccountEditor-pricedItem_required',
                     description);
