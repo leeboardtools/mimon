@@ -388,6 +388,7 @@ export function getTransactionKeyData(transaction) {
     }
 }
 
+
 export function compareTransactionKeys(a, b) {
     let result;
     if (typeof a.ymdDate === 'string') {
@@ -923,10 +924,14 @@ export class TransactionManager extends EventEmitter {
      * Retrieves an array of the {@link TransactionKey}s for an account, sorted from 
      * oldest to newest.
      * @param {number} accountId 
+     * @param {boolean} [includeSplitCounts=false]  If <code>true</code> then the
+     * transaction keys have a splitCount property added that is the number of
+     * splits in the transaction that refer to the account.
      * @return {TransactionKey[]}
      */
-    async asyncGetSortedTransactionKeysForAccount(accountId) {
-        return this._handler.asyncGetSortedTransactionKeysForAccount(accountId);
+    async asyncGetSortedTransactionKeysForAccount(accountId, includeSplitCounts) {
+        return this._handler.asyncGetSortedTransactionKeysForAccount(accountId, 
+            includeSplitCounts);
     }
 
 
@@ -934,10 +939,14 @@ export class TransactionManager extends EventEmitter {
      * Retrieves an array of the {@link TransactionKey}s for a lot, sorted from 
      * oldest to newest.
      * @param {number} lotId 
+     * @param {boolean} [includeSplitCounts=false]  If <code>true</code> then the
+     * transaction keys have a splitCount property added that is the number of
+     * splits in the transaction that refer to the lot.
      * @return {TransactionKey[]}
      */
-    async asyncGetSortedTransactionKeysForLot(lotId) {
-        return this._handler.asyncGetSortedTransactionKeysForLot(lotId);
+    async asyncGetSortedTransactionKeysForLot(lotId, includeSplitCounts) {
+        return this._handler.asyncGetSortedTransactionKeysForLot(lotId, 
+            includeSplitCounts);
     }
 
 
@@ -1788,9 +1797,12 @@ export class TransactionsHandler {
      * Retrieves an array of the {@link TransactionKey}s for an account, sorted from 
      * oldest to newest.
      * @param {number} accountId 
+     * @param {boolean} [includeSplitCounts=false]  If <code>true</code> then the
+     * transaction keys have a splitCount property added that is the number of
+     * splits in the transaction that refer to the account.
      * @return {TransactionKey[]}
      */
-    async asyncGetSortedTransactionKeysForAccount(accountId) {
+    async asyncGetSortedTransactionKeysForAccount(accountId, includeSplitCounts) {
         // eslint-disable-next-line max-len
         throw Error('TransactionHandler.asyncGetSortedTransactionKeysForAccount() abstract method!');
     }
@@ -1812,9 +1824,12 @@ export class TransactionsHandler {
      * Retrieves an array of the {@link TransactionKey}s for a lot, sorted from 
      * oldest to newest.
      * @param {number} lotId 
+     * @param {boolean} [includeSplitCounts=false]  If <code>true</code> then the
+     * transaction keys have a splitCount property added that is the number of
+     * splits in the transaction that refer to the account.
      * @return {TransactionKey[]}
      */
-    async asyncGetSortedTransactionKeysForLot(lotId) {
+    async asyncGetSortedTransactionKeysForLot(lotId, includeSplitCounts) {
         // eslint-disable-next-line max-len
         throw Error('TransactionHandler.asyncGetSortedTransactionKeysForLot() abstract method!');
     }
@@ -1852,8 +1867,14 @@ function entryToJSON(entry) {
     if (entry.accountIds) {
         json.accountIds = Array.from(entry.accountIds.values());
     }
+    if (entry.accountSplitCounts) {
+        json.accountSplitCounts = Array.from(entry.accountSplitCounts.entries());
+    }
     if (entry.lotIds) {
         json.lotIds = Array.from(entry.lotIds.values());
+    }
+    if (entry.lotSplitCounts) {
+        json.lotSplitCounts = Array.from(entry.lotSplitCounts.entries());
     }
     if ((entry.sameDayOrder !== undefined)
      && (entry.sameDayOrder !== null)) {
@@ -1872,8 +1893,14 @@ function entryFromJSON(json) {
     if (json.accountIds) {
         entry.accountIds = new Set(json.accountIds);
     }
+    if (json.accountSplitCounts) {
+        entry.accountSplitCounts = new Map(json.accountSplitCounts);
+    }
     if (json.lotIds) {
         entry.lotIds = new Set(json.lotIds);
+    }
+    if (json.lotSplitCounts) {
+        entry.lotSplitCounts = new Map(json.lotSplitCounts);
     }
     if ((json.sameDayOrder !== undefined)
      && (json.sameDayOrder !== null)) {
@@ -1899,8 +1926,14 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
      * transaction is ordered. If not given then it is treated as
      * @property {Set<number>}  [accountIds]  Set containing the account ids of all 
      * the accounts referred to by the transaction's splits.
+     * @property {Map<number,number>}   [accountSplitCounts]    Only present if there 
+     * are multiple splits referring to the same account, key is accountId, value is the 
+     * number of splits.
      * @property {Set<number>}  [lotIds]  Set containing the lot ids of all the lots 
      * referred to by the transaction's splits.
+     * @property {Map<number,number>}   [lotSplitCounts]    Only present if there 
+     * are multiple splits referring to the same lot, key is lotId, value is the 
+     * number of splits.
      */
 
     /**
@@ -2065,7 +2098,7 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
     }
 
 
-    _getSortedTransactionKeysForId(id, sortedEntriesById) {
+    _getSortedTransactionKeysForId(id, sortedEntriesById, splitCounter) {
         const sortedEntries = sortedEntriesById.get(id);
         if (sortedEntries) {
             return sortedEntries.getValues().map(
@@ -2077,6 +2110,9 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                      && (entry.sameDayOrder !== null)) {
                         key.sameDayOrder = entry.sameDayOrder;
                     }
+                    if (splitCounter) {
+                        splitCounter(key, entry);
+                    }
                     return key; 
                 });
         }
@@ -2086,9 +2122,20 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
     }
 
 
-    async asyncGetSortedTransactionKeysForAccount(accountId) {
+    async asyncGetSortedTransactionKeysForAccount(accountId, includeSplitCounts) {
+        const splitCounter = (includeSplitCounts)
+            ? (key, entry) => {
+                const { accountSplitCounts } = entry;
+                let splitCount;
+                if (accountSplitCounts) {
+                    splitCount = accountSplitCounts.get(accountId);
+                }
+                key.splitCount = splitCount || 1;
+            }
+            : undefined;
         return this._getSortedTransactionKeysForId(accountId, 
-            this._sortedEntriesByAccountId);
+            this._sortedEntriesByAccountId,
+            splitCounter);
     }
 
     async asyncGetNonReconciledIdsForAccountId(accountId) {
@@ -2096,9 +2143,20 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         return (sortedIds) ? sortedIds.getValues() : [];
     }
 
-    async asyncGetSortedTransactionKeysForLot(lotId) {
+    async asyncGetSortedTransactionKeysForLot(lotId, includeSplitCounts) {
+        const splitCounter = (includeSplitCounts)
+            ? (key, entry) => {
+                const { lotSplitCounts } = entry;
+                let splitCount;
+                if (lotSplitCounts) {
+                    splitCount = lotSplitCounts.get(lotId);
+                }
+                key.splitCount = splitCount || 1;
+            }
+            : undefined;
         return this._getSortedTransactionKeysForId(lotId, 
-            this._sortedEntriesByLotId);
+            this._sortedEntriesByLotId,
+            splitCounter);
     }
 
 
@@ -2128,14 +2186,45 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
 
                 let newAccountIds;
                 let newLotIds;
+                let newAccountSplitCounts;
+                let newLotSplitCounts;
                 if (dataItem.splits) {
                     newAccountIds = new Set();
                     newLotIds = new Set();
                     dataItem.splits.forEach((split) => {
-                        newAccountIds.add(split.accountId);
+                        const { accountId } = split;
+                        if (newAccountIds.has(accountId)) {
+                            let count = 1;
+                            if (!newAccountSplitCounts) {
+                                newAccountSplitCounts = new Map();
+                            }
+                            else {
+                                count = newAccountSplitCounts.get(accountId) || 1;
+                            }
+                            newAccountSplitCounts.set(accountId, count + 1);
+                        }
+                        else {
+                            newAccountIds.add(accountId);
+                        }
+
                         if (split.lotChanges) {
                             split.lotChanges.forEach(
-                                (lotChange) => newLotIds.add(lotChange.lotId));
+                                (lotChange) => {
+                                    const { lotId } = lotChange;
+                                    if (newLotIds.has(lotId)) {
+                                        let count = 1;
+                                        if (!newLotSplitCounts) {
+                                            newLotSplitCounts = new Map();
+                                        }
+                                        else {
+                                            count = newLotSplitCounts.get(lotId) || 1;
+                                        }
+                                        newLotSplitCounts.set(lotId, count + 1);
+                                    }
+                                    else {
+                                        newLotIds.add(lotId);
+                                    }
+                                });
                         }
                     });
                 }
@@ -2176,6 +2265,12 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                 }
 
                 newEntry.ymdDate = getYMDDate(newEntry.ymdDate);
+                if (newAccountSplitCounts) {
+                    newEntry.accountSplitCounts = newAccountSplitCounts;
+                }
+                if (newLotSplitCounts) {
+                    newEntry.lotSplitCounts = newLotSplitCounts;
+                }
                 entryChanges.push([newEntry, oldEntry, dataItem]);
             }
         }

@@ -1031,11 +1031,14 @@ export class EngineAccessor extends EventEmitter {
      * Retrieves an array of the {@link TransactionKey}s for an account, sorted from 
      * oldest to newest.
      * @param {number} accountId 
+     * @param {boolean} [includeSplitCounts=false]  If <code>true</code> then the
+     * transaction keys have a splitCount property added that is the number of
+     * splits in the transaction that refer to the account.
      * @return {TransactionKey[]}
      */
-    async asyncGetSortedTransactionKeysForAccount(accountId) {
+    async asyncGetSortedTransactionKeysForAccount(accountId, includeSplitCounts) {
         return this._transactionManager.asyncGetSortedTransactionKeysForAccount(
-            accountId);
+            accountId, includeSplitCounts);
     }
 
 
@@ -1043,10 +1046,14 @@ export class EngineAccessor extends EventEmitter {
      * Retrieves an array of the {@link TransactionKey}s for a lot, sorted from 
      * oldest to newest.
      * @param {number} lotId 
+     * @param {boolean} [includeSplitCounts=false]  If <code>true</code> then the
+     * transaction keys have a splitCount property added that is the number of
+     * splits in the transaction that refer to the lot.
      * @return {TransactionKey[]}
      */
-    async asyncGetSortedTransactionKeysForLot(lotId) {
-        return this._transactionManager.asyncGetSortedTransactionKeysForLot(lotId);
+    async asyncGetSortedTransactionKeysForLot(lotId, includeSplitCounts) {
+        return this._transactionManager.asyncGetSortedTransactionKeysForLot(lotId,
+            includeSplitCounts);
     }
 
 

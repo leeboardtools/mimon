@@ -316,8 +316,12 @@ test('EngineAccessor-actions', async () => {
                 },
                 { accountId: groceriesId,
                     reconcileState: T.ReconcileState.NOT_RECONCILED.name,
-                    quantityBaseValue: 5000,
-                }
+                    quantityBaseValue: 8000,
+                },
+                { accountId: checkingId,
+                    reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+                    quantityBaseValue: -3000,
+                },
             ]
         };
         const actionG = accountingActions.createAddTransactionAction(settingsG);
@@ -329,6 +333,8 @@ test('EngineAccessor-actions', async () => {
             .toEqual(transG);
 
         checkingBalance += settingsG.splits[0].quantityBaseValue;
+        const checkingBalanceG1 = checkingBalance;
+        checkingBalance += settingsG.splits[2].quantityBaseValue;
 
 
         const settingsH = {
@@ -401,9 +407,20 @@ test('EngineAccessor-actions', async () => {
             { id: transG.id, ymdDate: getYMDDate('2019-02-03'), },
         ]);
 
+        result = await accessor.asyncGetSortedTransactionKeysForAccount(checkingId, true);
+        expect(result).toEqual([
+            { id: transF.id, ymdDate: getYMDDate('2018-01-23'), splitCount: 1, },
+            { id: transG.id, ymdDate: getYMDDate('2019-02-03'), splitCount: 2, },
+        ]);
+
         result = await accessor.asyncGetSortedTransactionKeysForLot(lot1.id);
         expect(result).toEqual([
             { id: transI.id, ymdDate: getYMDDate('2019-10-14'), },
+        ]);
+
+        result = await accessor.asyncGetSortedTransactionKeysForLot(lot1.id, true);
+        expect(result).toEqual([
+            { id: transI.id, ymdDate: getYMDDate('2019-10-14'), splitCount: 1, },
         ]);
 
         result = await accessor.getCurrentAccountStateDataItem(checkingId);
@@ -420,7 +437,8 @@ test('EngineAccessor-actions', async () => {
         result = await accessor.asyncGetAccountStateDataItemsBeforeTransaction(
             checkingId, transG.id);
         expect(result).toEqual([
-            { ymdDate: '2018-01-23', quantityBaseValue: checkingOpeningBalance, }
+            { ymdDate: '2018-01-23', quantityBaseValue: checkingOpeningBalance, },
+            { ymdDate: '2019-02-03', quantityBaseValue: checkingBalanceG1, }
         ]);
 
         result = await accessor.asyncGetNonReconciledTransactionIdsForAccountId(
