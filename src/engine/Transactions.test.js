@@ -1216,6 +1216,25 @@ test('Transactions-accountStateUpdates', async () => {
         }]);
     
 
+    expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
+        sys.checkingId, transC.id, transA.id)).toEqual(
+        [
+            { ymdDate: settingsA.ymdDate, quantityBaseValue: checkingQuantityBaseValueA },
+            { ymdDate: settingsB.ymdDate, quantityBaseValue: checkingQuantityBaseValueB },
+            { ymdDate: settingsC.ymdDate, quantityBaseValue: checkingQuantityBaseValueC },
+        ]);
+
+    expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        sys.checkingId, transA.id, transC.id)).toEqual(
+        [
+            { ymdDate: initialYMDDate, 
+                quantityBaseValue: sys.checkingOBQuantityBaseValue 
+            },
+            { ymdDate: settingsA.ymdDate, quantityBaseValue: checkingQuantityBaseValueA },
+            { ymdDate: settingsB.ymdDate, quantityBaseValue: checkingQuantityBaseValueB },
+        ]);
+    
+    
     //  a: '2010-01-01', -100
     //  b: '2010-01-05', -200
     //  c: '2010-01-10', -300

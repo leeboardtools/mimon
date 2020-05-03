@@ -1073,15 +1073,19 @@ export class EngineAccessor extends EventEmitter {
      * been applied to the account.
      * @param {number} accountId 
      * @param {number} transactionId 
+     * @param {number} [otherTransactionId] If specified, the account states are retrieved
+     * for all the transactions between transactionId and otherTransactionId, inclusive,
+     * and are returned in order from oldest to newest.
      * @returns {AccountStateDataItem[]}    An array containing the account states 
      * immediately after a transaction has been applied. Multiple account states are 
      * returned if there are multiple splits referring to the account. The referring 
      * split at index closest to zero is at the first index, the last account state 
      * is the account state after the transaction has been fully applied.
      */
-    async asyncGetAccountStateDataItemsAfterTransaction(accountId, transactionId) {
+    async asyncGetAccountStateDataItemsAfterTransaction(accountId, transactionId,
+        otherTransactionId) {
         return this._transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
-            accountId, transactionId);
+            accountId, transactionId, otherTransactionId);
     }
 
 
@@ -1090,14 +1094,18 @@ export class EngineAccessor extends EventEmitter {
      * been applied to the account.
      * @param {number} accountId 
      * @param {number} transactionId 
+     * @param {number} [otherTransactionId] If specified, the account states are retrieved
+     * for all the transactions between transactionId and otherTransactionId, inclusive,
+     * and are returned in order from oldest to newest.
      * @returns {AccountStateDataItem[]}    An array containing the account states 
      * immediately before a transaction is applied. Multiple account states are 
      * returned if there are multiple splits referring to the account. The referring 
      * split at index closest to zero is at the first index.
      */
-    async asyncGetAccountStateDataItemsBeforeTransaction(accountId, transactionId) {
+    async asyncGetAccountStateDataItemsBeforeTransaction(accountId, transactionId,
+        otherTransactionId) {
         return this._transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
-            accountId, transactionId);
+            accountId, transactionId, otherTransactionId);
     }
 
 

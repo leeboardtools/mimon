@@ -1018,8 +1018,64 @@ export class TransactionManager extends EventEmitter {
     }
 
 
-    async _asyncLoadAccountStateDataItemsForTransactionId(accountId, transactionId) {
+    async _asyncLoadAccountStateDataItemsForTransactionId(accountId, transactionId,
+        otherTransactionId) {
+
         const accountEntry = await this._asyncLoadAccountEntry(accountId);
+
+        if (otherTransactionId && (otherTransactionId !== transactionId)) {
+            // Figure out the older of the two ids...
+            const transactionDataItems = await this.asyncGetTransactionDataItemsWithIds(
+                [transactionId, otherTransactionId]
+            );
+
+            let olderIndex;
+            if (compareTransactionKeys(transactionDataItems[0], 
+                transactionDataItems[1]) > 0) {
+                [ transactionId, otherTransactionId ] 
+                    = [otherTransactionId, transactionId ];
+                olderIndex = 1;
+            }
+            else {
+                olderIndex = 0;
+            }
+
+            // Loading the older of the transactions loads all the account states
+            // up to the newest transaction.
+            let oldestAccountStateDataItems 
+                = await this._asyncLoadAccountStateDataItemsForTransactionId(
+                    accountId, transactionId);
+            
+            const accountStateDataItems = Array.from(oldestAccountStateDataItems);
+
+            const olderTransactionDataItem = transactionDataItems[olderIndex];
+
+            const sortedTransactionKeys 
+                = await this.asyncGetSortedTransactionKeysForAccount(accountId);
+
+            let index = bSearch(sortedTransactionKeys, olderTransactionDataItem, 
+                compareTransactionKeys) 
+                + 1;
+            while (index < sortedTransactionKeys.length) {
+                const id = sortedTransactionKeys[index].id;
+                const thisAccountStateDataItems
+                    = accountEntry.accountStatesByTransactionId.get(id);
+                
+                // We start at 1 because the first account state is the same as the
+                // last account state of the previous transaction.
+                for (let i = 1; i < thisAccountStateDataItems.length; ++i) {
+                    accountStateDataItems.push(thisAccountStateDataItems[i]);
+                }
+                if (id === otherTransactionId) {
+                    break;
+                }
+                ++index;
+            }
+
+            return accountStateDataItems;
+        }
+
+
         let accountStateDataItems 
             = accountEntry.accountStatesByTransactionId.get(transactionId);
 
@@ -1101,38 +1157,46 @@ export class TransactionManager extends EventEmitter {
 
 
     /**
-     * Retrieves the account state data item immediately after a transaction has 
+     * Retrieves the account state data item(s) immediately after a transaction has 
      * been applied to the account.
      * @param {number} accountId 
      * @param {number} transactionId 
+     * @param {number} [otherTransactionId] If specified, the account states are retrieved
+     * for all the transactions between transactionId and otherTransactionId, inclusive,
+     * and are returned in order from oldest to newest.
      * @returns {AccountStateDataItem[]}    An array containing the account states 
      * immediately after a transaction has been applied. Multiple account states are 
      * returned if there are multiple splits referring to the account. The referring 
      * split at index closest to zero is at the first index, the last account state 
      * is the account state after the transaction has been fully applied.
      */
-    async asyncGetAccountStateDataItemsAfterTransaction(accountId, transactionId) {
+    async asyncGetAccountStateDataItemsAfterTransaction(accountId, transactionId,
+        otherTransactionId) {
         const accountStateDataItems 
             = await this._asyncLoadAccountStateDataItemsForTransactionId(
-                accountId, transactionId);
+                accountId, transactionId, otherTransactionId);
         return accountStateDataItems.slice(1);
     }
 
 
     /**
-     * Retrieves the account state data item immediately before a transaction has 
+     * Retrieves the account state data item(s) immediately before a transaction has 
      * been applied to the account.
      * @param {number} accountId 
      * @param {number} transactionId 
+     * @param {number} [otherTransactionId] If specified, the account states are retrieved
+     * for all the transactions between transactionId and otherTransactionId, inclusive,
+     * and are returned in order from oldest to newest.
      * @returns {AccountStateDataItem[]}    An array containing the account states 
      * immediately before a transaction is applied. Multiple account states are 
      * returned if there are multiple splits referring to the account. The referring 
      * split at index closest to zero is at the first index.
      */
-    async asyncGetAccountStateDataItemsBeforeTransaction(accountId, transactionId) {
+    async asyncGetAccountStateDataItemsBeforeTransaction(accountId, transactionId,
+        otherTransactionId) {
         const accountStateDataItems 
             = await this._asyncLoadAccountStateDataItemsForTransactionId(
-                accountId, transactionId);
+                accountId, transactionId, otherTransactionId);
         return accountStateDataItems.slice(0, accountStateDataItems.length - 1);
     }
 
