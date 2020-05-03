@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { ContextMenu } from './ContextMenu';
+import deepEqual from 'deep-equal';
 
 
 /**
@@ -205,6 +206,25 @@ export class CollapsibleRowTable extends React.Component {
         this.onContextMenuClose = this.onContextMenuClose.bind(this);
 
         this.state = {};
+    }
+
+
+    componentDidMount() {
+        const { onLoadRowEntries } = this.props;
+        if (onLoadRowEntries) {
+            // For now just load all row entries.
+            onLoadRowEntries(0, this.props.rowEntries.length);
+        }
+    }
+
+    componentDidUpdate(prevProps) {
+        // For now just load all row entries.
+        const { onLoadRowEntries } = this.props;
+        if (onLoadRowEntries) {
+            if (!deepEqual(prevProps.rowEntries, this.props.rowEntries)) {
+                onLoadRowEntries(0, this.props.rowEntries.length);
+            }
+        }
     }
 
 
@@ -415,6 +435,14 @@ export class CollapsibleRowTable extends React.Component {
  */
 
 /**
+ * Callback if present used to load row entries prior to rendering. This
+ * is used for virtual rows.
+ * @callback CollapsbileRowTable~onLoadRowEntries
+ * @param {number}  startRowIndex
+ * @param {number}  rowCount
+ */
+
+/**
  * @typedef {object} CollapsibleRowTable~propTypes
  * @property {CollapsibleRowTable~ColInfo[]}  columnInfos    Information for the columns, 
  * primarily the heading row information.
@@ -436,6 +464,7 @@ export class CollapsibleRowTable extends React.Component {
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/contextmenu_event}
  * @property {MenuList~Item[]}  [contextMenuItems]
  * @property {Dropdown~onChooseItem}    [onChooseContextMenuItem]
+ * @property {CollapsibleRowTable~onLoadRowEntries} [onLoadRowEntries]
  */
 CollapsibleRowTable.propTypes = {
     columnInfos: PropTypes.array.isRequired,
@@ -451,4 +480,5 @@ CollapsibleRowTable.propTypes = {
     onContextMenu: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
+    onLoadRowEntries: PropTypes.func,
 };
