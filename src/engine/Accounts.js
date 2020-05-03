@@ -52,6 +52,8 @@ export function accountCategory(ref) {
  * @property {string}   name    The identifying name of the account type.
  * @property {AccountCategory} category   The account category to which the type belongs.
  * @property {string}   description The user description of the account class.
+ * @property {string}   debitLabel  The user label for debit values.
+ * @property {string}   creditLabel The user label for credit values.
  * @property {boolean}  [hasLots=false] If <code>true</code> the account 
  * uses {@link Lot}s.
  * @property {boolean}  [isSingleton=false] If <code>true</code> only one instance of 
@@ -88,6 +90,7 @@ export function accountCategory(ref) {
  * @property {AccountTypeDef}   OPENING_BALANCE For opening balances.
  *
  */
+
 export const AccountType = {
     ASSET: { name: 'ASSET', 
         category: AccountCategory.ASSET, 
@@ -254,6 +257,8 @@ export function loadAccountsUserMessages() {
     }
     for (const type of Object.values(AccountType)) {
         type.description = userMsg('AccountType-' + type.name);
+        type.debitLabel = userMsg('AccountType-' + type.name + '_debit_label');
+        type.creditLabel = userMsg('AccountType-' + type.name + '_credit_label');
     }
 }
 
