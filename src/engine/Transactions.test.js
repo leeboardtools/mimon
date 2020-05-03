@@ -1226,6 +1226,7 @@ test('Transactions-accountStateUpdates', async () => {
                         quantityBaseValue: checkingQuantityBaseValueA },
                 transactionDataItem: transA,
                 splitIndex: 0,
+                splitOccurrance: 0,
             },
             {
                 accountStateDataItem:
@@ -1233,6 +1234,7 @@ test('Transactions-accountStateUpdates', async () => {
                         quantityBaseValue: checkingQuantityBaseValueB },
                 transactionDataItem: transB,
                 splitIndex: 1,
+                splitOccurrance: 0,
             },
             {
                 accountStateDataItem:
@@ -1240,6 +1242,7 @@ test('Transactions-accountStateUpdates', async () => {
                         quantityBaseValue: checkingQuantityBaseValueC },
                 transactionDataItem: transC,
                 splitIndex: 0,
+                splitOccurrance: 0,
             },
         ]);
 
@@ -1252,6 +1255,7 @@ test('Transactions-accountStateUpdates', async () => {
                         quantityBaseValue: checkingQuantityBaseValueB },
                 transactionDataItem: transB,
                 splitIndex: 1,
+                splitOccurrance: 0,
             },
             {
                 accountStateDataItem:
@@ -1259,6 +1263,7 @@ test('Transactions-accountStateUpdates', async () => {
                         quantityBaseValue: checkingQuantityBaseValueC },
                 transactionDataItem: transC,
                 splitIndex: 0,
+                splitOccurrance: 0,
             },
         ]);
     

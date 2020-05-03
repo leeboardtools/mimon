@@ -421,7 +421,10 @@ export function compareTransactionKeys(a, b) {
  * @typedef {object} AccountStateAndTransactionInfo
  * @property {AccountStateDataItem} accountStateDataItem
  * @property {TransactionDataItem}  transactionDataItem
- * @property {number}   splitIndex
+ * @property {number}   splitIndex  The index of the {@link SplitDataItem} in the
+ * {@link TransactionDataItem}'s split property.
+ * @property {number}   splitOccurrance  Which split occurrance this respresents
+ * for the account in the transaction data item.
  */
 
 
@@ -1205,6 +1208,7 @@ export class TransactionManager extends EventEmitter {
             // We start at 1 because the first account state is the same as the
             // last account state of the previous transaction.
             let splitIndex = 0;
+            let splitOccurrance = 0;
             const { splits } = transactionDataItem;
             for (let i = 1; i < accountStateDataItems.length; ++i) {
                 for (; splitIndex < splits.length; ++splitIndex) {
@@ -1216,9 +1220,11 @@ export class TransactionManager extends EventEmitter {
                     accountStateDataItem: accountStateDataItems[i],
                     transactionDataItem: transactionDataItem,
                     splitIndex: splitIndex,
+                    splitOccurrance: splitOccurrance,
                 });
 
                 ++splitIndex;
+                ++splitOccurrance;
             }
         }
         return result;
