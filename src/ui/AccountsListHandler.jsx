@@ -193,9 +193,33 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onToggleColumn(tabId, columnName) {
+        const state = this.getTabIdState(tabId);
+        const hiddenColumns = Array.from(state.hiddenColumns);
+
+        const index = hiddenColumns.indexOf(columnName);
+        if (index >= 0) {
+            hiddenColumns.splice(index, 1);
+        }
+        else {
+            hiddenColumns.push(columnName);
+        }
+
+        const hiddenInfo = Object.assign({}, state, {
+            hiddenColumns: hiddenColumns,
+        });
+
+        this.setTabIdState(tabId, {
+            showHiddenAccounts: !state.showHiddenAccounts,
+            dropdownInfo: this.getTabDropdownInfo(tabId, 
+                state.activeAccountId, hiddenInfo),
+        });
+    }
+
     
     getTabDropdownInfo(tabId, activeAccountId, hiddenInfo) {
-        const { hiddenRootAccountTypes, hiddenAccountIds, showHiddenAccounts }
+        const { hiddenRootAccountTypes, hiddenAccountIds, showHiddenAccounts,
+            hiddenColumns }
             = hiddenInfo;
 
         const showAccountLabelId = (hiddenAccountIds.indexOf(activeAccountId) >= 0)
@@ -271,7 +295,37 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 checked: showHiddenAccounts,
                 onChooseItem: () => this.onToggleShowHiddenAccounts(
                     tabId),
-            }
+            },
+            
+            { id: 'columnsSubMenu',
+                label: userMsg('AccountsListHandler-columns_subMenu'),
+                subMenuItems: [
+                    { id: 'toggle_name',
+                        label: userMsg('AccountsListHandler-name_col'),
+                        checked: hiddenColumns.indexOf('name') < 0,
+                        onChooseItem: () => this.onToggleColumn(
+                            tabId, 'name'),
+                    },
+                    { id: 'toggle_description',
+                        label: userMsg('AccountsListHandler-description_col'),
+                        checked: hiddenColumns.indexOf('description') < 0,
+                        onChooseItem: () => this.onToggleColumn(
+                            tabId, 'description'),
+                    },
+                    { id: 'toggle_balance',
+                        label: userMsg('AccountsListHandler-balance_col'),
+                        checked: hiddenColumns.indexOf('balance') < 0,
+                        onChooseItem: () => this.onToggleColumn(
+                            tabId, 'balance'),
+                    },
+                    { id: 'toggle_shares',
+                        label: userMsg('AccountsListHandler-shares_col'),
+                        checked: hiddenColumns.indexOf('shares') < 0,
+                        onChooseItem: () => this.onToggleColumn(
+                            tabId, 'shares'),
+                    },
+                ]
+            },
         ];
 
         return {
@@ -317,6 +371,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             hiddenRootAccountTypes: [],
             hiddenAccountIds: [],
             showHiddenAccounts: false,
+            hiddenColumns: [],
         };
 
         return {
@@ -326,6 +381,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             onRenderTabPage: this.onRenderTabPage,
             hiddenRootAccountTypes: [],
             hiddenAccountIds: [],
+            hiddenColumns: [],
         };
     }
 
@@ -346,12 +402,15 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             contextMenuItems = dropdownInfo.items;
         }
 
+        const columns = [];
+
         return <AccountsList
             accessor={accessor}
             onSelectAccount={(accountId) => 
                 this.onSelectAccount(tabEntry.tabId, accountId)}
             onChooseAccount={(accountId) => 
                 this.onChooseAccount(tabEntry.tabId, accountId)}
+            columns={columns}
             hiddenRootAccountTypes={tabEntry.hiddenRootAccountTypes}
             hiddenAccountIds={tabEntry.hiddenAccountIds}
             showHiddenAccounts={tabEntry.showHiddenAccounts}

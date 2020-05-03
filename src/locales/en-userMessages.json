@@ -107,6 +107,11 @@
     "AccountsListHandler-showAccount": "Show Account",
     "AccountsListHandler-hideAccount": "Hide Account",
     "AccountsListHandler-showHiddenAccounts": "Show Hidden Accounts",
+    "AccountsListHandler-columns_subMenu": "Columns",
+    "AccountsListHandler-name_col": "Name",
+    "AccountsListHandler-description_col": "Description",
+    "AccountsListHandler-balance_col": "Balance",
+    "AccountsListHandler-shares_col": "Shares",
 
     "AccountsListHandler-prompt_remove_account_with_transactions_title": "Confirm Delete Account",
     "AccountsListHandler-prompt_remove_account_with_transactions": 
@@ -140,6 +145,14 @@
     "AccountRegisterHandler-removeTransaction": "Delete Transaction",
     "AccountRegisterHandler-copyTransaction": "Copy Transaction",
     "AccountRegisterHandler-pasteTransaction": "Paste Transaction",
+
+    "AccountRegister-date": "Date",
+    "AccountRegister-refNum": "Num",
+    "AccountRegister-description": "Description",
+    "AccountRegister-split": "Split",
+    "AccountRegister-balance": "Balance",
+    "AccountRegister-shares": "Shares",
+    "AccountRegister-reconcile": "✔",
 
 
     "PricedItemEditor-prompt_cancel_title": "Confirm Cancel",

@@ -278,6 +278,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             contextMenuItems = dropdownInfo.items;
         }
 
+        const columns = [];
+
         return <PricedItemsList
             accessor={accessor}
             pricedItemTypeName={tabEntry.pricedItemTypeName}
@@ -286,6 +288,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                     tabEntry.pricedItemTypeName)}
             onChoosePricedItem={(pricedItemId) => 
                 this.onChoosePricedItem(tabEntry.tabId, pricedItemId)}
+            columns={columns}
             hiddenPricedItemIds={tabEntry.hiddenPricedItemIds}
             showHiddenPricedItems={tabEntry.showHiddenPricedItems}
             contextMenuItems={contextMenuItems}

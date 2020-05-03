@@ -55,6 +55,28 @@
 /** End util-ui/Dropdown.jsx */
 
 
+/** Needed for util-ui/MenuList.jsx */
+.dropdown-submenu {
+    position: relative;
+}
+
+/* This puts a right pointing arrow at the right side */
+.dropdown-submenu a::after {
+    transform: rotate(-90deg);
+    position: absolute;
+    right: 6px;
+    top: .8em;
+}
+
+.dropdown-submenu .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-left: .1rem;
+    margin-right: .1rem;
+}
+/** End util-ui/MenuList.jsx */
+
+
 .field-input-form-control {
     flex: 1 1 0%;
     width: 100%;

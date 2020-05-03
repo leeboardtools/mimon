@@ -12,6 +12,52 @@ import { QuantityDisplay } from '../util-ui/QuantityDisplay';
 import deepEqual from 'deep-equal';
 
 
+let columnInfoDefs;
+
+/**
+ * @returns {CollapsibleRowTable~ColInfo[]} Array containing the available
+ * columns for accounts lists.
+ */
+export function getAccountsListColumnInfoDefs() {
+    if (!columnInfoDefs) {
+        const cellClassName = 'm-0';
+
+        columnInfoDefs = {
+            name: { key: 'name',
+                label: userMsg('AccountsList-name'),
+                ariaLabel: 'Name',
+                propertyName: 'name',
+                className: 'w-50',
+                cellClassName: cellClassName,
+            },
+            type: { key: 'type',
+                label: userMsg('AccountsList-type'),
+                ariaLabel: 'Account Type',
+                propertyName: 'type',
+                className: '',
+                cellClassName: cellClassName,
+            },
+            balance: { key: 'balance',
+                label: userMsg('AccountsList-balance'),
+                ariaLabel: 'Account Balance',
+                propertyName: 'balance',
+                className: 'text-center',
+                cellClassName: cellClassName,
+            },
+            shares: { key: 'shares',
+                label: userMsg('AccountsList-shares'),
+                ariaLabel: 'Shares',
+                propertyName: 'shares',
+                className: 'text-center',
+                cellClassName: cellClassName,
+            },
+        };
+    }
+
+    return columnInfoDefs;
+}
+
+
 /**
  * Component for displaying a list of accounts.
  */
@@ -32,39 +78,27 @@ export class AccountsList extends React.Component {
 
         const { accessor } = this.props;
 
-        const cellClassName = 'm-0';
+        const columnInfoDefs = getAccountsListColumnInfoDefs();
+
+        const columnInfos = [];
+        const { columns } = props;
+        if (columns) {
+            for (let name of columns) {
+                const columnInfo = columnInfoDefs[name];
+                if (columnInfo) {
+                    columnInfos.push(columnInfo);
+                }
+            }
+        }
+
+        if (!columnInfos.length) {
+            for (let name in columnInfoDefs) {
+                columnInfos.push(columnInfoDefs[name]);
+            }
+        }
+
         this.state = {
-            columnInfos: [
-                { key: 'name',
-                    label: userMsg('AccountsList-name'),
-                    ariaLabel: 'Name',
-                    propertyName: 'name',
-                    className: 'w-50',
-                    cellClassName: cellClassName,
-                },
-                { key: 'type',
-                    label: userMsg('AccountsList-type'),
-                    ariaLabel: 'Account Type',
-                    propertyName: 'type',
-                    className: '',
-                    cellClassName: cellClassName,
-                },
-                { key: 'balance',
-                    label: userMsg('AccountsList-balance'),
-                    ariaLabel: 'Account Balance',
-                    propertyName: 'balance',
-                    className: 'text-center',
-                    cellClassName: cellClassName,
-                },
-                { key: 'shares',
-                    label: userMsg('AccountsList-shares'),
-                    ariaLabel: 'Shares',
-                    propertyName: 'shares',
-                    className: 'text-center',
-                    cellClassName: cellClassName,
-                },
-                // Quantity (for lots)
-            ],
+            columnInfos: columnInfos,
             topLevelAccountIds: [
                 accessor.getRootAssetAccountId(),
                 accessor.getRootLiabilityAccountId(),
@@ -452,6 +486,7 @@ AccountsList.propTypes = {
     onChooseAccount: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
+    columns: PropTypes.arrayOf(PropTypes.string),
     hiddenRootAccountTypes: PropTypes.arrayOf(PropTypes.string),
     hiddenAccountIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenAccounts: PropTypes.bool,

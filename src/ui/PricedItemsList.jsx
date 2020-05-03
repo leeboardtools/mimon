@@ -8,29 +8,18 @@ import deepEqual from 'deep-equal';
 import { getQuantityDefinition } from '../util/Quantities';
 
 
+let columnInfoDefs;
+
 /**
- * Component for displaying a list of priced items.
+ * @returns {CollapsibleRowTable~ColInfo[]} Array containing the available
+ * columns for priced item lists.
  */
-export class PricedItemsList extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.onPricedItemAdd = this.onPricedItemAdd.bind(this);
-        this.onPricedItemModify = this.onPricedItemModify.bind(this);
-        this.onPricedItemRemove = this.onPricedItemRemove.bind(this);
-
-        this.onRenderCell = this.onRenderCell.bind(this);
-        this.onGetRowAtIndex = this.onGetRowAtIndex.bind(this);
-        this.onActivateRow = this.onActivateRow.bind(this);
-        this.onOpenRow = this.onOpenRow.bind(this);
-
-        const { pricedItemTypeName } = this.props;
-        const pricedItemType = PI.getPricedItemType(pricedItemTypeName);
-
+export function getPricedItemsListColumnInfoDefs() {
+    if (!columnInfoDefs) {
         const cellClassName = 'm-0';
         const inputClassExtras = 'text-center';
 
-        this._columnInfoDefs = {
+        columnInfoDefs = columnInfoDefs = {
             name: { key: 'name',
                 label: userMsg('PricedItemsList-name'),
                 ariaLabel: 'Name',
@@ -78,17 +67,55 @@ export class PricedItemsList extends React.Component {
                 inputClassExtras: inputClassExtras,
             }
         };
+    }
+
+    return columnInfoDefs;
+}
+
+
+/**
+ * Component for displaying a list of priced items.
+ */
+export class PricedItemsList extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.onPricedItemAdd = this.onPricedItemAdd.bind(this);
+        this.onPricedItemModify = this.onPricedItemModify.bind(this);
+        this.onPricedItemRemove = this.onPricedItemRemove.bind(this);
+
+        this.onRenderCell = this.onRenderCell.bind(this);
+        this.onGetRowAtIndex = this.onGetRowAtIndex.bind(this);
+        this.onActivateRow = this.onActivateRow.bind(this);
+        this.onOpenRow = this.onOpenRow.bind(this);
+
+        const { pricedItemTypeName } = this.props;
+        const pricedItemType = PI.getPricedItemType(pricedItemTypeName);
+
+        const columnInfoDefs = getPricedItemsListColumnInfoDefs();
 
         const columnInfos = [];
-        if (pricedItemType.hasTickerSymbol) {
-            columnInfos.push(this._columnInfoDefs.ticker);
-            columnInfos.push(this._columnInfoDefs.onlineSource);
+        const { columns } = props;
+        if (columns) {
+            for (let name of columns) {
+                const columnInfo = columnInfoDefs[name];
+                if (columnInfo) {
+                    columnInfos.push(columnInfo);
+                }
+            }
         }
 
-        columnInfos.push(this._columnInfoDefs.name);
-        columnInfos.push(this._columnInfoDefs.description);
-        columnInfos.push(this._columnInfoDefs.currency);
-        columnInfos.push(this._columnInfoDefs.quantityDefinition);
+        if (!columnInfos.length) {
+            if (pricedItemType.hasTickerSymbol) {
+                columnInfos.push(columnInfoDefs.ticker);
+                columnInfos.push(columnInfoDefs.onlineSource);
+            }
+
+            columnInfos.push(columnInfoDefs.name);
+            columnInfos.push(columnInfoDefs.description);
+            columnInfos.push(columnInfoDefs.currency);
+            columnInfos.push(columnInfoDefs.quantityDefinition);
+        }
 
 
         this._hiddenPricedItemIds = new Set();
@@ -454,6 +481,7 @@ PricedItemsList.propTypes = {
     onChoosePricedItem: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
+    columns: PropTypes.arrayOf(PropTypes.string),
     hiddenPricedItemIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenPricedItems: PropTypes.bool,
     showPricedItemIds: PropTypes.bool,

@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+
 /**
  * Component for a menu list. This is used by {@link Dropdown} for its drop down
  * menu and by {@link ContextMenu} for the menu.
@@ -18,7 +19,6 @@ export class MenuList extends React.Component {
             this._menuRef.current.focus();
         }
     }
-
 
     componentWillUnmount() {
     }
@@ -67,6 +67,19 @@ export class MenuList extends React.Component {
             }
             else {
                 itemComponent = item.label;
+            }
+
+            if (item.subMenuItems) {
+                // TODO: Not yet supported, remove the disabled once submenus work...
+                return <div className="dropdown-submenu"
+                    key={item.id}
+                >
+                    <a className="dropdown-item dropdown-toggle disabled" href="#">
+                        {itemComponent}</a>
+                    <MenuList 
+                        items={item.subMenuItems}
+                    />
+                </div>;
             }
 
             return <a className={className}
