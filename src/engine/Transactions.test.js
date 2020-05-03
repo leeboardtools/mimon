@@ -1134,24 +1134,25 @@ test('Transactions-accountStateUpdates', async () => {
     const settingsB = { 
         ymdDate: '2010-01-05', 
         splits: [ 
-            { accountId: sys.checkingId, 
-                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
-                quantityBaseValue: -200, 
-            },
             { accountId: sys.cashId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: 200, 
             },
+            { accountId: sys.checkingId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: -200, 
+            },
         ]};
     const checkingQuantityBaseValueB 
-        = checkingQuantityBaseValueA + settingsB.splits[0].quantityBaseValue;
+        = checkingQuantityBaseValueA + settingsB.splits[1].quantityBaseValue;
 
     const settingsC = { 
         ymdDate: '2010-01-10', 
         splits: [ 
             { accountId: sys.checkingId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
-                quantityBaseValue: -300, },
+                quantityBaseValue: -300, 
+            },
             { accountId: sys.cashId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: 300, 
@@ -1216,25 +1217,52 @@ test('Transactions-accountStateUpdates', async () => {
         }]);
     
 
-    expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
+    expect(await transactionManager.asyncGetAccountStateAndTransactionDataItems(
         sys.checkingId, transC.id, transA.id)).toEqual(
         [
-            { ymdDate: settingsA.ymdDate, quantityBaseValue: checkingQuantityBaseValueA },
-            { ymdDate: settingsB.ymdDate, quantityBaseValue: checkingQuantityBaseValueB },
-            { ymdDate: settingsC.ymdDate, quantityBaseValue: checkingQuantityBaseValueC },
+            {
+                accountStateDataItem:
+                    { ymdDate: settingsA.ymdDate, 
+                        quantityBaseValue: checkingQuantityBaseValueA },
+                transactionDataItem: transA,
+                splitIndex: 0,
+            },
+            {
+                accountStateDataItem:
+                    { ymdDate: settingsB.ymdDate, 
+                        quantityBaseValue: checkingQuantityBaseValueB },
+                transactionDataItem: transB,
+                splitIndex: 1,
+            },
+            {
+                accountStateDataItem:
+                    { ymdDate: settingsC.ymdDate, 
+                        quantityBaseValue: checkingQuantityBaseValueC },
+                transactionDataItem: transC,
+                splitIndex: 0,
+            },
         ]);
 
-    expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
-        sys.checkingId, transA.id, transC.id)).toEqual(
+    expect(await transactionManager.asyncGetAccountStateAndTransactionDataItems(
+        sys.checkingId, transB.id, transC.id)).toEqual(
         [
-            { ymdDate: initialYMDDate, 
-                quantityBaseValue: sys.checkingOBQuantityBaseValue 
+            {
+                accountStateDataItem:
+                    { ymdDate: settingsB.ymdDate, 
+                        quantityBaseValue: checkingQuantityBaseValueB },
+                transactionDataItem: transB,
+                splitIndex: 1,
             },
-            { ymdDate: settingsA.ymdDate, quantityBaseValue: checkingQuantityBaseValueA },
-            { ymdDate: settingsB.ymdDate, quantityBaseValue: checkingQuantityBaseValueB },
+            {
+                accountStateDataItem:
+                    { ymdDate: settingsC.ymdDate, 
+                        quantityBaseValue: checkingQuantityBaseValueC },
+                transactionDataItem: transC,
+                splitIndex: 0,
+            },
         ]);
     
-    
+
     //  a: '2010-01-01', -100
     //  b: '2010-01-05', -200
     //  c: '2010-01-10', -300
@@ -1247,7 +1275,7 @@ test('Transactions-accountStateUpdates', async () => {
     const checkingQuantityBaseValueCa 
         = checkingQuantityBaseValueA + settingsC.splits[0].quantityBaseValue;
     const checkingQuantityBaseValueBa 
-        = checkingQuantityBaseValueCa + settingsB.splits[0].quantityBaseValue;
+        = checkingQuantityBaseValueCa + settingsB.splits[1].quantityBaseValue;
 
     //  a: '2010-01-01', -100,  99900
     //  c: '2010-01-04', -300,  99600
