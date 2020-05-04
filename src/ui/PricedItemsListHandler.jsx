@@ -230,7 +230,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
     
     onChoosePricedItem(tabId, pricedItemId) {
-        this.openPricedItemRegister(pricedItemId);
+        //this.openPricedItemRegister(pricedItemId);
     }
 
 
