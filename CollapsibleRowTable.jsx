@@ -327,10 +327,14 @@ export class CollapsibleRowTable extends React.Component {
         const tableHeader = this.renderTableHeader();
         const tableBody = this.renderTableBody();
         const contextMenu = this.renderContextMenu();
+
+        const tableClassName = 'table table-sm text-left table-hover pl-0 pr-0 '
+            + (this.props.tableClassExtras || '');
+
         return <div className=""
             onContextMenu={(e) => this.onContextMenu(e)}
         >
-            <table className="table table-sm text-left table-hover pl-0 pr-0" 
+            <table className={tableClassName}
             >
                 {tableHeader}
                 {tableBody}
@@ -470,6 +474,7 @@ CollapsibleRowTable.propTypes = {
     columnInfos: PropTypes.array.isRequired,
     rowEntries: PropTypes.array.isRequired,
     activeRowKey: PropTypes.string,
+    tableClassExtras: PropTypes.string,
     onRenderCell: PropTypes.func.isRequired,
     onGetRowExpandCollapseState: PropTypes.func,
     onGetRowExtras: PropTypes.func,

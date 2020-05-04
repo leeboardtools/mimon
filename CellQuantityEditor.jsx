@@ -1,21 +1,23 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { getQuantityDefinition } from '../util/Quantities';
 
 /**
  * React component for editing text in a table cell. Works with 
  * {@link RowEditCollapsibleTable}, return from the
- * {@link RowEditTable~onRenderEditCell} callback. {@link CellTextDisplay} 
+ * {@link RowEditTable~onRenderEditCell} callback. {@link CellQuantityDisplay} 
  * would then normally be returned from the
  * {@link RowEditTable~onRenderDisplayCell} callback.
  * @class
  */
-export const CellTextEditor = React.forwardRef(
-    function CellTextEditorImpl(props, ref) {
+/*
+export const CellQuantityEditor = React.forwardRef(
+    function CellQuantityEditorImpl(props, ref) {
         const { ariaLabel, value, inputClassExtras, errorMsg, size,
             onChange, onFocus, onBlur, disabled } = props;
 
         const divClassName = 'input-group mb-0 ';
-        let className = 'form-control cellTextEditor-textInput ' 
+        let className = 'form-control cellQuantityEditor-textInput ' 
             + (inputClassExtras || '');
 
         const inputType = props.inputType || 'text';
@@ -43,10 +45,11 @@ export const CellTextEditor = React.forwardRef(
         </div>;
     }
 );
+*/
 
 
 /**
- * @typedef {object} CellTextEditor~propTypes
+ * @typedef {object} CellQuantityEditor~propTypes
  * @property {string}   [ariaLabel]
  * @property {string}   [value]
  * @property {string}   [inputClassExtras]  If specified additional CSS
@@ -62,7 +65,8 @@ export const CellTextEditor = React.forwardRef(
  * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
  * @property {boolean} [disabled]
  */
-CellTextEditor.propTypes = {
+/*
+CellQuantityEditor.propTypes = {
     ariaLabel: PropTypes.string,
     value: PropTypes.string,
     inputType: PropTypes.string,
@@ -74,29 +78,39 @@ CellTextEditor.propTypes = {
     onBlur: PropTypes.func,
     disabled: PropTypes.bool,
 };
-
+*/
 
 /**
- * React component that's a display representation of {@link CellTextEditor},
+ * React component that's a display representation of {@link CellQuantityEditor},
  * for use with {@link RowEditCollapsibleTable~onRenderDisplayCell}.
  * @param {*} props 
  */
-export function CellTextDisplay(props) {
-    const { ariaLabel, value, inputClassExtras, size } = props;
-    const inputType = props.inputType || 'text';
+export function CellQuantityDisplay(props) {
+    const { ariaLabel, quantityBaseValue, 
+        inputClassExtras, size } = props;
+    const quantityDefinition 
+        = getQuantityDefinition(props.quantityDefinition);
+
+    let value;
+    if (!quantityDefinition || (quantityBaseValue === undefined)) {
+        value = '';
+    }
+    else {
+        value = quantityDefinition.baseValueToValueText(quantityBaseValue);
+    }
 
     const divClassName = 'input-group mb-0 ';
     const className = 'form-control cellTextEditor-textInput cellTextEditor-textDisplay ' 
         + (inputClassExtras || '');
-
+    
     return <div className={divClassName}>
-        <input type={inputType}
+        <input type="text"
             className={className}
             aria-label={ariaLabel}
             style={{backgroundColor: 'inherit'}}
             size={size}
             disabled
-            value={value || ''}
+            value={value}
             onChange={() => {}}
         />
     </div>;
@@ -104,15 +118,19 @@ export function CellTextDisplay(props) {
 
 
 /**
- * @typedef {object} CellTextDisplay~propTypes
+ * @typedef {object} CellQuantityDisplay~propTypes
  * @property {string}   [ariaLabel]
  * @property {string}   [value]
  * @property {string}   [inputClassExtras]  If specified additional CSS
  * classes to add to the &lt;input&gt; entity.
  */
-CellTextDisplay.propTypes = {
+CellQuantityDisplay.propTypes = {
     ariaLabel: PropTypes.string,
-    value: PropTypes.string,
+    quantityBaseValue: PropTypes.number,
+    quantityDefinition: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.object,
+    ]),
     inputClassExtras: PropTypes.string,
     size: PropTypes.number,
     inputType: PropTypes.string,
