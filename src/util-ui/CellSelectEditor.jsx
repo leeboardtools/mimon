@@ -55,7 +55,10 @@ export const CellSelectEditor = React.forwardRef(
 /**
  * @typedef {object} CellSelectEditor~propTypes
  * @property {string}   [selectedValue]
- * @property {string[]|Array[]} items The array of items to be displayed.
+ * @property {string[]|Array[]} items The array of items to be displayed. This may either
+ * be an array of the strings to display or an array of two element sub-arrays, the
+ * first element is the key and the second element is the text to display for that
+ * item.
  * @property {string}   [errorMsg]  If defined an error message to be displayed
  * beneath the selector.
  * @property {string}   [ariaLabel]
@@ -92,7 +95,7 @@ CellSelectEditor.propTypes = {
  * @class
  */
 export function CellSelectDisplay(props) {
-    const { selectedValue, ariaLabel, classExtras, } = props;
+    const { selectedValue, ariaLabel, classExtras, size, } = props;
 
     const divClassName = 'input-group mb-0 ';
     const className = 'form-control cellTextEditor-textInput cellTextEditor-textDisplay ' 
@@ -103,6 +106,7 @@ export function CellSelectDisplay(props) {
             className={className}
             aria-label={ariaLabel}
             style={{backgroundColor: 'inherit'}}
+            size={size}
             disabled
             value={selectedValue || ''}
             onChange={() => {}}
@@ -120,4 +124,5 @@ CellSelectDisplay.propTypes = {
     selectedValue: PropTypes.string,
     ariaLabel: PropTypes.string,
     classExtras: PropTypes.string,
+    size: PropTypes.number,
 };

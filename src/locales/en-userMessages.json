@@ -31,6 +31,8 @@
     "NewFileSetup-addOpeningBalance_failed": ["The opening balance of '", "' could not be set to '", "'. ", ""],
     "NewFileSetup-pricedItem_not_found": ["The priced item '", "' was not defined."],
     "NewFileSetup-openingBalance_Description": "Opening balance",
+    "NewFileSetup-addTransaction_failed": ["Could not creeate the transaction '", "'."],
+    "NewFileSetup-addTransaction_invalid_accountId": ["An account identified by '", "' was not found."],
     
 
     "App-mru_open_failed": ["Could not open '", "'. ", ""],
@@ -153,6 +155,10 @@
     "AccountRegister-balance": "Balance",
     "AccountRegister-shares": "Shares",
     "AccountRegister-reconcile": "✔",
+    "AccountRegister-multi_splits": "-Split-",
+    "AccountRegister-reconcile_NOT_RECONCILED": "",
+    "AccountRegister-reconcile_PENDING": "c",
+    "AccountRegister-reconcile_RECONCILED": "R",
 
 
     "PricedItemEditor-prompt_cancel_title": "Confirm Cancel",

@@ -4,18 +4,19 @@ import PropTypes from 'prop-types';
 /**
  * React component for editing text in a table cell. Works with 
  * {@link RowEditCollapsibleTable}, return from the
- * {@link RowEditTable~onRenderEditCell} callback. {@link CellTextDisplay} 
+ * {@link RowEditTable~onRenderEditCell} callback. {@link CellDateDisplay} 
  * would then normally be returned from the
  * {@link RowEditTable~onRenderDisplayCell} callback.
  * @class
  */
-export const CellTextEditor = React.forwardRef(
-    function CellTextEditorImpl(props, ref) {
+/*
+export const CellDateEditor = React.forwardRef(
+    function CellDateEditorImpl(props, ref) {
         const { ariaLabel, value, inputClassExtras, errorMsg, size,
             onChange, onFocus, onBlur, disabled } = props;
 
         const divClassName = 'input-group mb-0 ';
-        let className = 'form-control cellTextEditor-textInput ' 
+        let className = 'form-control cellDateEditor-textInput ' 
             + (inputClassExtras || '');
 
         const inputType = props.inputType || 'text';
@@ -43,10 +44,10 @@ export const CellTextEditor = React.forwardRef(
         </div>;
     }
 );
-
+*/
 
 /**
- * @typedef {object} CellTextEditor~propTypes
+ * @typedef {object} CellDateEditor~propTypes
  * @property {string}   [ariaLabel]
  * @property {string}   [value]
  * @property {string}   [inputClassExtras]  If specified additional CSS
@@ -62,7 +63,8 @@ export const CellTextEditor = React.forwardRef(
  * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
  * @property {boolean} [disabled]
  */
-CellTextEditor.propTypes = {
+/*
+CellDateEditor.propTypes = {
     ariaLabel: PropTypes.string,
     value: PropTypes.string,
     inputType: PropTypes.string,
@@ -74,14 +76,14 @@ CellTextEditor.propTypes = {
     onBlur: PropTypes.func,
     disabled: PropTypes.bool,
 };
-
+*/
 
 /**
- * React component that's a display representation of {@link CellTextEditor},
+ * React component that's a display representation of {@link CellDateEditor},
  * for use with {@link RowEditCollapsibleTable~onRenderDisplayCell}.
  * @param {*} props 
  */
-export function CellTextDisplay(props) {
+export function CellDateDisplay(props) {
     const { ariaLabel, value, inputClassExtras, size } = props;
     const inputType = props.inputType || 'text';
 
@@ -104,13 +106,13 @@ export function CellTextDisplay(props) {
 
 
 /**
- * @typedef {object} CellTextDisplay~propTypes
+ * @typedef {object} CellDateDisplay~propTypes
  * @property {string}   [ariaLabel]
  * @property {string}   [value]
  * @property {string}   [inputClassExtras]  If specified additional CSS
  * classes to add to the &lt;input&gt; entity.
  */
-CellTextDisplay.propTypes = {
+CellDateDisplay.propTypes = {
     ariaLabel: PropTypes.string,
     value: PropTypes.string,
     inputClassExtras: PropTypes.string,

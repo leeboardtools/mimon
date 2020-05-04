@@ -398,19 +398,48 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
 
 
 - Next Up:
-    - Account Editor
-
     - NewFileConfigurator.jsx
         - Change opening balance renderer to use a CellQuantityEditor/Display.
     
+    - Account Editor
+
     - Accounts List
         - Want quantity, market value, cost basis, cash-in columns
+        - Ability to show/hide columns, reorder them.
+        - Custom Account Lists
 
     - Priced Item List
+        - Custom Priced Item Lists
+
+    - Priced Item Editor
     
     - Securites/Mutual Fund List
         - Want quantity, market value, cost basis, cash-in columns
+        - Ability to show/hide columns, reorder them.
 
 
+    - Prices List
 
 
+    - Account Register
+        - Fields:
+            - Single line:
+                Date | Reconcile | Ref/Check # | Payee | Split | Deposit | Withdrawal | Balance
+        - Tool tips:
+            - Memo on Description
+            - Split amounts on Split
+        - Virtual scrolling:
+            - https://dev.to/adamklein/build-your-own-virtual-scroll-part-i-11ib
+        
+        - Need QuantityDefinition editor/display
+        - Date editor
+            - Still problems with not being able to control text-align, size.
+
+
+    - Get Sub-menus working in MenuList, etc.
+        - View Columns menus.
+    
+
+    - NewFileSetup.js
+        - Finish adding support for Prices
+        - Add test prices to CreateTestTransactions.js

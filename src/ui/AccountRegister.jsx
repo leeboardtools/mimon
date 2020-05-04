@@ -1,6 +1,115 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-//import { userMsg } from '../util/UserMessages';
+import { userMsg } from '../util/UserMessages';
+import { RowEditCollapsibleTable } from '../util-ui/RowEditTable';
+import { CellTextDisplay } from '../util-ui/CellTextEditor';
+import { CellSelectDisplay } from '../util-ui/CellSelectEditor';
+import { CellDateDisplay } from '../util-ui/CellDateEditor';
+import { CellQuantityDisplay } from '../util-ui/CellQuantityEditor';
+import { getCurrency } from '../util/Currency';
+import * as A from '../engine/Accounts';
+import * as T from '../engine/Transactions';
+import deepEqual from 'deep-equal';
+
+
+const allColumnInfoDefs = {};
+
+/**
+ * @returns {CollapsibleRowTable~ColInfo[]} Array containing the available
+ * columns for account registers.
+ */
+export function getAccountRegisterColumnInfoDefs(accountType) {
+    accountType = A.getAccountType(accountType);
+
+    let columnInfoDefs = allColumnInfoDefs[accountType.name];
+    if (!columnInfoDefs) {
+        const cellClassName = 'm-0';
+
+        const numericClassName = 'text-right';
+        columnInfoDefs = {
+            date: { key: 'date',
+                label: userMsg('AccountRegister-date'),
+                ariaLabel: 'Date',
+                propertyName: 'date',
+                className: 'text-center',
+                inputClassName: 'text-center',
+                cellClassName: cellClassName,
+            },
+            refNum: { key: 'refNum',
+                label: userMsg('AccountRegister-refNum'),
+                ariaLabel: 'Number',
+                propertyName: 'refNum',
+                className: 'text-right',
+                inputClassName: 'text-right',
+                inputSize: 10,
+                cellClassName: cellClassName,
+            },
+            description: { key: 'description',
+                label: userMsg('AccountRegister-description'),
+                ariaLabel: 'Description',
+                propertyName: 'description',
+                className: 'w-auto',
+                cellClassName: cellClassName,
+            },
+            splits: { key: 'split',
+                label: userMsg('AccountRegister-split'),
+                ariaLabel: 'Split',
+                propertyName: 'split',
+                className: '',
+                cellClassName: cellClassName,
+            },
+            reconcile: { key: 'reconcile',
+                label: userMsg('AccountRegister-reconcile'),
+                ariaLabel: 'Reconciled',
+                propertyName: 'reconcile',
+                className: 'text-center',
+                inputSize: 2,
+                cellClassName: cellClassName,
+            },
+            debit: { key: 'debit',
+                label: accountType.debitLabel,
+                ariaLabel: accountType.debitLabel,
+                propertyName: 'debit',
+                className: numericClassName,
+                cellClassName: cellClassName,
+            },
+            credit: { key: 'credit',
+                label: accountType.creditLabel,
+                ariaLabel: accountType.creditLabel,
+                propertyName: 'credit',
+                className: numericClassName,
+                cellClassName: cellClassName,
+            },
+            balance: { key: 'balance',
+                label: userMsg('AccountRegister-balance'),
+                ariaLabel: 'Account Balance',
+                propertyName: 'balance',
+                className: numericClassName,
+                cellClassName: cellClassName,
+            },
+        };
+
+        if (accountType.hasShares) {
+            // Need to think about this more, what exactly do we want to display
+            // when there are shares involved.
+            //  - market value? 
+            //  - cost basis?
+            //  - shares?
+            // Also, how does this affect the debit and credit columns?
+            columnInfoDefs.shares = { key: 'shares',
+                label: userMsg('AccountRegister-shares'),
+                ariaLabel: 'Shares',
+                propertyName: 'shares',
+                className: numericClassName,
+                cellClassName: cellClassName,
+            };
+        }
+
+        allColumnInfoDefs[accountType.name] = columnInfoDefs;
+    }
+
+    return columnInfoDefs;
+}
 
 
 /**
@@ -9,20 +118,604 @@ import PropTypes from 'prop-types';
 export class AccountRegister extends React.Component {
     constructor(props) {
         super(props);
+
+        this.onTransactionAdd = this.onTransactionAdd.bind(this);
+        this.onTransactionModify = this.onTransactionModify.bind(this);
+        this.onTransactionRemove = this.onTransactionRemove.bind(this);
+
+        this.onLoadRowEntries = this.onLoadRowEntries.bind(this);
+
+        this.onStartEditRow = this.onStartEditRow.bind(this);
+        this.onCancelEditRow = this.onCancelEditRow.bind(this);
+        this.asyncOnSaveEditRow = this.asyncOnSaveEditRow.bind(this);
+        this.onRenderDisplayCell = this.onRenderDisplayCell.bind(this);
+        this.onRenderEditCell = this.onRenderEditCell.bind(this);
+
+        this.onGetRowAtIndex = this.onGetRowAtIndex.bind(this);
+        this.onActivateRow = this.onActivateRow.bind(this);
+
+        const { accountId, accessor } = this.props;
+        const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+        const accountType = A.getAccountType(accountDataItem.type);
+
+        const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
+            accountDataItem.pricedItemId);
+
+        const columnInfoDefs = getAccountRegisterColumnInfoDefs(accountType);
+
+        const columnInfos = [];
+        const { columns } = props;
+
+        if (columns) {
+            for (let name of columns) {
+                const columnInfo = columnInfoDefs[name];
+                if (columnInfo) {
+                    columnInfos.push(columnInfo);
+                }
+            }
+        }
+
+        if (!columnInfos.length) {
+            for (let name in columnInfoDefs) {
+                columnInfos.push(columnInfoDefs[name]);
+            }
+        }
+
+
+        this._hiddenTransactionIds = new Set();
+
+        this._reconcileItems = [
+            [T.ReconcileState.NOT_RECONCILED.name, 
+                T.ReconcileState.NOT_RECONCILED.description],
+            [T.ReconcileState.PENDING.name, 
+                T.ReconcileState.PENDING.description],
+            [T.ReconcileState.RECONCILED.name, 
+                T.ReconcileState.RECONCILED.description],
+        ];
+
+        this.state = {
+            accountType: accountType,
+            columnInfos: columnInfos,
+            rowEntries: [],
+            rowEntriesByTransactionId: new Map(),
+            currency: pricedItemDataItem.currency,
+            quantityDefinition: pricedItemDataItem.quantityDefinition,
+        };
+
+        this.updateRowEntries();
     }
 
+
+    onTransactionAdd(result) {
+        const { newTransactionDataItem } = result;
+        const key = {
+            id: newTransactionDataItem.id,
+            ymdDate: newTransactionDataItem.ymdDate,
+        };
+
+        if (this.isTransactionKeyDisplayed(key)) {
+            this.updateRowEntries(key);
+        }
+    }
+
+    
+    onTransactionModify(result) {
+        const { newTransactionDataItem } = result;
+        const { id } = newTransactionDataItem;
+        if (this.state.rowEntriesByTransactionId.has(id)) {
+            const key = {
+                id: id,
+                ymdDate: newTransactionDataItem.ymdDate,
+            };
+            this.updateRowEntries(key);
+        }
+    }
+
+
+    onTransactionRemove(result) {
+        const { removedTransactionDataItem } = result;
+        const { id } = removedTransactionDataItem;
+        if (this.state.rowEntriesByTransactionId.has(id)) {
+            const key = {
+                id: id,
+                ymdDate: removedTransactionDataItem.ymdDate,
+            };
+            this.updateRowEntries(key);
+        }
+    }
+
+
+    componentDidMount() {
+        this.props.accessor.on('pricedItemAdd', this.onTransactionAdd);
+        this.props.accessor.on('pricedItemModify', this.onTransactionModify);
+        this.props.accessor.on('pricedItemRemove', this.onTransactionRemove);
+    }
+
+    componentWillUnmount() {
+        this.props.accessor.off('pricedItemAdd', this.onTransactionAdd);
+        this.props.accessor.off('pricedItemModify', this.onTransactionModify);
+        this.props.accessor.off('pricedItemRemove', this.onTransactionRemove);
+    }
+
+
+    componentDidUpdate(prevProps) {
+        let rowsNeedUpdating = false;
+        const { hiddenTransactionIds, 
+            showHiddenTransactions } = this.props;
+
+        if (!deepEqual(prevProps.hiddenTransactionIds, hiddenTransactionIds)) {
+            this._hiddenTransactionIds = new Set(hiddenTransactionIds);
+            rowsNeedUpdating = true;
+        }
+
+        if (prevProps.showHiddenTransactions !== showHiddenTransactions) {
+            rowsNeedUpdating = true;
+        }
+
+        if (rowsNeedUpdating) {
+            this.updateRowEntries();
+        }
+    }
+
+
+    updateRowEntries(modifiedTransactionKey) {
+        process.nextTick(async () => {
+            const newRowEntries = [];
+            const newRowEntriesByTransactionIds = new Map();
+
+            const modifiedId = (modifiedTransactionKey) 
+                ? modifiedTransactionKey.id : undefined;
+
+            const { accessor, accountId } = this.props;
+            const transactionKeys 
+                = await accessor.asyncGetSortedTransactionKeysForAccount(
+                    accountId, true);
+            
+            const { rowEntriesByTransactionId } = this.state;
+            transactionKeys.forEach((key) => {
+                if (!this.isTransactionKeyDisplayed(key)) {
+                    return;
+                }
+
+                const { splitCount } = key;
+
+                for (let splitOccurrance = 0; splitOccurrance < splitCount; 
+                    ++splitOccurrance) {
+                    const rowEntry = {
+                        key: key.id.toString() + '_' + splitOccurrance,
+                        index: newRowEntries.length,
+                        transactionId: key.id,
+                        splitOccurrance: splitOccurrance,
+                    };
+                    if (modifiedId !== key.id) {
+                        const existingRowEntry = rowEntriesByTransactionId.get(key.id);
+                        if (existingRowEntry) {
+                            rowEntry.transactionDataItem 
+                                = existingRowEntry.transactionDataItem;
+                            rowEntry.accountState = existingRowEntry.accountState;
+                        }
+                    }
+                    newRowEntries.push(rowEntry);
+
+                    const transactionRowEntries 
+                        = newRowEntriesByTransactionIds.get(key.id);
+                    if (!transactionRowEntries) {
+                        newRowEntriesByTransactionIds.set(key.id, [rowEntry]);
+                    }
+                    else {
+                        transactionRowEntries.push(rowEntry);
+                    }
+                }
+            });
+
+            this.setState({
+                rowEntries: newRowEntries,
+                rowEntriesByTransactionId: newRowEntriesByTransactionIds,
+            });
+        });
+    }
+
+
+    onLoadRowEntries(startRowIndex, rowCount) {
+        const { accessor } = this.props;
+        const { rowEntries } = this.state;
+
+        let needsLoading = false;
+        const lastRowIndex = startRowIndex + rowCount - 1;
+        for (let i = startRowIndex; i <= lastRowIndex; ++i) {
+            const rowEntry = rowEntries[i];
+            if (!rowEntry.accountStateDataItem) {
+                needsLoading = true;
+                break;
+            }
+        }
+
+        if (!needsLoading) {
+            return;
+        }
+
+        const { accountId } = this.props;
+        const transactionIdA = rowEntries[startRowIndex].transactionId;
+        const transactionIdB = rowEntries[lastRowIndex].transactionId;
+
+        process.nextTick(async () => {
+            console.log('loading transactions: ' + startRowIndex + ' ' + lastRowIndex);
+
+            const results = await accessor.asyncGetAccountStateAndTransactionDataItems(
+                accountId, transactionIdA, transactionIdB);
+            
+            if (this.state.rowEntries !== rowEntries) {
+                // Uh-oh, we're out of sync...
+                console.log('Out of sync, rowEntries has changed...');
+                return;
+            }
+
+            const newRowEntries = Array.from(this.state.rowEntries);
+            const newRowEntriesByTransactionIds 
+                = new Map(this.state.rowEntriesByTransactionId);
+
+            let resultIndex = 0;
+            for (let rowIndex = startRowIndex; rowIndex <= lastRowIndex; 
+                ++rowIndex, ++resultIndex) {
+                const newRowEntry = Object.assign({}, rowEntries[rowIndex]);
+                const id = newRowEntry.transactionId;
+                const { splitOccurrance } = newRowEntry;
+
+                // We need to look out for skipped transactions and also the possibility
+                // that we're now out of sync...
+                let resultEntry;
+                for (; resultIndex < results.length; ++resultIndex) {
+                    resultEntry = results[resultIndex];
+                    if ((splitOccurrance === resultEntry.splitOccurrance)
+                     && (id === resultEntry.transactionDataItem.id)) {
+                        break;
+                    }
+                }
+                if (resultIndex >= results.length) {
+                    // Uh-oh, must be out of sync...
+                    console.log('Out of sync...');
+                    return;
+                }
+                
+                newRowEntry.accountStateDataItem = resultEntry.accountStateDataItem;
+                newRowEntry.transactionDataItem = resultEntry.transactionDataItem;
+                newRowEntry.splitIndex = resultEntry.splitIndex;
+
+                newRowEntries[rowIndex] = newRowEntry;
+                let transactionIdRowEntries 
+                    = Array.from(newRowEntriesByTransactionIds.get(id));
+                transactionIdRowEntries[newRowEntry.splitOccurrance]
+                    = newRowEntry;
+                newRowEntriesByTransactionIds.set(id, transactionIdRowEntries);
+            }
+
+            console.log('loaded...');
+            this.setState({
+                rowEntries: newRowEntries,
+                rowEntriesByTransactionId: newRowEntriesByTransactionIds,
+            });
+        });
+    }
+
+
+    isTransactionKeyDisplayed(key) {
+        const { id } = key;
+        const { showHiddenTransactions } = this.props;
+        if (!showHiddenTransactions && this._hiddenTransactionIds.has(id)) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    onGetRowAtIndex(index) {
+        return this.state.rowEntries[index];
+    }
+
+
+    onActivateRow(rowEntry) {
+        this.setState({
+            activeRowKey: rowEntry.key,
+        });
+    }
+
+
+
+    onStartEditRow(rowEntry, cellEditBuffers, rowEditBuffer, asyncEndEditRow) {
+    }
+
+
+    onCancelEditRow(rowEntry, cellEditBuffers, rowEditBuffers) {
+    }
+
+    async asyncOnSaveEditRow(rowEntry, cellEditBuffers, rowEditBuffer) {
+    }
+
+
+    renderTextDisplay(columnInfo, value) {
+        const { ariaLabel, inputClassName, inputSize } = columnInfo;
+        return <CellTextDisplay
+            ariaLabel={ariaLabel}
+            value={value}
+            inputClassExtras={inputClassName}
+            size={inputSize}
+        />;
+    }
+
+
+
+    renderDateEditor(columnInfo, renderArgs, rowEntry) {
+
+    }
+
+    renderDateDisplay(columnInfo, rowEntry) {
+        const { transactionDataItem } = rowEntry;
+        if (transactionDataItem) {
+            return <CellDateDisplay
+                ariaLabel="Date"
+                value={transactionDataItem.ymdDate}
+                classExtras={columnInfo.className}
+                inputClassExtras={columnInfo.inputClassName}
+            />;
+        }
+    }
+
+    
+    renderRefNumEditor(columnInfo, renderArgs, rowEntry) {
+
+    }
+
+    renderRefNumDisplay(columnInfo, rowEntry) {
+        const { transactionDataItem } = rowEntry;
+        if (transactionDataItem) {
+            const split = transactionDataItem.splits[rowEntry.splitIndex];
+            const refNum = split.refNum || '';
+            return this.renderTextDisplay(columnInfo, refNum.toString());
+        }
+    }
+
+    
+    renderDescriptionEditor(columnInfo, renderArgs, rowEntry, splitDataItem) {
+
+    }
+
+    renderDescriptionDisplay(columnInfo, rowEntry) {
+        const { transactionDataItem } = rowEntry;
+        if (transactionDataItem) {
+            const split = transactionDataItem.splits[rowEntry.splitIndex];
+            let { description } = split;
+            description = description || transactionDataItem.description;
+            return this.renderTextDisplay(columnInfo, description);
+        }
+    }
+    
+
+
+    renderSplitEditor(columnInfo, renderArgs, rowEntry) {
+
+    }
+
+    renderSplitDisplay(columnInfo, rowEntry) {
+        const { transactionDataItem } = rowEntry;
+        if (transactionDataItem) {
+            const { accessor } = this.props;
+            const splits = transactionDataItem.splits;
+            let text;
+            if (splits.length === 2) {
+                const split = transactionDataItem.splits[1 - rowEntry.splitIndex];
+                const splitAccountDataItem 
+                    = accessor.getAccountDataItemWithId(split.accountId);
+                text = splitAccountDataItem.name;
+            }
+            else {
+                text = userMsg('AccountRegister-multi_splits');
+            }
+            
+            return this.renderTextDisplay(columnInfo, text);
+        }
+    }
+
+
+    renderDebitCreditEditor(columnInfo, renderArgs, rowEntry, sign) {
+
+    }
+
+    renderDebitCreditDisplay(columnInfo, rowEntry, sign) {
+        const { accountType, quantityDefinition } = this.state;
+        const { transactionDataItem } = rowEntry;
+        if (!transactionDataItem) {
+            return;
+        }
+        const split = transactionDataItem.splits[rowEntry.splitIndex];
+
+        const { category } = accountType;
+        const quantityBaseValue = sign * split.quantityBaseValue * category.creditSign;
+        if (quantityBaseValue < 0) {
+            return;
+        }
+
+        return <CellQuantityDisplay
+            quantityBaseValue={quantityBaseValue}
+            quantityDefinition={quantityDefinition}
+            ariaLabel={sign > 0 ? 'Credit' : 'Debit'}
+            inputClassExtras={columnInfo.className}
+        />;
+    }
+
+    
+    renderDebitEditor(columnInfo, renderArgs, rowEntry) {
+        return this.renderDebitCreditEditor(columnInfo, renderArgs, rowEntry, -1);
+    }
+
+    renderDebitDisplay(columnInfo, rowEntry) {
+        return this.renderDebitCreditDisplay(columnInfo, rowEntry, -1);
+    }
+
+    
+    renderCreditEditor(columnInfo, renderArgs, rowEntry) {
+        return this.renderDebitCreditEditor(columnInfo, renderArgs, rowEntry, 1);
+    }
+
+    renderCreditDisplay(columnInfo, rowEntry) {
+        return this.renderDebitCreditDisplay(columnInfo, rowEntry, 1);
+    }
+
+    
+    renderSharesEditor(columnInfo, renderArgs, rowEntry) {
+
+    }
+
+    renderSharesDisplay(columnInfo, rowEntry) {
+    }
+
+    
+    renderBalanceEditor(columnInfo, renderArgs, rowEntry) {
+        this.renderBalanceDisplay(columnInfo, rowEntry);
+    }
+
+    renderBalanceDisplay(columnInfo, rowEntry) {
+        const { currency } = this.state;
+        const { accountStateDataItem } = rowEntry;
+        if (accountStateDataItem) {
+            const quantityDefinition = getCurrency(currency).getQuantityDefinition();
+            return <CellQuantityDisplay
+                quantityDefinition={quantityDefinition}
+                quantityBaseValue={accountStateDataItem.quantityBaseValue}
+                ariaLabel="Balance"
+                inputClassExtras={columnInfo.className}
+            />;
+        }
+    }
+
+    
+    renderReconcileEditor(columnInfo, renderArgs, rowEntry) {
+
+    }
+
+    renderReconcileDisplay(columnInfo, rowEntry) {
+        const { transactionDataItem } = rowEntry;
+        if (transactionDataItem) {
+            const split = transactionDataItem.splits[rowEntry.splitIndex];
+            let reconcileState = split.reconcileState
+                || T.ReconcileState.NOT_RECONCILED.name;
+            
+            return <CellSelectDisplay
+                selectedValue={userMsg('AccountRegister-reconcile_' + reconcileState)}
+                ariaLabel="Reconcile State"
+                classExtras={columnInfo.className}
+                size={columnInfo.inputSize}
+            />;
+        }
+    }
+
+    
+    onRenderEditCell(cellInfo, cellSettings, renderArgs) {
+        const { rowEntry } = cellInfo;
+        const { columnInfo } = cellInfo;
+        switch (columnInfo.key) {
+        case 'date' :
+            return this.renderDateEditor(columnInfo, renderArgs, rowEntry);
+        
+        case 'refNum' :
+            return this.renderRefNumEditor(columnInfo, renderArgs, rowEntry);
+        
+        case 'description' :
+            return this.renderDescriptionEditor(columnInfo, renderArgs, rowEntry);
+        
+        case 'split' :
+            return this.renderSplitEditor(columnInfo, renderArgs, rowEntry);
+
+        case 'debit' :
+            return this.renderDebitEditor(columnInfo, renderArgs, rowEntry);
+
+        case 'credit' :
+            return this.renderCreditEditor(columnInfo, renderArgs, rowEntry);
+
+        case 'shares' :
+            return this.renderSharesEditor(columnInfo, renderArgs, rowEntry);
+
+        case 'balance' :
+            return this.renderBalanceEditor(columnInfo, renderArgs, rowEntry);
+
+        case 'reconcile' :
+            return this.renderReconcileEditor(columnInfo, renderArgs, rowEntry);
+        }
+    }
+
+    onRenderDisplayCell(cellInfo, cellSettings) {
+        const { rowEntry } = cellInfo;
+        const { columnInfo } = cellInfo;
+        switch (columnInfo.key) {
+        case 'date' :
+            return this.renderDateDisplay(columnInfo, rowEntry);
+        
+        case 'refNum' :
+            return this.renderRefNumDisplay(columnInfo, rowEntry);
+        
+        case 'description' :
+            return this.renderDescriptionDisplay(columnInfo, rowEntry);
+        
+        case 'split' :
+            return this.renderSplitDisplay(columnInfo, rowEntry);
+        
+        case 'debit' :
+            return this.renderDebitDisplay(columnInfo, rowEntry);
+        
+        case 'credit' :
+            return this.renderCreditDisplay(columnInfo, rowEntry);
+        
+        case 'shares' :
+            return this.renderSharesDisplay(columnInfo, rowEntry);
+        
+        case 'balance' :
+            return this.renderBalanceDisplay(columnInfo, rowEntry);
+        
+        case 'reconcile' :
+            return this.renderReconcileDisplay(columnInfo, rowEntry);
+        
+        }
+    }
+
+
     render() {
-        const accountDataItem = this.props.accessor.getAccountDataItemWithId(
-            this.props.accountId);
+        const { state } = this;
         return <div>
-            I am the account register for account {accountDataItem.name}
+            <RowEditCollapsibleTable
+                tableClassExtras="table-striped"
+                columnInfos={state.columnInfos}
+                rowEntries={state.rowEntries}
+                activeRowKey={state.activeRowKey}
+                onRenderDisplayCell={this.onRenderDisplayCell}
+                onRenderEditCell={this.onRenderEditCell}
+                onStartEditRow={this.onStartEditRow}
+                onCancelEditRow={this.onCancelEditRow}
+                asyncOnSaveEditRow={this.asyncOnSaveEditRow}
+
+                onGetRowAtIndex={this.onGetRowAtIndex}
+                onActivateRow={this.onActivateRow}
+                contextMenuItems={this.props.contextMenuItems}
+                onChooseContextMenuItem={this.props.onChooseContextMenuItem}
+                onLoadRowEntries={this.onLoadRowEntries}
+            />
             {this.props.children}
         </div>;
     }
 }
 
+
+/**
+ * @typedef {object} AccountRegister~propTypes
+ * @property {EngineAccessor}   accessor
+ */
 AccountRegister.propTypes = {
     accessor: PropTypes.object.isRequired,
     accountId: PropTypes.number.isRequired,
+    contextMenuItems: PropTypes.array,
+    onChooseContextMenuItem: PropTypes.func,
+    columns: PropTypes.arrayOf(PropTypes.string),
+    hiddenTransactionIds: PropTypes.arrayOf(PropTypes.number),
+    showHiddenTransactions: PropTypes.bool,
+    showTransactionIds: PropTypes.bool,
     children: PropTypes.any,
 };
