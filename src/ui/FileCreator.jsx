@@ -9,6 +9,7 @@ import { asyncGetNewFileTemplates } from '../tools/Templates';
 import { NewFileConfigurator} from './NewFileConfigurator';
 import { YMDDate } from '../util/YMDDate';
 import { CurrencySelector } from '../util-ui/CurrencySelector';
+import { createTestTransactions } from './CreateTestTransactions';
 
 const os = require('os');
 const path = require('path');
@@ -161,6 +162,10 @@ class GeneralSettingsEditor extends React.Component {
 
         this.onOpeningBalancesDateChange 
             = this.onOpeningBalancesDateChange.bind(this);
+        
+        this.state = {
+            addTestTransactions: false,
+        };
     }
 
 
@@ -211,10 +216,34 @@ class GeneralSettingsEditor extends React.Component {
         </div>;
     }
 
+    
+    renderAddTestTransactions() {
+        const { onSetAddTestTransactions } = this.props;
+        if (onSetAddTestTransactions) {
+            return <div className="text-left">
+                <div className="row mb-2">&nbsp;</div>
+                <input type="checkbox" 
+                    id="addTestTransactions"
+                    value={this.state.addTestTransactions}
+                    onClick={(e) => {
+                        const add = !this.state.addTestTransactions;
+                        onSetAddTestTransactions(add);
+                        this.setState({
+                            addTestTransactions: add,
+                        });
+                    }}
+                />
+                <label htmlFor="addTestTransactions">Add Test Transactions</label>
+            </div>;
+        }
+    }
+
 
     render() {
         const openingBalancesDateEditor = this.renderOpeningBalancesDateEditor();
         const defaultCurrency = this.renderDefaultCurrency();
+        const addTestTransactions = this.renderAddTestTransactions();
+
         return <div className="container-fluid mt-auto mb-auto">
             <h4 className="pageTitle pb-3 mb-4 border-bottom">
                 {userMsg('GeneraSettingsEditor-heading')}
@@ -222,6 +251,7 @@ class GeneralSettingsEditor extends React.Component {
             {openingBalancesDateEditor}
             <div className="row mb-2">&nbsp;</div>
             {defaultCurrency}
+            {addTestTransactions}
         </div>;
     }
 }
@@ -231,6 +261,7 @@ GeneralSettingsEditor.propTypes = {
     onSetOpeningBalancesDate: PropTypes.func.isRequired,
     defaultCurrency: PropTypes.string.isRequired,
     onSetDefaultCurrency: PropTypes.func.isRequired,
+    onSetAddTestTransactions: PropTypes.func,
 };
 
 
@@ -274,6 +305,7 @@ export class FileCreator extends React.Component {
 
         this.onSetOpeningBalancesDate = this.onSetOpeningBalancesDate.bind(this);
         this.onSetDefaultCurrency = this.onSetDefaultCurrency.bind(this);
+        this.onSetAddTestTransactions = this.onSetAddTestTransactions.bind(this);
 
         this.onUpdateFileContents = this.onUpdateFileContents.bind(this);
         this.onSetEndEditAsyncCallback = this.onSetEndEditAsyncCallback.bind(this);
@@ -373,6 +405,12 @@ export class FileCreator extends React.Component {
         });
     }
 
+    onSetAddTestTransactions(add) {
+        this.setState({
+            addTestTransactions: add,
+        });
+    }
+
     onUpdateFileContents(newFileContents) {
         this.setState({
             newFileContents: newFileContents
@@ -413,12 +451,20 @@ export class FileCreator extends React.Component {
             break;
         
         case 'generalSettings':
-            component = <GeneralSettingsEditor
-                openingBalancesDate={this.state.openingBalancesDate}
-                onSetOpeningBalancesDate={this.onSetOpeningBalancesDate}
-                defaultCurrency={this.state.baseCurrency}
-                onSetDefaultCurrency={this.onSetDefaultCurrency}
-            />;
+            {
+                const { mainSetup } = this.props;
+                const isDevMode = mainSetup && mainSetup.isDevMode;
+                const onSetAddTestTransactions = (isDevMode)
+                    ? this.onSetAddTestTransactions
+                    : undefined;
+                component = <GeneralSettingsEditor
+                    openingBalancesDate={this.state.openingBalancesDate}
+                    onSetOpeningBalancesDate={this.onSetOpeningBalancesDate}
+                    defaultCurrency={this.state.baseCurrency}
+                    onSetDefaultCurrency={this.onSetDefaultCurrency}
+                    onSetAddTestTransactions={onSetAddTestTransactions}
+                />;
+            }
             break;
 
         case 'accounts':
@@ -449,6 +495,10 @@ export class FileCreator extends React.Component {
             
             newFileContents.openingBalancesDate = this.state.openingBalancesDate;
             newFileContents.baseCurrency = this.state.baseCurrency;
+
+            if (this.state.addTestTransactions) {
+                createTestTransactions(newFileContents);
+            }
             
             const pathName = path.join(baseDirName, projectName);
             try {
@@ -539,6 +589,7 @@ export class FileCreator extends React.Component {
  */
 FileCreator.propTypes = {
     accessor: PropTypes.object.isRequired,
+    mainSetup: PropTypes.object,
     frameManager: PropTypes.object.isRequired,
     onFileCreated: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,

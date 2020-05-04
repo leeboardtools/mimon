@@ -1,0 +1,246 @@
+export function createTestTransactions(newFileContents) {
+    const transactions = [];
+    newFileContents.transactions = transactions;
+
+    transactions.push({
+        ymdDate: '2020-01-03',
+        description: 'Paycheck',
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Checking Account',
+                quantityBaseValue: 60000,
+                description: 'Paycheck',
+                reconcileState: 'RECONCILED',
+            },
+            {
+                accountId: 'INCOME-Salary',
+                quantityBaseValue: 100000,
+            },
+            {
+                accountId: 'EXPENSE-Taxes-Federal Income Tax',
+                quantityBaseValue: 20000,
+            },
+            {
+                accountId: 'EXPENSE-Taxes-State Income Tax',
+                quantityBaseValue: 10000,
+            },
+            {
+                accountId: 'EXPENSE-Taxes-Social Security',
+                quantityBaseValue: 7000,
+            },
+            {
+                accountId: 'EXPENSE-Taxes-Medicare',
+                quantityBaseValue: 3000,
+            },
+        ]
+    });
+
+    transactions.push({
+        ymdDate: '2020-01-03',
+        description: 'Cash',
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Checking Account',
+                quantityBaseValue: -10000,
+                reconcileState: 'RECONCILED',
+            },
+            { 
+                accountId: 'ASSET-Current Assets-Cash',
+                quantityBaseValue: 10000,
+            },
+        ] 
+    });
+
+    transactions.push({
+        ymdDate: '2020-01-10',
+        description: 'Phone Bill',
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Checking Account',
+                quantityBaseValue: -5000,
+                reconcileState: 'PENDING',
+            },
+            { 
+                accountId: 'EXPENSE-Utilities-Phone',
+                quantityBaseValue: 5000,
+            },
+        ] 
+    });
+
+    transactions.push({
+        ymdDate: '2020-01-05',
+        description: 'Lunch',
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Cash',
+                quantityBaseValue: -500,
+            },
+            { 
+                accountId: 'EXPENSE-Dining',
+                quantityBaseValue: 500,
+            },
+        ] 
+    });
+
+    transactions.push({
+        ymdDate: '2020-01-17',
+        description: 'Paycheck',
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Checking Account',
+                quantityBaseValue: 60000,
+                description: 'Paycheck',
+            },
+            {
+                accountId: 'INCOME-Salary',
+                quantityBaseValue: 100000,
+            },
+            {
+                accountId: 'EXPENSE-Taxes-Federal Income Tax',
+                quantityBaseValue: 20000,
+            },
+            {
+                accountId: 'EXPENSE-Taxes-State Income Tax',
+                quantityBaseValue: 10000,
+            },
+            {
+                accountId: 'EXPENSE-Taxes-Social Security',
+                quantityBaseValue: 7000,
+            },
+            {
+                accountId: 'EXPENSE-Taxes-Medicare',
+                quantityBaseValue: 3000,
+            },
+        ]
+    });
+
+    transactions.push({
+        ymdDate: '2020-01-30',
+        description: 'Rent',
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Checking Account',
+                quantityBaseValue: -50000,
+                refNum: 1001,
+            },
+            { 
+                accountId: 'EXPENSE-Rent',
+                quantityBaseValue: 50000,
+            },
+        ] 
+    });
+
+
+    //
+    // Add some stock transactions...
+    // First have to add some stocks...
+    const { pricedItems } = newFileContents.pricedItems;
+    
+    pricedItems.push({
+        'type': 'SECURITY',
+        'ticker': 'AAPL',
+        'name': 'Apple Computer, Inc.',
+        'onlineUpdateType': 'YAHOO_FINANCE',
+    });
+    pricedItems.push({
+        'type': 'SECURITY',
+        'ticker': 'MSFT',
+        'name': 'Microsoft Corporation',
+        'onlineUpdateType': 'YAHOO_FINANCE',
+    });
+    pricedItems.push({
+        'type': 'SECURITY',
+        'ticker': 'IBM',
+        'name': 'International Business Machines, Inc.',
+        'onlineUpdateType': 'YAHOO_FINANCE',
+    });
+
+    const prices = [];
+    newFileContents.prices = {
+        prices: prices,
+    };
+    prices.push({
+        pricedItemId: 'AAPL',
+        prices: [
+            { ymdDate: '2005-02-04', close: 5.63 * 2 * 7, },
+            { ymdDate: '2005-02-11', close: 5.80 * 2 * 7, },
+            { ymdDate: '2005-02-18', close: 6.20 * 2 * 7, },
+            { ymdDate: '2005-02-25', close: 6.36 * 2 * 7, },
+            // 2 for 1 split...
+            { ymdDate: '2005-02-28', close: 6.41 * 7, },
+            { ymdDate: '2005-03-04', close: 6.12 * 7, },
+            { ymdDate: '2005-03-11', close: 5.75 * 7, },
+
+            { ymdDate: '2014-06-04', close: 92.12 * 7, },
+            { ymdDate: '2014-06-05', close: 92.48 * 7, },
+            { ymdDate: '2014-06-06', close: 92.22 * 7, },
+            // 7 for 1 split...
+            { ymdDate: '2014-06-09', close: 93.70, },
+            { ymdDate: '2014-06-10', close: 94.25, },
+            { ymdDate: '2014-06-13', close: 91.28, },
+            { ymdDate: '2014-06-20', close: 90.91, },
+
+            { ymdDate: '2015-03-12', close: 124.45, },
+
+            { ymdDate: '2020-01-24', close: 318.31, },
+            { ymdDate: '2020-01-31', close: 309.51, },
+
+        ],
+    });
+
+    prices.push({
+        pricedItemId: 'MSFT',
+        prices: [
+            { ymdDate: '2005-02-04', close: 26.32, },
+            { ymdDate: '2005-02-11', close: 25.97, },
+            { ymdDate: '2005-02-18', close: 25.48, },
+            { ymdDate: '2005-02-25', close: 25.25, },
+            { ymdDate: '2005-02-28', close: 25.16, },
+            { ymdDate: '2005-03-04', close: 25.17, },
+            { ymdDate: '2005-03-11', close: 25.09, },
+
+            { ymdDate: '2014-06-04', close: 40.32, },
+            { ymdDate: '2014-06-10', close: 41.11, },
+            { ymdDate: '2014-06-13', close: 41.23, },
+            { ymdDate: '2014-06-20', close: 41.68, },
+
+            { ymdDate: '2015-03-12', close: 41.02, },
+
+            { ymdDate: '2020-01-24', close: 165.04, },
+            { ymdDate: '2020-01-31', close: 170.23, },
+        ],
+    });
+
+
+    transactions.push({
+        ymdDate: '2010-01-30',
+        description: 'Opening Balance',
+        splits: [
+            { 
+                accountId: 'ASSET-Investments-Brokerage Account',
+                quantityBaseValue: 5000000,
+            },
+            { 
+                accountId: 'EQUITY-Opening Balances',
+                quantityBaseValue: 5000000,
+            },
+        ] 
+    });
+
+    transactions.push({
+        ymdDate: '2010-01-30',
+        description: 'Opening Balance',
+        splits: [
+            { 
+                accountId: 'ASSET-Investments-IRA Account',
+                quantityBaseValue: 500000,
+            },
+            { 
+                accountId: 'EQUITY-Opening Balances',
+                quantityBaseValue: 500000,
+            },
+        ] 
+    });
+}
+
+

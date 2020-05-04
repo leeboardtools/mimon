@@ -569,6 +569,7 @@ export default class App extends React.Component {
         case 'newFile': 
             return <FileCreator
                 accessor = {this._accessor}
+                mainSetup = {this.state.mainSetup}
                 frameManager = {this._frameManager}
                 onFileCreated = {this.onFileCreated}
                 onCancel = {this.onCancel}

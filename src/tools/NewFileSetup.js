@@ -1,6 +1,8 @@
 import { getCurrency } from '../util/Currency';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
+import * as PI from '../engine/PricedItems';
+import * as QD from '../util/Quantities';
 import { YMDDate } from '../util/YMDDate';
 import { userMsg, userError } from '../util/UserMessages';
 
@@ -72,12 +74,17 @@ async function asyncSetBaseCurrency(setupInfo) {
 //---------------------------------------------------------
 //
 async function asyncLoadPricedItems(setupInfo) {
-    const { pricedItems } = setupInfo.initialContents;
+    if (!setupInfo.initialContents.pricedItems) {
+        return;
+    }
+
+    const { pricedItems } = setupInfo.initialContents.pricedItems;
     if (!pricedItems) {
         return;
     }
 
-    const { pricedItemManager, pricedItemMapping, warnings } = setupInfo;
+    const { pricedItemManager, pricedItemMapping, pricedItemNameMapping,
+        warnings } = setupInfo;
     const baseCurrency = pricedItemManager.getBaseCurrencyCode();
     for (let i = 0; i < pricedItems.length; ++i) {
         const item = pricedItems[i];
@@ -89,8 +96,17 @@ async function asyncLoadPricedItems(setupInfo) {
         }
 
         try {
-            const quantityDefinition = item.quantityDefinition 
-                || currency.getQuantityDefinition();
+            let quantityDefinition = item.quantityDefinition;
+            if (!quantityDefinition) {
+                if (item.type === PI.PricedItemType.SECURITY.name) {
+                    quantityDefinition = QD.getDecimalDefinition(4);
+                }
+                else {
+                    quantityDefinition = currency.getQuantityDefinition();
+                }
+                quantityDefinition = QD.getQuantityDefinitionName(quantityDefinition);
+            }
+            
             const settings = {
                 type: item.type,
                 name: item.name,
@@ -108,6 +124,9 @@ async function asyncLoadPricedItems(setupInfo) {
                 settings)).newPricedItemDataItem;
 
             pricedItemMapping.set(item.id, pricedItemDataItem);
+
+            const name = item.ticker || item.name;
+            pricedItemNameMapping.set(name, pricedItemDataItem);
         }
         catch (e) {
             warnings.push(userMsg('NewFileSetup-addPricedItem_failed', item.name, e));
@@ -119,8 +138,39 @@ async function asyncLoadPricedItems(setupInfo) {
 //
 //---------------------------------------------------------
 //
+async function asyncLoadPrices(setupInfo) {
+    if (!setupInfo.initialContents.prices) {
+        return;
+    }
+
+    const { prices } = setupInfo.initialContents.prices;
+    if (!prices) {
+        return;
+    }
+
+    // TODO:
+}
+
+
+//
+//---------------------------------------------------------
+//
 async function asyncLoadAccounts(setupInfo) {
-    const { accountManager } = setupInfo;
+    const { accountManager, accountNameMapping } = setupInfo;
+    accountNameMapping.set('ASSET', accountManager.getAccountDataItemWithId(
+        accountManager.getRootAssetAccountId()));
+    accountNameMapping.set('LIABILITY', accountManager.getAccountDataItemWithId(
+        accountManager.getRootLiabilityAccountId()));
+    accountNameMapping.set('INCOME', accountManager.getAccountDataItemWithId(
+        accountManager.getRootIncomeAccountId()));
+    accountNameMapping.set('EXPENSE', accountManager.getAccountDataItemWithId(
+        accountManager.getRootExpenseAccountId()));
+    accountNameMapping.set('EQUITY', accountManager.getAccountDataItemWithId(
+        accountManager.getRootEquityAccountId()));
+    accountNameMapping.set('EQUITY-Opening Balances', 
+        accountManager.getAccountDataItemWithId(
+            accountManager.getOpeningBalancesAccountId()));
+                    
     await asyncLoadAccountsForRoot(setupInfo, accountManager.getRootAssetAccountId());
     await asyncLoadAccountsForRoot(setupInfo, accountManager.getRootLiabilityAccountId());
     await asyncLoadAccountsForRoot(setupInfo, accountManager.getRootIncomeAccountId());
@@ -149,7 +199,7 @@ async function asyncLoadAccountsForRoot(setupInfo, rootAccountId) {
     }
 
     for (let i = 0; i < accounts.length; ++i) {
-        await asyncLoadAccount(setupInfo, rootAccountId, accounts[i]);
+        await asyncLoadAccount(setupInfo, rootAccountId, accounts[i], rootCategory.name);
     }
 }
 
@@ -157,8 +207,8 @@ async function asyncLoadAccountsForRoot(setupInfo, rootAccountId) {
 //
 //---------------------------------------------------------
 //
-async function asyncLoadAccount(setupInfo, parentAccountId, item) {
-    const { accountManager, accountMapping, pricedItemManager,
+async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
+    const { accountManager, accountMapping, accountNameMapping, pricedItemManager,
         accessor, warnings } = setupInfo;
 
     try {
@@ -187,10 +237,14 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item) {
 
         accountMapping.set(item.id, accountDataItem);
 
+        const name = parentName + '-' + accountDataItem.name;
+        accountNameMapping.set(name, accountDataItem);
+
         const { childAccounts, openingBalance } = item;
         if (childAccounts) {
             for (let i = 0; i < childAccounts.length; ++i) {
-                await asyncLoadAccount(setupInfo, accountDataItem.id, childAccounts[i]);
+                await asyncLoadAccount(setupInfo, accountDataItem.id, childAccounts[i],
+                    name);
             }
         }
 
@@ -231,6 +285,45 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item) {
     }
 }
 
+//
+//---------------------------------------------------------
+//
+async function asyncLoadTransactions(setupInfo) {
+    const { transactions } = setupInfo.initialContents;
+    if (!transactions) {
+        return;
+    }
+
+    const { warnings, accountNameMapping } = setupInfo;
+    let item;
+    try {
+        for (let i = 0; i < transactions.length; ++i) {
+            item = transactions[i];
+
+            const splits = [];
+            item.splits.forEach((itemSplit) => {
+                const split = Object.assign({}, itemSplit);
+                const accountDataItem = accountNameMapping.get(itemSplit.accountId);
+                if (!accountDataItem) {
+                    throw userError('NewFileSetup-addTransaction_invalid_accountId', 
+                        itemSplit.accountId);
+                }
+                split.accountId = accountDataItem.id;
+                splits.push(split);
+            });
+
+            const transaction = Object.assign({}, item);
+            transaction.splits = splits;
+
+            await setupInfo.transactionManager.asyncAddTransaction(transaction);
+        }
+    }
+    catch (e) {
+        warnings.push(userMsg('NewFileSetup-addTransaction_failed',
+            item.name, e));
+    }
+}
+
 
 /**
  * Sets up a blank accounting file from JSON template data.
@@ -252,7 +345,10 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
         transactionManager: accountingSystem.getTransactionManager(),
 
         pricedItemMapping: new Map(),
+        pricedItemNameMapping: new Map(),
+
         accountMapping: new Map(),
+        accountNameMapping: new Map(),
 
         openingBalancesDate: initialContents.openingBalancesDate 
             || (new YMDDate()).toString(),
@@ -262,7 +358,9 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
 
     await asyncSetBaseCurrency(setupInfo);
     await asyncLoadPricedItems(setupInfo);
+    await asyncLoadPrices(setupInfo);
     await asyncLoadAccounts(setupInfo);
+    await asyncLoadTransactions(setupInfo);
 
     await accountingSystem.getUndoManager().asyncClearUndos();
 
