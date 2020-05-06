@@ -138,6 +138,49 @@ async function asyncLoadPricedItems(setupInfo) {
 //
 //---------------------------------------------------------
 //
+async function asyncLoadLots(setupInfo) {
+    if (!setupInfo.initialContents.lots) {
+        return;
+    }
+
+    const { lots } = setupInfo.initialContents.lots;
+    if (!lots) {
+        return;
+    }
+
+    const { lotManager, lotMapping, lotNameMapping,
+        pricedItemNameMapping, warnings } = setupInfo;
+    for (let i = 0; i < lots.length; ++i) {
+        const item = lots[i];
+
+        const pricedItem = pricedItemNameMapping.get(item.pricedItemId);
+        if (!pricedItem) {
+            warnings.push('NewFileSetup-lot_pricedItem_not_found', 
+                item.description, item.pricedItemId);
+            continue;
+        }
+
+        try {
+            const settings = {
+                description: item.description,
+                pricedItemId: pricedItem.id,
+            };
+            const lotDataItem = (await lotManager.asyncAddLot(
+                settings)).newLotDataItem;
+
+            lotMapping.set(item.id, lotDataItem);
+            lotNameMapping.set(item.description, lotDataItem);
+        }
+        catch (e) {
+            warnings.push(userMsg('NewFileSetup-addLot_failed', item.description, e));
+        }
+    }
+}
+
+
+//
+//---------------------------------------------------------
+//
 async function asyncLoadPrices(setupInfo) {
     if (!setupInfo.initialContents.prices) {
         return;
@@ -220,8 +263,8 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
             description: item.description,
         };
         if (item.pricedItemId) {
-            const { pricedItemMapping } = setupInfo;
-            const pricedItemId = pricedItemMapping.get(item.pricedItemId);
+            const { pricedItemNameMapping } = setupInfo;
+            const pricedItemId = pricedItemNameMapping.get(item.pricedItemId);
             if (!pricedItemId) {
                 throw userError('NewFileSetup-pricedItem_not_found', item.pricedItemId);
             }
@@ -294,7 +337,7 @@ async function asyncLoadTransactions(setupInfo) {
         return;
     }
 
-    const { warnings, accountNameMapping } = setupInfo;
+    const { warnings, accountNameMapping, lotNameMapping } = setupInfo;
     let item;
     try {
         for (let i = 0; i < transactions.length; ++i) {
@@ -309,6 +352,21 @@ async function asyncLoadTransactions(setupInfo) {
                         itemSplit.accountId);
                 }
                 split.accountId = accountDataItem.id;
+
+                if (split.lotChanges) {
+                    split.lotChanges = Array.from(split.lotChanges);
+                    const { lotChanges } = split;
+                    for (let i = 0; i < lotChanges.length; ++i) {
+                        lotChanges[i] = Object.assign({}, lotChanges[i]);
+                        const lotDataItem = lotNameMapping.get(lotChanges[i].lotId);
+                        if (!lotDataItem) {
+                            throw userError('NewFileSetup-addTransaction_invalid_lotId',
+                                lotChanges[i].lotId);
+                        }
+                        lotChanges[i].lotId = lotDataItem.id;
+                    }
+                }
+
                 splits.push(split);
             });
 
@@ -343,12 +401,16 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
         pricedItemManager: accountingSystem.getPricedItemManager(),
         accountManager: accountingSystem.getAccountManager(),
         transactionManager: accountingSystem.getTransactionManager(),
+        lotManager: accountingSystem.getLotManager(),
 
         pricedItemMapping: new Map(),
         pricedItemNameMapping: new Map(),
 
         accountMapping: new Map(),
         accountNameMapping: new Map(),
+
+        lotMapping: new Map(),
+        lotNameMapping: new Map(),
 
         openingBalancesDate: initialContents.openingBalancesDate 
             || (new YMDDate()).toString(),
@@ -360,6 +422,7 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
     await asyncLoadPricedItems(setupInfo);
     await asyncLoadPrices(setupInfo);
     await asyncLoadAccounts(setupInfo);
+    await asyncLoadLots(setupInfo);
     await asyncLoadTransactions(setupInfo);
 
     await accountingSystem.getUndoManager().asyncClearUndos();

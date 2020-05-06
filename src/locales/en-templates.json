@@ -189,6 +189,10 @@
                 },
                 {
                     "type": "EXPENSE",
+                    "name": "Commissions"
+                },
+                {
+                    "type": "EXPENSE",
                     "name": "Dining"
                 },
                 {

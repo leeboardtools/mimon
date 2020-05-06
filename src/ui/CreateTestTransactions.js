@@ -1,3 +1,33 @@
+function findAccountEntry(newFileContents, accountPath) {
+    const accountNames = accountPath.split('-');
+    if (!accountNames.length) {
+        return;
+    }
+    const rootAccount = newFileContents.accounts[accountNames[0]];
+    if (!rootAccount || (accountNames.length === 1)) {
+        return rootAccount;
+    }
+
+    let childAccounts = rootAccount;
+    let account;
+    for (let nameIndex = 1; nameIndex < accountNames.length; ++nameIndex) {
+        account = undefined;
+        for (let i = 0; i < childAccounts.length; ++i) {
+            if (childAccounts[i].name === accountNames[nameIndex]) {
+                account = childAccounts[i];
+                break;
+            }
+        }
+        if (!account) {
+            return;
+        }
+        childAccounts = account.childAccounts;
+    }
+
+    return account;
+}
+
+
 export function createTestTransactions(newFileContents) {
     const transactions = [];
     newFileContents.transactions = transactions;
@@ -241,6 +271,143 @@ export function createTestTransactions(newFileContents) {
             },
         ] 
     });
+
+
+    const lots = [];
+    newFileContents.lots = {
+        lots: lots,
+    };
+
+    const brokerageAccountId = 'ASSET-Investments-Brokerage Account';
+    const brokerageAccount = findAccountEntry(newFileContents,
+        brokerageAccountId);
+    if (brokerageAccount) {
+        const childAccounts = brokerageAccount.childAccounts || [];
+        brokerageAccount.childAccounts = childAccounts;
+        childAccounts.push({
+            type: 'SECURITY',
+            name: 'AAPL',
+            pricedItemId: 'AAPL'
+        });
+        const accountId = 'ASSET-Investments-Brokerage Account-AAPL';
+
+        // { ymdDate: '2014-06-04', close: 92.12 * 7, },
+        const lotA = '50 sh 2014-06-04';   
+        lots.push({
+            pricedItemId: 'AAPL',
+            description: lotA,
+        });
+
+        // { ymdDate: '2014-06-13', close: 91.28, },
+        const lotB = '100 sh 2014-06-13';
+        lots.push({
+            pricedItemId: 'AAPL',
+            description: lotB,
+        });
+
+        const commissionBaseValueA = 495;
+        const aaplQuantityBaseValueA = 500000;
+        const stockBaseValueA = 50 * 9212 * 7;
+        const costBasisBaseValueA = commissionBaseValueA + stockBaseValueA;
+        const aaplLotChangeA = { lotId: lotA, 
+            quantityBaseValue: aaplQuantityBaseValueA, 
+            costBasisBaseValue: costBasisBaseValueA,
+        };
+        transactions.push({
+            ymdDate: '2014-06-04',
+            description: 'Buy 50sh AAPL',
+            splits: [
+                {
+                    accountId: brokerageAccountId,
+                    quantityBaseValue: -costBasisBaseValueA,
+                },
+                {
+                    accountId: accountId,
+                    quantityBaseValue: stockBaseValueA,
+                    lotChanges: [aaplLotChangeA],
+                },
+                {
+                    accountId: 'EXPENSE-Commissions',
+                    quantityBaseValue: commissionBaseValueA,
+                },
+            ],
+        });
+
+        const aaplChangeSplit2014_06_09 = { 
+            lotId: lotA, 
+            isSplitMerge: true, 
+            quantityBaseValue: 6 * (aaplQuantityBaseValueA), 
+        };
+        transactions.push({
+            ymdDate: '2014-06-09',
+            description: '7 for 1 split',
+            splits: [
+                {
+                    accountId: accountId,
+                    quantityBaseValue: 0,
+                    lotChanges: [ aaplChangeSplit2014_06_09 ],
+                }
+            ],
+        });
+
+        const commissionBaseValueB = 495;
+        const stockBaseValueB = 100 * 9128;
+        const costBasisBaseValueB = commissionBaseValueB + stockBaseValueB;
+        const aaplLotChangeB = { lotId: lotB, 
+            quantityBaseValue: 1000000, 
+            costBasisBaseValue: costBasisBaseValueB,
+        };
+        transactions.push({
+            ymdDate: '2014-06-13',
+            description: 'Buy 100sh AAPL',
+            splits: [
+                {
+                    accountId: brokerageAccountId,
+                    quantityBaseValue: -costBasisBaseValueB,
+                },
+                {
+                    accountId: accountId,
+                    quantityBaseValue: stockBaseValueB,
+                    lotChanges: [aaplLotChangeB],
+                },
+                {
+                    accountId: 'EXPENSE-Commissions',
+                    quantityBaseValue: commissionBaseValueB,
+                },
+            ],
+        });
+
+
+        // Sell 10 shares from lotB on { ymdDate: '2020-01-24', close: 165.04, },
+        const aaplQuantityC = -10;
+        const aaplQuantityBaseValueC = aaplQuantityC * 10000;
+        const aaplCostBasisBaseValueC = aaplQuantityC * 16504;
+        const aaplLotChangeC = {
+            lotId: lotB,
+            quantityBaseValue: aaplQuantityBaseValueC,
+            costBasisBaseValue: aaplCostBasisBaseValueC,
+        };
+        transactions.push({
+            ymdDate: '2020-01-24',
+            description: 'Sell 10sh AAPL',
+            splits: [
+                { accountId: brokerageAccountId, 
+                    quantityBaseValue: -aaplCostBasisBaseValueC, 
+                },
+                { accountId: accountId, 
+                    quantityBaseValue: aaplCostBasisBaseValueC, 
+                    lotChanges: [ aaplLotChangeC ],
+                },
+                
+            ]
+        });
+    }
+
+    const iraAccount = findAccountEntry(newFileContents,
+        'ASSET-Investments-IRA Account');
+    if (iraAccount) {
+        // 
+    }
 }
 
 

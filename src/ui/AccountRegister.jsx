@@ -6,7 +6,6 @@ import { CellTextDisplay } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay } from '../util-ui/CellSelectEditor';
 import { CellDateDisplay } from '../util-ui/CellDateEditor';
 import { CellQuantityDisplay } from '../util-ui/CellQuantityEditor';
-import { getCurrency } from '../util/Currency';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
 import deepEqual from 'deep-equal';
@@ -26,6 +25,8 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
         const cellClassName = 'm-0';
 
         const numericClassName = 'text-right';
+        const numericSize = 10; // 12.456,789
+
         columnInfoDefs = {
             date: { key: 'date',
                 label: userMsg('AccountRegister-date'),
@@ -33,13 +34,14 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 propertyName: 'date',
                 className: 'text-center',
                 inputClassName: 'text-center',
+                inputSize: 10,
                 cellClassName: cellClassName,
             },
             refNum: { key: 'refNum',
                 label: userMsg('AccountRegister-refNum'),
                 ariaLabel: 'Number',
                 propertyName: 'refNum',
-                className: 'text-right',
+                className: 'text-center',
                 inputClassName: 'text-right',
                 inputSize: 10,
                 cellClassName: cellClassName,
@@ -66,49 +68,86 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputSize: 2,
                 cellClassName: cellClassName,
             },
-            debit: { key: 'debit',
-                label: accountType.debitLabel,
-                ariaLabel: accountType.debitLabel,
-                propertyName: 'debit',
-                className: numericClassName,
-                cellClassName: cellClassName,
-            },
-            credit: { key: 'credit',
-                label: accountType.creditLabel,
-                ariaLabel: accountType.creditLabel,
-                propertyName: 'credit',
-                className: numericClassName,
-                cellClassName: cellClassName,
-            },
-            balance: { key: 'balance',
-                label: userMsg('AccountRegister-balance'),
-                ariaLabel: 'Account Balance',
-                propertyName: 'balance',
-                className: numericClassName,
-                cellClassName: cellClassName,
-            },
         };
 
-        if (accountType.hasShares) {
+        if (accountType.hasLots) {
             // Need to think about this more, what exactly do we want to display
             // when there are shares involved.
             //  - market value? 
             //  - cost basis?
             //  - shares?
             // Also, how does this affect the debit and credit columns?
+            //  - bought
+            //  - sold
+            columnInfoDefs.bought = { key: 'bought',
+                label: userMsg('AccountRegister-bought'),
+                ariaLabel: 'Bought',
+                propertyName: 'bought',
+                className: numericClassName,
+                cellClassName: cellClassName,
+                inputSize: numericSize,
+            };
+            columnInfoDefs.sold = { key: 'sold',
+                label: userMsg('AccountRegister-sold'),
+                ariaLabel: 'Sold',
+                propertyName: 'sold',
+                className: numericClassName,
+                cellClassName: cellClassName,
+                inputSize: numericSize,
+            };
             columnInfoDefs.shares = { key: 'shares',
                 label: userMsg('AccountRegister-shares'),
                 ariaLabel: 'Shares',
                 propertyName: 'shares',
                 className: numericClassName,
                 cellClassName: cellClassName,
+                inputSize: numericSize,
             };
+        }
+        else {
+            columnInfoDefs.debit = { key: 'debit',
+                label: accountType.debitLabel,
+                ariaLabel: accountType.debitLabel,
+                propertyName: 'debit',
+                className: numericClassName,
+                cellClassName: cellClassName,
+                inputSize: numericSize,
+            };
+            columnInfoDefs.credit = { key: 'credit',
+                label: accountType.creditLabel,
+                ariaLabel: accountType.creditLabel,
+                propertyName: 'credit',
+                className: numericClassName,
+                cellClassName: cellClassName,
+                inputSize: numericSize,
+            };
+            columnInfoDefs.balance = { key: 'balance',
+                label: userMsg('AccountRegister-balance'),
+                ariaLabel: 'Account Balance',
+                propertyName: 'balance',
+                className: numericClassName,
+                cellClassName: cellClassName,
+                inputSize: numericSize,
+            };
+
         }
 
         allColumnInfoDefs[accountType.name] = columnInfoDefs;
     }
 
     return columnInfoDefs;
+}
+
+
+function getInputSize(columnInfo, value, extra) {
+    let { inputSize } = columnInfo;
+    if (inputSize) {
+        if ((value !== undefined) && (value !== null)) {
+            extra = extra || 0;
+            inputSize = Math.max(value.toString().length + extra, inputSize);
+        }
+        return inputSize;
+    }
 }
 
 
@@ -457,6 +496,7 @@ export class AccountRegister extends React.Component {
                 value={transactionDataItem.ymdDate}
                 classExtras={columnInfo.className}
                 inputClassExtras={columnInfo.inputClassName}
+                size={columnInfo.inputSize}
             />;
         }
     }
@@ -540,6 +580,7 @@ export class AccountRegister extends React.Component {
             quantityDefinition={quantityDefinition}
             ariaLabel={sign > 0 ? 'Credit' : 'Debit'}
             inputClassExtras={columnInfo.className}
+            size={getInputSize(columnInfo, quantityBaseValue)}
         />;
     }
 
@@ -561,12 +602,79 @@ export class AccountRegister extends React.Component {
         return this.renderDebitCreditDisplay(columnInfo, rowEntry, 1);
     }
 
-    
-    renderSharesEditor(columnInfo, renderArgs, rowEntry) {
+
+    renderBoughtSoldEditor(columnInfo, renderArgs, rowEntry, sign) {
 
     }
 
+    renderBoughtSoldDisplay(columnInfo, rowEntry, sign) {
+        const { accountType, quantityDefinition } = this.state;
+        const { transactionDataItem } = rowEntry;
+        if (!transactionDataItem) {
+            return;
+        }
+        const split = transactionDataItem.splits[rowEntry.splitIndex];
+        const { lotChanges } = split;
+        if (!lotChanges || !lotChanges.length) {
+            return;
+        }
+
+        let quantityBaseValue = 0;
+        for (let lotChange of lotChanges) {
+            quantityBaseValue += lotChange.quantityBaseValue;
+        }
+
+        const { category } = accountType;
+        quantityBaseValue *= sign * category.creditSign;
+        if (quantityBaseValue < 0) {
+            return;
+        }
+
+        return <CellQuantityDisplay
+            quantityBaseValue={quantityBaseValue}
+            quantityDefinition={quantityDefinition}
+            ariaLabel={sign > 0 ? 'Credit' : 'Debit'}
+            inputClassExtras={columnInfo.className}
+            size={getInputSize(columnInfo, quantityBaseValue)}
+        />;
+    }
+
+    
+    renderBoughtEditor(columnInfo, renderArgs, rowEntry) {
+        return this.renderBoughtSoldEditor(columnInfo, renderArgs, rowEntry, -1);
+    }
+
+    renderBoughtDisplay(columnInfo, rowEntry) {
+        return this.renderBoughtSoldDisplay(columnInfo, rowEntry, -1);
+    }
+
+    
+    renderSoldEditor(columnInfo, renderArgs, rowEntry) {
+        return this.renderBoughtSoldEditor(columnInfo, renderArgs, rowEntry, 1);
+    }
+
+    renderSoldDisplay(columnInfo, rowEntry) {
+        return this.renderBoughtSoldDisplay(columnInfo, rowEntry, 1);
+    }
+
+    
+    renderSharesEditor(columnInfo, renderArgs, rowEntry) {
+        this.renderSharesDisplay(columnInfo, rowEntry);
+    }
+
     renderSharesDisplay(columnInfo, rowEntry) {
+        const { accountStateDataItem } = rowEntry;
+        if (accountStateDataItem) {
+            const { quantityDefinition } = this.state;
+            const { quantityBaseValue } = accountStateDataItem;
+            return <CellQuantityDisplay
+                quantityDefinition={quantityDefinition}
+                quantityBaseValue={quantityBaseValue}
+                ariaLabel="Shares"
+                inputClassExtras={columnInfo.className}
+                size={getInputSize(columnInfo, quantityBaseValue)}
+            />;
+        }
     }
 
     
@@ -575,15 +683,16 @@ export class AccountRegister extends React.Component {
     }
 
     renderBalanceDisplay(columnInfo, rowEntry) {
-        const { currency } = this.state;
         const { accountStateDataItem } = rowEntry;
         if (accountStateDataItem) {
-            const quantityDefinition = getCurrency(currency).getQuantityDefinition();
+            const { quantityDefinition } = this.state;
+            const { quantityBaseValue } = accountStateDataItem;
             return <CellQuantityDisplay
                 quantityDefinition={quantityDefinition}
-                quantityBaseValue={accountStateDataItem.quantityBaseValue}
+                quantityBaseValue={quantityBaseValue}
                 ariaLabel="Balance"
                 inputClassExtras={columnInfo.className}
+                size={getInputSize(columnInfo, quantityBaseValue)}
             />;
         }
     }
@@ -632,12 +741,18 @@ export class AccountRegister extends React.Component {
         case 'credit' :
             return this.renderCreditEditor(columnInfo, renderArgs, rowEntry);
 
-        case 'shares' :
-            return this.renderSharesEditor(columnInfo, renderArgs, rowEntry);
-
         case 'balance' :
             return this.renderBalanceEditor(columnInfo, renderArgs, rowEntry);
 
+        case 'bought' :
+            return this.renderBoughtEditor(columnInfo, renderArgs, rowEntry);
+
+        case 'sold' :
+            return this.renderSoldEditor(columnInfo, renderArgs, rowEntry);
+        
+        case 'shares' :
+            return this.renderSharesEditor(columnInfo, renderArgs, rowEntry);
+    
         case 'reconcile' :
             return this.renderReconcileEditor(columnInfo, renderArgs, rowEntry);
         }
@@ -665,12 +780,18 @@ export class AccountRegister extends React.Component {
         case 'credit' :
             return this.renderCreditDisplay(columnInfo, rowEntry);
         
-        case 'shares' :
-            return this.renderSharesDisplay(columnInfo, rowEntry);
-        
         case 'balance' :
             return this.renderBalanceDisplay(columnInfo, rowEntry);
-        
+
+        case 'bought' :
+            return this.renderBoughtDisplay(columnInfo, rowEntry);
+
+        case 'sold' :
+            return this.renderSoldDisplay(columnInfo, rowEntry);
+            
+        case 'shares' :
+            return this.renderSharesDisplay(columnInfo, rowEntry);
+            
         case 'reconcile' :
             return this.renderReconcileDisplay(columnInfo, rowEntry);
         

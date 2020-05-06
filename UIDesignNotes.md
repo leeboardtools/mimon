@@ -419,22 +419,39 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
 
 
     - Prices List
+        - Lists latest prices for each security/mutual fund
+
+    - Historical Prices List
+        - Select a security/mutual-fund
+        - Lists historical prices for security/mutual-fund
+
+    - Lots List
+        - Hierarchy, by security (priced items)
+        - Only for securities and mutual funds?
 
 
     - Account Register
-        - Fields:
-            - Single line:
-                Date | Reconcile | Ref/Check # | Payee | Split | Deposit | Withdrawal | Balance
         - Tool tips:
             - Memo on Description
             - Split amounts on Split
+            - Lots for bought/sold
+
         - Virtual scrolling:
             - https://dev.to/adamklein/build-your-own-virtual-scroll-part-i-11ib
         
-        - Need QuantityDefinition editor/display
         - Date editor
-            - Still problems with not being able to control text-align, size.
-
+            - Need editor.
+            - Display needs to use locale to display date.
+        
+        - For account types with lots, add:
+            - Price
+            - Commission
+            - Fees
+            - Cost-basis
+            - Market value
+            - Long term/short term?
+        
+        - Multi-row support?
 
     - Get Sub-menus working in MenuList, etc.
         - View Columns menus.
@@ -443,3 +460,7 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
     - NewFileSetup.js
         - Finish adding support for Prices
         - Add test prices to CreateTestTransactions.js
+
+
+    - Add zoom in/out to main menu.
+    

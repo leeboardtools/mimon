@@ -1204,6 +1204,9 @@ export class TransactionManager extends EventEmitter {
             const transactionDataItem = transactionDataItems[i];
             const accountStateDataItems
                 = accountEntry.accountStatesByTransactionId.get(transactionDataItem.id);
+            if (!accountStateDataItems) {
+                continue;
+            }
 
             // We start at 1 because the first account state is the same as the
             // last account state of the previous transaction.

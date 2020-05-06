@@ -27,12 +27,15 @@
     "NewFileSetup-setBaseCurrency_failed": ["Could not set the default currency to '", "'. ", ""],
     "NewFileSetup-invalid_currency": ["Could not set up the priced item '", "'. '", "' is not a valid currency."],
     "NewFileSetup-addPricedItem_failed": ["Could not add the priced item '", "'. ", ""],
+    "NewFileSetup-addLot_failed": ["Could not add the lot '", "'. ", ""],
+    "NewFileSetup-lot_pricedItem_not_found": ["Could not add the lot '", "'. The priced item '", "' was not defined."],
     "NewFileSetup-addAccount_failed": ["Could not add the account '", "'. ", ""],
     "NewFileSetup-addOpeningBalance_failed": ["The opening balance of '", "' could not be set to '", "'. ", ""],
     "NewFileSetup-pricedItem_not_found": ["The priced item '", "' was not defined."],
     "NewFileSetup-openingBalance_Description": "Opening balance",
     "NewFileSetup-addTransaction_failed": ["Could not creeate the transaction '", "'."],
     "NewFileSetup-addTransaction_invalid_accountId": ["An account identified by '", "' was not found."],
+    "NewFileSetup-addTransaction_invalid_lotId": ["A lot with description '", "' was not found."],
     
 
     "App-mru_open_failed": ["Could not open '", "'. ", ""],
@@ -159,6 +162,8 @@
     "AccountRegister-reconcile_NOT_RECONCILED": "",
     "AccountRegister-reconcile_PENDING": "c",
     "AccountRegister-reconcile_RECONCILED": "R",
+    "AccountRegister-bought": "Bought",
+    "AccountRegister-sold": "Sold",
 
 
     "PricedItemEditor-prompt_cancel_title": "Confirm Cancel",
