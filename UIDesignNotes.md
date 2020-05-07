@@ -432,9 +432,7 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
 
     - Account Register
         - Tool tips:
-            - Memo on Description
-            - Split amounts on Split
-            - Lots for bought/sold
+            
 
         - Virtual scrolling:
             - https://dev.to/adamklein/build-your-own-virtual-scroll-part-i-11ib

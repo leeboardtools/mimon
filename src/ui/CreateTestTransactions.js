@@ -415,16 +415,28 @@ export function createTestTransactions(newFileContents) {
             quantityBaseValue: aaplQuantityBaseValueC,
             costBasisBaseValue: aaplCostBasisBaseValueC,
         };
+
+        const aaplQuantityD = -20;
+        const applQuantityBaseValueD = aaplQuantityC * 20000;
+        const aaplCostBasisBaseValueD = aaplQuantityD * 16504;
+        const aaplLotChangeD = {
+            lotId: lotA,
+            quantityBaseValue: applQuantityBaseValueD,
+            costBasisBaseValue: aaplCostBasisBaseValueD,
+        };
+
         transactions.push({
             ymdDate: '2020-01-24',
-            description: 'Sell 10sh AAPL',
+            description: 'Sell 30sh AAPL',
             splits: [
                 { accountId: brokerageAccountId, 
-                    quantityBaseValue: -aaplCostBasisBaseValueC, 
+                    quantityBaseValue: -aaplCostBasisBaseValueC
+                        - aaplCostBasisBaseValueD, 
                 },
                 { accountId: accountId, 
-                    quantityBaseValue: aaplCostBasisBaseValueC, 
-                    lotChanges: [ aaplLotChangeC ],
+                    quantityBaseValue: aaplCostBasisBaseValueC
+                        + aaplCostBasisBaseValueD, 
+                    lotChanges: [ aaplLotChangeC, aaplLotChangeD ],
                 },
                 
             ]

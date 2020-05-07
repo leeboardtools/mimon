@@ -653,18 +653,53 @@ export class AccountRegister extends React.Component {
         }
 
         const { category } = accountType;
-        quantityBaseValue *= sign * category.creditSign;
+        sign *= category.creditSign;
+        quantityBaseValue *= sign;
         if (quantityBaseValue < 0) {
             return;
         }
 
-        return <CellQuantityDisplay
+        const { accessor } = this.props;
+        const lotTooltipEntries = [];
+        for (let i = 0; i < lotChanges.length; ++i) {
+            const lotChange = lotChanges[i];
+
+            const lotDataItem = accessor.getLotDataItemWithId(lotChange.lotId);
+            const pricedItemDataItem 
+                = accessor.getPricedItemDataItemWithId(lotDataItem.pricedItemId);
+            if (lotDataItem && pricedItemDataItem) {
+                const quantityDefinition = getQuantityDefinition(
+                    pricedItemDataItem.quantityDefinition);
+                const value = quantityDefinition.baseValueToValueText(
+                    lotChange.quantityBaseValue * sign);
+                lotTooltipEntries.push(<div className="row" key={i}>
+                    <div className="col col-sm-auto text-left">
+                        {lotDataItem.description}
+                    </div>
+                    <div className="col text-right">
+                        {value}
+                    </div>
+                </div>);
+            }
+        }
+
+        const displayComponent = <CellQuantityDisplay
             quantityBaseValue={quantityBaseValue}
             quantityDefinition={quantityDefinition}
             ariaLabel={sign > 0 ? 'Credit' : 'Debit'}
             inputClassExtras={columnInfo.className}
             size={columnInfo.inputSize}
         />;
+
+        if (lotTooltipEntries.length) {
+            return <div className="simple-tooltip">
+                {displayComponent}
+                <div className="simple-tooltiptext">
+                    {lotTooltipEntries}
+                </div>
+            </div>;
+        }
+        return displayComponent;
     }
 
     
