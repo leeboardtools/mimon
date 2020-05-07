@@ -125,7 +125,7 @@ async function asyncLoadPricedItems(setupInfo) {
 
             pricedItemMapping.set(item.id, pricedItemDataItem);
 
-            const name = item.ticker || item.name;
+            const name = item.id || item.ticker || item.name;
             pricedItemNameMapping.set(name, pricedItemDataItem);
         }
         catch (e) {

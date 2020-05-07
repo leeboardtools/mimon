@@ -22,26 +22,29 @@ test('NewFileSetup', async () => {
         const test1 = {
             baseCurrency: 'JPY',
             openingBalancesDate: '2020-01-01',
-            pricedItems: [
-                {
-                    type: PI.PricedItemType.SECURITY.name,
-                    currency: 'USD',
-                    quantityDefinition: QD.getQuantityDefinitionName(
-                        QD.getDecimalDefinition(4)),
-                    name: 'AAPL',
-                    description: 'Apple Computer',
-                    ticker: 'AAPL',
-                    onlineUpdateType: PI.PricedItemOnlineUpdateType.YAHOO_FINANCE.name,
-                },
-                {
-                    type: PI.PricedItemType.REAL_ESTATE.name,
-                    currency: 'EUR',
-                    quantityDefinition: QD.getQuantityDefinitionName(
-                        QD.getDecimalDefinition(2)),
-                    name: 'My House',
-                    id: 'MyHouse',
-                },
-            ],
+            pricedItems: {
+                pricedItems: [
+                    {
+                        type: PI.PricedItemType.SECURITY.name,
+                        currency: 'USD',
+                        quantityDefinition: QD.getQuantityDefinitionName(
+                            QD.getDecimalDefinition(4)),
+                        name: 'AAPL',
+                        description: 'Apple Computer',
+                        ticker: 'AAPL',
+                        onlineUpdateType: 
+                            PI.PricedItemOnlineUpdateType.YAHOO_FINANCE.name,
+                    },
+                    {
+                        type: PI.PricedItemType.REAL_ESTATE.name,
+                        currency: 'EUR',
+                        quantityDefinition: QD.getQuantityDefinitionName(
+                            QD.getDecimalDefinition(2)),
+                        name: 'My House',
+                        id: 'MyHouse',
+                    },
+                ],
+            },
             accounts: {
                 ASSET: [
                     {
@@ -117,12 +120,14 @@ test('NewFileSetup', async () => {
 
         const pricedItemA = accessor.getPricedItemDataItemWithId(
             pricedItemIds1[corePricedItemIds.length]);
-        expect(pricedItemA).toEqual(expect.objectContaining(test1.pricedItems[0]));
+        expect(pricedItemA).toEqual(
+            expect.objectContaining(test1.pricedItems.pricedItems[0]));
 
         const pricedItemB = accessor.getPricedItemDataItemWithId(
             pricedItemIds1[corePricedItemIds.length + 1]);
-        delete test1.pricedItems[1].id;
-        expect(pricedItemB).toEqual(expect.objectContaining(test1.pricedItems[1]));
+        delete test1.pricedItems.pricedItems[1].id;
+        expect(pricedItemB).toEqual(
+            expect.objectContaining(test1.pricedItems.pricedItems[1]));
 
 
         const checkingA = accessor.getAccountDataItemWithRefId('Checking');
