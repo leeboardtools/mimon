@@ -82,8 +82,16 @@ CellTextEditor.propTypes = {
  * @param {*} props 
  */
 export function CellTextDisplay(props) {
-    const { ariaLabel, value, inputClassExtras, size } = props;
+    const { ariaLabel, inputClassExtras } = props;
     const inputType = props.inputType || 'text';
+
+    let { value, size } = props;
+    value = value || '';
+    if (size) {
+        if (size < 0) {
+            size = Math.max(-size, value.length);
+        }
+    }
 
     const divClassName = 'input-group mb-0 ';
     const className = 'form-control cellTextEditor-textInput cellTextEditor-textDisplay ' 
@@ -96,7 +104,7 @@ export function CellTextDisplay(props) {
             style={{backgroundColor: 'inherit'}}
             size={size}
             disabled
-            value={value || ''}
+            value={value}
             onChange={() => {}}
         />
     </div>;

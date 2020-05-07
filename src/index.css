@@ -60,3 +60,44 @@ body {
   visibility: visible;
   opacity: 1;
 }
+
+
+
+
+.simple-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.simple-tooltip .simple-tooltiptext {
+  visibility: hidden;
+  width: 250px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.3s;
+  top: 100%;
+  left: 0%;
+  margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
+}
+
+.simple-tooltip .simple-tooltiptext::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  right: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #555 transparent;
+}
+
+.simple-tooltip:hover .simple-tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}

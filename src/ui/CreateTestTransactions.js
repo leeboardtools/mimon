@@ -35,6 +35,7 @@ export function createTestTransactions(newFileContents) {
     transactions.push({
         ymdDate: '2020-01-03',
         description: 'Paycheck',
+        memo: 'First paycheck of the year!',
         splits: [
             { 
                 accountId: 'ASSET-Current Assets-Checking Account',
@@ -45,6 +46,17 @@ export function createTestTransactions(newFileContents) {
             {
                 accountId: 'INCOME-Salary',
                 quantityBaseValue: 100000,
+            },
+            {
+                accountId: 'INCOME-Bonus',
+                quantityBaseValue: 20000,
+                description: 'A bonus',
+                memo: 'Woo-whoo!',
+            },
+            {
+                accountId: 'ASSET-Investments-401(k) Account',
+                quantityBaseValue: 20000,
+                memo: 'The bonus',
             },
             {
                 accountId: 'EXPENSE-Taxes-Federal Income Tax',
@@ -115,6 +127,7 @@ export function createTestTransactions(newFileContents) {
     transactions.push({
         ymdDate: '2020-01-17',
         description: 'Paycheck',
+        memo: 'Second paycheck of the year!',
         splits: [
             { 
                 accountId: 'ASSET-Current Assets-Checking Account',
@@ -272,6 +285,21 @@ export function createTestTransactions(newFileContents) {
         ] 
     });
 
+    transactions.push({
+        ymdDate: '2010-01-30',
+        description: 'Opening Balance',
+        splits: [
+            { 
+                accountId: 'ASSET-Investments-401(k) Account',
+                quantityBaseValue: 100000000,
+            },
+            { 
+                accountId: 'EQUITY-Opening Balances',
+                quantityBaseValue: 100000000,
+            },
+        ] 
+    });
+
 
     const lots = [];
     newFileContents.lots = {
@@ -406,6 +434,12 @@ export function createTestTransactions(newFileContents) {
     const iraAccount = findAccountEntry(newFileContents,
         'ASSET-Investments-IRA Account');
     if (iraAccount) {
+        // 
+    }
+
+    const fourOhOneKAccount = findAccountEntry(newFileContents,
+        'ASSET-Investments-401(k) Account');
+    if (fourOhOneKAccount) {
         // 
     }
 }

@@ -87,16 +87,20 @@ CellQuantityEditor.propTypes = {
  */
 export function CellQuantityDisplay(props) {
     const { ariaLabel, quantityBaseValue, 
-        inputClassExtras, size } = props;
+        inputClassExtras } = props;
     const quantityDefinition 
         = getQuantityDefinition(props.quantityDefinition);
 
+    let { size } = props;
     let value;
     if (!quantityDefinition || (quantityBaseValue === undefined)) {
         value = '';
     }
     else {
         value = quantityDefinition.baseValueToValueText(quantityBaseValue);
+        if (size && (size < 0)) {
+            size = Math.max(value.length, -size);
+        }
     }
 
     const divClassName = 'input-group mb-0 ';
@@ -123,6 +127,9 @@ export function CellQuantityDisplay(props) {
  * @property {string}   [value]
  * @property {string}   [inputClassExtras]  If specified additional CSS
  * classes to add to the &lt;input&gt; entity.
+ * @property {number}   [size]  If specified and &lt; 0 then this is
+ * the default size for the input field and will be enlarged to fit
+ * the number of characters in the quantity as needed.
  */
 CellQuantityDisplay.propTypes = {
     ariaLabel: PropTypes.string,

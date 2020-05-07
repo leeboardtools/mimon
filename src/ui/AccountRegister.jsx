@@ -6,6 +6,7 @@ import { CellTextDisplay } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay } from '../util-ui/CellSelectEditor';
 import { CellDateDisplay } from '../util-ui/CellDateEditor';
 import { CellQuantityDisplay } from '../util-ui/CellQuantityEditor';
+import { getQuantityDefinition } from '../util/Quantities';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
 import deepEqual from 'deep-equal';
@@ -25,7 +26,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
         const cellClassName = 'm-0';
 
         const numericClassName = 'text-right';
-        const numericSize = 10; // 12.456,789
+        const numericSize = -8; // 12.456,78
 
         columnInfoDefs = {
             date: { key: 'date',
@@ -34,7 +35,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 propertyName: 'date',
                 className: 'text-center',
                 inputClassName: 'text-center',
-                inputSize: 10,
+                inputSize: -10,
                 cellClassName: cellClassName,
             },
             refNum: { key: 'refNum',
@@ -43,7 +44,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 propertyName: 'refNum',
                 className: 'text-center',
                 inputClassName: 'text-right',
-                inputSize: 10,
+                inputSize: -6,
                 cellClassName: cellClassName,
             },
             description: { key: 'description',
@@ -139,16 +140,6 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
 }
 
 
-function getInputSize(columnInfo, value, extra) {
-    let { inputSize } = columnInfo;
-    if (inputSize) {
-        if ((value !== undefined) && (value !== null)) {
-            extra = extra || 0;
-            inputSize = Math.max(value.toString().length + extra, inputSize);
-        }
-        return inputSize;
-    }
-}
 
 
 /**
@@ -524,9 +515,20 @@ export class AccountRegister extends React.Component {
         const { transactionDataItem } = rowEntry;
         if (transactionDataItem) {
             const split = transactionDataItem.splits[rowEntry.splitIndex];
-            let { description } = split;
+            let { description, memo } = split;
             description = description || transactionDataItem.description;
-            return this.renderTextDisplay(columnInfo, description);
+            memo = memo || transactionDataItem.memo;
+
+            const descriptionComponent 
+                = this.renderTextDisplay(columnInfo, description);
+            if (memo) {
+                return <div className="simple-tooltip">
+                    {descriptionComponent}
+                    <div className="simple-tooltiptext">{memo}</div>
+                </div>;
+            }
+
+            return descriptionComponent;
         }
     }
     
@@ -536,6 +538,20 @@ export class AccountRegister extends React.Component {
 
     }
 
+    renderSplitItemTooltip(splits, index) {
+        const split = splits[index];
+        const splitAccountDataItem 
+            = this.props.accessor.getAccountDataItemWithId(split.accountId);
+        
+        const { quantityDefinition } = this.state;
+        const value = getQuantityDefinition(quantityDefinition)
+            .baseValueToValueText(split.quantityBaseValue);
+        return <div className="row" key={index}>
+            <div className="col col-sm-auto text-left">{splitAccountDataItem.name}</div>
+            <div className="col text-right">{value}</div>
+        </div>;
+    }
+
     renderSplitDisplay(columnInfo, rowEntry) {
         const { transactionDataItem } = rowEntry;
         if (transactionDataItem) {
@@ -543,13 +559,25 @@ export class AccountRegister extends React.Component {
             const splits = transactionDataItem.splits;
             let text;
             if (splits.length === 2) {
-                const split = transactionDataItem.splits[1 - rowEntry.splitIndex];
+                const split = splits[1 - rowEntry.splitIndex];
                 const splitAccountDataItem 
                     = accessor.getAccountDataItemWithId(split.accountId);
                 text = splitAccountDataItem.name;
             }
             else {
                 text = userMsg('AccountRegister-multi_splits');
+                const tooltipEntries = [];
+                for (let i = 0; i < splits.length; ++i) {
+                    tooltipEntries.push(this.renderSplitItemTooltip(splits, i));
+                }
+                const tooltip = <div className="simple-tooltiptext">
+                    {tooltipEntries}
+                </div>;
+
+                return <div className="simple-tooltip"> 
+                    {this.renderTextDisplay(columnInfo, text)}
+                    {tooltip}
+                </div>;
             }
             
             return this.renderTextDisplay(columnInfo, text);
@@ -580,7 +608,7 @@ export class AccountRegister extends React.Component {
             quantityDefinition={quantityDefinition}
             ariaLabel={sign > 0 ? 'Credit' : 'Debit'}
             inputClassExtras={columnInfo.className}
-            size={getInputSize(columnInfo, quantityBaseValue)}
+            size={columnInfo.inputSize}
         />;
     }
 
@@ -635,7 +663,7 @@ export class AccountRegister extends React.Component {
             quantityDefinition={quantityDefinition}
             ariaLabel={sign > 0 ? 'Credit' : 'Debit'}
             inputClassExtras={columnInfo.className}
-            size={getInputSize(columnInfo, quantityBaseValue)}
+            size={columnInfo.inputSize}
         />;
     }
 
@@ -672,7 +700,7 @@ export class AccountRegister extends React.Component {
                 quantityBaseValue={quantityBaseValue}
                 ariaLabel="Shares"
                 inputClassExtras={columnInfo.className}
-                size={getInputSize(columnInfo, quantityBaseValue)}
+                size={columnInfo.inputSize}
             />;
         }
     }
@@ -692,7 +720,7 @@ export class AccountRegister extends React.Component {
                 quantityBaseValue={quantityBaseValue}
                 ariaLabel="Balance"
                 inputClassExtras={columnInfo.className}
-                size={getInputSize(columnInfo, quantityBaseValue)}
+                size={columnInfo.inputSize}
             />;
         }
     }
