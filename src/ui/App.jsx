@@ -55,10 +55,12 @@ class AppOpenScreen extends React.Component {
         process.nextTick(async () => {
             const validPathNames = [];
             const { mruPathNames } = this.props;
-            for (let i = 0; i < mruPathNames.length; ++i) {
-                const pathName = mruPathNames[i];
-                if (await asyncFileOrDirExists(pathName)) {
-                    validPathNames.push(pathName);
+            if (mruPathNames) {
+                for (let i = 0; i < mruPathNames.length; ++i) {
+                    const pathName = mruPathNames[i];
+                    if (await asyncFileOrDirExists(pathName)) {
+                        validPathNames.push(pathName);
+                    }
                 }
             }
 
