@@ -173,6 +173,29 @@ export function createTestTransactions(newFileContents) {
         ] 
     });
 
+    for (let i = 1; i <= 29; ++i) {
+        let date = '2020-02-';
+        if (i < 10) {
+            date += '0';
+        }
+        date += i.toString();
+
+        transactions.push({
+            ymdDate: date,
+            description: 'Coffee ' + i,
+            splits: [
+                { 
+                    accountId: 'ASSET-Current Assets-Cash',
+                    quantityBaseValue: -300,
+                },
+                { 
+                    accountId: 'EXPENSE-Dining',
+                    quantityBaseValue: 300,
+                },
+            ] 
+        });
+    }
+
 
     //
     // Add some stock transactions...
