@@ -110,8 +110,8 @@ export class TabbedPages extends React.Component {
         });
 
         let className = this.props.tabClassName || 'nav nav-tabs bg-light';
-        if (this.props.tabExtras) {
-            className += ' ' + this.props.tabExtras;
+        if (this.props.tabClassExtras) {
+            className += ' ' + this.props.tabClassExtras;
         }
         return (
             <nav className={className}>
@@ -132,21 +132,32 @@ export class TabbedPages extends React.Component {
             ));
         });
 
-        return <div className="container-fluid pl-0 pr-0 mt-3">{pages}</div>;
+        let className = 'container-fluid pl-0 pr-0 mt-3';
+        const { bodyClassExtras } = this.props;
+        if (bodyClassExtras) {
+            className += ' ' + bodyClassExtras;
+        }
+
+        return <div className={className}>{pages}</div>;
     }
 
 
     render() {
         let tabs = this.renderTabs();
 
-        const { onPostRenderTabs } = this.props;
+        const { classExtras, onPostRenderTabs } = this.props;
         if (onPostRenderTabs) {
             tabs = onPostRenderTabs(tabs);
         }
 
+        let className = 'container-fluid pl-1 pr-1';
+        if (classExtras) {
+            className += ' ' + classExtras;
+        }
+
         const body = this.renderBody();
 
-        return <div className="container-fluid pl-1 pr-1">
+        return <div className={className}>
             {tabs}
             {body}
         </div>;
@@ -214,7 +225,7 @@ export class TabbedPages extends React.Component {
  * the initially active page.
  * @property {string}   [tabClassName]  Initial class for individual tabs, Bootstrap
  * classes added to this.
- * @property {string}   [tabExtras] Extra classes to add for individual tabs after
+ * @property {string}   [tabClassExtras] Extra classes to add for individual tabs after
  * the Bootstrap classes.
  * @property {TabbedPages~onPostRenderTabs} [onPostRenderTabs] Callback that allows
  * processing of the tabs component to render.
@@ -225,7 +236,9 @@ TabbedPages.propTypes = {
     onRenderPage: PropTypes.func.isRequired,
     onCloseTab: PropTypes.func,
     onActivateTab: PropTypes.func,
+    classExtras: PropTypes.string,
     tabClassName: PropTypes.string,
-    tabExtras: PropTypes.string,
+    tabClassExtras: PropTypes.string,
+    bodyClassExtras: PropTypes.string,
     onPostRenderTabs: PropTypes.func,
 };
