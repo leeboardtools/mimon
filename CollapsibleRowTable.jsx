@@ -295,7 +295,9 @@ export class CollapsibleRowTable extends React.Component {
         if (this.props.onGetRowExpandCollapseState) {
             columns.splice(0, 0, <th scope="col" key="0" />);
         }
-        return <thead><tr>{columns}</tr></thead>;
+        return <thead className={this.props.headerClassExtras}>
+            <tr className={this.props.headerRowClassExtras}>{columns}</tr>
+        </thead>;
     }
 
     renderTableBody() {
@@ -475,6 +477,8 @@ CollapsibleRowTable.propTypes = {
     rowEntries: PropTypes.array.isRequired,
     activeRowKey: PropTypes.string,
     tableClassExtras: PropTypes.string,
+    headerClassExtras: PropTypes.string,
+    headerRowClassExtras: PropTypes.string,
     onRenderCell: PropTypes.func.isRequired,
     onGetRowExpandCollapseState: PropTypes.func,
     onGetRowExtras: PropTypes.func,
