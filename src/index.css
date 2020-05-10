@@ -101,3 +101,25 @@ body {
   visibility: visible;
   opacity: 1;
 }
+
+
+.tabbedMain {
+  display: flex;
+  flex-direction: column;
+  height:100%;
+}
+
+.tabbedBody {
+  margin: 0!important;
+  flex-grow: 1;
+}
+
+.tabbedPage {
+  height: 100%;
+}
+
+.AccountRegisterVirtual {
+  padding: 2px;
+  height: 100%;
+}
+
