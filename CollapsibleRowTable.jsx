@@ -295,7 +295,9 @@ export class CollapsibleRowTable extends React.Component {
         if (this.props.onGetRowExpandCollapseState) {
             columns.splice(0, 0, <th scope="col" key="0" />);
         }
-        return <thead className={this.props.headerClassExtras}>
+        const className = 'CollapsibleRowTableHeader ' 
+            + (this.props.headerClassExtras || '');
+        return <thead className={className}>
             <tr className={this.props.headerRowClassExtras}>{columns}</tr>
         </thead>;
     }
@@ -322,7 +324,9 @@ export class CollapsibleRowTable extends React.Component {
                 />
             );
         });
-        return <tbody>{rows}</tbody>;
+        return <tbody className="CollapsibleRowTableBody">
+            {rows}
+        </tbody>;
     }
 
     render() {
@@ -331,9 +335,10 @@ export class CollapsibleRowTable extends React.Component {
         const contextMenu = this.renderContextMenu();
 
         const tableClassName = 'table table-sm text-left table-hover pl-0 pr-0 '
+            + ' CollapsibleRowTable_table'
             + (this.props.tableClassExtras || '');
 
-        return <div className=""
+        return <div className="CollapsibleRowTable"
             onContextMenu={(e) => this.onContextMenu(e)}
         >
             <table className={tableClassName}
