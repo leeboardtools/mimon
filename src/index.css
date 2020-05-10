@@ -107,7 +107,7 @@ body {
   display: flex;
   flex-direction: column;
   height:100%;
-  /*overflow: hidden;*/
+  overflow: hidden;
 }
 
 .tabbedBody {
@@ -118,6 +118,7 @@ body {
 
 .tabbedPage {
   height: 100%;
+  overflow: auto;
 }
 
 

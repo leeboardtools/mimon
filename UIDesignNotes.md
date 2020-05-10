@@ -453,6 +453,7 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
 
     - Get Sub-menus working in MenuList, etc.
         - View Columns menus.
+        - Add zoom in/out to main menu.
     
 
     - NewFileSetup.js
@@ -460,5 +461,4 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
         - Add test prices to CreateTestTransactions.js
 
 
-    - Add zoom in/out to main menu.
     
