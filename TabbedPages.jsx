@@ -123,10 +123,11 @@ export class TabbedPages extends React.Component {
 
     renderBody() {
         const pages = [];
+        const pageClassExtras = this.props.pageClassExtras || '';
         this.props.tabEntries.forEach((tabEntry) => {
             const isActive = (tabEntry.tabId === this.state.activeTabId);
             const page = this.props.onRenderPage(tabEntry, isActive);
-            const className = (isActive ? '' : 'd-none');
+            const className = (isActive ? pageClassExtras : 'd-none');
             pages.push((
                 <div className={className} key={tabEntry.tabId}>{page}</div>
             ));
@@ -240,5 +241,6 @@ TabbedPages.propTypes = {
     tabClassName: PropTypes.string,
     tabClassExtras: PropTypes.string,
     bodyClassExtras: PropTypes.string,
+    pageClassExtras: PropTypes.string,
     onPostRenderTabs: PropTypes.func,
 };
