@@ -119,7 +119,7 @@ function CollapsibleRowTableRow(props) {
         }
 
         const cellSettings = {};
-        const cell = onRenderCell({ cellInfo: cellInfo, cellSettings: cellSettings });
+        const cell = onRenderCell({ cellInfo, cellSettings });
         if (cellSettings.indent) {
             style = {
                 paddingLeft: cellSettings.indent + 'rem',

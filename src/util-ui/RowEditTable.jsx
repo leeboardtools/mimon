@@ -232,7 +232,7 @@ export function rowEditTable(WrappedTable) {
                     const { onCancelEditRow } = this.props;
                     if (onCancelEditRow) {
                         onCancelEditRow({
-                            activeEditRow: activeEditRow, 
+                            rowEntry: activeEditRow, 
                             cellEditBuffers: cellEditBuffers, 
                             rowEditBuffer: rowEditBuffer
                         });
@@ -362,17 +362,17 @@ export function rowEditTable(WrappedTable) {
                             },
                         };
                         return this.props.onRenderEditCell({
-                            cellInfo: cellInfo, 
-                            cellSettings: cellSettings, 
-                            renderArgs: renderArgs,
+                            cellInfo, 
+                            cellSettings, 
+                            renderArgs,
                         });
                     }
                 }
             }
 
             return this.props.onRenderDisplayCell({
-                cellInfo: cellInfo, 
-                cellSettings: cellSettings
+                cellInfo, 
+                cellSettings
             });
         }
 
