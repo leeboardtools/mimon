@@ -412,7 +412,7 @@ export class AccountsList extends React.Component {
     }
 
     
-    onRenderCell(cellInfo, cellSettings) {
+    onRenderCell({ cellInfo, cellSettings }) {
         const { rowEntry } = cellInfo;
         if (!cellInfo.columnIndex) {
             cellSettings.indent = rowEntry.depth;

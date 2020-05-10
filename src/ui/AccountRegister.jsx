@@ -728,6 +728,9 @@ export class AccountRegister extends React.Component {
                 }
             });
 
+            // TODO:
+            // Need to add the 'new transaction' row entry
+
             this.setState({
                 rowEntries: newRowEntries,
                 rowEntriesByTransactionId: newRowEntriesByTransactionIds,
@@ -842,19 +845,25 @@ export class AccountRegister extends React.Component {
 
 
 
-    onStartEditRow(rowEntry, cellEditBuffers, rowEditBuffer, asyncEndEditRow) {
+    onStartEditRow({ rowEntry, cellEditBuffers, rowEditBuffer, asyncEndEditRow }) {
+        const { accountDataItem } = rowEntry;
+        if (!accountDataItem) {
+            return;
+        }
     }
 
 
-    onCancelEditRow(rowEntry, cellEditBuffers, rowEditBuffers) {
+    onCancelEditRow({ rowEntry, cellEditBuffers, rowEditBuffers }) {
     }
 
-    async asyncOnSaveEditRow(rowEntry, cellEditBuffers, rowEditBuffer) {
+    async asyncOnSaveEditRow({ rowEntry, cellEditBuffers, rowEditBuffer }) {
     }
+
+
 
 
     
-    onRenderEditCell(cellInfo, cellSettings, renderArgs) {
+    onRenderEditCell({cellInfo, cellSettings, renderArgs}) {
         const { rowEntry } = cellInfo;
         const { columnInfo } = cellInfo;
         const { renderEditor } = columnInfo;
@@ -868,7 +877,7 @@ export class AccountRegister extends React.Component {
         }
     }
 
-    onRenderDisplayCell(cellInfo, cellSettings) {
+    onRenderDisplayCell({cellInfo, cellSettings}) {
         const { rowEntry } = cellInfo;
         const { columnInfo } = cellInfo;
         const { renderDisplay } = columnInfo;

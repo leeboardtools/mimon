@@ -383,7 +383,7 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    onRenderCell(cellInfo, cellSettings) {
+    onRenderCell({ cellInfo, cellSettings }) {
         const { rowEntry } = cellInfo;
         // id - x
         // type - x

@@ -570,7 +570,7 @@ class NewFileAccountsEditor extends React.Component {
     }
 
 
-    onStartEditRow(rowEntry, cellEditBuffers, rowEditBuffer, asyncEndEditRow) {
+    onStartEditRow({ rowEntry, cellEditBuffers, rowEditBuffer, asyncEndEditRow }) {
         for (let i = 0; i < this._columnInfos.length; ++i) {
             cellEditBuffers.push(i);
         }
@@ -590,7 +590,7 @@ class NewFileAccountsEditor extends React.Component {
     }
 
 
-    onCancelEditRow(rowEntry, cellEditBuffers, rowEditBuffers) {
+    onCancelEditRow({ rowEntry, cellEditBuffers, rowEditBuffers }) {
         this.props.onSetEndEditAsyncCallback(undefined);
         this.setState({
             asyncEndEditRow: undefined,
@@ -609,7 +609,7 @@ class NewFileAccountsEditor extends React.Component {
     }
 
  
-    async asyncOnSaveEditRow(rowEntry, cellEditBuffers, rowEditBuffer) {
+    async asyncOnSaveEditRow({ rowEntry, cellEditBuffers, rowEditBuffer }) {
         const currency = C.USD;
         const newRootAccountDataItems 
             = cloneAccountDataItems(this.props.rootAccountDataItems);
@@ -757,7 +757,7 @@ class NewFileAccountsEditor extends React.Component {
     }
 
 
-    onRenderEditCell(cellInfo, cellSettings, renderArgs) {
+    onRenderEditCell({cellInfo, cellSettings, renderArgs}) {
         const { rowEntry } = cellInfo;
         if (!cellInfo.columnIndex) {
             cellSettings.indent = rowEntry.depth;
@@ -781,7 +781,7 @@ class NewFileAccountsEditor extends React.Component {
     }
 
 
-    onRenderDisplayCell(cellInfo, cellSettings) {
+    onRenderDisplayCell({cellInfo, cellSettings}) {
         const { rowEntry } = cellInfo;
         if (!cellInfo.columnIndex) {
             cellSettings.indent = rowEntry.depth;

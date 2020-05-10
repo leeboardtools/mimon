@@ -119,7 +119,7 @@ function CollapsibleRowTableRow(props) {
         }
 
         const cellSettings = {};
-        const cell = onRenderCell(cellInfo, cellSettings);
+        const cell = onRenderCell({ cellInfo: cellInfo, cellSettings: cellSettings });
         if (cellSettings.indent) {
             style = {
                 paddingLeft: cellSettings.indent + 'rem',
@@ -388,10 +388,14 @@ export class CollapsibleRowTable extends React.Component {
  */
 
 /**
- * The callback for rendering cells
- * @callback CollapsibleRowTable~onRenderCell
+ * @typedef CollapsibleRowTable~onRenderCellArgs
  * @param {CollapsibleRowTable~CellInfo} cellInfo
  * @param {CollapsibleRowTable~CellSettings} cellSettings
+ */
+/**
+ * The callback for rendering cells
+ * @callback CollapsibleRowTable~onRenderCell
+ * @param {CollapsibleRowTable~onRenderCellArgs}    args
  * @returns {object|string}    A React component or text string.
  */
 

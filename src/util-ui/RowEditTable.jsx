@@ -216,8 +216,11 @@ export function rowEditTable(WrappedTable) {
                 if (isSave) {
                     const { asyncOnSaveEditRow } = this.props;
                     if (asyncOnSaveEditRow) {
-                        const errorMsg = await asyncOnSaveEditRow(activeEditRow, 
-                            cellEditBuffers, rowEditBuffer);
+                        const errorMsg = await asyncOnSaveEditRow({
+                            rowEntry: activeEditRow, 
+                            cellEditBuffers: cellEditBuffers, 
+                            rowEditBuffer: rowEditBuffer,
+                        });
                         if (errorMsg) {
                             this.setState({ errorMsg: errorMsg });
                             return false;
@@ -228,7 +231,11 @@ export function rowEditTable(WrappedTable) {
                 else {
                     const { onCancelEditRow } = this.props;
                     if (onCancelEditRow) {
-                        onCancelEditRow(activeEditRow, cellEditBuffers, rowEditBuffer);
+                        onCancelEditRow({
+                            activeEditRow: activeEditRow, 
+                            cellEditBuffers: cellEditBuffers, 
+                            rowEditBuffer: rowEditBuffer
+                        });
                     }
                 }
                 this.setState({
@@ -261,8 +268,12 @@ export function rowEditTable(WrappedTable) {
             const cellEditBuffers = [];
             const rowEditBuffer = {};
             if (onStartEditRow) {
-                onStartEditRow(rowEntry, cellEditBuffers, 
-                    rowEditBuffer, async (isSave) => this.asyncEndEdit(isSave));
+                onStartEditRow({
+                    rowEntry: rowEntry, 
+                    cellEditBuffers: cellEditBuffers, 
+                    rowEditBuffer: rowEditBuffer, 
+                    asyncEndEdit: async (isSave) => this.asyncEndEdit(isSave),
+                });
             }
 
             this.setState({
@@ -321,7 +332,7 @@ export function rowEditTable(WrappedTable) {
         }
 
 
-        onRenderCell(cellInfo, cellSettings) {
+        onRenderCell({ cellInfo, cellSettings }) {
             const { rowEntry, columnIndex } = cellInfo;
             if (this.state.activeEditRowKey === rowEntry.key) {
                 const { cellEditBuffers, rowEditBuffer } = this.state;
@@ -350,13 +361,19 @@ export function rowEditTable(WrappedTable) {
                                 this.handleCellBlur(event, rowEntry, columnIndex); 
                             },
                         };
-                        return this.props.onRenderEditCell(cellInfo, cellSettings, 
-                            renderArgs);
+                        return this.props.onRenderEditCell({
+                            cellInfo: cellInfo, 
+                            cellSettings: cellSettings, 
+                            renderArgs: renderArgs,
+                        });
                     }
                 }
             }
 
-            return this.props.onRenderDisplayCell(cellInfo, cellSettings);
+            return this.props.onRenderDisplayCell({
+                cellInfo: cellInfo, 
+                cellSettings: cellSettings
+            });
         }
 
 
@@ -429,56 +446,85 @@ export function rowEditTable(WrappedTable) {
      */
 
     /**
-     * @callback RowEditTable~onStartEditRow
-     * @param {CollapsibleRowTable~RowEntry}  rowEntry
-     * @param {RowEditTable~renderArgs} renderArgs
-     * @param {object[]}   cellEditBuffers Array whose elements correspond 
+     * @typedef {object} RowEditTable~onStartEditRowArgs
+     * @property {CollapsibleRowTable~RowEntry}  rowEntry
+     * @property {RowEditTable~renderArgs} renderArgs
+     * @property {object[]}   cellEditBuffers Array whose elements correspond 
      * to the individual cells, the editable cells should use the appropriate 
      * element to store in-progress edit information.
      * Note that cells that do edit do need to store an object in 
      * cellEditBuffers at their corresponding index.
-     * @param {object}  rowEditBuffer   Object that may be used to pass 
+     * @property {object}  rowEditBuffer   Object that may be used to pass 
      * information to the {@link RowEditTable~onRenderEditCell} callback.
-     * @param {RowEditTable~asyncEndEditRow}    asyncEndEditRow Callback 
+     * @property {RowEditTable~asyncEndEditRow}    asyncEndEditRow Callback 
      * that can be used to end the editing started by this.
      */
 
     /**
-     * @callback RowEditTable~onCancelEditRow
-     * @param {CollapsibleRowTable~RowEntry}  rowEntry
-     * @param {object[]}   cellEditBuffers Edit buffer array that was 
+     * @callback RowEditTable~onStartEditRow
+     * @param {RowEditTable~onStartEditRowArgs} args
+     */
+
+    
+    /**
+     * @typedef {object} RowEditTable~onCancelEditRowArgs
+     * @property {CollapsibleRowTable~RowEntry}  rowEntry
+     * @property {object[]}   cellEditBuffers Edit buffer array that was 
      * passed to {@link RowEditTable~onStartEditRow}
-     * @param {object}  rowEditBuffer   The row edit buffer that was 
+     * @property {object}  rowEditBuffer   The row edit buffer that was 
+     * passed to {@link RowEditTable~onStartEditRow}, may be a copy.
+     */
+
+    /**
+     * @callback RowEditTable~onCancelEditRow
+     * @param {RowEditTable~onCancelEditRowArgs} args
+     */
+
+    
+    /**
+     * @typedef {object} RowEditTable~asyncOnSaveEditRowArgs
+     * @property {CollapsibleRowTable~RowEntry}  rowEntry
+     * @property {object[]}   cellEditBuffers The edit buffer array that was 
+     * passed to {@link RowEditTable~onStartEditRow} and may have been 
+     * modified during cell editing.
+     * @property {object}  rowEditBuffer   The row edit buffer that was 
      * passed to {@link RowEditTable~onStartEditRow}, may be a copy.
      */
 
     /**
      * Callback used to save the current edit state.
      * @callback RowEditTable~asyncOnSaveEditRow
-     * @param {CollapsibleRowTable~RowEntry}  rowEntry
-     * @param {object[]}   cellEditBuffers The edit buffer array that was 
-     * passed to {@link RowEditTable~onStartEditRow} and may have been 
-     * modified during cell editing.
-     * @param {object}  rowEditBuffer   The row edit buffer that was 
-     * passed to {@link RowEditTable~onStartEditRow}, may be a copy.
+     * @param {RowEditTable~asyncOnSaveEditRowArgs} args
      * @returns {string|undefined}   If a non-empty string is returned, 
      * it is an error message that should be displayed.
      */
 
+
+    /**
+     * @typedef {object} RowEditTable~onRenderDisplayCellArgs
+     * @property {CollapsibleRowTable~CellInfo} cellInfo
+     * @property {CollapsibleRowTable~CellSettings} cellSettings
+     */
+    
     /**
      * The callback for rendering cells
      * @callback RowEditTable~onRenderDisplayCell
-     * @param {CollapsibleRowTable~CellInfo} cellInfo
-     * @param {CollapsibleRowTable~CellSettings} cellSettings
+     * @param {RowEditTable~onRenderDisplayCellArgs} args
      * @returns {object|string}    A React component or text string.
      */
 
+    
+    /**
+     * @typedef {object} RowEditTable~onRenderEditCellArgs
+     * @property {CollapsibleRowTable~CellInfo} cellInfo
+     * @property {CollapsibleRowTable~CellSettings} cellSettings
+     * @property {RowEditTable~renderArgs} renderArgs
+     */
+    
     /**
      * Callback used to render a cell when it is in edit mode.
      * @callback RowEditTable~onRenderEditCell
-     * @param {CollapsibleRowTable~CellInfo} cellInfo
-     * @param {CollapsibleRowTable~CellSettings} cellSettings
-     * @param {RowEditTable~renderArgs} renderArgs
+     * @param {RowEditTable~onRenderEditCellArgs} args
      * @returns {object|string}    A React component or text string.
      */
 
