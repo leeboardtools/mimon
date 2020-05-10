@@ -107,14 +107,30 @@ body {
   display: flex;
   flex-direction: column;
   height:100%;
+  /*overflow: hidden;*/
 }
 
 .tabbedBody {
   margin: 0!important;
   flex-grow: 1;
+  height: 100%;
 }
 
 .tabbedPage {
   height: 100%;
 }
 
+
+.CollapsibleRowTableBody {
+}
+
+.CollapsibleRowTableHeader {
+}
+
+.CollapsibleRowTable {
+  height: 100%;
+  width: 100%;
+}
+
+.CollapsibleRowTable_table {
+}
