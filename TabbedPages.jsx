@@ -133,7 +133,7 @@ export class TabbedPages extends React.Component {
             ));
         });
 
-        let className = 'container-fluid pl-0 pr-0 mt-3';
+        let className = 'container-fluid pl-0 pr-0';
         const { bodyClassExtras } = this.props;
         if (bodyClassExtras) {
             className += ' ' + bodyClassExtras;
