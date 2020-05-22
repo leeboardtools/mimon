@@ -83,6 +83,75 @@
 }
 
 
+/** Needed for util-ui/RowTable.jsx */
+.RowTable {
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+    overflow: hidden;
+}
+
+.RowTableCell {
+    padding: .3rem; /* or .75 */
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+
+.RowTableHeader {
+    vertical-align: middle;
+    overflow: hidden;
+}
+
+.RowTableHeaderRow {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+.RowTableHeaderCell {
+}
+
+.RowTableBody {
+    vertical-align: middle;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.RowTableRow {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+.table-striped .RowTableRow:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.table-active .RowTableRow, .table-active>.RowTableRowCell {
+    background-color: rgba(0, 0, 0, 0.075);
+}
+
+.RowTableRowCell {
+
+}
+
+.RowTableFooter {
+    vertical-align: middle;
+    overflow: hidden;
+}
+
+.RowTableFooterRow {
+    display: flex;
+    flex-wrap: nowrap;
+    vertical-align: middle;
+    overflow: hidden;
+}
+
+.RowTableFooterCell {
+
+}
+
+/** End util-ui/RowTable.jsx */
+
+
 /** Needed for util-ui/DropdownField.jsx */
 .scrollable-menu {
     height: auto;
