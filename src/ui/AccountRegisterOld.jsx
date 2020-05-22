@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { RowTable } from '../util-ui/RowTable';
+import { RowEditCollapsibleTable } from '../util-ui/RowEditTable';
 import { CellTextDisplay } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay } from '../util-ui/CellSelectEditor';
 import { CellDateDisplay } from '../util-ui/CellDateEditor';
@@ -16,11 +16,11 @@ const allColumnInfoDefs = {};
 
 
 function renderTextDisplay(columnInfo, value) {
-    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+    const { ariaLabel, inputClassName, inputSize } = columnInfo;
     return <CellTextDisplay
         ariaLabel={ariaLabel}
         value={value}
-        inputClassExtras={inputClassExtras}
+        inputClassExtras={inputClassName}
         size={inputSize}
     />;
 }
@@ -40,8 +40,8 @@ function renderDateDisplay({columnInfo, rowEntry}) {
         return <CellDateDisplay
             ariaLabel="Date"
             value={transactionDataItem.ymdDate}
-            classExtras={columnInfo.inputClassExtras}
-            inputClassExtras={columnInfo.inputClassExtras}
+            classExtras={columnInfo.className}
+            inputClassExtras={columnInfo.inputClassName}
             size={columnInfo.inputSize}
         />;
     }
@@ -107,9 +107,6 @@ function renderSplitItemTooltip(caller, splits, index) {
     const split = splits[index];
     const splitAccountDataItem 
         = caller.props.accessor.getAccountDataItemWithId(split.accountId);
-    if (!splitAccountDataItem) {
-        return;
-    }
     
     const { quantityDefinition } = caller.state;
     const value = getQuantityDefinition(quantityDefinition)
@@ -128,14 +125,8 @@ function renderSplitDisplay({caller, columnInfo, rowEntry}) {
         let text;
         if (splits.length === 2) {
             const split = splits[1 - rowEntry.splitIndex];
-            let splitAccountDataItem = accessor.getAccountDataItemWithId(split.accountId);
-            if (!splitAccountDataItem) {
-                splitAccountDataItem = rowEntry.splitAccountDataItem;
-                if (!splitAccountDataItem) {
-                    return;
-                }
-            }
-
+            const splitAccountDataItem 
+                = accessor.getAccountDataItemWithId(split.accountId);
             text = splitAccountDataItem.name;
         }
         else {
@@ -177,7 +168,7 @@ function renderReconcileDisplay({columnInfo, rowEntry}) {
         return <CellSelectDisplay
             selectedValue={userMsg('AccountRegister-reconcile_' + reconcileState)}
             ariaLabel="Reconcile State"
-            classExtras={columnInfo.inputClassExtras}
+            classExtras={columnInfo.className}
             size={columnInfo.inputSize}
         />;
     }
@@ -244,7 +235,7 @@ function renderBoughtSoldDisplay({caller, columnInfo, rowEntry}, sign) {
         quantityBaseValue={quantityBaseValue}
         quantityDefinition={quantityDefinition}
         ariaLabel={sign > 0 ? 'Credit' : 'Debit'}
-        inputClassExtras={columnInfo.inputClassExtras}
+        inputClassExtras={columnInfo.className}
         size={columnInfo.inputSize}
     />;
 
@@ -300,7 +291,7 @@ function renderSharesDisplay({ caller, columnInfo, rowEntry }) {
             quantityDefinition={quantityDefinition}
             quantityBaseValue={quantityBaseValue}
             ariaLabel="Shares"
-            inputClassExtras={columnInfo.inputClassExtras}
+            inputClassExtras={columnInfo.className}
             size={columnInfo.inputSize}
         />;
     }
@@ -335,7 +326,7 @@ function renderDebitCreditDisplay({ caller, columnInfo, rowEntry }, sign) {
         quantityBaseValue={quantityBaseValue}
         quantityDefinition={quantityDefinition}
         ariaLabel={sign > 0 ? 'Credit' : 'Debit'}
-        inputClassExtras={columnInfo.inputClassExtras}
+        inputClassExtras={columnInfo.className}
         size={columnInfo.inputSize}
     />;
     return component;
@@ -381,7 +372,7 @@ function renderBalanceDisplay({caller, columnInfo, rowEntry}) {
             quantityDefinition={quantityDefinition}
             quantityBaseValue={quantityBaseValue}
             ariaLabel="Balance"
-            inputClassExtras={columnInfo.inputClassExtras}
+            inputClassExtras={columnInfo.className}
             size={columnInfo.inputSize}
         />;
     }
@@ -407,58 +398,50 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
 
         columnInfoDefs = {
             date: { key: 'date',
-                header: {
-                    label: userMsg('AccountRegister-date'),
-                    ariaLabel: 'Date',
-                    classExtras: 'text-center',
-                },
-                inputClassExtras: 'text-center',
+                label: userMsg('AccountRegister-date'),
+                ariaLabel: 'Date',
+                propertyName: 'date',
+                className: 'text-center',
+                inputClassName: 'text-center',
                 inputSize: -10,
                 cellClassName: cellClassName,
                 renderDisplay: renderDateDisplay,
                 renderEditor: renderDateEditor,
             },
             refNum: { key: 'refNum',
-                header: {
-                    label: userMsg('AccountRegister-refNum'),
-                    ariaLabel: 'Number',
-                    classExtras: 'text-center',
-                },
-                inputClassExtras: 'text-center',
+                label: userMsg('AccountRegister-refNum'),
+                ariaLabel: 'Number',
+                propertyName: 'refNum',
+                className: 'text-center',
+                inputClassName: 'text-right',
                 inputSize: -6,
                 cellClassName: cellClassName,
                 renderDisplay: renderRefNumDisplay,
                 renderEditor: renderRefNumEditor,
             },
             description: { key: 'description',
-                header: {
-                    label: userMsg('AccountRegister-description'),
-                    ariaLabel: 'Description',
-                    classExtras: 'text-left',
-                },
-                inputClassExtras: 'text-left',
+                label: userMsg('AccountRegister-description'),
+                ariaLabel: 'Description',
+                propertyName: 'description',
+                className: 'w-auto',
                 cellClassName: cellClassName,
                 renderDisplay: renderDescriptionDisplay,
                 renderEditor: renderDescriptionEditor,
             },
             splits: { key: 'split',
-                header: {
-                    label: userMsg('AccountRegister-split'),
-                    ariaLabel: 'Split',
-                    classExtras: 'text-left',
-                },
-                inputClassExtras: 'text-left',
+                label: userMsg('AccountRegister-split'),
+                ariaLabel: 'Split',
+                propertyName: 'split',
+                className: '',
                 cellClassName: cellClassName,
                 renderDisplay: renderSplitDisplay,
                 renderEditor: renderSplitEditor,
             },
             reconcile: { key: 'reconcile',
-                header: {
-                    label: userMsg('AccountRegister-reconcile'),
-                    ariaLabel: 'Reconciled',
-                    classExtras: 'text-center',
-                },
-                inputClassExtras: 'text-center',
+                label: userMsg('AccountRegister-reconcile'),
+                ariaLabel: 'Reconciled',
+                propertyName: 'reconcile',
+                className: 'text-center',
                 inputSize: 2,
                 cellClassName: cellClassName,
                 renderDisplay: renderReconcileDisplay,
@@ -476,36 +459,30 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
             //  - bought
             //  - sold
             columnInfoDefs.bought = { key: 'bought',
-                header: {
-                    label: userMsg('AccountRegister-bought'),
-                    ariaLabel: 'Bought',
-                    classExtras: numericClassName,
-                },
-                inputClassExtras: numericClassName,
+                label: userMsg('AccountRegister-bought'),
+                ariaLabel: 'Bought',
+                propertyName: 'bought',
+                className: numericClassName,
                 cellClassName: cellClassName,
                 inputSize: numericSize,
                 renderDisplay: renderBoughtDisplay,
                 renderEditor: renderBoughtEditor,
             };
             columnInfoDefs.sold = { key: 'sold',
-                header: {
-                    label: userMsg('AccountRegister-sold'),
-                    ariaLabel: 'Sold',
-                    classExtras: numericClassName,
-                },
-                inputClassExtras: numericClassName,
+                label: userMsg('AccountRegister-sold'),
+                ariaLabel: 'Sold',
+                propertyName: 'sold',
+                className: numericClassName,
                 cellClassName: cellClassName,
                 inputSize: numericSize,
                 renderDisplay: renderSoldDisplay,
                 renderEditor: renderSoldEditor,
             };
             columnInfoDefs.shares = { key: 'shares',
-                header: {
-                    label: userMsg('AccountRegister-shares'),
-                    ariaLabel: 'Shares',
-                    classExtras: numericClassName,
-                },
-                inputClassExtras: numericClassName,
+                label: userMsg('AccountRegister-shares'),
+                ariaLabel: 'Shares',
+                propertyName: 'shares',
+                className: numericClassName,
                 cellClassName: cellClassName,
                 inputSize: numericSize,
                 renderDisplay: renderSharesDisplay,
@@ -514,36 +491,30 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
         }
         else {
             columnInfoDefs.debit = { key: 'debit',
-                header: {
-                    label: accountType.debitLabel,
-                    ariaLabel: accountType.debitLabel,
-                    classExtras: numericClassName,
-                },
-                inputClassExtras: numericClassName,
+                label: accountType.debitLabel,
+                ariaLabel: accountType.debitLabel,
+                propertyName: 'debit',
+                className: numericClassName,
                 cellClassName: cellClassName,
                 inputSize: numericSize,
                 renderDisplay: renderDebitDisplay,
                 renderEditor: renderDebitEditor,
             };
             columnInfoDefs.credit = { key: 'credit',
-                header: {
-                    label: accountType.creditLabel,
-                    ariaLabel: accountType.creditLabel,
-                    classExtras: numericClassName,
-                },
-                inputClassExtras: numericClassName,
+                label: accountType.creditLabel,
+                ariaLabel: accountType.creditLabel,
+                propertyName: 'credit',
+                className: numericClassName,
                 cellClassName: cellClassName,
                 inputSize: numericSize,
                 renderDisplay: renderCreditDisplay,
                 renderEditor: renderCreditEditor,
             };
             columnInfoDefs.balance = { key: 'balance',
-                header: {
-                    label: userMsg('AccountRegister-balance'),
-                    ariaLabel: 'Account Balance',
-                    classExtras: numericClassName,
-                },
-                inputClassExtras: numericClassName,
+                label: userMsg('AccountRegister-balance'),
+                ariaLabel: 'Account Balance',
+                propertyName: 'balance',
+                className: numericClassName,
                 cellClassName: cellClassName,
                 inputSize: numericSize,
                 renderDisplay: renderBalanceDisplay,
@@ -564,7 +535,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
 /**
  * Component for account registers.
  */
-export class AccountRegister extends React.Component {
+export class AccountRegisterOld extends React.Component {
     constructor(props) {
         super(props);
 
@@ -572,8 +543,7 @@ export class AccountRegister extends React.Component {
         this.onTransactionModify = this.onTransactionModify.bind(this);
         this.onTransactionRemove = this.onTransactionRemove.bind(this);
 
-        this.getRowKey = this.getRowKey.bind(this);
-        this.onLoadRows = this.onLoadRows.bind(this);
+        this.onLoadRowEntries = this.onLoadRowEntries.bind(this);
 
         this.onStartEditRow = this.onStartEditRow.bind(this);
         this.onCancelEditRow = this.onCancelEditRow.bind(this);
@@ -581,8 +551,8 @@ export class AccountRegister extends React.Component {
         this.onRenderDisplayCell = this.onRenderDisplayCell.bind(this);
         this.onRenderEditCell = this.onRenderEditCell.bind(this);
 
+        this.onGetRowAtIndex = this.onGetRowAtIndex.bind(this);
         this.onActivateRow = this.onActivateRow.bind(this);
-        this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
 
         const { accountId, accessor } = this.props;
         const accountDataItem = accessor.getAccountDataItemWithId(accountId);
@@ -632,73 +602,7 @@ export class AccountRegister extends React.Component {
             quantityDefinition: pricedItemDataItem.quantityDefinition,
         };
 
-        /*
-                newRowEntry.accountStateDataItem = resultEntry.accountStateDataItem;
-                newRowEntry.transactionDataItem = resultEntry.transactionDataItem;
-                newRowEntry.splitIndex = resultEntry.splitIndex;
-                key: key.id.toString() + '_' + splitOccurrance,
-                index: newRowEntries.length,
-                transactionId: key.id,
-                splitOccurrance: splitOccurrance,
-        */
-        this._sizingRowEntry = {
-            transactionDataItem: {
-                ymdDate: '2020-12-31',
-                description: userMsg('AccountRegister-dummy_description'),
-                splits: [
-                    {
-                        reconcileState: T.ReconcileState.NOT_RECONCILED,
-                        accountId: -1,
-                        quantityBaseValue: 999999999,
-                        lotChanges: [
-
-                        ],
-                    },
-                ],
-            },
-            accountStateDataItem: {
-                ymdDate: '2020-12-31',
-                quantityBaseValue: 999999999,
-                lotStates: [
-
-                ],
-            },
-            splitIndex: 0,
-            splitAccountDataItem: {
-                name: userMsg('AccountRegister-dummy_accountName'),
-            }
-        };
-
-        this.state.columns = this.generateColumns();
-
         this.updateRowEntries();
-    }
-
-
-    generateColumns(columnWidths) {
-        const { columnInfos } = this.state;
-        const columns = columnInfos.map((columnInfo) => {
-            return {
-                key: columnInfo.key,
-                // width
-                // minWidth
-                // maxWidth
-                header: columnInfo.header,
-                footer: columnInfo.footer,
-            };
-        });
-
-        columnWidths = columnWidths || this.state.columnWidths;
-        if (columnWidths) {
-            const count = Math.min(columnWidths.length, columns.length);
-            for (let i = 0; i < count; ++i) {
-                if (columnWidths[i] !== undefined) {
-                    columns[i].width = columnWidths[i];
-                }
-            }
-        }
-
-        return columns;
     }
 
 
@@ -827,13 +731,7 @@ export class AccountRegister extends React.Component {
             // TODO:
             // Need to add the 'new transaction' row entry
 
-            let { activeRowIndex } = this.state;
-            if (activeRowIndex === undefined) {
-                activeRowIndex = newRowEntries.length - 1;
-            }
-
             this.setState({
-                activeRowIndex: activeRowIndex,
                 rowEntries: newRowEntries,
                 rowEntriesByTransactionId: newRowEntriesByTransactionIds,
             });
@@ -841,22 +739,13 @@ export class AccountRegister extends React.Component {
     }
 
 
-    getRowKey(rowIndex) {
-        const { rowEntries } = this.state;
-        const rowEntry = rowEntries[rowIndex];
-        if (rowEntry) {
-            return rowEntry.transactionId;
-        }
-        return -rowIndex;
-    }
-
-
-    onLoadRows({firstRowIndex, lastRowIndex}) {
+    onLoadRowEntries(startRowIndex, rowCount) {
         const { accessor } = this.props;
         const { rowEntries } = this.state;
 
         let needsLoading = false;
-        for (let i = firstRowIndex; i <= lastRowIndex; ++i) {
+        const lastRowIndex = startRowIndex + rowCount - 1;
+        for (let i = startRowIndex; i <= lastRowIndex; ++i) {
             const rowEntry = rowEntries[i];
             if (!rowEntry.accountStateDataItem) {
                 needsLoading = true;
@@ -869,11 +758,11 @@ export class AccountRegister extends React.Component {
         }
 
         const { accountId } = this.props;
-        const transactionIdA = rowEntries[firstRowIndex].transactionId;
+        const transactionIdA = rowEntries[startRowIndex].transactionId;
         const transactionIdB = rowEntries[lastRowIndex].transactionId;
 
         process.nextTick(async () => {
-            console.log('loading transactions: ' + firstRowIndex + ' ' + lastRowIndex);
+            console.log('loading transactions: ' + startRowIndex + ' ' + lastRowIndex);
 
             const results = await accessor.asyncGetAccountStateAndTransactionDataItems(
                 accountId, transactionIdA, transactionIdB);
@@ -889,7 +778,7 @@ export class AccountRegister extends React.Component {
                 = new Map(this.state.rowEntriesByTransactionId);
 
             let resultIndex = 0;
-            for (let rowIndex = firstRowIndex; rowIndex <= lastRowIndex; 
+            for (let rowIndex = startRowIndex; rowIndex <= lastRowIndex; 
                 ++rowIndex, ++resultIndex) {
                 const newRowEntry = Object.assign({}, rowEntries[rowIndex]);
                 const id = newRowEntry.transactionId;
@@ -943,23 +832,17 @@ export class AccountRegister extends React.Component {
     }
 
 
-    onSetColumnWidth({ columnIndex, columnWidth}) {
-        this.setState((state) => {
-            const columnWidths = Array.from(state.columnWidths || []);
-            columnWidths[columnIndex] = columnWidth;
-            return {
-                columnWidths: columnWidths,
-                columns: this.generateColumns(columnWidths),
-            };
-        });
+    onGetRowAtIndex(index) {
+        return this.state.rowEntries[index];
     }
 
 
-    onActivateRow(rowIndex) {
+    onActivateRow(rowEntry) {
         this.setState({
-            activeRowIndex: rowIndex,
+            activeRowKey: rowEntry.key,
         });
     }
+
 
 
     onStartEditRow({ rowEntry, cellEditBuffers, rowEditBuffer, asyncEndEditRow }) {
@@ -1023,32 +906,15 @@ export class AccountRegister extends React.Component {
         }
     }
 
-
-    onRenderDisplayCell({rowIndex, columnIndex, isSizeRender}) {
-        if (rowIndex < 0) {
-            // Shouldn't happen...
-            return;
-        }
-
-        let rowEntry;
-        if (isSizeRender) {
-            rowEntry = this._sizingRowEntry;
-        }
-        else {
-            rowEntry = this.state.rowEntries[rowIndex];
-        }
-
-        if (!rowEntry) {
-            return;
-        }
-
-        const columnInfo = this.state.columnInfos[columnIndex];
+    onRenderDisplayCell({cellInfo, cellSettings}) {
+        const { rowEntry } = cellInfo;
+        const { columnInfo } = cellInfo;
         const { renderDisplay } = columnInfo;
         if (renderDisplay) {
             return renderDisplay({
                 caller: this, 
                 columnInfo: columnInfo, 
-                rowEntry: rowEntry,
+                rowEntry: rowEntry
             });
         }
     }
@@ -1056,53 +922,23 @@ export class AccountRegister extends React.Component {
 
     render() {
         const { state } = this;
-
         return <div className="AccountRegister">
-            <RowTable
-                columns={state.columns}
-
-                rowCount={state.rowEntries.length}
-                getRowKey={this.getRowKey}
-
-                onLoadRows={this.onLoadRows}
-
-                //onRenderCell: PropTypes.func.isRequired,
-                onRenderCell={this.onRenderDisplayCell}
-
-                requestedVisibleRowIndex={state.activeRowIndex}
-
-                onSetColumnWidth={this.onSetColumnWidth}
-
-                //rowHeight: PropTypes.number,
-                //headerHeight: PropTypes.number,
-                //footerHeight: PropTypes.number,
-
-                activeRowIndex={state.activeRowIndex}
-                onActivateRow={this.onActivateRow}
-
-                //onOpenRow: PropTypes.func,
-                //onCloseRow: PropTypes.func,
-
-                //onContextMenu: PropTypes.func,
-                //contextMenuItems: PropTypes.array,
-                //onChooseContextMenuItem: PropTypes.func,
-                contextMenuItems={this.props.contextMenuItems}
-                onChooseContextMenuItem={this.props.onChooseContextMenuItem}
-
-                classExtras="table-striped"
-                //headerClassExtras: PropTypes.string,
-                //bodyClassExtras: PropTypes.string,
-                //rowClassExtras: PropTypes.string,
-                //footerClassExtras: PropTypes.string,
-
-                //rowEntries={state.rowEntries}
-                /*activeRowKey={state.activeRowKey}
+            <RowEditCollapsibleTable
+                tableClassExtras="table-striped"
+                columnInfos={state.columnInfos}
+                rowEntries={state.rowEntries}
+                activeRowKey={state.activeRowKey}
                 onRenderDisplayCell={this.onRenderDisplayCell}
                 onRenderEditCell={this.onRenderEditCell}
                 onStartEditRow={this.onStartEditRow}
                 onCancelEditRow={this.onCancelEditRow}
                 asyncOnSaveEditRow={this.asyncOnSaveEditRow}
-                */
+
+                onGetRowAtIndex={this.onGetRowAtIndex}
+                onActivateRow={this.onActivateRow}
+                contextMenuItems={this.props.contextMenuItems}
+                onChooseContextMenuItem={this.props.onChooseContextMenuItem}
+                onLoadRowEntries={this.onLoadRowEntries}
             />
             {this.props.children}
         </div>;
@@ -1114,7 +950,7 @@ export class AccountRegister extends React.Component {
  * @typedef {object} AccountRegister~propTypes
  * @property {EngineAccessor}   accessor
  */
-AccountRegister.propTypes = {
+AccountRegisterOld.propTypes = {
     accessor: PropTypes.object.isRequired,
     accountId: PropTypes.number.isRequired,
     contextMenuItems: PropTypes.array,

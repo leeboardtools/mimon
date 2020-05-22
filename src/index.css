@@ -118,20 +118,19 @@ body {
 
 .tabbedPage {
   height: 100%;
-  overflow: auto;
+  overflow: auto; 
+    /* tabbedMain overflow: hidden plus tabbedPage overflow: auto
+      keeps the tabs from scrolling.
+    */
+  overflow: hidden;
 }
 
 
-.CollapsibleRowTableBody {
-}
-
-.CollapsibleRowTableHeader {
-}
-
-.CollapsibleRowTable {
+.AccountRegister {
   height: 100%;
   width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  /*overflow: auto;*/
 }
 
-.CollapsibleRowTable_table {
-}

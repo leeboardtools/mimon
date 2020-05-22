@@ -164,6 +164,8 @@
     "AccountRegister-reconcile_RECONCILED": "R",
     "AccountRegister-bought": "Bought",
     "AccountRegister-sold": "Sold",
+    "AccountRegister-dummy_description": "This is a sample description for a transaction",
+    "AccountRegister-dummy_accountName": "Sample Account Name",
 
 
     "PricedItemEditor-prompt_cancel_title": "Confirm Cancel",

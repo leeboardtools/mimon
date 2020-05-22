@@ -441,6 +441,11 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
             - Need editor.
             - Display needs to use locale to display date.
         
+        - Splits editor
+            - Split button?
+                - What will button do?
+                    - Put up modal in account register?
+        
         - For account types with lots, add:
             - Price
             - Commission
@@ -450,6 +455,7 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
             - Long term/short term?
         
         - Multi-row support?
+
 
     - Get Sub-menus working in MenuList, etc.
         - View Columns menus.
@@ -461,4 +467,91 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
         - Add test prices to CreateTestTransactions.js
 
 
+    - General Table Support:
+        - Virtual loading
+            - Scroll only body
+            - Only needed for AccountRegister, prices.
+                - For AccountRegister, actually want to scroll from bottom up.
+                - For prices, probably same.
+
+        - Resizable columns
+
+
+
+Make my own row based table:
+Requirements:
+    - Header and footer row(s)
+        - They just don't scroll.
+
+    - Body
+        - Scrollable
+
+    - Need column widths
+
+    - Virtual
     
+    - Ability to display rows bottom up
+
+    - Ideas:
+        - Have a Row component
+        - Body a list of Row components
+        - Header, footer a Row components
+    
+
+Current set of table classes:
+    /**
+    * React HOC function that adds row editing support to a table component. 
+    * This also adds active row support via {@link ActiveRowTable}. 
+    * The caller must maintain the active row.
+    * Adds {@link RowEditTable~Props} to the wrapped table's properties.
+    */
+    RowEditCollapsibleTable = rowEditTable(CollapsibleRowTable)
+        - AccountRegister
+        - NewFileConfigurator
+
+    /**
+    * React HOC function that adds keyboard and mouse support to a table component 
+    * for tracking an active row. The caller must maintain the active row.
+    * Adds {@link ActiveRowTable~Props} to the wrapped table's properties.
+    * @name ActiveRowTable
+    * @class
+    */
+    ActiveRowCollapsibleTable = activeRowTable(CollapsibleRowTable);
+        - AccountList
+        - PricedItemsList
+
+
+    RowTable
+        - Column
+            - width
+            - width renderer
+            - Header
+            - Footer
+        
+        - Body
+            - rows are identified by index
+                - This is needed for virtual support
+            - reverse indexing? Or should this just be done by the parent.
+            - row in view
+            
+
+        - Active Row
+            - Keyboard support
+        - Virtual support
+        - Bottom up support
+
+    EditableRowTable
+        - RowTable
+        - Tracks edit state
+
+    CollapsibleRowTable
+        - Maybe not even?
+
+
+- RowTable To Do:
+    - Change onOpenRow/onCloseRow to onEnterRow, onExitRow, onEscapeRow
+    - Add EditableRowTable
+    - Add CollapsibleRowTable - or at least HOC type of thing.
+    - Add column resizing support
+
+    - If scroll active row out of visible range, focus gets lost.

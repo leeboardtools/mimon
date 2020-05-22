@@ -14,9 +14,40 @@ export class TabbedPages extends React.Component {
 
         this.handleTabClick = this.handleTabClick.bind(this);
 
+        this.checkLayout = this.checkLayout.bind(this);
+        this._mainRef = React.createRef();
+        this._tabsRef = React.createRef();
+
         this.state = {
             activeTabId: this.props.activeTabId || this.props.tabEntries[0].tabId,
         };
+    }
+
+
+    checkLayout() {
+        if (this._mainRef.current && this._tabsRef.current) {
+            const { clientWidth, clientHeight } = this._mainRef.current;
+            const tabsHeight = this._tabsRef.current.clientHeight;
+            if ((clientWidth !== this.state.clientWidth)
+             || (clientHeight !== this.state.clientHeight)
+             || (tabsHeight !== this.state.tabsHeight)) {
+                let bodyHeight = clientHeight - tabsHeight;
+
+                this.setState({
+                    clientWidth: clientWidth,
+                    clientHeight: clientHeight,
+                    tabsHeight: tabsHeight,
+                    bodyHeight: bodyHeight,
+                });
+            }
+        }
+        
+        window.requestAnimationFrame(this.checkLayout);
+    }
+
+
+    componentDidMount() {
+        window.requestAnimationFrame(this.checkLayout);
     }
 
 
@@ -114,7 +145,8 @@ export class TabbedPages extends React.Component {
             className += ' ' + this.props.tabClassExtras;
         }
         return (
-            <nav className={className}>
+            <nav className={className}
+            >
                 {items}
             </nav>
         );
@@ -139,7 +171,19 @@ export class TabbedPages extends React.Component {
             className += ' ' + bodyClassExtras;
         }
 
-        return <div className={className}>{pages}</div>;
+        let style;
+        const { bodyHeight } = this.state;
+        if (bodyHeight !== undefined) {
+            style = {
+                height: bodyHeight,
+            };
+        }
+
+        return <div className={className}
+            style={style}
+        >
+            {pages}
+        </div>;
     }
 
 
@@ -158,8 +202,12 @@ export class TabbedPages extends React.Component {
 
         const body = this.renderBody();
 
-        return <div className={className}>
-            {tabs}
+        return <div className={className}
+            ref={this._mainRef}
+        >
+            <div ref={this._tabsRef}>
+                {tabs}
+            </div>
             {body}
         </div>;
     }

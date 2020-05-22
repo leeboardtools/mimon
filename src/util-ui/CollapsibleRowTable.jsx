@@ -63,11 +63,12 @@ ExpandCollapseButton.propTypes = {
 //
 // --------------------------------------------------------
 //
-function CollapsibleRowTableColumnHeading(props) {
+function CollapsibleRowTableColumnHeading(props) { 
     const { columnInfo } = props;
-    return <th scope="col" className={columnInfo.className}>
+    const className = 'CollapsibleRowTableHeaderCell ' + columnInfo.className;
+    return <td scope="col" className={className}>
         {columnInfo.label}
-    </th>;
+    </td>;
 }
 
 CollapsibleRowTableColumnHeading.propTypes = {
@@ -112,7 +113,7 @@ function CollapsibleRowTableRow(props) {
         cellInfo.columnIndex = i;
         cellInfo.columnInfo = columnInfo;
 
-        let className = columnInfo.className;
+        let className = 'CollapsibleRowTableBodyCell ' + columnInfo.className;
         const { cellClassName } = columnInfo;
         if (cellClassName) {
             className += ' ' + cellClassName;
@@ -138,7 +139,9 @@ function CollapsibleRowTableRow(props) {
     }
     if (onGetRowExpandCollapseState && onRowToggleCollapse) {
         columnEntries.splice(0, 0, (
-            <td key={rowEntry.key}>
+            <td key={rowEntry.key}
+                className="CollapsibleRowTableBodyCell"
+            >
                 <ExpandCollapseButton
                     expandCollapseState={onGetRowExpandCollapseState(rowEntry)}
                     onToggleCollapse={() => onRowToggleCollapse(rowEntry)}
@@ -204,16 +207,44 @@ export class CollapsibleRowTable extends React.Component {
 
         this.onContextMenu = this.onContextMenu.bind(this);
         this.onContextMenuClose = this.onContextMenuClose.bind(this);
+        this.onUpdateSizes = this.onUpdateSizes.bind(this);
+
+        this._tableRef = React.createRef();
+        this._theadRef = React.createRef();
+        this._tbodyRef = React.createRef();
 
         this.state = {};
     }
 
 
+
+    onUpdateSizes() {
+        const table = this._tableRef.current;
+        const header = this._theadRef.current;
+        const body = this._tbodyRef.current;
+        if (table && header && body) {
+            const bodyHeight = table.clientHeight - header.clientHeight;
+            //body.style.height = bodyHeight;
+        }
+    }
+
+
     componentDidMount() {
+        if (this._tableRef.current) {
+            window.addEventListener('resize', this.onUpdateSizes);
+            this.onUpdateSizes();
+        }
+
         const { onLoadRowEntries } = this.props;
         if (onLoadRowEntries) {
             // For now just load all row entries.
             onLoadRowEntries(0, this.props.rowEntries.length);
+        }
+    }
+
+    componentWillUnmount() {
+        if (this._tableRef.current) {
+            window.removeEventListener('resize', this.onUpdateSizes);
         }
     }
 
@@ -293,11 +324,15 @@ export class CollapsibleRowTable extends React.Component {
                 columnInfo={columnInfo}
             />);
         if (this.props.onGetRowExpandCollapseState) {
-            columns.splice(0, 0, <th scope="col" key="0" />);
+            columns.splice(0, 0, <td scope="col" key="0" 
+                className="CollapsibleRowTableHeaderCell"
+            />);
         }
         const className = 'CollapsibleRowTableHeader ' 
             + (this.props.headerClassExtras || '');
-        return <thead className={className}>
+        return <thead className={className}
+            ref={this._theadRef}
+        >
             <tr className={this.props.headerRowClassExtras}>{columns}</tr>
         </thead>;
     }
@@ -324,7 +359,9 @@ export class CollapsibleRowTable extends React.Component {
                 />
             );
         });
-        return <tbody className="CollapsibleRowTableBody">
+        return <tbody className="CollapsibleRowTableBody"
+            ref={this._tbodyRef}
+        >
             {rows}
         </tbody>;
     }
@@ -335,13 +372,14 @@ export class CollapsibleRowTable extends React.Component {
         const contextMenu = this.renderContextMenu();
 
         const tableClassName = 'table table-sm text-left table-hover pl-0 pr-0 '
-            + ' CollapsibleRowTable_table'
+            + ' CollapsibleRowTable_table '
             + (this.props.tableClassExtras || '');
 
         return <div className="CollapsibleRowTable"
             onContextMenu={(e) => this.onContextMenu(e)}
         >
             <table className={tableClassName}
+                ref={this._tableRef}
             >
                 {tableHeader}
                 {tableBody}
