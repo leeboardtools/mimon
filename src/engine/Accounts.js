@@ -4,6 +4,7 @@ import { NumericIdGenerator } from '../util/NumericIds';
 import { PricedItemType, getPricedItemType } from './PricedItems';
 import { getYMDDate, getYMDDateString } from '../util/YMDDate';
 import deepEqual from 'deep-equal';
+import { areSimilar } from '../util/AreSimilar';
 
 
 /**
@@ -358,6 +359,23 @@ export function getAccountDataItem(account, alwaysCopy) {
         }
     }
     return account;
+}
+
+
+/**
+ * Determines if two accounts represent the same thing.
+ * @param {Account|AccountDataItem} a 
+ * @param {Account|AccountDataItem} b 
+ * @param {boolean} [ignoreIds=false]
+ */
+export function areAccountsSimilar(a, b, ignoreIds) {
+    a = getAccountDataItem(a, ignoreIds);
+    b = getAccountDataItem(b, ignoreIds);
+    if (ignoreIds) {
+        delete a.id;
+        delete b.id;
+    }
+    return areSimilar(a, b);
 }
 
 

@@ -2,6 +2,7 @@ import { getYMDDate, getYMDDateString } from '../util/YMDDate';
 import { getFullSplitDataItem } from './Transactions';
 import * as LS from './LotStates';
 import { userError } from '../util/UserMessages';
+import { areSimilar } from '../util/AreSimilar';
 
 
 /**
@@ -134,6 +135,17 @@ export function getFullAccountState(accountState, hasLots) {
     }
 
     return accountState;
+}
+
+
+/**
+ * Determines if two account states represent the same thing.
+ * @param {AccountState|AccountStateDataItem} a 
+ * @param {AccountState|AccountStateDataItem} b 
+ * @returns {boolean}
+ */
+export function areAccountStatesSimilar(a, b) {
+    return areSimilar(a, b);
 }
 
 

@@ -11,6 +11,7 @@ import * as PI from './PricedItems';
 import { getCurrency } from '../util/Currency';
 import { getRatio, getRatioJSON } from '../util/Ratios';
 import { bSearch } from '../util/BinarySearch';
+import { areSimilar } from '../util/AreSimilar';
 
 
 /**
@@ -331,6 +332,24 @@ export function getTransaction(transactionDataItem, alwaysCopy) {
         }
     }
     return transactionDataItem;
+}
+
+
+/**
+ * Determines if two transactions represent the same thing.
+ * @param {Transaction|TransactionDataItem} a 
+ * @param {Transaction|TransactionDataItem} b 
+ * @param {boolean} [ignoreIds=false]
+ */
+export function areTransactionsSimilar(a, b, ignoreIds) {
+    a = getTransactionDataItem(a, ignoreIds);
+    b = getTransactionDataItem(b, ignoreIds);
+    if (ignoreIds) {
+        delete a.id;
+        delete b.id;
+    }
+    
+    return areSimilar(a, b);
 }
 
 

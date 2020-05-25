@@ -228,6 +228,68 @@ test('Transaction-Data Items', () => {
 //
 //---------------------------------------------------------
 //
+test('Transaction-areSimilar', () => {
+    const a = T.getTransaction({
+        ymdDate: new YMDDate('2019-10-11'),
+        splits: [
+            {
+                reconcileState: T.ReconcileState.NOT_RECONCILED,
+                accountId: 1,
+                quantityBaseValue: 1234,
+                description: 'Hello',
+                memo: 'I am a memo'
+            },
+            {
+                reconcileState: T.ReconcileState.RECONCILED,
+                accountId: 2,
+                quantityBaseValue: -1234,
+            },
+        ],
+        description: 'A description',
+        memo: 'A memo',
+    });
+
+    const b = T.getTransaction({
+        ymdDate: new YMDDate('2019-10-11'),
+        splits: [
+            {
+                reconcileState: T.ReconcileState.NOT_RECONCILED,
+                accountId: 1,
+                quantityBaseValue: 1234,
+                description: 'Hello',
+                memo: 'I am a memo'
+            },
+            {
+                reconcileState: T.ReconcileState.RECONCILED,
+                accountId: 2,
+                quantityBaseValue: -1234,
+                description: '',
+            },
+        ],
+        description: 'A description',
+        memo: 'A memo',
+    });
+
+    expect(T.areTransactionsSimilar(a, b)).toBeTruthy();
+
+    a.id = 123;
+    b.id = 123;
+    expect(T.areTransactionsSimilar(a, b)).toBeTruthy();
+
+    b.id = 456;
+    expect(T.areTransactionsSimilar(a, b)).toBeFalsy();
+    expect(T.areTransactionsSimilar(a, b, true)).toBeTruthy();
+
+    b.id = a.id;
+    b.splits[1].description = 'A';
+    expect(T.areTransactionsSimilar(a, b)).toBeFalsy();
+    expect(T.areTransactionsSimilar(a, b, true)).toBeFalsy();
+});
+
+
+//
+//---------------------------------------------------------
+//
 test('TransactionHandlerImplBase', async () => {
     const handlerA = new T.InMemoryTransactionsHandler();
 

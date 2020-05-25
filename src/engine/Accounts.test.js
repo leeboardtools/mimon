@@ -94,6 +94,31 @@ test('Account-Data Items', () => {
 //
 //---------------------------------------------------------
 //
+test('Account-areSimilar', () => {
+    const a = A.getAccount({
+        id: 123,
+        type: A.AccountType.ASSET,
+        description: 'A',
+        pricedItemId: 12,
+    });
+    const b = A.getAccount({
+        id: 123,
+        type: A.AccountType.ASSET,
+        description: 'A',
+        pricedItemId: 12,
+    });
+    expect(A.areAccountsSimilar(a, b)).toBeTruthy();
+
+    b.id = 456;
+    expect(A.areAccountsSimilar(a, b)).toBeFalsy();
+
+    expect(A.areAccountsSimilar(a, b, true)).toBeTruthy();
+});
+
+
+//
+//---------------------------------------------------------
+//
 test('AccountManager-rootAccounts', async () => {
     const accountingSystem = await ASTH.asyncCreateAccountingSystem();
     const accountManager = accountingSystem.getAccountManager();
