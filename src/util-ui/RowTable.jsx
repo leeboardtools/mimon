@@ -60,8 +60,6 @@ export class RowTable extends React.Component {
         this.state.topVisibleRow = 0;
         this.state.bottomVisibleRow = 0;
 
-        this.state.isActiveRowOpen = false;
-
         this.state.isSizeRender = this.state.isAutoSize;
     }
 
@@ -127,7 +125,7 @@ export class RowTable extends React.Component {
                 });
             }
 
-            this.updateLayout('watcher');
+            this.updateLayout();
             window.requestAnimationFrame(this.watcher);
         }
     }
@@ -135,7 +133,7 @@ export class RowTable extends React.Component {
 
     componentDidMount() {
         if (!this._isUnmounted) {
-            this.updateLayout('componentDidMount');
+            this.updateLayout();
         }
 
         window.requestAnimationFrame(this.watcher);
@@ -148,18 +146,6 @@ export class RowTable extends React.Component {
 
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.activeRowIndex !== this.props.activeRowIndex) {
-            if (this.state.isActiveRowOpen) {
-                const { onCloseRow } = this.props;
-                if (onCloseRow) {
-                    onCloseRow(prevProps.activeRowIndex);
-                    this.setState({
-                        isActiveRowOpen: false,
-                    });
-                }
-            }
-        }
-
         if (this.props.requestedVisibleRowIndex !== prevProps.requestedVisibleRowIndex) {
             this.setState({
                 visibleRowIndex: this.props.requestedVisibleRowIndex
@@ -270,7 +256,7 @@ export class RowTable extends React.Component {
     }
 
 
-    updateLayout(caller) {
+    updateLayout() {
         if (!this._mainRef.current) {
             return;
         }
@@ -454,12 +440,12 @@ export class RowTable extends React.Component {
     }
 
 
-    openActiveRow() {
+    openActiveRow(columnIndex) {
         const { onOpenActiveRow, activeRowIndex, rowCount } = this.props;
         if (onOpenActiveRow 
          && (activeRowIndex !== undefined)
          && (activeRowIndex >= 0) && (activeRowIndex < rowCount)) {
-            onOpenActiveRow(activeRowIndex);
+            onOpenActiveRow(activeRowIndex, columnIndex);
         }
     }
 
@@ -532,16 +518,16 @@ export class RowTable extends React.Component {
     }
 
     
-    onRowDoubleClick(e, rowIndex) {
+    onRowDoubleClick(e, rowIndex, columnIndex) {
         const { onRowDoubleClick } = this.props;
         if (onRowDoubleClick) {
-            const result = onRowDoubleClick(e);
+            const result = onRowDoubleClick(e, rowIndex, columnIndex);
             if ((result === 'default') || e.defaultPrevented) {
                 return;
             }
         }
 
-        this.openActiveRow();
+        this.openActiveRow(columnIndex);
     }
 
     
@@ -767,8 +753,8 @@ export class RowTable extends React.Component {
                     style={style}
                     key={c}
                     ref={ref}
-                    onClick={(e) => this.onRowClick(e, i)}
-                    onDoubleClick={(e) => this.onRowDoubleClick(e, i)}
+                    onClick={(e) => this.onRowClick(e, i, c)}
+                    onDoubleClick={(e) => this.onRowDoubleClick(e, i, c)}
                 >
                     {cell}
                 </div>);
@@ -922,14 +908,10 @@ export class RowTable extends React.Component {
         const containerStyle = {
             width: '100%',
             height: '100%',
-            //position: 'relative',
-            //left: 0,
-            //top: 0,
         };
         const hiddenStyle = {
             visibility: 'hidden',
             width: '100%',
-            //height: '100%',
             position: 'absolute',
             left: 0,
             top: 0,
@@ -944,6 +926,75 @@ export class RowTable extends React.Component {
                 {hiddenRender}
             </div>
         </div>;
+    }
+
+
+    /**
+     * @typedef {object} RowTable~VisibleRowRange
+     * @property {number}   topVisibleRow
+     * @property {number}   bottomVisibleRow
+     * @property {number}   bottomFullyVisibleRow
+     */
+
+    /**
+     * @returns {RowTable~VisibleRowRange}  The range of currently visible rows.
+     */
+    getVisibleRowRange() {
+        const { state } = this;
+        return {
+            topVisibleRow: state.topVisibleRow,
+            bottomVisibleRow: state.bottomVisibleRow,
+            bottomFullyVisibleRow: state.bottomFullyVisibleRow,
+        };
+    }
+
+    /**
+     * Attempts to make a range of rows visible. Preference is given to ensuring
+     * the smaller row index is made visible.
+     * @param {number} rowIndexA 
+     * @param {number} [rowIndexB =rowIndexA]
+     */
+    makeRowRangeVisible(rowIndexA, rowIndexB) {
+        if (rowIndexB === undefined) {
+            rowIndexB = rowIndexA;
+        }
+        if (rowIndexA === undefined) {
+            rowIndexA = rowIndexB;
+        }
+        if (rowIndexA === undefined) {
+            return;
+        }
+
+        if (rowIndexA > rowIndexB) {
+            [ rowIndexA, rowIndexB ] = [ rowIndexB, rowIndexA ];
+        }
+
+        const { rowCount } = this.props;
+
+        rowIndexA = Math.max(0, rowIndexA);
+        rowIndexB = Math.min(rowCount - 1, rowIndexB);
+        if (rowIndexA > rowIndexB) {
+            // Must be no rows...
+            return;
+        }
+
+        const { bodyRowHeight, topVisibleRow, bottomFullyVisibleRow, } = this.state;
+        if (!bodyRowHeight) {
+            return;
+        }
+
+        let newTopVisibleRow = topVisibleRow;
+        if (rowIndexA < topVisibleRow) {
+            newTopVisibleRow = rowIndexA;
+        }
+        else if (rowIndexB > bottomFullyVisibleRow) {
+            newTopVisibleRow = rowIndexB - (bottomFullyVisibleRow - topVisibleRow);
+            newTopVisibleRow = Math.min(rowIndexA, newTopVisibleRow);
+        }
+
+        if (newTopVisibleRow !== topVisibleRow) {
+            this.updateVisibleRows(newTopVisibleRow * bodyRowHeight);            
+        }
     }
 }
 
@@ -1006,6 +1057,9 @@ export class RowTable extends React.Component {
  * Called when a row the Enter key is pressed or the active row is double clicked.
  * @callback RowTable~onOpenActiveRow
  * @param {number}  rowIndex
+ * @param {number}  [columnIndex=undefined] The index of the column that was 
+ * double clicked on if this is being called from a double click, otherwise
+ * it is <code>undefined</code>.
  */
 
 /**
@@ -1018,6 +1072,8 @@ export class RowTable extends React.Component {
 /**
  * @callback RowTable~onRowDoubleClick
  * @param {Event}  e
+ * @param {number}  rowIndex
+ * @param {number}  columnIndex
  * @returns {string|undefined}  If 'default' is returned, the event is 
  * ignored by RowTable and is processed normally.
  */
@@ -1089,7 +1145,6 @@ RowTable.propTypes = {
     noActiveRowFocus: PropTypes.bool,
 
     onOpenActiveRow: PropTypes.func,
-    onCloseRow: PropTypes.func,
 
     onKeyDown: PropTypes.func,
     onRowDoubleClick: PropTypes.func,
@@ -1104,69 +1159,3 @@ RowTable.propTypes = {
     rowClassExtras: PropTypes.string,
     footerClassExtras: PropTypes.string,
 };
-
-
-/*
-    Row editing behavior:
-    Active row has focus.
-        - Not Editing:
-            - Enter key: -> onStartRowEdit
-            - Arrow keys: -> onActivateRow
-            - Click on row: -> onActivateRow
-            - Double-click row -> onStartRowEdit
-
-        - Editing:
-            - Esc key: -> onCancelRowEdit
-            - Enter key: 
-                - Call canEditCell to find next available cell
-                for editing, if one found, set focus to it.
-                    - otherwise onEndRowEdit
-                        - onStartRowEdit for next row.
-            
-            - Tab key:
-                - next focus.
-
-            - Determine active cell from:
-                - document.activeElement => element with focus.
-                - element.contains(child) => determines if child is child of element.
- */
-
-
-/**
- * @callback RowTable~asyncEndRowEdit
- * @param {boolean} isSave
- */
-
-/**
- * @typedef {object} RowTable~onStartRowEditArgs
- * @property {number}   rowIndex
- * @property {object}   rowEditBuffer
- * @property {RowTable~asyncEndRowEdit}
- */
-
-/**
- * @callback RowTable~onStartRowEdit
- * @param {RowTable~onStartRowEditArgs} args
- */
-
-/**
- * @typedef {object}    RowTable~onSaveEditRowArgs
- * @property {number}  rowIndex
- * @property {object}   rowEditBuffer
- */
-
-/**
- * @callback RowTable~asyncOnSaveEditRow
- * @param {RowTable~onSaveEditRowArgs}
- */
-
-/**
- * @typedef {object}    RowTable~onCancelEditRowArgs
- * @property {number}  rowIndex
- * @property {object}   rowEditBuffer
- */
-
-/**
- * @callback RowTable~onCancelEditRow
- * @param {RowTable~onCancelEditRowArgs}    args
- */
