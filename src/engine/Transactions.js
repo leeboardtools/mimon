@@ -265,8 +265,7 @@ export function getSplits(splitDataItems, alwaysCopy) {
  * @property {YMDDate}  ymdDate The transaction's date.
  * @property {number}   [sameDayOrder]    Optional, used to order transactions that 
  * fall on the same day, the lower the value the earlier in the day the transaction 
- * is ordered. If not given then it is treated as
- * -{@link Number#MAX_VALUE}.
+ * is ordered. If not given then it is treated as 0.
  * @property {Split[]}  splits
  * @property {string}   [description]
  * @property {string}   [memo]  
@@ -353,7 +352,7 @@ function copyTransactionDataItems(transactionDataItems) {
  * @property {YMDDate}  ymdDate The transaction date.
  * @property {number}   [sameDayOrder]    Optional, used to order transactions that 
  * fall on the same day, the lower the value the earlier in the day the transaction 
- * is ordered. If not given then it is treated as
+ * is ordered. If not given then it is treated as 0.
  */
 
 export function getTransactionKey(transaction) {
@@ -405,10 +404,8 @@ export function compareTransactionKeys(a, b) {
         return result;
     }
 
-    const aSameDayOrder = ((a.sameDayOrder !== undefined) && (a.sameDayOrder !== null)) 
-        ? a.sameDayOrder : -Number.MAX_VALUE;
-    const bSameDayOrder = ((b.sameDayOrder !== undefined) && (b.sameDayOrder !== null)) 
-        ? b.sameDayOrder : -Number.MAX_VALUE;
+    const aSameDayOrder = a.sameDayOrder || 0;
+    const bSameDayOrder = b.sameDayOrder || 0;
     if (aSameDayOrder !== bSameDayOrder) {
         return aSameDayOrder - bSameDayOrder;
     }
@@ -783,6 +780,7 @@ class AccountStatesUpdater {
             const processor = accountProcessors[i];
             const { accountEntry, oldestIndex, newAccountStatesByOrder } = processor;
             const { sortedTransactionKeys, accountStatesByTransactionId } = accountEntry;
+
             if (oldestIndex <= 0) {
                 accountEntry.accountStatesByOrder.length = 0;
                 accountStatesByTransactionId.clear();
@@ -804,7 +802,7 @@ class AccountStatesUpdater {
             accountEntry.sortedTransactionKeys = undefined;
             accountEntry.nonReconciledTransactionIds = undefined;
 
-            accountEntry.accountStatesByTransactionId.clear();
+            //accountEntry.accountStatesByTransactionId.clear();
         }
     }
 }
@@ -1170,7 +1168,6 @@ export class TransactionManager extends EventEmitter {
         let olderIndex = (compareTransactionKeys(transactionDataItems[0],
             transactionDataItems[1]) <= 0)
             ? 0 : 1;
-        const olderTransactionId = transactionIds[olderIndex];
         const newerTransactionId = transactionIds[1 - olderIndex];
         
         const olderTransactionDataItem = transactionDataItems[olderIndex];
@@ -1196,16 +1193,20 @@ export class TransactionManager extends EventEmitter {
 
         // Loading the older of the transactions loads all the account states
         // up to the newest transaction.
-        await this._asyncLoadAccountStateDataItemsForTransactionId(
-            accountId, olderTransactionId);
 
         const result = [];
         for (let i = 0; i < transactionDataItems.length; ++i) {
             const transactionDataItem = transactionDataItems[i];
-            const accountStateDataItems
-                = accountEntry.accountStatesByTransactionId.get(transactionDataItem.id);
+            const { id } = transactionDataItem;
+            let accountStateDataItems
+                = accountEntry.accountStatesByTransactionId.get(id);
             if (!accountStateDataItems) {
-                continue;
+                accountStateDataItems 
+                    = await this._asyncLoadAccountStateDataItemsForTransactionId(
+                        accountId, id);
+                if (!accountStateDataItems) {
+                    continue;
+                }
             }
 
             // We start at 1 because the first account state is the same as the
@@ -2330,6 +2331,13 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                     // Modify entry
                     newEntry.ymdDate = dataItem.ymdDate || oldEntry.ymdDate;
 
+                    if (Object.keys(dataItem).indexOf('sameDayOrder') >= 0) {
+                        newEntry.sameDayOrder = dataItem.sameDayOrder;
+                    }
+                    else if (Object.keys(oldEntry).indexOf('sameDayOrder') >= 0) {
+                        newEntry.sameDayOrder = oldEntry.sameDayOrder;
+                    }
+
                     if (newAccountIds) {
                         let accountIdsModified = !doSetsHaveSameElements(newAccountIds, 
                             oldEntry.accountIds);
@@ -2355,6 +2363,10 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                 else {
                     // New entry
                     newEntry.ymdDate = dataItem.ymdDate;
+                    if (Object.keys(dataItem).indexOf('sameDayOrder') >= 0) {
+                        newEntry.sameDayOrder = dataItem.sameDayOrder;
+                    }
+
                     newEntry.accountIds = newAccountIds;
                     if (newLotIds) {
                         newEntry.lotIds = newLotIds;
@@ -2405,7 +2417,8 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                 if (oldEntry) {
                     // Modify
                     let isDateChange;
-                    if (YMDDate.compare(oldEntry.ymdDate, newEntry.ymdDate)) {
+                    if (YMDDate.compare(oldEntry.ymdDate, newEntry.ymdDate)
+                     || (oldEntry.sameDayOrder !== newEntry.sameDayOrder)) {
                         this._ymdDateSortedEntries.delete(oldEntry);
                         isDateChange = true;
                     }
