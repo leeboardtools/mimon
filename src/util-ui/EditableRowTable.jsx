@@ -86,9 +86,45 @@ export function editableRowTable(WrappedTable) {
         }
 
 
-        startRealRowEdit(rowIndex, columnIndex) {
-            console.log('startRealRowEdit: ' + rowIndex);
+        updateForNewEdit() {
+            const { activeEditInfo } = this.state;
+            if (activeEditInfo) {
+                const { refsForFocus } = activeEditInfo;
 
+                let refForFocus;
+                const columnIndex = activeEditInfo.columnIndex || 0;
+
+                let focusColumnIndex;
+                for (let i = columnIndex; i < refsForFocus.length; ++i) {
+                    const { current } = refsForFocus[i];
+                    if (current && (current.tabIndex >= 0)) {
+                        refForFocus = refsForFocus[i];
+                        focusColumnIndex = i;
+                        break;
+                    }
+                }
+
+                if (!refForFocus) {
+                    for (let i = 0; i < columnIndex; ++i) {
+                        const { current } = refsForFocus[i];
+                        if (current && (current.tabIndex >= 0)) {
+                            refForFocus = refsForFocus[i];
+                            focusColumnIndex = i;
+                        }
+                    }
+                }
+                
+                if (refForFocus) {
+                    refForFocus.current.focus();
+
+                    console.log('setting focus row ' + activeEditInfo.rowIndex 
+                        + '  col ' + focusColumnIndex);
+                }
+            }
+        }
+
+
+        startRealRowEdit(rowIndex, columnIndex) {
             const { onStartRowEdit, columns } = this.props;
             if (onStartRowEdit) {
                 const newRowEditBuffer = {};
@@ -106,10 +142,13 @@ export function editableRowTable(WrappedTable) {
                 })) {
                     this.setActiveEditInfo({
                         rowIndex: rowIndex,
+                        columnIndex: columnIndex,
                         rowEditBuffer: newRowEditBuffer,
                         cellEditBuffers:    newCellEditBuffers,
                         refsForFocus: columns.map(() => React.createRef()),
                     });
+
+                    process.nextTick(() => this.updateForNewEdit());
                     return true;
                 }
             }
@@ -218,12 +257,66 @@ export function editableRowTable(WrappedTable) {
         }
 
 
+        findCellFocus(startIndex, increment) {
+            let { activeEditInfo } = this.state;
+            if (activeEditInfo) {
+                const { refsForFocus } = activeEditInfo;
+                const endIndex = (increment > 0) 
+                    ? refsForFocus.length 
+                    : -1;
+                for (let i = startIndex; i !== endIndex; i += increment) {
+                    const ref = refsForFocus[i];
+                    if (ref.current && (ref.current.tabIndex >= 0)) {
+                        return ref;
+                    }
+                }
+            }
+        }
+
+        getFirstCellFocus() {
+            return this.findCellFocus(0, 1);
+        }
+
+        getLastCellFocus() {
+            return this.findCellFocus(this.props.columns.length - 1, -1);
+        }
+
+
+        getColumnIndexWithFocus() {
+            const currentFocus = document.activeElement;
+            let { activeEditInfo } = this.state;
+            if (activeEditInfo && currentFocus) {
+                const { refsForFocus } = activeEditInfo;
+                for (let i = 0; i < refsForFocus.length; ++i) {
+                    if (currentFocus === refsForFocus[i].current) {
+                        return i;
+                    }
+                }
+            }
+        }
+
+
+        getNextCellFocus() {
+            const columnIndex = this.getColumnIndexWithFocus();
+            if (columnIndex !== undefined) {
+                return this.findCellFocus(columnIndex + 1, 1);
+            }
+        }
+
+        getPrevCellFocus() {
+            const columnIndex = this.getColumnIndexWithFocus();
+            if (columnIndex !== undefined) {
+                return this.findCellFocus(columnIndex - 1, -1);
+            }
+        }
+
+
         onKeyDown(e) {
             if (this._isSaving) {
                 return;
             }
 
-            let { activeEditInfo } = this.state;
+            const { activeEditInfo } = this.state;
             if (activeEditInfo) {
                 switch (e.key) {
                 case 'Escape' :
@@ -232,6 +325,30 @@ export function editableRowTable(WrappedTable) {
                     break;
 
                 case 'Enter' :
+                    if (e.shiftKey) {
+                        let newFocus = this.getPrevCellFocus();
+                        if (!newFocus) {
+                            newFocus = this.getLastCellFocus();
+                        }
+                        if (newFocus) {
+                            newFocus.current.focus();
+                        }
+                    }
+                    else {
+                        let newFocus = this.getNextCellFocus();
+                        if (!newFocus) {
+                            this.asyncSaveRowEdit().then((result) => {
+                                if (result) {
+                                    this._rowTableRef.current.activateRow(
+                                        activeEditInfo.rowIndex + 1);
+                                }
+                            });
+                        }
+                        else {
+                            newFocus.current.focus();
+                            console.log('Enter new focus');
+                        }
+                    }
                     e.preventDefault();
                     break;
                 }

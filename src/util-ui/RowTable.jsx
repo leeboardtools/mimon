@@ -116,6 +116,7 @@ export class RowTable extends React.Component {
                  && (activeRowIndex >= topVisibleRow)
                  && (activeRowIndex <= bottomVisibleRow)) {
                     this._activeRowRef.current.focus();
+                    console.log('watcher activeRowFocus: ' + activeRowIndex);
                 }
                 else {
                     this._bodyRef.current.focus();
@@ -398,8 +399,6 @@ export class RowTable extends React.Component {
                         && (activeRowIndex <= bottomVisibleRow);
                     if (!isActiveRowVisible && wasActiveRowVisible) {
                         activeRowUpdated = true;
-
-                        console.log('setting activeRowUpdated');
                     }
                 }
 
@@ -450,6 +449,10 @@ export class RowTable extends React.Component {
     }
 
 
+    /**
+     * Requests a particular row be made the active row.
+     * @param {number} activeRowIndex 
+     */
     activateRow(activeRowIndex) {
         const lastRowIndex = this.props.rowCount - 1;
         activeRowIndex = Math.max(0, Math.min(activeRowIndex, lastRowIndex));
@@ -926,6 +929,27 @@ export class RowTable extends React.Component {
                 {hiddenRender}
             </div>
         </div>;
+    }
+
+
+    /**
+     * Sets focus to the active row, the active row is made visible if it is not
+     * visible.
+     */
+    focusActiveRow() {
+        const { activeRowIndex } = this.props;
+        if (activeRowIndex === undefined) {
+            return;
+        }
+
+        const { topVisibleRow, bottomFullyVisibleRow } = this.state;
+        if ((activeRowIndex < topVisibleRow)
+         || (activeRowIndex > bottomFullyVisibleRow)) {
+            this.makeRowRangeVisible(activeRowIndex);
+        }
+        this.setState({
+            activeRowUpdated: true,
+        });
     }
 
 

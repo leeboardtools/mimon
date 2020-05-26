@@ -118,7 +118,7 @@
     "Actions-removePrices": "Remove Prices",
     "Actions-addTransactions": "New Transaction",
     "Actions-removeTransactions": "Delete Transaction",
-    "Actions-modifyTransactinos": "Modify Transactions",
+    "Actions-modifyTransactions": "Modify Transactions",
 
 
     "LotManager-invalid_pricedItem_id": ["A priced item with id '", "' was not found."],

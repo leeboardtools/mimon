@@ -1323,14 +1323,18 @@ export class AccountRegister extends React.Component {
                 );
             }
             else {
-                action = accountingActions.createModifyTransactionsAction(
-                    newTransactionDataItem
-                );
+                if (!T.areTransactionsSimilar(
+                    newTransactionDataItem, transactionDataItem)) {
+
+                    action = accountingActions.createModifyTransactionsAction(
+                        newTransactionDataItem
+                    );
+                }
             }
 
-            await accessor.asyncApplyAction(action);
-
-            console.log('endRowEdit, action applied');
+            if (action) {
+                await accessor.asyncApplyAction(action);
+            }
         }
         catch (e) {
             this.setErrorMsg('description', e.toString());

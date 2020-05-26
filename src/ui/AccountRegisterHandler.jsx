@@ -93,6 +93,9 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
                 label: userMsg('AccountsListHandler-reconcileAccount'),
                 onChooseItem: () => this.onReconcileAccount(tabId),
             },
+
+            // TODO:
+            // 'clearNewTransaction - resets the new transaction...
         ];
         return {
             items: menuItems,
