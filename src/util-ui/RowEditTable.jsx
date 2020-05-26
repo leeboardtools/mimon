@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { CollapsibleRowTable } from './CollapsibleRowTable';
+import { CollapsibleRowTableOld } from './CollapsibleRowTableOld';
 import { activeRowTable } from './ActiveRowTable';
 
 
@@ -418,8 +418,8 @@ export function rowEditTable(WrappedTable) {
      * @typedef {object}    RowEditTable~renderArgs
      * Used to pass all sorts of info for editing a row.
      *
-     * @property {CollapsibleRowTable~CellInfo} cellInfo
-     * @property {CollapsibleRowTable~CellSettings} cellSettings
+     * @property {CollapsibleRowTableOld~CellInfo} cellInfo
+     * @property {CollapsibleRowTableOld~CellSettings} cellSettings
      * @property {object}  cellEditBuffer
      * @property {object}  rowEditBuffer
      * @property {RowEditTable~updateCellEditBuffer}    updateCellEditBuffer
@@ -447,7 +447,7 @@ export function rowEditTable(WrappedTable) {
 
     /**
      * @typedef {object} RowEditTable~onStartEditRowArgs
-     * @property {CollapsibleRowTable~RowEntry}  rowEntry
+     * @property {CollapsibleRowTableOld~RowEntry}  rowEntry
      * @property {RowEditTable~renderArgs} renderArgs
      * @property {object[]}   cellEditBuffers Array whose elements correspond 
      * to the individual cells, the editable cells should use the appropriate 
@@ -468,7 +468,7 @@ export function rowEditTable(WrappedTable) {
     
     /**
      * @typedef {object} RowEditTable~onCancelEditRowArgs
-     * @property {CollapsibleRowTable~RowEntry}  rowEntry
+     * @property {CollapsibleRowTableOld~RowEntry}  rowEntry
      * @property {object[]}   cellEditBuffers Edit buffer array that was 
      * passed to {@link RowEditTable~onStartEditRow}
      * @property {object}  rowEditBuffer   The row edit buffer that was 
@@ -483,7 +483,7 @@ export function rowEditTable(WrappedTable) {
     
     /**
      * @typedef {object} RowEditTable~asyncOnSaveEditRowArgs
-     * @property {CollapsibleRowTable~RowEntry}  rowEntry
+     * @property {CollapsibleRowTableOld~RowEntry}  rowEntry
      * @property {object[]}   cellEditBuffers The edit buffer array that was 
      * passed to {@link RowEditTable~onStartEditRow} and may have been 
      * modified during cell editing.
@@ -502,8 +502,8 @@ export function rowEditTable(WrappedTable) {
 
     /**
      * @typedef {object} RowEditTable~onRenderDisplayCellArgs
-     * @property {CollapsibleRowTable~CellInfo} cellInfo
-     * @property {CollapsibleRowTable~CellSettings} cellSettings
+     * @property {CollapsibleRowTableOld~CellInfo} cellInfo
+     * @property {CollapsibleRowTableOld~CellSettings} cellSettings
      */
     
     /**
@@ -516,8 +516,8 @@ export function rowEditTable(WrappedTable) {
     
     /**
      * @typedef {object} RowEditTable~onRenderEditCellArgs
-     * @property {CollapsibleRowTable~CellInfo} cellInfo
-     * @property {CollapsibleRowTable~CellSettings} cellSettings
+     * @property {CollapsibleRowTableOld~CellInfo} cellInfo
+     * @property {CollapsibleRowTableOld~CellSettings} cellSettings
      * @property {RowEditTable~renderArgs} renderArgs
      */
     
@@ -557,7 +557,7 @@ export function rowEditTable(WrappedTable) {
 
 /**
  * React component applying the {@link rowEditTable} HOC to the table 
- * {@link CollapsibleRowTable}.
+ * {@link CollapsibleRowTableOld}.
  */
-export const RowEditCollapsibleTable = rowEditTable(CollapsibleRowTable);
+export const RowEditCollapsibleTable = rowEditTable(CollapsibleRowTableOld);
 

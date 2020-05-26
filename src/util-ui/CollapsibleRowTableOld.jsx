@@ -201,7 +201,7 @@ CollapsibleRowTableRow.propTypes = {
  * only requirement for a row entry is it must have a string key, as that
  * is used to identify individual rows.
  */
-export class CollapsibleRowTable extends React.Component {
+export class CollapsibleRowTableOld extends React.Component {
     constructor(props) {
         super(props);
 
@@ -375,7 +375,7 @@ export class CollapsibleRowTable extends React.Component {
             + ' CollapsibleRowTable_table '
             + (this.props.tableClassExtras || '');
 
-        return <div className="CollapsibleRowTable"
+        return <div className="CollapsibleRowTableOld"
             onContextMenu={(e) => this.onContextMenu(e)}
         >
             <table className={tableClassName}
@@ -391,7 +391,7 @@ export class CollapsibleRowTable extends React.Component {
 
 
 /**
- * @typedef {object} CollapsibleRowTable~ColInfo
+ * @typedef {object} CollapsibleRowTableOld~ColInfo
  * @property {string}   label   The text to appear in the column heading.
  * @property {string}   key Unique identifier for the column, used by React.
  * @property {string}   [className]   Optional class name for the &lt;th&gt; 
@@ -402,23 +402,23 @@ export class CollapsibleRowTable extends React.Component {
 
 /**
  * Each row has one of these.
- * @typedef {object} CollapsibleRowTable~RowEntry
+ * @typedef {object} CollapsibleRowTableOld~RowEntry
  * @property {string} key Unique identifier for the row, used by React and also to
  * identify rows.
  */
 
 /**
  * Information pertaining to an individual cell in calls to onRenderCell.
- * @typedef {object} CollapsibleRowTable~CellInfo
- * @param {CollapsibleRowTable~RowEntry}  rowEntry
+ * @typedef {object} CollapsibleRowTableOld~CellInfo
+ * @param {CollapsibleRowTableOld~RowEntry}  rowEntry
  * @param {number}  columnIndex
- * @param {CollapsibleRowTable~ColInfo}  columnInfo
+ * @param {CollapsibleRowTableOld~ColInfo}  columnInfo
  * @param {boolean} isRowActive
  */
 
 /**
  * This is used to pass back additional cell information from the render function.
- * @typedef {object} CollapsibleRowTable~CellSettings
+ * @typedef {object} CollapsibleRowTableOld~CellSettings
  * @property {number}   [indent=undefined]  If specified, the number of indent 
  * positions to render the cell. This is used to indicate hierarchy and should 
  * normally only be set on the first column, as that is the column adjacent to the 
@@ -426,54 +426,54 @@ export class CollapsibleRowTable extends React.Component {
  */
 
 /**
- * @typedef CollapsibleRowTable~onRenderCellArgs
- * @param {CollapsibleRowTable~CellInfo} cellInfo
- * @param {CollapsibleRowTable~CellSettings} cellSettings
+ * @typedef CollapsibleRowTableOld~onRenderCellArgs
+ * @param {CollapsibleRowTableOld~CellInfo} cellInfo
+ * @param {CollapsibleRowTableOld~CellSettings} cellSettings
  */
 /**
  * The callback for rendering cells
- * @callback CollapsibleRowTable~onRenderCell
- * @param {CollapsibleRowTable~onRenderCellArgs}    args
+ * @callback CollapsibleRowTableOld~onRenderCell
+ * @param {CollapsibleRowTableOld~onRenderCellArgs}    args
  * @returns {object|string}    A React component or text string.
  */
 
 /**
  * The callback for obtaining the {@link ExpandCollapseState} for a row.
- * @callback CollapsibleRowTable~onGetRowExpandCollapseState
- * @param {CollapsibleRowTable~RowEntry}    rowEntry The row of interest.
+ * @callback CollapsibleRowTableOld~onGetRowExpandCollapseState
+ * @param {CollapsibleRowTableOld~RowEntry}    rowEntry The row of interest.
  * @returns {ExpandCollapseState}
  */
 
 /**
  * The basic event handler callback.
- * @callback CollapsibleRowTable~RowEventHandler
- * @param {CollapsibleRowTable~RowEntry} rowEntry
+ * @callback CollapsibleRowTableOld~RowEventHandler
+ * @param {CollapsibleRowTableOld~RowEntry} rowEntry
  * @param {Event}   event
  */
 
 /**
  * The callback for a row being expanded or collapsed.
- * @callback CollapsibleRowTable~onRowToggleCollapse
- * @param {CollapsibleRowTable~RowEntry} rowEntry
+ * @callback CollapsibleRowTableOld~onRowToggleCollapse
+ * @param {CollapsibleRowTableOld~RowEntry} rowEntry
  * @param {ExpandCollapseState} newExpandCollapseState
  */
 
 /**
  * The callback for retrieving extra row handler. 
  * See {@link TableHandler#onGetRowExtras} for usage.
- * @callback CollapsibleRowTable~onGetRowExtras
- * @param {CollapsibleRowTable~RowEntry} rowEntry
+ * @callback CollapsibleRowTableOld~onGetRowExtras
+ * @param {CollapsibleRowTableOld~RowEntry} rowEntry
  * @param {number}  rowIndex
  * @param {object[]}    rowRefs An array containing the React refs of each row.
- * @returns {CollapsibleRowTable~RowExtras}
+ * @returns {CollapsibleRowTableOld~RowExtras}
  */
 
 /**
- * Object returned by {@link CollapsibleRowTable~onGetRowExtras}.
- * @typedef CollapsibleRowTable~RowExtras
- * @property {CollapsibleRowTable~RowEventHandler} [onRowClick]
- * @property {CollapsibleRowTable~RowEventHandler} [onRowDoubleClick]
- * @property {CollapsibleRowTable~onRowToggleCollapse} [onRowToggleCollapse]
+ * Object returned by {@link CollapsibleRowTableOld~onGetRowExtras}.
+ * @typedef CollapsibleRowTableOld~RowExtras
+ * @property {CollapsibleRowTableOld~RowEventHandler} [onRowClick]
+ * @property {CollapsibleRowTableOld~RowEventHandler} [onRowDoubleClick]
+ * @property {CollapsibleRowTableOld~onRowToggleCollapse} [onRowToggleCollapse]
  * @property {function} ...args Additional event handlers and other such stuff to pass to
  * the React component.
  */
@@ -481,7 +481,7 @@ export class CollapsibleRowTable extends React.Component {
 /**
  * The callback for modifying the class name for the row.
  * @callback CollapsbileRowTable~onGetRowClassName
- * @param {CollapsibleRowTable~RowEntry} rowEntry
+ * @param {CollapsibleRowTableOld~RowEntry} rowEntry
  * @param {number}  rowIndex
  * @param {string}  className
  * @returns {string}    The class name to use.
@@ -496,30 +496,30 @@ export class CollapsibleRowTable extends React.Component {
  */
 
 /**
- * @typedef {object} CollapsibleRowTable~propTypes
- * @property {CollapsibleRowTable~ColInfo[]}  columnInfos    Information for the columns, 
+ * @typedef {object} CollapsibleRowTableOld~propTypes
+ * @property {CollapsibleRowTableOld~ColInfo[]}  columnInfos    Information for the columns, 
  * primarily the heading row information.
- * @property {CollapsibleRowTable~RowEntry[]}    rowEntries  The individual rows.
+ * @property {CollapsibleRowTableOld~RowEntry[]}    rowEntries  The individual rows.
  * @property {string} [activeRowKey]  The key of the active row.  A key is 
  * used instead of the row object itself to avoid any problems with rowEntry objects 
  * being changed.
- * @property {CollapsibleRowTable~onRenderCell} onRenderCell The cell rendering callback.
+ * @property {CollapsibleRowTableOld~onRenderCell} onRenderCell The cell rendering callback.
  * @property {CollapsbileRowTable~onGetRowExpandCollapseState} 
  * [onGetRowExpandCollapseState] Optional callback for retrieving the 
  * {@link ExpandCollapseState} of rows. If <code>undefined</code> then the 
  * expand/collapse button column is disabled.
- * @property {CollapsibleRowTable~onGetRowExtras} [onGetRowExtras]
+ * @property {CollapsibleRowTableOld~onGetRowExtras} [onGetRowExtras]
  * @property {CollapsbileRowTable~onGetRowClassName}  [onGetRowClassName]
- * @property {CollapsibleRowTable~RowEventHandler} [onRowClick]
- * @property {CollapsibleRowTable~RowEventHandler} [onRowDoubleClick]
- * @property {CollapsibleRowTable~onRowToggleCollapse} [onRowToggleCollapse]
+ * @property {CollapsibleRowTableOld~RowEventHandler} [onRowClick]
+ * @property {CollapsibleRowTableOld~RowEventHandler} [onRowDoubleClick]
+ * @property {CollapsibleRowTableOld~onRowToggleCollapse} [onRowToggleCollapse]
  * @property {function} [onContextMenu] Event handler for 
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/contextmenu_event}
  * @property {MenuList~Item[]}  [contextMenuItems]
  * @property {Dropdown~onChooseItem}    [onChooseContextMenuItem]
- * @property {CollapsibleRowTable~onLoadRowEntries} [onLoadRowEntries]
+ * @property {CollapsibleRowTableOld~onLoadRowEntries} [onLoadRowEntries]
  */
-CollapsibleRowTable.propTypes = {
+CollapsibleRowTableOld.propTypes = {
     columnInfos: PropTypes.array.isRequired,
     rowEntries: PropTypes.array.isRequired,
     activeRowKey: PropTypes.string,

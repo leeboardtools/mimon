@@ -5,7 +5,7 @@ import { TabbedPages } from '../util-ui/TabbedPages';
 import * as A from '../engine/Accounts';
 import { PricedItemType } from '../engine/PricedItems';
 import deepEqual from 'deep-equal';
-import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
+import { ExpandCollapseState } from '../util-ui/CollapsibleRowTableOld';
 import { RowEditCollapsibleTable } from '../util-ui/RowEditTable';
 import * as C from '../util/Currency';
 import { CellTextEditor, CellTextDisplay } from '../util-ui/CellTextEditor';

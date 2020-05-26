@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { CollapsibleRowTable } from './CollapsibleRowTable';
+import { CollapsibleRowTableOld } from './CollapsibleRowTableOld';
 
 
 /**
@@ -57,7 +57,7 @@ export function activeRowTable(WrappedTable) {
 
         /**
          * Basic row activation.
-         * @param {CollapsibleRowTable~RowEntry} rowEntry
+         * @param {CollapsibleRowTableOld~RowEntry} rowEntry
          */
         activateRow(rowEntry) {
             const { onActivateRow } = this.props;
@@ -140,7 +140,7 @@ export function activeRowTable(WrappedTable) {
 
         /**
          * Pass this function as the onGetRowExtras property of CollapsbileRowTable.
-         * @param {CollapsibleRowTable~RowEntry} rowEntry
+         * @param {CollapsibleRowTableOld~RowEntry} rowEntry
          * @param {number} rowIndex
          * @param {object[]} rowRefs
          */
@@ -174,23 +174,23 @@ export function activeRowTable(WrappedTable) {
     /**
      * @callback ActiveRowTable~onGetRowAtIndex
      * @param {number}  index
-     * @returns {CollapsibleRowTable~RowEntry}
+     * @returns {CollapsibleRowTableOld~RowEntry}
      */
 
     /**
      * @callback ActiveRowTable~onActivateRow
-     * @param {CollapsibleRowTable~RowEntry}  rowEntry
+     * @param {CollapsibleRowTableOld~RowEntry}  rowEntry
      */
 
     /**
      * @callback ActiveRowTable~onOpenRow
-     * @param {CollapsibleRowTable~RowEntry}  rowEntry
+     * @param {CollapsibleRowTableOld~RowEntry}  rowEntry
      */
 
     /**
      * @callback ActiveRowTable~onKeyDown
      * @param {Event}   event
-     * @param {CollapsibleRowTable~RowEntry}  rowEntry
+     * @param {CollapsibleRowTableOld~RowEntry}  rowEntry
      * @param {number}  rowIndex
      * @param {object[]}    rowRefs
      * @returns {string|undefined}  If 'default' is returned, the event is 
@@ -222,7 +222,7 @@ export function activeRowTable(WrappedTable) {
         onOpenRow: PropTypes.func,
         onKeyDown: PropTypes.func,
 
-        // From CollapsibleRowTable
+        // From CollapsibleRowTableOld
         onRowToggleCollapse: PropTypes.func,
     };
 
@@ -232,7 +232,7 @@ export function activeRowTable(WrappedTable) {
 
 /**
  * React component applying the {@link activeRowTable} HOC to the table 
- * {@link CollapsibleRowTable}.
+ * {@link CollapsibleRowTableOld}.
  */
-export const ActiveRowCollapsibleTable = activeRowTable(CollapsibleRowTable);
+export const ActiveRowCollapsibleTable = activeRowTable(CollapsibleRowTableOld);
 

@@ -11,7 +11,7 @@ import { getQuantityDefinition } from '../util/Quantities';
 let columnInfoDefs;
 
 /**
- * @returns {CollapsibleRowTable~ColInfo[]} Array containing the available
+ * @returns {CollapsibleRowTableOld~ColInfo[]} Array containing the available
  * columns for priced item lists.
  */
 export function getPricedItemsListColumnInfoDefs() {

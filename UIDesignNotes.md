@@ -331,7 +331,7 @@ Common menus:
         - Generic, this may form the basis for reports that display summarized account info.
         - Have a master accounts list in MainWindow
         - Support customizing and saving customized versions.
-        - CollapsibleRowTable.
+        - CollapsibleRowTableOld.
     
     - Support for new/modify/delete account, priced items
 
@@ -432,11 +432,9 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
 
     - Account Register
         - Tool tips:
-            
 
-        - Virtual scrolling:
-            - https://dev.to/adamklein/build-your-own-virtual-scroll-part-i-11ib
-        
+        - Auto-complete for description
+            
         - Date editor
             - Need editor.
             - Display needs to use locale to display date.
@@ -505,9 +503,9 @@ Current set of table classes:
     * The caller must maintain the active row.
     * Adds {@link RowEditTable~Props} to the wrapped table's properties.
     */
-    RowEditCollapsibleTable = rowEditTable(CollapsibleRowTable)
+    RowEditCollapsibleTable = rowEditTable(CollapsibleRowTableOld)
         - AccountRegister
-        - NewFileConfigurator
+        - NewFileConfigurator (also uses collapsible table stuff)
 
     /**
     * React HOC function that adds keyboard and mouse support to a table component 
@@ -516,42 +514,13 @@ Current set of table classes:
     * @name ActiveRowTable
     * @class
     */
-    ActiveRowCollapsibleTable = activeRowTable(CollapsibleRowTable);
+    ActiveRowCollapsibleTable = activeRowTable(CollapsibleRowTableOld);
         - AccountList
         - PricedItemsList
 
 
-    RowTable
-        - Column
-            - width
-            - width renderer
-            - Header
-            - Footer
-        
-        - Body
-            - rows are identified by index
-                - This is needed for virtual support
-            - reverse indexing? Or should this just be done by the parent.
-            - row in view
-            
-
-        - Active Row
-            - Keyboard support
-        - Virtual support
-        - Bottom up support
-
-    EditableRowTable
-        - RowTable
-        - Tracks edit state
-
-    CollapsibleRowTable
-        - Maybe not even?
-
 
 - RowTable To Do:
-    - Change onOpenRow/onCloseRow to onEnterRow, onExitRow, onEscapeRow
-    - Add EditableRowTable
-    - Add CollapsibleRowTable - or at least HOC type of thing.
+    - Add CollapsibleRowTableOld - or at least HOC type of thing.
     - Add column resizing support
 
-    - If scroll active row out of visible range, focus gets lost.

@@ -383,7 +383,7 @@ function renderBalanceDisplay({caller, columnInfo, rowEntry}) {
 
 
 /**
- * @returns {CollapsibleRowTable~ColInfo[]} Array containing the available
+ * @returns {CollapsibleRowTableOld~ColInfo[]} Array containing the available
  * columns for account registers.
  */
 export function getAccountRegisterColumnInfoDefs(accountType) {

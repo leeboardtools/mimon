@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
+import { ExpandCollapseState } from '../util-ui/CollapsibleRowTableOld';
 import { ActiveRowCollapsibleTable } from '../util-ui/ActiveRowTable';
 import { CellTextDisplay } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay } from '../util-ui/CellSelectEditor';
@@ -15,7 +15,7 @@ import deepEqual from 'deep-equal';
 let columnInfoDefs;
 
 /**
- * @returns {CollapsibleRowTable~ColInfo[]} Array containing the available
+ * @returns {CollapsibleRowTableOld~ColInfo[]} Array containing the available
  * columns for accounts lists.
  */
 export function getAccountsListColumnInfoDefs() {
