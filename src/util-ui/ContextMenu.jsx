@@ -71,31 +71,42 @@ export class ContextMenu extends React.Component {
             const menuHeight = menuRect.height;
 
             const { innerWidth, innerHeight } = window;
+            const maxRight = innerWidth - 2;
+            const maxBottom = innerHeight - 2;
+
             let left = this.props.x;
             let top = this.props.y;
+            let right = left + menuWidth;
+            let bottom = top + menuHeight;
 
-            if ((left + menuWidth) > innerWidth) {
-                left = innerWidth - menuWidth;
-                if (left < 0) {
-                    // Wider than the window, center vertically...
-                    left = (innerWidth - menuWidth) / 2;
-                }
+            if (right > maxRight) {
+                right = maxRight;
+                left = Math.max(maxRight - menuWidth, 0);
             }
-            if ((top + menuHeight) > innerHeight) {
-                top = innerHeight - menuHeight;
-                if (top < 0) {
-                    // Taller than the window, center vertically...
-                    top = (innerHeight - menuWidth) / 2;
-                }
+            if (bottom > maxBottom) {
+                bottom = maxBottom;
+                top = Math.max(maxBottom - menuHeight, 0);
             }
+
+            const width = right - left;
+            const height = bottom - top;
 
             left += window.scrollX;
             top += window.scrollY;
+            right += window.scrollX;
+            bottom += window.scrollY;
 
-            if ((this.state.left !== left) || (this.state.top !== top)) {
+            console.log('context: ' + left + ' ' + top + ' ' + right + ' ' + bottom + '   ' + width + ' ' + height);
+
+            if ((this.state.left !== left) || (this.state.top !== top)
+             || (this.state.right !== right) || (this.state.bottom !== bottom)) {
                 this.setState({
                     left: left,
                     top: top,
+                    right: right,
+                    bottom: bottom,
+                    width: width,
+                    height: height,
                 });
             }
         }
@@ -107,6 +118,16 @@ export class ContextMenu extends React.Component {
 
         let { menuClassExtras } = this.props;
         menuClassExtras = menuClassExtras || '';
+
+        const style = {
+            position: 'absolute',
+            top: this.state.top,
+            left: this.state.left,
+        };
+        if (this.state.right !== undefined) {
+            style.right = this.state.right;
+            style.bottom = this.state.bottom;
+        }
 
         let menuComponent;
         if (show) {
@@ -120,12 +141,6 @@ export class ContextMenu extends React.Component {
                 alwaysFocus
             />;
         }
-
-        const style = {
-            position: 'absolute',
-            top: this.state.top,
-            left: this.state.left,
-        };
 
         return <div style={style} className="contextMenu"
         >
