@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { ExpandCollapseState } from '../util-ui/CollapsibleRowTableOld';
 import { CellTextDisplay } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay } from '../util-ui/CellSelectEditor';
 import * as A from '../engine/Accounts';
@@ -9,7 +8,7 @@ import * as PI from '../engine/PricedItems';
 import { CurrencyDisplay } from '../util-ui/CurrencyDisplay';
 import { QuantityDisplay } from '../util-ui/QuantityDisplay';
 import deepEqual from 'deep-equal';
-import { CollapsibleRowTable } from '../util-ui/CollapsibleRowTable';
+import { CollapsibleRowTable, ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
 import { getDecimalDefinition, getQuantityDefinitionName } from '../util/Quantities';
 
 
@@ -129,7 +128,7 @@ export class AccountsList extends React.Component {
 
         this.state.columns = this.generateColumns();
 
-        this.state.rowInfos = this.buildRowInfos().rowInfos;
+        this.state = Object.assign(this.state, this.buildRowInfos());
         if (this.state.rowInfos.length) {
             this.state.activeRowKey = this.state.rowInfos[0].key;
         }
@@ -191,16 +190,16 @@ export class AccountsList extends React.Component {
 
     
     onAccountsModify(result) {
+        const { rowInfosByAccountId } = this.state;
         for (let accountDataItem of result.newAccountDataItems) {
             const { id } = accountDataItem;
-            for (let rowInfo of this.state.rowInfos) {
-                if (rowInfo.accountDataItem.id === id) {
-                    // TODO:
-                    // Only do a full update if the parent or children changed,
-                    // otherwise just need to update the row entry.
-                    this.rebuildRowInfos();
-                    return;
-                }
+            const rowInfo = rowInfosByAccountId.get(id);
+            if (rowInfo) {
+                // TODO:
+                // Only do a full update if the parent or children changed,
+                // otherwise just need to update the row entry.
+                this.rebuildRowInfos();
+                return;
             }
         }
     }
@@ -208,11 +207,9 @@ export class AccountsList extends React.Component {
 
     onAccountRemove(result) {
         const { id } = result.removedAccountDataItem;
-        for (let rowInfo of this.state.rowInfos) {
-            if (rowInfo.accountDataItem.id === id) {
-                this.rebuildRowInfos();
-                return;
-            }
+        const { rowInfosByAccountId } = this.state;
+        if (rowInfosByAccountId.has(id)) {
+            this.rebuildRowInfos();
         }
     }
 
@@ -252,10 +249,7 @@ export class AccountsList extends React.Component {
             let prevActiveRowKey = this.state.activeRowKey;
             
             const result = this.buildRowInfos();
-            this.setState({
-                rowInfos: result.rowInfos,
-                activeRowKey: result.activeRowKey,
-            });
+            this.setState(result);
 
             if (prevActiveRowKey !== result.activeRowKey) {
                 const { onSelectAccount } = this.props;
@@ -346,12 +340,13 @@ export class AccountsList extends React.Component {
     // TODO: Support summary rows...
     buildRowInfos() {
         const rowInfos = [];
+        const rowInfosByAccountId = new Map();
         const { topLevelAccountIds } = this.state;
 
         let { activeRowKey } = this.state;
 
         topLevelAccountIds.forEach((id) => {
-            this.addAccountIdToRowEntries(rowInfos, id);
+            this.addAccountIdToRowEntries(rowInfos, id, rowInfosByAccountId);
         });
 
         let newActiveRowKey;
@@ -364,12 +359,13 @@ export class AccountsList extends React.Component {
 
         return {
             rowInfos: rowInfos,
+            rowInfosByAccountId: rowInfosByAccountId,
             activeRowKey: newActiveRowKey,
         };
     }
 
 
-    addAccountIdToRowEntries(rowInfos, accountId) {
+    addAccountIdToRowEntries(rowInfos, accountId, rowInfosByAccountId) {
         if (!this.isAccountIdDisplayed(accountId)) {
             return;
         }
@@ -393,12 +389,13 @@ export class AccountsList extends React.Component {
             accountDataItem: accountDataItem,
         };
         rowInfos.push(rowInfo);
+        rowInfosByAccountId.set(accountId, rowInfo);
 
         if (childAccountIds) {
             rowInfo.childRowInfos = [];
             childAccountIds.forEach((childId) => {
                 this.addAccountIdToRowEntries(rowInfo.childRowInfos, 
-                    childId, accountId);
+                    childId, rowInfosByAccountId);
             });
         }
 
@@ -428,10 +425,7 @@ export class AccountsList extends React.Component {
     rebuildRowInfos() {
         this.setState((state) => {
             const result = this.buildRowInfos();
-            return {
-                rowInfos: result.rowInfos,
-                activeRowKey: result.activeRowKey,
-            };
+            return result;
         });
     }
 

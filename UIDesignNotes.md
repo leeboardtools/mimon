@@ -522,6 +522,8 @@ Current set of table classes:
 
 - RowTable To Do:
     - Add column resizing support
-    - Add context menu support
 
+- Fix AccountRegister undo/redo not updating list.
+
+- Fix AccountEditor modifying root account.
 
