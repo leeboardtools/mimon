@@ -2,7 +2,6 @@ import React from 'react';
 import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountRegister } from './AccountRegister';
-import { AccountRegisterOld } from './AccountRegisterOld';
 
  
 
@@ -132,14 +131,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     onRenderTabPage(tabEntry, isActive) {
         const { accessor } = this.props;
         const { accountId } = tabEntry;
-        let useOld = false;
-        //useOld = true;
-        if (useOld) {
-            return <AccountRegisterOld
-                accessor={accessor}
-                accountId={accountId}
-            />;
-        }
+
         return <AccountRegister
             accessor={accessor}
             accountId={accountId}

@@ -2,7 +2,6 @@ import React from 'react';
 import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountsList } from './AccountsList';
-import { AccountsListOld } from './AccountsListOld';
 import * as A from '../engine/Accounts';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 
@@ -404,23 +403,6 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         }
 
         const columns = [];
-
-        let useOld = false;
-        //useOld = true;
-        if (useOld) {
-            return <AccountsListOld
-                accessor={accessor}
-                onSelectAccount={(accountId) => 
-                    this.onSelectAccount(tabEntry.tabId, accountId)}
-                onChooseAccount={(accountId) => 
-                    this.onChooseAccount(tabEntry.tabId, accountId)}
-                columns={columns}
-                hiddenRootAccountTypes={tabEntry.hiddenRootAccountTypes}
-                hiddenAccountIds={tabEntry.hiddenAccountIds}
-                showHiddenAccounts={tabEntry.showHiddenAccounts}
-                contextMenuItems={contextMenuItems}
-            />;
-        }        
 
         return <AccountsList
             accessor={accessor}
