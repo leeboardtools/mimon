@@ -96,8 +96,6 @@ export class ContextMenu extends React.Component {
             right += window.scrollX;
             bottom += window.scrollY;
 
-            console.log('context: ' + left + ' ' + top + ' ' + right + ' ' + bottom + '   ' + width + ' ' + height);
-
             if ((this.state.left !== left) || (this.state.top !== top)
              || (this.state.right !== right) || (this.state.bottom !== bottom)) {
                 this.setState({
