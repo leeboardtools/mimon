@@ -387,17 +387,17 @@ export function editableRowTable(WrappedTable) {
             return <WrappedTable
                 {...passThroughProps}
 
-                activeRowIndex={state.activeRowIndex}
-                onActivateRow={this.onActivateRow}
+                activeRowIndex = {state.activeRowIndex}
+                onActivateRow = {this.onActivateRow}
 
-                requestedVisibleRowIndex={state.activeRowIndex}
+                requestedVisibleRowIndex = {state.activeRowIndex}
 
-                onOpenActiveRow={this.onOpenActiveRow}
-                onKeyDown={this.onKeyDown}
-                onRenderCell={this.onRenderCell}
-                noActiveRowFocus={activeRowEditIndex !== undefined}
+                onOpenActiveRow = {this.onOpenActiveRow}
+                onKeyDown = {this.onKeyDown}
+                onRenderCell = {this.onRenderCell}
+                noActiveRowFocus = {activeRowEditIndex !== undefined}
 
-                ref={this._rowTableRef}
+                ref = {this._rowTableRef}
             >
 
             </WrappedTable>;
@@ -571,4 +571,7 @@ export function editableRowTable(WrappedTable) {
     return _EditableRowTable;
 }
 
+/**
+ * @class
+ */
 export const EditableRowTable = editableRowTable(RowTable);
