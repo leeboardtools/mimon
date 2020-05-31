@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { ExpandCollapseState } from '../util-ui/CollapsibleRowTableOld';
-import { ActiveRowCollapsibleTable } from '../util-ui/ActiveRowTable';
 import { CellTextDisplay } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay } from '../util-ui/CellSelectEditor';
 import * as A from '../engine/Accounts';
@@ -10,6 +9,8 @@ import * as PI from '../engine/PricedItems';
 import { CurrencyDisplay } from '../util-ui/CurrencyDisplay';
 import { QuantityDisplay } from '../util-ui/QuantityDisplay';
 import deepEqual from 'deep-equal';
+import { CollapsibleRowTable } from '../util-ui/CollapsibleRowTable';
+import { getDecimalDefinition, getQuantityDefinitionName } from '../util/Quantities';
 
 
 let columnInfoDefs;
@@ -21,35 +22,47 @@ let columnInfoDefs;
 export function getAccountsListColumnInfoDefs() {
     if (!columnInfoDefs) {
         const cellClassName = 'm-0';
+        const numericClassName = 'text-right';
+        const numericSize = -8; // 12.456,78
 
         columnInfoDefs = {
             name: { key: 'name',
-                label: userMsg('AccountsList-name'),
-                ariaLabel: 'Name',
-                propertyName: 'name',
-                className: 'w-50',
-                cellClassName: cellClassName,
+                header: {
+                    label: userMsg('AccountsList-name'),
+                    ariaLabel: 'Name',
+                    classExtras: 'text-left',
+                },
+                inputClassExtras: 'text-left',
+                cellClassName: cellClassName + ' w-50',
             },
             type: { key: 'type',
-                label: userMsg('AccountsList-type'),
-                ariaLabel: 'Account Type',
-                propertyName: 'type',
-                className: '',
+                header: {
+                    label: userMsg('AccountsList-type'),
+                    ariaLabel: 'Account Type',
+                    classExtras: 'text-left',
+                },
+                inputClassExtras: 'text-left',
                 cellClassName: cellClassName,
             },
             balance: { key: 'balance',
-                label: userMsg('AccountsList-balance'),
-                ariaLabel: 'Account Balance',
-                propertyName: 'balance',
-                className: 'text-center',
+                header: {
+                    label: userMsg('AccountsList-balance'),
+                    ariaLabel: 'Account Balance',
+                    classExtras: numericClassName,
+                },
+                inputClassExtras: numericClassName,
                 cellClassName: cellClassName,
+                inputSize: numericSize,
             },
             shares: { key: 'shares',
-                label: userMsg('AccountsList-shares'),
-                ariaLabel: 'Shares',
-                propertyName: 'shares',
-                className: 'text-center',
+                header: {
+                    label: userMsg('AccountsList-shares'),
+                    ariaLabel: 'Shares',
+                    classExtras: numericClassName,
+                },
+                inputClassExtras: numericClassName,
                 cellClassName: cellClassName,
+                inputSize: numericSize,
             },
         };
     }
@@ -69,12 +82,12 @@ export class AccountsList extends React.Component {
         this.onAccountsModify = this.onAccountsModify.bind(this);
         this.onAccountRemove = this.onAccountRemove.bind(this);
 
+        this.onExpandCollapseRow = this.onExpandCollapseRow.bind(this);
         this.onRenderCell = this.onRenderCell.bind(this);
-        this.onGetRowExpandCollapseState = this.onGetRowExpandCollapseState.bind(this);
-        this.onGetRowAtIndex = this.onGetRowAtIndex.bind(this);
+        this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
+
         this.onActivateRow = this.onActivateRow.bind(this);
-        this.onOpenRow = this.onOpenRow.bind(this);
-        this.onRowToggleCollapse = this.onRowToggleCollapse.bind(this);
+        this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
 
         const { accessor } = this.props;
 
@@ -106,7 +119,7 @@ export class AccountsList extends React.Component {
                 accessor.getRootExpenseAccountId(),
                 accessor.getRootEquityAccountId(),
             ],
-            rowEntries: [],
+            rowInfos: [],
         };
 
         this._collapsedRowIds = new Set();
@@ -114,14 +127,65 @@ export class AccountsList extends React.Component {
         this._hiddenRootAccountTypes = new Set(props.hiddenRootAccountTypes);
         this._hiddenAccountIds = new Set(props.hiddenAccountIds);
 
+        this.state.columns = this.generateColumns();
 
-        this.state.rowEntries = this.buildRowEntries().rowEntries;
+        this.state.rowInfos = this.buildRowInfos().rowInfos;
+        if (this.state.rowInfos.length) {
+            this.state.activeRowKey = this.state.rowInfos[0].key;
+        }
+
+        this._sizingRowInfo = {
+            accountDataItem: {
+                name: userMsg('AccountsList-dummy_name'),
+
+                // TODO:
+                // Scan through the account type names to find the longest one...
+                type: A.AccountType.REAL_ESTATE.name,
+
+                pricedItemId: accessor.getBaseCurrencyPricedItemId(),
+
+            },
+            accountState: {
+                quantityBaseValue: 999999999,
+            },
+            quantityDefinition: getQuantityDefinitionName(
+                getDecimalDefinition(4)
+            ),
+        };
+    }
+
+
+    generateColumns(columnWidths) {
+        const { columnInfos } = this.state;
+        const columns = columnInfos.map((columnInfo) => {
+            return {
+                key: columnInfo.key,
+                // width
+                // minWidth
+                // maxWidth
+                cellClassExtras: columnInfo.cellClassName,
+                header: columnInfo.header,
+                footer: columnInfo.footer,
+            };
+        });
+
+        columnWidths = columnWidths || this.state.columnWidths;
+        if (columnWidths) {
+            const count = Math.min(columnWidths.length, columns.length);
+            for (let i = 0; i < count; ++i) {
+                if (columnWidths[i] !== undefined) {
+                    columns[i].width = columnWidths[i];
+                }
+            }
+        }
+
+        return columns;
     }
 
 
     onAccountAdd(result) {
         if (this.isAccountIdDisplayed(result.newAccountDataItem.id)) {
-            this.updateRowEntries();
+            this.rebuildRowInfos();
         }
     }
 
@@ -129,9 +193,12 @@ export class AccountsList extends React.Component {
     onAccountsModify(result) {
         for (let accountDataItem of result.newAccountDataItems) {
             const { id } = accountDataItem;
-            for (let rowEntry of this.state.rowEntries) {
-                if (rowEntry.accountDataItem.id === id) {
-                    this.updateRowEntries();
+            for (let rowInfo of this.state.rowInfos) {
+                if (rowInfo.accountDataItem.id === id) {
+                    // TODO:
+                    // Only do a full update if the parent or children changed,
+                    // otherwise just need to update the row entry.
+                    this.rebuildRowInfos();
                     return;
                 }
             }
@@ -141,9 +208,9 @@ export class AccountsList extends React.Component {
 
     onAccountRemove(result) {
         const { id } = result.removedAccountDataItem;
-        for (let rowEntry of this.state.rowEntries) {
-            if (rowEntry.accountDataItem.id === id) {
-                this.updateRowEntries();
+        for (let rowInfo of this.state.rowInfos) {
+            if (rowInfo.accountDataItem.id === id) {
+                this.rebuildRowInfos();
                 return;
             }
         }
@@ -182,62 +249,127 @@ export class AccountsList extends React.Component {
         }
 
         if (rowsNeedUpdating) {
-            const { prevActiveRowKey } = this.state;
-            const result = this.buildRowEntries();
+            let prevActiveRowKey = this.state.activeRowKey;
+            
+            const result = this.buildRowInfos();
             this.setState({
-                rowEntries: result.rowEntries,
+                rowInfos: result.rowInfos,
                 activeRowKey: result.activeRowKey,
             });
 
             if (prevActiveRowKey !== result.activeRowKey) {
                 const { onSelectAccount } = this.props;
                 if (onSelectAccount) {
-                    const accountDataItem = (result.activeRowEntry)
-                        ? result.activeRowEntry.accountDataItem
-                        : undefined;
-                    onSelectAccount(accountDataItem ? accountDataItem.id : undefined);
+                    onSelectAccount(result.activeRowKey);
                 }
             }
         }
     }
 
 
-    // Setting up the row entries:
-    // Want to be able to filter what gets displayed.
-    // Support summary rows for say account balances.
-    buildRowEntries() {
-        const rowEntries = [];
-        const { topLevelAccountIds } = this.state;
 
-        topLevelAccountIds.forEach((id) => {
-            this.addAccountIdToRowEntries(rowEntries, id, 0, 0);
-        });
-
-        let { activeRowKey } = this.state;
-        let activeRowEntry;
-        if (activeRowKey) {
-            let currentIndex;
-            for (currentIndex = 0; currentIndex < rowEntries.length; ++currentIndex) {
-                if (rowEntries[currentIndex].key === activeRowKey) {
-                    activeRowEntry = rowEntries[currentIndex];
-                    break;
+    updateRowInfo(rowInfos, updatedRowInfo) {
+        for (let i = 0; i < rowInfos.length; ++i) {
+            let rowInfo = rowInfos[i];
+            if (rowInfo.key === updatedRowInfo.key) {
+                if (!deepEqual(rowInfo, updatedRowInfo)) {
+                    const rowInfosCopy = Array.from(rowInfos);
+                    rowInfosCopy[i] = updatedRowInfo;
+                    return rowInfosCopy;
+                }
+                else {
+                    // No change...
+                    return rowInfos;
                 }
             }
-            if (currentIndex >= rowEntries.length) {
-                // The active row is no longer visible...
-                activeRowKey = undefined;
+
+            if (rowInfo.childRowInfos) {
+                const childRowInfos = this.updateRowInfo(
+                    rowInfo.childRowInfos, updatedRowInfo);
+                if (childRowInfos !== rowInfo.childRowInfos) {
+                    const rowInfosCopy = Array.from(rowInfos);
+                    rowInfosCopy[i] = Object.assign({}, rowInfo, {
+                        childRowInfos: childRowInfos,
+                    });
+                    return rowInfosCopy;
+                }
+            }
+        }
+        return rowInfos;
+    }
+
+
+    onExpandCollapseRow({rowInfo, expandCollapseState}) {
+        this.setState((state) => {
+            rowInfo = Object.assign({}, rowInfo, {
+                expandCollapseState: expandCollapseState,
+            });
+            switch (expandCollapseState) {
+            case ExpandCollapseState.COLLAPSED :
+                this._collapsedRowIds.delete(rowInfo.key);
+                break;
+    
+            case ExpandCollapseState.EXPANDED :
+                this._collapsedRowIds.add(rowInfo.key);
+                break;
+            
+            default :
+                return;
+            }
+
+            return {
+                rowInfos: this.updateRowInfo(state.rowInfos, rowInfo),
+            };
+        });
+    }
+
+
+    findRowInfoWithKey(rowInfos, key) {
+        for (let i = 0; i < rowInfos.length; ++i) {
+            const rowInfo = rowInfos[i];
+            if (rowInfo.key === key) {
+                return rowInfo;
+            }
+            
+            const { childRowInfos } = rowInfo;
+            if (childRowInfos) {
+                const foundRowInfo = this.findRowInfoWithKey(childRowInfos,
+                    key);
+                if (foundRowInfo) {
+                    return foundRowInfo;
+                }
+            }
+        }
+    }
+
+
+    // TODO: Support summary rows...
+    buildRowInfos() {
+        const rowInfos = [];
+        const { topLevelAccountIds } = this.state;
+
+        let { activeRowKey } = this.state;
+
+        topLevelAccountIds.forEach((id) => {
+            this.addAccountIdToRowEntries(rowInfos, id);
+        });
+
+        let newActiveRowKey;
+        if (activeRowKey) {
+            // Make sure the active row key is still valid.
+            if (this.findRowInfoWithKey(rowInfos, activeRowKey)) {
+                newActiveRowKey = activeRowKey;
             }
         }
 
         return {
-            rowEntries: rowEntries,
-            activeRowKey: activeRowKey,
-            activeRowEntry: activeRowEntry,
+            rowInfos: rowInfos,
+            activeRowKey: newActiveRowKey,
         };
     }
 
 
-    addAccountIdToRowEntries(rowEntries, accountId, parentAccountId, depth) {
+    addAccountIdToRowEntries(rowInfos, accountId) {
         if (!this.isAccountIdDisplayed(accountId)) {
             return;
         }
@@ -246,24 +378,27 @@ export class AccountsList extends React.Component {
         const accountDataItem = accessor.getAccountDataItemWithId(accountId);
         const { childAccountIds } = accountDataItem;
 
-        const key = accountDataItem.id.toString();
+        const key = accountDataItem.id;
         const isCollapsed = this._collapsedRowIds.has(key);
-        const index = rowEntries.length;
+        const index = rowInfos.length;
 
-        rowEntries.push({
+        const rowInfo = {
             key: key,
             index: index,
             expandCollapseState: (childAccountIds && childAccountIds.length)
-                ? ((isCollapsed) ? ExpandCollapseState.COLLAPSED
+                ? ((isCollapsed) 
+                    ? ExpandCollapseState.COLLAPSED
                     : ExpandCollapseState.EXPANDED)
                 : ExpandCollapseState.NO_EXPAND_COLLAPSE,
             accountDataItem: accountDataItem,
-            depth: depth,
-        });
+        };
+        rowInfos.push(rowInfo);
 
-        if (childAccountIds && !isCollapsed) {
+        if (childAccountIds) {
+            rowInfo.childRowInfos = [];
             childAccountIds.forEach((childId) => {
-                this.addAccountIdToRowEntries(rowEntries, childId, accountId, depth + 1);
+                this.addAccountIdToRowEntries(rowInfo.childRowInfos, 
+                    childId, accountId);
             });
         }
 
@@ -290,74 +425,58 @@ export class AccountsList extends React.Component {
     }
 
 
-    updateRowEntries(activeRowKey) {
+    rebuildRowInfos() {
         this.setState((state) => {
-            const rowEntries = this.buildRowEntries().rowEntries;
+            const result = this.buildRowInfos();
             return {
-                rowEntries: rowEntries,
-                activeRowKey: activeRowKey || state.activeRowKey,
+                rowInfos: result.rowInfos,
+                activeRowKey: result.activeRowKey,
             };
         });
     }
 
 
-    onGetRowExpandCollapseState(rowEntry) {
-        return rowEntry.expandCollapseState;
-    }
-
-    onGetRowAtIndex(index) {
-        return this.state.rowEntries[index];
-    }
-
-
-    onRowToggleCollapse(rowEntry, newExpandCollapseState) {
-        switch (rowEntry.expandCollapseState) {
-        case ExpandCollapseState.COLLAPSED :
-            this._collapsedRowIds.delete(rowEntry.key);
-            break;
-
-        case ExpandCollapseState.EXPANDED :
-            this._collapsedRowIds.add(rowEntry.key);
-            break;
-        
-        default :
-            return;
-        }
-
-        // This has the side effect of making rowEntry the active row entry...
-        this.updateRowEntries(rowEntry.key);
+    onSetColumnWidth({ columnIndex, columnWidth}) {
+        this.setState((state) => {
+            const columnWidths = Array.from(state.columnWidths || []);
+            columnWidths[columnIndex] = columnWidth;
+            return {
+                columnWidths: columnWidths,
+                columns: this.generateColumns(columnWidths),
+            };
+        });
     }
 
 
-    onActivateRow(rowEntry) {
+    onActivateRow({ rowInfo }) {
+        const activeRowKey = (rowInfo) ? rowInfo.key : undefined;
         this.setState({
-            activeRowKey: rowEntry.key,
+            activeRowKey: activeRowKey,
         });
 
         const { onSelectAccount } = this.props;
         if (onSelectAccount) {
-            const { accountDataItem } = rowEntry;
-            onSelectAccount(accountDataItem ? accountDataItem.id : undefined);
+            onSelectAccount(activeRowKey);
         }
     }
 
 
-    onOpenRow(rowEntry) {
+    onOpenActiveRow({ rowIndex }) {
         const { onChooseAccount } = this.props;
-        const { accountDataItem } = rowEntry;
-        if (onChooseAccount && accountDataItem) {
-            onChooseAccount(accountDataItem.id);
+        const { activeRowKey } = this.state;
+        if (onChooseAccount && activeRowKey) {
+            onChooseAccount(activeRowKey);
         }
     }
 
 
     renderTextDisplay(columnInfo, value) {
-        const { ariaLabel, inputClassExtras } = columnInfo;
-        
+        const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
         return <CellTextDisplay
-            ariaLabel={ariaLabel}
-            value={value}
-            inputClassExtras={inputClassExtras}
+            ariaLabel = {ariaLabel}
+            value = {value}
+            inputClassExtras = {inputClassExtras}
+            size = {inputSize}
         />;
     }
 
@@ -366,60 +485,78 @@ export class AccountsList extends React.Component {
         const accountType = A.AccountType[type];
         return <CellSelectDisplay
             ariaLabel="Account Type"
-            selectedValue={accountType.description}
+            selectedValue = {accountType.description}
         />;
     }
 
 
-    renderBalanceDisplay(columnInfo, accountDataItem) {
+    renderBalanceDisplay(columnInfo, accountDataItem, accountState) {
         const { accessor } = this.props;
-        const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
-            accountDataItem.pricedItemId
-        );
 
-        if (pricedItemDataItem 
-         && (pricedItemDataItem.type === PI.PricedItemType.CURRENCY.name)) {
-            const accountState = accessor.getCurrentAccountStateDataItem(
-                accountDataItem.id);
-            if (accountState && accountState.quantityBaseValue) {
-                return <CurrencyDisplay
-                    quantityBaseValue={accountState.quantityBaseValue}
-                    currency={pricedItemDataItem.currency}
-                />;
+        let currency;
+        if (!accountState) {
+            const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
+                accountDataItem.pricedItemId
+            );
+
+            if (pricedItemDataItem 
+            && (pricedItemDataItem.type === PI.PricedItemType.CURRENCY.name)) {
+                accountState = accessor.getCurrentAccountStateDataItem(
+                    accountDataItem.id);
+                currency = pricedItemDataItem.currency;
             }
+        }
+        else {
+            currency = accessor.getBaseCurrencyCode();
+        }
+
+        if (accountState && accountState.quantityBaseValue) {
+            return <CurrencyDisplay
+                quantityBaseValue = {accountState.quantityBaseValue}
+                currency = {currency}
+            />;
         }
     }
 
 
-    renderSharesDisplay(columnInfo, accountDataItem) {
+    renderSharesDisplay(columnInfo, accountDataItem, accountState, quantityDefinition) {
         const { accessor } = this.props;
-        const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
-            accountDataItem.pricedItemId
-        );
-        
-        if (pricedItemDataItem 
-         && ((pricedItemDataItem.type === PI.PricedItemType.SECURITY.name)
-          || (pricedItemDataItem.type === PI.PricedItemType.MUTUAL_FUND.name))) {
-            const accountState = accessor.getCurrentAccountStateDataItem(
-                accountDataItem.id);
-            if (accountState && accountState.quantityBaseValue) {
-                return <QuantityDisplay
-                    quantityBaseValue={accountState.quantityBaseValue}
-                    quantityDefinition={pricedItemDataItem.quantityDefinition}
-                />;
+
+        if (!accountState) {
+            const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
+                accountDataItem.pricedItemId
+            );
+            
+            if (pricedItemDataItem 
+             && ((pricedItemDataItem.type === PI.PricedItemType.SECURITY.name)
+              || (pricedItemDataItem.type === PI.PricedItemType.MUTUAL_FUND.name))) {
+                accountState = accessor.getCurrentAccountStateDataItem(
+                    accountDataItem.id);
+                quantityDefinition = pricedItemDataItem.quantityDefinition;
             }
+        }
+
+        if (accountState && accountState.quantityBaseValue) {
+            return <QuantityDisplay
+                quantityBaseValue = {accountState.quantityBaseValue}
+                quantityDefinition = {quantityDefinition}
+            />;
         }
     }
 
     
-    onRenderCell({ cellInfo, cellSettings }) {
-        const { rowEntry } = cellInfo;
-        if (!cellInfo.columnIndex) {
-            cellSettings.indent = rowEntry.depth;
-        }
+    onRenderCell({ rowInfo, columnIndex, isSizeRender, }) {
+        let { accountDataItem } = rowInfo;
+        
+        const columnInfo = this.state.columnInfos[columnIndex];
 
-        const { accountDataItem } = rowEntry;
-        const { columnInfo } = cellInfo;
+        let accountState;
+        let quantityDefinition;
+        if (isSizeRender) {
+            accountDataItem = this._sizingRowInfo.accountDataItem;
+            accountState = this._sizingRowInfo.accountState;
+            quantityDefinition = this._sizingRowInfo.quantityDefinition;
+        }
         switch (columnInfo.key) {
         case 'name' :
             if (this.props.showAccountIds) {
@@ -432,29 +569,36 @@ export class AccountsList extends React.Component {
             return this.renderAccountTypeDisplay(accountDataItem.type);
         
         case 'balance' :
-            return this.renderBalanceDisplay(columnInfo, accountDataItem);
+            return this.renderBalanceDisplay(columnInfo, accountDataItem,
+                accountState);
         
         case 'shares' :
-            return this.renderSharesDisplay(columnInfo, accountDataItem);
+            return this.renderSharesDisplay(columnInfo, accountDataItem,
+                accountState, quantityDefinition);
         }
     }
 
 
     render() {
         const { state } = this;
-        return <div>
-            <ActiveRowCollapsibleTable
-                columnInfos={state.columnInfos}
-                rowEntries={state.rowEntries}
-                activeRowKey={state.activeRowKey}
-                onRenderCell={this.onRenderCell}
-                onGetRowExpandCollapseState={this.onGetRowExpandCollapseState}
-                onGetRowAtIndex={this.onGetRowAtIndex}
-                onActivateRow={this.onActivateRow}
-                onOpenRow={this.onOpenRow}
-                onRowToggleCollapse={this.onRowToggleCollapse}
-                contextMenuItems={this.props.contextMenuItems}
-                onChooseContextMenuItem={this.props.onChooseContextMenuItem}
+
+        return <div className="RowTableContainer AccountsList">
+            <CollapsibleRowTable
+                columns = {state.columns}
+                rowInfos = {state.rowInfos}
+                onExpandCollapseRow = {this.onExpandCollapseRow}
+
+                onRenderCell = {this.onRenderCell}
+
+                onSetColumnWidth = {this.onSetColumnWidth}
+
+                activeRowKey = {state.activeRowKey}
+                onActivateRow = {this.onActivateRow}
+
+                onOpenActiveRow = {this.onOpenActiveRow}
+
+                contextMenuItems = {this.props.contextMenuItems}
+                onChooseContextMenuItem = {this.props.onChooseContextMenuItem}
             />
             {this.props.children}
         </div>;

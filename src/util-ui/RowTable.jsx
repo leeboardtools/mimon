@@ -23,6 +23,8 @@ export const FOOTER_ROW_INDEX = -2;
  * @property {number}   [width] Optional desired width of the column.
  * @property {number}   [minWidth]  Optional minimum width of the column.
  * @property {number}   [maxWidth]  Optional maximum width of the column.
+ * @property {string}   [cellClassExtras]   Optional extra classes to add to the class
+ * name of the cell container.
  * @property {RowTable~HeaderFooter}    [header]
  * @property {RowTable~HeaderFooter}    [footer]
  */
@@ -116,7 +118,6 @@ export class RowTable extends React.Component {
                  && (activeRowIndex >= topVisibleRow)
                  && (activeRowIndex <= bottomVisibleRow)) {
                     this._activeRowRef.current.focus();
-                    console.log('watcher activeRowFocus: ' + activeRowIndex);
                 }
                 else {
                     this._bodyRef.current.focus();
@@ -151,7 +152,6 @@ export class RowTable extends React.Component {
             this.setState({
                 visibleRowIndex: this.props.requestedVisibleRowIndex
             });
-            return;
         }
 
         if (!deepEqual(prevProps.columns, this.props.columns)) {
@@ -391,6 +391,9 @@ export class RowTable extends React.Component {
                         this._bodyRef.current.scrollTop = scrollTop;
                         visibleRowIndex = undefined;
                     }
+
+                    bottomVisibleRow = Math.min(bottomVisibleRow, lastRow);
+                    bottomFullyVisibleRow = Math.min(bottomFullyVisibleRow, lastRow);
                 }
 
                 let { activeRowUpdated } = state;
@@ -444,7 +447,10 @@ export class RowTable extends React.Component {
         if (onOpenActiveRow 
          && (activeRowIndex !== undefined)
          && (activeRowIndex >= 0) && (activeRowIndex < rowCount)) {
-            onOpenActiveRow(activeRowIndex, columnIndex);
+            onOpenActiveRow({
+                rowIndex: activeRowIndex, 
+                columnIndex: columnIndex,
+            });
         }
     }
 
@@ -587,7 +593,7 @@ export class RowTable extends React.Component {
                         className += ' ' + classExtras;
                     }
                     if (label) {
-                        cell = <span aria-label={ariaLabel}>
+                        cell = <span aria-label = {ariaLabel}>
                             {label}
                         </span>;
                     }
@@ -614,10 +620,10 @@ export class RowTable extends React.Component {
                     ref = getCellRef(sizeRenderRefs.columnRefs[c]);
                 }
 
-                cells.push(<div className={className}
-                    key={column.key}
-                    style={style}
-                    ref={ref}
+                cells.push(<div className = {className}
+                    key = {column.key}
+                    style = {style}
+                    ref = {ref}
                 >
                     {cell}
                 </div>);
@@ -647,10 +653,10 @@ export class RowTable extends React.Component {
                 ref = getRowRef(sizeRenderRefs);
             }
 
-            return <div className={containerClassName}>
-                <div className={rowClassName}
-                    style={style}
-                    ref={ref}
+            return <div className = {containerClassName}>
+                <div className = {rowClassName}
+                    style = {style}
+                    ref = {ref}
                 >
                     {cells}
                 </div>
@@ -719,7 +725,9 @@ export class RowTable extends React.Component {
             : this.state.columnWidths;
 
         const firstRow = topVisibleRow || 0;
-        const lastRow = (sizeRenderRefs) ? firstRow : bottomVisibleRow;
+        const lastRow = (sizeRenderRefs) 
+            ? firstRow 
+            : Math.min(bottomVisibleRow, rowCount - 1);
 
         if (!sizeRenderRefs) {
             this._activeRowRef = undefined;
@@ -739,6 +747,10 @@ export class RowTable extends React.Component {
 
                 let cellClassName = 'RowTableCell RowTableRowCell';
 
+                if (column.cellClassExtras) {
+                    cellClassName += ' ' + column.cellClassExtras;
+                }
+
                 let style;
                 const width = columnWidths[c];
                 if (width !== undefined) {
@@ -752,12 +764,12 @@ export class RowTable extends React.Component {
                     ref = sizeRenderRefs.columnRefs[c].bodyCellRef;
                 }
 
-                cells.push(<div className={cellClassName}
-                    style={style}
-                    key={c}
-                    ref={ref}
-                    onClick={(e) => this.onRowClick(e, i, c)}
-                    onDoubleClick={(e) => this.onRowDoubleClick(e, i, c)}
+                cells.push(<div className = {cellClassName}
+                    style = {style}
+                    key = {c}
+                    ref = {ref}
+                    onClick = {(e) => this.onRowClick(e, i, c)}
+                    onDoubleClick = {(e) => this.onRowDoubleClick(e, i, c)}
                 >
                     {cell}
                 </div>);
@@ -790,12 +802,12 @@ export class RowTable extends React.Component {
                 }
             }
 
-            rows.push(<div className={rowClassName}
-                key={getRowKey(i)}
-                style={style}
-                ref={ref}
-                tabIndex={tabIndex}
-                onKeyDown={this.onKeyDown}
+            rows.push(<div className = {rowClassName}
+                key = {getRowKey(i)}
+                style = {style}
+                ref = {ref}
+                tabIndex = {tabIndex}
+                onKeyDown = {this.onKeyDown}
             >
                 {cells}
             </div>);
@@ -855,18 +867,18 @@ export class RowTable extends React.Component {
             bodyRef = this._bodyRef;
         } 
 
-        return <div className={bodyClassName}
-            style={bodyStyle}
-            onScroll={this.onScroll}
-            tabIndex={bodyTabIndex}
-            onKeyDown={bodyOnKeyDown}
-            ref={bodyRef}
+        return <div className = {bodyClassName}
+            style = {bodyStyle}
+            onScroll = {this.onScroll}
+            tabIndex = {bodyTabIndex}
+            onKeyDown = {bodyOnKeyDown}
+            ref = {bodyRef}
         >
             <div
-                style={rowsContainerStyle}
-                ref={rowsContainerRef}
+                style = {rowsContainerStyle}
+                ref = {rowsContainerRef}
             >
-                <div style={rowsInnerStyle}>
+                <div style = {rowsInnerStyle}>
                     {rows}
                 </div>
             </div>
@@ -888,8 +900,8 @@ export class RowTable extends React.Component {
             className += ' ' + classExtras;
         }
 
-        return <div className={className}
-            style={style}
+        return <div className = {className}
+            style = {style}
         >
             {header}
             {body}
@@ -919,13 +931,13 @@ export class RowTable extends React.Component {
             left: 0,
             top: 0,
         };
-        return <div style={containerStyle}
-            ref={this._mainRef}
+        return <div style = {containerStyle}
+            ref = {this._mainRef}
         >
             <div>
                 {regularRender}
             </div>
-            <div style={hiddenStyle}>
+            <div style = {hiddenStyle}>
                 {hiddenRender}
             </div>
         </div>;
@@ -1072,18 +1084,23 @@ export class RowTable extends React.Component {
  * @property {number}  columnWidth
  * @property {RowTable~Column}  column
  */
+
 /**
  * @callback RowTable~onSetColumnWidth
  * @param {RowTable~onSetColumnWidthArgs}   args
  */
 
 /**
- * Called when a row the Enter key is pressed or the active row is double clicked.
- * @callback RowTable~onOpenActiveRow
- * @param {number}  rowIndex
- * @param {number}  [columnIndex=undefined] The index of the column that was 
+ * @typedef {object} RowTable~onOpenActiveRowArgs
+ * @property {number}   rowIndex
+ * @property {number}   [columnIndex=undefined] The index of the column that was 
  * double clicked on if this is being called from a double click, otherwise
  * it is <code>undefined</code>.
+ */
+/**
+ * Called when a row the Enter key is pressed or the active row is double clicked.
+ * @callback RowTable~onOpenActiveRow
+ * @param {RowTable~onOpenActiveRowArgs}    args
  */
 
 /**
@@ -1147,7 +1164,7 @@ export class RowTable extends React.Component {
  * @property {string}   [classExtras]
  */
 RowTable.propTypes = {
-    columns: PropTypes.array,
+    columns: PropTypes.array.isRequired,
 
     rowCount: PropTypes.number.isRequired,
     getRowKey: PropTypes.func,

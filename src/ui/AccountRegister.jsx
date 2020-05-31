@@ -21,27 +21,27 @@ function renderTextEditor(args) {
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
     const value = cellEditBuffer.value || '';
     return <CellTextEditor
-        ariaLabel={ariaLabel}
-        ref={refForFocus}
-        value={value.toString()}
-        inputClassExtras={inputClassExtras}
-        size={inputSize}
-        onChange={(e) => {
+        ariaLabel = {ariaLabel}
+        ref = {refForFocus}
+        value = {value.toString()}
+        inputClassExtras = {inputClassExtras}
+        size = {inputSize}
+        onChange = {(e) => {
             setCellEditBuffer({
                 value: e.target.value,
             });
         }}
-        errorMsg={errorMsg}
+        errorMsg = {errorMsg}
     />;
 }
 
 function renderTextDisplay(columnInfo, value) {
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
     return <CellTextDisplay
-        ariaLabel={ariaLabel}
-        value={value}
-        inputClassExtras={inputClassExtras}
-        size={inputSize}
+        ariaLabel = {ariaLabel}
+        value = {value}
+        inputClassExtras = {inputClassExtras}
+        size = {inputSize}
     />;
 }
 
@@ -67,11 +67,11 @@ function renderDateDisplay({columnInfo, rowEntry}) {
     const { transactionDataItem } = rowEntry;
     if (transactionDataItem) {
         return <CellDateDisplay
-            ariaLabel="Date"
-            value={transactionDataItem.ymdDate}
-            classExtras={columnInfo.inputClassExtras}
-            inputClassExtras={columnInfo.inputClassExtras}
-            size={columnInfo.inputSize}
+            ariaLabel = "Date"
+            value = {transactionDataItem.ymdDate}
+            classExtras = {columnInfo.inputClassExtras}
+            inputClassExtras = {columnInfo.inputClassExtras}
+            size = {columnInfo.inputSize}
         />;
     }
 }
@@ -134,9 +134,9 @@ function renderDescriptionDisplay({caller, columnInfo, rowEntry}) {
         const descriptionComponent 
             = renderTextDisplay(columnInfo, description);
         if (memo) {
-            return <div className="simple-tooltip">
+            return <div className = "simple-tooltip">
                 {descriptionComponent}
-                <div className="simple-tooltiptext">{memo}</div>
+                <div className = "simple-tooltiptext">{memo}</div>
             </div>;
         }
 
@@ -173,9 +173,9 @@ function renderSplitItemTooltip(caller, splits, index) {
     const { quantityDefinition } = caller.state;
     const value = getQuantityDefinition(quantityDefinition)
         .baseValueToValueText(split.quantityBaseValue);
-    return <div className="row" key={index}>
-        <div className="col col-sm-auto text-left">{splitAccountDataItem.name}</div>
-        <div className="col text-right">{value}</div>
+    return <div className = "row" key = {index}>
+        <div className = "col col-sm-auto text-left">{splitAccountDataItem.name}</div>
+        <div className = "col text-right">{value}</div>
     </div>;
 }
 
@@ -203,11 +203,11 @@ function renderSplitDisplay({caller, columnInfo, rowEntry}) {
             for (let i = 0; i < splits.length; ++i) {
                 tooltipEntries.push(renderSplitItemTooltip(caller, splits, i));
             }
-            const tooltip = <div className="simple-tooltiptext">
+            const tooltip = <div className = "simple-tooltiptext">
                 {tooltipEntries}
             </div>;
 
-            return <div className="simple-tooltip"> 
+            return <div className = "simple-tooltip"> 
                 {renderTextDisplay(columnInfo, text)}
                 {tooltip}
             </div>;
@@ -243,10 +243,10 @@ function renderReconcileDisplay({columnInfo, rowEntry}) {
             || T.ReconcileState.NOT_RECONCILED.name;
         
         return <CellSelectDisplay
-            selectedValue={userMsg('AccountRegister-reconcile_' + reconcileState)}
-            ariaLabel="Reconcile State"
-            classExtras={columnInfo.inputClassExtras}
-            size={columnInfo.inputSize}
+            selectedValue = {userMsg('AccountRegister-reconcile_' + reconcileState)}
+            ariaLabel = "Reconcile State"
+            classExtras = {columnInfo.inputClassExtras}
+            size = {columnInfo.inputSize}
         />;
     }
 }
@@ -306,11 +306,11 @@ function renderBoughtSoldDisplay({caller, columnInfo, rowEntry}, sign) {
                 pricedItemDataItem.quantityDefinition);
             const value = quantityDefinition.baseValueToValueText(
                 lotChange.quantityBaseValue * sign);
-            lotTooltipEntries.push(<div className="row" key={i}>
-                <div className="col col-sm-auto text-left">
+            lotTooltipEntries.push(<div className = "row" key = {i}>
+                <div className = "col col-sm-auto text-left">
                     {lotDataItem.description}
                 </div>
-                <div className="col text-right">
+                <div className = "col text-right">
                     {value}
                 </div>
             </div>);
@@ -318,17 +318,17 @@ function renderBoughtSoldDisplay({caller, columnInfo, rowEntry}, sign) {
     }
 
     const displayComponent = <CellQuantityDisplay
-        quantityBaseValue={quantityBaseValue}
-        quantityDefinition={quantityDefinition}
-        ariaLabel={sign > 0 ? 'Credit' : 'Debit'}
-        inputClassExtras={columnInfo.inputClassExtras}
-        size={columnInfo.inputSize}
+        quantityBaseValue = {quantityBaseValue}
+        quantityDefinition = {quantityDefinition}
+        ariaLabel = {sign > 0 ? 'Credit' : 'Debit'}
+        inputClassExtras = {columnInfo.inputClassExtras}
+        size = {columnInfo.inputSize}
     />;
 
     if (lotTooltipEntries.length) {
-        return <div className="simple-tooltip">
+        return <div className = "simple-tooltip">
             {displayComponent}
-            <div className="simple-tooltiptext">
+            <div className = "simple-tooltiptext">
                 {lotTooltipEntries}
             </div>
         </div>;
@@ -386,11 +386,11 @@ function renderSharesDisplay({ caller, columnInfo, rowEntry }) {
         const { quantityDefinition } = caller.state;
         const { quantityBaseValue } = accountStateDataItem;
         return <CellQuantityDisplay
-            quantityDefinition={quantityDefinition}
-            quantityBaseValue={quantityBaseValue}
-            ariaLabel="Shares"
-            inputClassExtras={columnInfo.inputClassExtras}
-            size={columnInfo.inputSize}
+            quantityDefinition = {quantityDefinition}
+            quantityBaseValue = {quantityBaseValue}
+            ariaLabel = "Shares"
+            inputClassExtras = {columnInfo.inputClassExtras}
+            size = {columnInfo.inputSize}
         />;
     }
 }
@@ -440,11 +440,11 @@ function renderDebitCreditDisplay(args, sign) {
     // Need to assign to component then return component to effectively disable
     // eslint(react/prop-types) being triggered on the function.
     const component = <CellQuantityDisplay
-        quantityBaseValue={quantityBaseValue}
-        quantityDefinition={quantityDefinition}
-        ariaLabel={sign > 0 ? 'Credit' : 'Debit'}
-        inputClassExtras={columnInfo.inputClassExtras}
-        size={columnInfo.inputSize}
+        quantityBaseValue = {quantityBaseValue}
+        quantityDefinition = {quantityDefinition}
+        ariaLabel = {sign > 0 ? 'Credit' : 'Debit'}
+        inputClassExtras = {columnInfo.inputClassExtras}
+        size = {columnInfo.inputSize}
     />;
     return component;
 }
@@ -498,11 +498,11 @@ function renderBalanceDisplay({caller, columnInfo, rowEntry}) {
         const { quantityDefinition } = caller.state;
         const { quantityBaseValue } = accountStateDataItem;
         return <CellQuantityDisplay
-            quantityDefinition={quantityDefinition}
-            quantityBaseValue={quantityBaseValue}
-            ariaLabel="Balance"
-            inputClassExtras={columnInfo.inputClassExtras}
-            size={columnInfo.inputSize}
+            quantityDefinition = {quantityDefinition}
+            quantityBaseValue = {quantityBaseValue}
+            ariaLabel = "Balance"
+            inputClassExtras = {columnInfo.inputClassExtras}
+            size = {columnInfo.inputSize}
         />;
     }
 }
@@ -512,8 +512,6 @@ function renderBalanceDisplay({caller, columnInfo, rowEntry}) {
 
 
 /**
- * @returns {CollapsibleRowTable~ColInfo[]} Array containing the available
- * columns for account registers.
  */
 export function getAccountRegisterColumnInfoDefs(accountType) {
     accountType = A.getAccountType(accountType);
@@ -1413,18 +1411,18 @@ export class AccountRegister extends React.Component {
     render() {
         const { state } = this;
 
-        return <div className="AccountRegister">
+        return <div className = "RowTableContainer AccountRegister">
             <EditableRowTable
-                columns={state.columns}
+                columns = {state.columns}
 
-                rowCount={state.rowEntries.length}
-                getRowKey={this.getRowKey}
+                rowCount = {state.rowEntries.length}
+                getRowKey = {this.getRowKey}
 
-                onLoadRows={this.onLoadRows}
+                onLoadRows = {this.onLoadRows}
 
                 //onRenderCell: PropTypes.func.isRequired,
 
-                onSetColumnWidth={this.onSetColumnWidth}
+                onSetColumnWidth = {this.onSetColumnWidth}
 
                 //rowHeight: PropTypes.number,
                 //headerHeight: PropTypes.number,
@@ -1436,10 +1434,10 @@ export class AccountRegister extends React.Component {
                 //onContextMenu: PropTypes.func,
                 //contextMenuItems: PropTypes.array,
                 //onChooseContextMenuItem: PropTypes.func,
-                contextMenuItems={this.props.contextMenuItems}
-                onChooseContextMenuItem={this.props.onChooseContextMenuItem}
+                contextMenuItems = {this.props.contextMenuItems}
+                onChooseContextMenuItem = {this.props.onChooseContextMenuItem}
 
-                classExtras="table-striped"
+                classExtras = "table-striped"
                 //headerClassExtras: PropTypes.string,
                 //bodyClassExtras: PropTypes.string,
                 //rowClassExtras: PropTypes.string,
@@ -1447,17 +1445,17 @@ export class AccountRegister extends React.Component {
 
                 //
                 // EditableRowTable methods
-                onRenderDisplayCell={this.onRenderDisplayCell}
-                onRenderEditCell={this.onRenderEditCell}
+                onRenderDisplayCell = {this.onRenderDisplayCell}
+                onRenderEditCell = {this.onRenderEditCell}
 
-                requestedActiveRowIndex={state.activeRowIndex}
-                onActiveRowChanged={this.onActiveRowChanged}
+                requestedActiveRowIndex = {state.activeRowIndex}
+                onActiveRowChanged = {this.onActiveRowChanged}
 
-                onStartRowEdit={this.onStartRowEdit}
-                asyncOnSaveRowEdit={this.asyncOnSaveRowEdit}
-                onCancelRowEdit={this.onCancelRowEdit}
+                onStartRowEdit = {this.onStartRowEdit}
+                asyncOnSaveRowEdit = {this.asyncOnSaveRowEdit}
+                onCancelRowEdit = {this.onCancelRowEdit}
 
-                ref={this._rowTableRef}
+                ref = {this._rowTableRef}
             />
             {this.props.children}
         </div>;

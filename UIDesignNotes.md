@@ -521,6 +521,7 @@ Current set of table classes:
 
 
 - RowTable To Do:
-    - Add CollapsibleRowTableOld - or at least HOC type of thing.
     - Add column resizing support
+    - Add context menu support
+
 

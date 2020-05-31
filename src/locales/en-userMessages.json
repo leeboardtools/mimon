@@ -97,6 +97,7 @@
     "AccountsList-type": "Type",
     "AccountsList-balance": "Balance",
     "AccountsList-shares": "Shares",
+    "AccountsList-dummy_name": "Sample Account Name This is a much longer name",
 
     "AccountsListHandler-masterAccountList_title": "Accounts",
     "AccountsListHandler-reconcileAccount": "Reconcile Account",

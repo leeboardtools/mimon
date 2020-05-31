@@ -126,11 +126,16 @@ body {
 }
 
 
-.AccountRegister {
+.RowTableContainer {
   height: 100%;
   width: 100%;
   border-collapse: collapse;
   overflow: hidden;
-  /*overflow: auto;*/
 }
 
+
+.AccountRegister {
+}
+
+.AccountsList {
+}
