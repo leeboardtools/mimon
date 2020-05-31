@@ -116,15 +116,12 @@ export function editableRowTable(WrappedTable) {
                 
                 if (refForFocus) {
                     refForFocus.current.focus();
-
-                    console.log('setting focus row ' + activeEditInfo.rowIndex 
-                        + '  col ' + focusColumnIndex);
                 }
             }
         }
 
 
-        startRealRowEdit(rowIndex, columnIndex) {
+        startRealRowEdit({ rowIndex, columnIndex, }) {
             const { onStartRowEdit, columns } = this.props;
             if (onStartRowEdit) {
                 const newRowEditBuffer = {};
@@ -182,7 +179,7 @@ export function editableRowTable(WrappedTable) {
         }
 
 
-        startRowEdit(rowIndex, columnIndex) {
+        startRowEdit(args) {
             if (this._isSaving) {
                 return;
             }
@@ -191,12 +188,12 @@ export function editableRowTable(WrappedTable) {
             if (activeEditInfo) {
                 this.asyncSaveRowEdit().then((result) => {
                     if (result) {
-                        this.startRealRowEdit(rowIndex, columnIndex);
+                        this.startRealRowEdit(args);
                     }
                 });
             }
             else {
-                this.startRealRowEdit(rowIndex, columnIndex);
+                this.startRealRowEdit(args);
             }
         }
 
@@ -252,8 +249,8 @@ export function editableRowTable(WrappedTable) {
         }
 
 
-        onOpenActiveRow(rowIndex, columnIndex) {
-            this.startRowEdit(rowIndex, columnIndex);
+        onOpenActiveRow(args) {
+            this.startRowEdit(args);
         }
 
 
@@ -346,7 +343,6 @@ export function editableRowTable(WrappedTable) {
                         }
                         else {
                             newFocus.current.focus();
-                            console.log('Enter new focus');
                         }
                     }
                     e.preventDefault();
