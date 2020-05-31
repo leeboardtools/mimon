@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import deepEqual from 'deep-equal';
+import { ContextMenu } from './ContextMenu';
 
 
 export const HEADER_ROW_INDEX = -1;
@@ -44,6 +45,7 @@ export class RowTable extends React.Component {
         this.onRowClick = this.onRowClick.bind(this);
         this.onRowDoubleClick = this.onRowDoubleClick.bind(this);
         this.onContextMenu = this.onContextMenu.bind(this);
+        this.onContextMenuClose = this.onContextMenuClose.bind(this);
         this.onScroll = this.onScroll.bind(this);
 
         this._mainRef = React.createRef();
@@ -541,7 +543,60 @@ export class RowTable extends React.Component {
 
     
     onContextMenu(e) {
+        const { onContextMenu, contextMenuItems } = this.props;
+        if (onContextMenu) {
+            if (contextMenuItems) {
+                console.warn('Both onContextMenu and contextMenuItems specified, '
+                    + 'only one or the other should be used, not both.');
+            }
+            onContextMenu(e);
+        }
 
+        if (contextMenuItems) {
+            this.setState({
+                contextMenuInfo: {
+                    x: e.clientX,
+                    y: e.clientY,
+                }
+            });
+        }
+        else {
+            this.setState({
+                contextMenuInfo: undefined,
+            });
+        }
+    }
+
+
+    onContextMenuClose() {
+        this.setState({
+            contextMenuInfo: undefined,
+        });
+    }
+
+
+    renderContextMenu() {
+        const { contextMenuItems, onChooseContextMenuItem } = this.props;
+        if (contextMenuItems) {
+            const { contextMenuInfo } = this.state;
+            let x;
+            let y;
+            let show;
+            if (contextMenuInfo) {
+                x = contextMenuInfo.x;
+                y = contextMenuInfo.y;
+                show = true;
+            }
+
+            return <ContextMenu
+                x={x}
+                y={y}
+                show={show}
+                items={contextMenuItems}
+                onChooseItem={onChooseContextMenuItem}
+                onMenuClose={this.onContextMenuClose}
+            />;
+        }
     }
 
 
@@ -920,9 +975,13 @@ export class RowTable extends React.Component {
             hiddenRender = this.renderAll(sizeRenderRefs);
         }
 
+        // The context menu needs to be included in the sizing rendering...
+        const contextMenu = this.renderContextMenu();
+
         const containerStyle = {
             width: '100%',
             height: '100%',
+            overflow: 'hidden',
         };
         const hiddenStyle = {
             visibility: 'hidden',
@@ -933,13 +992,16 @@ export class RowTable extends React.Component {
         };
         return <div style = {containerStyle}
             ref = {this._mainRef}
+            onContextMenu={(e) => this.onContextMenu(e)}
         >
-            <div>
+            <div
+            >
                 {regularRender}
             </div>
             <div style = {hiddenStyle}>
                 {hiddenRender}
             </div>
+            {contextMenu}
         </div>;
     }
 
