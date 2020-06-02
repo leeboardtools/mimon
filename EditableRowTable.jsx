@@ -336,6 +336,7 @@ export function editableRowTable(WrappedTable) {
                         if (!newFocus) {
                             this.asyncSaveRowEdit().then((result) => {
                                 if (result) {
+                                    this.cancelRowEdit();
                                     this._rowTableRef.current.activateRow(
                                         activeEditInfo.rowIndex + 1);
                                 }
