@@ -1091,7 +1091,13 @@ export class RowTable extends React.Component {
         }
 
         if (newTopVisibleRow !== topVisibleRow) {
-            this.updateVisibleRows(newTopVisibleRow * bodyRowHeight);            
+            this.setState({
+                visibleRowIndex: newTopVisibleRow
+            });
+            this.updateVisibleRows(newTopVisibleRow * bodyRowHeight);
+            this.setState({
+                activeRowUpdated: true,
+            });
         }
     }
 }

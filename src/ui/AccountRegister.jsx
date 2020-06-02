@@ -1064,8 +1064,6 @@ export class AccountRegister extends React.Component {
                 activeRowIndex = newRowEntries.length - 1;
             }
             
-            console.log('updateRowEntries: ' + activeRowIndex);
-
             this.setState({
                 activeRowIndex: activeRowIndex,
                 rowEntries: newRowEntries,
@@ -1076,6 +1074,7 @@ export class AccountRegister extends React.Component {
 
             if (newTopVisibleRow !== undefined) {
                 if (activeRowIndex !== undefined) {
+
                     // Keep the active row visible...
                     let delta = 0;
                     if (activeRowIndex < newTopVisibleRow) {
@@ -1088,18 +1087,19 @@ export class AccountRegister extends React.Component {
                     newBottomFullyVisibleRow += delta;
                 }
 
+                
                 const pageRows = newBottomFullyVisibleRow - newTopVisibleRow + 1;
                 const firstRowToLoad = Math.max(0, newTopVisibleRow - pageRows);
                 const lastRowToLoad = Math.min(newRowEntries.length - 1, 
                     newBottomFullyVisibleRow + pageRows);
                 
-                this.onLoadRows({
-                    firstRowIndex: firstRowToLoad, 
-                    lastRowIndex: lastRowToLoad
+                
+                this._firstRowIndexToLoad = firstRowToLoad;
+                this._lastRowIndexToLoad = lastRowToLoad;
+                this.asyncLoadRows().then(() => {
+                    this._rowTableRef.current.makeRowRangeVisible(
+                        newTopVisibleRow, newBottomFullyVisibleRow);
                 });
-
-                this._rowTableRef.current.makeRowRangeVisible(
-                    newTopVisibleRow, newBottomFullyVisibleRow);
             }
         });
     }
@@ -1115,13 +1115,74 @@ export class AccountRegister extends React.Component {
     }
 
 
-    onLoadRows({firstRowIndex, lastRowIndex}) {
-        const { accessor } = this.props;
-        const { rowEntries, } = this.state;
+    async asyncLoadRows() {
+        const firstRowIndex = this._firstRowIndexToLoad;
+        const lastRowIndex = this._lastRowIndexToLoad;
 
+        const { accessor } = this.props;
+        const { accountId } = this.props;
+        const { rowEntries } = this.state;
+        const transactionIdA = rowEntries[firstRowIndex].transactionId;
+        const transactionIdB = rowEntries[lastRowIndex].transactionId;
+
+        const results = await accessor.asyncGetAccountStateAndTransactionDataItems(
+            accountId, transactionIdA, transactionIdB);
+        
+        const newRowEntries = Array.from(rowEntries);
+        const newRowEntriesByTransactionIds 
+            = new Map(this.state.rowEntriesByTransactionId);
+
+        let resultIndex = 0;
+        for (let rowIndex = firstRowIndex; rowIndex <= lastRowIndex; 
+            ++rowIndex, ++resultIndex) {
+            const newRowEntry = Object.assign({}, rowEntries[rowIndex]);
+            const id = newRowEntry.transactionId;
+            const { splitOccurrance } = newRowEntry;
+
+            // We need to look out for skipped transactions and also the possibility
+            // that we're now out of sync...
+            let resultEntry;
+            for (; resultIndex < results.length; ++resultIndex) {
+                resultEntry = results[resultIndex];
+                if ((splitOccurrance === resultEntry.splitOccurrance)
+                 && (id === resultEntry.transactionDataItem.id)) {
+                    break;
+                }
+            }
+            if (resultIndex >= results.length) {
+                // Uh-oh, must be out of sync...
+                console.log('Out of sync...');
+                return;
+            }
+            
+            newRowEntry.accountStateDataItem = resultEntry.accountStateDataItem;
+            newRowEntry.transactionDataItem = resultEntry.transactionDataItem;
+            newRowEntry.splitIndex = resultEntry.splitIndex;
+
+            newRowEntries[rowIndex] = newRowEntry;
+            let transactionIdRowEntries 
+                = Array.from(newRowEntriesByTransactionIds.get(id));
+            transactionIdRowEntries[newRowEntry.splitOccurrance]
+                = newRowEntry;
+            newRowEntriesByTransactionIds.set(id, transactionIdRowEntries);
+        }
+
+        this.setState((state) => {
+            return {
+                rowEntries: newRowEntries,
+                rowEntriesByTransactionId: newRowEntriesByTransactionIds,
+                minLoadedRowIndex: Math.min(firstRowIndex, state.minLoadedRowIndex),
+                maxLoadedRowIndex: Math.max(lastRowIndex, state.maxLoadedRowIndex),
+            };
+        });
+    }
+
+
+    onLoadRows({firstRowIndex, lastRowIndex}) {
         // We're not using state.minLoadedRowIndex and maxLoadedRowIndex to
         // determine if loading is needed in case for some reason a row entry
         // within that range was not loaded.
+        const { rowEntries, } = this.state;
         let needsLoading = false;
         for (let i = firstRowIndex; i <= lastRowIndex; ++i) {
             const rowEntry = rowEntries[i];
@@ -1131,75 +1192,11 @@ export class AccountRegister extends React.Component {
             }
         }
 
-        if (!needsLoading) {
-            return;
+        if (needsLoading) {
+            this._firstRowIndexToLoad = firstRowIndex;
+            this._lastRowIndexToLoad = lastRowIndex;
+            process.nextTick(async () => this.asyncLoadRows());
         }
-
-        const { accountId } = this.props;
-        const transactionIdA = rowEntries[firstRowIndex].transactionId;
-        const transactionIdB = rowEntries[lastRowIndex].transactionId;
-
-        process.nextTick(async () => {
-            console.log('loading transactions: ' + firstRowIndex + ' ' + lastRowIndex);
-
-            const results = await accessor.asyncGetAccountStateAndTransactionDataItems(
-                accountId, transactionIdA, transactionIdB);
-            
-            if (this.state.rowEntries !== rowEntries) {
-                // Uh-oh, we're out of sync...
-                console.log('Out of sync, rowEntries has changed...');
-                return;
-            }
-
-            const newRowEntries = Array.from(this.state.rowEntries);
-            const newRowEntriesByTransactionIds 
-                = new Map(this.state.rowEntriesByTransactionId);
-
-            let resultIndex = 0;
-            for (let rowIndex = firstRowIndex; rowIndex <= lastRowIndex; 
-                ++rowIndex, ++resultIndex) {
-                const newRowEntry = Object.assign({}, rowEntries[rowIndex]);
-                const id = newRowEntry.transactionId;
-                const { splitOccurrance } = newRowEntry;
-
-                // We need to look out for skipped transactions and also the possibility
-                // that we're now out of sync...
-                let resultEntry;
-                for (; resultIndex < results.length; ++resultIndex) {
-                    resultEntry = results[resultIndex];
-                    if ((splitOccurrance === resultEntry.splitOccurrance)
-                     && (id === resultEntry.transactionDataItem.id)) {
-                        break;
-                    }
-                }
-                if (resultIndex >= results.length) {
-                    // Uh-oh, must be out of sync...
-                    console.log('Out of sync...');
-                    return;
-                }
-                
-                newRowEntry.accountStateDataItem = resultEntry.accountStateDataItem;
-                newRowEntry.transactionDataItem = resultEntry.transactionDataItem;
-                newRowEntry.splitIndex = resultEntry.splitIndex;
-
-                newRowEntries[rowIndex] = newRowEntry;
-                let transactionIdRowEntries 
-                    = Array.from(newRowEntriesByTransactionIds.get(id));
-                transactionIdRowEntries[newRowEntry.splitOccurrance]
-                    = newRowEntry;
-                newRowEntriesByTransactionIds.set(id, transactionIdRowEntries);
-            }
-
-            console.log('loaded...');
-            this.setState((state) => {
-                return {
-                    rowEntries: newRowEntries,
-                    rowEntriesByTransactionId: newRowEntriesByTransactionIds,
-                    minLoadedRowIndex: Math.min(firstRowIndex, state.minLoadedRowIndex),
-                    maxLoadedRowIndex: Math.max(lastRowIndex, state.maxLoadedRowIndex),
-                };
-            });
-        });
     }
 
 
