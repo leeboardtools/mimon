@@ -107,8 +107,10 @@
     flex-wrap: nowrap;
 }
 
+/*
 .RowTableHeaderCell {
 }
+*/
 
 .RowTableBody {
     vertical-align: middle;
@@ -129,9 +131,10 @@
     background-color: rgba(0, 0, 0, 0.075);
 }
 
+/*
 .RowTableRowCell {
-
 }
+*/
 
 .RowTableFooter {
     vertical-align: middle;

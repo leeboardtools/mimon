@@ -374,12 +374,22 @@ export function editableRowTable(WrappedTable) {
 
         render() {
             const {
+                onOuterRenderCell,
+                // eslint-disable-next-line react/prop-types
+                onRenderCell,
                 ...passThroughProps
             } = this.props;
+
+            onRenderCell;
 
             const { state } = this;
 
             const { activeRowEditIndex } = state;
+
+            let myOnRenderCell = this.onRenderCell;
+            if (onOuterRenderCell) {
+                myOnRenderCell = (args) => onOuterRenderCell(args, this.onRenderCell);
+            }
 
             return <WrappedTable
                 {...passThroughProps}
@@ -391,7 +401,7 @@ export function editableRowTable(WrappedTable) {
 
                 onOpenActiveRow = {this.onOpenActiveRow}
                 onKeyDown = {this.onKeyDown}
-                onRenderCell = {this.onRenderCell}
+                onRenderCell = {myOnRenderCell}
                 noActiveRowFocus = {activeRowEditIndex !== undefined}
 
                 ref = {this._rowTableRef}
@@ -421,6 +431,16 @@ export function editableRowTable(WrappedTable) {
     /**
      * @callback EditableRowTable~onActiveRowChanged
      * @param {number}  activeRowIndex
+     */
+
+    
+    /**
+     * Callback for an outer {@link RowTable~onRenderCell}, see 
+     * {@link CollapsibleRowTable~propTypes} for an example. The callback
+     * should at some point call the onRenderCell arg passed in.
+     * @callback EditableRowTable~onOuterRenderCell
+     * @param {RowTable~onRenderCellArgs}   args
+     * @property {RowTable~onRenderCell}    onRenderCell
      */
 
 
@@ -549,6 +569,8 @@ export function editableRowTable(WrappedTable) {
      * for when editing of a row should be completed, saving the contents.
      * @property {EditableRowTable~onCancelRowEdit} onCancelRowEdit Callback
      * for when editing of a row should be canceled and no changes made.
+     * @property {EditableRowTable~onOuterRenderCell}    [onOuterRenderCell] Optional
+     * special callback used to encapsulate the editable row table's onRenderCell.
      */
     _EditableRowTable.propTypes = {
         // From RowTable...
@@ -563,6 +585,8 @@ export function editableRowTable(WrappedTable) {
         onStartRowEdit: PropTypes.func,
         asyncOnSaveRowEdit: PropTypes.func,
         onCancelRowEdit: PropTypes.func,
+
+        onOuterRenderCell: PropTypes.func,
     };
 
     return _EditableRowTable;

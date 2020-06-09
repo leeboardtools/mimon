@@ -11,12 +11,53 @@ export class SequentialPages extends React.Component {
     constructor(props) {
         super(props);
 
+        this.watcher = this.watcher.bind(this);
+        this.onClickBack = this.onClickBack.bind(this);
+        this.onClickNext = this.onClickNext.bind(this);
+
+        this._mainRef = React.createRef();
+        this._buttonBarRef = React.createRef();
+
         this.state = {
             activePageIndex: this.props.activePageIndex || 0,
         };
+    }
 
-        this.onClickBack = this.onClickBack.bind(this);
-        this.onClickNext = this.onClickNext.bind(this);
+
+    watcher() {
+        if (!this._isUnmounted) {
+            if (this._buttonBarRef.current) {
+                this.updateLayout();
+                window.requestAnimationFrame(this.watcher);
+            }
+        }
+    }
+
+
+    componentDidMount() {
+        if (!this._isUnmounted) {
+            this.updateLayout();
+        }
+
+        window.requestAnimationFrame(this.watcher);
+    }
+
+    componentWillUnmount() {
+        this._isUnmounted = true;
+    }
+
+
+    updateLayout() {
+        if (this._mainRef.current && this._buttonBarRef.current) {
+            const mainHeight = this._mainRef.current.clientHeight;
+            const buttonBarHeight = this._buttonBarRef.current.clientHeight;
+            const bodyHeight = mainHeight - buttonBarHeight;
+            if ((bodyHeight > 0) && (bodyHeight !== this.state.bodyHeight)) {
+                this.setState({
+                    bodyHeight: bodyHeight,
+                });
+            }
+        }
     }
 
 
@@ -59,13 +100,25 @@ export class SequentialPages extends React.Component {
         for (let i = 0; i < pageCount; ++i) {
             const isActive = (i === activePageIndex);
             const pageComponent = this.props.onRenderPage(i, isActive);
-            const className = (isActive ? '' : 'd-none');
+            const className = 'h-100 SequentialPages-page ' + (isActive ? '' : 'd-none');
             pages.push((
-                <div className={className} key={i}>{pageComponent}</div>
+                <div className = {className} key = {i}>{pageComponent}</div>
             ));
         }
 
-        return <div className="container-fluid pl-0 pr-0">{pages}</div>;
+        let style;
+        const { bodyHeight } = this.state;
+        if (bodyHeight !== undefined) {
+            style = {
+                height: bodyHeight,
+            };
+        }
+
+        return <div className = "container-fluid pl-0 pr-0 SequentialPages-body"
+            style = {style}
+        >
+            {pages}
+        </div>;
     }
 
 
@@ -77,8 +130,8 @@ export class SequentialPages extends React.Component {
 
         let cancelBtn;
         if (this.props.onCancel) {
-            cancelBtn = <button className="btn btn-secondary m-2 mr-4"
-                onClick={this.props.onCancel}>
+            cancelBtn = <button className = "btn btn-secondary m-2 mr-4"
+                onClick = {this.props.onCancel}>
                 {userMsg('cancel')}
             </button>;
         }
@@ -87,21 +140,21 @@ export class SequentialPages extends React.Component {
         if (title) {
             let titleCloseBtn;
             if (cancelBtn) {
-                titleCloseBtn = <button type="button" 
-                    className="close" 
-                    aria-label="Close"
-                    onClick={this.props.onCancel}
+                titleCloseBtn = <button type = "button" 
+                    className = "close" 
+                    aria-label = "Close"
+                    onClick = {this.props.onCancel}
                 >
-                    <span aria-hidden="true">&times;</span>
+                    <span aria-hidden = "true">&times;</span>
                 </button>;
             }
 
-            titleComponent = <div className=" border-bottom m-2">
-                <div className="row justify-content-between">
-                    <div className="col-11 text-center">
-                        <h4 className="">{title}</h4>
+            titleComponent = <div className = "border-bottom m-2 SequentialPages-title">
+                <div className = "row justify-content-between">
+                    <div className = "col-11 text-center">
+                        <h4 className = "">{title}</h4>
                     </div>
-                    <div className="col">
+                    <div className = "col">
                         {titleCloseBtn}
                     </div>
                 </div>
@@ -126,26 +179,31 @@ export class SequentialPages extends React.Component {
 
         let backButton;
         if (pageCount > 1) {
-            backButton = <button className={btnClassName}
-                onClick={this.onClickBack}
-                disabled={backBtnDisabled}>
+            backButton = <button className = {btnClassName}
+                onClick = {this.onClickBack}
+                disabled = {backBtnDisabled}>
                 {userMsg('SequentialPages-back_btn')}
             </button>;
         }
 
-        return <div className="d-flex w-100 h-100 p-1 mx-auto flex-column">
+        return <div 
+            className = "d-flex w-100 h-100 mx-auto flex-column SequentialPages"
+            ref = {this._mainRef}
+        >
             {titleComponent}
             {body}
-            <div className="mt-auto">
-                <div className="row border-top m-2">
-                    <div className="col text-left mt-2">
+            <div className = "mt-auto SequentialPages-buttonBar"
+                ref = {this._buttonBarRef}
+            >
+                <div className = "row border-top m-2">
+                    <div className = "col text-left mt-2">
                         {cancelBtn}
                     </div>
-                    <div className="col text-right mt-2">
+                    <div className = "col text-right mt-2">
                         {backButton}
-                        <button className={btnClassName}
-                            onClick={this.onClickNext} 
-                            disabled={nextBtnDisabled}>
+                        <button className = {btnClassName}
+                            onClick = {this.onClickNext} 
+                            disabled = {nextBtnDisabled}>
                             {nextText}
                         </button>
                     </div>

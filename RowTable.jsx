@@ -238,6 +238,7 @@ export class RowTable extends React.Component {
                 }
                 columnWidths[i] = width;
             }
+
         }
 
         this.setState({
