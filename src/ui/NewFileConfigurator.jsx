@@ -10,24 +10,13 @@ import { RowEditCollapsibleTable } from '../util-ui/RowEditTable';
 import * as C from '../util/Currency';
 import { CellTextEditor, CellTextDisplay } from '../util-ui/CellTextEditor';
 import { CellSelectEditor, CellSelectDisplay } from '../util-ui/CellSelectEditor';
+import { NewFileAccountsEditor,
+    cloneAccountDataItems, findAccountDataItemWithId, } from './NewFileAccountsEditor';
+import { Dropdown } from '../util-ui/Dropdown';
 
 
-function cloneAccountDataItem(accountDataItem) {
-    const clone = Object.assign({}, accountDataItem);
-    if (accountDataItem.childAccounts && accountDataItem.childAccounts) {
-        clone.childAccounts = cloneAccountDataItems(accountDataItem.childAccounts);
-    }
-    return clone;
-}
 
-function cloneAccountDataItems(accountDataItems) {
-    const clone = [];
-    accountDataItems.forEach((accountDataItem) => {
-        clone.push(cloneAccountDataItem(accountDataItem));
-    });
-    return clone;
-}
-
+// OK
 function getDescendantIds(accountDataItem, ids) {
     ids = ids || new Set();
     const { childAccounts } = accountDataItem;
@@ -40,22 +29,7 @@ function getDescendantIds(accountDataItem, ids) {
     return ids;
 }
 
-function findAccountDataItemWithId(accountDataItems, id) {
-    for (let i = 0; i < accountDataItems.length; ++i) {
-        const accountDataItem = accountDataItems[i];
-        if (accountDataItem.id.toString() === id) {
-            return accountDataItem;
-        }
-        if (accountDataItem.childAccounts) {
-            const result = findAccountDataItemWithId(accountDataItem.childAccounts, id);
-            if (result) {
-                return result;
-            }
-        }
-    }
-}
-
-
+// OK
 function removeAccountDataItemFromParent(accountDataItems, parentId, id) {
     const parent = findAccountDataItemWithId(accountDataItems, parentId);
     if (parent) {
@@ -69,6 +43,7 @@ function removeAccountDataItemFromParent(accountDataItems, parentId, id) {
     }
 }
 
+// OK
 function removeAccountDataItemWithId(accountDataItems, id) {
     for (let i = 0; i < accountDataItems.length; ++i) {
         const accountDataItem = accountDataItems[i];
@@ -92,7 +67,7 @@ function removeAccountDataItemWithId(accountDataItems, id) {
  * in a new accounting file.
  * @private
  */
-class NewFileAccountsEditor extends React.Component {
+class NewFileAccountsEditorOld extends React.Component {
     constructor(props) {
         super(props);
 
@@ -675,16 +650,16 @@ class NewFileAccountsEditor extends React.Component {
             : undefined;
         
         return <CellTextEditor
-            ariaLabel={ariaLabel}
-            value={rowEditBuffer[propertyName]}
-            inputClassExtras={inputClassExtras}
-            errorMsg={errorMsg}
-            onChange={(event) => { 
+            ariaLabel = {ariaLabel}
+            value = {rowEditBuffer[propertyName]}
+            inputClassExtras = {inputClassExtras}
+            errorMsg = {errorMsg}
+            onChange = {(event) => { 
                 this.onTextEditorChange(event, propertyName, renderArgs);
             }}
-            onFocus={onFocus}
-            onBlur={onBlur}
-            ref={setCellRef}
+            onFocus = {onFocus}
+            onBlur = {onBlur}
+            ref = {setCellRef}
         />;
     }
 
@@ -692,9 +667,9 @@ class NewFileAccountsEditor extends React.Component {
         const { ariaLabel, inputClassExtras } = columnInfo;
         
         return <CellTextDisplay
-            ariaLabel={ariaLabel}
-            value={value}
-            inputClassExtras={inputClassExtras}
+            ariaLabel = {ariaLabel}
+            value = {value}
+            inputClassExtras = {inputClassExtras}
         />;
     }
 
@@ -736,23 +711,23 @@ class NewFileAccountsEditor extends React.Component {
         });
 
         return <CellSelectEditor
-            ariaLabel="Account Type"
-            selectedValue={rowEditBuffer.type}
-            items={items}
-            onChange={(event) => { 
+            ariaLabel = "Account Type"
+            selectedValue = {rowEditBuffer.type}
+            items = {items}
+            onChange = {(event) => { 
                 this.onAccountTypeChange(event, renderArgs); 
             }}
-            onFocus={onFocus}
-            onBlur={onBlur}
-            ref={setCellRef}
+            onFocus = {onFocus}
+            onBlur = {onBlur}
+            ref = {setCellRef}
         />;
     }
 
     renderAccountTypeDisplay(type) {
         const accountType = A.AccountType[type];
         return <CellSelectDisplay
-            ariaLabel="Account Type"
-            selectedValue={accountType.description}
+            ariaLabel = "Account Type"
+            selectedValue = {accountType.description}
         />;
     }
 
@@ -821,57 +796,57 @@ class NewFileAccountsEditor extends React.Component {
 
         const divClassName = 'ml-2';
         const btnClassName = 'btn btn-outline-secondary btn-sm fixed-width-button';
-        return <div className="row pl-2 pr-2 pb-2">
-            <div className={divClassName}>
-                <button type="button" 
-                    className={btnClassName}
-                    aria-label="New Account" 
-                    onClick={() => this.onNewAccount()}>
+        return <div className = "row pl-2 pr-2 pb-2">
+            <div className = {divClassName}>
+                <button type = "button" 
+                    className = {btnClassName}
+                    aria-label = "New Account" 
+                    onClick = {() => this.onNewAccount()}>
                     {userMsg('NewFileAccountsEditor-add_account')}
                 </button>
             </div>
-            <div className={divClassName}>
-                <button type="button" 
-                    className={btnClassName}
-                    aria-label="Remove Account" 
-                    disabled={removeDisabled}
-                    onClick={() => this.onRemoveAccount()}>
+            <div className = {divClassName}>
+                <button type = "button" 
+                    className = {btnClassName}
+                    aria-label = "Remove Account" 
+                    disabled = {removeDisabled}
+                    onClick = {() => this.onRemoveAccount()}>
                     {userMsg('NewFileAccountsEditor-remove_account')}
                 </button>
             </div>
-            <div className={divClassName}>
-                <button type="button" 
-                    className={btnClassName}
-                    aria-label="Move Account Up" 
-                    disabled={upDisabled}
-                    onClick={() => this.onMoveAccountUp()}>
+            <div className = {divClassName}>
+                <button type = "button" 
+                    className = {btnClassName}
+                    aria-label = "Move Account Up" 
+                    disabled = {upDisabled}
+                    onClick = {() => this.onMoveAccountUp()}>
                     {userMsg('NewFileAccountsEditor-move_up')}
                 </button>
             </div>
-            <div className={divClassName}>
-                <button type="button" 
-                    className={btnClassName}
-                    aria-label="Move Account Down" 
-                    disabled={downDisabled}
-                    onClick={() => this.onMoveAccountDown()}>
+            <div className = {divClassName}>
+                <button type = "button" 
+                    className = {btnClassName}
+                    aria-label = "Move Account Down" 
+                    disabled = {downDisabled}
+                    onClick = {() => this.onMoveAccountDown()}>
                     {userMsg('NewFileAccountsEditor-move_down')}
                 </button>
             </div>
-            <div className={divClassName}>
-                <button type="button" 
-                    className={btnClassName}
-                    aria-label="Undo" 
-                    disabled={undoDisabled}
-                    onClick={() => this.onUndo()}>
+            <div className = {divClassName}>
+                <button type = "button" 
+                    className = {btnClassName}
+                    aria-label = "Undo" 
+                    disabled = {undoDisabled}
+                    onClick = {() => this.onUndo()}>
                     {userMsg('NewFileAccountsEditor-undo')}
                 </button>
             </div>
-            <div className={divClassName}>
-                <button type="button" 
-                    className={btnClassName}
-                    aria-label="Redo" 
-                    disabled={redoDisabled}
-                    onClick={() => this.onRedo()}>
+            <div className = {divClassName}>
+                <button type = "button" 
+                    className = {btnClassName}
+                    aria-label = "Redo" 
+                    disabled = {redoDisabled}
+                    onClick = {() => this.onRedo()}>
                     {userMsg('NewFileAccountsEditor-redo')}
                 </button>
             </div>
@@ -881,18 +856,18 @@ class NewFileAccountsEditor extends React.Component {
 
     renderTable() {
         return <RowEditCollapsibleTable
-            columnInfos={this._columnInfos}
-            rowEntries={this.state.rowEntries}
-            activeRowKey={this.state.activeRowKey}
-            onRenderDisplayCell={this.onRenderDisplayCell}
-            onRenderEditCell={this.onRenderEditCell}
-            onStartEditRow={this.onStartEditRow}
-            onCancelEditRow={this.onCancelEditRow}
-            asyncOnSaveEditRow={this.asyncOnSaveEditRow}
-            onGetRowExpandCollapseState={this.onGetRowExpandCollapseState}
-            onRowToggleCollapse={this.onRowToggleCollapse}
-            onGetRowAtIndex={this.onGetRowAtIndex}
-            onActivateRow={this.onActivateRow}
+            columnInfos = {this._columnInfos}
+            rowEntries = {this.state.rowEntries}
+            activeRowKey = {this.state.activeRowKey}
+            onRenderDisplayCell = {this.onRenderDisplayCell}
+            onRenderEditCell = {this.onRenderEditCell}
+            onStartEditRow = {this.onStartEditRow}
+            onCancelEditRow = {this.onCancelEditRow}
+            asyncOnSaveEditRow = {this.asyncOnSaveEditRow}
+            onGetRowExpandCollapseState = {this.onGetRowExpandCollapseState}
+            onRowToggleCollapse = {this.onRowToggleCollapse}
+            onGetRowAtIndex = {this.onGetRowAtIndex}
+            onActivateRow = {this.onActivateRow}
         />;
     }
 
@@ -901,17 +876,17 @@ class NewFileAccountsEditor extends React.Component {
         const controlBar = this.renderControlBar();
         const table = this.renderTable();
 
-        return <div className="container-fluid">
-            <div className="row pl-0 pr-0">
+        return <div className = "container-fluid">
+            <div className = "row pl-0 pr-0">
                 {controlBar}
             </div>
-            <div className="row mb-auto">
+            <div className = "row mb-auto">
                 {table}
             </div>
         </div>;
     }
 }
-NewFileAccountsEditor.propTypes = {
+NewFileAccountsEditorOld.propTypes = {
     accountCategory: PropTypes.string.isRequired,
     rootAccountDataItems: PropTypes.array.isRequired,
     onUpdateRootAccountDataItems: PropTypes.func.isRequired,
@@ -933,18 +908,22 @@ export class NewFileConfigurator extends React.Component {
             { tabId: 'assets',
                 title: userMsg('NewFileConfigurator-assets_tab'),
                 accountCategory: A.AccountCategory.ASSET.name,
+                pageRef: React.createRef(),
             },
             { tabId: 'liabilities',
                 title: userMsg('NewFileConfigurator-liabilities_tab'),
                 accountCategory: A.AccountCategory.LIABILITY.name,
+                pageRef: React.createRef(),
             },
             { tabId: 'income',
                 title: userMsg('NewFileConfigurator-income_tab'),
                 accountCategory: A.AccountCategory.INCOME.name,
+                pageRef: React.createRef(),
             },
             { tabId: 'expenses',
                 title: userMsg('NewFileConfigurator-expense_tab'),
                 accountCategory: A.AccountCategory.EXPENSE.name,
+                pageRef: React.createRef(),
             },
         ];
 
@@ -954,10 +933,13 @@ export class NewFileConfigurator extends React.Component {
 
         this.onNewAccount = this.onNewAccount.bind(this);
         this.onRemoveAccount = this.onRemoveAccount.bind(this);
+        this.onActiveRowChanged = this.onActiveRowChanged.bind(this);
+        this.onMenuNeedsUpdate = this.onMenuNeedsUpdate.bind(this);
 
         this.onUpdateRootAccountDataItems = this.onUpdateRootAccountDataItems.bind(this);
         this.onRenderPage = this.onRenderPage.bind(this);
         this.onActivateTab = this.onActivateTab.bind(this);
+        this.onPostRenderTabs = this.onPostRenderTabs.bind(this);
     }
 
 
@@ -1014,6 +996,22 @@ export class NewFileConfigurator extends React.Component {
     }
 
 
+    onActiveRowChanged(activeRowKey) {
+        this.setState({
+            activeRowKey: activeRowKey,
+        });
+    }
+
+
+    onMenuNeedsUpdate() {
+        this.setState((state) => {
+            return {
+                updateCount: (state.updateCount || 0) + 1,
+            };
+        });
+    }
+
+
     onUpdateRootAccountDataItems(accountCategory, rootAccountDataItems) {
         const newFileContents = Object.assign({}, this.props.newFileContents);
         newFileContents.accounts[accountCategory] = rootAccountDataItems;
@@ -1034,16 +1032,157 @@ export class NewFileConfigurator extends React.Component {
                 return;
             }
 
+            let useOld = false;
+            //useOld = true;
+            if (useOld) {
+                return <NewFileAccountsEditorOld
+                    accountCategory = {tabEntry.accountCategory}
+                    rootAccountDataItems = {rootAccountDataItems}
+                    onUpdateRootAccountDataItems = {this.onUpdateRootAccountDataItems}
+                    onNewAccount = {this.onNewAccount}
+                    onRemoveAccount = {this.onRemoveAccount}
+                    onSetEndEditAsyncCallback = {this.props.onSetEndEditAsyncCallback}
+                />;
+            }
+
             return <NewFileAccountsEditor
-                accountCategory={tabEntry.accountCategory}
-                rootAccountDataItems={rootAccountDataItems}
-                onUpdateRootAccountDataItems={this.onUpdateRootAccountDataItems}
-                onNewAccount={this.onNewAccount}
-                onRemoveAccount={this.onRemoveAccount}
-                onSetEndEditAsyncCallback={this.props.onSetEndEditAsyncCallback}
+                accountCategory = {tabEntry.accountCategory}
+                rootAccountDataItems = {rootAccountDataItems}
+                onUpdateRootAccountDataItems = {this.onUpdateRootAccountDataItems}
+                onNewAccount = {this.onNewAccount}
+                onRemoveAccount = {this.onRemoveAccount}
+                onSetEndEditAsyncCallback = {this.props.onSetEndEditAsyncCallback}
+                onActiveRowChanged = {this.onActiveRowChanged}
+                onMenuNeedsUpdate = {this.onMenuNeedsUpdate}
+                isActive = {tabEntry.tabId === this.state.activeTabId}
+                
+                ref = {tabEntry.pageRef}
             />;
         }
         return <div>{tabEntry.title}</div>;
+    }
+
+
+    getActiveTabEntry() {
+        const { activeTabId } = this.state;
+        for (let i = 0; i < this._tabEntries.length; ++i) {
+            if (this._tabEntries[i].tabId === activeTabId) {
+                return this._tabEntries[i];
+            }
+        }
+    }
+    
+
+    renderMenu() {
+        const activeTabEntry = this.getActiveTabEntry();
+
+        let undoItem;
+        let redoItem;
+        let mainMenuItems = [];
+        if (activeTabEntry && activeTabEntry.pageRef) {
+            const pageImpl = activeTabEntry.pageRef.current;
+            if (pageImpl && pageImpl.getMenuItems) {
+                const menuItems = pageImpl.getMenuItems();
+                if (menuItems) {
+                    for (let i = 0; i < menuItems.length; ++i) {
+                        const menuItem = menuItems[i];
+                        switch (menuItem.id) {
+                        case 'undo' :
+                            undoItem = menuItem;
+                            break;
+                        
+                        case 'redo' :
+                            redoItem = menuItem;
+                            break;
+                        
+                        default :
+                            mainMenuItems.push(menuItem);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Have the undo/redo buttons...
+        const baseClassName = 'nav nav-link pl-2 pr-2';
+
+        let undoClassName = baseClassName + ' undo-tooltip';
+        let undoLabel;
+        let undoOnClick;
+        if (undoItem) {
+            undoLabel = undoItem.label;
+            undoOnClick = undoItem.onChooseItem;
+            if (undoItem.disabled) {
+                undoClassName += ' disabled';
+            }
+        }
+        else {
+            undoClassName += ' disabled';
+        }
+
+        let undo = <a
+            className = {undoClassName}
+            onClick = {undoOnClick}
+            aria-label = "Undo"
+            href = "#"
+            role = "button"
+        >
+            <i className = "material-icons">undo</i>
+            <span className = "undo-tooltiptext">{undoLabel}</span>
+        </a>;
+
+
+        let redoClassName = baseClassName + ' undo-tooltip';
+        let redoLabel;
+        let redoOnClick;
+        if (redoItem) {
+            redoLabel = redoItem.label;
+            redoOnClick = redoItem.onChooseItem;
+            if (redoItem.disabled) {
+                redoClassName += ' disabled';
+            }
+        }
+        else {
+            redoClassName += ' disabled';
+        }
+        const redo = <a
+            className = {redoClassName}
+            onClick = {redoOnClick}
+            aria-label = "Redo"
+            href = "#"
+            role = "button"
+        >
+            <i className = "material-icons">redo</i>
+            <span className = "undo-tooltiptext">{redoLabel}</span>
+        </a>;
+
+
+        const mainMenuTitle = <i className = "material-icons">menu</i>;
+
+        const mainMenu = <Dropdown
+            title = {mainMenuTitle}
+            items = {mainMenuItems}
+            topClassExtras = "mt-2 ml-2"
+            noArrow
+            menuClassExtras = "dropdown-menu-right"
+        />;
+
+        return <div className = "btn-group btn-group-sm" role = "group">
+            {undo}
+            {redo}
+            {mainMenu}
+        </div>;
+    }
+
+
+    onPostRenderTabs(tabs) {
+        const menu = this.renderMenu();
+        return <div className = "d-flex">
+            <div className = "flex-grow-1">
+                {tabs}
+            </div>
+            {menu}
+        </div>;
     }
 
 
@@ -1052,15 +1191,22 @@ export class NewFileConfigurator extends React.Component {
             activeTabId: tabId,
         });
     }
-    
+
 
     render() {
-        return <TabbedPages
-            tabEntries={this._tabEntries}
-            activeTabId={this.state.activeTabId}
-            onRenderPage={this.onRenderPage}
-            onActivateTab={this.onActivateTab}
+        const tabbedPages = <TabbedPages
+            tabEntries = {this._tabEntries}
+            activeTabId = {this.state.activeTabId}
+            onRenderPage = {this.onRenderPage}
+            onActivateTab = {this.onActivateTab}
+            onPostRenderTabs = {this.onPostRenderTabs}
         />;
+        return <div className="h-100">
+            <h4 className="pageTitle pb-3 border-bottom">
+                {userMsg('NewFileAccountsEditor-heading')}
+            </h4>
+            {tabbedPages}
+        </div>;
     }
 }
 

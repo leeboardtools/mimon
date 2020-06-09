@@ -288,14 +288,15 @@ export class FileCreator extends React.Component {
         };
 
         this._pages = [
+            // TEST!!! Should be last entry...
+            {
+                pageId: 'accounts',
+            },
             {
                 pageId: 'fileName',
             },
             {
                 pageId: 'generalSettings',
-            },
-            {
-                pageId: 'accounts',
             },
         ];
 

@@ -504,7 +504,6 @@ Current set of table classes:
     * Adds {@link RowEditTable~Props} to the wrapped table's properties.
     */
     RowEditCollapsibleTable = rowEditTable(CollapsibleRowTableOld)
-        - AccountRegister
         - NewFileConfigurator (also uses collapsible table stuff)
 
     /**
@@ -515,7 +514,6 @@ Current set of table classes:
     * @class
     */
     ActiveRowCollapsibleTable = activeRowTable(CollapsibleRowTableOld);
-        - AccountList
         - PricedItemsList
 
 
@@ -526,3 +524,7 @@ Current set of table classes:
 
 - Fix AccountEditor modifying root account.
 
+
+NewFileAccountsEditor
+    - Get editing working.
+    - Columns not aligning.

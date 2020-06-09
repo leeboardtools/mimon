@@ -77,19 +77,21 @@
     "NewFileConfigurator-income_tab": "Income",
     "NewFileConfigurator-expense_tab": "Expenses",
 
+    "NewFileAccountsEditor-heading": "Account Setup",
     "NewFileAccountsEditor-account_name": "Name",
     "NewFileAccountsEditor-description": "Description",
     "NewFileAccountsEditor-type": "Type",
     "NewFileAccountsEditor-opening_balance": "Opening Balance",
     "NewFileAccountsEditor-name_required": "An account name is required.",
     "NewFileAccountsEditor-invalid_opening_balance": "The opening balance must either be empty or a valid monetary value.",
-    "NewFileAccountsEditor-add_account": "Add",
-    "NewFileAccountsEditor-remove_account": "Delete",
-    "NewFileAccountsEditor-move_up": "Up",
-    "NewFileAccountsEditor-move_down": "Down",
+    "NewFileAccountsEditor-add_account": "Add Account",
+    "NewFileAccountsEditor-remove_account": "Delete Account",
+    "NewFileAccountsEditor-move_up": "Move Account Up",
+    "NewFileAccountsEditor-move_down": "Move Account Down",
     "NewFileAccountsEditor-undo": "Undo",
     "NewFileAccountsEditor-redo": "Redo",
     "NewFileAccountsEditor-new_account_name": "New Account",
+    "NewFileAccountsEditor-modify_account": "Account Modification",
 
 
 

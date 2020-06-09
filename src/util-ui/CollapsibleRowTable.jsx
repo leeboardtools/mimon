@@ -4,6 +4,105 @@ import { RowTable } from './RowTable';
 import deepEqual from 'deep-equal';
 
 
+
+/**
+ * Helper that looks for the {@link CollapsibleRowTable~RowInfo} with
+ * a given key.
+ * @param {CollapsibleRowTable~RowInfo[]}    rowInfos
+ * @param {*} key 
+ * @returns {CollapsibleRowTable~RowInfo|undefined}
+ */
+export function findRowInfoWithKey(rowInfos, key) {
+    for (let i = 0; i < rowInfos.length; ++i) {
+        const rowInfo = rowInfos[i];
+        if (rowInfo.key === key) {
+            return rowInfo;
+        }
+        
+        const { childRowInfos } = rowInfo;
+        if (childRowInfos) {
+            const foundRowInfo = findRowInfoWithKey(childRowInfos,
+                key);
+            if (foundRowInfo) {
+                return foundRowInfo;
+            }
+        }
+    }
+}
+
+
+/**
+ * Updates an individual row info within a row info tree.
+ * @param {CollapsibleRowTable~RowInfo[]}    rowInfos
+ * @param {CollapsibleRowTable~RowInfo} updatedRowInfo 
+ * @returns {CollapsibleRowTable~RowInfo[]}
+ */
+export function updateRowInfo(rowInfos, updatedRowInfo) {
+    for (let i = 0; i < rowInfos.length; ++i) {
+        let rowInfo = rowInfos[i];
+        if (rowInfo.key === updatedRowInfo.key) {
+            if (!deepEqual(rowInfo, updatedRowInfo)) {
+                const rowInfosCopy = Array.from(rowInfos);
+                rowInfosCopy[i] = updatedRowInfo;
+                return rowInfosCopy;
+            }
+            else {
+                // No change...
+                return rowInfos;
+            }
+        }
+
+        if (rowInfo.childRowInfos) {
+            const childRowInfos = updateRowInfo(
+                rowInfo.childRowInfos, updatedRowInfo);
+            if (childRowInfos !== rowInfo.childRowInfos) {
+                const rowInfosCopy = Array.from(rowInfos);
+                rowInfosCopy[i] = Object.assign({}, rowInfo, {
+                    childRowInfos: childRowInfos,
+                });
+                return rowInfosCopy;
+            }
+        }
+    }
+    return rowInfos;
+}
+
+
+/**
+ * Flattens out a row infos tree into an array.
+ * Items that are not expanded do not have their children added.
+ * @param {CollapsibleRowTable~RowInfo[]} rowInfos 
+ * @param {Set} [keysToIgnore=undefined]    If defined, a set containing
+ * the keys that should not be added. These keys and any of their children
+ * are not added.
+ * @returns {CollapsibleRowTable~RowInfo[]}
+ */
+export function rowInfosTreeToArray(rowInfos, keysToIgnore) {
+    const rowInfosArray = [];
+    addRowInfosToArray(rowInfos, rowInfosArray, keysToIgnore);
+    return rowInfosArray;
+}
+
+function addRowInfosToArray(rowInfos, rowInfosArray, keysToIgnore) {
+    for (let i = 0; i < rowInfos.length; ++i) {
+        const rowInfo = rowInfos[i];
+        if (keysToIgnore) {
+            if (keysToIgnore.has(rowInfo.key)) {
+                continue;
+            }
+        }
+
+        rowInfosArray.push(rowInfo);
+
+        if (rowInfo.expandCollapseState === ExpandCollapseState.EXPANDED) {
+            if (rowInfo.childRowInfos) {
+                addRowInfosToArray(rowInfo.childRowInfos, rowInfosArray);
+            }
+        }
+    }
+}
+
+
 /**
  * @readonly
  * @enum {string}
@@ -26,12 +125,13 @@ export function collapsibleRowTable(WrappedTable) {
             this.onActivateRow = this.onActivateRow.bind(this);
             this.onKeyDown = this.onKeyDown.bind(this);
             this.onRenderCell = this.onRenderCell.bind(this);
-
+            this._onRenderCellImpl = this._onRenderCellImpl.bind(this);
+            
             this.getRowKey = this.getRowKey.bind(this);
 
             this.state = {
                 activeRowIndex: undefined,
-                maxDepth: 0,
+                maxDepth: 1,
                 rowEntries: [],
                 rowIndicesByKey: new Map(),
             };
@@ -52,7 +152,7 @@ export function collapsibleRowTable(WrappedTable) {
                 rowEntries: newRowEntries,
                 rowIndicesByKey: newRowIndicesByKey,
                 activeRowIndex: newRowIndicesByKey.get(this.props.activeRowKey),
-                maxDepth: maxDepth,
+                maxDepth: Math.max(maxDepth, 1),
             };
         }
 
@@ -166,18 +266,22 @@ export function collapsibleRowTable(WrappedTable) {
         }
 
 
-        onRenderCell(args) {
+        _onRenderCellImpl(args, onRenderCell) {
             args = Object.assign({}, args);
 
             const rowEntry = this.state.rowEntries[args.rowIndex];
             args.rowInfo = rowEntry.rowInfo;
             args.depth = rowEntry.depth;
-            let cell = this.props.onRenderCell(args);
+            let cell = onRenderCell(args);
 
             if (!args.columnIndex) {
                 const buttonStyle = {
                     width: (this.state.maxDepth + 1) + 'rem',
                     paddingLeft: rowEntry.depth + 'rem',
+                };
+
+                const cellStyle = {
+                    paddingLeft: buttonStyle.paddingLeft,
                 };
 
                 let button;
@@ -213,16 +317,21 @@ export function collapsibleRowTable(WrappedTable) {
                 }
 
                 cell = <div className = "CollapsibleRowTable-expand-collapse-container">
-                    <div 
-                        style = {buttonStyle}
-                    >
+                    <div style = {buttonStyle}>
                         {button}
                     </div>
-                    {cell}
+                    <div style = {cellStyle}>
+                        {cell}
+                    </div>
                 </div>;
             }
             
             return cell;
+        }
+
+
+        onRenderCell(args) {
+            return this._onRenderCellImpl(args, this.props.onRenderCell);
         }
 
 
@@ -236,7 +345,12 @@ export function collapsibleRowTable(WrappedTable) {
 
             onActivateRow,
             onKeyDown;
-            onRenderCell;
+            
+            let onOuterRenderCell;
+            if (!onRenderCell) {
+                // Presume the wrapped table is something like EditableRowTable
+                onOuterRenderCell = this._onRenderCellImpl;
+            }
 
             return <WrappedTable
                 {...passThroughProps}
@@ -247,6 +361,7 @@ export function collapsibleRowTable(WrappedTable) {
                 onActivateRow = {this.onActivateRow}
                 onKeyDown = {this.onKeyDown}
                 onRenderCell = {this.onRenderCell}
+                onOuterRenderCell = {onOuterRenderCell}
                 getRowKey = {this.getRowKey}
             >
 
@@ -262,6 +377,15 @@ export function collapsibleRowTable(WrappedTable) {
         getRowInfoForIndex(rowIndex) {
             const rowEntry = this.state.rowEntries[rowIndex];
             return (rowEntry) ? rowEntry.rowInfo : undefined;
+        }
+
+        /**
+         * Retrieves the row index of the row info with a given key.
+         * @param {*} key 
+         * @returns {number}
+         */
+        getRowIndexForInfoKey(key) {
+            return this.state.rowIndicesByKey.get(key);
         }
     }
 
@@ -336,7 +460,7 @@ export function collapsibleRowTable(WrappedTable) {
 
         // From RowTable...
         columns: PropTypes.array.isRequired,
-        onRenderCell: PropTypes.func.isRequired,
+        onRenderCell: PropTypes.func,
         onKeyDown: PropTypes.func,
 
     };

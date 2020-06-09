@@ -8,7 +8,8 @@ import * as PI from '../engine/PricedItems';
 import { CurrencyDisplay } from '../util-ui/CurrencyDisplay';
 import { QuantityDisplay } from '../util-ui/QuantityDisplay';
 import deepEqual from 'deep-equal';
-import { CollapsibleRowTable, ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
+import { CollapsibleRowTable, ExpandCollapseState,
+    findRowInfoWithKey, updateRowInfo } from '../util-ui/CollapsibleRowTable';
 import { getDecimalDefinition, getQuantityDefinitionName } from '../util/Quantities';
 
 
@@ -262,37 +263,6 @@ export class AccountsList extends React.Component {
 
 
 
-    updateRowInfo(rowInfos, updatedRowInfo) {
-        for (let i = 0; i < rowInfos.length; ++i) {
-            let rowInfo = rowInfos[i];
-            if (rowInfo.key === updatedRowInfo.key) {
-                if (!deepEqual(rowInfo, updatedRowInfo)) {
-                    const rowInfosCopy = Array.from(rowInfos);
-                    rowInfosCopy[i] = updatedRowInfo;
-                    return rowInfosCopy;
-                }
-                else {
-                    // No change...
-                    return rowInfos;
-                }
-            }
-
-            if (rowInfo.childRowInfos) {
-                const childRowInfos = this.updateRowInfo(
-                    rowInfo.childRowInfos, updatedRowInfo);
-                if (childRowInfos !== rowInfo.childRowInfos) {
-                    const rowInfosCopy = Array.from(rowInfos);
-                    rowInfosCopy[i] = Object.assign({}, rowInfo, {
-                        childRowInfos: childRowInfos,
-                    });
-                    return rowInfosCopy;
-                }
-            }
-        }
-        return rowInfos;
-    }
-
-
     onExpandCollapseRow({rowInfo, expandCollapseState}) {
         this.setState((state) => {
             rowInfo = Object.assign({}, rowInfo, {
@@ -312,28 +282,9 @@ export class AccountsList extends React.Component {
             }
 
             return {
-                rowInfos: this.updateRowInfo(state.rowInfos, rowInfo),
+                rowInfos: updateRowInfo(state.rowInfos, rowInfo),
             };
         });
-    }
-
-
-    findRowInfoWithKey(rowInfos, key) {
-        for (let i = 0; i < rowInfos.length; ++i) {
-            const rowInfo = rowInfos[i];
-            if (rowInfo.key === key) {
-                return rowInfo;
-            }
-            
-            const { childRowInfos } = rowInfo;
-            if (childRowInfos) {
-                const foundRowInfo = this.findRowInfoWithKey(childRowInfos,
-                    key);
-                if (foundRowInfo) {
-                    return foundRowInfo;
-                }
-            }
-        }
     }
 
 
@@ -352,7 +303,7 @@ export class AccountsList extends React.Component {
         let newActiveRowKey;
         if (activeRowKey) {
             // Make sure the active row key is still valid.
-            if (this.findRowInfoWithKey(rowInfos, activeRowKey)) {
+            if (findRowInfoWithKey(rowInfos, activeRowKey)) {
                 newActiveRowKey = activeRowKey;
             }
         }
