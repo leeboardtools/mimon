@@ -155,7 +155,9 @@ export class TabbedPages extends React.Component {
 
     renderBody() {
         const pages = [];
-        const pageClassExtras = this.props.pageClassExtras || '';
+        const pageClassExtras = 'h-100 overflow-hidden '
+            + this.props.pageClassExtras || '';
+        
         this.props.tabEntries.forEach((tabEntry) => {
             const isActive = (tabEntry.tabId === this.state.activeTabId);
             const page = this.props.onRenderPage(tabEntry, isActive);
@@ -173,7 +175,7 @@ export class TabbedPages extends React.Component {
 
         let style;
         const { bodyHeight } = this.state;
-        if (bodyHeight !== undefined) {
+        if ((bodyHeight !== undefined) && (bodyHeight > 0)) {
             style = {
                 height: bodyHeight,
             };
@@ -195,7 +197,8 @@ export class TabbedPages extends React.Component {
             tabs = onPostRenderTabs(tabs);
         }
 
-        let className = 'container-fluid pl-1 pr-1';
+        let className = 'container-fluid pl-1 pr-1'
+            + ' d-flex flex-column h-100 overflow-hidden';
         if (classExtras) {
             className += ' ' + classExtras;
         }

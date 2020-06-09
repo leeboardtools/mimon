@@ -103,26 +103,8 @@ body {
 }
 
 
-.tabbedMain {
-  display: flex;
-  flex-direction: column;
-  height:100%;
-  overflow: hidden;
-}
-
-.tabbedBody {
-  margin: 0!important;
-  flex-grow: 1;
-  height: 100%;
-}
-
-.tabbedPage {
-  height: 100%;
-  overflow: auto; 
-    /* tabbedMain overflow: hidden plus tabbedPage overflow: auto
-      keeps the tabs from scrolling.
-    */
-  overflow: hidden;
+.pageTitle {
+  margin-top: 0.5rem;
 }
 
 

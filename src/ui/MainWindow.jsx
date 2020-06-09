@@ -609,9 +609,6 @@ export class MainWindow extends React.Component {
             onCloseTab={this.onCloseTab}
             onActivateTab={this.onActivateTab}
             onPostRenderTabs={this.onPostRenderTabs}
-            classExtras="tabbedMain"
-            bodyClassExtras="tabbedBody"
-            pageClassExtras="tabbedPage"
         />;
     }
 
