@@ -241,7 +241,12 @@ export class MainWindow extends React.Component {
     onActionChange() {
         process.nextTick(async () => {
             const { accessor } = this.props;
-            const lastAppliedAction = accessor.getLastAppliedAction();
+            let lastAppliedAction;
+            const lastAppliedActionIndex = accessor.getAppliedActionCount() - 1;
+            if (lastAppliedActionIndex >= 0) {
+                lastAppliedAction = await accessor.asyncGetAppliedActionAtIndex(
+                    lastAppliedActionIndex);
+            }
 
             let lastUndoneAction;
             const lastUndoneActionIndex = accessor.getUndoneActionCount() - 1;
