@@ -88,6 +88,10 @@ CellQuantityEditor.propTypes = {
 export function CellQuantityDisplay(props) {
     const { ariaLabel, quantityBaseValue, 
         inputClassExtras } = props;
+    if (!props.quantityDefinition) {
+        return null;
+    }
+
     const quantityDefinition 
         = getQuantityDefinition(props.quantityDefinition);
 
