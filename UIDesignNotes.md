@@ -473,27 +473,6 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
                 - For prices, probably same.
 
         - Resizable columns
-
-
-
-Make my own row based table:
-Requirements:
-    - Header and footer row(s)
-        - They just don't scroll.
-
-    - Body
-        - Scrollable
-
-    - Need column widths
-
-    - Virtual
-    
-    - Ability to display rows bottom up
-
-    - Ideas:
-        - Have a Row component
-        - Body a list of Row components
-        - Header, footer a Row components
     
 
 Current set of table classes:
@@ -527,4 +506,16 @@ Current set of table classes:
 
 NewFileAccountsEditor
     - Get editing working.
-    - Columns not aligning.
+
+
+- Change reconcile state editor to be toggling button.
+- Add splits list editor.
+- Add split quantity editor.
+
+- Convert NewFileAccountsEditor to CellEditors
+
+- Rename CellEditors.jsx as AccountingCellEditors.jsx.
+
+- Splits List:
+    - Need appropriate sign for split values.
+    

@@ -2,165 +2,122 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { EditableRowTable } from '../util-ui/EditableRowTable';
-import { CellTextDisplay, CellTextEditor } from '../util-ui/CellTextEditor';
-import { CellSelectDisplay } from '../util-ui/CellSelectEditor';
-import { CellDateDisplay } from '../util-ui/CellDateEditor';
-import { CellQuantityDisplay } from '../util-ui/CellQuantityEditor';
 import { getQuantityDefinition } from '../util/Quantities';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
+import * as CE from './AccountingCellEditors';
 import deepEqual from 'deep-equal';
+import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 
 
 const allColumnInfoDefs = {};
 
 
-function renderTextEditor(args) {
-    const {columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
-        refForFocus } = args;
-    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
-    const value = cellEditBuffer.value || '';
-    return <CellTextEditor
-        ariaLabel = {ariaLabel}
-        ref = {refForFocus}
-        value = {value.toString()}
-        inputClassExtras = {inputClassExtras}
-        size = {inputSize}
-        onChange = {(e) => {
-            setCellEditBuffer({
-                value: e.target.value,
-            });
-        }}
-        errorMsg = {errorMsg}
-    />;
-}
-
-function renderTextDisplay(columnInfo, value) {
-    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
-    return <CellTextDisplay
-        ariaLabel = {ariaLabel}
-        value = {value}
-        inputClassExtras = {inputClassExtras}
-        size = {inputSize}
-    />;
-}
-
-
-//
-//---------------------------------------------------------
-// date
-function getDateEditorCellBufferValue({ rowEntry }) {
-    return rowEntry.transactionDataItem.ymdDate;
-}
-
-function updateDataFromEditor(args) {
-    const { transactionDataItem, cellEditBuffer } = args;
-    transactionDataItem.ymdDate = cellEditBuffer.value;
-}
-
-function renderDateEditor(
-    {caller, columnInfo, rowIndex, rowEditBuffer}) {
-
-}
-
-function renderDateDisplay({columnInfo, rowEntry}) {
+function getTransactionCellValue(args) {
+    const { rowEntry, columnInfo } = args;
     const { transactionDataItem } = rowEntry;
-    if (transactionDataItem) {
-        return <CellDateDisplay
-            ariaLabel = "Date"
-            value = {transactionDataItem.ymdDate}
-            classExtras = {columnInfo.inputClassExtras}
-            inputClassExtras = {columnInfo.inputClassExtras}
-            size = {columnInfo.inputSize}
-        />;
+    const { property } = columnInfo;
+    if (transactionDataItem && property) {
+        return transactionDataItem[property];
+    }
+}
+
+function saveTransactionCellValue(args) {
+    const { saveBuffer, columnInfo, cellEditBuffer } = args;
+    const { property } = columnInfo;
+    if (saveBuffer && property) {
+        saveBuffer[property] = cellEditBuffer.value;
     }
 }
 
 
-//
-//---------------------------------------------------------
-// refNum
-function getRefNumEditorCellBufferValue({ rowEntry }) {
+function getSplitCellValue(args) {
+    const { rowEntry, columnInfo } = args;
     const { transactionDataItem, splitIndex } = rowEntry;
-    return transactionDataItem.splits[splitIndex].refNum || '';
+    const { property } = columnInfo;
+    if (transactionDataItem && property) {
+        return transactionDataItem.splits[splitIndex][property];
+    }
 }
 
-function updateRefNumFromEditor(args) {
-    const { rowEntry, transactionDataItem } = args;
+function saveSplitCellValue(args) {
+    const { rowEntry, columnInfo, cellEditBuffer, saveBuffer } = args;
     const { splitIndex } = rowEntry;
-    transactionDataItem.splits[splitIndex].refNum = args.cellEditBuffer.value;
-}
-
-function renderRefNumEditor(args) {
-    return renderTextEditor(args);
-}
-
-function renderRefNumDisplay({columnInfo, rowEntry}) {
-    const { transactionDataItem } = rowEntry;
-    if (transactionDataItem) {
-        const split = transactionDataItem.splits[rowEntry.splitIndex];
-        const refNum = split.refNum || '';
-        return renderTextDisplay(columnInfo, refNum.toString());
+    const { property } = columnInfo;
+    if (saveBuffer && property) {
+        saveBuffer.splits[splitIndex][property] = cellEditBuffer.value;
     }
 }
 
 
+function getAccountStateQuantityCellValue(args) {
+    const { rowEntry } = args;
+    const { accountStateDataItem, caller } = rowEntry;
+    if (accountStateDataItem) {
+        const { quantityDefinition } = caller.state;
+        const { quantityBaseValue } = accountStateDataItem;
+        return {
+            quantityBaseValue: quantityBaseValue,
+            quantityDefinition: quantityDefinition,
+        };
+    }
+}
+
+// Don't have saveAccountStateQuantityCellValue() as it is read-only...
+
+
 //
 //---------------------------------------------------------
-// description
-function getDescriptionEditorCellBufferValue({ rowEntry }) {
+//
+function getDescriptionCellValue(args) {
+    const { rowEntry } = args;
     const { transactionDataItem, splitIndex } = rowEntry;
-    return transactionDataItem.splits[splitIndex].description 
-        || transactionDataItem.description;
-}
-
-function updateDescriptionFromEditor(args) {
-    const { transactionDataItem, cellEditBuffer } = args;
-    transactionDataItem.description = cellEditBuffer.value;
-}
-
-function renderDescriptionEditor(args) {
-    return renderTextEditor(args);
-}
-
-function renderDescriptionDisplay({caller, columnInfo, rowEntry}) {
-    const { transactionDataItem } = rowEntry;
     if (transactionDataItem) {
-        const split = transactionDataItem.splits[rowEntry.splitIndex];
-        let { description, memo } = split;
-        description = description || transactionDataItem.description;
-        memo = memo || transactionDataItem.memo;
-
-        const descriptionComponent 
-            = renderTextDisplay(columnInfo, description);
-        if (memo) {
-            return <div className = "simple-tooltip">
-                {descriptionComponent}
-                <div className = "simple-tooltiptext">{memo}</div>
-            </div>;
+        const split = transactionDataItem.splits[splitIndex];
+        let description;
+        let memo;
+        if (split.description) {
+            description = split.description;
+            memo = split.memo || transactionDataItem.memo;
+        }
+        else {
+            description = transactionDataItem.description;
+            memo = transactionDataItem.memo;
         }
 
-        return descriptionComponent;
+        if (memo) {
+            return {
+                description: description,
+                memo: memo,
+            };
+        }
+        return transactionDataItem.description;
+    }
+}
+
+function saveDescriptionCellValue(args) {
+    const { rowEntry, cellEditBuffer, saveBuffer } = args;
+    const { transactionDataItem, splitIndex } = rowEntry;
+    if (saveBuffer) {
+        const split = transactionDataItem.splits[splitIndex];
+        let { value } = cellEditBuffer;
+        if (typeof value === 'object') {
+            value = value.description;
+        }
+
+        if (split.description) {
+            saveBuffer.splits[splitIndex].description = value;
+        }
+        else {
+            saveBuffer.description = value;
+        }
     }
 }
 
 
 //
 //---------------------------------------------------------
-// split
-function getSplitEditorCellBufferValue(
-    {caller, columnIndex, columnInfo, rowEditBuffer}) {
-
-}
-
-function updateSplitFromEditor(args) {
-
-}
-
-function renderSplitEditor(
-    {caller, columnInfo, rowIndex, rowEditBuffer}) {
-
-}
+// splits
 
 function renderSplitItemTooltip(caller, splits, index) {
     const split = splits[index];
@@ -179,11 +136,13 @@ function renderSplitItemTooltip(caller, splits, index) {
     </div>;
 }
 
-function renderSplitDisplay({caller, columnInfo, rowEntry}) {
-    const { transactionDataItem } = rowEntry;
-    if (transactionDataItem) {
+
+function renderSplitsListDisplay(args) {
+    const { rowEntry, columnInfo, value } = args;
+    const splits = value;
+    if (splits) {
+        const { caller } = rowEntry;
         const { accessor } = caller.props;
-        const splits = transactionDataItem.splits;
         let text;
         if (splits.length === 2) {
             const split = splits[1 - rowEntry.splitIndex];
@@ -208,307 +167,54 @@ function renderSplitDisplay({caller, columnInfo, rowEntry}) {
             </div>;
 
             return <div className = "simple-tooltip"> 
-                {renderTextDisplay(columnInfo, text)}
+                {CE.renderTextDisplay({
+                    columnInfo: columnInfo, 
+                    value: text,
+                })}
                 {tooltip}
             </div>;
         }
         
-        return renderTextDisplay(columnInfo, text);
+        return CE.renderTextDisplay({
+            columnInfo: columnInfo, 
+            value: text,
+        });
     }
 }
 
 
+function renderSplitsListEditor(args) {
+
+}
+
+
+
+
 //
 //---------------------------------------------------------
-// reconcile
-function getReconcileEditorCellBufferValue({ rowEntry }) {
-    const { transactionDataItem, splitIndex } = rowEntry;
-    return transactionDataItem.splits[splitIndex].reconcileState || '';
-}
+// Split quantities
 
-function updateReconcileFromEditor(args) {
-    
-}
-    
-function renderReconcileEditor(
-    {caller, columnInfo, rowIndex, rowEditBuffer}) {
-
-}
-
-function renderReconcileDisplay({columnInfo, rowEntry}) {
-    const { transactionDataItem } = rowEntry;
-    if (transactionDataItem) {
-        const split = transactionDataItem.splits[rowEntry.splitIndex];
-        let reconcileState = split.reconcileState
-            || T.ReconcileState.NOT_RECONCILED.name;
-        
-        return <CellSelectDisplay
-            selectedValue = {userMsg('AccountRegister-reconcile_' + reconcileState)}
-            ariaLabel = "Reconcile State"
-            classExtras = {columnInfo.inputClassExtras}
-            size = {columnInfo.inputSize}
-        />;
+function getSplitQuantityCellValue(args, type) {
+    const { rowEntry } = args;
+    const { transactionDataItem, caller } = rowEntry;
+    if (!transactionDataItem) {
+        return;
     }
-}
-
-
-//
-//---------------------------------------------------------
-// bought
-function getBoughtSoldEditorCellBufferValue(
-    {caller, columnIndex, columnInfo, rowEditBuffer}, sign) {
-
-}
-
-function updateBoughtSoldFromEditor(args, sign) {
-
-}
-
-function renderBoughtSoldEditor(
-    {caller, columnInfo, rowIndex, rowEditBuffer}, sign) {
-
-}
-
-function renderBoughtSoldDisplay({caller, columnInfo, rowEntry}, sign) {
     const { accountType, quantityDefinition } = caller.state;
-    const { transactionDataItem } = rowEntry;
-    if (!transactionDataItem) {
-        return;
-    }
     const split = transactionDataItem.splits[rowEntry.splitIndex];
-    const { lotChanges } = split;
-    if (!lotChanges || !lotChanges.length) {
-        return;
-    }
-
-    let quantityBaseValue = 0;
-    for (let lotChange of lotChanges) {
-        quantityBaseValue += lotChange.quantityBaseValue;
-    }
-
-    const { category } = accountType;
-    sign *= category.creditSign;
-    quantityBaseValue *= sign;
-    if (quantityBaseValue < 0) {
-        return;
-    }
-
-    const { accessor } = caller.props;
-    const lotTooltipEntries = [];
-    for (let i = 0; i < lotChanges.length; ++i) {
-        const lotChange = lotChanges[i];
-
-        const lotDataItem = accessor.getLotDataItemWithId(lotChange.lotId);
-        const pricedItemDataItem 
-            = accessor.getPricedItemDataItemWithId(lotDataItem.pricedItemId);
-        if (lotDataItem && pricedItemDataItem) {
-            const quantityDefinition = getQuantityDefinition(
-                pricedItemDataItem.quantityDefinition);
-            const value = quantityDefinition.baseValueToValueText(
-                lotChange.quantityBaseValue * sign);
-            lotTooltipEntries.push(<div className = "row" key = {i}>
-                <div className = "col col-sm-auto text-left">
-                    {lotDataItem.description}
-                </div>
-                <div className = "col text-right">
-                    {value}
-                </div>
-            </div>);
-        }
-    }
-
-    const displayComponent = <CellQuantityDisplay
-        quantityBaseValue = {quantityBaseValue}
-        quantityDefinition = {quantityDefinition}
-        ariaLabel = {sign > 0 ? 'Credit' : 'Debit'}
-        inputClassExtras = {columnInfo.inputClassExtras}
-        size = {columnInfo.inputSize}
-    />;
-
-    if (lotTooltipEntries.length) {
-        return <div className = "simple-tooltip">
-            {displayComponent}
-            <div className = "simple-tooltiptext">
-                {lotTooltipEntries}
-            </div>
-        </div>;
-    }
-    return displayComponent;
+    const value = {
+        accessor: caller.props.accessor,
+        split: split,
+        accountType: accountType,
+        quantityDefinition: quantityDefinition,
+        splitQuantityType: type,
+    };
+    return value;
 }
 
-function getBoughtEditorCellBufferValue(args) {
-    return getBoughtSoldEditorCellBufferValue(args, -1);
-}
-
-function updateBoughtFromEditor(args) {
-    return updateBoughtSoldFromEditor(args, -1);
-}
-
-function renderBoughtEditor(args) {
-    return renderBoughtSoldEditor(args, -1);
-}
-
-
-function renderBoughtDisplay(args) {
-    return renderBoughtSoldDisplay(args, -1);
-}
-
-
-
-//
-//---------------------------------------------------------
-// sold
-
-function getSoldEditorCellBufferValue(args) {
-    return getBoughtSoldEditorCellBufferValue(args, 1);
-}
-
-function updateSoldFromEditor(args) {
-    return updateBoughtSoldFromEditor(args, 1);
-}
-
-function renderSoldEditor(args) {
-    return renderBoughtSoldEditor(args, 1);
-}
-
-function renderSoldDisplay(args) {
-    return renderBoughtSoldDisplay(args, 1);
-}
-
-
-//
-//---------------------------------------------------------
-// shares
-
-function renderSharesDisplay({ caller, columnInfo, rowEntry }) {
-    const { accountStateDataItem } = rowEntry;
-    if (accountStateDataItem) {
-        const { quantityDefinition } = caller.state;
-        const { quantityBaseValue } = accountStateDataItem;
-        return <CellQuantityDisplay
-            quantityDefinition = {quantityDefinition}
-            quantityBaseValue = {quantityBaseValue}
-            ariaLabel = "Shares"
-            inputClassExtras = {columnInfo.inputClassExtras}
-            size = {columnInfo.inputSize}
-        />;
-    }
-}
-
-
-//
-//---------------------------------------------------------
-// debit
-function getDebitCreditQuantityBaseValue({ caller, columnInfo, rowEntry}, sign) {
-    const { accountType } = caller.state;
-    const { transactionDataItem } = rowEntry;
-    if (!transactionDataItem) {
-        return;
-    }
-    const split = transactionDataItem.splits[rowEntry.splitIndex];
-
-    const { category } = accountType;
-    const quantityBaseValue = sign * split.quantityBaseValue * category.creditSign;
-    if (quantityBaseValue < 0) {
-        return;
-    }
-
-    return quantityBaseValue;
-}
-
-function updateDebitCreditFromEditor(args, sign) {
+function saveSplitQuantityCellValue(args) {
 
 }
-
-function getDebitCreditEditorCellBufferValue(args, sign) {
-    return getDebitCreditQuantityBaseValue(args, sign);
-}
-
-function renderDebitCreditEditor(
-    {caller, columnInfo, rowIndex, rowEditBuffer}, sign) {
-
-}
-
-function renderDebitCreditDisplay(args, sign) {
-    const { caller, columnInfo, } = args;
-    const quantityBaseValue = getDebitCreditQuantityBaseValue(args, sign);
-    if (quantityBaseValue === undefined) {
-        return;
-    }
-    const { quantityDefinition } = caller.state;
-
-    // Need to assign to component then return component to effectively disable
-    // eslint(react/prop-types) being triggered on the function.
-    const component = <CellQuantityDisplay
-        quantityBaseValue = {quantityBaseValue}
-        quantityDefinition = {quantityDefinition}
-        ariaLabel = {sign > 0 ? 'Credit' : 'Debit'}
-        inputClassExtras = {columnInfo.inputClassExtras}
-        size = {columnInfo.inputSize}
-    />;
-    return component;
-}
-
-
-function getDebitEditorCellBufferValue(args) {
-    return getDebitCreditEditorCellBufferValue(args, -1);
-}
-
-function updateDebitFromEditor(args) {
-    return updateDebitCreditFromEditor(args, -1);
-}
-
-function renderDebitEditor(args) {
-    return renderDebitCreditEditor(args, -1);
-}
-
-function renderDebitDisplay(args) {
-    return renderDebitCreditDisplay(args, -1);
-}
-
-
-
-//
-//---------------------------------------------------------
-// credit
-function getCreditEditorCellBufferValue(args) {
-    return getDebitCreditEditorCellBufferValue(args, 1);
-}
-
-function updateCreditFromEditor(args) {
-    return updateDebitCreditFromEditor(args, 1);
-}
-
-function renderCreditEditor(args) {
-    return renderDebitCreditEditor(args, 1);
-}
-
-function renderCreditDisplay(args) {
-    return renderDebitCreditDisplay(args, 1);
-}
-
-
-//
-//---------------------------------------------------------
-// balance
-
-function renderBalanceDisplay({caller, columnInfo, rowEntry}) {
-    const { accountStateDataItem } = rowEntry;
-    if (accountStateDataItem) {
-        const { quantityDefinition } = caller.state;
-        const { quantityBaseValue } = accountStateDataItem;
-        return <CellQuantityDisplay
-            quantityDefinition = {quantityDefinition}
-            quantityBaseValue = {quantityBaseValue}
-            ariaLabel = "Balance"
-            inputClassExtras = {columnInfo.inputClassExtras}
-            size = {columnInfo.inputSize}
-        />;
-    }
-}
-
-
-
 
 
 /**
@@ -533,10 +239,12 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputClassExtras: 'text-center',
                 inputSize: -10,
                 cellClassName: cellClassName,
-                renderDisplay: renderDateDisplay,
-                renderEditor: renderDateEditor,
-                getCellEditBufferValue: getDateEditorCellBufferValue,
-                updateTransactionDataItem: updateDataFromEditor,
+
+                property: 'ymdDate',
+                getCellValue: getTransactionCellValue,
+                saveCellValue: saveTransactionCellValue,
+                renderDisplayCell: CE.renderDateDisplay,
+                renderEditCell: CE.renderDateEditor,
             },
             refNum: { key: 'refNum',
                 header: {
@@ -547,10 +255,12 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputClassExtras: 'text-center',
                 inputSize: -6,
                 cellClassName: cellClassName,
-                renderDisplay: renderRefNumDisplay,
-                renderEditor: renderRefNumEditor,
-                getCellEditBufferValue: getRefNumEditorCellBufferValue,
-                updateTransactionDataItem: updateRefNumFromEditor,
+
+                property: 'refNum',
+                getCellValue: getSplitCellValue,
+                saveCellValue: saveSplitCellValue,
+                renderDisplayCell: CE.renderRefNumDisplay,
+                renderEditCell: CE.renderRefNumEditor,
             },
             description: { key: 'description',
                 header: {
@@ -560,10 +270,11 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 },
                 inputClassExtras: 'text-left',
                 cellClassName: cellClassName,
-                renderDisplay: renderDescriptionDisplay,
-                renderEditor: renderDescriptionEditor,
-                getCellEditBufferValue: getDescriptionEditorCellBufferValue,
-                updateTransactionDataItem: updateDescriptionFromEditor,
+
+                getCellValue: getDescriptionCellValue,
+                saveCellValue: saveDescriptionCellValue,
+                renderDisplayCell: CE.renderDescriptionDisplay,
+                renderEditCell: CE.renderDescriptionEditor,
             },
             splits: { key: 'split',
                 header: {
@@ -573,10 +284,12 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 },
                 inputClassExtras: 'text-left',
                 cellClassName: cellClassName,
-                renderDisplay: renderSplitDisplay,
-                renderEditor: renderSplitEditor,
-                getCellEditBufferValue: getSplitEditorCellBufferValue,
-                updateTransactionDataItem: updateSplitFromEditor,
+
+                property: 'splits',
+                getCellValue: getTransactionCellValue,
+                saveCellValue: saveTransactionCellValue,
+                renderDisplayCell: renderSplitsListDisplay,
+                renderEditCell: renderSplitsListEditor,
             },
             reconcile: { key: 'reconcile',
                 header: {
@@ -587,10 +300,12 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputClassExtras: 'text-center',
                 inputSize: 2,
                 cellClassName: cellClassName,
-                renderDisplay: renderReconcileDisplay,
-                renderEditor: renderReconcileEditor,
-                getCellEditBufferValue: getReconcileEditorCellBufferValue,
-                updateTransactionDataItem: updateReconcileFromEditor,
+
+                property: 'reconcileState',
+                getCellValue: getSplitCellValue,
+                saveCellValue: saveSplitCellValue,
+                renderDisplayCell: CE.renderReconcileStateDisplay,
+                renderEditCell: CE.renderReconcileStateEditor,
             },
         };
 
@@ -612,10 +327,12 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputClassExtras: numericClassName,
                 cellClassName: cellClassName,
                 inputSize: numericSize,
-                renderDisplay: renderBoughtDisplay,
-                renderEditor: renderBoughtEditor,
-                getCellEditBufferValue: getBoughtEditorCellBufferValue,
-                updateTransactionDataItem: updateBoughtFromEditor,
+
+                getCellValue: (args) => getSplitQuantityCellValue(args, 'bought'),
+                saveCellValue: saveSplitQuantityCellValue,
+                renderDisplayCell: CE.renderSplitQuantityDisplay,
+                renderEditCell: CE.renderSplitQuantityEditor,
+
             };
             columnInfoDefs.sold = { key: 'sold',
                 header: {
@@ -626,10 +343,11 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputClassExtras: numericClassName,
                 cellClassName: cellClassName,
                 inputSize: numericSize,
-                renderDisplay: renderSoldDisplay,
-                renderEditor: renderSoldEditor,
-                getCellEditBufferValue: getSoldEditorCellBufferValue,
-                updateTransactionDataItem: updateSoldFromEditor,
+
+                getCellValue: (args) => getSplitQuantityCellValue(args, 'sold'),
+                saveCellValue: saveSplitQuantityCellValue,
+                renderDisplayCell: CE.renderSplitQuantityDisplay,
+                renderEditCell: CE.renderSplitQuantityEditor,
             };
             columnInfoDefs.shares = { key: 'shares',
                 header: {
@@ -640,9 +358,9 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputClassExtras: numericClassName,
                 cellClassName: cellClassName,
                 inputSize: numericSize,
-                renderDisplay: renderSharesDisplay,
-                //renderEditor: renderSharesEditor,
-                //getCellEditBufferValue: getSharesEditorCellBufferValue,
+
+                getCellValue: getAccountStateQuantityCellValue,
+                renderDisplayCell: CE.renderSharesDisplay,
             };
         }
         else {
@@ -655,10 +373,11 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputClassExtras: numericClassName,
                 cellClassName: cellClassName,
                 inputSize: numericSize,
-                renderDisplay: renderDebitDisplay,
-                renderEditor: renderDebitEditor,
-                getCellEditBufferValue: getDebitEditorCellBufferValue,
-                updateTransactionDataItem: updateDebitFromEditor,
+
+                getCellValue: (args) => getSplitQuantityCellValue(args, 'debit'),
+                saveCellValue: saveSplitQuantityCellValue,
+                renderDisplayCell: CE.renderSplitQuantityDisplay,
+                renderEditCell: CE.renderSplitQuantityEditor,
             };
             columnInfoDefs.credit = { key: 'credit',
                 header: {
@@ -669,10 +388,11 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputClassExtras: numericClassName,
                 cellClassName: cellClassName,
                 inputSize: numericSize,
-                renderDisplay: renderCreditDisplay,
-                renderEditor: renderCreditEditor,
-                getCellEditBufferValue: getCreditEditorCellBufferValue,
-                updateTransactionDataItem: updateCreditFromEditor,
+
+                getCellValue: (args) => getSplitQuantityCellValue(args, 'credit'),
+                saveCellValue: saveSplitQuantityCellValue,
+                renderDisplayCell: CE.renderSplitQuantityDisplay,
+                renderEditCell: CE.renderSplitQuantityEditor,
             };
             columnInfoDefs.balance = { key: 'balance',
                 header: {
@@ -683,11 +403,17 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputClassExtras: numericClassName,
                 cellClassName: cellClassName,
                 inputSize: numericSize,
-                renderDisplay: renderBalanceDisplay,
-                //renderEditor: renderBalanceEditor,
-                //getCellEditBufferValue: getBalanceEditorCellBufferValue,
+
+                getCellValue: getAccountStateQuantityCellValue,
+                renderDisplayCell: CE.renderBalanceDisplay,
             };
 
+        }
+
+        for (let name in columnInfoDefs) {
+            const columnInfo = columnInfoDefs[name];
+            columnInfo.ariaLabel = columnInfo.ariaLabel 
+                || columnInfo.header.ariaLabel;
         }
 
         allColumnInfoDefs[accountType.name] = columnInfoDefs;
@@ -723,6 +449,21 @@ export class AccountRegister extends React.Component {
         this.onRenderEditCell = this.onRenderEditCell.bind(this);
 
         this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
+
+        this.getRowEntry = this.getRowEntry.bind(this);
+        this.getSaveBuffer = this.getSaveBuffer.bind(this);
+        this.asyncSaveBuffer = this.asyncSaveBuffer.bind(this);
+
+        this._cellEditorsManager = new CellEditorsManager({
+            getRowEntry: this.getRowEntry,
+            getColumnInfo: (columnIndex) => this.state.columnInfos[columnIndex],
+            setManagerState: (state) => this.setState({
+                managerState: state,
+            }),
+            getManagerState: () => this.state.managerState,
+            getSaveBuffer: this.getSaveBuffer,
+            asyncSaveBuffer: this.asyncSaveBuffer,
+        });
 
         this._rowTableRef = React.createRef();
 
@@ -784,6 +525,7 @@ export class AccountRegister extends React.Component {
                 splitOccurrance: splitOccurrance,
         */
         this._sizingRowEntry = {
+            caller: this,
             transactionDataItem: {
                 ymdDate: '2020-12-31',
                 description: userMsg('AccountRegister-dummy_description'),
@@ -793,7 +535,7 @@ export class AccountRegister extends React.Component {
                         accountId: -1,
                         quantityBaseValue: 999999999,
                         lotChanges: [
-
+                            { quantityBaseValue: 999999999, },
                         ],
                     },
                 ],
@@ -802,7 +544,7 @@ export class AccountRegister extends React.Component {
                 ymdDate: '2020-12-31',
                 quantityBaseValue: 999999999,
                 lotStates: [
-
+                    { quantityBaseValue: 999999999, },
                 ],
             },
             splitIndex: 0,
@@ -1012,6 +754,7 @@ export class AccountRegister extends React.Component {
                             key: rowEntryKey,
                             transactionId: key.id,
                             splitOccurrance: splitOccurrance,
+                            caller: this,
                         };
                     }
                     newRowEntries.push(rowEntry);
@@ -1230,6 +973,60 @@ export class AccountRegister extends React.Component {
     }
 
 
+    getRowEntry(args) {
+        const { rowIndex, isSizeRender } = args;
+        return (isSizeRender)
+            ? this._sizingRowEntry
+            : this.state.rowEntries[rowIndex];
+    }
+    
+    
+    getSaveBuffer(args) {
+        const { rowIndex } = args;
+        const rowEntry = this.state.rowEntries[rowIndex];
+        const { transactionDataItem } = rowEntry;
+        return T.getTransactionDataItem(transactionDataItem, true);
+    }
+
+
+    async asyncSaveBuffer(args) {
+        try {
+            const { rowIndex, saveBuffer: newTransactionDataItem } = args;
+            const rowEntry = this.state.rowEntries[rowIndex];
+            const { transactionDataItem } = rowEntry;
+
+            const { accessor } = this.props;
+            const accountingActions = accessor.getAccountingActions();
+            let action;
+            if ((rowIndex + 1) === this.state.rowEntries.length) {
+                // Last row is new transaction...
+                action = accountingActions.createAddTransactionsAction(
+                    newTransactionDataItem
+                );
+            }
+            else {
+                if (!T.areTransactionsSimilar(
+                    newTransactionDataItem, transactionDataItem)) {
+
+                    action = accountingActions.createModifyTransactionsAction(
+                        newTransactionDataItem
+                    );
+                }
+            }
+
+            if (action) {
+                await accessor.asyncApplyAction(action);
+            }
+        }
+        catch (e) {
+            this.setErrorMsg('description', e.toString());
+            return;
+        }
+
+        return true;
+    }
+
+
     onStartRowEdit({ rowIndex, rowEditBuffer, cellEditBuffers,
         asyncEndRowEdit, cancelRowEdit,
         setRowEditBuffer, setCellEditBuffer}) {
@@ -1242,7 +1039,7 @@ export class AccountRegister extends React.Component {
 
         const { columnInfos } = this.state;
         const cellBufferArgs = {
-            caller: this,
+            //caller: this,
             rowEditBuffer: rowEditBuffer,
             rowEntry: rowEntry,
         };
@@ -1293,7 +1090,7 @@ export class AccountRegister extends React.Component {
         const cellArgs = Object.assign({}, args,
             {
                 transactionDataItem: newTransactionDataItem,
-                caller: this,
+                //caller: this,
                 rowEntry: rowEntry,
             });
         for (let i = 0; i < columnInfos.length; ++i) {
@@ -1362,7 +1159,7 @@ export class AccountRegister extends React.Component {
         const { renderEditor } = columnInfo;
         if (!args.isSizeRender && renderEditor) {
             return renderEditor(Object.assign({}, args, { 
-                caller: this,
+                //caller: this,
                 columnInfo: columnInfo,
                 setCellEditBuffer: (value) => {
                     this.state.editInfo.setCellEditBuffer(columnIndex, value);
@@ -1442,15 +1239,15 @@ export class AccountRegister extends React.Component {
 
                 //
                 // EditableRowTable methods
-                onRenderDisplayCell = {this.onRenderDisplayCell}
-                onRenderEditCell = {this.onRenderEditCell}
+                onRenderDisplayCell = {this._cellEditorsManager.onRenderDisplayCell}
+                onRenderEditCell = {this._cellEditorsManager.onRenderEditCell}
 
                 requestedActiveRowIndex = {state.activeRowIndex}
                 onActiveRowChanged = {this.onActiveRowChanged}
 
-                onStartRowEdit = {this.onStartRowEdit}
-                asyncOnSaveRowEdit = {this.asyncOnSaveRowEdit}
-                onCancelRowEdit = {this.onCancelRowEdit}
+                onStartRowEdit = {this._cellEditorsManager.onStartRowEdit}
+                asyncOnSaveRowEdit = {this._cellEditorsManager.asyncOnSaveRowEdit}
+                onCancelRowEdit = {this._cellEditorsManager.onCancelRowEdit}
 
                 ref = {this._rowTableRef}
             />

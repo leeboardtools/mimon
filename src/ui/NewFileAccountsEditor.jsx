@@ -11,6 +11,8 @@ import { EditableRowTable } from '../util-ui/EditableRowTable';
 import * as C from '../util/Currency';
 import { CellTextEditor, CellTextDisplay } from '../util-ui/CellTextEditor';
 import { CellSelectEditor, CellSelectDisplay } from '../util-ui/CellSelectEditor';
+import CellEditorsManager from '../util-ui/CellEditorsManager';
+import * as CE from './AccountingCellEditors';
 
 
 const EditableCollapsibleRowTable = collapsibleRowTable(EditableRowTable);
@@ -86,17 +88,22 @@ export class NewFileAccountsEditor extends React.Component {
 
         this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
 
-        this.onStartEditRow = this.onStartEditRow.bind(this);
-        this.onCancelEditRow = this.onCancelEditRow.bind(this);
-        this.asyncOnSaveEditRow = this.asyncOnSaveEditRow.bind(this);
+        //this.onStartEditRow = this.onStartEditRow.bind(this);
+        //this.onCancelEditRow = this.onCancelEditRow.bind(this);
+        //this.asyncOnSaveEditRow = this.asyncOnSaveEditRow.bind(this);
+
+        this.onStartRowEdit = this.onStartRowEdit.bind(this);
+        this.onCancelRowEdit = this.onCancelRowEdit.bind(this);
+        this.asyncOnSaveRowEdit = this.asyncOnSaveRowEdit.bind(this);
+
         this.onRenderDisplayCell = this.onRenderDisplayCell.bind(this);
         this.onRenderEditCell = this.onRenderEditCell.bind(this);
 
         this.onTextEditorChange = this.onTextEditorChange.bind(this);
         this.onAccountTypeChange = this.onAccountTypeChange.bind(this);
 
-        this.onGetRowExpandCollapseState = this.onGetRowExpandCollapseState.bind(this);
-        this.onRowToggleCollapse = this.onRowToggleCollapse.bind(this);
+        //this.onGetRowExpandCollapseState = this.onGetRowExpandCollapseState.bind(this);
+        //this.onRowToggleCollapse = this.onRowToggleCollapse.bind(this);
 
 
         this._tableRef = React.createRef();
@@ -120,12 +127,13 @@ export class NewFileAccountsEditor extends React.Component {
         };
 
         const cellClassName = 'm-0 ';
+
         this.state.columnInfos = [
             { key: 'name',
                 header: {
                     label: userMsg('NewFileAccountsEditor-account_name'),
                     ariaLabel: 'Name',
-                    classExtras: 'text-left',
+                    classExtras: 'text-left w-50',
                 },
                 propertyName: 'name',
                 inputClassExtras: 'text-left',
@@ -135,7 +143,7 @@ export class NewFileAccountsEditor extends React.Component {
                 header: {
                     label: userMsg('NewFileAccountsEditor-type'),
                     ariaLabel: 'Account Type',
-                    classExtras: 'text-left',
+                    classExtras: 'text-left w-15',
                 },
                 propertyName: 'type',
                 inputClassExtras: 'text-left',
@@ -145,7 +153,7 @@ export class NewFileAccountsEditor extends React.Component {
                 header: {
                     label: userMsg('NewFileAccountsEditor-description'),
                     ariaLabel: 'Description',
-                    classExtras: 'text-left',
+                    classExtras: 'text-left w-40',
                 },
                 propertyName: 'description',
                 inputClassExtras: 'text-left',
@@ -159,7 +167,8 @@ export class NewFileAccountsEditor extends React.Component {
                 },
                 propertyName: 'openingBalance',
                 inputClassExtras: 'text-right',
-                cellClassName: cellClassName + 'w-15',
+                cellClassName: cellClassName,
+                inputSize: -12, // 1,234,567.89
             },
         ];
 
@@ -644,7 +653,7 @@ export class NewFileAccountsEditor extends React.Component {
         }
     }
 
-
+/*
     onRowToggleCollapse(rowInfo) {
         switch (rowInfo.expandCollapseState) {
         case ExpandCollapseState.COLLAPSED :
@@ -662,13 +671,14 @@ export class NewFileAccountsEditor extends React.Component {
         // This has the side effect of making rowInfo the active row entry...
         this.updateRowInfos(rowInfo.key);
     }
+*/
 
-
+/*
     onGetRowExpandCollapseState(rowInfo) {
         return rowInfo.expandCollapseState;
     }
-
-
+*/
+/*
     onStartEditRow({ rowInfo, cellEditBuffers, rowEditBuffer, asyncEndEditRow }) {
         for (let i = 0; i < this._columnInfos.length; ++i) {
             cellEditBuffers.push(i);
@@ -687,8 +697,8 @@ export class NewFileAccountsEditor extends React.Component {
             errorMsgs: {}
         });
     }
-
-
+*/
+/*
     onCancelEditRow({ rowInfo, cellEditBuffers, rowEditBuffers }) {
         this.props.onSetEndEditAsyncCallback(undefined);
         this.setState({
@@ -696,6 +706,123 @@ export class NewFileAccountsEditor extends React.Component {
             errorMsgs: {}
         });
     }
+*/
+
+
+    onStartRowEdit({ rowIndex, rowEditBuffer, cellEditBuffers,
+        asyncEndRowEdit, cancelRowEdit,
+        setRowEditBuffer, setCellEditBuffer}) {
+        
+        const rowEntry = this.state.rowEntries[rowIndex];
+        const { accountDataItem } = rowEntry;
+        if (!accountDataItem) {
+            return;
+        }
+
+        const { columnInfos } = this.state;
+        const cellBufferArgs = {
+            caller: this,
+            rowEditBuffer: rowEditBuffer,
+            rowEntry: rowEntry,
+        };
+        for (let i = 0; i < columnInfos.length; ++i) {
+            const { getCellEditBufferValue } = columnInfos[i];
+            if (getCellEditBufferValue) {
+                cellBufferArgs.columnIndex = i;
+                cellBufferArgs.columnInfo = columnInfos[i];
+                cellEditBuffers[i].value = getCellEditBufferValue(cellBufferArgs);
+            }
+        }
+
+        this.setState({
+            editInfo: {
+                //transactionId: transactionDataItem.id,
+                asyncEndRowEdit: asyncEndRowEdit,
+                cancelRowEdit: cancelRowEdit,
+                setRowEditBuffer: setRowEditBuffer, 
+                setCellEditBuffer: setCellEditBuffer,
+            },
+            errorMsgs: {}
+        });
+
+        return true;
+    }
+
+
+    onCancelRowEdit() {
+        this.setState({
+            editInfo: undefined,
+            errorMsgs: {}
+        });
+    }
+
+
+    async asyncOnSaveRowEdit(args) {
+        const { rowIndex, cellEditBuffers } = args;
+        const rowEntry = this.state.rowEntries[rowIndex];
+        const { accountDataItem } = rowEntry;
+        if (!accountDataItem) {
+            return;
+        }
+
+        const newTransactionDataItem 
+            = T.getTransactionDataItem(transactionDataItem, true);
+
+        const { columnInfos } = this.state;
+        const cellArgs = Object.assign({}, args,
+            {
+                transactionDataItem: newTransactionDataItem,
+                caller: this,
+                rowEntry: rowEntry,
+            });
+        for (let i = 0; i < columnInfos.length; ++i) {
+            const columnInfo = columnInfos[i];
+            const { updateTransactionDataItem } = columnInfo;
+            if (updateTransactionDataItem) {
+                cellArgs.columnIndex = i;
+                cellArgs.columnInfo = columnInfo;
+                cellArgs.cellEditBuffer = cellEditBuffers[i];
+                updateTransactionDataItem(cellArgs);
+            }
+        }
+
+        try {
+            const { accessor } = this.props;
+            const accountingActions = accessor.getAccountingActions();
+            let action;
+            if ((rowIndex + 1) === this.state.rowEntries.length) {
+                // Last row is new transaction...
+                action = accountingActions.createAddTransactionsAction(
+                    newTransactionDataItem
+                );
+            }
+            else {
+                if (!T.areTransactionsSimilar(
+                    newTransactionDataItem, transactionDataItem)) {
+
+                    action = accountingActions.createModifyTransactionsAction(
+                        newTransactionDataItem
+                    );
+                }
+            }
+
+            if (action) {
+                await accessor.asyncApplyAction(action);
+            }
+        }
+        catch (e) {
+            this.setErrorMsg('description', e.toString());
+            return;
+        }
+
+        this.setState({
+            editInfo: undefined,
+            errorMsgs: {}
+        });
+
+        return true;
+    }
+
 
 
     setErrorMsg(propertyName, msg) {
@@ -707,7 +834,7 @@ export class NewFileAccountsEditor extends React.Component {
         return msg;
     }
 
- 
+/*
     async asyncOnSaveEditRow({ rowInfo, cellEditBuffers, rowEditBuffer }) {
         const currency = C.USD;
         const newRootAccountDataItems 
@@ -748,7 +875,7 @@ export class NewFileAccountsEditor extends React.Component {
             errorMsgs: {}
         });
     }
-
+*/
 
     updateRowEditBuffer(renderArgs, rowEditBuffer) {
         renderArgs.updateRowEditBuffer(rowEditBuffer);
@@ -784,17 +911,6 @@ export class NewFileAccountsEditor extends React.Component {
             onFocus = {onFocus}
             onBlur = {onBlur}
             ref = {setCellRef}
-        />;
-    }
-
-
-    renderTextDisplay(columnInfo, value) {
-        const { ariaLabel, inputClassExtras } = columnInfo;
-        
-        return <CellTextDisplay
-            ariaLabel = {ariaLabel}
-            value = {value}
-            inputClassExtras = {inputClassExtras}
         />;
     }
 
@@ -849,15 +965,6 @@ export class NewFileAccountsEditor extends React.Component {
     }
 
     
-    renderAccountTypeDisplay(type) {
-        const accountType = A.AccountType[type];
-        return <CellSelectDisplay
-            ariaLabel = "Account Type"
-            selectedValue = {accountType.description}
-        />;
-    }
-
-
     onRenderEditCell({cellInfo, cellSettings, renderArgs}) {
         const { rowInfo } = cellInfo;
         if (!cellInfo.columnIndex) {
@@ -882,7 +989,8 @@ export class NewFileAccountsEditor extends React.Component {
     }
 
 
-    onRenderDisplayCell({rowIndex, columnIndex, isSizeRender, }) {
+    onRenderDisplayCell(args) {
+        const {rowIndex, columnIndex, isSizeRender, } = args;
         if (!this._tableRef.current) {
             return;
         }
@@ -898,16 +1006,32 @@ export class NewFileAccountsEditor extends React.Component {
         const columnInfo = this.state.columnInfos[columnIndex];
         switch (columnInfo.key) {
         case 'type' :
-            return this.renderAccountTypeDisplay(accountDataItem.type);
+            return CE.renderAccountTypeDisplay(Object.assign({}, args, {
+                columnInfo: columnInfo,
+                value: accountDataItem.type
+            }));
 
         case 'name' :
-            return this.renderTextDisplay(columnInfo, accountDataItem.name);
+            return CE.renderNameDisplay(Object.assign({}, args, {
+                columnInfo: columnInfo,
+                value: accountDataItem.name,
+            }));
 
         case 'description' :
-            return this.renderTextDisplay(columnInfo, accountDataItem.description);
+            return CE.renderDescriptionDisplay(Object.assign({}, args, {
+                columnInfo: columnInfo,
+                value: accountDataItem.description,
+            }));
 
         case 'opening_balance' :
-            return this.renderTextDisplay(columnInfo, accountDataItem.openingBalance);
+        {
+            const currency = C.USD;
+            return CE.renderBalanceDisplay(Object.assign({}, args, {
+                columnInfo: columnInfo,
+                quantityDefinition: currency.getQuantityDefinition(),
+                value: accountDataItem.openingBalance,
+            }));
+        }
         }
     }
 
@@ -1007,6 +1131,10 @@ export class NewFileAccountsEditor extends React.Component {
 
             requestedActiveRowIndex = {activeRowIndex}
             onActiveRowChanged = {this.onActiveRowChanged}
+
+            onStartRowEdit = {this.onStartRowEdit}
+            asyncOnSaveRowEdit = {this.asyncOnSaveRowEdit}
+            onCancelRowEdit = {this.onCancelRowEdit}
 
             ref = {this._tableRef}
 
