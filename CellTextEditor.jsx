@@ -2,11 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 /**
- * React component for editing text in a table cell. Works with 
- * {@link RowEditCollapsibleTable}, return from the
- * {@link RowEditTable~onRenderEditCell} callback. {@link CellTextDisplay} 
- * would then normally be returned from the
- * {@link RowEditTable~onRenderDisplayCell} callback.
+ * React component for editing text in a table cell.
  * @class
  */
 export const CellTextEditor = React.forwardRef(
@@ -77,8 +73,7 @@ CellTextEditor.propTypes = {
 
 
 /**
- * React component that's a display representation of {@link CellTextEditor},
- * for use with {@link RowEditCollapsibleTable~onRenderDisplayCell}.
+ * React component that's a display representation of {@link CellTextEditor}.
  * @param {*} props 
  */
 export function CellTextDisplay(props) {

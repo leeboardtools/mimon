@@ -3,11 +3,7 @@ import PropTypes from 'prop-types';
 import { getQuantityDefinition } from '../util/Quantities';
 
 /**
- * React component for editing text in a table cell. Works with 
- * {@link RowEditCollapsibleTable}, return from the
- * {@link RowEditTable~onRenderEditCell} callback. {@link CellQuantityDisplay} 
- * would then normally be returned from the
- * {@link RowEditTable~onRenderDisplayCell} callback.
+ * React component for editing a quantity in a table cell.
  * @class
  */
 /*
@@ -81,8 +77,7 @@ CellQuantityEditor.propTypes = {
 */
 
 /**
- * React component that's a display representation of {@link CellQuantityEditor},
- * for use with {@link RowEditCollapsibleTable~onRenderDisplayCell}.
+ * React component that's a display representation of {@link CellQuantityEditor}.
  * @param {*} props 
  */
 export function CellQuantityDisplay(props) {
