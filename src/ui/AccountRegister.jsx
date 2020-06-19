@@ -6,6 +6,8 @@ import { getQuantityDefinition } from '../util/Quantities';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
 import * as CE from './AccountingCellEditors';
+import { columnInfosToColumns, 
+    stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
 import deepEqual from 'deep-equal';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 
@@ -546,39 +548,12 @@ export class AccountRegister extends React.Component {
             }
         };
 
-        this.state.columns = this.generateColumns();
+        this.state.columns = columnInfosToColumns(this.state);
 
         this.updateRowEntries();
     }
 
-
-    generateColumns(columnWidths) {
-        const { columnInfos } = this.state;
-        const columns = columnInfos.map((columnInfo) => {
-            return {
-                key: columnInfo.key,
-                // width
-                // minWidth
-                // maxWidth
-                header: columnInfo.header,
-                footer: columnInfo.footer,
-            };
-        });
-
-        columnWidths = columnWidths || this.state.columnWidths;
-        if (columnWidths) {
-            const count = Math.min(columnWidths.length, columns.length);
-            for (let i = 0; i < count; ++i) {
-                if (columnWidths[i] !== undefined) {
-                    columns[i].width = columnWidths[i];
-                }
-            }
-        }
-
-        return columns;
-    }
-
-
+    
     isTransactionForThis(transactionDataItem) {
         const { splits } = transactionDataItem;
         for (let i = 0; i < splits.length; ++i) {
@@ -947,15 +922,8 @@ export class AccountRegister extends React.Component {
     }
 
 
-    onSetColumnWidth({ columnIndex, columnWidth}) {
-        this.setState((state) => {
-            const columnWidths = Array.from(state.columnWidths || []);
-            columnWidths[columnIndex] = columnWidth;
-            return {
-                columnWidths: columnWidths,
-                columns: this.generateColumns(columnWidths),
-            };
-        });
+    onSetColumnWidth(args) {
+        this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
     }
 
 

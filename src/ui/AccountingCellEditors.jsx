@@ -48,13 +48,6 @@ import { getCurrency } from '../util/Currency';
 //
 
 /**
- * @typedef {object}    ColumnInfo
- * @property {string}   [ariaLabel]
- * @property {string}   [inputClassExtras]
- * @property {number}   [inputSize]
- */
-
-/**
  * @typedef {object}    CellEditorArgs
  * {@link EditableRowTable~onRenderEditCellArgs} plus:
  * @property {ColumnInfo} columnInfo

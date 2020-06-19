@@ -8,6 +8,8 @@ import { CollapsibleRowTable, ExpandCollapseState,
     findRowInfoWithKey, updateRowInfo } from '../util-ui/CollapsibleRowTable';
 import { getDecimalDefinition, getQuantityDefinitionName } from '../util/Quantities';
 import * as CE from './AccountingCellEditors';
+import { columnInfosToColumns,
+    stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
 
 
 let columnInfoDefs;
@@ -124,7 +126,7 @@ export class AccountsList extends React.Component {
         this._hiddenRootAccountTypes = new Set(props.hiddenRootAccountTypes);
         this._hiddenAccountIds = new Set(props.hiddenAccountIds);
 
-        this.state.columns = this.generateColumns();
+        this.state.columns = columnInfosToColumns(this.state);
 
         this.state = Object.assign(this.state, this.buildRowInfos());
         if (this.state.rowInfos.length) {
@@ -149,34 +151,6 @@ export class AccountsList extends React.Component {
                 getDecimalDefinition(4)
             ),
         };
-    }
-
-
-    generateColumns(columnWidths) {
-        const { columnInfos } = this.state;
-        const columns = columnInfos.map((columnInfo) => {
-            return {
-                key: columnInfo.key,
-                // width
-                // minWidth
-                // maxWidth
-                cellClassExtras: columnInfo.cellClassName,
-                header: columnInfo.header,
-                footer: columnInfo.footer,
-            };
-        });
-
-        columnWidths = columnWidths || this.state.columnWidths;
-        if (columnWidths) {
-            const count = Math.min(columnWidths.length, columns.length);
-            for (let i = 0; i < count; ++i) {
-                if (columnWidths[i] !== undefined) {
-                    columns[i].width = columnWidths[i];
-                }
-            }
-        }
-
-        return columns;
     }
 
 
@@ -378,15 +352,8 @@ export class AccountsList extends React.Component {
     }
 
 
-    onSetColumnWidth({ columnIndex, columnWidth}) {
-        this.setState((state) => {
-            const columnWidths = Array.from(state.columnWidths || []);
-            columnWidths[columnIndex] = columnWidth;
-            return {
-                columnWidths: columnWidths,
-                columns: this.generateColumns(columnWidths),
-            };
-        });
+    onSetColumnWidth(args) {
+        this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
     }
 
 
