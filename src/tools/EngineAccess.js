@@ -338,8 +338,13 @@ export class EngineAccessor extends EventEmitter {
         }
 
         if (accountingFile) {
-            await this.asyncClearAppliedActions();
-            await this.asyncClearUndoneActions();
+            try {
+                await this.asyncClearAppliedActions();
+                await this.asyncClearUndoneActions();
+            }
+            catch (err) {
+                // 
+            }
         }
 
         return warnings;
@@ -387,8 +392,13 @@ export class EngineAccessor extends EventEmitter {
         this._setupForAccountingFile(accountingFile, fileFactoryIndex);
 
         if (accountingFile) {
-            await this.asyncClearAppliedActions();
-            await this.asyncClearUndoneActions();
+            try {
+                await this.asyncClearAppliedActions();
+                await this.asyncClearUndoneActions();
+            }
+            catch (err) {
+                // 
+            }
         }
     }
 
