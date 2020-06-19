@@ -94,12 +94,12 @@ export function editableRowTable(WrappedTable) {
                 let refForFocus;
                 const columnIndex = activeEditInfo.columnIndex || 0;
 
-                let focusColumnIndex;
+                //let focusColumnIndex;
                 for (let i = columnIndex; i < refsForFocus.length; ++i) {
                     const { current } = refsForFocus[i];
                     if (current && (current.tabIndex >= 0)) {
                         refForFocus = refsForFocus[i];
-                        focusColumnIndex = i;
+                        //focusColumnIndex = i;
                         break;
                     }
                 }
@@ -109,7 +109,7 @@ export function editableRowTable(WrappedTable) {
                         const { current } = refsForFocus[i];
                         if (current && (current.tabIndex >= 0)) {
                             refForFocus = refsForFocus[i];
-                            focusColumnIndex = i;
+                            //focusColumnIndex = i;
                         }
                     }
                 }
