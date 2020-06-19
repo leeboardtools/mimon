@@ -513,7 +513,7 @@ NewFileAccountsEditor
 - Add split quantity editor.
 - Add adding new transaction for last row.
 
-- Convert NewFileAccountsEditor to CellEditors
+- Convert PricedItemsList to CellEditors
 
 - Splits List:
     - Need appropriate sign for split values.
