@@ -8,6 +8,7 @@ import { getQuantityDefinition } from '../util/Quantities';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
 import { ReconcileState } from '../engine/Transactions';
+import { getCurrency } from '../util/Currency';
 
 //
 // The way editing currently works:
@@ -437,13 +438,6 @@ export function renderQuantityEditor(args) {
     */
 }
 
-
-/**
- * @typedef {object}    CellBalanceDisplayArgs
- * @property {ColumnInfo} columnInfo
- * @property {CellQuantityValue}   value
- */
-
 /**
  * The core display renderer for {@link QuantityDefinition} based
  * quantities.
@@ -464,6 +458,21 @@ export function renderQuantityDisplay(args) {
 }
 
 
+
+/**
+ * @typedef {object}    CellBalanceValue
+ * @property {QuantityDefinition}   [quantityDefinition]
+ * @property {Currency} [currency]
+ * @property {number}   quantityBaseValue
+ */
+
+
+/**
+ * @typedef {object}    CellBalanceDisplayArgs
+ * @property {ColumnInfo} columnInfo
+ * @property {CellBalanceValue}   value
+ */
+
 /**
  * Editor renderer for opening balances (the only type of balances 
  * that are editable).
@@ -475,7 +484,29 @@ export const renderBalanceEditor = renderQuantityEditor;
  * Display renderer for balances.
  * @param {CellQuantityDisplayArgs} args
  */
-export const renderBalanceDisplay = renderQuantityDisplay;
+export function renderBalanceDisplay(args) {
+    const { value } = args;
+    if (!value) {
+        return;
+    }
+
+    let { currency, quantityDefinition }
+        = value;
+    if (currency && !quantityDefinition) {
+        currency = getCurrency(currency);
+        if (!currency) {
+            return;
+        }
+        quantityDefinition = currency.getQuantityDefinition();
+        args = Object.assign({}, args, {
+            value: Object.assign({}, value, {
+                quantityDefinition: quantityDefinition,
+            }),
+        });
+    }
+
+    return renderQuantityDisplay(args);
+}
 
 
 

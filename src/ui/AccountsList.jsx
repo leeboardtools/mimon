@@ -1,16 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { CellTextDisplay } from '../util-ui/CellTextEditor';
-import { CellSelectDisplay } from '../util-ui/CellSelectEditor';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
-import { CurrencyDisplay } from '../util-ui/CurrencyDisplay';
-import { QuantityDisplay } from '../util-ui/QuantityDisplay';
 import deepEqual from 'deep-equal';
 import { CollapsibleRowTable, ExpandCollapseState,
     findRowInfoWithKey, updateRowInfo } from '../util-ui/CollapsibleRowTable';
 import { getDecimalDefinition, getQuantityDefinitionName } from '../util/Quantities';
+import * as CE from './AccountingCellEditors';
 
 
 let columnInfoDefs;
@@ -415,26 +412,6 @@ export class AccountsList extends React.Component {
     }
 
 
-    renderTextDisplay(columnInfo, value) {
-        const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
-        return <CellTextDisplay
-            ariaLabel = {ariaLabel}
-            value = {value}
-            inputClassExtras = {inputClassExtras}
-            size = {inputSize}
-        />;
-    }
-
-
-    renderAccountTypeDisplay(type) {
-        const accountType = A.AccountType[type];
-        return <CellSelectDisplay
-            ariaLabel="Account Type"
-            selectedValue = {accountType.description}
-        />;
-    }
-
-
     renderBalanceDisplay(columnInfo, accountDataItem, accountState) {
         const { accessor } = this.props;
 
@@ -455,11 +432,14 @@ export class AccountsList extends React.Component {
             currency = accessor.getBaseCurrencyCode();
         }
 
-        if (accountState && accountState.quantityBaseValue) {
-            return <CurrencyDisplay
-                quantityBaseValue = {accountState.quantityBaseValue}
-                currency = {currency}
-            />;
+        if (accountState && accountState.quantityBaseValue && currency) {
+            return CE.renderBalanceDisplay({
+                columnInfo: columnInfo,
+                value: {
+                    quantityBaseValue: accountState.quantityBaseValue,
+                    currency: currency,
+                },
+            });
         }
     }
 
@@ -482,10 +462,13 @@ export class AccountsList extends React.Component {
         }
 
         if (accountState && accountState.quantityBaseValue) {
-            return <QuantityDisplay
-                quantityBaseValue = {accountState.quantityBaseValue}
-                quantityDefinition = {quantityDefinition}
-            />;
+            return CE.renderSharesDisplay({
+                columnInfo: columnInfo,
+                value: {
+                    quantityBaseValue: accountState.quantityBaseValue,
+                    quantityDefinition: quantityDefinition,
+                }
+            });
         }
     }
 
@@ -504,14 +487,18 @@ export class AccountsList extends React.Component {
         }
         switch (columnInfo.key) {
         case 'name' :
-            if (this.props.showAccountIds) {
-                return this.renderTextDisplay(columnInfo, 
-                    accountDataItem.name + ' ' + accountDataItem.id);
-            }
-            return this.renderTextDisplay(columnInfo, accountDataItem.name);
+            return CE.renderNameDisplay({
+                columnInfo: columnInfo,
+                value: accountDataItem.name,
+            });
         
         case 'type' :
-            return this.renderAccountTypeDisplay(accountDataItem.type);
+            return CE.renderAccountTypeDisplay({
+                columnInfo: columnInfo,
+                value: {
+                    accountType: accountDataItem.type,
+                }
+            });
         
         case 'balance' :
             return this.renderBalanceDisplay(columnInfo, accountDataItem,
