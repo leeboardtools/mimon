@@ -20,6 +20,11 @@ export class CellEditorsManager {
 
 
     onStartRowEdit(args) {
+        const { getSaveBuffer, asyncSaveBuffer } = this.props;
+        if (!getSaveBuffer || !asyncSaveBuffer) {
+            return;
+        }
+
         const rowEntry = this.props.getRowEntry(args);
         if (rowEntry === undefined) {
             return;
@@ -56,8 +61,13 @@ export class CellEditorsManager {
     
 
     async asyncOnSaveRowEdit(args) {
+        const { getSaveBuffer, asyncSaveBuffer } = this.props;
+        if (!getSaveBuffer || !asyncSaveBuffer) {
+            return;
+        }
+
         const rowEntry = this.props.getRowEntry(args);
-        const saveBuffer = this.props.getSaveBuffer(args);
+        const saveBuffer = getSaveBuffer(args);
         const rowArgs = Object.assign({}, args,
             {
                 saveBuffer: saveBuffer,
@@ -76,7 +86,7 @@ export class CellEditorsManager {
             }
         }
 
-        if (!await this.props.asyncSaveBuffer(rowArgs)) {
+        if (!await asyncSaveBuffer(rowArgs)) {
             return;
         }
 
@@ -277,6 +287,6 @@ CellEditorsManager.propTypes = {
     getColumnInfo: PropTypes.func.isRequired,
     setManagerState: PropTypes.func.isRequired,
     getManagerState: PropTypes.func.isRequired,
-    getSaveBuffer: PropTypes.func.isRequired,
-    asyncSaveBuffer: PropTypes.func.isRequired,
+    getSaveBuffer: PropTypes.func,
+    asyncSaveBuffer: PropTypes.func,
 };
