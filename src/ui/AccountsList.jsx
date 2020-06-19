@@ -15,7 +15,7 @@ import { columnInfosToColumns,
 let columnInfoDefs;
 
 /**
- * @returns {CollapsibleRowTableOld~ColInfo[]} Array containing the available
+ * @returns {ColumnInfo[]} Array containing the available
  * columns for accounts lists.
  */
 export function getAccountsListColumnInfoDefs() {

@@ -13,7 +13,7 @@ import { columnInfosToColumns,
 let columnInfoDefs;
 
 /**
- * @returns {CollapsibleRowTableOld~ColInfo[]} Array containing the available
+ * @returns {ColumnInfo[]} Array containing the available
  * columns for priced item lists.
  */
 export function getPricedItemsListColumnInfoDefs() {

@@ -331,7 +331,6 @@ Common menus:
         - Generic, this may form the basis for reports that display summarized account info.
         - Have a master accounts list in MainWindow
         - Support customizing and saving customized versions.
-        - CollapsibleRowTableOld.
     
     - Support for new/modify/delete account, priced items
 
@@ -473,17 +472,6 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
                 - For prices, probably same.
 
         - Resizable columns
-    
-
-Current set of table classes:
-    /**
-    * React HOC function that adds row editing support to a table component. 
-    * This also adds active row support via {@link ActiveRowTable}. 
-    * The caller must maintain the active row.
-    * Adds {@link RowEditTable~Props} to the wrapped table's properties.
-    */
-    RowEditCollapsibleTable = rowEditTable(CollapsibleRowTableOld)
-        - NewFileConfigurator (also uses collapsible table stuff)
 
 
 
