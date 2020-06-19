@@ -2,16 +2,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import * as A from '../engine/Accounts';
-import { PricedItemType } from '../engine/PricedItems';
 import deepEqual from 'deep-equal';
 import { collapsibleRowTable, ExpandCollapseState,
     findRowInfoWithKey, updateRowInfo, rowInfosTreeToArray, 
 } from '../util-ui/CollapsibleRowTable';
 import { EditableRowTable } from '../util-ui/EditableRowTable';
 import * as C from '../util/Currency';
-import { CellTextEditor, CellTextDisplay } from '../util-ui/CellTextEditor';
-import { CellSelectEditor, CellSelectDisplay } from '../util-ui/CellSelectEditor';
-import CellEditorsManager from '../util-ui/CellEditorsManager';
+import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import * as CE from './AccountingCellEditors';
 
 
@@ -67,6 +64,44 @@ function removeAccountDataItemWithId(accountDataItems, id) {
 }
 
 
+function getAccountCellValue(args) {
+    const { rowEntry, columnInfo } = args;
+    const { accountDataItem } = rowEntry;
+    const { propertyName } = columnInfo;
+    if (accountDataItem && propertyName) {
+        return accountDataItem[propertyName];
+    }
+}
+
+function saveAccountCellValue(args) {
+    const { saveBuffer, columnInfo, cellEditBuffer } = args;
+    const { propertyName } = columnInfo;
+    if (saveBuffer && propertyName) {
+        saveBuffer[propertyName] = cellEditBuffer.value;
+    }
+}
+
+
+function getAccountTypeCellValue(args) {
+    const { rowEntry, } = args;
+    const { accountDataItem } = rowEntry;
+    if (accountDataItem) {
+        return {
+            accountType: accountDataItem.type,
+            accountDataItem: accountDataItem,
+            parentAccountType: rowEntry.parentType,
+        };
+    }
+}
+
+function saveAccountTypeCellValue(args) {
+    const { saveBuffer, cellEditBuffer } = args;
+    if (saveBuffer) {
+        saveBuffer.type = cellEditBuffer.value.accountType;
+    }
+}
+
+
 /**
  * Component for editing the accounts for a particular root account
  * in a new accounting file.
@@ -88,22 +123,20 @@ export class NewFileAccountsEditor extends React.Component {
 
         this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
 
-        //this.onStartEditRow = this.onStartEditRow.bind(this);
-        //this.onCancelEditRow = this.onCancelEditRow.bind(this);
-        //this.asyncOnSaveEditRow = this.asyncOnSaveEditRow.bind(this);
+        this.getRowEntry = this.getRowEntry.bind(this);
+        this.getSaveBuffer = this.getSaveBuffer.bind(this);
+        this.asyncSaveBuffer = this.asyncSaveBuffer.bind(this);
 
-        this.onStartRowEdit = this.onStartRowEdit.bind(this);
-        this.onCancelRowEdit = this.onCancelRowEdit.bind(this);
-        this.asyncOnSaveRowEdit = this.asyncOnSaveRowEdit.bind(this);
-
-        this.onRenderDisplayCell = this.onRenderDisplayCell.bind(this);
-        this.onRenderEditCell = this.onRenderEditCell.bind(this);
-
-        this.onTextEditorChange = this.onTextEditorChange.bind(this);
-        this.onAccountTypeChange = this.onAccountTypeChange.bind(this);
-
-        //this.onGetRowExpandCollapseState = this.onGetRowExpandCollapseState.bind(this);
-        //this.onRowToggleCollapse = this.onRowToggleCollapse.bind(this);
+        this._cellEditorsManager = new CellEditorsManager({
+            getRowEntry: this.getRowEntry,
+            getColumnInfo: (columnIndex) => this.state.columnInfos[columnIndex],
+            setManagerState: (state) => this.setState({
+                managerState: state,
+            }),
+            getManagerState: () => this.state.managerState,
+            getSaveBuffer: this.getSaveBuffer,
+            asyncSaveBuffer: this.asyncSaveBuffer,
+        });
 
 
         this._tableRef = React.createRef();
@@ -138,6 +171,11 @@ export class NewFileAccountsEditor extends React.Component {
                 propertyName: 'name',
                 inputClassExtras: 'text-left',
                 cellClassName: cellClassName + 'w-50',
+
+                getCellValue: getAccountCellValue,
+                saveCellValue: saveAccountCellValue,
+                renderDisplayCell: CE.renderNameDisplay,
+                renderEditCell: CE.renderNameEditor,
             },
             { key: 'type',
                 header: {
@@ -148,6 +186,11 @@ export class NewFileAccountsEditor extends React.Component {
                 propertyName: 'type',
                 inputClassExtras: 'text-left',
                 cellClassName: cellClassName + 'w-15',
+
+                getCellValue: getAccountTypeCellValue,
+                saveCellValue: saveAccountTypeCellValue,
+                renderDisplayCell: CE.renderAccountTypeDisplay,
+                renderEditCell: CE.renderAccountTypeEditor,
             },
             { key: 'description',
                 header: {
@@ -158,6 +201,11 @@ export class NewFileAccountsEditor extends React.Component {
                 propertyName: 'description',
                 inputClassExtras: 'text-left',
                 cellClassName: cellClassName + 'w-40',
+
+                getCellValue: getAccountCellValue,
+                saveCellValue: saveAccountCellValue,
+                renderDisplayCell: CE.renderDescriptionDisplay,
+                renderEditCell: CE.renderDescriptionEditor,
             },
             { key: 'opening_balance',
                 header: {
@@ -169,6 +217,11 @@ export class NewFileAccountsEditor extends React.Component {
                 inputClassExtras: 'text-right',
                 cellClassName: cellClassName,
                 inputSize: -12, // 1,234,567.89
+
+                getCellValue: getAccountCellValue,
+                saveCellValue: saveAccountCellValue,
+                renderDisplayCell: CE.renderBalanceDisplay,
+                renderEditCell: CE.renderBalanceEditor,
             },
         ];
 
@@ -653,202 +706,42 @@ export class NewFileAccountsEditor extends React.Component {
         }
     }
 
-/*
-    onRowToggleCollapse(rowInfo) {
-        switch (rowInfo.expandCollapseState) {
-        case ExpandCollapseState.COLLAPSED :
-            this._collapsedRowIds.delete(rowInfo.key);
-            break;
 
-        case ExpandCollapseState.EXPANDED :
-            this._collapsedRowIds.add(rowInfo.key);
-            break;
-        
-        default :
-            return;
+    getRowEntry(args) {
+        const { rowIndex, isSizeRender } = args;
+        if (isSizeRender) {
+            return this._sizingRowInfo;
         }
-
-        // This has the side effect of making rowInfo the active row entry...
-        this.updateRowInfos(rowInfo.key);
-    }
-*/
-
-/*
-    onGetRowExpandCollapseState(rowInfo) {
-        return rowInfo.expandCollapseState;
-    }
-*/
-/*
-    onStartEditRow({ rowInfo, cellEditBuffers, rowEditBuffer, asyncEndEditRow }) {
-        for (let i = 0; i < this._columnInfos.length; ++i) {
-            cellEditBuffers.push(i);
+        if (this._tableRef.current) {
+            return this._tableRef.current.getRowInfoForIndex(rowIndex);
         }
-
-        const { accountDataItem } = rowInfo;
-        rowEditBuffer.type = accountDataItem.type;
-        rowEditBuffer.name = accountDataItem.name;
-        rowEditBuffer.description = accountDataItem.description;
-        rowEditBuffer.openingBalance = accountDataItem.openingBalance;
-
-        this.props.onSetEndEditAsyncCallback(asyncEndEditRow);
-
-        this.setState({
-            asyncEndEditRow: asyncEndEditRow,
-            errorMsgs: {}
-        });
     }
-*/
-/*
-    onCancelEditRow({ rowInfo, cellEditBuffers, rowEditBuffers }) {
-        this.props.onSetEndEditAsyncCallback(undefined);
-        this.setState({
-            asyncEndEditRow: undefined,
-            errorMsgs: {}
-        });
-    }
-*/
 
-
-    onStartRowEdit({ rowIndex, rowEditBuffer, cellEditBuffers,
-        asyncEndRowEdit, cancelRowEdit,
-        setRowEditBuffer, setCellEditBuffer}) {
-        
-        const rowEntry = this.state.rowEntries[rowIndex];
+    getSaveBuffer(args) {
+        const { rowIndex } = args;
+        const rowEntry = this._tableRef.current.getRowInfoForIndex(rowIndex);
         const { accountDataItem } = rowEntry;
-        if (!accountDataItem) {
-            return;
-        }
-
-        const { columnInfos } = this.state;
-        const cellBufferArgs = {
-            caller: this,
-            rowEditBuffer: rowEditBuffer,
-            rowEntry: rowEntry,
-        };
-        for (let i = 0; i < columnInfos.length; ++i) {
-            const { getCellEditBufferValue } = columnInfos[i];
-            if (getCellEditBufferValue) {
-                cellBufferArgs.columnIndex = i;
-                cellBufferArgs.columnInfo = columnInfos[i];
-                cellEditBuffers[i].value = getCellEditBufferValue(cellBufferArgs);
-            }
-        }
-
-        this.setState({
-            editInfo: {
-                //transactionId: transactionDataItem.id,
-                asyncEndRowEdit: asyncEndRowEdit,
-                cancelRowEdit: cancelRowEdit,
-                setRowEditBuffer: setRowEditBuffer, 
-                setCellEditBuffer: setCellEditBuffer,
-            },
-            errorMsgs: {}
-        });
-
-        return true;
+        return A.getAccountDataItem(accountDataItem, true);
     }
 
 
-    onCancelRowEdit() {
-        this.setState({
-            editInfo: undefined,
-            errorMsgs: {}
-        });
-    }
-
-
-    async asyncOnSaveRowEdit(args) {
-        const { rowIndex, cellEditBuffers } = args;
-        const rowEntry = this.state.rowEntries[rowIndex];
-        const { accountDataItem } = rowEntry;
-        if (!accountDataItem) {
-            return;
-        }
-
-        const newTransactionDataItem 
-            = T.getTransactionDataItem(transactionDataItem, true);
-
-        const { columnInfos } = this.state;
-        const cellArgs = Object.assign({}, args,
-            {
-                transactionDataItem: newTransactionDataItem,
-                caller: this,
-                rowEntry: rowEntry,
-            });
-        for (let i = 0; i < columnInfos.length; ++i) {
-            const columnInfo = columnInfos[i];
-            const { updateTransactionDataItem } = columnInfo;
-            if (updateTransactionDataItem) {
-                cellArgs.columnIndex = i;
-                cellArgs.columnInfo = columnInfo;
-                cellArgs.cellEditBuffer = cellEditBuffers[i];
-                updateTransactionDataItem(cellArgs);
-            }
-        }
-
-        try {
-            const { accessor } = this.props;
-            const accountingActions = accessor.getAccountingActions();
-            let action;
-            if ((rowIndex + 1) === this.state.rowEntries.length) {
-                // Last row is new transaction...
-                action = accountingActions.createAddTransactionsAction(
-                    newTransactionDataItem
-                );
-            }
-            else {
-                if (!T.areTransactionsSimilar(
-                    newTransactionDataItem, transactionDataItem)) {
-
-                    action = accountingActions.createModifyTransactionsAction(
-                        newTransactionDataItem
-                    );
-                }
-            }
-
-            if (action) {
-                await accessor.asyncApplyAction(action);
-            }
-        }
-        catch (e) {
-            this.setErrorMsg('description', e.toString());
-            return;
-        }
-
-        this.setState({
-            editInfo: undefined,
-            errorMsgs: {}
-        });
-
-        return true;
-    }
-
-
-
-    setErrorMsg(propertyName, msg) {
-        this.setState({
-            errorMsgs: {
-                [propertyName]: msg,
-            }
-        });
-        return msg;
-    }
-
-/*
-    async asyncOnSaveEditRow({ rowInfo, cellEditBuffers, rowEditBuffer }) {
+    async asyncSaveBuffer(args) {
+        const { rowIndex, saveBuffer } = args;
         const currency = C.USD;
+        const rowEntry = this._tableRef.current.getRowInfoForIndex(rowIndex);
         const newRootAccountDataItems 
             = cloneAccountDataItems(this.props.rootAccountDataItems);
         const accountDataItem = findAccountDataItemWithId(
-            newRootAccountDataItems, rowInfo.key);
+            newRootAccountDataItems, rowEntry.key);
+
         
-        const name = (rowEditBuffer.name || '').trim();
+        const name = (saveBuffer.name || '').trim();
         if (!name) { 
             return this.setErrorMsg('name', 
                 userMsg('NewFileAccountsEditor-name_required'));
         }
 
-        const openingBalance = (rowEditBuffer.openingBalance || '').trim();
+        const openingBalance = (saveBuffer.openingBalance || '').trim();
         if (openingBalance) {
             try {
                 currency.baseValueFromString(openingBalance);
@@ -859,180 +752,21 @@ export class NewFileAccountsEditor extends React.Component {
             }
         }
         
-        accountDataItem.type = rowEditBuffer.type;
-        accountDataItem.name = rowEditBuffer.name;
-        accountDataItem.description = rowEditBuffer.description;
-        accountDataItem.openingBalance = rowEditBuffer.openingBalance;
+        accountDataItem.type = saveBuffer.type;
+        accountDataItem.name = saveBuffer.name;
+        accountDataItem.description = saveBuffer.description;
+        accountDataItem.openingBalance = saveBuffer.openingBalance;
 
         this.saveForUndo(userMsg('NewFileAccountsEditor-modify_account'));
         this.props.onUpdateRootAccountDataItems(this.props.accountCategory, 
             newRootAccountDataItems);
         
-        this.props.onSetEndEditAsyncCallback(undefined);
-
-        this.setState({
-            asyncEndEditRow: undefined,
-            errorMsgs: {}
-        });
-    }
-*/
-
-    updateRowEditBuffer(renderArgs, rowEditBuffer) {
-        renderArgs.updateRowEditBuffer(rowEditBuffer);
-        if (this.state.errorMsgs) {
-            this.setState({
-                errorMsgs: {}
-            });
-        }
-    }
-
-    onTextEditorChange(event, propertyName, renderArgs) {
-        const { rowEditBuffer } = renderArgs;
-        rowEditBuffer[propertyName] = event.target.value;
-        this.updateRowEditBuffer(renderArgs, rowEditBuffer);
+        return true;
     }
 
 
-    renderTextEditor(columnInfo, renderArgs) {
-        const { propertyName, ariaLabel, inputClassExtras } = columnInfo;
-        const { rowEditBuffer, setCellRef, onFocus, onBlur } = renderArgs;
-        const errorMsg = this.state.errorMsgs 
-            ? this.state.errorMsgs[propertyName]
-            : undefined;
-        
-        return <CellTextEditor
-            ariaLabel = {ariaLabel}
-            value = {rowEditBuffer[propertyName]}
-            inputClassExtras = {inputClassExtras}
-            errorMsg = {errorMsg}
-            onChange = {(event) => { 
-                this.onTextEditorChange(event, propertyName, renderArgs);
-            }}
-            onFocus = {onFocus}
-            onBlur = {onBlur}
-            ref = {setCellRef}
-        />;
-    }
-
-
-    onAccountTypeChange(event, renderArgs) {
-        const { rowEditBuffer } = renderArgs;
-        rowEditBuffer.type = event.target.value;
-        this.updateRowEditBuffer(renderArgs, rowEditBuffer);
-    }
-
-    renderAccountTypeEditor(renderArgs) {
-        const { cellInfo, rowEditBuffer, setCellRef,
-            onFocus, onBlur } = renderArgs;
-        const { rowInfo } = cellInfo;
-        const parentType = A.AccountType[rowInfo.parentType];
-
-        // If the account has kids, we need to restrict the allowed types.
-        const { childAccounts } = rowInfo.accountDataItem;
-        const items = [];
-        parentType.allowedChildTypes.forEach((type) => {
-            if (type.pricedItemType !== PricedItemType.CURRENCY) {
-                return;
-            }
-
-            let allowsChildren = true;
-            if (childAccounts) {
-                for (let i = childAccounts.length - 1; i >= 0; --i) {
-                    const childType = A.AccountType[childAccounts[i].type];
-                    if (type.allowedChildTypes.indexOf(childType) < 0) {
-                        allowsChildren = false;
-                        break;
-                    }
-                }
-            }
-            if (!allowsChildren) {
-                return;
-            }
-            items.push([type.name, type.description]);
-        });
-
-        return <CellSelectEditor
-            ariaLabel = "Account Type"
-            selectedValue = {rowEditBuffer.type}
-            items = {items}
-            onChange = {(event) => { 
-                this.onAccountTypeChange(event, renderArgs); 
-            }}
-            onFocus = {onFocus}
-            onBlur = {onBlur}
-            ref = {setCellRef}
-        />;
-    }
-
-    
-    onRenderEditCell({cellInfo, cellSettings, renderArgs}) {
-        const { rowInfo } = cellInfo;
-        if (!cellInfo.columnIndex) {
-            cellSettings.indent = rowInfo.depth;
-        }
-
-        const { columnInfo } = cellInfo;
-        switch (columnInfo.key) {
-        case 'type' :
-            return this.renderAccountTypeEditor(renderArgs);
-
-        case 'name' :
-            return this.renderTextEditor(columnInfo, renderArgs);
-
-        case 'description' :
-            return this.renderTextEditor(columnInfo, renderArgs);
-
-        case 'opening_balance' :
-            return this.renderTextEditor(columnInfo, renderArgs);
-
-        }
-    }
-
-
-    onRenderDisplayCell(args) {
-        const {rowIndex, columnIndex, isSizeRender, } = args;
-        if (!this._tableRef.current) {
-            return;
-        }
-        const rowInfo = this._tableRef.current.getRowInfoForIndex(rowIndex);
-        if (!rowInfo) {
-            return;
-        }
-
-        const { accountDataItem } = (isSizeRender) 
-            ? this._sizingRowInfo 
-            : rowInfo;
-        
-        const columnInfo = this.state.columnInfos[columnIndex];
-        switch (columnInfo.key) {
-        case 'type' :
-            return CE.renderAccountTypeDisplay(Object.assign({}, args, {
-                columnInfo: columnInfo,
-                value: accountDataItem.type
-            }));
-
-        case 'name' :
-            return CE.renderNameDisplay(Object.assign({}, args, {
-                columnInfo: columnInfo,
-                value: accountDataItem.name,
-            }));
-
-        case 'description' :
-            return CE.renderDescriptionDisplay(Object.assign({}, args, {
-                columnInfo: columnInfo,
-                value: accountDataItem.description,
-            }));
-
-        case 'opening_balance' :
-        {
-            const currency = C.USD;
-            return CE.renderBalanceDisplay(Object.assign({}, args, {
-                columnInfo: columnInfo,
-                quantityDefinition: currency.getQuantityDefinition(),
-                value: accountDataItem.openingBalance,
-            }));
-        }
-        }
+    setErrorMsg(propertyName, msg) {
+        this._cellEditorsManager.setErrorMsg(propertyName, msg);
     }
 
 
@@ -1126,23 +860,17 @@ export class NewFileAccountsEditor extends React.Component {
             rowInfos = {state.rowInfos}
             onExpandCollapseRow = {this.onExpandCollapseRow}
 
-            onRenderDisplayCell = {this.onRenderDisplayCell}
-            onRenderEditCell = {this.onRenderEditCell}
+            onRenderDisplayCell = {this._cellEditorsManager.onRenderDisplayCell}
+            onRenderEditCell = {this._cellEditorsManager.onRenderEditCell}
 
             requestedActiveRowIndex = {activeRowIndex}
             onActiveRowChanged = {this.onActiveRowChanged}
 
-            onStartRowEdit = {this.onStartRowEdit}
-            asyncOnSaveRowEdit = {this.asyncOnSaveRowEdit}
-            onCancelRowEdit = {this.onCancelRowEdit}
+            onStartRowEdit = {this._cellEditorsManager.onStartRowEdit}
+            asyncOnSaveRowEdit = {this._cellEditorsManager.asyncOnSaveRowEdit}
+            onCancelRowEdit = {this._cellEditorsManager.onCancelRowEdit}
 
             ref = {this._tableRef}
-
-        /*
-            onStartEditRow = {this.onStartEditRow}
-            onCancelEditRow = {this.onCancelEditRow}
-            asyncOnSaveEditRow = {this.asyncOnSaveEditRow}
-        */
         />;
     }
 }

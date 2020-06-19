@@ -511,10 +511,9 @@ NewFileAccountsEditor
 - Change reconcile state editor to be toggling button.
 - Add splits list editor.
 - Add split quantity editor.
+- Add adding new transaction for last row.
 
 - Convert NewFileAccountsEditor to CellEditors
-
-- Rename CellEditors.jsx as AccountingCellEditors.jsx.
 
 - Splits List:
     - Need appropriate sign for split values.

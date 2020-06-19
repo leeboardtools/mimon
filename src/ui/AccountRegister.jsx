@@ -16,17 +16,17 @@ const allColumnInfoDefs = {};
 function getTransactionCellValue(args) {
     const { rowEntry, columnInfo } = args;
     const { transactionDataItem } = rowEntry;
-    const { property } = columnInfo;
-    if (transactionDataItem && property) {
-        return transactionDataItem[property];
+    const { propertyName } = columnInfo;
+    if (transactionDataItem && propertyName) {
+        return transactionDataItem[propertyName];
     }
 }
 
 function saveTransactionCellValue(args) {
     const { saveBuffer, columnInfo, cellEditBuffer } = args;
-    const { property } = columnInfo;
-    if (saveBuffer && property) {
-        saveBuffer[property] = cellEditBuffer.value;
+    const { propertyName } = columnInfo;
+    if (saveBuffer && propertyName) {
+        saveBuffer[propertyName] = cellEditBuffer.value;
     }
 }
 
@@ -34,18 +34,18 @@ function saveTransactionCellValue(args) {
 function getSplitCellValue(args) {
     const { rowEntry, columnInfo } = args;
     const { transactionDataItem, splitIndex } = rowEntry;
-    const { property } = columnInfo;
-    if (transactionDataItem && property) {
-        return transactionDataItem.splits[splitIndex][property];
+    const { propertyName } = columnInfo;
+    if (transactionDataItem && propertyName) {
+        return transactionDataItem.splits[splitIndex][propertyName];
     }
 }
 
 function saveSplitCellValue(args) {
     const { rowEntry, columnInfo, cellEditBuffer, saveBuffer } = args;
     const { splitIndex } = rowEntry;
-    const { property } = columnInfo;
-    if (saveBuffer && property) {
-        saveBuffer.splits[splitIndex][property] = cellEditBuffer.value;
+    const { propertyName } = columnInfo;
+    if (saveBuffer && propertyName) {
+        saveBuffer.splits[splitIndex][propertyName] = cellEditBuffer.value;
     }
 }
 
@@ -240,7 +240,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputSize: -10,
                 cellClassName: cellClassName,
 
-                property: 'ymdDate',
+                propertyName: 'ymdDate',
                 getCellValue: getTransactionCellValue,
                 saveCellValue: saveTransactionCellValue,
                 renderDisplayCell: CE.renderDateDisplay,
@@ -256,7 +256,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputSize: -6,
                 cellClassName: cellClassName,
 
-                property: 'refNum',
+                propertyName: 'refNum',
                 getCellValue: getSplitCellValue,
                 saveCellValue: saveSplitCellValue,
                 renderDisplayCell: CE.renderRefNumDisplay,
@@ -285,7 +285,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputClassExtras: 'text-left',
                 cellClassName: cellClassName,
 
-                property: 'splits',
+                propertyName: 'splits',
                 getCellValue: getTransactionCellValue,
                 saveCellValue: saveTransactionCellValue,
                 renderDisplayCell: renderSplitsListDisplay,
@@ -301,7 +301,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 inputSize: 2,
                 cellClassName: cellClassName,
 
-                property: 'reconcileState',
+                propertyName: 'reconcileState',
                 getCellValue: getSplitCellValue,
                 saveCellValue: saveSplitCellValue,
                 renderDisplayCell: CE.renderReconcileStateDisplay,
@@ -440,13 +440,6 @@ export class AccountRegister extends React.Component {
         this.onLoadRows = this.onLoadRows.bind(this);
 
         this.onActiveRowChanged = this.onActiveRowChanged.bind(this);
-
-        this.onStartRowEdit = this.onStartRowEdit.bind(this);
-        this.onCancelRowEdit = this.onCancelRowEdit.bind(this);
-        this.asyncOnSaveRowEdit = this.asyncOnSaveRowEdit.bind(this);
-
-        this.onRenderDisplayCell = this.onRenderDisplayCell.bind(this);
-        this.onRenderEditCell = this.onRenderEditCell.bind(this);
 
         this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
 
@@ -1027,121 +1020,6 @@ export class AccountRegister extends React.Component {
     }
 
 
-    onStartRowEdit({ rowIndex, rowEditBuffer, cellEditBuffers,
-        asyncEndRowEdit, cancelRowEdit,
-        setRowEditBuffer, setCellEditBuffer}) {
-        
-        const rowEntry = this.state.rowEntries[rowIndex];
-        const { transactionDataItem } = rowEntry;
-        if (!transactionDataItem) {
-            return;
-        }
-
-        const { columnInfos } = this.state;
-        const cellBufferArgs = {
-            //caller: this,
-            rowEditBuffer: rowEditBuffer,
-            rowEntry: rowEntry,
-        };
-        for (let i = 0; i < columnInfos.length; ++i) {
-            const { getCellEditBufferValue } = columnInfos[i];
-            if (getCellEditBufferValue) {
-                cellBufferArgs.columnIndex = i;
-                cellBufferArgs.columnInfo = columnInfos[i];
-                cellEditBuffers[i].value = getCellEditBufferValue(cellBufferArgs);
-            }
-        }
-
-        this.setState({
-            editInfo: {
-                transactionId: transactionDataItem.id,
-                asyncEndRowEdit: asyncEndRowEdit,
-                cancelRowEdit: cancelRowEdit,
-                setRowEditBuffer: setRowEditBuffer, 
-                setCellEditBuffer: setCellEditBuffer,
-            },
-            errorMsgs: {}
-        });
-
-        return true;
-    }
-
-
-    onCancelRowEdit() {
-        this.setState({
-            editInfo: undefined,
-            errorMsgs: {}
-        });
-    }
-
-
-    async asyncOnSaveRowEdit(args) {
-        const { rowIndex, cellEditBuffers } = args;
-        const rowEntry = this.state.rowEntries[rowIndex];
-        const { transactionDataItem } = rowEntry;
-        if (!transactionDataItem) {
-            return;
-        }
-
-        const newTransactionDataItem 
-            = T.getTransactionDataItem(transactionDataItem, true);
-
-        const { columnInfos } = this.state;
-        const cellArgs = Object.assign({}, args,
-            {
-                transactionDataItem: newTransactionDataItem,
-                //caller: this,
-                rowEntry: rowEntry,
-            });
-        for (let i = 0; i < columnInfos.length; ++i) {
-            const columnInfo = columnInfos[i];
-            const { updateTransactionDataItem } = columnInfo;
-            if (updateTransactionDataItem) {
-                cellArgs.columnIndex = i;
-                cellArgs.columnInfo = columnInfo;
-                cellArgs.cellEditBuffer = cellEditBuffers[i];
-                updateTransactionDataItem(cellArgs);
-            }
-        }
-
-        try {
-            const { accessor } = this.props;
-            const accountingActions = accessor.getAccountingActions();
-            let action;
-            if ((rowIndex + 1) === this.state.rowEntries.length) {
-                // Last row is new transaction...
-                action = accountingActions.createAddTransactionsAction(
-                    newTransactionDataItem
-                );
-            }
-            else {
-                if (!T.areTransactionsSimilar(
-                    newTransactionDataItem, transactionDataItem)) {
-
-                    action = accountingActions.createModifyTransactionsAction(
-                        newTransactionDataItem
-                    );
-                }
-            }
-
-            if (action) {
-                await accessor.asyncApplyAction(action);
-            }
-        }
-        catch (e) {
-            this.setErrorMsg('description', e.toString());
-            return;
-        }
-
-        this.setState({
-            editInfo: undefined,
-            errorMsgs: {}
-        });
-
-        return true;
-    }
-
-
     setErrorMsg(key, msg) {
         this.setState({
             errorMsgs: {
@@ -1150,57 +1028,6 @@ export class AccountRegister extends React.Component {
         });
         return msg;
     }
-
-    
-    onRenderEditCell(args) {
-        const { columnIndex } = args;
-        const { columnInfos } = this.state;
-        const columnInfo = columnInfos[columnIndex];
-        const { renderEditor } = columnInfo;
-        if (!args.isSizeRender && renderEditor) {
-            return renderEditor(Object.assign({}, args, { 
-                //caller: this,
-                columnInfo: columnInfo,
-                setCellEditBuffer: (value) => {
-                    this.state.editInfo.setCellEditBuffer(columnIndex, value);
-                },
-                errorMsg: this.state.errorMsgs[columnInfo.key],
-            }));
-        }
-
-        return this.onRenderDisplayCell(args);
-    }
-
-
-    onRenderDisplayCell({rowIndex, columnIndex, isSizeRender}) {
-        if (rowIndex < 0) {
-            // Shouldn't happen...
-            return;
-        }
-
-        let rowEntry;
-        if (isSizeRender) {
-            rowEntry = this._sizingRowEntry;
-        }
-        else {
-            rowEntry = this.state.rowEntries[rowIndex];
-        }
-
-        if (!rowEntry) {
-            return;
-        }
-
-        const columnInfo = this.state.columnInfos[columnIndex];
-        const { renderDisplay } = columnInfo;
-        if (renderDisplay) {
-            return renderDisplay({
-                caller: this, 
-                columnInfo: columnInfo, 
-                rowEntry: rowEntry,
-            });
-        }
-    }
-
 
     render() {
         const { state } = this;

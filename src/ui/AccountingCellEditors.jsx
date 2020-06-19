@@ -5,7 +5,8 @@ import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor
 import { CellDateDisplay } from '../util-ui/CellDateEditor';
 import { CellQuantityDisplay } from '../util-ui/CellQuantityEditor';
 import { getQuantityDefinition } from '../util/Quantities';
-import { AccountType } from '../engine/Accounts';
+import * as A from '../engine/Accounts';
+import * as PI from '../engine/PricedItems';
 import { ReconcileState } from '../engine/Transactions';
 
 //
@@ -62,7 +63,7 @@ import { ReconcileState } from '../engine/Transactions';
 
 /**
  * @typedef {object}    CellTextEditorArgs
- * {@link CellEditorArgs} plus:
+ * {@link CellEditorArgs} where the cellEditBuffer's value property is:
  * @property {string}   value
  */
 
@@ -199,7 +200,7 @@ export function renderDescriptionDisplay(args) {
 
 /**
  * @typedef {object}    CellDateEditorArgs
- * {@link CellEditorArgs} plus:
+ * {@link CellEditorArgs} where the cellEditBuffer's value property is:
  * @property {string}   value
  */
 
@@ -235,9 +236,17 @@ export function renderDateDisplay(args) {
 
 
 /**
+ * @typedef {object}    CellAccountTypeValue
+ * @property {string}   accountType
+ * @property {AccountType|string}   [parentAccountType] Only needed for editing.
+ * @property {AccountDataItem}  [accountDataItem]   Only needed for editing.
+ */
+
+
+/**
  * @typedef {object}    CellAccountTypeEditorArgs
- * {@link CellEditorArgs} plus:
- * @property {string}   value
+ * {@link CellEditorArgs} where the cellEditBuffer's value property is:
+ * @property {CellAccountTypeValue}   value
  */
 
 /**
@@ -245,14 +254,65 @@ export function renderDateDisplay(args) {
  * @param {CellAccountTypeEditorArgs} args 
  */
 export function renderAccountTypeEditor(args) {
-    // TODO:
+    const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
+        refForFocus } = args;
+    const { value } = cellEditBuffer;
+    const parentAccountType = A.getAccountType(value.parentAccountType);
+    if (!parentAccountType) {
+        return;
+    }
+
+    const { accountDataItem } = value;
+    const childAccounts = (accountDataItem) 
+        ? accountDataItem.childAccounts : undefined;    
+
+    const items = [];
+    parentAccountType.allowedChildTypes.forEach((type) => {
+        if (type.pricedItemType !== PI.PricedItemType.CURRENCY) {
+            return;
+        }
+
+        let allowsChildren = true;
+        if (childAccounts) {
+            for (let i = childAccounts.length - 1; i >= 0; --i) {
+                const childType = A.AccountType[childAccounts[i].type];
+                if (type.allowedChildTypes.indexOf(childType) < 0) {
+                    allowsChildren = false;
+                    break;
+                }
+            }
+        }
+        if (!allowsChildren) {
+            return;
+        }
+        items.push([type.name, type.description]);
+    });
+
+    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+
+    return <CellSelectEditor
+        ariaLabel = {ariaLabel}
+        ref = {refForFocus}
+        selectedValue = {value.accountType || A.AccountType.ASSET.name}
+        items = {items}
+        classExtras = {inputClassExtras}
+        size = {inputSize}
+        onChange = {(e) => {
+            setCellEditBuffer({
+                value: Object.assign({}, value, {
+                    accountType: e.target.value,
+                }),
+            });
+        }}
+        errorMsg = {errorMsg}
+    />;
 }
 
 
 /**
  * @typedef {object}    CellAccountTypeDisplayArgs
  * @property {ColumnInfo} columnInfo
- * @property {string}   value
+ * @property {CellAccountTypeValue}   value
  */
 
 /**
@@ -261,7 +321,7 @@ export function renderAccountTypeEditor(args) {
  */
 export function renderAccountTypeDisplay(args) {
     const { columnInfo, value } = args;
-    const accountType = AccountType[value];
+    const accountType = A.AccountType[value.accountType];
     return <CellSelectDisplay
         ariaLabel = {columnInfo.ariaLabel}
         selectedValue = {accountType.description}
@@ -274,7 +334,7 @@ let reconcileItems;
 
 /**
  * @typedef {object}    CellReconcileStateEditorArgs
- * {@link CellEditorArgs} plus:
+ * {@link CellEditorArgs} where the cellEditBuffer's value property is:
  * @property {string}   value
  */
 
@@ -344,7 +404,7 @@ export function renderReconcileStateDisplay(args) {
 
 /**
  * @typedef {object}    CellQuantityEditorArgs
- * {@link CellEditorArgs} plus:
+ * {@link CellEditorArgs} where the cellEditBuffer's value property is:
  * @property {CellQuantityValue}    value
  */
 
@@ -356,6 +416,25 @@ export function renderReconcileStateDisplay(args) {
  */
 export function renderQuantityEditor(args) {
     // TODO:
+    /*
+    const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
+        refForFocus } = args;
+    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+    const value = cellEditBuffer.value || '';
+    return <CellTextEditor
+        ariaLabel = {ariaLabel}
+        ref = {refForFocus}
+        value = {value.toString()}
+        inputClassExtras = {inputClassExtras}
+        size = {inputSize}
+        onChange = {(e) => {
+            setCellEditBuffer({
+                value: e.target.value,
+            });
+        }}
+        errorMsg = {errorMsg}
+    />;
+    */
 }
 
 
@@ -425,7 +504,7 @@ export const renderSharesDisplay = renderQuantityDisplay;
 
 /**
  * @typedef {object}    CellSplitQuantityEditorArgs
- * {@link CellEditorArgs} plus:
+ * {@link CellEditorArgs} where the cellEditBuffer's value property is:
  * @property {CellSplitValue}    value
  */
 
