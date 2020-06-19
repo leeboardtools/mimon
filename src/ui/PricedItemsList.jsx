@@ -1,11 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { ActiveRowCollapsibleTable } from '../util-ui/ActiveRowTable';
-import { CellTextDisplay } from '../util-ui/CellTextEditor';
 import * as PI from '../engine/PricedItems';
 import deepEqual from 'deep-equal';
 import { getQuantityDefinition } from '../util/Quantities';
+import * as CE from './AccountingCellEditors';
+import { RowTable } from '../util-ui/RowTable';
+import { columnInfosToColumns, 
+    stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
 
 
 let columnInfoDefs;
@@ -21,46 +23,58 @@ export function getPricedItemsListColumnInfoDefs() {
 
         columnInfoDefs = columnInfoDefs = {
             name: { key: 'name',
-                label: userMsg('PricedItemsList-name'),
-                ariaLabel: 'Name',
+                header: {
+                    label: userMsg('PricedItemsList-name'),
+                    ariaLabel: 'Name',
+                },
                 propertyName: 'name',
                 className: '',
                 cellClassName: cellClassName,
             },
             description: { key: 'description',
-                label: userMsg('PricedItemsList-description'),
-                ariaLabel: 'Description',
+                header: {
+                    label: userMsg('PricedItemsList-description'),
+                    ariaLabel: 'Description',
+                },
                 propertyName: 'description',
                 className: '',
                 cellClassName: cellClassName,
             },
             currency: { key: 'currency',
-                label: userMsg('PricedItemsList-currency'),
-                ariaLabel: 'Currency',
+                header: {
+                    label: userMsg('PricedItemsList-currency'),
+                    ariaLabel: 'Currency',
+                },
                 propertyName: 'currency',
                 className: 'text-center w-10',
                 cellClassName: cellClassName,
                 inputClassExtras: inputClassExtras,
             },
             quantityDefinition: { key: 'quantityDefinition',
-                label: userMsg('PricedItemsList-quantityDefinition'),
-                ariaLabel: 'Quantity Definition',
+                header: {
+                    label: userMsg('PricedItemsList-quantityDefinition'),
+                    ariaLabel: 'Quantity Definition',
+                },
                 propertyName: 'quantityDefinition',
                 className: 'text-center w-10',
                 cellClassName: cellClassName,
                 inputClassExtras: inputClassExtras,
             },
             ticker: { key: 'ticker',
-                label: userMsg('PricedItemsList-ticker'),
-                ariaLabel: 'Ticker Symbol',
+                header: {
+                    label: userMsg('PricedItemsList-ticker'),
+                    ariaLabel: 'Ticker Symbol',
+                },
                 propertyName: 'ticker',
                 className: 'text-center w-10',
                 cellClassName: cellClassName,
                 inputClassExtras: inputClassExtras,
             },
             onlineSource: { key: 'onlineSource',
-                label: userMsg('PricedItemsList-onlineSource'),
-                ariaLabel: 'Online Source',
+                header: {
+                    label: userMsg('PricedItemsList-onlineSource'),
+                    ariaLabel: 'Online Source',
+                },
                 propertyName: 'onlineSource',
                 className: 'text-center',
                 cellClassName: cellClassName,
@@ -84,10 +98,12 @@ export class PricedItemsList extends React.Component {
         this.onPricedItemModify = this.onPricedItemModify.bind(this);
         this.onPricedItemRemove = this.onPricedItemRemove.bind(this);
 
+        this.getRowKey = this.getRowKey.bind(this);
+        this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
+
         this.onRenderCell = this.onRenderCell.bind(this);
-        this.onGetRowAtIndex = this.onGetRowAtIndex.bind(this);
         this.onActivateRow = this.onActivateRow.bind(this);
-        this.onOpenRow = this.onOpenRow.bind(this);
+        this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
 
         const { pricedItemTypeName } = this.props;
         const pricedItemType = PI.getPricedItemType(pricedItemTypeName);
@@ -124,6 +140,17 @@ export class PricedItemsList extends React.Component {
             columnInfos: columnInfos,
             rowEntries: [],
         };
+
+        this._sizingRowEntry = {
+            pricedItemDataItem: {
+                name: 'Name',
+                description: 'Description',
+                type: pricedItemTypeName,
+                ticker: 'WWWW',
+            }
+        };
+
+        this.state.columns = columnInfosToColumns(this.state);
 
         this.state.rowEntries = this.buildRowEntries().rowEntries;
     }
@@ -191,6 +218,7 @@ export class PricedItemsList extends React.Component {
             this.setState({
                 rowEntries: result.rowEntries,
                 activeRowKey: result.activeRowKey,
+                activeRowIndex: result.activeRowIndex,
             });
 
             if (prevActiveRowKey !== result.activeRowKey) {
@@ -222,11 +250,13 @@ export class PricedItemsList extends React.Component {
 
         let { activeRowKey } = this.state;
         let activeRowEntry;
+        let activeRowIndex;
         if (activeRowKey) {
             let currentIndex;
             for (currentIndex = 0; currentIndex < rowEntries.length; ++currentIndex) {
                 if (rowEntries[currentIndex].key === activeRowKey) {
                     activeRowEntry = rowEntries[currentIndex];
+                    activeRowIndex = currentIndex;
                     break;
                 }
             }
@@ -238,6 +268,7 @@ export class PricedItemsList extends React.Component {
 
         return {
             rowEntries: rowEntries,
+            activeRowIndex: activeRowIndex,
             activeRowKey: activeRowKey,
             activeRowEntry: activeRowEntry,
         };
@@ -283,25 +314,43 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    updateRowEntries(activeRowKey) {
+    updateRowEntries() {
         this.setState((state) => {
-            const rowEntries = this.buildRowEntries().rowEntries;
+            const result = this.buildRowEntries().rowEntries;
             return {
-                rowEntries: rowEntries,
-                activeRowKey: activeRowKey || state.activeRowKey,
+                rowEntries: result.rowEntries,
+                activeRowKey: result.activeRowKey,
+                activeRowIndex: result.activeRowIndex,
             };
         });
     }
 
 
-    onGetRowAtIndex(index) {
-        return this.state.rowEntries[index];
+
+    getRowKey(rowIndex) {
+        return this.state.rowEntries[rowIndex].key;
+    }
+
+    onSetColumnWidth(args) {
+        this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
     }
 
 
-    onActivateRow(rowEntry) {
+    /*
+    onGetRowAtIndex(index) {
+        return this.state.rowEntries[index];
+    }
+    */
+
+
+    onActivateRow(activeRowIndex) {
+        const rowEntry = (activeRowIndex !== undefined)
+            ? this.state.rowEntries[activeRowIndex]
+            : undefined;
+        const activeRowKey = (rowEntry) ? rowEntry.key : undefined;
         this.setState({
-            activeRowKey: rowEntry.key,
+            activeRowIndex: activeRowIndex,
+            activeRowKey: activeRowKey,
         });
 
         const { onSelectPricedItem } = this.props;
@@ -312,25 +361,14 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    onOpenRow(rowEntry) {
+    onOpenActiveRow({rowIndex}) {
+        const rowEntry = this.state.rowEntries[rowIndex];
         const { onChoosePricedItem } = this.props;
         const { pricedItemDataItem } = rowEntry;
         if (onChoosePricedItem && pricedItemDataItem) {
             onChoosePricedItem(pricedItemDataItem.id);
         }
     }
-
-
-    renderTextDisplay(columnInfo, value) {
-        const { ariaLabel, inputClassExtras } = columnInfo;
-        
-        return <CellTextDisplay
-            ariaLabel={ariaLabel}
-            value={value}
-            inputClassExtras={inputClassExtras}
-        />;
-    }
-
 
     renderCurrency(columnInfo, pricedItemDataItem) {
         let { currency } = pricedItemDataItem;
@@ -340,7 +378,10 @@ export class PricedItemsList extends React.Component {
             currency = userMsg('PricedItemsList-default_currency', 
                 accessor.getBaseCurrencyCode());
         }
-        return this.renderTextDisplay(columnInfo, currency);
+        return CE.renderTextDisplay({
+            columnInfo: columnInfo, 
+            currency: currency,
+        });
     }
 
 
@@ -348,8 +389,10 @@ export class PricedItemsList extends React.Component {
         const quantityDefinition 
             = getQuantityDefinition(pricedItemDataItem.quantityDefinition);
         if (quantityDefinition) {
-            return this.renderTextDisplay(columnInfo, 
-                quantityDefinition.getDisplayText());
+            return CE.renderTextDisplay({
+                columnInfo: columnInfo, 
+                value: quantityDefinition.getDisplayText(),
+            });
         }
     }
 
@@ -358,7 +401,10 @@ export class PricedItemsList extends React.Component {
         const onlineUpdateType = PI.getPricedItemOnlineUpdateType(
             pricedItemDataItem.onlineUpdateType);
         if (onlineUpdateType) {
-            return this.renderTextDisplay(columnInfo, onlineUpdateType.description);
+            return CE.renderTextDisplay({
+                columnInfo: columnInfo, 
+                value: onlineUpdateType.description,
+            });
         }
     }
 
@@ -383,9 +429,10 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    onRenderCell({ cellInfo, cellSettings }) {
-        const { rowEntry } = cellInfo;
-        // id - x
+    onRenderCell({ rowIndex, columnIndex, isSizeRender }) {
+        const rowEntry = (isSizeRender)
+            ? this._sizingRowEntry
+            : this.state.rowEntries[rowIndex];
         // type - x
         // name
         // currency
@@ -395,17 +442,19 @@ export class PricedItemsList extends React.Component {
         // online update type
 
         const { pricedItemDataItem } = rowEntry;
-        const { columnInfo } = cellInfo;
+        const columnInfo = this.state.columnInfos[columnIndex];
         switch (columnInfo.key) {
         case 'name' :
-            if (this.props.showPricedItemIds) {
-                return this.renderTextDisplay(columnInfo, 
-                    pricedItemDataItem.name + ' ' + pricedItemDataItem.id);
-            }
-            return this.renderTextDisplay(columnInfo, pricedItemDataItem.name);
+            return CE.renderNameDisplay({
+                columnInfo: columnInfo,
+                value: pricedItemDataItem.name,
+            });
         
         case 'description' :
-            return this.renderTextDisplay(columnInfo, pricedItemDataItem.description);
+            return CE.renderDescriptionDisplay({
+                columnInfo: columnInfo,
+                value: pricedItemDataItem.name,
+            });
         
         case 'currency' :
             return this.renderCurrency(columnInfo, pricedItemDataItem);
@@ -415,7 +464,10 @@ export class PricedItemsList extends React.Component {
                 columnInfo, pricedItemDataItem);
         
         case 'ticker' :
-            return this.renderTextDisplay(columnInfo, pricedItemDataItem.ticker);
+            return CE.renderTextDisplay({
+                columnInfo: columnInfo, 
+                value: pricedItemDataItem.ticker,
+            });
         
         case 'onlineSource' :
             return this.renderOnlineSource(
@@ -438,20 +490,64 @@ export class PricedItemsList extends React.Component {
 
     render() {
         const { state } = this;
-        return <div>
-            <ActiveRowCollapsibleTable
+        return <div className="RowTableContainer PricedItemsList">
+            <RowTable
+                columns = { state.columns }
+                rowCount = { state.rowEntries.length }
+                getRowKey = { this.getRowKey }
+
+                onRenderCell={this.onRenderCell}
+
+                onSetColumnWidth = { this.onSetColumnWidth }
+
+                activeRowIndex = {state.activeRowIndex}
+                onActivateRow = {this.onActivateRow}
+
+                onOpenActiveRow = {this.onOpenActiveRow}
+            /*
                 columnInfos={state.columnInfos}
                 rowEntries={state.rowEntries}
-                activeRowKey={state.activeRowKey}
-                onRenderCell={this.onRenderCell}
                 onGetRowAtIndex={this.onGetRowAtIndex}
-                onActivateRow={this.onActivateRow}
                 onOpenRow={this.onOpenRow}
                 contextMenuItems={this.props.contextMenuItems}
                 onChooseContextMenuItem={this.props.onChooseContextMenuItem}
+            */
             />
             {this.props.children}
         </div>;
+        /*
+
+    onLoadRows: PropTypes.func,
+
+    onRenderCell: PropTypes.func.isRequired,
+
+    requestedVisibleRowIndex: PropTypes.number,
+
+    onSetColumnWidth: PropTypes.func,
+
+    rowHeight: PropTypes.number,
+    headerHeight: PropTypes.number,
+    footerHeight: PropTypes.number,
+
+    activeRowIndex: PropTypes.number,
+    onActivateRow: PropTypes.func,
+    noActiveRowFocus: PropTypes.bool,
+
+    onOpenActiveRow: PropTypes.func,
+
+    onKeyDown: PropTypes.func,
+    onRowDoubleClick: PropTypes.func,
+
+    onContextMenu: PropTypes.func,
+    contextMenuItems: PropTypes.array,
+    onChooseContextMenuItem: PropTypes.func,
+
+    classExtras: PropTypes.string,
+    headerClassExtras: PropTypes.string,
+    bodyClassExtras: PropTypes.string,
+    rowClassExtras: PropTypes.string,
+    footerClassExtras: PropTypes.string,
+        */
     }
 }
 

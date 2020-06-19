@@ -1009,8 +1009,6 @@ export class AccountRegister extends React.Component {
 
                 onLoadRows = {this.onLoadRows}
 
-                //onRenderCell: PropTypes.func.isRequired,
-
                 onSetColumnWidth = {this.onSetColumnWidth}
 
                 //rowHeight: PropTypes.number,

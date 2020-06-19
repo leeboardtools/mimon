@@ -485,16 +485,6 @@ Current set of table classes:
     RowEditCollapsibleTable = rowEditTable(CollapsibleRowTableOld)
         - NewFileConfigurator (also uses collapsible table stuff)
 
-    /**
-    * React HOC function that adds keyboard and mouse support to a table component 
-    * for tracking an active row. The caller must maintain the active row.
-    * Adds {@link ActiveRowTable~Props} to the wrapped table's properties.
-    * @name ActiveRowTable
-    * @class
-    */
-    ActiveRowCollapsibleTable = activeRowTable(CollapsibleRowTableOld);
-        - PricedItemsList
-
 
 
 - RowTable To Do:

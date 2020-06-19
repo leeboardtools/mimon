@@ -652,7 +652,7 @@ class DecimalDefinition extends QuantityDefinition {
 
     static fromName(name) {
         const prefix = 'DecimalDefinition_';
-        if (!name.startsWith(prefix)) {
+        if (!name || !name.startsWith(prefix)) {
             return;
         }
 
