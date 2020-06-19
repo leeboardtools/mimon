@@ -790,87 +790,89 @@ export class RowTable extends React.Component {
         }
 
         const rows = [];
-        for (let i = firstRow; i <= lastRow; ++i) {
-            const cells = [];
-            for (let c = 0; c < columns.length; ++c) {
-                const column = columns[c];
-                const cell = onRenderCell({
-                    rowIndex: i, 
-                    columnIndex: c, 
-                    column: column,
-                    isSizeRender: sizeRenderRefs,
-                });
+        if (sizeRenderRefs || (topVisibleRow >= 0)) {
+            for (let i = firstRow; i <= lastRow; ++i) {
+                const cells = [];
+                for (let c = 0; c < columns.length; ++c) {
+                    const column = columns[c];
+                    const cell = onRenderCell({
+                        rowIndex: i, 
+                        columnIndex: c, 
+                        column: column,
+                        isSizeRender: sizeRenderRefs,
+                    });
 
-                let cellClassName = 'RowTableCell RowTableRowCell';
+                    let cellClassName = 'RowTableCell RowTableRowCell';
 
-                if (column.cellClassExtras) {
-                    cellClassName += ' ' + column.cellClassExtras;
+                    if (column.cellClassExtras) {
+                        cellClassName += ' ' + column.cellClassExtras;
+                    }
+
+                    let style;
+                    const width = columnWidths[c];
+                    if (width !== undefined) {
+                        style = {
+                            width: width,
+                        };
+                    }
+
+                    let ref;
+                    if (sizeRenderRefs) {
+                        ref = sizeRenderRefs.columnRefs[c].bodyCellRef;
+                    }
+
+                    cells.push(<div className = {cellClassName}
+                        style = {style}
+                        key = {c}
+                        ref = {ref}
+                        onClick = {(e) => this.onRowClick(e, i, c)}
+                        onDoubleClick = {(e) => this.onRowDoubleClick(e, i, c)}
+                    >
+                        {cell}
+                    </div>);
                 }
 
+                let rowClassName = 'RowTableRow';
+                if (i === activeRowIndex) {
+                    rowClassName += ' table-active';
+                }
+                if (rowClassExtras) {
+                    rowClassName += ' ' + rowClassExtras;
+                }
+
+                let tabIndex = -1;
                 let style;
-                const width = columnWidths[c];
-                if (width !== undefined) {
-                    style = {
-                        width: width,
-                    };
-                }
-
                 let ref;
                 if (sizeRenderRefs) {
-                    ref = sizeRenderRefs.columnRefs[c].bodyCellRef;
+                    ref = sizeRenderRefs.bodyRowRef;
+                }
+                else {
+                    if (bodyRowHeight !== undefined) {
+                        style = {
+                            height: bodyRowHeight,
+                        };
+                    }
+                    if (i === activeRowIndex) {
+                        tabIndex = 0;
+                        this._activeRowRef = React.createRef();
+                        ref = this._activeRowRef;
+                    }
                 }
 
-                cells.push(<div className = {cellClassName}
+                rows.push(<div className = {rowClassName}
+                    key = {getRowKey(i)}
                     style = {style}
-                    key = {c}
                     ref = {ref}
-                    onClick = {(e) => this.onRowClick(e, i, c)}
-                    onDoubleClick = {(e) => this.onRowDoubleClick(e, i, c)}
+                    tabIndex = {tabIndex}
+                    onKeyDown = {this.onKeyDown}
                 >
-                    {cell}
+                    {cells}
                 </div>);
-            }
 
-            let rowClassName = 'RowTableRow';
-            if (i === activeRowIndex) {
-                rowClassName += ' table-active';
-            }
-            if (rowClassExtras) {
-                rowClassName += ' ' + rowClassExtras;
-            }
-
-            let tabIndex = -1;
-            let style;
-            let ref;
-            if (sizeRenderRefs) {
-                ref = sizeRenderRefs.bodyRowRef;
-            }
-            else {
-                if (bodyRowHeight !== undefined) {
-                    style = {
-                        height: bodyRowHeight,
-                    };
+                if (sizeRenderRefs) {
+                    // If we're fixed height rows only render a single row.
+                    break;
                 }
-                if (i === activeRowIndex) {
-                    tabIndex = 0;
-                    this._activeRowRef = React.createRef();
-                    ref = this._activeRowRef;
-                }
-            }
-
-            rows.push(<div className = {rowClassName}
-                key = {getRowKey(i)}
-                style = {style}
-                ref = {ref}
-                tabIndex = {tabIndex}
-                onKeyDown = {this.onKeyDown}
-            >
-                {cells}
-            </div>);
-
-            if (sizeRenderRefs) {
-                // If we're fixed height rows only render a single row.
-                break;
             }
         }
 
