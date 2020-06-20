@@ -166,8 +166,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                 disabled: !activePricedItemId,
                 onChooseItem: () => this.onOpenPricedItemRegister(tabId),
             },
-            */
             {},
+            */
             { id: 'newPricedItem',
                 label: userMsg('PricedItemsListHandler-newPricedItem', 
                     typeDescription),

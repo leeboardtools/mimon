@@ -122,10 +122,6 @@ export class ContextMenu extends React.Component {
             top: this.state.top,
             left: this.state.left,
         };
-        if (this.state.right !== undefined) {
-            style.right = this.state.right;
-            style.bottom = this.state.bottom;
-        }
 
         let menuComponent;
         if (show) {
