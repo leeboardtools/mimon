@@ -26,6 +26,7 @@ export function getPricedItemsListColumnInfoDefs() {
                 header: {
                     label: userMsg('PricedItemsList-name'),
                     ariaLabel: 'Name',
+                    classExtras: 'text-left',
                 },
                 propertyName: 'name',
                 className: '',
@@ -35,6 +36,7 @@ export function getPricedItemsListColumnInfoDefs() {
                 header: {
                     label: userMsg('PricedItemsList-description'),
                     ariaLabel: 'Description',
+                    classExtras: 'text-left',
                 },
                 propertyName: 'description',
                 className: '',
@@ -143,9 +145,10 @@ export class PricedItemsList extends React.Component {
 
         this._sizingRowEntry = {
             pricedItemDataItem: {
-                name: 'Name',
-                description: 'Description',
+                name: userMsg('PricedItemsList-dummy_name'),
+                description: userMsg('PricedItemsList-dummy_description'),
                 type: pricedItemTypeName,
+                onlineUpdateType: PI.PricedItemOnlineUpdateType.YAHOO_FINANCE.name,
                 ticker: 'WWWW',
             }
         };
@@ -328,19 +331,15 @@ export class PricedItemsList extends React.Component {
 
 
     getRowKey(rowIndex) {
-        return this.state.rowEntries[rowIndex].key;
+        const rowEntry = this.state.rowEntries[rowIndex];
+        if (rowEntry) {
+            return rowEntry.key;
+        }
     }
 
     onSetColumnWidth(args) {
         this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
     }
-
-
-    /*
-    onGetRowAtIndex(index) {
-        return this.state.rowEntries[index];
-    }
-    */
 
 
     onActivateRow(activeRowIndex) {
@@ -380,7 +379,7 @@ export class PricedItemsList extends React.Component {
         }
         return CE.renderTextDisplay({
             columnInfo: columnInfo, 
-            currency: currency,
+            value: currency,
         });
     }
 
@@ -504,50 +503,12 @@ export class PricedItemsList extends React.Component {
                 onActivateRow = {this.onActivateRow}
 
                 onOpenActiveRow = {this.onOpenActiveRow}
-            /*
-                columnInfos={state.columnInfos}
-                rowEntries={state.rowEntries}
-                onGetRowAtIndex={this.onGetRowAtIndex}
-                onOpenRow={this.onOpenRow}
+
                 contextMenuItems={this.props.contextMenuItems}
                 onChooseContextMenuItem={this.props.onChooseContextMenuItem}
-            */
             />
             {this.props.children}
         </div>;
-        /*
-
-    onLoadRows: PropTypes.func,
-
-    onRenderCell: PropTypes.func.isRequired,
-
-    requestedVisibleRowIndex: PropTypes.number,
-
-    onSetColumnWidth: PropTypes.func,
-
-    rowHeight: PropTypes.number,
-    headerHeight: PropTypes.number,
-    footerHeight: PropTypes.number,
-
-    activeRowIndex: PropTypes.number,
-    onActivateRow: PropTypes.func,
-    noActiveRowFocus: PropTypes.bool,
-
-    onOpenActiveRow: PropTypes.func,
-
-    onKeyDown: PropTypes.func,
-    onRowDoubleClick: PropTypes.func,
-
-    onContextMenu: PropTypes.func,
-    contextMenuItems: PropTypes.array,
-    onChooseContextMenuItem: PropTypes.func,
-
-    classExtras: PropTypes.string,
-    headerClassExtras: PropTypes.string,
-    bodyClassExtras: PropTypes.string,
-    rowClassExtras: PropTypes.string,
-    footerClassExtras: PropTypes.string,
-        */
     }
 }
 

@@ -482,6 +482,9 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
 - Fix AccountEditor modifying root account.
 
 
+PricedItemsEditor
+    - Double click needs to open priced item editor
+
 NewFileAccountsEditor
     - Get editing working.
 
@@ -490,8 +493,6 @@ NewFileAccountsEditor
 - Add splits list editor.
 - Add split quantity editor.
 - Add adding new transaction for last row.
-
-- Convert PricedItemsList to CellEditors
 
 - Splits List:
     - Need appropriate sign for split values.
