@@ -50,6 +50,7 @@ export function renderTextEditor(args) {
         refForFocus } = args;
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
     const value = cellEditBuffer.value || '';
+
     return <CellTextEditor
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
@@ -65,11 +66,27 @@ export function renderTextEditor(args) {
     />;
 }
 
+function renderTextEditorWithTooltips(args, valueProperty) {
+    const { cellEditBuffer } = args;
+    let { value } = cellEditBuffer;
+    if (typeof value === 'object') {
+        args = Object.assign({}, args, {
+            value: value[valueProperty],
+        });
+    }
+    return renderTextEditor(args);
+}
+
+/**
+ * @typedef {object}    CellTextValue
+ * @property {string|number}    value
+ * @property {string}   tooltip
+ */
 
 /**
  * @typedef {object}    CellTextDisplayArgs
  * @property {ColumnInfo} columnInfo
- * @property {string|number}    value
+ * @property {string|number|CellTextValue}  value
  */
 
 /**
@@ -80,15 +97,30 @@ export function renderTextDisplay(args) {
     const { columnInfo } = args;
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
     let value = args.value;
+    let tooltip;
     if ((value === undefined) || (value === null)) {
         value = '';
     }
-    return <CellTextDisplay
+    else if (typeof value === 'object') {
+        tooltip = value.tooltip;
+        value = value.value;
+    }
+    
+    const component = <CellTextDisplay
         ariaLabel = {ariaLabel}
         value = {value.toString()}
         inputClassExtras = {inputClassExtras}
         size = {inputSize}
     />;
+
+    if (tooltip) {
+        return <div className = "simple-tooltip">
+            {component}
+            <div className = "simple-tooltiptext">{tooltip}</div>
+        </div>;
+    }
+
+    return component;
 }
 
 
@@ -123,18 +155,7 @@ export const renderRefNumDisplay = renderTextDisplay;
  * @param {CellNameEditorArgs}  args
  */
 export function renderNameEditor(args) {
-    const { cellEditBuffer } = args;
-    if (cellEditBuffer) {
-        const { value } = cellEditBuffer;
-        if (typeof value === 'object') {
-            args = Object.assign({}, args, {
-                cellEditBuffer: {
-                    value: value.name,
-                }
-            });
-        }
-    }
-    return renderTextEditor(args);
+    return renderTextEditorWithTooltips(args, 'name');
 }
 
 
@@ -152,17 +173,12 @@ export function renderNameDisplay(args) {
     const { value } = args;
     if (typeof value === 'object') {
         args = Object.assign({}, args, {
-            value: value.name
+            value: {
+                value: value.name,
+                tooltip: value.description,
+            },
         });
 
-        const { description } = value;
-        if (description) {
-            const descriptionComponent = renderTextDisplay(args);
-            return <div className = "simple-tooltip">
-                {descriptionComponent}
-                <div className = "simple-tooltiptext">{description}</div>
-            </div>;
-        }
     }
 
     return renderTextDisplay(args);
@@ -187,18 +203,7 @@ export function renderNameDisplay(args) {
  * @param {CellDescriptionEditorArgs}  args
  */
 export function renderDescriptionEditor(args) {
-    const { cellEditBuffer } = args;
-    if (cellEditBuffer) {
-        const { value } = cellEditBuffer;
-        if (typeof value === 'object') {
-            args = Object.assign({}, args, {
-                cellEditBuffer: {
-                    value: value.description,
-                }
-            });
-        }
-    }
-    return renderTextEditor(args);
+    return renderTextEditorWithTooltips(args, 'description');
 }
 
 
@@ -215,16 +220,12 @@ export function renderDescriptionEditor(args) {
 export function renderDescriptionDisplay(args) {
     const { value } = args;
     if (typeof value === 'object') {
-        args = Object.assign({}, args, { value: value.description, });
-
-        const { memo } = value;
-        if (memo) {
-            const descriptionComponent = renderTextDisplay(args);
-            return <div className = "simple-tooltip">
-                {descriptionComponent}
-                <div className = "simple-tooltiptext">{memo}</div>
-            </div>;
-        }
+        args = Object.assign({}, args, { 
+            value: {
+                value: value.description, 
+                tooltip: value.memo,
+            },
+        });
     }
 
     return renderTextDisplay(args);
