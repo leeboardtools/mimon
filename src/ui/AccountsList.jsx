@@ -456,7 +456,10 @@ export class AccountsList extends React.Component {
         case 'name' :
             return CE.renderNameDisplay({
                 columnInfo: columnInfo,
-                value: accountDataItem.name,
+                value: {
+                    name: accountDataItem.name,
+                    description: accountDataItem.description,
+                }
             });
         
         case 'type' :

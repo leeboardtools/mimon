@@ -11,6 +11,22 @@ import { ReconcileState, getReconcileStateName } from '../engine/Transactions';
 import { getCurrency } from '../util/Currency';
 
 
+/*
+ * About the design:
+ * The idea is to support {@link CellEditorsManager}'s 
+ * {@link CellEditorsManager~ColumnInfo} callbacks directly for both the display
+ * and editor renderers.
+ * 
+ * The editors should have an args that's based upon {@link CellEditorArgs} and
+ * has one additional property, named value, which is the result of the 
+ * getCellValue() callback.
+ * 
+ * The displayers should have an args that's just a columnInfo and a value
+ * property, where the value property is the result of the getCellValue()
+ * callback.
+ */
+
+
 /**
  * @typedef {object}    CellEditorArgs
  * {@link EditableRowTable~onRenderEditCellArgs} plus:
@@ -89,24 +105,86 @@ export const renderRefNumEditor = renderTextEditor;
 export const renderRefNumDisplay = renderTextDisplay;
 
 
+/**
+ * @typedef {object}    CellNameDescriptionValue
+ * @property {string}   [name]
+ * @property {string}   [description]
+ */
+
+
+/**
+ * @typedef {object}    CellNameEditorArgs
+ * {@link CellEditorArgs} where the cellEditBuffer's value property is:
+ * @property {string|CellNameDescriptionValue}   value
+ */
 
 /**
  * Editor renderer for name properties.
- * @param {CellTextEditorArgs}  args
+ * @param {CellNameEditorArgs}  args
  */
-export const renderNameEditor = renderTextEditor;
+export function renderNameEditor(args) {
+    const { cellEditBuffer } = args;
+    if (cellEditBuffer) {
+        const { value } = cellEditBuffer;
+        if (typeof value === 'object') {
+            args = Object.assign({}, args, {
+                cellEditBuffer: {
+                    value: value.name,
+                }
+            });
+        }
+    }
+    return renderTextEditor(args);
+}
+
+
+/**
+ * @typedef {object}    CellNameDisplayArgs
+ * @property {ColumnInfo} columnInfo
+ * @property {string|number|CellNameDescriptionValue}   value
+ */
 
 /**
  * Display renderer for name properties.
- * @param {CellTextDisplayArgs} args
+ * @param {CellNameDisplayArgs} args
  */
-export const renderNameDisplay = renderTextDisplay;
+export function renderNameDisplay(args) {
+    const { value } = args;
+    if (typeof value === 'object') {
+        args = Object.assign({}, args, {
+            value: value.name
+        });
 
+        const { description } = value;
+        if (description) {
+            const descriptionComponent = renderTextDisplay(args);
+            return <div className = "simple-tooltip">
+                {descriptionComponent}
+                <div className = "simple-tooltiptext">{description}</div>
+            </div>;
+        }
+    }
+
+    return renderTextDisplay(args);
+}
 
 
 /**
+ * @typedef {object}    CellDescriptionMemoValue
+ * @property {string}   [description]
+ * @property {string}   [memo]
+ */
+
+
+/**
+ * @typedef {object}    CellDescriptionEditorArgs
+ * {@link CellEditorArgs} where the cellEditBuffer's value property is:
+ * @property {string|CellDescriptionMemoValue}   value
+ */
+
+/**
  * Editor renderer for description properties.
- * @param {CellTextEditorArgs}  args
+ * @param {CellDescriptionEditorArgs}  args
  */
 export function renderDescriptionEditor(args) {
     const { cellEditBuffer } = args;
@@ -125,31 +203,28 @@ export function renderDescriptionEditor(args) {
 
 
 /**
- * @typedef {object}    CellDescriptionMemo
- * @property {string}   [description]
- * @property {string}   [memo]
- */
-
-/**
- * @typedef {object}    renderTextDisplayArgs
+ * @typedef {object}    CellDescriptionMemoDisplayArgs
  * @property {ColumnInfo} columnInfo
- * @property {string|number|CellDescriptionMemo}    value
+ * @property {string|number|CellDescriptionMemoValue}   value
  */
 
 /**
  * Display renderer for description properties.
- * @param {renderTextDisplayArgs} args
+ * @param {CellDescriptionMemoDisplayArgs} args
  */
 export function renderDescriptionDisplay(args) {
     const { value } = args;
-    if ((typeof value === 'object') && value.memo) {
-        const { memo } = value;
+    if (typeof value === 'object') {
         args = Object.assign({}, args, { value: value.description, });
-        const descriptionComponent = renderTextDisplay(args);
-        return <div className = "simple-tooltip">
-            {descriptionComponent}
-            <div className = "simple-tooltiptext">{memo}</div>
-        </div>;
+
+        const { memo } = value;
+        if (memo) {
+            const descriptionComponent = renderTextDisplay(args);
+            return <div className = "simple-tooltip">
+                {descriptionComponent}
+                <div className = "simple-tooltiptext">{memo}</div>
+            </div>;
+        }
     }
 
     return renderTextDisplay(args);
@@ -548,48 +623,6 @@ export const renderSharesDisplay = renderQuantityDisplay;
  */
 
 
-/**
- * @typedef {object}    CellSplitQuantityEditorArgs
- * {@link CellEditorArgs} where the cellEditBuffer's value property is:
- * @property {CellSplitValue}    value
- */
-
-
-/**
- * Editor renderer for bought/sold split entries.
- * @param {CellSplitQuantityEditorArgs}  args
- */
-export function renderSplitQuantityEditor(args) {
-    /*
-    const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
-        refForFocus } = args;
-    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
-    const value = cellEditBuffer.value;
-    if (!value) {
-        return;
-    }
-
-    const { accessor, split, accountType, splitQuantityType, } = args.value;
-
-    return <CellQuantityEditor
-        ariaLabel = {ariaLabel}
-        ref = {refForFocus}
-        value = {quantityBaseValue}
-        inputClassExtras = {inputClassExtras}
-        size = {inputSize}
-        onChange = {(e) => {
-            setCellEditBuffer({
-                value: {
-                    quantityBaseValue: e.target.value,
-                    quantityDefinition: quantityDefinition,
-                },
-            });
-        }}
-        errorMsg = {errorMsg}
-    />;
-    */
-}
-
 
 /**
  * @typedef {object}    CellSplitQuantityDisplayArgs
@@ -645,6 +678,48 @@ function getSplitQuantityInfo(args, value) {
         isLots: isLots,
         quantityBaseValue: quantityBaseValue,
     };
+}
+
+/**
+ * @typedef {object}    CellSplitQuantityEditorArgs
+ * {@link CellEditorArgs} where the cellEditBuffer's value property is:
+ * @property {CellSplitValue}    value
+ */
+
+
+/**
+ * Editor renderer for bought/sold and credit/debit split entries.
+ * @param {CellSplitQuantityEditorArgs}  args
+ */
+export function renderSplitQuantityEditor(args) {
+    /*
+    const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
+        refForFocus } = args;
+    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+    const value = cellEditBuffer.value;
+    if (!value) {
+        return;
+    }
+
+    const { accessor, split, accountType, splitQuantityType, } = args.value;
+
+    return <CellQuantityEditor
+        ariaLabel = {ariaLabel}
+        ref = {refForFocus}
+        value = {quantityBaseValue}
+        inputClassExtras = {inputClassExtras}
+        size = {inputSize}
+        onChange = {(e) => {
+            setCellEditBuffer({
+                value: {
+                    quantityBaseValue: e.target.value,
+                    quantityDefinition: quantityDefinition,
+                },
+            });
+        }}
+        errorMsg = {errorMsg}
+    />;
+    */
 }
 
 
