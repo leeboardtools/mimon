@@ -92,6 +92,7 @@ function getOpeningBalanceCellValue(args) {
         if (typeof value !== 'object') {
             return {
                 quantityBaseValue: (value === undefined) ? 0 : value,
+                currency: rowEntry.baseCurrency,
             };
         }
         return value;
@@ -313,6 +314,7 @@ export class NewFileAccountsEditor extends React.Component {
                     : ExpandCollapseState.EXPANDED)
                 : ExpandCollapseState.NO_EXPAND_COLLAPSE,
             accountDataItem: accountDataItem,
+            baseCurrency: this.props.baseCurrency,
         };
         rowInfos.push(rowInfo);
 
@@ -359,7 +361,8 @@ export class NewFileAccountsEditor extends React.Component {
 
 
     componentDidUpdate(prevProps, prevState) {
-        if (!deepEqual(prevProps.rootAccountDataItems, this.props.rootAccountDataItems)) {
+        if (!deepEqual(prevProps.rootAccountDataItems, this.props.rootAccountDataItems)
+         || (prevProps.baseCurrency !== this.props.baseCurrency)) {
             this.updateRowInfos();
         }
 
@@ -714,8 +717,8 @@ export class NewFileAccountsEditor extends React.Component {
 
     async asyncSaveBuffer(args) {
         const { rowIndex, saveBuffer } = args;
-        const currency = C.USD;
         const rowEntry = this._tableRef.current.getRowInfoForIndex(rowIndex);
+        const currency = C.getCurrency(rowEntry.baseCurrency || C.USD);
         const newRootAccountDataItems 
             = cloneAccountDataItems(this.props.rootAccountDataItems);
         const accountDataItem = findAccountDataItemWithId(
@@ -741,7 +744,8 @@ export class NewFileAccountsEditor extends React.Component {
             // Validating the opening balance....
             if (openingBalance !== '') {
                 try {
-                    currency.baseValueFromString(openingBalance);
+                    openingBalance = currency.baseValueFromString(openingBalance);
+                    openingBalance = currency.baseValueToNoCurrencyString(openingBalance);
                 }
                 catch (e) {
                     return this.setErrorMsg('openingBalance',
@@ -879,6 +883,7 @@ export class NewFileAccountsEditor extends React.Component {
 NewFileAccountsEditor.propTypes = {
     accountCategory: PropTypes.string.isRequired,
     rootAccountDataItems: PropTypes.array.isRequired,
+    baseCurrency: PropTypes.string,
     onUpdateRootAccountDataItems: PropTypes.func.isRequired,
     onNewAccount: PropTypes.func.isRequired,
     onRemoveAccount: PropTypes.func.isRequired,

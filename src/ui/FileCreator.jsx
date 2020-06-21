@@ -57,23 +57,23 @@ class NewFileName extends React.Component {
         const label = userMsg('NewFileName-baseDir_selector_label');
         const browseText = userMsg('NewFileName-browse_btn');
 
-        return <div className="form-group text-left">
-            <label className="mb-0" htmlFor="NewFileName-baseDir">
+        return <div className = "form-group text-left">
+            <label className = "mb-0" htmlFor = "NewFileName-baseDir">
                 {label}
             </label>
-            <div className="input-group mb-0">
-                <input type="text"
-                    id="NewFileName-baseDir"
-                    className="form-control"
+            <div className = "input-group mb-0">
+                <input type = "text"
+                    id = "NewFileName-baseDir"
+                    className = "form-control"
                     readOnly
-                    aria-label="Base Folder"
-                    value={this.props.baseDirName}/>
-                <div className="input-group-append">
-                    <button className="btn btn-outline-secondary" 
-                        type="button"
-                        id="browse_btn"
-                        aria-label="Browse Base Folder"
-                        onClick={this.onBrowse}>
+                    aria-label = "Base Folder"
+                    value = {this.props.baseDirName}/>
+                <div className = "input-group-append">
+                    <button className = "btn btn-outline-secondary" 
+                        type = "button"
+                        id = "browse_btn"
+                        aria-label = "Browse Base Folder"
+                        onClick = {this.onBrowse}>
                         {browseText}
                     </button>
                 </div>
@@ -100,22 +100,22 @@ class NewFileName extends React.Component {
         let errorMsgComponent;
         if (projectNameErrorMsg) {
             inputClassName += ' is-invalid';
-            errorMsgComponent = <div className="invalid-feedback">
+            errorMsgComponent = <div className = "invalid-feedback">
                 {projectNameErrorMsg}
             </div>;
         }
 
-        return <div className="form-group text-left">
-            <label className="mb-0" htmlFor="NewFileName-projectName">
+        return <div className = "form-group text-left">
+            <label className = "mb-0" htmlFor = "NewFileName-projectName">
                 {label}
             </label>
-            <div className="input-group mb-0">
-                <input type="text"
-                    id="NewFileName-projectName"
-                    className={inputClassName}
-                    onChange={this.onProjectNameChange}
-                    aria-label="Project Name"
-                    value={projectName}/>
+            <div className = "input-group mb-0">
+                <input type = "text"
+                    id = "NewFileName-projectName"
+                    className = {inputClassName}
+                    onChange = {this.onProjectNameChange}
+                    aria-label = "Project Name"
+                    value = {projectName}/>
                 {errorMsgComponent}
             </div>
         </div>;
@@ -128,8 +128,8 @@ class NewFileName extends React.Component {
         const fileTypeSelector = this.renderFileTypeSelector();
         const projectNameEditor = this.renderProjectNameEditor();
 
-        return <div className="container-fluid mt-auto mb-auto">
-            <h4 className="pageTitle pb-3 mb-4 border-bottom">
+        return <div className = "container-fluid mt-auto mb-auto">
+            <h4 className = "pageTitle pb-3 mb-4 border-bottom">
                 {userMsg('NewFileName-heading')}
             </h4>
             {baseDirSelector}
@@ -178,19 +178,19 @@ class GeneralSettingsEditor extends React.Component {
         const label = userMsg('GeneraSettingsEditor-openingBalancesDate_label');
         const inputClassName = 'form-control';
 
-        return <div className="form-row text-left">
-            <div className="form-col">
-                <label className="mb-0" 
-                    htmlFor="GeneralSettingsEditor-openingBalancesDate">
+        return <div className = "form-row text-left">
+            <div className = "form-col">
+                <label className = "mb-0" 
+                    htmlFor = "GeneralSettingsEditor-openingBalancesDate">
                     {label}
                 </label>
-                <div className="mb-0">
-                    <input type="date"
-                        id="GeneralSettingsEditor-openingBalancesDate"
-                        className={inputClassName}
-                        onChange={this.onOpeningBalancesDateChange}
-                        aria-label="Opening Balance Date"
-                        value={this.props.openingBalancesDate}/>
+                <div className = "mb-0">
+                    <input type = "date"
+                        id = "GeneralSettingsEditor-openingBalancesDate"
+                        className = {inputClassName}
+                        onChange = {this.onOpeningBalancesDateChange}
+                        aria-label = "Opening Balance Date"
+                        value = {this.props.openingBalancesDate}/>
                 </div>
             </div>
         </div>;
@@ -199,18 +199,18 @@ class GeneralSettingsEditor extends React.Component {
     
     renderDefaultCurrency() {
         const label = userMsg('GeneraSettingsEditor-defaultCurrency_label');
-        return <div className="form-row text-left">
-            <div className="form-col">
-                <label className="mb-0" 
-                    htmlFor="GeneralSettingsEditor-defaultCurrency">
+        return <div className = "form-row text-left">
+            <div className = "form-col">
+                <label className = "mb-0" 
+                    htmlFor = "GeneralSettingsEditor-defaultCurrency">
                     {label}
                 </label>
-                <div className="mb-0">
+                <div className = "mb-0">
                     <CurrencySelector
-                        id="GeneralSettingsEditor-defaultCurrency"
-                        onChange={this.props.onSetDefaultCurrency}
-                        aria-label="Default Currency"
-                        value={this.props.defaultCurrency}/>
+                        id = "GeneralSettingsEditor-defaultCurrency"
+                        onChange = {this.props.onSetDefaultCurrency}
+                        aria-label = "Default Currency"
+                        value = {this.props.defaultCurrency}/>
                 </div>
             </div>
         </div>;
@@ -220,12 +220,12 @@ class GeneralSettingsEditor extends React.Component {
     renderAddTestTransactions() {
         const { onSetAddTestTransactions } = this.props;
         if (onSetAddTestTransactions) {
-            return <div className="text-left">
-                <div className="row mb-2">&nbsp;</div>
-                <input type="checkbox" 
-                    id="addTestTransactions"
-                    value={this.state.addTestTransactions}
-                    onClick={(e) => {
+            return <div className = "text-left">
+                <div className = "row mb-2">&nbsp;</div>
+                <input type = "checkbox" 
+                    id = "addTestTransactions"
+                    value = {this.state.addTestTransactions}
+                    onClick = {(e) => {
                         const add = !this.state.addTestTransactions;
                         onSetAddTestTransactions(add);
                         this.setState({
@@ -233,7 +233,7 @@ class GeneralSettingsEditor extends React.Component {
                         });
                     }}
                 />
-                <label htmlFor="addTestTransactions">Add Test Transactions</label>
+                <label htmlFor = "addTestTransactions">Add Test Transactions</label>
             </div>;
         }
     }
@@ -244,12 +244,12 @@ class GeneralSettingsEditor extends React.Component {
         const defaultCurrency = this.renderDefaultCurrency();
         const addTestTransactions = this.renderAddTestTransactions();
 
-        return <div className="container-fluid mt-auto mb-auto">
-            <h4 className="pageTitle pb-3 mb-4 border-bottom">
+        return <div className = "container-fluid mt-auto mb-auto">
+            <h4 className = "pageTitle pb-3 mb-4 border-bottom">
                 {userMsg('GeneraSettingsEditor-heading')}
             </h4>
             {openingBalancesDateEditor}
-            <div className="row mb-2">&nbsp;</div>
+            <div className = "row mb-2">&nbsp;</div>
             {defaultCurrency}
             {addTestTransactions}
         </div>;
@@ -288,15 +288,14 @@ export class FileCreator extends React.Component {
         };
 
         this._pages = [
-            // TEST!!! Should be last entry...
-            {
-                pageId: 'accounts',
-            },
             {
                 pageId: 'fileName',
             },
             {
                 pageId: 'generalSettings',
+            },
+            {
+                pageId: 'accounts',
             },
         ];
 
@@ -439,15 +438,15 @@ export class FileCreator extends React.Component {
         switch (page.pageId) {
         case 'fileName':
             component = <NewFileName
-                accessor={this.props.accessor}
-                frameManager={this.props.frameManager}
-                baseDirName={this.state.baseDirName}
-                projectName={this.state.projectName}
-                projectNameErrorMsg={this.state.projectNameErrorMsg}
-                fileFactoryIndex={this.state.fileFactoryIndex}
-                onSetBaseDirName={this.onSetBaseDirName}
-                onSetProjectName={this.onSetProjectName}
-                onSetFileFactoryIndex={this.onSetFileFactoryIndex}
+                accessor = {this.props.accessor}
+                frameManager = {this.props.frameManager}
+                baseDirName = {this.state.baseDirName}
+                projectName = {this.state.projectName}
+                projectNameErrorMsg = {this.state.projectNameErrorMsg}
+                fileFactoryIndex = {this.state.fileFactoryIndex}
+                onSetBaseDirName = {this.onSetBaseDirName}
+                onSetProjectName = {this.onSetProjectName}
+                onSetFileFactoryIndex = {this.onSetFileFactoryIndex}
             />;
             break;
         
@@ -459,21 +458,22 @@ export class FileCreator extends React.Component {
                     ? this.onSetAddTestTransactions
                     : undefined;
                 component = <GeneralSettingsEditor
-                    openingBalancesDate={this.state.openingBalancesDate}
-                    onSetOpeningBalancesDate={this.onSetOpeningBalancesDate}
-                    defaultCurrency={this.state.baseCurrency}
-                    onSetDefaultCurrency={this.onSetDefaultCurrency}
-                    onSetAddTestTransactions={onSetAddTestTransactions}
+                    openingBalancesDate = {this.state.openingBalancesDate}
+                    onSetOpeningBalancesDate = {this.onSetOpeningBalancesDate}
+                    defaultCurrency = {this.state.baseCurrency}
+                    onSetDefaultCurrency = {this.onSetDefaultCurrency}
+                    onSetAddTestTransactions = {onSetAddTestTransactions}
                 />;
             }
             break;
 
         case 'accounts':
             component = <NewFileConfigurator
-                accessor={this.props.accessor}
-                newFileContents={this.state.newFileContents}
-                onUpdateFileContents={this.onUpdateFileContents}
-                onSetEndEditAsyncCallback={this.onSetEndEditAsyncCallback}
+                accessor = {this.props.accessor}
+                baseCurrency = { this.state.baseCurrency}
+                newFileContents = {this.state.newFileContents}
+                onUpdateFileContents = {this.onUpdateFileContents}
+                onSetEndEditAsyncCallback = {this.onSetEndEditAsyncCallback}
             />;
             break;
 
@@ -532,14 +532,14 @@ export class FileCreator extends React.Component {
     render() {
         const { activePageIndex, errorMsg, warningMsg } = this.state;
         if (errorMsg) {
-            return <ErrorReporter message={errorMsg} 
-                onClose={this.props.onCancel}
+            return <ErrorReporter message = {errorMsg} 
+                onClose = {this.props.onCancel}
             />;
         }
         if (warningMsg) {
-            return <InfoReporter message={warningMsg} 
-                title={this.state.warningTitle}
-                onClose={this.props.onFileCreated}
+            return <InfoReporter message = {warningMsg} 
+                title = {this.state.warningTitle}
+                onClose = {this.props.onFileCreated}
             />;
         }
         
@@ -559,14 +559,14 @@ export class FileCreator extends React.Component {
         }
 
         return <SequentialPages
-            pageCount={this._pages.length}
-            activePageIndex={this.state.activePageIndex}
-            onActivatePage={this.onActivatePage}
-            onRenderPage={this.onRenderPage}
-            onFinish={this.onFileCreate}
-            onCancel={this.props.onCancel}
-            isBackDisabled={isBackDisabled}
-            isNextDisabled={isNextDisabled}
+            pageCount = {this._pages.length}
+            activePageIndex = {this.state.activePageIndex}
+            onActivatePage = {this.onActivatePage}
+            onRenderPage = {this.onRenderPage}
+            onFinish = {this.onFileCreate}
+            onCancel = {this.props.onCancel}
+            isBackDisabled = {isBackDisabled}
+            isNextDisabled = {isNextDisabled}
         />;
     }
 }

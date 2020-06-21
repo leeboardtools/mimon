@@ -149,6 +149,7 @@ export class NewFileConfigurator extends React.Component {
             return <NewFileAccountsEditor
                 accountCategory = {tabEntry.accountCategory}
                 rootAccountDataItems = {rootAccountDataItems}
+                baseCurrency = {this.props.baseCurrency}
                 onUpdateRootAccountDataItems = {this.onUpdateRootAccountDataItems}
                 onNewAccount = {this.onNewAccount}
                 onRemoveAccount = {this.onRemoveAccount}
@@ -333,10 +334,12 @@ export class NewFileConfigurator extends React.Component {
  * @property {NewFileContents}   newFileContents
  * @property {NewFileConfigurator~onUpdateFileContents} onUpdateFileContents
  * @property {NewFileConfigurator~onSetEndEditAsyncCallback}    onSetEndEditAsyncCallback
+ * @property {string}   [baseCurrency]
  */
 NewFileConfigurator.propTypes = {
     accessor: PropTypes.object.isRequired,
     newFileContents: PropTypes.object.isRequired,
     onUpdateFileContents: PropTypes.func.isRequired,
     onSetEndEditAsyncCallback: PropTypes.func.isRequired,
+    baseCurrency: PropTypes.string,
 };

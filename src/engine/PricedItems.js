@@ -818,16 +818,25 @@ export class PricedItemManager extends EventEmitter {
 
         this._pricedItemDataItemsById.set(id, newPricedItemDataItem);
 
-        if ((type === PricedItemType.CURRENCY) 
-         && (id !== this._currencyBasePricedItemId)) {
-            const oldCurrencyName = this._getCurrencyName(
-                oldPricedItemDataItem.currency, oldPricedItemDataItem.quantityDefinition);
-            const newCurrencyName = this._getCurrencyName(
-                newPricedItemDataItem.currency, newPricedItemDataItem.quantityDefinition);
-            
-            if (oldCurrencyName !== newCurrencyName) {
-                this._currencyPricedItemIdsByCurrency.delete(oldCurrencyName);
-                this._currencyPricedItemIdsByCurrency.set(newCurrencyName, id);
+        if (type === PricedItemType.CURRENCY) {
+            if (id !== this._currencyBasePricedItemId) {
+                const oldCurrencyName = this._getCurrencyName(
+                    oldPricedItemDataItem.currency, 
+                    oldPricedItemDataItem.quantityDefinition);
+                const newCurrencyName = this._getCurrencyName(
+                    newPricedItemDataItem.currency, 
+                    newPricedItemDataItem.quantityDefinition);
+                
+                if (oldCurrencyName !== newCurrencyName) {
+                    this._currencyPricedItemIdsByCurrency.delete(oldCurrencyName);
+                    this._currencyPricedItemIdsByCurrency.set(newCurrencyName, id);
+                }
+            }
+            else {
+                // Base currency.
+                // Make sure the quantity definition is the currency's.
+                newPricedItemDataItem.quantityDefinition 
+                    = getCurrency(newPricedItemDataItem.currency).getQuantityDefinition();
             }
         }
 
