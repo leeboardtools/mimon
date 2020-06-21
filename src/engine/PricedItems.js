@@ -836,7 +836,8 @@ export class PricedItemManager extends EventEmitter {
                 // Base currency.
                 // Make sure the quantity definition is the currency's.
                 newPricedItemDataItem.quantityDefinition 
-                    = getCurrency(newPricedItemDataItem.currency).getQuantityDefinition();
+                    = getCurrency(newPricedItemDataItem.currency)
+                        .getQuantityDefinition().getName();
             }
         }
 
