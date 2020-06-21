@@ -29,7 +29,7 @@ export function getPricedItemsListColumnInfoDefs() {
                     classExtras: 'text-left',
                 },
                 propertyName: 'name',
-                cellClassName: cellClassName + ' text-left',
+                cellClassName: cellClassName + ' text-left w-40',
             },
             description: { key: 'description',
                 header: {
@@ -66,9 +66,9 @@ export function getPricedItemsListColumnInfoDefs() {
                     ariaLabel: 'Ticker Symbol',
                 },
                 propertyName: 'ticker',
-                cellClassName: cellClassName,
+                cellClassName: cellClassName + ' text-left',
                 inputClassExtras: inputClassExtras,
-                inputSize: -8,
+                inputSize: -6,
             },
             onlineSource: { key: 'onlineSource',
                 header: {
@@ -125,9 +125,13 @@ export class PricedItemsList extends React.Component {
             if (pricedItemType.hasTickerSymbol) {
                 columnInfos.push(columnInfoDefs.ticker);
                 columnInfos.push(columnInfoDefs.onlineSource);
+
+                columnInfos.push(columnInfoDefs.name);
+            }
+            else {
+                columnInfos.push(columnInfoDefs.name);
             }
 
-            columnInfos.push(columnInfoDefs.name);
             //columnInfos.push(columnInfoDefs.description);
             columnInfos.push(columnInfoDefs.currency);
             columnInfos.push(columnInfoDefs.quantityDefinition);
@@ -139,6 +143,7 @@ export class PricedItemsList extends React.Component {
         this.state = {
             columnInfos: columnInfos,
             rowEntries: [],
+            columnKeys: new Set(),
         };
 
         this._sizingRowEntry = {
@@ -237,17 +242,11 @@ export class PricedItemsList extends React.Component {
 
 
         const { columnInfos } = this.state;
-        let isDescriptionColumn;
-        for (let i = 0; i < columnInfos.length; ++i) {
-            if (columnInfos[i].key === 'description') {
-                isDescriptionColumn = true;
-                break;
-            }
-        }
-
-        if (isDescriptionColumn !== prevState.isDescriptionColumn) {
+        const columnKeys = new Set();
+        columnInfos.forEach((columnInfo) => columnKeys.add(columnInfo.key));
+        if (!deepEqual(columnKeys, prevState.columnKeys)) {
             this.setState({
-                isDescriptionColumn: isDescriptionColumn,
+                columnKeys: columnKeys,
             });
         }
     }
@@ -460,7 +459,7 @@ export class PricedItemsList extends React.Component {
         case 'name' :
             return CE.renderNameDisplay({
                 columnInfo: columnInfo,
-                value: (this.state.isDescriptionColumn)
+                value: (this.state.columnKeys.has('description'))
                     ? pricedItemDataItem.name
                     : {
                         name: pricedItemDataItem.name,
@@ -484,7 +483,12 @@ export class PricedItemsList extends React.Component {
         case 'ticker' :
             return CE.renderTextDisplay({
                 columnInfo: columnInfo, 
-                value: pricedItemDataItem.ticker,
+                value: (this.state.columnKeys.has('name'))
+                    ? pricedItemDataItem.ticker
+                    : {
+                        value: pricedItemDataItem.ticker,
+                        tooltip: pricedItemDataItem.name,
+                    },
             });
         
         case 'onlineSource' :
