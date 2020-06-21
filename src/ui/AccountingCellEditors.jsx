@@ -7,7 +7,7 @@ import { CellQuantityDisplay, CellQuantityEditor } from '../util-ui/CellQuantity
 import { getQuantityDefinition } from '../util/Quantities';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
-import { ReconcileState } from '../engine/Transactions';
+import { ReconcileState, getReconcileStateName } from '../engine/Transactions';
 import { getCurrency } from '../util/Currency';
 
 
@@ -307,7 +307,8 @@ export function renderReconcileStateEditor(args) {
     const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
         refForFocus } = args;
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
-    const value = cellEditBuffer.value || ReconcileState.NOT_RECONCILED;
+    const value = getReconcileStateName(
+        cellEditBuffer.value || ReconcileState.NOT_RECONCILED);
     if (!reconcileItems) {
         reconcileItems = [];
         for (let name in ReconcileState) {
@@ -346,8 +347,10 @@ export function renderReconcileStateEditor(args) {
  */
 export function renderReconcileStateDisplay(args) {
     const { columnInfo, value } = args;
+    const selectedValue = getReconcileStateName(
+        value || ReconcileState.NOT_RECONCILED);
     return <CellSelectDisplay
-        selectedValue = {userMsg('CellEditors-reconcile_' + value)}
+        selectedValue = {userMsg('CellEditors-reconcile_' + selectedValue)}
         ariaLabel = {columnInfo.ariaLabel}
         classExtras = {columnInfo.inputClassExtras}
         size = {columnInfo.inputSize}
