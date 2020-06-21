@@ -143,7 +143,10 @@ export function CellQuantityDisplay(props) {
  */
 CellQuantityDisplay.propTypes = {
     ariaLabel: PropTypes.string,
-    quantityBaseValue: PropTypes.number,
+    quantityBaseValue: PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.string,
+    ]),
     quantityDefinition: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object,
