@@ -482,11 +482,12 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
 - Fix AccountEditor modifying root account.
 
 
-PricedItemsEditor
-    - Double click needs to open priced item editor
+PricedItemsEditor:
+    - Double click needs to open priced item editor???
 
-NewFileAccountsEditor
-    - Get editing working.
+
+AccountsList:
+    - Add tooltip with description for name.
 
 
 - Change reconcile state editor to be toggling button.

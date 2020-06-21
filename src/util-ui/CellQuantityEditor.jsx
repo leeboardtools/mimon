@@ -1,47 +1,57 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { userMsg } from '../util/UserMessages';
 import { getQuantityDefinition } from '../util/Quantities';
+import { CellTextEditor, CellTextDisplay } from './CellTextEditor';
 
 /**
  * React component for editing a quantity in a table cell.
+ * Want this to be an editor that attempts to format the value like
+ * CellQuantityDisplay, and if it fails and there is no other error
+ * displays an error.
+ * Also onChange handler?
  * @class
  */
-/*
+
 export const CellQuantityEditor = React.forwardRef(
     function CellQuantityEditorImpl(props, ref) {
-        const { ariaLabel, value, inputClassExtras, errorMsg, size,
+        const { ariaLabel, inputClassExtras, size,
             onChange, onFocus, onBlur, disabled } = props;
 
-        const divClassName = 'input-group mb-0 ';
-        let className = 'form-control cellQuantityEditor-textInput ' 
-            + (inputClassExtras || '');
-
-        const inputType = props.inputType || 'text';
-
-        let errorMsgComponent;
-        if (errorMsg) {
-            className += ' is-invalid';
-            errorMsgComponent = <div className="invalid-feedback">
-                {errorMsg}
-            </div>;
+        let { value, errorMsg } = props;
+        const quantityDefinition 
+            = getQuantityDefinition(props.quantityDefinition);
+        if (!quantityDefinition) {
+            return null;
         }
-        return <div className={divClassName}>
-            <input type={inputType}
-                className={className}
-                aria-label={ariaLabel}
-                value={value || ''}
-                size={size}
-                disabled={disabled}
-                onChange={onChange}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                ref={ref}
-            />
-            {errorMsgComponent}
-        </div>;
+
+        if (typeof value === 'number') {
+            value = quantityDefinition.baseValueToValueText(value);
+        }
+        else if (!errorMsg) {
+            // Validate the value.
+            if (value !== '') {
+                if (quantityDefinition.fromValueText(value) === undefined) {
+                    errorMsg = userMsg('CellQuantityEditor-invalid_value', 
+                        quantityDefinition.getDisplayText());
+                }
+            }
+        }
+
+        return <CellTextEditor
+            ariaLabel = {ariaLabel}
+            value = {value}
+            inputClassExtras = {inputClassExtras}
+            size = {size}
+            errorMsg = {errorMsg}
+            onChange = {onChange}
+            onFocus = {onFocus}
+            onBlur = {onBlur}
+            disabled = {disabled}
+            ref = {ref}
+        />;
     }
 );
-*/
 
 
 /**
@@ -61,11 +71,16 @@ export const CellQuantityEditor = React.forwardRef(
  * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
  * @property {boolean} [disabled]
  */
-/*
 CellQuantityEditor.propTypes = {
     ariaLabel: PropTypes.string,
-    value: PropTypes.string,
-    inputType: PropTypes.string,
+    value: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.number,
+    ]),
+    quantityDefinition: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.object,
+    ]),
     inputClassExtras: PropTypes.string,
     size: PropTypes.number,
     errorMsg: PropTypes.string,
@@ -74,7 +89,7 @@ CellQuantityEditor.propTypes = {
     onBlur: PropTypes.func,
     disabled: PropTypes.bool,
 };
-*/
+
 
 /**
  * React component that's a display representation of {@link CellQuantityEditor}.
@@ -96,27 +111,23 @@ export function CellQuantityDisplay(props) {
         value = '';
     }
     else {
-        value = quantityDefinition.baseValueToValueText(quantityBaseValue);
+        if (typeof quantityBaseValue === 'number') {
+            value = quantityDefinition.baseValueToValueText(quantityBaseValue);
+        }
+        else {
+            value = quantityBaseValue;
+        }
         if (size && (size < 0)) {
             size = Math.max(value.length, -size);
         }
     }
 
-    const divClassName = 'input-group mb-0 ';
-    const className = 'form-control cellTextEditor-textInput cellTextEditor-textDisplay ' 
-        + (inputClassExtras || '');
-    
-    return <div className={divClassName}>
-        <input type="text"
-            className={className}
-            aria-label={ariaLabel}
-            style={{backgroundColor: 'inherit'}}
-            size={size}
-            disabled
-            value={value}
-            onChange={() => {}}
-        />
-    </div>;
+    return <CellTextDisplay
+        ariaLabel = {ariaLabel}
+        value = {value}
+        inputClassExtras = {inputClassExtras}
+        size = {size}
+    />;
 }
 
 

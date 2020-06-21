@@ -3,49 +3,13 @@ import { userMsg } from '../util/UserMessages';
 import { CellTextDisplay, CellTextEditor } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor';
 import { CellDateDisplay } from '../util-ui/CellDateEditor';
-import { CellQuantityDisplay } from '../util-ui/CellQuantityEditor';
+import { CellQuantityDisplay, CellQuantityEditor } from '../util-ui/CellQuantityEditor';
 import { getQuantityDefinition } from '../util/Quantities';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
 import { ReconcileState } from '../engine/Transactions';
 import { getCurrency } from '../util/Currency';
 
-//
-// The way editing currently works:
-//
-// When onStartRowEdit() is called:
-//  The columnInfo has a getCellEditBufferValue() method, which takes
-//  a CellBufferArgs, which is:
-//      CellBufferArgs:
-//          rowEditBuffer
-//          rowEntry
-//          columnIndex
-//          columnInfo
-//  and returns a value for the cellEditBuffers[i].value.
-//  For AccountRegister the rowEntry has a transactionDataItem and splitIndex.
-//  
-//
-// For the editor rendering:
-//  The args from EditableRowTable is amended with:
-//          columnInfo
-//          setCellEditBuffer: 
-//              (value) => this.state.editInfo.setCellEditBuffer(columnIndex, value)
-//          errorMsg
-//      where editInfo.setCellEditBuffer was passed to onStartRowEdit().
-//
-//  
-// When asyncOnSaveRowEdit() is called:
-//  a updateTransactionDataItem() method is called, which takes a cellArgs:
-//      CellArgs:
-//          transactionDataItem
-//          rowEntry
-//          columnIndex
-//          columnInfo
-//          cellEditBuffer
-//  
-//  updateTransactionDataItem updates the transactionDataItem in the args with 
-//  cellEditBuffer.value.
-//
 
 /**
  * @typedef {object}    CellEditorArgs
@@ -315,10 +279,13 @@ export function renderAccountTypeEditor(args) {
  */
 export function renderAccountTypeDisplay(args) {
     const { columnInfo, value } = args;
+    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
     const accountType = A.AccountType[value.accountType];
     return <CellSelectDisplay
-        ariaLabel = {columnInfo.ariaLabel}
+        ariaLabel = {ariaLabel}
         selectedValue = {accountType.description}
+        classExtras = {inputClassExtras}
+        size = {inputSize}
     />;
 }
 
@@ -392,7 +359,8 @@ export function renderReconcileStateDisplay(args) {
 /**
  * @typedef {object}    CellQuantityValue
  * @property {QuantityDefinition}   quantityDefinition
- * @property {number}   quantityBaseValue
+ * @property {number|string}   quantityBaseValue    This is normally a string after
+ * something is typed in the editor.
  */
 
 
@@ -409,26 +377,33 @@ export function renderReconcileStateDisplay(args) {
  * @param {CellQuantityEditorArgs} args 
  */
 export function renderQuantityEditor(args) {
-    // TODO:
-    /*
     const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
         refForFocus } = args;
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
-    const value = cellEditBuffer.value || '';
-    return <CellTextEditor
+    const value = cellEditBuffer.value;
+    if (!value) {
+        return;
+    }
+
+    const { quantityBaseValue, quantityDefinition } = value;
+
+    return <CellQuantityEditor
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
-        value = {value.toString()}
+        value = {quantityBaseValue}
+        quantityDefinition = {quantityDefinition}
         inputClassExtras = {inputClassExtras}
         size = {inputSize}
         onChange = {(e) => {
             setCellEditBuffer({
-                value: e.target.value,
+                value: {
+                    quantityBaseValue: e.target.value,
+                    quantityDefinition: quantityDefinition,
+                },
             });
         }}
         errorMsg = {errorMsg}
     />;
-    */
 }
 
 /**
@@ -456,7 +431,8 @@ export function renderQuantityDisplay(args) {
  * @typedef {object}    CellBalanceValue
  * @property {QuantityDefinition}   [quantityDefinition]
  * @property {Currency} [currency]
- * @property {number}   quantityBaseValue
+ * @property {number|string}   quantityBaseValue    This is normally a string
+ * after something is typed in the editor.
  */
 
 
@@ -466,35 +442,78 @@ export function renderQuantityDisplay(args) {
  * @property {CellBalanceValue}   value
  */
 
+function cellBalanceValueToQuantityValue(value) {
+    if (value) {
+        let { currency, quantityDefinition }
+            = value;
+        if (!quantityDefinition && !currency) {
+            currency = 'USD';
+        }
+        if (currency && !quantityDefinition) {
+            currency = getCurrency(currency);
+            if (!currency) {
+                return;
+            }
+            quantityDefinition = currency.getQuantityDefinition();
+            value = Object.assign({}, value, {
+                quantityDefinition: quantityDefinition,
+            });
+        }
+    }
+
+    return value;
+}
+
+
 /**
  * Editor renderer for opening balances (the only type of balances 
  * that are editable).
  * @param {CellQuantityEditorArgs}  args
  */
-export const renderBalanceEditor = renderQuantityEditor;
+export function renderBalanceEditor(args) {
+    const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
+        refForFocus } = args;
+    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+    const value = cellEditBuffer.value;
+    if (!value) {
+        return;
+    }
+
+    const quantitytValue = cellBalanceValueToQuantityValue(value);
+    const { quantityBaseValue, quantityDefinition } = quantitytValue;
+
+    return <CellQuantityEditor
+        ariaLabel = {ariaLabel}
+        ref = {refForFocus}
+        value = {quantityBaseValue}
+        quantityDefinition = {quantityDefinition}
+        inputClassExtras = {inputClassExtras}
+        size = {inputSize}
+        onChange = {(e) => {
+            setCellEditBuffer({
+                value: Object.assign({}, value, {
+                    quantityBaseValue: e.target.value,
+                }),
+            });
+        }}
+        errorMsg = {errorMsg}
+    />;
+}
+
 
 /**
  * Display renderer for balances.
  * @param {CellQuantityDisplayArgs} args
  */
 export function renderBalanceDisplay(args) {
-    const { value } = args;
+    const value = cellBalanceValueToQuantityValue(args.value);
     if (!value) {
         return;
     }
 
-    let { currency, quantityDefinition }
-        = value;
-    if (currency && !quantityDefinition) {
-        currency = getCurrency(currency);
-        if (!currency) {
-            return;
-        }
-        quantityDefinition = currency.getQuantityDefinition();
+    if (value !== args.value) {
         args = Object.assign({}, args, {
-            value: Object.assign({}, value, {
-                quantityDefinition: quantityDefinition,
-            }),
+            value: value,
         });
     }
 
@@ -538,7 +557,34 @@ export const renderSharesDisplay = renderQuantityDisplay;
  * @param {CellSplitQuantityEditorArgs}  args
  */
 export function renderSplitQuantityEditor(args) {
-    // TODO:
+    /*
+    const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
+        refForFocus } = args;
+    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+    const value = cellEditBuffer.value;
+    if (!value) {
+        return;
+    }
+
+    const { accessor, split, accountType, splitQuantityType, } = args.value;
+
+    return <CellQuantityEditor
+        ariaLabel = {ariaLabel}
+        ref = {refForFocus}
+        value = {quantityBaseValue}
+        inputClassExtras = {inputClassExtras}
+        size = {inputSize}
+        onChange = {(e) => {
+            setCellEditBuffer({
+                value: {
+                    quantityBaseValue: e.target.value,
+                    quantityDefinition: quantityDefinition,
+                },
+            });
+        }}
+        errorMsg = {errorMsg}
+    />;
+    */
 }
 
 
@@ -548,16 +594,8 @@ export function renderSplitQuantityEditor(args) {
  * @property {CellSplitValue}    value
  */
 
-/**
- * Display renderer for bought/sold split entries.
- * @param {CellSplitQuantityDisplayArgs} args 
- */
-export function renderSplitQuantityDisplay(args) {
-    if (!args.value) {
-        return;
-    }
-    
-    const { accessor, split, accountType, splitQuantityType, } = args.value;
+function getSplitQuantityInfo(args, value) {
+    const { split, accountType, splitQuantityType, } = value;
 
     let sign;
     switch (splitQuantityType) {
@@ -598,6 +636,30 @@ export function renderSplitQuantityDisplay(args) {
     const { category } = accountType;
     sign *= category.creditSign;
     quantityBaseValue *= sign;
+
+    return {
+        sign: sign,
+        isLots: isLots,
+        quantityBaseValue: quantityBaseValue,
+    };
+}
+
+
+/**
+ * Display renderer for bought/sold split entries.
+ * @param {CellSplitQuantityDisplayArgs} args 
+ */
+export function renderSplitQuantityDisplay(args) {
+    if (!args.value) {
+        return;
+    }
+    
+    let { sign, isLots, quantityBaseValue } = getSplitQuantityInfo(args,
+        args.value);
+    
+    const { accessor, split, } = args.value;
+    const { lotChanges } = split;
+
     if (quantityBaseValue < 0) {
         if (args.isSizeRender) {
             quantityBaseValue = -quantityBaseValue;

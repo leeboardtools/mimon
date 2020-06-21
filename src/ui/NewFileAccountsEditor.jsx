@@ -84,6 +84,23 @@ function saveAccountCellValue(args) {
 }
 
 
+function getOpeningBalanceCellValue(args) {
+    const { rowEntry, } = args;
+    const { accountDataItem } = rowEntry;
+    if (accountDataItem) {
+        let value = accountDataItem.openingBalance;
+        if (typeof value !== 'object') {
+            return {
+                quantityBaseValue: (value === undefined) ? 0 : value,
+            };
+        }
+        return value;
+    }
+}
+
+const saveOpeningBalanceCellValue = saveAccountCellValue;
+
+
 function getAccountTypeCellValue(args) {
     const { rowEntry, } = args;
     const { accountDataItem } = rowEntry;
@@ -153,11 +170,13 @@ export class NewFileAccountsEditor extends React.Component {
 
         this._sizingRowInfo = {
             accountDataItem: {
-                name: userMsg('AccountsList-dummy_name'),
+                name: userMsg('NewFileAccountsEditor-dummy_name'),
+                description: userMsg('NewFileAccountsEditor-dummy_description'),
 
                 // TODO:
                 // Scan through the account type names to find the longest one...
                 type: A.AccountType.REAL_ESTATE.name,
+                //openingBalance: 999999999,
             },
         };
 
@@ -168,11 +187,11 @@ export class NewFileAccountsEditor extends React.Component {
                 header: {
                     label: userMsg('NewFileAccountsEditor-account_name'),
                     ariaLabel: 'Name',
-                    classExtras: 'text-left w-50',
+                    classExtras: 'text-left', // w-50',
                 },
                 propertyName: 'name',
                 inputClassExtras: 'text-left',
-                cellClassName: cellClassName + 'w-50',
+                cellClassName: cellClassName + 'w-30',
 
                 getCellValue: getAccountCellValue,
                 saveCellValue: saveAccountCellValue,
@@ -183,11 +202,12 @@ export class NewFileAccountsEditor extends React.Component {
                 header: {
                     label: userMsg('NewFileAccountsEditor-type'),
                     ariaLabel: 'Account Type',
-                    classExtras: 'text-left w-15',
+                    classExtras: 'text-left', // w-15',
                 },
                 propertyName: 'type',
                 inputClassExtras: 'text-left',
-                cellClassName: cellClassName + 'w-15',
+                cellClassName: cellClassName,
+                inputSize: -10,
 
                 getCellValue: getAccountTypeCellValue,
                 saveCellValue: saveAccountTypeCellValue,
@@ -198,7 +218,7 @@ export class NewFileAccountsEditor extends React.Component {
                 header: {
                     label: userMsg('NewFileAccountsEditor-description'),
                     ariaLabel: 'Description',
-                    classExtras: 'text-left w-40',
+                    classExtras: 'text-left', // w-40',
                 },
                 propertyName: 'description',
                 inputClassExtras: 'text-left',
@@ -218,10 +238,10 @@ export class NewFileAccountsEditor extends React.Component {
                 propertyName: 'openingBalance',
                 inputClassExtras: 'text-right',
                 cellClassName: cellClassName,
-                inputSize: -12, // 1,234,567.89
+                inputSize: -14, // 1,234,567.89
 
-                getCellValue: getAccountCellValue,
-                saveCellValue: saveAccountCellValue,
+                getCellValue: getOpeningBalanceCellValue,
+                saveCellValue: saveOpeningBalanceCellValue,
                 renderDisplayCell: CE.renderBalanceDisplay,
                 renderEditCell: CE.renderBalanceEditor,
             },
@@ -708,21 +728,35 @@ export class NewFileAccountsEditor extends React.Component {
                 userMsg('NewFileAccountsEditor-name_required'));
         }
 
-        const openingBalance = (saveBuffer.openingBalance || '').trim();
-        if (openingBalance) {
-            try {
-                currency.baseValueFromString(openingBalance);
+        // accountDataItem.openingBalance should be a string...
+        let { openingBalance } = saveBuffer;
+        openingBalance = (openingBalance === undefined) ? '' : openingBalance;
+        if (typeof openingBalance === 'object') {
+            openingBalance = openingBalance.quantityBaseValue;
+        }
+
+        if (typeof openingBalance === 'string') {
+            openingBalance = openingBalance.trim();
+
+            // Validating the opening balance....
+            if (openingBalance !== '') {
+                try {
+                    currency.baseValueFromString(openingBalance);
+                }
+                catch (e) {
+                    return this.setErrorMsg('openingBalance',
+                        userMsg('NewFileAccountsEditor-invalid_opening_balance'));
+                }
             }
-            catch (e) {
-                return this.setErrorMsg('openingBalance',
-                    userMsg('NewFileAccountsEditor-invalid_opening_balance'));
-            }
+        }
+        else if (typeof openingBalance === 'number') {
+            openingBalance = currency.baseValueToSimpleString(openingBalance);
         }
         
         accountDataItem.type = saveBuffer.type;
         accountDataItem.name = saveBuffer.name;
         accountDataItem.description = saveBuffer.description;
-        accountDataItem.openingBalance = saveBuffer.openingBalance;
+        accountDataItem.openingBalance = openingBalance;
 
         this.saveForUndo(userMsg('NewFileAccountsEditor-modify_account'));
         this.props.onUpdateRootAccountDataItems(this.props.accountCategory, 

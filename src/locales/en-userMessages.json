@@ -92,6 +92,8 @@
     "NewFileAccountsEditor-redo": "Redo",
     "NewFileAccountsEditor-new_account_name": "New Account",
     "NewFileAccountsEditor-modify_account": "Account Modification",
+    "NewFileAccountsEditor-dummy_name": "Sample Account Name",
+    "NewFileAccountsEditor-dummy_description": "Sample Account Description",
 
 
 

@@ -4,6 +4,8 @@
     "yes": "Yes",
     "no": "No",
 
+    "CellQuantityEditor-invalid_value": ["Enter a numeric value of the form ", "."],
+
     "FileSelector-readdir_failed": ["Could not read the folder '", "'. ", ""],
     "FileSelector-open": "Open",
     "FileSelector-create": "Create",
