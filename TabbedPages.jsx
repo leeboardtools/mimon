@@ -156,7 +156,7 @@ export class TabbedPages extends React.Component {
     renderBody() {
         const pages = [];
         const pageClassExtras = 'h-100 overflow-hidden '
-            + this.props.pageClassExtras || '';
+            + (this.props.pageClassExtras || '');
         
         this.props.tabEntries.forEach((tabEntry) => {
             const isActive = (tabEntry.tabId === this.state.activeTabId);
