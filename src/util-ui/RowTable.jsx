@@ -62,7 +62,7 @@ export class RowTable extends React.Component {
         this.state.visibleRowIndex = this.props.requestedVisibleRowIndex;
 
         this.state.topVisibleRow = 0;
-        this.state.bottomVisibleRow = 0;
+        this.state.bottomVisibleRow = -1;
 
         this.state.isSizeRender = this.state.isAutoSize;
     }
