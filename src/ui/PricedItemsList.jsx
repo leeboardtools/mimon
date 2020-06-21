@@ -29,8 +29,7 @@ export function getPricedItemsListColumnInfoDefs() {
                     classExtras: 'text-left',
                 },
                 propertyName: 'name',
-                className: '',
-                cellClassName: cellClassName,
+                cellClassName: cellClassName + ' text-left',
             },
             description: { key: 'description',
                 header: {
@@ -39,7 +38,6 @@ export function getPricedItemsListColumnInfoDefs() {
                     classExtras: 'text-left',
                 },
                 propertyName: 'description',
-                className: '',
                 cellClassName: cellClassName,
             },
             currency: { key: 'currency',
@@ -48,9 +46,9 @@ export function getPricedItemsListColumnInfoDefs() {
                     ariaLabel: 'Currency',
                 },
                 propertyName: 'currency',
-                className: 'text-center w-10',
                 cellClassName: cellClassName,
                 inputClassExtras: inputClassExtras,
+                inputSize: -4,
             },
             quantityDefinition: { key: 'quantityDefinition',
                 header: {
@@ -58,9 +56,9 @@ export function getPricedItemsListColumnInfoDefs() {
                     ariaLabel: 'Quantity Definition',
                 },
                 propertyName: 'quantityDefinition',
-                className: 'text-center w-10',
                 cellClassName: cellClassName,
                 inputClassExtras: inputClassExtras,
+                inputSize: -10,
             },
             ticker: { key: 'ticker',
                 header: {
@@ -68,9 +66,9 @@ export function getPricedItemsListColumnInfoDefs() {
                     ariaLabel: 'Ticker Symbol',
                 },
                 propertyName: 'ticker',
-                className: 'text-center w-10',
                 cellClassName: cellClassName,
                 inputClassExtras: inputClassExtras,
+                inputSize: -8,
             },
             onlineSource: { key: 'onlineSource',
                 header: {
@@ -78,9 +76,9 @@ export function getPricedItemsListColumnInfoDefs() {
                     ariaLabel: 'Online Source',
                 },
                 propertyName: 'onlineSource',
-                className: 'text-center',
                 cellClassName: cellClassName,
                 inputClassExtras: inputClassExtras,
+                inputSize: -12,
             }
         };
     }
@@ -130,7 +128,7 @@ export class PricedItemsList extends React.Component {
             }
 
             columnInfos.push(columnInfoDefs.name);
-            columnInfos.push(columnInfoDefs.description);
+            //columnInfos.push(columnInfoDefs.description);
             columnInfos.push(columnInfoDefs.currency);
             columnInfos.push(columnInfoDefs.quantityDefinition);
         }
@@ -201,7 +199,7 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps, prevState) {
         let rowsNeedUpdating = false;
         const { hiddenPricedItemIds, 
             showHiddenPricedItems } = this.props;
@@ -235,6 +233,22 @@ export class PricedItemsList extends React.Component {
                         : undefined);
                 }
             }
+        }
+
+
+        const { columnInfos } = this.state;
+        let isDescriptionColumn;
+        for (let i = 0; i < columnInfos.length; ++i) {
+            if (columnInfos[i].key === 'description') {
+                isDescriptionColumn = true;
+                break;
+            }
+        }
+
+        if (isDescriptionColumn !== prevState.isDescriptionColumn) {
+            this.setState({
+                isDescriptionColumn: isDescriptionColumn,
+            });
         }
     }
 
@@ -319,7 +333,7 @@ export class PricedItemsList extends React.Component {
 
     updateRowEntries() {
         this.setState((state) => {
-            const result = this.buildRowEntries().rowEntries;
+            const result = this.buildRowEntries();
             return {
                 rowEntries: result.rowEntries,
                 activeRowKey: result.activeRowKey,
@@ -446,13 +460,18 @@ export class PricedItemsList extends React.Component {
         case 'name' :
             return CE.renderNameDisplay({
                 columnInfo: columnInfo,
-                value: pricedItemDataItem.name,
+                value: (this.state.isDescriptionColumn)
+                    ? pricedItemDataItem.name
+                    : {
+                        name: pricedItemDataItem.name,
+                        description: pricedItemDataItem.description,
+                    },
             });
         
         case 'description' :
             return CE.renderDescriptionDisplay({
                 columnInfo: columnInfo,
-                value: pricedItemDataItem.name,
+                value: pricedItemDataItem.description,
             });
         
         case 'currency' :
