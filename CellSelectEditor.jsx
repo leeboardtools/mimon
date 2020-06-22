@@ -3,10 +3,7 @@ import PropTypes from 'prop-types';
 
 
 /**
- * Component normally used with {@link RowEditTable} for a cell that offers a drop-down
- * list to choose from in edit mode, return from the {@link RowEditTable~onRenderEditCell}
- * callback. {@link CellSelectDisplay} is normally returned from the
- * {@link RowEditTable~onRenderDisplayCell} callback.
+ * Component for a cell that offers a drop-down list to choose from.
  * @class
  */
 export const CellSelectEditor = React.forwardRef(
@@ -52,6 +49,7 @@ export const CellSelectEditor = React.forwardRef(
     }
 );
 
+
 /**
  * @typedef {object} CellSelectEditor~propTypes
  * @property {string}   [selectedValue]
@@ -89,9 +87,7 @@ CellSelectEditor.propTypes = {
 
 
 /**
- * Component normally used with {@link RowEditTable} for a cell that offers a drop-down
- * list to choose from in display mode, return from the 
- * {@link RowEditTable~onRenderDisplayCell} callback.
+ * Component for the display only version of {@link CellSelectEditor}.
  * @class
  */
 export function CellSelectDisplay(props) {
@@ -126,3 +122,112 @@ CellSelectDisplay.propTypes = {
     classExtras: PropTypes.string,
     size: PropTypes.number,
 };
+
+
+
+/**
+ * Component for a cell that toggles through a list of options.
+ * This should normally not be used for more than a handful of options.
+ * @class
+ */
+export const CellToggleSelectEditor = React.forwardRef(
+    function myCellSelectEditor(props, ref) {
+        const { selectedValue, items, errorMsg, ariaLabel, classExtras, 
+            onChange, onFocus, onBlur, disabled } = props;
+
+        const divClassName = 'input-group mb-0 ';
+        let className = 'form-control cellToggleSelectEditor-button ' + classExtras;
+
+        let value = selectedValue;
+        let nextKey;
+        if (items.length && (typeof items[0] === 'string')) {
+            for (let i = 0; i < items.length; ++i) {
+                if (items[i] === selectedValue) {
+                    nextKey = ((i + 1) === items.length)
+                        ? items[0]
+                        : items[i + 1];
+                }
+            }
+        }
+        else {
+            for (let i = 0; i < items.length; ++i) {
+                if (items[i][0] === selectedValue) {
+                    value = items[i][1];
+                    nextKey = ((i + 1) === items.length)
+                        ? items[0][0]
+                        : items[i + 1][0];
+                }
+            }
+        }
+
+        let errorMsgComponent;
+        if (errorMsg) {
+            className += ' is-invalid';
+            errorMsgComponent = <div className="invalid-feedback">
+                {errorMsg}
+            </div>;
+        }
+        return <div className={divClassName}>
+            <button type="button"
+                className={className}
+                aria-label={ariaLabel}
+                value={selectedValue}
+                disabled={disabled}
+                onClick={(e) => {
+                    if (onChange) {
+                        e = Object.assign({}, e, {
+                            target: {
+                                value: nextKey
+                            }
+                        });
+                        onChange(e);
+                    }
+                }}
+                onFocus={onFocus}
+                onBlur={onBlur}
+                ref={ref}
+            >
+                {value}
+            </button>
+            {errorMsgComponent}
+        </div>;
+    }
+);
+
+
+/**
+ * @typedef {object} CellToggleSelectEditor~propTypes
+ * @property {string}   [selectedValue]
+ * @property {string[]|Array[]} items The array of items to be displayed. This may either
+ * be an array of the strings to display or an array of two element sub-arrays, the
+ * first element is the key and the second element is the text to display for that
+ * item.
+ * @property {string}   [errorMsg]  If defined an error message to be displayed
+ * beneath the selector.
+ * @property {string}   [ariaLabel]
+ * @property {string}   [classExtras]   Extra classes to add to the component.
+ * @property {function} [onChange]  onChange event handler 
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/change_event}.
+ * @property {function} [onFocus]   onFocus event handler
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onfocus}.
+ * @property {function} [onBlur]    onBlur event handler
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onblur}.
+ * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
+ */
+CellToggleSelectEditor.propTypes = {
+    selectedValue: PropTypes.string,
+    items: PropTypes.oneOfType([
+        PropTypes.arrayOf(PropTypes.string),
+        PropTypes.arrayOf(PropTypes.array),
+    ]).isRequired,
+    errorMsg: PropTypes.string,
+    ariaLabel: PropTypes.string,
+    classExtras: PropTypes.string,
+    onChange: PropTypes.func,
+    onFocus: PropTypes.func,
+    onBlur: PropTypes.func,
+    disabled: PropTypes.bool,
+};
+
+
+export const CellToggleSelectDisplay = CellSelectDisplay;
