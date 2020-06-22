@@ -1,7 +1,8 @@
 import React from 'react';
 import { userMsg } from '../util/UserMessages';
 import { CellTextDisplay, CellTextEditor } from '../util-ui/CellTextEditor';
-import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor';
+import { CellSelectDisplay, CellSelectEditor,
+    CellToggleSelectDisplay, CellToggleSelectEditor, } from '../util-ui/CellSelectEditor';
 import { CellDateDisplay } from '../util-ui/CellDateEditor';
 import { CellQuantityDisplay, CellQuantityEditor } from '../util-ui/CellQuantityEditor';
 import { getQuantityDefinition } from '../util/Quantities';
@@ -105,7 +106,7 @@ export function renderTextDisplay(args) {
         tooltip = value.tooltip;
         value = value.value;
     }
-    
+
     const component = <CellTextDisplay
         ariaLabel = {ariaLabel}
         value = {value.toString()}
@@ -394,7 +395,7 @@ export function renderReconcileStateEditor(args) {
             ]);
         }
     }
-    return <CellSelectEditor
+    return <CellToggleSelectEditor
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
         selectedValue = {value.toString()}
@@ -425,7 +426,7 @@ export function renderReconcileStateDisplay(args) {
     const { columnInfo, value } = args;
     const selectedValue = getReconcileStateName(
         value || ReconcileState.NOT_RECONCILED);
-    return <CellSelectDisplay
+    return <CellToggleSelectDisplay
         selectedValue = {userMsg('CellEditors-reconcile_' + selectedValue)}
         ariaLabel = {columnInfo.ariaLabel}
         classExtras = {columnInfo.inputClassExtras}
@@ -631,8 +632,8 @@ export const renderSharesDisplay = renderQuantityDisplay;
  * @property {CellSplitValue}    value
  */
 
-function getSplitQuantityInfo(args, value) {
-    const { split, accountType, splitQuantityType, } = value;
+function getSplitQuantityInfo(args) {
+    const { split, accountType, splitQuantityType, } = args.value;
 
     let sign;
     switch (splitQuantityType) {
@@ -733,8 +734,7 @@ export function renderSplitQuantityDisplay(args) {
         return;
     }
     
-    let { sign, isLots, quantityBaseValue } = getSplitQuantityInfo(args,
-        args.value);
+    let { sign, isLots, quantityBaseValue } = getSplitQuantityInfo(args);
     
     const { accessor, split, } = args.value;
     const { lotChanges } = split;

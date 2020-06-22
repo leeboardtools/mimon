@@ -35,6 +35,13 @@
     background-color: inherit;
     border-radius: 0;
 }
+
+.cellToggleSelectEditor-button {
+    margin: 0px;
+    padding: 0px 0px;
+    height: calc(1.5rem + .3rem + 2px);
+    border-radius: 0;
+}
 /** End util-ui/CellSelectEditor.jsx */
 
 

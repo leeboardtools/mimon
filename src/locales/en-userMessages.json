@@ -170,9 +170,9 @@
     "AccountRegister-dummy_accountName": "Sample Account Name",
 
 
-    "CellEditors-reconcile_NOT_RECONCILED": "",
+    "CellEditors-reconcile_NOT_RECONCILED": "-",
     "CellEditors-reconcile_PENDING": "c",
-    "CellEditors-reconcile_RECONCILED": "R",
+    "CellEditors-reconcile_RECONCILED": "\u2713",
 
 
     "PricedItemEditor-prompt_cancel_title": "Confirm Cancel",
