@@ -20,7 +20,7 @@ test('NewFileSetup', async () => {
         const corePricedItemIds = Array.from(accessor.getPricedItemIds());
 
         const test1 = {
-            baseCurrency: 'JPY',
+            baseCurrency: 'KYD',
             openingBalancesDate: '2020-01-01',
             pricedItems: {
                 pricedItems: [
@@ -113,7 +113,7 @@ test('NewFileSetup', async () => {
             accessor._accountingFile, test1);
         expect(result1).toEqual([]);
 
-        expect(accessor.getBaseCurrencyCode()).toEqual('JPY');
+        expect(accessor.getBaseCurrencyCode()).toEqual('KYD');
 
         const pricedItemIds1 = accessor.getPricedItemIds();
         expect(pricedItemIds1.length).toEqual(2 + corePricedItemIds.length);
