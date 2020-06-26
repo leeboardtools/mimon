@@ -230,7 +230,10 @@ export default class App extends React.Component {
                 try {
                     this._isSilenced = true;
                     if (await this.asyncOpenAccountingFile(
-                        startupOptions.mruPathNames[0])) {
+                        startupOptions.mruPathNames[0],
+                        {
+                            clearActions: true,
+                        })) {
                         return;
                     }
                 }
@@ -421,7 +424,10 @@ export default class App extends React.Component {
             }
 
             try {
-                await this._accessor.asyncOpenAccountingFile(pathName, fileFactoryIndex);
+                await this._accessor.asyncOpenAccountingFile(pathName, {
+                    fileFactoryIndex: fileFactoryIndex,
+                    clearActions: true,
+                });
                 this.enterMainWindow();
             }
             catch (e) {
@@ -501,8 +507,10 @@ export default class App extends React.Component {
     onOpenFile(pathName) {
         process.nextTick(async () => {
             try {
-                await this._accessor.asyncOpenAccountingFile(pathName, 
-                    this.state.fileFactoryIndex);
+                await this._accessor.asyncOpenAccountingFile(pathName, {
+                    fileFactoryIndex: this.state.fileFactoryIndex,
+                    clearActions: true,
+                });
                 this.enterMainWindow();
             }
             catch (e) {
@@ -524,7 +532,9 @@ export default class App extends React.Component {
     onRecentClick(pathName) {
         process.nextTick(async () => {
             try {
-                await this._accessor.asyncOpenAccountingFile(pathName);
+                await this._accessor.asyncOpenAccountingFile(pathName, {
+                    clearActions: true,
+                });
                 this.enterMainWindow();
             }
             catch (e) {

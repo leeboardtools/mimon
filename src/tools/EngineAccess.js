@@ -361,7 +361,10 @@ export class EngineAccessor extends EventEmitter {
      * whose {@link AccountingFile#asyncOpenFile} succeeds will be used.
      * @throws {Error}
      */
-    async asyncOpenAccountingFile(pathName, fileFactoryIndex) {
+    async asyncOpenAccountingFile(pathName, options) {
+        options = options || {};
+        let { fileFactoryIndex, clearActions } = options;
+
         let accountingFile;
         if ((fileFactoryIndex >= 0) && (fileFactoryIndex < this._fileFactories.length)) {
             accountingFile = await this._fileFactories[fileFactoryIndex].asyncOpenFile(
@@ -393,8 +396,10 @@ export class EngineAccessor extends EventEmitter {
 
         if (accountingFile) {
             try {
-                await this.asyncClearAppliedActions();
-                await this.asyncClearUndoneActions();
+                if (clearActions) {
+                    await this.asyncClearAppliedActions();
+                    await this.asyncClearUndoneActions();
+                }
             }
             catch (err) {
                 // 
