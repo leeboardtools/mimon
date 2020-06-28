@@ -9,6 +9,7 @@ import PropTypes from 'prop-types';
 export const CellSelectEditor = React.forwardRef(
     function myCellSelectEditor(props, ref) {
         const { selectedValue, items, errorMsg, ariaLabel, classExtras, 
+            size,
             onChange, onFocus, onBlur, disabled } = props;
 
         const divClassName = 'input-group mb-0 ';
@@ -17,30 +18,31 @@ export const CellSelectEditor = React.forwardRef(
         let optionComponents;
         if (items.length && (typeof items[0] === 'string')) {
             optionComponents = items.map((option) =>
-                <option key={option}>{option}</option>);
+                <option key = {option}>{option}</option>);
         }
         else {
             optionComponents = items.map(([key, option]) =>
-                <option key={key} value={key}>{option}</option>);
+                <option key = {key} value = {key}>{option}</option>);
         }
 
         let errorMsgComponent;
         if (errorMsg) {
             className += ' is-invalid';
-            errorMsgComponent = <div className="invalid-feedback">
+            errorMsgComponent = <div className = "invalid-feedback">
                 {errorMsg}
             </div>;
         }
-        return <div className={divClassName}>
+        return <div className = {divClassName}>
             <select
-                className={className}
-                aria-label={ariaLabel}
-                value={selectedValue}
-                disabled={disabled}
-                onChange={onChange}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                ref={ref}
+                className = {className}
+                aria-label = {ariaLabel}
+                value = {selectedValue}
+                disabled = {disabled}
+                size = {size}
+                onChange = {onChange}
+                onFocus = {onFocus}
+                onBlur = {onBlur}
+                ref = {ref}
             >
                 {optionComponents}
             </select>
@@ -61,6 +63,7 @@ export const CellSelectEditor = React.forwardRef(
  * beneath the selector.
  * @property {string}   [ariaLabel]
  * @property {string}   [classExtras]   Extra classes to add to the component.
+ * @property {number}   [size]
  * @property {function} [onChange]  onChange event handler 
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/change_event}.
  * @property {function} [onFocus]   onFocus event handler
@@ -78,6 +81,7 @@ CellSelectEditor.propTypes = {
     errorMsg: PropTypes.string,
     ariaLabel: PropTypes.string,
     classExtras: PropTypes.string,
+    size: PropTypes.number,
     onChange: PropTypes.func,
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
@@ -97,22 +101,22 @@ export function CellSelectDisplay(props) {
     const className = 'form-control cellTextEditor-textInput cellTextEditor-textDisplay ' 
         + classExtras;
 
-    return <div className={divClassName}>
-        <input type="text"
-            className={className}
-            aria-label={ariaLabel}
-            style={{backgroundColor: 'inherit'}}
-            size={size}
+    return <div className = {divClassName}>
+        <input type = "text"
+            className = {className}
+            aria-label = {ariaLabel}
+            style = {{backgroundColor: 'inherit'}}
+            size = {size}
             disabled
-            value={selectedValue || ''}
-            onChange={() => {}}
+            value = {selectedValue || ''}
+            onChange = {() => {}}
         />
     </div>;
 }
 
 /**
  * @typedef {object} CellSelectDisplay~propTypes
- * @property {string}   [selectedValue]
+ * @property {string|number}   [selectedValue]
  * @property {string}   [ariaLabel]
  * @property {string}   [classExtras]   Extra classes to add to the component.
  */
@@ -163,17 +167,17 @@ export const CellToggleSelectEditor = React.forwardRef(
         let errorMsgComponent;
         if (errorMsg) {
             className += ' is-invalid';
-            errorMsgComponent = <div className="invalid-feedback">
+            errorMsgComponent = <div className = "invalid-feedback">
                 {errorMsg}
             </div>;
         }
-        return <div className={divClassName}>
-            <button type="button"
-                className={className}
-                aria-label={ariaLabel}
-                value={selectedValue}
-                disabled={disabled}
-                onClick={(e) => {
+        return <div className = {divClassName}>
+            <button type = "button"
+                className = {className}
+                aria-label = {ariaLabel}
+                value = {selectedValue}
+                disabled = {disabled}
+                onClick = {(e) => {
                     if (onChange) {
                         e = Object.assign({}, e, {
                             target: {
@@ -183,9 +187,9 @@ export const CellToggleSelectEditor = React.forwardRef(
                         onChange(e);
                     }
                 }}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                ref={ref}
+                onFocus = {onFocus}
+                onBlur = {onBlur}
+                ref = {ref}
             >
                 {value}
             </button>
@@ -197,7 +201,7 @@ export const CellToggleSelectEditor = React.forwardRef(
 
 /**
  * @typedef {object} CellToggleSelectEditor~propTypes
- * @property {string}   [selectedValue]
+ * @property {*}   [selectedValue]
  * @property {string[]|Array[]} items The array of items to be displayed. This may either
  * be an array of the strings to display or an array of two element sub-arrays, the
  * first element is the key and the second element is the text to display for that
@@ -215,7 +219,7 @@ export const CellToggleSelectEditor = React.forwardRef(
  * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
  */
 CellToggleSelectEditor.propTypes = {
-    selectedValue: PropTypes.string,
+    selectedValue: PropTypes.any,
     items: PropTypes.oneOfType([
         PropTypes.arrayOf(PropTypes.string),
         PropTypes.arrayOf(PropTypes.array),

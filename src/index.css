@@ -116,8 +116,73 @@ body {
 }
 
 
+/*
 .AccountRegister {
 }
+*/
 
+/*
 .AccountsList {
+}
+*/
+
+
+.header-base  {
+  /* TEST!!! */
+  border: 1px solid #666666;
+}
+
+.cell-base {
+  /* TEST!!! */
+  border: 1px solid #333333;
+}
+
+.date-cell {
+  text-align: center;
+  width: 7rem;
+}
+
+.refNum-cell {
+  text-align: center;
+  width: 6rem;
+}
+
+.name-cell {
+  text-align: left;
+  flex-grow: 2;
+}
+
+.description-cell {
+  text-align: left;
+  flex-grow: 2;
+}
+
+.accountType-cell {
+  text-align: left;
+  flex-grow: 1;
+}
+
+.splits-cell {
+  text-align: left;
+  flex-grow: 2;
+}
+
+.reconcile-cell {
+  text-align: center;
+  width: 2rem;
+}
+
+.splitQuantity-cell {
+  text-align: right;
+  width: 8rem;  /* 1,234,567.00 */
+}
+
+.shares-cell {
+  text-align: right;
+  width: 8rem;
+}
+
+.balance-cell {
+  text-align: right;
+  width: 8rem;
 }

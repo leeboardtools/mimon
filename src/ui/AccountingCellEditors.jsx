@@ -36,6 +36,17 @@ import { getCurrency } from '../util/Currency';
  * @property {string}   [errorMsg]
  */
 
+
+/**
+ * @typedef {object} getColumnInfoArgs
+ * Argument for the various getXColumnInfo() functions, these are additional
+ * properties for the column info. Typically the following properties are
+ * specified:
+ * @property {CellEditorsManager~getCellValue}  getCellValue
+ * @property {CellEditorsManager~saveCellValue} saveCellValue
+ */
+
+
 /**
  * @typedef {object}    CellTextEditorArgs
  * {@link CellEditorArgs} where the cellEditBuffer's value property is:
@@ -68,14 +79,39 @@ export function renderTextEditor(args) {
 }
 
 function renderTextEditorWithTooltips(args, valueProperty) {
-    const { cellEditBuffer } = args;
-    let { value } = cellEditBuffer;
+    const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
+        refForFocus } = args;
+    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+
+    const originalValue = cellEditBuffer.value || '';
+    let value = originalValue;
     if (typeof value === 'object') {
-        args = Object.assign({}, args, {
-            value: value[valueProperty],
-        });
+        value = value[valueProperty];
     }
-    return renderTextEditor(args);
+
+    return <CellTextEditor
+        ariaLabel = {ariaLabel}
+        ref = {refForFocus}
+        value = {value.toString()}
+        inputClassExtras = {inputClassExtras}
+        size = {inputSize}
+        onChange = {(e) => {
+            if (typeof originalValue === 'object') {
+                const newValue = Object.assign({}, originalValue);
+                newValue[valueProperty] = e.target.value;
+                setCellEditBuffer({
+                    value: newValue,
+                });
+
+            }
+            else {
+                setCellEditBuffer({
+                    value: e.target.value,
+                });
+            }
+        }}
+        errorMsg = {errorMsg}
+    />;
 }
 
 /**
@@ -115,7 +151,7 @@ export function renderTextDisplay(args) {
     />;
 
     if (tooltip) {
-        return <div className = "simple-tooltip">
+        return <div className = "simple-tooltip w-100">
             {component}
             <div className = "simple-tooltiptext">{tooltip}</div>
         </div>;
@@ -136,6 +172,28 @@ export const renderRefNumEditor = renderTextEditor;
  * @param {CellTextDisplayArgs} args
  */
 export const renderRefNumDisplay = renderTextDisplay;
+
+
+/**
+ * Retrieves a column info for cells for the refNum property of {@link SplitDataItem}.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getRefNumColumnInfo(args) {
+    return Object.assign({ key: 'refNum',
+        header: {
+            label: userMsg('AccountingCellEditors-refNum'),
+            ariaLabel: 'Reference Number',
+            classExtras: 'header-base refNum-cell',
+        },
+        inputClassExtras: 'refNum-cell',
+        cellClassName: 'cell-base refNum-cell',
+
+        renderDisplayCell: renderRefNumDisplay,
+        renderEditCell: renderRefNumEditor,
+    },
+    args);
+}
 
 
 /**
@@ -187,6 +245,28 @@ export function renderNameDisplay(args) {
 
 
 /**
+ * Retrieves a column info for name cells.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getNameColumnInfo(args) {
+    return Object.assign({ key: 'name',
+        header: {
+            label: userMsg('AccountingCellEditors-name'),
+            ariaLabel: 'Name',
+            classExtras: 'header-base name-cell',
+        },
+        inputClassExtras: 'name-cell',
+        cellClassName: 'cell-base name-cell',
+
+        renderDisplayCell: renderNameDisplay,
+        renderEditCell: renderNameEditor,
+    },
+    args);
+}
+
+
+/**
  * @typedef {object}    CellDescriptionMemoValue
  * @property {string}   [description]
  * @property {string}   [memo]
@@ -234,6 +314,28 @@ export function renderDescriptionDisplay(args) {
 
 
 /**
+ * Retrieves a column info for description cells.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getDescriptionColumnInfo(args) {
+    return Object.assign({ key: 'description',
+        header: {
+            label: userMsg('AccountingCellEditors-description'),
+            ariaLabel: 'Description',
+            classExtras: 'header-base description-cell',
+        },
+        inputClassExtras: 'description-cell',
+        cellClassName: 'cell-base description-cell',
+
+        renderDisplayCell: renderDescriptionDisplay,
+        renderEditCell: renderDescriptionEditor,
+    },
+    args);
+}
+
+
+/**
  * @typedef {object}    CellDateEditorArgs
  * {@link CellEditorArgs} where the cellEditBuffer's value property is:
  * @property {string}   value
@@ -267,6 +369,29 @@ export function renderDateDisplay(args) {
         inputClassExtras = {columnInfo.inputClassExtras}
         size = {columnInfo.inputSize}
     />;
+}
+
+
+
+/**
+ * Retrieves a column info for date cells.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getDateColumnInfo(args) {
+    return Object.assign({ key: 'date',
+        header: {
+            label: userMsg('AccountingCellEditors-date'),
+            ariaLabel: 'Date',
+            classExtras: 'header-base date-cell',
+        },
+        inputClassExtras: 'date-cell',
+        cellClassName: 'cell-base date-cell',
+
+        renderDisplayCell: renderDateDisplay,
+        renderEditCell: renderDateEditor,
+    },
+    args);
 }
 
 
@@ -366,6 +491,26 @@ export function renderAccountTypeDisplay(args) {
     />;
 }
 
+/**
+ * Retrieves a column info for {@link AccountType} cells.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getAccountTypeColumnInfo(args) {
+    return Object.assign({ key: 'accountType',
+        header: {
+            label: userMsg('AccountingCellEditors-accountType'),
+            classExtras: 'header-base accountType-cell',
+        },
+        inputClassExtras: 'accountType-cell',
+        cellClassName: 'cell-base accountType-cell',
+
+        renderDisplayCell: renderAccountTypeDisplay,
+        renderEditCell: renderAccountTypeEditor,
+    },
+    args);
+}
+
 
 let reconcileItems;
 
@@ -391,7 +536,7 @@ export function renderReconcileStateEditor(args) {
         for (let name in ReconcileState) {
             reconcileItems.push([
                 name,
-                userMsg('CellEditors-reconcile_' + name)
+                userMsg('AccountingCellEditors-reconcile_' + name)
             ]);
         }
     }
@@ -427,11 +572,33 @@ export function renderReconcileStateDisplay(args) {
     const selectedValue = getReconcileStateName(
         value || ReconcileState.NOT_RECONCILED);
     return <CellToggleSelectDisplay
-        selectedValue = {userMsg('CellEditors-reconcile_' + selectedValue)}
+        selectedValue = {userMsg('AccountingCellEditors-reconcile_' + selectedValue)}
         ariaLabel = {columnInfo.ariaLabel}
         classExtras = {columnInfo.inputClassExtras}
         size = {columnInfo.inputSize}
     />;
+}
+
+
+/**
+ * Retrieves a column info for {@link ReconcileState} properties.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getReconcileStateColumnInfo(args) {
+    return Object.assign({ key: 'reconcile',
+        header: {
+            label: userMsg('AccountingCellEditors-reconcile'),
+            ariaLabel: 'Reconcile',
+            classExtras: 'header-base reconcile-cell',
+        },
+        inputClassExtras: 'reconcile-cell',
+        cellClassName: 'cell-base reconcile-cell',
+
+        renderDisplayCell: renderReconcileStateDisplay,
+        renderEditCell: renderReconcileStateEditor,
+    },
+    args);
 }
 
 
@@ -601,6 +768,28 @@ export function renderBalanceDisplay(args) {
 }
 
 
+/**
+ * Retrieves a column info for balance cells.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getBalanceColumnInfo(args) {
+    return Object.assign({ key: 'balance',
+        header: {
+            label: userMsg('AccountingCellEditors-balance'),
+            ariaLabel: 'Balance',
+            classExtras: 'header-base balance-cell',
+        },
+        inputClassExtras: 'balance-cell',
+        cellClassName: 'cell-base balance-cell',
+
+        renderDisplayCell: renderBalanceDisplay,
+        renderEditCell: renderBalanceEditor,
+    },
+    args);
+}
+
+
 
 /**
  * Editor renderer for share quantities.
@@ -613,6 +802,28 @@ export const renderSharesEditor = renderQuantityEditor;
  * @param {CellQuantityDisplayArgs} args
  */
 export const renderSharesDisplay = renderQuantityDisplay;
+
+
+/**
+ * Retrieves a column info for share totals cells.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getSharesColumnInfo(args) {
+    return Object.assign({ key: 'shares',
+        header: {
+            label: userMsg('AccountingCellEditors-shares'),
+            ariaLabel: 'Shares',
+            classExtras: 'header-base shares-cell',
+        },
+        inputClassExtras: 'shares-cell',
+        cellClassName: 'cell-base shares-cell',
+
+        renderDisplayCell: renderSharesDisplay,
+        renderEditCell: renderSharesEditor,
+    },
+    args);
+}
 
 
 /**
@@ -784,7 +995,7 @@ export function renderSplitQuantityDisplay(args) {
     }
 
     if (lotTooltipEntries.length) {
-        return <div className = "simple-tooltip">
+        return <div className = "simple-tooltip w-100">
             {displayComponent}
             <div className = "simple-tooltiptext">
                 {lotTooltipEntries}
@@ -794,3 +1005,25 @@ export function renderSplitQuantityDisplay(args) {
     return displayComponent;
 }
 
+/**
+ * Retrieves a column info for share totals cells.
+ * @param {getColumnInfoArgs} args
+ * @param {string}  type
+ * @param {string} [label]
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getSplitQuantityColumnInfo(args, type, label) {
+    label = label || userMsg('AccountingCellEditors-' + type);
+    return Object.assign({ key: type,
+        header: {
+            label: label,
+            classExtras: 'header-base splitQuantity-cell',
+        },
+        inputClassExtras: 'splitQuantity-cell',
+        cellClassName: 'cell-base splitQuantity-cell',
+
+        renderDisplayCell: renderSplitQuantityDisplay,
+        renderEditCell: renderSplitQuantityEditor,
+    },
+    args);
+}

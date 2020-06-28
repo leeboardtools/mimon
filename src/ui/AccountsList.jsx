@@ -20,49 +20,23 @@ let columnInfoDefs;
  */
 export function getAccountsListColumnInfoDefs() {
     if (!columnInfoDefs) {
-        const cellClassName = 'm-0';
-        const numericClassName = 'text-right';
-        const numericSize = -8; // 12.456,78
 
         columnInfoDefs = {
+            /*
             name: { key: 'name',
                 header: {
                     label: userMsg('AccountsList-name'),
                     ariaLabel: 'Name',
-                    classExtras: 'text-left',
+                    classExtras: 'header-base text-left',
                 },
                 inputClassExtras: 'text-left',
-                cellClassName: cellClassName + ' w-50',
+                cellClassName: 'm-0 w-50',
             },
-            type: { key: 'type',
-                header: {
-                    label: userMsg('AccountsList-type'),
-                    ariaLabel: 'Account Type',
-                    classExtras: 'text-left',
-                },
-                inputClassExtras: 'text-left',
-                cellClassName: cellClassName,
-            },
-            balance: { key: 'balance',
-                header: {
-                    label: userMsg('AccountsList-balance'),
-                    ariaLabel: 'Account Balance',
-                    classExtras: numericClassName,
-                },
-                inputClassExtras: numericClassName,
-                cellClassName: cellClassName,
-                inputSize: numericSize,
-            },
-            shares: { key: 'shares',
-                header: {
-                    label: userMsg('AccountsList-shares'),
-                    ariaLabel: 'Shares',
-                    classExtras: numericClassName,
-                },
-                inputClassExtras: numericClassName,
-                cellClassName: cellClassName,
-                inputSize: numericSize,
-            },
+            */
+            name: CE.getNameColumnInfo({}),
+            type: CE.getAccountTypeColumnInfo({}),
+            balance: CE.getBalanceColumnInfo({}),
+            shares: CE.getSharesColumnInfo({}),
         };
     }
 
@@ -462,7 +436,7 @@ export class AccountsList extends React.Component {
                 }
             });
         
-        case 'type' :
+        case 'accountType' :
             return CE.renderAccountTypeDisplay({
                 columnInfo: columnInfo,
                 value: {

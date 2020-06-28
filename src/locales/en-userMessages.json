@@ -98,9 +98,6 @@
 
 
     "AccountsList-name": "Name",
-    "AccountsList-type": "Type",
-    "AccountsList-balance": "Balance",
-    "AccountsList-shares": "Shares",
     "AccountsList-dummy_name": "Sample Account Name This is a much longer name",
 
     "AccountsListHandler-masterAccountList_title": "Accounts",
@@ -156,23 +153,26 @@
     "AccountRegisterHandler-copyTransaction": "Copy Transaction",
     "AccountRegisterHandler-pasteTransaction": "Paste Transaction",
 
-    "AccountRegister-date": "Date",
-    "AccountRegister-refNum": "Ref Num",
-    "AccountRegister-description": "Description",
     "AccountRegister-split": "Split",
-    "AccountRegister-balance": "Balance",
-    "AccountRegister-shares": "Shares",
-    "AccountRegister-reconcile": "✔",
     "AccountRegister-multi_splits": "-Split-",
-    "AccountRegister-bought": "Bought",
-    "AccountRegister-sold": "Sold",
     "AccountRegister-dummy_description": "This is a sample description for a transaction",
     "AccountRegister-dummy_accountName": "Sample Account Name",
 
 
-    "CellEditors-reconcile_NOT_RECONCILED": "-",
-    "CellEditors-reconcile_PENDING": "c",
-    "CellEditors-reconcile_RECONCILED": "\u2713",
+    "AccountingCellEditors-date": "Date",
+    "AccountingCellEditors-refNum": "Ref Num",
+    "AccountingCellEditors-name": "Name",
+    "AccountingCellEditors-description": "Description",
+    "AccountingCellEditors-accountType": "Type",
+    "AccountingCellEditors-reconcile": "✔",
+    "AccountingCellEditors-bought": "Bought",
+    "AccountingCellEditors-sold": "Sold",
+    "AccountingCellEditors-shares": "Shares",
+    "AccountingCellEditors-balance": "Balance",
+
+    "AccountingCellEditors-reconcile_NOT_RECONCILED": "-",
+    "AccountingCellEditors-reconcile_PENDING": "c",
+    "AccountingCellEditors-reconcile_RECONCILED": "\u2713",
 
 
     "PricedItemEditor-prompt_cancel_title": "Confirm Cancel",

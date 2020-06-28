@@ -177,6 +177,7 @@
     background-color: transparent;
     opacity: 0.5;
     line-height: 1.5rem;
+    padding: 0;
 }
 /** End util-ui/CollapsibleRowTable.jsx */
 

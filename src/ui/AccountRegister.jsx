@@ -6,48 +6,47 @@ import { getQuantityDefinition } from '../util/Quantities';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
 import * as CE from './AccountingCellEditors';
+import * as AH from '../tools/AccountHelpers';
 import { columnInfosToColumns, 
     stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
 import deepEqual from 'deep-equal';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
+import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor';
 
 
 const allColumnInfoDefs = {};
 
 
-function getTransactionCellValue(args) {
-    const { rowEntry, columnInfo } = args;
+function getTransactionCellValue(args, propertyName) {
+    const { rowEntry, } = args;
     const { transactionDataItem } = rowEntry;
-    const { propertyName } = columnInfo;
-    if (transactionDataItem && propertyName) {
+    if (transactionDataItem) {
         return transactionDataItem[propertyName];
     }
 }
 
-function saveTransactionCellValue(args) {
-    const { saveBuffer, columnInfo, cellEditBuffer } = args;
-    const { propertyName } = columnInfo;
-    if (saveBuffer && propertyName) {
-        saveBuffer[propertyName] = cellEditBuffer.value;
+function saveTransactionCellValue(args, propertyName) {
+    const { saveBuffer, cellEditBuffer } = args;
+    if (saveBuffer) {
+        saveBuffer.newTransactionDataItem[propertyName] = cellEditBuffer.value;
     }
 }
 
 
-function getSplitCellValue(args) {
-    const { rowEntry, columnInfo } = args;
+function getSplitCellValue(args, propertyName) {
+    const { rowEntry } = args;
     const { transactionDataItem, splitIndex } = rowEntry;
-    const { propertyName } = columnInfo;
-    if (transactionDataItem && propertyName) {
+    if (transactionDataItem) {
         return transactionDataItem.splits[splitIndex][propertyName];
     }
 }
 
-function saveSplitCellValue(args) {
-    const { rowEntry, columnInfo, cellEditBuffer, saveBuffer } = args;
+function saveSplitCellValue(args, propertyName) {
+    const { rowEntry, cellEditBuffer, saveBuffer } = args;
     const { splitIndex } = rowEntry;
-    const { propertyName } = columnInfo;
     if (saveBuffer && propertyName) {
-        saveBuffer.splits[splitIndex][propertyName] = cellEditBuffer.value;
+        saveBuffer.newTransactionDataItem.splits[splitIndex][propertyName] 
+            = cellEditBuffer.value;
     }
 }
 
@@ -101,6 +100,7 @@ function saveDescriptionCellValue(args) {
     const { rowEntry, cellEditBuffer, saveBuffer } = args;
     const { transactionDataItem, splitIndex } = rowEntry;
     if (saveBuffer) {
+        const { newTransactionDataItem } = saveBuffer;
         const split = transactionDataItem.splits[splitIndex];
         let { value } = cellEditBuffer;
         if (typeof value === 'object') {
@@ -108,10 +108,10 @@ function saveDescriptionCellValue(args) {
         }
 
         if (split.description) {
-            saveBuffer.splits[splitIndex].description = value;
+            newTransactionDataItem.splits[splitIndex].description = value;
         }
         else {
-            saveBuffer.description = value;
+            newTransactionDataItem.description = value;
         }
     }
 }
@@ -120,6 +120,32 @@ function saveDescriptionCellValue(args) {
 //
 //---------------------------------------------------------
 // splits
+function getSplitsListCellValue(args) {
+    const { rowEntry } = args;
+    const { transactionDataItem } = rowEntry;
+    if (transactionDataItem) {
+        return {
+            splits: transactionDataItem.splits,
+            rowEntry: rowEntry,
+        };
+    }
+}
+
+function saveSplitsListCellValue(args) {
+    const { rowEntry, columnInfo, cellEditBuffer, saveBuffer } = args;
+    const { splitIndex } = rowEntry;
+    if (saveBuffer) {
+        // Scenarios:
+        //  - Two splits, the 'other' split's account changed.
+        //  - Splits Editor: Replace all the splits.
+        //      - Maybe need to update the split index as well.
+        //      - Need to distinguish between splits editor and just
+        //          having multiple splits.
+        //
+
+        //saveBuffer.splits[splitIndex][propertyName] = cellEditBuffer.value;
+    }
+}
 
 function renderSplitItemTooltip(caller, splits, index) {
     const split = splits[index];
@@ -141,22 +167,20 @@ function renderSplitItemTooltip(caller, splits, index) {
 
 function renderSplitsListDisplay(args) {
     const { rowEntry, columnInfo, value } = args;
-    const splits = value;
+
+    if (!value) {
+        return;
+    }
+
+    const { splits } = value;
     if (splits) {
         const { caller } = rowEntry;
         const { accessor } = caller.props;
         let text;
+        let tooltip;
         if (splits.length === 2) {
             const split = splits[1 - rowEntry.splitIndex];
-            let splitAccountDataItem = accessor.getAccountDataItemWithId(split.accountId);
-            if (!splitAccountDataItem) {
-                splitAccountDataItem = rowEntry.splitAccountDataItem;
-                if (!splitAccountDataItem) {
-                    return;
-                }
-            }
-
-            text = splitAccountDataItem.name;
+            text = AH.getShortAccountAncestorNames(accessor, split.accountId);
         }
         else {
             text = userMsg('AccountRegister-multi_splits');
@@ -164,29 +188,116 @@ function renderSplitsListDisplay(args) {
             for (let i = 0; i < splits.length; ++i) {
                 tooltipEntries.push(renderSplitItemTooltip(caller, splits, i));
             }
-            const tooltip = <div className = "simple-tooltiptext">
+            tooltip = <div className = "simple-tooltiptext">
                 {tooltipEntries}
             </div>;
+        }
 
-            return <div className = "simple-tooltip"> 
-                {CE.renderTextDisplay({
-                    columnInfo: columnInfo, 
-                    value: text,
-                })}
+        if (args.isSizeRender) {
+            console.log('sizeRender: ' + text);
+        }
+
+        const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+        const component = <CellSelectDisplay
+            selectedValue = {text}
+            ariaLabel = {ariaLabel}
+            classExtras = {inputClassExtras}
+            size = {inputSize}
+        />;
+
+        if (tooltip) {
+            return <div className = "simple-tooltip w-100"> 
+                {component}
                 {tooltip}
             </div>;
         }
-        
-        return CE.renderTextDisplay({
-            columnInfo: columnInfo, 
-            value: text,
+        return component;
+    }
+}
+
+
+function addAccountIdsToItems(accessor, items, accountId, filter) {
+    const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+    if (!accountDataItem) {
+        return;
+    }
+
+    if (filter(accountId)) {
+        const name = AH.getShortAccountAncestorNames(accessor, accountId);
+        items.push([accountId, name]);
+    }
+
+    const { childAccountIds } = accountDataItem;
+    if (childAccountIds) {
+        childAccountIds.forEach((childId) => {
+            addAccountIdsToItems(accessor, items, childId, filter);
         });
     }
 }
 
 
-function renderSplitsListEditor(args) {
+function onSplitsListChange(e, args) {
 
+}
+
+function renderSplitsListEditor(args) {
+    const { columnInfo, cellEditBuffer, errorMsg,
+        refForFocus } = args;
+    const { splits, rowEntry } = cellEditBuffer.value;
+    if (!splits || !rowEntry) {
+        return;
+    }
+
+    // Dropdown list, with one option the --Split-- button.
+    // When the --Split-- button is chosen, we bring up a modal
+    // multi-split selection component.
+    // 
+    // To clear a multi-split, just remove the other accounts in the
+    // multi-split selection component.
+    const items = [[ -1, userMsg('AccountRegister-multi_splits')]];
+    const { caller, splitIndex } = rowEntry;
+    const { accountId, accessor } = caller.props;
+    addAccountIdsToItems(accessor, items, accessor.getRootAssetAccountId(),
+        (id) => id !== accountId);
+    addAccountIdsToItems(accessor, items, accessor.getRootLiabilityAccountId(),
+        (id) => id !== accountId);
+    addAccountIdsToItems(accessor, items, accessor.getRootEquityAccountId(),
+        (id) => id !== accountId);
+    addAccountIdsToItems(accessor, items, accessor.getRootIncomeAccountId(),
+        (id) => id !== accountId);
+    addAccountIdsToItems(accessor, items, accessor.getRootExpenseAccountId(),
+        (id) => id !== accountId);
+
+    let activeAccountId = -1;
+    if (splits.length === 2) {
+        activeAccountId = splits[1 - splitIndex].accountId;
+    }
+
+    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+    return <CellSelectEditor
+        selectedValue = {activeAccountId}
+        items = {items}
+        errorMsg = {errorMsg}
+        ariaLabel = {ariaLabel}
+        classExtras = {inputClassExtras}
+        size = {inputSize}
+        onChange = {(e) => onSplitsListChange(e, args)}
+        ref = {refForFocus}
+    />;
+/*
+    selectedValue: PropTypes.string,
+    items: PropTypes.oneOfType([
+        PropTypes.arrayOf(PropTypes.string),
+        PropTypes.arrayOf(PropTypes.array),
+    ]).isRequired,
+    errorMsg: PropTypes.string,
+    ariaLabel: PropTypes.string,
+    classExtras: PropTypes.string,
+    onChange: PropTypes.func,
+    onFocus: PropTypes.func,
+    onBlur: PropTypes.func,
+    disabled: PropTypes.bool,
+*/
 }
 
 
@@ -226,89 +337,37 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
 
     let columnInfoDefs = allColumnInfoDefs[accountType.name];
     if (!columnInfoDefs) {
-        const cellClassName = 'm-0';
-
-        const numericClassName = 'text-right';
-        const numericSize = -8; // 12.456,78
-
         columnInfoDefs = {
-            date: { key: 'date',
-                header: {
-                    label: userMsg('AccountRegister-date'),
-                    ariaLabel: 'Date',
-                    classExtras: 'text-center',
-                },
-                inputClassExtras: 'text-center',
-                inputSize: -10,
-                cellClassName: cellClassName,
-
-                propertyName: 'ymdDate',
-                getCellValue: getTransactionCellValue,
-                saveCellValue: saveTransactionCellValue,
-                renderDisplayCell: CE.renderDateDisplay,
-                renderEditCell: CE.renderDateEditor,
-            },
-            refNum: { key: 'refNum',
-                header: {
-                    label: userMsg('AccountRegister-refNum'),
-                    ariaLabel: 'Number',
-                    classExtras: 'text-center',
-                },
-                inputClassExtras: 'text-center',
-                inputSize: -6,
-                cellClassName: cellClassName,
-
-                propertyName: 'refNum',
-                getCellValue: getSplitCellValue,
-                saveCellValue: saveSplitCellValue,
-                renderDisplayCell: CE.renderRefNumDisplay,
-                renderEditCell: CE.renderRefNumEditor,
-            },
-            description: { key: 'description',
-                header: {
-                    label: userMsg('AccountRegister-description'),
-                    ariaLabel: 'Description',
-                    classExtras: 'text-left',
-                },
-                inputClassExtras: 'text-left',
-                cellClassName: cellClassName,
-
+            date: CE.getDateColumnInfo({
+                getCellValue: (args) => getTransactionCellValue(args, 'ymdDate'),
+                saveCellValue: (args) => saveTransactionCellValue(args, 'ymdDate'),
+            }),
+            refNumb: CE.getRefNumColumnInfo({
+                getCellValue: (args) => getSplitCellValue(args, 'refNum'),
+                saveCellValue: (args) => saveSplitCellValue(args, 'refNumb'),
+            }),
+            description: CE.getDescriptionColumnInfo({
                 getCellValue: getDescriptionCellValue,
                 saveCellValue: saveDescriptionCellValue,
-                renderDisplayCell: CE.renderDescriptionDisplay,
-                renderEditCell: CE.renderDescriptionEditor,
-            },
-            splits: { key: 'split',
+            }),
+            splits: { key: 'splits',
                 header: {
                     label: userMsg('AccountRegister-split'),
-                    ariaLabel: 'Split',
-                    classExtras: 'text-left',
+                    classExtras: 'header-base splits-cell',
                 },
-                inputClassExtras: 'text-left',
-                cellClassName: cellClassName,
+                inputClassExtras: 'splits-cell',
+                cellClassName: 'cell-base splits-cell',
 
                 propertyName: 'splits',
-                getCellValue: getTransactionCellValue,
-                saveCellValue: saveTransactionCellValue,
+                getCellValue: getSplitsListCellValue,
+                saveCellValue: saveSplitsListCellValue,
                 renderDisplayCell: renderSplitsListDisplay,
                 renderEditCell: renderSplitsListEditor,
             },
-            reconcile: { key: 'reconcile',
-                header: {
-                    label: userMsg('AccountRegister-reconcile'),
-                    ariaLabel: 'Reconciled',
-                    classExtras: 'text-center',
-                },
-                inputClassExtras: 'text-center',
-                inputSize: 2,
-                cellClassName: cellClassName,
-
-                propertyName: 'reconcileState',
-                getCellValue: getSplitCellValue,
-                saveCellValue: saveSplitCellValue,
-                renderDisplayCell: CE.renderReconcileStateDisplay,
-                renderEditCell: CE.renderReconcileStateEditor,
-            },
+            reconcile: CE.getReconcileStateColumnInfo({
+                getCellValue: (args) => getSplitCellValue(args, 'reconcileState'),
+                saveCellValue: (args) => saveSplitCellValue(args, 'reconcileState'),
+            }),
         };
 
         if (accountType.hasLots) {
@@ -320,96 +379,42 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
             // Also, how does this affect the debit and credit columns?
             //  - bought
             //  - sold
-            columnInfoDefs.bought = { key: 'bought',
-                header: {
-                    label: userMsg('AccountRegister-bought'),
-                    ariaLabel: 'Bought',
-                    classExtras: numericClassName,
+            columnInfoDefs.bought = CE.getSplitQuantityColumnInfo(
+                {
+                    getCellValue: (args) => getSplitQuantityCellValue(args, 'bought'),
+                    saveCellValue: saveSplitQuantityCellValue,
                 },
-                inputClassExtras: numericClassName,
-                cellClassName: cellClassName,
-                inputSize: numericSize,
-
-                getCellValue: (args) => getSplitQuantityCellValue(args, 'bought'),
-                saveCellValue: saveSplitQuantityCellValue,
-                renderDisplayCell: CE.renderSplitQuantityDisplay,
-                renderEditCell: CE.renderSplitQuantityEditor,
-
-            };
-            columnInfoDefs.sold = { key: 'sold',
-                header: {
-                    label: userMsg('AccountRegister-sold'),
-                    ariaLabel: 'Sold',
-                    classExtras: numericClassName,
+                'bought');
+            columnInfoDefs.sold = CE.getSplitQuantityColumnInfo(
+                {
+                    getCellValue: (args) => getSplitQuantityCellValue(args, 'sold'),
+                    saveCellValue: saveSplitQuantityCellValue,
                 },
-                inputClassExtras: numericClassName,
-                cellClassName: cellClassName,
-                inputSize: numericSize,
-
-                getCellValue: (args) => getSplitQuantityCellValue(args, 'sold'),
-                saveCellValue: saveSplitQuantityCellValue,
-                renderDisplayCell: CE.renderSplitQuantityDisplay,
-                renderEditCell: CE.renderSplitQuantityEditor,
-            };
-            columnInfoDefs.shares = { key: 'shares',
-                header: {
-                    label: userMsg('AccountRegister-shares'),
-                    ariaLabel: 'Shares',
-                    classExtras: numericClassName,
-                },
-                inputClassExtras: numericClassName,
-                cellClassName: cellClassName,
-                inputSize: numericSize,
-
+                'sold');
+            columnInfoDefs.shares = CE.getSharesColumnInfo({
                 getCellValue: getAccountStateQuantityCellValue,
-                renderDisplayCell: CE.renderSharesDisplay,
-            };
+            });
         }
         else {
-            columnInfoDefs.debit = { key: 'debit',
-                header: {
-                    label: accountType.debitLabel,
-                    ariaLabel: accountType.debitLabel,
-                    classExtras: numericClassName,
+            columnInfoDefs.debit = CE.getSplitQuantityColumnInfo(
+                {
+                    getCellValue: (args) => getSplitQuantityCellValue(args, 'debit'),
+                    saveCellValue: saveSplitQuantityCellValue,
                 },
-                inputClassExtras: numericClassName,
-                cellClassName: cellClassName,
-                inputSize: numericSize,
-
-                getCellValue: (args) => getSplitQuantityCellValue(args, 'debit'),
-                saveCellValue: saveSplitQuantityCellValue,
-                renderDisplayCell: CE.renderSplitQuantityDisplay,
-                renderEditCell: CE.renderSplitQuantityEditor,
-            };
-            columnInfoDefs.credit = { key: 'credit',
-                header: {
-                    label: accountType.creditLabel,
-                    ariaLabel: accountType.creditLabel,
-                    classExtras: numericClassName,
+                'debit',
+                accountType.debitLabel
+            );
+            columnInfoDefs.credit = CE.getSplitQuantityColumnInfo(
+                {
+                    getCellValue: (args) => getSplitQuantityCellValue(args, 'credit'),
+                    saveCellValue: saveSplitQuantityCellValue,
                 },
-                inputClassExtras: numericClassName,
-                cellClassName: cellClassName,
-                inputSize: numericSize,
-
-                getCellValue: (args) => getSplitQuantityCellValue(args, 'credit'),
-                saveCellValue: saveSplitQuantityCellValue,
-                renderDisplayCell: CE.renderSplitQuantityDisplay,
-                renderEditCell: CE.renderSplitQuantityEditor,
-            };
-            columnInfoDefs.balance = { key: 'balance',
-                header: {
-                    label: userMsg('AccountRegister-balance'),
-                    ariaLabel: 'Account Balance',
-                    classExtras: numericClassName,
-                },
-                inputClassExtras: numericClassName,
-                cellClassName: cellClassName,
-                inputSize: numericSize,
-
+                'credit',
+                accountType.creditLabel
+            );
+            columnInfoDefs.balance = CE.getBalanceColumnInfo({
                 getCellValue: getAccountStateQuantityCellValue,
-                renderDisplayCell: CE.renderBalanceDisplay,
-            };
-
+            });
         }
 
         for (let name in columnInfoDefs) {
@@ -425,6 +430,22 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
 }
 
 
+function getAccountWithLongestAncestorName(accessor, accountId, nameId) {
+    // We only need to check accounts with no children.
+    const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+    if (!accountDataItem.childAccountIds || !accountDataItem.childAccountIds.length) {
+        const name = AH.getShortAccountAncestorNames(accessor, accountId);
+        if (name.length > nameId.name.length) {
+            nameId.name = name;
+            nameId.id = accountId;
+        }
+    }
+    else {
+        // Gotta check the children.
+        accountDataItem.childAccountIds.forEach((childAccountId) =>
+            getAccountWithLongestAncestorName(accessor, childAccountId, nameId));
+    }
+}
 
 
 /**
@@ -519,6 +540,21 @@ export class AccountRegister extends React.Component {
                 transactionId: key.id,
                 splitOccurrance: splitOccurrance,
         */
+
+        // Find the account that has the longest name for the splits...
+        const nameId = {
+            name: '',
+            id: -1,
+        };
+        getAccountWithLongestAncestorName(accessor,
+            accessor.getRootAssetAccountId(), nameId);
+        getAccountWithLongestAncestorName(accessor,
+            accessor.getRootLiabilityAccountId(), nameId);
+        getAccountWithLongestAncestorName(accessor,
+            accessor.getRootIncomeAccountId(), nameId);
+        getAccountWithLongestAncestorName(accessor,
+            accessor.getRootExpenseAccountId(), nameId);
+
         this._sizingRowEntry = {
             caller: this,
             transactionDataItem: {
@@ -527,7 +563,15 @@ export class AccountRegister extends React.Component {
                 splits: [
                     {
                         reconcileState: T.ReconcileState.NOT_RECONCILED,
-                        accountId: -1,
+                        accountId: nameId.id,
+                        quantityBaseValue: 999999999,
+                        lotChanges: [
+                            { quantityBaseValue: 999999999, },
+                        ],
+                    },
+                    {
+                        reconcileState: T.ReconcileState.NOT_RECONCILED,
+                        accountId: nameId.id,
                         quantityBaseValue: 999999999,
                         lotChanges: [
                             { quantityBaseValue: 999999999, },
@@ -564,6 +608,7 @@ export class AccountRegister extends React.Component {
         }
     }
 
+    
     onTransactionsAdd(result) {
         const { newTransactionDataItems } = result;
         const addedIds = new Set();
@@ -599,13 +644,7 @@ export class AccountRegister extends React.Component {
         const removedIds = new Set();
         removedTransactionDataItems.forEach((transactionDataItem) => {
             if (this.isTransactionForThis(transactionDataItem)) {
-                const { id } = transactionDataItem;
-                const { editInfo } = this.state;
-                if (editInfo && (editInfo.transactionId === id)) {
-                    editInfo.cancelRowEdit();
-                }
-
-                removedIds.add(id);
+                removedIds.add(transactionDataItem.id);
             }    
         });
 
@@ -648,16 +687,12 @@ export class AccountRegister extends React.Component {
         }
     }
 
-    //
-    // rowEntry has:
-    //  key: key.id.toString() + '_' + splitOccurrance,
-    //  rowIndex: newRowEntries.length,
-    //  transactionId: key.id,
-    //  splitOccurrance: splitOccurrance,
-    //  transactionDataItem 
-    //  accountStateDataItem
 
     updateRowEntries(modifiedTransactionIds) {
+        if (this._rowTableRef.current) {
+            this._rowTableRef.current.cancelRowEdit();
+        }
+
         process.nextTick(async () => {
             const newRowEntries = [];
             const newRowEntriesByTransactionIds = new Map();
@@ -946,15 +981,18 @@ export class AccountRegister extends React.Component {
         const { rowIndex } = args;
         const rowEntry = this.state.rowEntries[rowIndex];
         const { transactionDataItem } = rowEntry;
-        return T.getTransactionDataItem(transactionDataItem, true);
+        return {
+            newTransactionDataItem: T.getTransactionDataItem(transactionDataItem, true),
+        };
     }
 
 
     async asyncSaveBuffer(args) {
         try {
-            const { rowIndex, saveBuffer: newTransactionDataItem } = args;
+            const { rowIndex, saveBuffer } = args;
             const rowEntry = this.state.rowEntries[rowIndex];
             const { transactionDataItem } = rowEntry;
+            const { newTransactionDataItem } = saveBuffer;
 
             const { accessor } = this.props;
             const accountingActions = accessor.getAccountingActions();
@@ -996,6 +1034,8 @@ export class AccountRegister extends React.Component {
         });
         return msg;
     }
+
+
 
     render() {
         const { state } = this;

@@ -67,7 +67,7 @@ test('AccountHelpers', async () => {
             asset.name + ':' + investments.name + ':' + brokerageA.name
         );
         expect(AH.getShortAccountAncestorNames(accessor, sys.aaplBrokerageAId)).toEqual(
-            asset.name + '...' + brokerageA.name + ':' + aaplBrokerageA.name
+            asset.name + ':[...]:' + brokerageA.name + ':' + aaplBrokerageA.name
         );
         expect(AH.getShortAccountAncestorNames(accessor, sys.aaplBrokerageAId,
             {

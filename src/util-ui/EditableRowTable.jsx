@@ -198,6 +198,9 @@ export function editableRowTable(WrappedTable) {
         }
 
         
+        /**
+         * Public method that cancels editing if there is editing going on.
+         */
         cancelRowEdit() {
             if (this._isSaving) {
                 return;

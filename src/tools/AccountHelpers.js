@@ -58,7 +58,7 @@ export function getAccountAncestorNames(accessor, id, options) {
 /**
  * @typedef {object}    getShortAccountAncestorNamesOptions
  * @property {string}   [separator = ':'] The string to appear between names.
- * @property {string}   [placeholder = '...]    The string to appear in place
+ * @property {string}   [placeholder = ':[...]:']    The string to appear in place
  * of the names that were left out.
  */
 
@@ -80,7 +80,7 @@ export function getShortAccountAncestorNames(accessor, id, options) {
         return buildAncestorNames(accountDataItems, separator);
     }
 
-    const placeholder = options.placeholder || '...';
+    const placeholder = options.placeholder || ':[...]:';
     return accountDataItems[accountDataItems.length - 1].name 
         + placeholder + accountDataItems[1].name
         + separator + accountDataItems[0].name;

@@ -478,6 +478,8 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
 - RowTable To Do:
     - Add column resizing support
 
+- CollapsibleRowTable
+    - Need to tweak the expand/collapse indenting.
 
 - Fix AccountEditor modifying root account.
 
@@ -490,7 +492,6 @@ AccountsList:
     - Add tooltip with description for name.
 
 
-- Change reconcile state editor to be toggling button.
 - Add splits list editor.
 - Add split quantity editor.
 - Add adding new transaction for last row.
@@ -498,3 +499,12 @@ AccountsList:
 - Splits List:
     - Need appropriate sign for split values.
 
+
+- AccountRegister
+
+- Add an Imbalance account?
+    - Root Imbalance account for the default currency.
+    - Additional imbalance accounts as needed for other currencies.
+    - 
+
+- Add a transaction id based lock.
