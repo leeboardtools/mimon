@@ -667,7 +667,7 @@ export class RowTable extends React.Component {
                 const width = columnWidths[c];
                 if (width !== undefined) {
                     style = {
-                        width: width,
+                        flexBasis: width,
                     };
                 }
 
@@ -812,7 +812,7 @@ export class RowTable extends React.Component {
                     const width = columnWidths[c];
                     if (width !== undefined) {
                         style = {
-                            width: width,
+                            flexBasis: width,
                         };
                     }
 

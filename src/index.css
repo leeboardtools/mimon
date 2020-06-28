@@ -129,12 +129,14 @@ body {
 
 .header-base  {
   /* TEST!!! */
-  border: 0px solid #666666;
+  /*border: 1px solid #666666;*/
+  flex-grow: 0;
 }
 
 .cell-base {
   /* TEST!!! */
-  border: 0px solid #333333;
+  /*border: 1px solid #333333;*/
+  flex-grow: 0;
 }
 
 
@@ -143,7 +145,7 @@ body {
 }
 
 .date-cell {
-  width: 12rem;
+  flex-basis: 10rem;
 }
 
 
@@ -152,7 +154,7 @@ body {
 }
 
 .refNum-cell {
-  width: 6rem;
+  flex-basis: 6rem;
 }
 
 
@@ -167,6 +169,10 @@ body {
 
 .description-base {
   text-align: left;
+}
+
+.description-header {
+  flex-grow: 2;
 }
 
 .description-cell {
@@ -187,6 +193,10 @@ body {
   text-align: left;
 }
 
+.splits-header {
+  flex-grow: 2;
+}
+
 .splits-cell {
   flex-grow: 2;
 }
@@ -197,7 +207,7 @@ body {
 }
 
 .reconcile-cell {
-  width: 3rem;
+  flex-basis: 3rem;
 }
 
 
@@ -207,10 +217,11 @@ body {
 
 .splitQuantity-header {
   text-align: center;
+  flex-basis: 10rem;
 }
 
 .splitQuantity-cell {
-  width: 12rem;  /* 1,234,567.00 */
+  flex-basis: 10rem;
 }
 
 
@@ -220,10 +231,11 @@ body {
 
 .shares-header {
   text-align: center;
+  flex-basis: 10rem;
 }
 
 .shares-cell {
-  width: 12rem;
+  flex-basis: 10rem;
 }
 
 
@@ -233,9 +245,11 @@ body {
 
 .balance-header {
   text-align: center;
+  flex-basis: 10rem;
 }
 
 .balance-cell {
-  width: 12rem;
+  flex-grow: 0;
+  flex-basis: 10rem;
 }
 

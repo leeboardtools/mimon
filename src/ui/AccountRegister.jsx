@@ -370,6 +370,10 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
             }),
         };
 
+        // TEST!!!
+        //delete columnInfoDefs.description;
+        //delete columnInfoDefs.splits;
+
         if (accountType.hasLots) {
             // Need to think about this more, what exactly do we want to display
             // when there are shares involved.
