@@ -66,19 +66,17 @@ function removeAccountDataItemWithId(accountDataItems, id) {
 }
 
 
-function getAccountCellValue(args) {
-    const { rowEntry, columnInfo } = args;
+function getAccountCellValue(args, propertyName) {
+    const { rowEntry } = args;
     const { accountDataItem } = rowEntry;
-    const { propertyName } = columnInfo;
-    if (accountDataItem && propertyName) {
+    if (accountDataItem) {
         return accountDataItem[propertyName];
     }
 }
 
-function saveAccountCellValue(args) {
-    const { saveBuffer, columnInfo, cellEditBuffer } = args;
-    const { propertyName } = columnInfo;
-    if (saveBuffer && propertyName) {
+function saveAccountCellValue(args, propertyName) {
+    const { saveBuffer, cellEditBuffer } = args;
+    if (saveBuffer) {
         saveBuffer[propertyName] = cellEditBuffer.value;
     }
 }
@@ -181,64 +179,31 @@ export class NewFileAccountsEditor extends React.Component {
             },
         };
 
-        const cellClassName = 'm-0 ';
-
         this.state.columnInfos = [
-            { key: 'name',
-                header: {
-                    label: userMsg('NewFileAccountsEditor-account_name'),
-                    ariaLabel: 'Name',
-                    classExtras: 'text-left', // w-50',
-                },
-                propertyName: 'name',
-                inputClassExtras: 'text-left',
-                cellClassName: cellClassName + 'w-30',
-
-                getCellValue: getAccountCellValue,
-                saveCellValue: saveAccountCellValue,
-                renderDisplayCell: CE.renderNameDisplay,
-                renderEditCell: CE.renderNameEditor,
-            },
-            { key: 'type',
-                header: {
-                    label: userMsg('NewFileAccountsEditor-type'),
-                    ariaLabel: 'Account Type',
-                    classExtras: 'text-left', // w-15',
-                },
-                propertyName: 'type',
-                inputClassExtras: 'text-left',
-                cellClassName: cellClassName,
-                inputSize: -10,
-
+            CE.getNameColumnInfo({
+                getCellValue: (args) => getAccountCellValue(args, 'name'),
+                saveCellValue: (args) => saveAccountCellValue(args, 'name'),
+            }),
+            CE.getAccountTypeColumnInfo({
                 getCellValue: getAccountTypeCellValue,
                 saveCellValue: saveAccountTypeCellValue,
-                renderDisplayCell: CE.renderAccountTypeDisplay,
-                renderEditCell: CE.renderAccountTypeEditor,
-            },
-            { key: 'description',
-                header: {
-                    label: userMsg('NewFileAccountsEditor-description'),
-                    ariaLabel: 'Description',
-                    classExtras: 'text-left', // w-40',
-                },
-                propertyName: 'description',
-                inputClassExtras: 'text-left',
-                cellClassName: cellClassName + 'w-40',
-
-                getCellValue: getAccountCellValue,
-                saveCellValue: saveAccountCellValue,
-                renderDisplayCell: CE.renderDescriptionDisplay,
-                renderEditCell: CE.renderDescriptionEditor,
-            },
+            }),
+            CE.getDescriptionColumnInfo({
+                getCellValue: (args) => getAccountCellValue(args, 'description'),
+                saveCellValue: (args) => saveAccountCellValue(args, 'description'),
+            }),
+            CE.getBalanceColumnInfo({
+                getCellValue: getOpeningBalanceCellValue,
+                saveCellValue: saveOpeningBalanceCellValue,
+            }),
+            /*
             { key: 'opening_balance',
                 header: {
                     label: userMsg('NewFileAccountsEditor-opening_balance'),
-                    ariaLabel: 'Opening Balance',
-                    classExtras: 'text-right',
+                    classExtras: 'header-base text-right',
                 },
-                propertyName: 'openingBalance',
                 inputClassExtras: 'text-right',
-                cellClassName: cellClassName,
+                cellClassName: 'cell-base',
                 inputSize: -14, // 1,234,567.89
 
                 getCellValue: getOpeningBalanceCellValue,
@@ -246,6 +211,7 @@ export class NewFileAccountsEditor extends React.Component {
                 renderDisplayCell: CE.renderBalanceDisplay,
                 renderEditCell: CE.renderBalanceEditor,
             },
+            */
         ];
 
         this.state.columns = columnInfosToColumns(this.state);

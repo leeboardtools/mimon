@@ -129,60 +129,113 @@ body {
 
 .header-base  {
   /* TEST!!! */
-  border: 1px solid #666666;
+  border: 0px solid #666666;
 }
 
 .cell-base {
   /* TEST!!! */
-  border: 1px solid #333333;
+  border: 0px solid #333333;
+}
+
+
+.date-base {
+  text-align: center;
 }
 
 .date-cell {
+  width: 12rem;
+}
+
+
+.refNum-base {
   text-align: center;
-  width: 7rem;
 }
 
 .refNum-cell {
-  text-align: center;
   width: 6rem;
 }
 
-.name-cell {
+
+.name-base {
   text-align: left;
+}
+
+.name-cell {
   flex-grow: 2;
+}
+
+
+.description-base {
+  text-align: left;
 }
 
 .description-cell {
-  text-align: left;
   flex-grow: 2;
+}
+
+
+.accountType-base {
+  text-align: left;
 }
 
 .accountType-cell {
-  text-align: left;
   flex-grow: 1;
 }
 
-.splits-cell {
+
+.splits-base {
   text-align: left;
+}
+
+.splits-cell {
   flex-grow: 2;
 }
 
-.reconcile-cell {
+
+.reconcile-base {
   text-align: center;
-  width: 2rem;
+}
+
+.reconcile-cell {
+  width: 3rem;
+}
+
+
+.splitQuantity-base {
+  text-align: right;
+}
+
+.splitQuantity-header {
+  text-align: center;
 }
 
 .splitQuantity-cell {
+  width: 12rem;  /* 1,234,567.00 */
+}
+
+
+.shares-base {
   text-align: right;
-  width: 8rem;  /* 1,234,567.00 */
+}
+
+.shares-header {
+  text-align: center;
 }
 
 .shares-cell {
+  width: 12rem;
+}
+
+
+.balance-base {
   text-align: right;
-  width: 8rem;
+}
+
+.balance-header {
+  text-align: center;
 }
 
 .balance-cell {
-  text-align: right;
-  width: 8rem;
+  width: 12rem;
 }
+

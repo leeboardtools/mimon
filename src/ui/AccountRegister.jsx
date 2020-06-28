@@ -353,10 +353,10 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
             splits: { key: 'splits',
                 header: {
                     label: userMsg('AccountRegister-split'),
-                    classExtras: 'header-base splits-cell',
+                    classExtras: 'header-base splits-base splits-header',
                 },
-                inputClassExtras: 'splits-cell',
-                cellClassName: 'cell-base splits-cell',
+                inputClassExtras: 'splits-base splits-input',
+                cellClassName: 'cell-base splits-base splits-cell',
 
                 propertyName: 'splits',
                 getCellValue: getSplitsListCellValue,

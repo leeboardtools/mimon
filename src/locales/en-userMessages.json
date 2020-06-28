@@ -78,9 +78,6 @@
     "NewFileConfigurator-expense_tab": "Expenses",
 
     "NewFileAccountsEditor-heading": "Account Setup",
-    "NewFileAccountsEditor-account_name": "Name",
-    "NewFileAccountsEditor-description": "Description",
-    "NewFileAccountsEditor-type": "Type",
     "NewFileAccountsEditor-opening_balance": "Opening Balance",
     "NewFileAccountsEditor-name_required": "An account name is required.",
     "NewFileAccountsEditor-invalid_opening_balance": "The opening balance must either be empty or a valid monetary value.",

@@ -184,10 +184,10 @@ export function getRefNumColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-refNum'),
             ariaLabel: 'Reference Number',
-            classExtras: 'header-base refNum-cell',
+            classExtras: 'header-base refNum-base refNum-header',
         },
-        inputClassExtras: 'refNum-cell',
-        cellClassName: 'cell-base refNum-cell',
+        inputClassExtras: 'refNum-base refNum-input',
+        cellClassName: 'cell-base refNum-base refNum-cell',
 
         renderDisplayCell: renderRefNumDisplay,
         renderEditCell: renderRefNumEditor,
@@ -254,10 +254,10 @@ export function getNameColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-name'),
             ariaLabel: 'Name',
-            classExtras: 'header-base name-cell',
+            classExtras: 'header-base name-base name-header',
         },
-        inputClassExtras: 'name-cell',
-        cellClassName: 'cell-base name-cell',
+        inputClassExtras: 'name-base name-input',
+        cellClassName: 'cell-base name-base name-cell',
 
         renderDisplayCell: renderNameDisplay,
         renderEditCell: renderNameEditor,
@@ -323,10 +323,10 @@ export function getDescriptionColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-description'),
             ariaLabel: 'Description',
-            classExtras: 'header-base description-cell',
+            classExtras: 'header-base description-base description-header',
         },
-        inputClassExtras: 'description-cell',
-        cellClassName: 'cell-base description-cell',
+        inputClassExtras: 'description-base description-input',
+        cellClassName: 'cell-base description-base description-cell',
 
         renderDisplayCell: renderDescriptionDisplay,
         renderEditCell: renderDescriptionEditor,
@@ -365,7 +365,7 @@ export function renderDateDisplay(args) {
     return <CellDateDisplay
         ariaLabel = {columnInfo.ariaLabel}
         value = {value}
-        classExtras = {columnInfo.inputClassExtras}
+        classExtras = {columnInfo.cellClassExtras}
         inputClassExtras = {columnInfo.inputClassExtras}
         size = {columnInfo.inputSize}
     />;
@@ -383,10 +383,10 @@ export function getDateColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-date'),
             ariaLabel: 'Date',
-            classExtras: 'header-base date-cell',
+            classExtras: 'header-base date-base date-header',
         },
-        inputClassExtras: 'date-cell',
-        cellClassName: 'cell-base date-cell',
+        inputClassExtras: 'date-base date-input',
+        cellClassName: 'cell-base date-base date-cell',
 
         renderDisplayCell: renderDateDisplay,
         renderEditCell: renderDateEditor,
@@ -500,10 +500,10 @@ export function getAccountTypeColumnInfo(args) {
     return Object.assign({ key: 'accountType',
         header: {
             label: userMsg('AccountingCellEditors-accountType'),
-            classExtras: 'header-base accountType-cell',
+            classExtras: 'header-base accountType-base accountType-header',
         },
-        inputClassExtras: 'accountType-cell',
-        cellClassName: 'cell-base accountType-cell',
+        inputClassExtras: 'accountType-base accountType-input',
+        cellClassName: 'cell-base accountType-base accountType-cell',
 
         renderDisplayCell: renderAccountTypeDisplay,
         renderEditCell: renderAccountTypeEditor,
@@ -590,10 +590,10 @@ export function getReconcileStateColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-reconcile'),
             ariaLabel: 'Reconcile',
-            classExtras: 'header-base reconcile-cell',
+            classExtras: 'header-base reconcile-base reconcile-header',
         },
-        inputClassExtras: 'reconcile-cell',
-        cellClassName: 'cell-base reconcile-cell',
+        inputClassExtras: 'reconcile-base reconcile-input',
+        cellClassName: 'cell-base reconcile-base reconcile-cell',
 
         renderDisplayCell: renderReconcileStateDisplay,
         renderEditCell: renderReconcileStateEditor,
@@ -778,10 +778,10 @@ export function getBalanceColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-balance'),
             ariaLabel: 'Balance',
-            classExtras: 'header-base balance-cell',
+            classExtras: 'header-base balance-base balance-header',
         },
-        inputClassExtras: 'balance-cell',
-        cellClassName: 'cell-base balance-cell',
+        inputClassExtras: 'balance-base balance-input',
+        cellClassName: 'cell-base balance-base balance-cell',
 
         renderDisplayCell: renderBalanceDisplay,
         renderEditCell: renderBalanceEditor,
@@ -814,10 +814,10 @@ export function getSharesColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-shares'),
             ariaLabel: 'Shares',
-            classExtras: 'header-base shares-cell',
+            classExtras: 'header-base shares-base shares-header',
         },
-        inputClassExtras: 'shares-cell',
-        cellClassName: 'cell-base shares-cell',
+        inputClassExtras: 'shares-base shares-input',
+        cellClassName: 'cell-base shares-base shares-cell',
 
         renderDisplayCell: renderSharesDisplay,
         renderEditCell: renderSharesEditor,
@@ -1017,10 +1017,10 @@ export function getSplitQuantityColumnInfo(args, type, label) {
     return Object.assign({ key: type,
         header: {
             label: label,
-            classExtras: 'header-base splitQuantity-cell',
+            classExtras: 'header-base splitQuantity-base splitQuantity-header',
         },
-        inputClassExtras: 'splitQuantity-cell',
-        cellClassName: 'cell-base splitQuantity-cell',
+        inputClassExtras: 'splitQuantity-base splitQuantity-input',
+        cellClassName: 'cell-base splitQuantity-base splitQuantity-cell',
 
         renderDisplayCell: renderSplitQuantityDisplay,
         renderEditCell: renderSplitQuantityEditor,
