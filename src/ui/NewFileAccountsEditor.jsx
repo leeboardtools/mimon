@@ -97,7 +97,9 @@ function getOpeningBalanceCellValue(args) {
     }
 }
 
-const saveOpeningBalanceCellValue = saveAccountCellValue;
+function saveOpeningBalanceCellValue(args) {
+    return saveAccountCellValue(args, 'openingBalance');
+}
 
 
 function getAccountTypeCellValue(args) {
@@ -175,7 +177,7 @@ export class NewFileAccountsEditor extends React.Component {
                 // TODO:
                 // Scan through the account type names to find the longest one...
                 type: A.AccountType.REAL_ESTATE.name,
-                //openingBalance: 999999999,
+                openingBalance: 999999999,
             },
         };
 
@@ -196,22 +198,6 @@ export class NewFileAccountsEditor extends React.Component {
                 getCellValue: getOpeningBalanceCellValue,
                 saveCellValue: saveOpeningBalanceCellValue,
             }),
-            /*
-            { key: 'opening_balance',
-                header: {
-                    label: userMsg('NewFileAccountsEditor-opening_balance'),
-                    classExtras: 'header-base text-right',
-                },
-                inputClassExtras: 'text-right',
-                cellClassName: 'cell-base',
-                inputSize: -14, // 1,234,567.89
-
-                getCellValue: getOpeningBalanceCellValue,
-                saveCellValue: saveOpeningBalanceCellValue,
-                renderDisplayCell: CE.renderBalanceDisplay,
-                renderEditCell: CE.renderBalanceEditor,
-            },
-            */
         ];
 
         this.state.columns = columnInfosToColumns(this.state);
