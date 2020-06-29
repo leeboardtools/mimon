@@ -53,6 +53,58 @@ export class NewFileConfigurator extends React.Component {
         this.onRenderPage = this.onRenderPage.bind(this);
         this.onActivateTab = this.onActivateTab.bind(this);
         this.onPostRenderTabs = this.onPostRenderTabs.bind(this);
+
+        this.checkLayout = this.checkLayout.bind(this);
+
+        this._mainRef = React.createRef();
+        this._headingRef = React.createRef();
+    }
+
+
+    checkLayout() {
+        if (this._mainRef.current
+         && this._headingRef.current) {
+            const { clientHeight } = this._mainRef.current;
+
+            let headingHeight = this._headingRef.current.offsetHeight;
+            const headingStyle = window.getComputedStyle(this._headingRef.current);
+            if (headingStyle) {
+                const marginTop = parseInt(headingStyle.marginTop);
+                if (!isNaN(marginTop)) {
+                    headingHeight += marginTop;
+                }
+
+                const marginBottom = parseInt(headingStyle.marginBottom);
+                if (!isNaN(marginBottom)) {
+                    headingHeight += marginBottom;
+                }
+            }
+
+            if ((clientHeight !== this.state.clientHeight)
+             || (headingHeight !== this.state.headingHeight)) {
+                let pagesHeight = clientHeight - headingHeight;
+
+                this.setState({
+                    clientHeight: clientHeight,
+                    headingHeight: headingHeight,
+                    pagesHeight: pagesHeight,
+                });
+            }
+        }
+        
+        if (!this._willUnmount) {
+            window.requestAnimationFrame(this.checkLayout);
+        }
+    }
+
+
+    componentDidMount() {
+        window.requestAnimationFrame(this.checkLayout);
+    }
+
+    
+    componentWillUnmount() {
+        this._willUnmount = true;
     }
 
 
@@ -303,11 +355,25 @@ export class NewFileConfigurator extends React.Component {
             onActivateTab = {this.onActivateTab}
             onPostRenderTabs = {this.onPostRenderTabs}
         />;
-        return <div className="h-100">
-            <h4 className="pageTitle pb-3 border-bottom">
+
+        let pagesStyle;
+        const { pagesHeight } = this.state;
+        if ((pagesHeight !== undefined) && (pagesHeight > 0)) {
+            pagesStyle = {
+                height: pagesHeight,
+            };
+        }
+
+        return <div className = "h-100" ref = {this._mainRef}>
+            <h4 className = "pageTitle pb-3 border-bottom"
+                ref = {this._headingRef}
+            >
                 {userMsg('NewFileAccountsEditor-heading')}
             </h4>
-            {tabbedPages}
+            <div style = {pagesStyle}
+            >
+                {tabbedPages}
+            </div>
         </div>;
     }
 }

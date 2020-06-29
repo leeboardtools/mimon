@@ -217,11 +217,11 @@ body {
 
 .splitQuantity-header {
   text-align: center;
-  flex-basis: 10rem;
+  flex-basis: 9rem;
 }
 
 .splitQuantity-cell {
-  flex-basis: 10rem;
+  flex-basis: 9rem;
 }
 
 
