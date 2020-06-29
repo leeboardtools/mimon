@@ -42,12 +42,19 @@ export class TabbedPages extends React.Component {
             }
         }
         
-        window.requestAnimationFrame(this.checkLayout);
+        if (!this._willUnmount) {
+            window.requestAnimationFrame(this.checkLayout);
+        }
     }
 
 
     componentDidMount() {
         window.requestAnimationFrame(this.checkLayout);
+    }
+
+    
+    componentWillUnmount() {
+        this._willUnmount = true;
     }
 
 
