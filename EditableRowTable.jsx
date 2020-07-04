@@ -48,41 +48,61 @@ export function editableRowTable(WrappedTable) {
 
 
         setActiveEditInfo(changes) {
-            let newActiveEditInfo;
-            if (changes) {
-                newActiveEditInfo = Object.assign({}, 
-                    this.state.activeEditInfo || {},
-                    changes);
+            if (!changes) {
+                this.setState({
+                    activeEditInfo: undefined,
+                });
             }
-            this.setState({
-                activeEditInfo: newActiveEditInfo,
-            });
+            else {
+                this.setState((state) => {
+                    const newActiveEditInfo = Object.assign({},
+                        state.activeEditInfo || {},
+                        changes);
+                    return {
+                        activeEditInfo: newActiveEditInfo,
+                    };
+                });
+            }
         }
 
 
         setRowEditBuffer(bufferChanges) {
-            const { activeEditInfo } = this.state;
-            if (activeEditInfo) {
-                const newRowEditBuffer = Object.assign({}, 
-                    activeEditInfo.rowEditBuffer, 
-                    bufferChanges);
-                this.setActiveEditInfo({
-                    rowEditBuffer: newRowEditBuffer,
-                });
-            }
+            this.setState((state) => {
+                const { activeEditInfo } = state;
+                if (activeEditInfo) {
+                    const newRowEditBuffer = Object.assign({}, 
+                        activeEditInfo.rowEditBuffer, 
+                        bufferChanges);
+                    const newActiveEditInfo = Object.assign({},
+                        activeEditInfo,
+                        {
+                            rowEditBuffer: newRowEditBuffer,
+                        });
+                    return {
+                        activeEditInfo: newActiveEditInfo,
+                    };
+                }
+            });
         }
 
 
         setCellEditBuffer(columnIndex, bufferChanges) {
-            const { activeEditInfo } = this.state;
-            if (activeEditInfo) {
-                const newCellEditBuffers = Array.from(activeEditInfo.cellEditBuffers);
-                newCellEditBuffers[columnIndex] = Object.assign({},
-                    newCellEditBuffers[columnIndex], bufferChanges);
-                this.setActiveEditInfo({
-                    cellEditBuffers: newCellEditBuffers,
-                });
-            }
+            this.setState((state) => {
+                const { activeEditInfo } = state;
+                if (activeEditInfo) {
+                    const newCellEditBuffers = Array.from(activeEditInfo.cellEditBuffers);
+                    newCellEditBuffers[columnIndex] = Object.assign({},
+                        newCellEditBuffers[columnIndex], bufferChanges);
+                    const newActiveEditInfo = Object.assign({},
+                        activeEditInfo,
+                        {
+                            cellEditBuffers: newCellEditBuffers,
+                        });
+                    return {
+                        activeEditInfo: newActiveEditInfo,
+                    };
+                }
+            });
         }
 
 
@@ -364,6 +384,7 @@ export function editableRowTable(WrappedTable) {
                 if (rowIndex === activeEditInfo.rowIndex) {
                     args = Object.assign({}, args, {
                         rowEditBuffer: activeEditInfo.rowEditBuffer,
+                        cellEditBuffers: activeEditInfo.cellEditBuffers,
                         cellEditBuffer: activeEditInfo.cellEditBuffers[columnIndex],
                         refForFocus: activeEditInfo.refsForFocus[columnIndex],
                     });
@@ -459,6 +480,7 @@ export function editableRowTable(WrappedTable) {
      * @property {RowTable~Column}  column
      * @property {boolean}  isSizeRender
      * @property {object}   rowEditBuffer
+     * @property {object[]} cellEditBuffers
      * @property {object}   cellEditBuffer
      * @property {React.Ref}    refForFocus This is used to set focus to the appropriate
      * editor when a cell is double-clicked.

@@ -19,6 +19,12 @@ export class CellEditorsManager {
     }
 
 
+    _setManagerState(state) {
+        const prevState = this.props.getManagerState();
+        this.props.setManagerState(Object.assign({}, prevState, state));
+    }
+
+
     onStartRowEdit(args) {
         const { getSaveBuffer, asyncSaveBuffer } = this.props;
         if (!getSaveBuffer || !asyncSaveBuffer) {
@@ -30,12 +36,15 @@ export class CellEditorsManager {
             return;
         }
 
-        const cellBufferArgs = {
-            rowEditBuffer: args.rowEditBuffer,
-            rowEntry: rowEntry,
-        };
         const { cellEditBuffers, asyncEndRowEdit, cancelRowEdit,
             setRowEditBuffer, setCellEditBuffer, } = args;
+
+        const cellBufferArgs = {
+            rowEditBuffer: args.rowEditBuffer,
+            setRowEditBuffer: setRowEditBuffer,
+            rowEntry: rowEntry,
+            cellEditBuffers: cellEditBuffers,
+        };
         for (let i = 0; i < cellEditBuffers.length; ++i) {
             const columnInfo = this.props.getColumnInfo(i);
             const { getCellValue } = columnInfo;
@@ -46,7 +55,7 @@ export class CellEditorsManager {
             }
         }
 
-        this.props.setManagerState({
+        this._setManagerState({
             editInfo: {
                 asyncEndRowEdit: asyncEndRowEdit,
                 cancelRowEdit: cancelRowEdit,
@@ -82,7 +91,14 @@ export class CellEditorsManager {
                 cellArgs.columnIndex = i;
                 cellArgs.columnInfo = columnInfo;
                 cellArgs.cellEditBuffer = cellEditBuffers[i];
-                saveCellValue(cellArgs);
+                try {
+                    this.setErrorMsg(columnInfo.key, undefined);
+                    saveCellValue(cellArgs);
+                }
+                catch (e) {
+                    this.setErrorMsg(columnInfo.key, e.toString());
+                    return;
+                }
             }
         }
 
@@ -90,7 +106,7 @@ export class CellEditorsManager {
             return;
         }
 
-        this.props.setManagerState({
+        this._setManagerState({
             editInfo: undefined,
             errorMsgs: {}
         });
@@ -99,7 +115,7 @@ export class CellEditorsManager {
 
 
     onCancelRowEdit(args) {
-        this.props.setManagerState({
+        this._setManagerState({
             editInfo: undefined,
             errorMsgs: {},
         });
@@ -107,7 +123,7 @@ export class CellEditorsManager {
 
 
     setErrorMsg(key, msg) {
-        this.props.setManagerState({
+        this._setManagerState({
             errorMsgs: {
                 [key]: msg,
             }
@@ -116,17 +132,31 @@ export class CellEditorsManager {
     }
 
 
+    areAnyErrors() {
+        const { errorMsgs } = this.props.getManagerState();
+        if (errorMsgs) {
+            for (let key in errorMsgs) {
+                if (errorMsgs[key]) {
+                    return true;
+                }
+            }
+        }
+    }
+
+
     onRenderEditCell(args) {
         const { columnIndex } = args;
         const columnInfo = this.props.getColumnInfo(columnIndex);
         const state = this.props.getManagerState();
 
-        const { renderEditCell } = columnInfo;
-        if (!args.isSizeRender && renderEditCell) {
+        const { renderEditCell, saveCellValue } = columnInfo;
+        if (!args.isSizeRender && renderEditCell && saveCellValue) {
             return renderEditCell(Object.assign({}, args, { 
                 columnInfo: columnInfo,
-                setCellEditBuffer: (value) => {
-                    state.editInfo.setCellEditBuffer(columnIndex, value);
+                getColumnInfo: this.props.getColumnInfo,
+                setCellEditBuffer: (value, index) => {
+                    state.editInfo.setCellEditBuffer(
+                        (index === undefined) ? columnIndex : index, value);
                 },
                 errorMsg: state.errorMsgs[columnInfo.key],
             }));
@@ -186,6 +216,8 @@ export class CellEditorsManager {
 /**
  * @callback CellEditorsManager~saveCellValue
  * @param {CellEditorsManager~saveCellValueArgs}    args
+ * @throws {Error}  An error may be thrown, in which case the error text is installed
+ * as the error message for the cell editor.
  */
 
 /**
