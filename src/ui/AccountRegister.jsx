@@ -193,10 +193,6 @@ function renderSplitsListDisplay(args) {
             </div>;
         }
 
-        if (args.isSizeRender) {
-            console.log('sizeRender: ' + text);
-        }
-
         const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
         const component = <CellSelectDisplay
             selectedValue = {text}
@@ -321,12 +317,43 @@ function getSplitQuantityCellValue(args, type) {
         accountType: accountType,
         quantityDefinition: quantityDefinition,
         splitQuantityType: type,
+        readOnly: transactionDataItem.splits.length !== 2,
     };
     return value;
 }
 
 function saveSplitQuantityCellValue(args) {
+    // If the value is a number, then it hasn't been changed.
+    // If the value is readOnly, it will be updated by the multi-splits.
+    // If the value is empty, then the split will be set by the opposite.
+    // Otherwise...
+    //  Evaluate the value.
+    //  Mark any error
+    const { rowEntry, cellEditBuffer, saveBuffer } = args;
+    const { value } = cellEditBuffer;
+    if (saveBuffer && value) {
+        if (value.readOnly) {
+            // If readOnly then the split will be set by the multi-splits.
+            return;
+        }
+        
+        const { split } = value;
+        const { quantityBaseValue } = split;
+        if (typeof quantityBaseValue === 'number') {
+            // If a number then the value hasn't been edited.
+            return;
+        }
+        else if (quantityBaseValue === '') {
+            // Not set presume the 'opposite will set it.
+            return;
+        }
 
+        const { newTransactionDataItem } = saveBuffer;
+        const { splitIndex } = rowEntry;
+
+        newTransactionDataItem.splits[splitIndex] 
+            = CE.resolveSplitQuantityEditValueToSplitDataItem(args);
+    }
 }
 
 
@@ -395,6 +422,9 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                     saveCellValue: saveSplitQuantityCellValue,
                 },
                 'sold');
+            columnInfoDefs.sold.oppositeColumnInfo = columnInfoDefs.bought;
+            columnInfoDefs.bought.oppositeColumnInfo = columnInfoDefs.sold;
+
             columnInfoDefs.shares = CE.getSharesColumnInfo({
                 getCellValue: getAccountStateQuantityCellValue,
             });
@@ -416,6 +446,9 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 'credit',
                 accountType.creditLabel
             );
+            columnInfoDefs.credit.oppositeColumnInfo = columnInfoDefs.debit;
+            columnInfoDefs.debit.oppositeColumnInfo = columnInfoDefs.credit;
+
             columnInfoDefs.balance = CE.getBalanceColumnInfo({
                 getCellValue: getAccountStateQuantityCellValue,
             });
@@ -994,11 +1027,29 @@ export class AccountRegister extends React.Component {
     async asyncSaveBuffer(args) {
         try {
             const { rowIndex, saveBuffer } = args;
+
+            // TODO:
+            // Need to catch known errors...
+            if (this._cellEditorsManager.areAnyErrors()) {
+                return;
+            }
+
             const rowEntry = this.state.rowEntries[rowIndex];
-            const { transactionDataItem } = rowEntry;
+            const { transactionDataItem, splitIndex } = rowEntry;
             const { newTransactionDataItem } = saveBuffer;
 
             const { accessor } = this.props;
+
+            if (transactionDataItem.splits.length === 2) {
+                const thisSplit = newTransactionDataItem.splits[splitIndex];
+                const otherSplit = transactionDataItem.splits[1 - splitIndex];
+                const newSplit = Object.assign({}, otherSplit,
+                    accessor.createBalancingSplitDataItem([thisSplit],
+                        otherSplit.accountId));
+                newTransactionDataItem.splits[1 - splitIndex]
+                    = newSplit;
+            }
+
             const accountingActions = accessor.getAccountingActions();
             let action;
             if ((rowIndex + 1) === this.state.rowEntries.length) {
@@ -1030,13 +1081,8 @@ export class AccountRegister extends React.Component {
     }
 
 
-    setErrorMsg(key, msg) {
-        this.setState({
-            errorMsgs: {
-                [key]: msg,
-            }
-        });
-        return msg;
+    setErrorMsg(columnInfoKey, msg) {
+        this._cellEditorsManager.setErrorMsg(columnInfoKey, msg);
     }
 
 

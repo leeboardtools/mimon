@@ -501,6 +501,7 @@ AccountsList:
 
 
 - AccountRegister
+    - Need to handle multiple splits for the same account.
 
 - Add an Imbalance account?
     - Root Imbalance account for the default currency.
@@ -508,3 +509,20 @@ AccountsList:
     - 
 
 - Add a transaction id based lock.
+
+
+- renderSplitQuantityEditor
+    - Initial state: negative quantityBaseValue left empty.
+    - onChange, need to clear 'opposite' quantityBaseValue.
+        - columnInfoDef has oppositeColumnInfoDef
+        - in onChange...
+            - look for cellEditBuffer belonging to oppsoiteColumnInfoDef
+            - clear it out.
+            - Also need isEdited state, if !isEdited then display
+            empty string for value.
+                isEdited state kept in cellEditBuffer?
+            
+    - Need resolveSplitQuantityCellValue()?
+        - How are errors reported back?
+        
+    - Change setCellEditBuffer() calls to use Object.assign({}, value...)

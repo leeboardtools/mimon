@@ -171,6 +171,8 @@
     "AccountingCellEditors-reconcile_PENDING": "c",
     "AccountingCellEditors-reconcile_RECONCILED": "\u2713",
 
+    "AccountingCellEditors-invalid_split_quantity": ["'", "' is not a valid number. ", ""],
+
 
     "PricedItemEditor-prompt_cancel_title": "Confirm Cancel",
     "PricedItemEditor-prompt_cancel_msg": "Are you sure you want to cancel?\nAny changes will be lost.",

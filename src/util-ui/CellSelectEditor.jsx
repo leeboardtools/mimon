@@ -73,7 +73,7 @@ export const CellSelectEditor = React.forwardRef(
  * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
  */
 CellSelectEditor.propTypes = {
-    selectedValue: PropTypes.string,
+    selectedValue: PropTypes.any,
     items: PropTypes.oneOfType([
         PropTypes.arrayOf(PropTypes.string),
         PropTypes.arrayOf(PropTypes.array),

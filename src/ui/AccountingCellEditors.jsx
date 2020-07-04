@@ -1,5 +1,5 @@
 import React from 'react';
-import { userMsg } from '../util/UserMessages';
+import { userMsg, userError } from '../util/UserMessages';
 import { CellTextDisplay, CellTextEditor } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay, CellSelectEditor,
     CellToggleSelectDisplay, CellToggleSelectEditor, } from '../util-ui/CellSelectEditor';
@@ -829,13 +829,11 @@ export function getSharesColumnInfo(args) {
 /**
  * @typedef {object}    CellSplitValue
  * @property {EngineAccessor}   accessor
- * @property {SpitDataItem} split
+ * @property {SplitDataItem} split
  * @property {AccountType}  accountType
  * @property {QuantityDefinition}   quantityDefinition
  * @property {'bought'|'sold'|'credit'|'debit'} splitQuantityType 
  */
-
-
 
 /**
  * @typedef {object}    CellSplitQuantityDisplayArgs
@@ -843,8 +841,8 @@ export function getSharesColumnInfo(args) {
  * @property {CellSplitValue}    value
  */
 
-function getSplitQuantityInfo(args) {
-    const { split, accountType, splitQuantityType, } = args.value;
+function getSplitQuantityInfo(value) {
+    const { split, accountType, splitQuantityType, } = value;
 
     let sign;
     switch (splitQuantityType) {
@@ -884,7 +882,9 @@ function getSplitQuantityInfo(args) {
 
     const { category } = accountType;
     sign *= category.creditSign;
-    quantityBaseValue *= sign;
+    if (typeof quantityBaseValue === 'number') {
+        quantityBaseValue *= sign;
+    }
 
     return {
         sign: sign,
@@ -892,6 +892,87 @@ function getSplitQuantityInfo(args) {
         quantityBaseValue: quantityBaseValue,
     };
 }
+
+
+function setSplitQuantityValue(args, quantityValue, index) {
+    const { setCellEditBuffer } = args;
+    let cellEditBuffer = (index === undefined) 
+        ? args.cellEditBuffer
+        : args.cellEditBuffers[index];
+    const { value } = cellEditBuffer;
+    const { split } = value;
+    const newValue = Object.assign({}, value, {
+        split: Object.assign({}, split, {
+            quantityBaseValue: quantityValue,
+        }),
+    });
+    setCellEditBuffer({
+        value: newValue,
+    },
+    index);
+}
+
+
+function onChangeSplitQuantity(e, args) {
+    const { columnInfo } = args;
+
+    const { getColumnInfo } = args;
+    const { oppositeColumnInfo } = columnInfo;
+    if (oppositeColumnInfo && getColumnInfo) {        
+        const { cellEditBuffers } = args;
+        for (let i = 0; i < cellEditBuffers.length; ++i) {
+            const otherColumnInfo = getColumnInfo(i);
+            if (otherColumnInfo.key === oppositeColumnInfo.key) {
+                console.log('clearing other: ' + oppositeColumnInfo.key);
+                setSplitQuantityValue(args, '', i);
+                break;
+            }
+        }
+    }
+
+    setSplitQuantityValue(args, e.target.value);
+}
+
+
+/**
+ * Resolves the quantity value for a split being edited into an updated split.
+ * @param {CellSplitQuantityEditorArgs} args 
+ * @returns {SplitDataItem}
+ * @throws {Exception}  An exception is thrown on any error.
+ */
+export function resolveSplitQuantityEditValueToSplitDataItem(args) {
+    const { cellEditBuffer } = args;
+    const { value } = cellEditBuffer;
+    const quantityInfo = getSplitQuantityInfo(value);
+    let { isLots, quantityBaseValue, sign } = quantityInfo;
+    if (isLots) {
+        // FIX ME!!!
+        return value.split;
+    }
+
+    // TODO: Evaluate any expressions here...
+
+    const quantityDefinition = getQuantityDefinition(value.quantityDefinition);
+    if (typeof quantityBaseValue === 'string') {
+        const result = quantityDefinition.fromValueText(quantityBaseValue);
+        if (!result || result.remainingText) {
+            throw userError('AccountingCellEditors-invalid_split_quantity', 
+                quantityBaseValue);
+        }
+        
+        quantityBaseValue = result.quantity.getBaseValue();
+    }
+    else {
+        quantityBaseValue = quantityDefinition.numberToBaseValue(quantityBaseValue);
+    }
+    
+    return Object.assign({},
+        value.split,
+        {
+            quantityBaseValue: sign * quantityBaseValue,
+        });
+}
+
 
 /**
  * @typedef {object}    CellSplitQuantityEditorArgs
@@ -905,34 +986,44 @@ function getSplitQuantityInfo(args) {
  * @param {CellSplitQuantityEditorArgs}  args
  */
 export function renderSplitQuantityEditor(args) {
-    /*
-    const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
+    const { columnInfo, cellEditBuffer, errorMsg,
         refForFocus } = args;
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
-    const value = cellEditBuffer.value;
+    const { value } = cellEditBuffer;
     if (!value) {
         return;
     }
+    if (value.readOnly) {
+        args = Object.assign({}, args, {
+            value: value
+        });
+        return renderSplitQuantityDisplay(args);
+    }
 
-    const { accessor, split, accountType, splitQuantityType, } = args.value;
+    const { quantityDefinition } = value;
+    const quantityInfo = getSplitQuantityInfo(value);
+    let { isLots, quantityBaseValue } = quantityInfo;
+    if (isLots) {
+        // FIX ME!!!
+        return;
+    }
+
+    if ((typeof quantityBaseValue === 'number') && (quantityBaseValue <= 0)) {
+        quantityBaseValue = '';
+    }
+
+    console.log('render: ' + JSON.stringify(quantityBaseValue));
 
     return <CellQuantityEditor
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
         value = {quantityBaseValue}
+        quantityDefinition = {quantityDefinition}
         inputClassExtras = {inputClassExtras}
         size = {inputSize}
-        onChange = {(e) => {
-            setCellEditBuffer({
-                value: {
-                    quantityBaseValue: e.target.value,
-                    quantityDefinition: quantityDefinition,
-                },
-            });
-        }}
+        onChange = {(e) => onChangeSplitQuantity(e, args)}
         errorMsg = {errorMsg}
     />;
-    */
 }
 
 
@@ -941,13 +1032,14 @@ export function renderSplitQuantityEditor(args) {
  * @param {CellSplitQuantityDisplayArgs} args 
  */
 export function renderSplitQuantityDisplay(args) {
-    if (!args.value) {
+    const { value } = args;
+    if (!value) {
         return;
     }
     
-    let { sign, isLots, quantityBaseValue } = getSplitQuantityInfo(args);
+    let { sign, isLots, quantityBaseValue } = getSplitQuantityInfo(value);
     
-    const { accessor, split, } = args.value;
+    const { accessor, split, } = value;
     const { lotChanges } = split;
 
     if (quantityBaseValue < 0) {
