@@ -862,7 +862,7 @@ class DecimalDefinition extends QuantityDefinition {
             result.fullQuantity = result.quantity;
         }
 
-        result.remainingText = valueText.slice(i);
+        result.remainingText = valueText.slice(i).trimStart();
 
         return result;
     }
