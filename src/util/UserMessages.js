@@ -186,6 +186,7 @@ class ArgsClass {
  */
 export function userError(key, ...args) {
     const error = Error(userMsg(key, new ArgsClass(args)));
+    error.name = '';
     error.msgCode = key;
     return error;
 }
