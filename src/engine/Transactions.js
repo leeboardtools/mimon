@@ -89,7 +89,7 @@ export function loadTransactionsUserMessages() {
  * @property {number}   accountId   The account to which the row applies.
  * @property {number}   quantityBaseValue   The base value for the amount 
  * to apply to the account.
- * @property {number|number[]} [currencyToUSDRatio]  Only required if there is a 
+ * @property {Ratio} [currencyToUSDRatio]  Only required if there is a 
  * currency conversion between the items in the split and this split's currency is 
  * not USD, this is either the price, or a numerator/denominator pair for the price 
  * {@link Ratio}.
@@ -1267,26 +1267,81 @@ export class TransactionManager extends EventEmitter {
 
 
     /**
-     * Validates an array of splits.
+     * Creates a basic split for a given account that balances the quantities of the 
+     * splits in an array of splits. The split when included with the other splits are 
+     * together considered valid by {@link TransactionManager#validateSplits}.
      * @param {Split[]|SplitDataItem[]} splits 
-     * @param {boolean} isModify    If <code>true</code> the splits are for a 
-     * transaction modify, and any lot changes will not be verified against the 
-     * account's currenty state.
-     * @returns {Error|undefined}   Returns an Error if invalid, 
-     * <code>undefined</code> if valid.
+     * @param {number} accountId 
+     * @param {Ratio|number|number[]}   [currencyToUSDRatio]    If the desired account
+     * is not in USD and one or more of the splits in splits is not the same currency
+     * as the desired account, this is required.
+     * @returns {SplitDataItem}
+     * @throws {Error}
      */
-    validateSplits(splits, isModify) {
-        if (!splits) {
-            return userError('TransactionManager~need_at_least_2_splits');
+    createBalancingSplitDataItem(splits, accountId, currencyToUSDRatio) {
+        const accountManager = this._accountingSystem.getAccountManager();
+        const pricedItemManager = this._accountingSystem.getPricedItemManager();
+
+        const accountDataItem = accountManager.getAccountDataItemWithId(accountId);
+        const account = A.getAccount(accountDataItem);
+        if (!account) {
+            throw userError('TransactionManager~split_account_not_found', 
+                accountId);
         }
 
-        // We need to ensure that the sum of the values of the splits add up.
+        const pricedItem = PI.getPricedItem(
+            pricedItemManager.getPricedItemDataItemWithId(account.pricedItemId));
+        if (!pricedItem) {
+            throw userError('TransactionManager~split_priced_item_not_found', 
+                account.pricedItemId, account.id);
+        }
 
+        const currency = getCurrency(pricedItem.currency);
+
+        const result = this.sumSplits(splits, currency);
+        if (result instanceof Error) {
+            throw result;
+        }
+
+        let split = {
+            reconcileState: ReconcileState.NOT_RECONCILED.name,
+            accountId: accountId,
+        };
+
+        let { creditSumBaseValue } = result;
+        const { isCurrencyExchange } = result;
+        if (isCurrencyExchange) {
+            const usdCurrency = getCurrency('USD');
+            if (currency !== usdCurrency) {
+                // Need to convert the currency from USD...
+                const ratio = getRatio(currencyToUSDRatio);
+                if (!ratio) {
+                    throw userError(
+                        'TransactionManager~split_needs_currency_price', currency);
+                }
+
+                creditSumBaseValue = ratio.applyToNumber(creditSumBaseValue);
+
+                split.currencyToUSDRatio = getRatioJSON(currencyToUSDRatio);
+            }
+        }
+
+        if (account.type.hasLots) {
+            throw Error('Lots not yet supported!');
+        }
+
+        const { creditSign } = account.type.category;
+        split.quantityBaseValue = creditSumBaseValue * -creditSign;
+
+        return split;
+    }
+
+
+    sumSplits(splits, activeCurrency) {
         const accountManager = this._accountingSystem.getAccountManager();
         const pricedItemManager = this._accountingSystem.getPricedItemManager();
 
         let creditSumBaseValue = 0;
-        let activeCurrency;
 
         const splitCurrencies = [];
         const splitCreditBaseValues = [];
@@ -1324,7 +1379,6 @@ export class TransactionManager extends EventEmitter {
 
             isCurrencyExchange = isCurrencyExchange || (currency !== activeCurrency);
 
-
             if (account.type.hasLots) {
                 const { lotChanges } = split;
                 if (!lotChanges && creditBaseValue) {
@@ -1347,12 +1401,6 @@ export class TransactionManager extends EventEmitter {
             creditSumBaseValue += creditBaseValue;
         }
 
-        if (splitMergeLotCount !== 1) {
-            if (splits.length < 2) {
-                return userError('TransactionManager~need_at_least_2_splits');
-            }
-        }
-
         if (isCurrencyExchange) {
             // Gotta do this all over, validating the currency prices...
             const usdCurrency = getCurrency('USD');
@@ -1373,6 +1421,49 @@ export class TransactionManager extends EventEmitter {
                 }
 
                 creditSumBaseValue += creditBaseValue;
+            }
+        }
+
+        return {
+            creditSumBaseValue: creditSumBaseValue,
+            isCurrencyExchange: isCurrencyExchange,
+            splitCurrencies: splitCurrencies,
+            activeCurrency: activeCurrency,
+            splitMergeLotCount: splitMergeLotCount,
+            splitCreditBaseValues: splitCreditBaseValues,
+        };
+    }
+
+
+    /**
+     * Validates an array of splits.
+     * @param {Split[]|SplitDataItem[]} splits 
+     * @param {boolean} isModify    If <code>true</code> the splits are for a 
+     * transaction modify, and any lot changes will not be verified against the 
+     * account's currenty state.
+     * @returns {Error|undefined}   Returns an Error if invalid, 
+     * <code>undefined</code> if valid.
+     */
+    validateSplits(splits, isModify) {
+        if (!splits) {
+            return userError('TransactionManager~need_at_least_2_splits');
+        }
+
+        // We need to ensure that the sum of the values of the splits add up.
+        const result = this.sumSplits(splits);
+        if (result instanceof Error) {
+            return result;
+        }
+
+        let { creditSumBaseValue,
+            activeCurrency,
+            splitMergeLotCount,
+        } = result;
+
+
+        if (splitMergeLotCount !== 1) {
+            if (splits.length < 2) {
+                return userError('TransactionManager~need_at_least_2_splits');
             }
         }
 

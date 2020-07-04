@@ -1154,6 +1154,19 @@ export class EngineAccessor extends EventEmitter {
 
 
     /**
+     * Creates a split for a given account that balances the quantities of the splits
+     * in an array of splits. The split when included with the other splits are 
+     * together considered valid by {@link EngineAccessorr#validateSplits}.
+     * @param {Split[]|SplitDataItem[]} splits 
+     * @param {number} accountId 
+     * @returns {SplitDataItem}
+     */
+    createBalancingSplitDataItem(splits, accountId) {
+        return this._transactionManager.createBalancingSplitDataItem(splits, accountId);
+    }
+
+
+    /**
      * Validates an array of splits.
      * @param {Split[]|SplitDataItem[]} splits 
      * @param {boolean} isModify    If <code>true</code> the splits are for a 
@@ -1165,7 +1178,6 @@ export class EngineAccessor extends EventEmitter {
     validateSplits(splits, isModify) {
         return this._transactionManager.validateSplits(splits, isModify);
     }
-
 
 
     /**

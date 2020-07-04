@@ -504,6 +504,27 @@ test('TransactionManager-validateSplits', async () => {
         { accountId: sys.groceriesId, quantityBaseValue: 1000, },
     ])).toBeUndefined();
 
+    expect(manager.createBalancingSplitDataItem([
+        { accountId: sys.cashId, quantityBaseValue: -1000, },
+    ],
+    sys.groceriesId
+    )).toEqual({
+        accountId: sys.groceriesId,
+        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+        quantityBaseValue: 1000,
+    });
+
+    expect(manager.createBalancingSplitDataItem([
+        { accountId: sys.groceriesId, quantityBaseValue: 1000, },
+    ],
+    sys.cashId
+    )).toEqual({
+        accountId: sys.cashId,
+        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+        quantityBaseValue: -1000,
+    });
+
+
     expect(manager.validateSplits([
         { accountId: sys.cashId, quantityBaseValue: -1000, },
         { accountId: sys.groceriesId, quantityBaseValue: 1001, },
@@ -515,6 +536,17 @@ test('TransactionManager-validateSplits', async () => {
         { accountId: sys.brokerageAId, quantityBaseValue: 70000, },
         { accountId: sys.otherIncomeId, quantityBaseValue: -30000, },
     ])).toBeUndefined();
+
+    expect(manager.createBalancingSplitDataItem([
+        { accountId: sys.checkingId, quantityBaseValue: -100000, },
+        { accountId: sys.brokerageAId, quantityBaseValue: 70000, },
+    ],
+    sys.otherIncomeId
+    )).toEqual({
+        accountId: sys.otherIncomeId,
+        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+        quantityBaseValue: -30000,
+    });
 
 
     //
@@ -540,11 +572,22 @@ test('TransactionManager-validateSplits', async () => {
         { accountId: cadCashAccountDataItem.id, quantityBaseValue: 70000, },
     ])).toBeUndefined();
 
+    expect(manager.createBalancingSplitDataItem([
+        { accountId: cadCashAccountDataItem.id, quantityBaseValue: -70000, },
+    ],
+    cadCashAccountDataItem.id
+    )).toEqual({
+        accountId: cadCashAccountDataItem.id,
+        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+        quantityBaseValue: 70000,
+    });
+
     // Differing currencies, need prices.
     expect(manager.validateSplits([
         { accountId: cadCashAccountDataItem.id, quantityBaseValue: -70000, },
         { accountId: sys.cashId, quantityBaseValue: 70000, },
     ])).toBeInstanceOf(Error);
+
 
     // OK with prices
     expect(manager.validateSplits([
@@ -554,6 +597,32 @@ test('TransactionManager-validateSplits', async () => {
         },
         { accountId: sys.cashId, quantityBaseValue: 1000000, },
     ])).toBeUndefined();
+
+    expect(manager.createBalancingSplitDataItem([
+        { accountId: cadCashAccountDataItem.id, 
+            quantityBaseValue: -1150000, 
+            currencyToUSDRatio: new Ratio(115, 100)
+        },
+    ],
+    sys.cashId
+    )).toEqual({
+        accountId: sys.cashId,
+        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+        quantityBaseValue: 1000000,
+    });
+
+    expect(manager.createBalancingSplitDataItem([
+        { accountId: sys.cashId, quantityBaseValue: 1000000, },
+    ],
+    cadCashAccountDataItem.id,
+    new Ratio(115, 100)
+    )).toEqual({
+        accountId: cadCashAccountDataItem.id, 
+        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+        quantityBaseValue: -1150000, 
+        currencyToUSDRatio: (new Ratio(115, 100)).toJSON(),
+    });
+
 
     // OK with prices
     expect(manager.validateSplits([
@@ -569,6 +638,41 @@ test('TransactionManager-validateSplits', async () => {
             currencyToUSDRatio: new Ratio(100, 2000),
         },
     ])).toBeUndefined();
+
+    expect(manager.createBalancingSplitDataItem([
+        { accountId: cadCashAccountDataItem.id, 
+            quantityBaseValue: -1150000, 
+            currencyToUSDRatio: new Ratio(115, 100),
+        },
+        { accountId: sys.cashId, 
+            quantityBaseValue: 1000000 + 1000 * 2000 / 100, 
+        },
+    ],
+    jpyCashAccountDataItem.id, 
+    new Ratio(100, 2000)
+    )).toEqual({
+        accountId: jpyCashAccountDataItem.id, 
+        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+        quantityBaseValue: -1000, 
+        currencyToUSDRatio: (new Ratio(100, 2000)).toJSON(),
+    });
+
+    expect(manager.createBalancingSplitDataItem([
+        { accountId: cadCashAccountDataItem.id, 
+            quantityBaseValue: -1150000, 
+            currencyToUSDRatio: new Ratio(115, 100),
+        },
+        { accountId: jpyCashAccountDataItem.id, 
+            quantityBaseValue: -1000, 
+            currencyToUSDRatio: new Ratio(100, 2000),
+        },
+    ],
+    sys.cashId
+    )).toEqual({
+        accountId: sys.cashId,
+        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+        quantityBaseValue: 1000000 + 1000 * 2000 / 100, 
+    });
 });
 
 
