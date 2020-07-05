@@ -124,26 +124,34 @@ function getSplitsListCellValue(args) {
     const { rowEntry } = args;
     const { transactionDataItem } = rowEntry;
     if (transactionDataItem) {
+        let { splits } = transactionDataItem;
+        if (args.isEdit) {
+            splits = Array.from(splits);
+            for (let i = 0; i < splits.length; ++i) {
+                splits[i] = T.getSplitDataItem(splits[i], true);
+            }
+        }
         return {
-            splits: transactionDataItem.splits,
+            splits: splits,
             rowEntry: rowEntry,
         };
     }
 }
 
 function saveSplitsListCellValue(args) {
-    const { rowEntry, columnInfo, cellEditBuffer, saveBuffer } = args;
+    const { rowEntry, cellEditBuffer, saveBuffer } = args;
     const { splitIndex } = rowEntry;
     if (saveBuffer) {
-        // Scenarios:
-        //  - Two splits, the 'other' split's account changed.
-        //  - Splits Editor: Replace all the splits.
-        //      - Maybe need to update the split index as well.
-        //      - Need to distinguish between splits editor and just
-        //          having multiple splits.
-        //
-
-        //saveBuffer.splits[splitIndex][propertyName] = cellEditBuffer.value;
+        const { newTransactionDataItem } = saveBuffer;
+        const { value } = cellEditBuffer;
+        const { splits } = value;
+        if (cellEditBuffer.isMultiSplit) {
+            newTransactionDataItem.splits = splits;
+        }
+        else {
+            newTransactionDataItem.splits[1 - splitIndex].accountId 
+                = splits[1 - splitIndex].accountId;
+        }
     }
 }
 
@@ -166,7 +174,15 @@ function renderSplitItemTooltip(caller, splits, index) {
 
 
 function renderSplitsListDisplay(args) {
-    const { rowEntry, columnInfo, value } = args;
+    const { rowEntry, columnInfo, } = args;
+    let { value } = args;
+    if (!value) {
+        const { cellEditBuffer } = args;
+        if (!cellEditBuffer) {
+            return;
+        }
+        value = cellEditBuffer.value;
+    }
 
     if (!value) {
         return;
@@ -233,7 +249,27 @@ function addAccountIdsToItems(accessor, items, accountId, filter) {
 
 
 function onSplitsListChange(e, args) {
+    const value = parseInt(e.target.value);
+    const { cellEditBuffer, setCellEditBuffer, } = args;
+    const { splits, rowEntry } = cellEditBuffer.value;
+    const { caller, splitIndex } = rowEntry;
+    if (value === -1) {
+        // Multi-splits
+        caller;
+        return;
+    }
 
+    const newSplits = Array.from(splits);
+    const newSplit = T.getSplitDataItem(splits[1 - splitIndex], true);
+    newSplit.accountId = value;
+    newSplits[1 - splitIndex] = newSplit;
+    setCellEditBuffer({
+        value: Object.assign({}, cellEditBuffer.value, {
+            splits: newSplits,
+        }),
+    });
+    newSplit.accountId = value;
+    
 }
 
 function renderSplitsListEditor(args) {
@@ -244,6 +280,29 @@ function renderSplitsListEditor(args) {
         return;
     }
 
+    const { caller, splitIndex } = rowEntry;
+    const { accountId, accessor } = caller.props;
+
+    // If any of the other accounts are lot based then we can't change
+    // the split editor from here.
+    for (let i = 0; i < splitIndex; ++i) {
+        const split = splits[i];
+        const accountDataItem = accessor.getAccountDataItemWithId(split.accountId);
+        const accountType = A.getAccountType(accountDataItem.type);
+        if (accountType.hasLots) {
+            return renderSplitsListDisplay(args);
+        }
+    }
+    for (let i = splitIndex + 1; i < splits.length; ++i) {
+        const split = splits[i];
+        const accountDataItem = accessor.getAccountDataItemWithId(split.accountId);
+        const accountType = A.getAccountType(accountDataItem.type);
+        if (accountType.hasLots) {
+            return renderSplitsListDisplay(args);
+        }
+    }
+
+
     // Dropdown list, with one option the --Split-- button.
     // When the --Split-- button is chosen, we bring up a modal
     // multi-split selection component.
@@ -251,8 +310,6 @@ function renderSplitsListEditor(args) {
     // To clear a multi-split, just remove the other accounts in the
     // multi-split selection component.
     const items = [[ -1, userMsg('AccountRegister-multi_splits')]];
-    const { caller, splitIndex } = rowEntry;
-    const { accountId, accessor } = caller.props;
     addAccountIdsToItems(accessor, items, accessor.getRootAssetAccountId(),
         (id) => id !== accountId);
     addAccountIdsToItems(accessor, items, accessor.getRootLiabilityAccountId(),
@@ -280,20 +337,6 @@ function renderSplitsListEditor(args) {
         onChange = {(e) => onSplitsListChange(e, args)}
         ref = {refForFocus}
     />;
-/*
-    selectedValue: PropTypes.string,
-    items: PropTypes.oneOfType([
-        PropTypes.arrayOf(PropTypes.string),
-        PropTypes.arrayOf(PropTypes.array),
-    ]).isRequired,
-    errorMsg: PropTypes.string,
-    ariaLabel: PropTypes.string,
-    classExtras: PropTypes.string,
-    onChange: PropTypes.func,
-    onFocus: PropTypes.func,
-    onBlur: PropTypes.func,
-    disabled: PropTypes.bool,
-*/
 }
 
 
@@ -323,12 +366,6 @@ function getSplitQuantityCellValue(args, type) {
 }
 
 function saveSplitQuantityCellValue(args) {
-    // If the value is a number, then it hasn't been changed.
-    // If the value is readOnly, it will be updated by the multi-splits.
-    // If the value is empty, then the split will be set by the opposite.
-    // Otherwise...
-    //  Evaluate the value.
-    //  Mark any error
     const { rowEntry, cellEditBuffer, saveBuffer } = args;
     const { value } = cellEditBuffer;
     if (saveBuffer && value) {
@@ -344,7 +381,7 @@ function saveSplitQuantityCellValue(args) {
             return;
         }
         else if (quantityBaseValue === '') {
-            // Not set presume the 'opposite will set it.
+            // Not set presume the opposite will set it.
             return;
         }
 
@@ -396,10 +433,6 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 saveCellValue: (args) => saveSplitCellValue(args, 'reconcileState'),
             }),
         };
-
-        // TEST!!!
-        //delete columnInfoDefs.description;
-        //delete columnInfoDefs.splits;
 
         if (accountType.hasLots) {
             // Need to think about this more, what exactly do we want to display
@@ -1042,7 +1075,7 @@ export class AccountRegister extends React.Component {
 
             if (transactionDataItem.splits.length === 2) {
                 const thisSplit = newTransactionDataItem.splits[splitIndex];
-                const otherSplit = transactionDataItem.splits[1 - splitIndex];
+                const otherSplit = newTransactionDataItem.splits[1 - splitIndex];
                 const newSplit = Object.assign({}, otherSplit,
                     accessor.createBalancingSplitDataItem([thisSplit],
                         otherSplit.accountId));
@@ -1101,24 +1134,10 @@ export class AccountRegister extends React.Component {
 
                 onSetColumnWidth = {this.onSetColumnWidth}
 
-                //rowHeight: PropTypes.number,
-                //headerHeight: PropTypes.number,
-                //footerHeight: PropTypes.number,
-
-                //onOpenRow: PropTypes.func,
-                //onCloseRow: PropTypes.func,
-
-                //onContextMenu: PropTypes.func,
-                //contextMenuItems: PropTypes.array,
-                //onChooseContextMenuItem: PropTypes.func,
                 contextMenuItems = {this.props.contextMenuItems}
                 onChooseContextMenuItem = {this.props.onChooseContextMenuItem}
 
                 classExtras = "table-striped"
-                //headerClassExtras: PropTypes.string,
-                //bodyClassExtras: PropTypes.string,
-                //rowClassExtras: PropTypes.string,
-                //footerClassExtras: PropTypes.string,
 
                 //
                 // EditableRowTable methods

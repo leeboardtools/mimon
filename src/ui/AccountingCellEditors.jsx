@@ -643,10 +643,10 @@ export function renderQuantityEditor(args) {
         size = {inputSize}
         onChange = {(e) => {
             setCellEditBuffer({
-                value: {
+                value: Object.assign({}, value, {
                     quantityBaseValue: e.target.value,
                     quantityDefinition: quantityDefinition,
-                },
+                }),
             });
         }}
         errorMsg = {errorMsg}
@@ -923,7 +923,6 @@ function onChangeSplitQuantity(e, args) {
         for (let i = 0; i < cellEditBuffers.length; ++i) {
             const otherColumnInfo = getColumnInfo(i);
             if (otherColumnInfo.key === oppositeColumnInfo.key) {
-                console.log('clearing other: ' + oppositeColumnInfo.key);
                 setSplitQuantityValue(args, '', i);
                 break;
             }
@@ -1011,8 +1010,6 @@ export function renderSplitQuantityEditor(args) {
     if ((typeof quantityBaseValue === 'number') && (quantityBaseValue <= 0)) {
         quantityBaseValue = '';
     }
-
-    console.log('render: ' + JSON.stringify(quantityBaseValue));
 
     return <CellQuantityEditor
         ariaLabel = {ariaLabel}

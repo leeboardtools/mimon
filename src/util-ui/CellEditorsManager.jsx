@@ -44,6 +44,7 @@ export class CellEditorsManager {
             setRowEditBuffer: setRowEditBuffer,
             rowEntry: rowEntry,
             cellEditBuffers: cellEditBuffers,
+            isEdit: true,
         };
         for (let i = 0; i < cellEditBuffers.length; ++i) {
             const columnInfo = this.props.getColumnInfo(i);
@@ -146,6 +147,11 @@ export class CellEditorsManager {
 
     onRenderEditCell(args) {
         const { columnIndex } = args;
+        const rowEntry = this.props.getRowEntry(args);
+        if (!rowEntry) {
+            return;
+        }
+
         const columnInfo = this.props.getColumnInfo(columnIndex);
         const state = this.props.getManagerState();
 
@@ -154,6 +160,7 @@ export class CellEditorsManager {
             return renderEditCell(Object.assign({}, args, { 
                 columnInfo: columnInfo,
                 getColumnInfo: this.props.getColumnInfo,
+                rowEntry: rowEntry,
                 setCellEditBuffer: (value, index) => {
                     state.editInfo.setCellEditBuffer(
                         (index === undefined) ? columnIndex : index, value);
@@ -179,6 +186,7 @@ export class CellEditorsManager {
         if (renderDisplayCell && getCellValue) {
             args = Object.assign({}, args);
             args.columnInfo = columnInfo;
+            args.isEdit = false;
             args.rowEntry = rowEntry;
             args.value = columnInfo.getCellValue(args);
             return renderDisplayCell(args);
@@ -193,6 +201,7 @@ export class CellEditorsManager {
  * @property {number}   columnIndex
  * @property {RowTable~Column}  column
  * @property {CellEditorsManager~ColumnInfo}    columnInfo
+ * @property {boolean}  isEdit
  * @property {*}    rowEntry
  */
 
@@ -223,6 +232,7 @@ export class CellEditorsManager {
 /**
  * @typedef {object}    CellEditorsManager~renderDisplayCellArgs
  * {@link RowTable~onRenderCellArgs} plus:
+ * @property {*}    rowEntry
  * @property {*}    value
  */
 
@@ -235,6 +245,7 @@ export class CellEditorsManager {
  * @typedef {object}    CellEditorsManager~renderEditCellArgs
  * {@link EditableRowTable~onRenderEditCellArgs} plus:
  * @property {ColumnInfo} columnInfo
+ * @property {*}    rowEntry
  * @property {EditableRowTable~setCellEditBuffer}   setCellEditBuffer
  * @property {string}   [errorMsg]
  */

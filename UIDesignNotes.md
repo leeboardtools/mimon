@@ -512,17 +512,55 @@ AccountsList:
 
 
 - renderSplitQuantityEditor
-    - Initial state: negative quantityBaseValue left empty.
-    - onChange, need to clear 'opposite' quantityBaseValue.
-        - columnInfoDef has oppositeColumnInfoDef
-        - in onChange...
-            - look for cellEditBuffer belonging to oppsoiteColumnInfoDef
-            - clear it out.
-            - Also need isEdited state, if !isEdited then display
-            empty string for value.
-                isEdited state kept in cellEditBuffer?
+    - Lots
+        - Split has LotChangeDataItem array lotChanges
+
+        - Use cases:
+            - Brokerage account in account register
+                - Transaction with other account a lot account.
+                - Just open up the lot account and jump the editing to the transaction?
             
-    - Need resolveSplitQuantityCellValue()?
-        - How are errors reported back?
+            - Lot account in account register
+                - Buy
+                    - Other account is brokerage/cash/etc.
+
+                - Reinvested Dividend
+                    - Other account is income account.
+
+                - Sell
+                    - Proceeds go to account P
+                    - Capital gain/loss recorded in account G
+
+                - Receive
+                    - Gift, starting, etc.
+                    - Value comes from account G
+                
+                - Donate
+                    - Value goes to account D
+                
+                - Merge/Split
+                    - Old shares
+                    - New shares
+                    - Cash in lieu shares
+
+                - Return of capital
+            
+            - When does lot editing come into play?
+                - Account Register for account with lots.
+
+        - Buy
+            - Auto-create lots
+            - Manually specify lots???
+
+        - Sell
+            - Need to choose lots, which may be parts of a lot.
+            - Lot picker:
+                - Shows available lots, with shares, cost basis, select how much of each lot is to be sold.
+                - Have price, commission & fees, so can show gain/loss.
+
+                - Have sell all button.
+
+            - Needs to be smart enough to detect if future transactions are affected
+            by the lots sold (i.e. do we run out of the lot?)
         
-    - Change setCellEditBuffer() calls to use Object.assign({}, value...)
+        
