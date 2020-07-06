@@ -511,8 +511,6 @@ AccountsList:
 
 - Add a transaction id based lock.
 
-- Remove memos in transactions, split descriptions will be what they are.
-
 
 - renderSplitQuantityEditor
     - Lots

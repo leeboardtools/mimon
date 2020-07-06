@@ -94,14 +94,12 @@ test('Transaction-Data Items', () => {
             accountId: 1,
             quantityBaseValue: 1234,
             description: 'Hello',
-            memo: 'I am a memo'
         },
         {
             reconcileState: T.ReconcileState.PENDING,
             accountId: 1,
             quantityBaseValue: 1234,
             description: 'Hello',
-            memo: 'I am a memo',
             currencyToUSDRatio: new Ratio(1234, 1),
             lotChanges: [
                 { lotId: 123, quantityBaseValue: 12345, costBasisBaseValue: 98765, },
@@ -128,7 +126,6 @@ test('Transaction-Data Items', () => {
                 accountId: 1,
                 quantityBaseValue: 1234,
                 description: 'Hello',
-                memo: 'I am a memo'
             },
             {
                 reconcileState: T.ReconcileState.RECONCILED,
@@ -137,7 +134,6 @@ test('Transaction-Data Items', () => {
             },
         ],
         description: 'A description',
-        memo: 'A memo',
     });
 
 
@@ -149,7 +145,6 @@ test('Transaction-Data Items', () => {
                 accountId: 1,
                 quantityBaseValue: 1234,
                 description: 'Hello',
-                memo: 'I am a memo'
             },
             {
                 reconcileState: T.ReconcileState.RECONCILED,
@@ -167,7 +162,6 @@ test('Transaction-Data Items', () => {
             },
         ],
         description: 'A description',
-        memo: 'A memo',
     });
 
 
@@ -181,7 +175,6 @@ test('Transaction-Data Items', () => {
                 accountId: 1,
                 quantityBaseValue: 1234,
                 description: 'Hello',
-                memo: 'I am a memo'
             },
             {
                 reconcileState: T.ReconcileState.RECONCILED,
@@ -200,7 +193,6 @@ test('Transaction-Data Items', () => {
             },
         ],
         description: 'A description',
-        memo: 'A memo',
     };
     const settingsXDataItem = T.getTransactionDataItem(settingsX);
     const deepCopyDataItem = T.getTransactionDataItem(settingsXDataItem, true);
@@ -237,7 +229,6 @@ test('Transaction-areSimilar', () => {
                 accountId: 1,
                 quantityBaseValue: 1234,
                 description: 'Hello',
-                memo: 'I am a memo'
             },
             {
                 reconcileState: T.ReconcileState.RECONCILED,
@@ -246,7 +237,6 @@ test('Transaction-areSimilar', () => {
             },
         ],
         description: 'A description',
-        memo: 'A memo',
     });
 
     const b = T.getTransaction({
@@ -257,7 +247,6 @@ test('Transaction-areSimilar', () => {
                 accountId: 1,
                 quantityBaseValue: 1234,
                 description: 'Hello',
-                memo: 'I am a memo'
             },
             {
                 reconcileState: T.ReconcileState.RECONCILED,
@@ -267,7 +256,6 @@ test('Transaction-areSimilar', () => {
             },
         ],
         description: 'A description',
-        memo: 'A memo',
     });
 
     expect(T.areTransactionsSimilar(a, b)).toBeTruthy();
@@ -904,7 +892,6 @@ test('TransactionManager-add_modify', async () => {
     
     const changesF1 = { id: settingsF.id, 
         description: 'This is description F1', 
-        memo: 'This is memo F1', 
     };
     const settingsF1 = Object.assign({}, settingsF, changesF1);
     const transactionF1 = (await manager.asyncModifyTransactions(changesF1))

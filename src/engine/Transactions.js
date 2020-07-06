@@ -78,7 +78,6 @@ export function loadTransactionsUserMessages() {
  * {@link Ratio}.
  * @property {LotChangeDataItem[]}  [lotChanges]    Array of changes to any lots.
  * @property {string}   [description]
- * @property {string}   [memo]  
  * @property {string}   [refNum]
  */
 
@@ -95,7 +94,6 @@ export function loadTransactionsUserMessages() {
  * {@link Ratio}.
  * @property {LotChange[]}  [lotChanges]    Array of changes to any lots.
  * @property {string}   [description]
- * @property {string}   [memo]  
  * @property {string}   [refNum]
  */
 
@@ -256,7 +254,6 @@ export function getSplits(splitDataItems, alwaysCopy) {
  * -{@link Number#MAX_VALUE}.
  * @property {SplitDataItem[]}   splits
  * @property {string}   [description]
- * @property {string}   [memo]  
  */
 
 
@@ -269,7 +266,6 @@ export function getSplits(splitDataItems, alwaysCopy) {
  * is ordered. If not given then it is treated as 0.
  * @property {Split[]}  splits
  * @property {string}   [description]
- * @property {string}   [memo]  
  */
 
 

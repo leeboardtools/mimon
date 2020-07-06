@@ -35,7 +35,6 @@ export function createTestTransactions(newFileContents) {
     transactions.push({
         ymdDate: '2020-01-03',
         description: 'Paycheck',
-        memo: 'First paycheck of the year!',
         splits: [
             { 
                 accountId: 'ASSET-Current Assets-Checking Account',
@@ -51,12 +50,10 @@ export function createTestTransactions(newFileContents) {
                 accountId: 'INCOME-Bonus',
                 quantityBaseValue: 20000,
                 description: 'A bonus',
-                memo: 'Woo-whoo!',
             },
             {
                 accountId: 'ASSET-Investments-401(k) Account',
                 quantityBaseValue: 20000,
-                memo: 'The bonus',
             },
             {
                 accountId: 'EXPENSE-Taxes-Federal Income Tax',
@@ -127,7 +124,6 @@ export function createTestTransactions(newFileContents) {
     transactions.push({
         ymdDate: '2020-01-17',
         description: 'Paycheck',
-        memo: 'Second paycheck of the year!',
         splits: [
             { 
                 accountId: 'ASSET-Current Assets-Checking Account',

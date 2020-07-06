@@ -77,24 +77,19 @@ function getDescriptionCellValue(args) {
     const { transactionDataItem, splitIndex } = rowEntry;
     if (transactionDataItem) {
         const split = transactionDataItem.splits[splitIndex];
-        let description;
+        let { description } = transactionDataItem;
         let memo;
         if (split.description) {
-            description = split.description;
-            memo = split.memo || transactionDataItem.memo;
-        }
-        else {
-            description = transactionDataItem.description;
-            memo = transactionDataItem.memo;
+            memo = split.description;
         }
 
-        if (memo) {
+        if (memo && (memo !== description)) {
             return {
                 description: description,
                 memo: memo,
             };
         }
-        return transactionDataItem.description;
+        return description;
     }
 }
 
