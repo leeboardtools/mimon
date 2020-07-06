@@ -3,6 +3,8 @@
     "ok": "OK",
     "yes": "Yes",
     "no": "No",
+    "done": "Done",
+    "save": "Save",
 
     "CellQuantityEditor-invalid_value": ["Enter a numeric value of the form ", "."],
 

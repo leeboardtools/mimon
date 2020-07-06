@@ -258,7 +258,7 @@ function handleMultiSplitSelect(args) {
             accessor = {accessor}
             splits = {splits}
             splitIndex = {splitIndex}
-            onFinish = {() => {
+            onDone = {() => {
                 // TEST!!!
                 caller.setModal(undefined);
             }}

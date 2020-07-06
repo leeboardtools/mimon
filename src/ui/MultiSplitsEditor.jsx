@@ -1,15 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { SequentialPages } from '../util-ui/SequentialPages';
+import { ModalPage } from '../util-ui/ModalPage';
 
 
 export class MultiSplitsEditor extends React.Component {
     constructor(props) {
         super(props);
 
-        this.onFinish = this.onFinish.bind(this);
-        this.onRenderPage = this.onRenderPage.bind(this);
+        this.onDone = this.onDone.bind(this);
 
         this.state = {
 
@@ -30,25 +29,33 @@ export class MultiSplitsEditor extends React.Component {
     // Read-only current quantity value for split.
 
 
-    onFinish() {
-        const { onFinish } = this.props;
+    onDone() {
+        const { onDone } = this.props;
 
-        onFinish();
+        onDone();
     }
 
 
-    onRenderPage() {
-        return <div>Why hello there...</div>;
+    renderControls() {
+        return <div className = "container-fluid">
+            <div className = "row">
+                The current account row.
+            </div>
+            <div className = "row">
+                The main table
+            </div>
+        </div>;
     }
 
 
     render() {
-        return <SequentialPages
-            pageCount = {1}
-            onRenderPage = {this.onRenderPage}
-            onFinish = {this.onFinish}
+        return <ModalPage
+            title = {userMsg('MultiSplitsEditor-title')}
+            onDone = {this.onDone}
             onCancel = {this.props.onCancel}
-        />;
+        >
+            {this.renderControls()}
+        </ModalPage>;
     }
 }
 
@@ -57,6 +64,6 @@ MultiSplitsEditor.propTypes = {
     accessor: PropTypes.object.isRequired,
     splits: PropTypes.array.isRequired,
     splitIndex: PropTypes.number.isRequired,
-    onFinish: PropTypes.func.isRequired,
+    onDone: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,
 };
