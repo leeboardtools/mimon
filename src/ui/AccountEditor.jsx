@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { SequentialPages } from '../util-ui/SequentialPages';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { TextField } from '../util-ui/TextField';
@@ -11,6 +10,7 @@ import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
 import { DropdownField } from '../util-ui/DropdownField';
 import { PricedItemSelector } from './PricedItemSelector';
+import { ModalPage } from '../util-ui/ModalPage';
 
 
 /**
@@ -534,13 +534,13 @@ export class AccountEditor extends React.Component {
             return modal();
         }
 
-        return <SequentialPages
-            pageCount={1}
-            onRenderPage={this.onRenderPage}
-            onFinish={this.onFinish}
-            onCancel={this.onCancel}
-            isNextDisabled={!isOKToSave}
-        />;
+        return <ModalPage
+            onDone = {this.onFinish}
+            doneDisabled = {!isOKToSave}
+            onCancel = {this.onCancel}
+        >
+            {this.onRenderPage()}
+        </ModalPage>;
     }
 }
 

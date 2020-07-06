@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { SequentialPages } from '../util-ui/SequentialPages';
+import { ModalPage } from '../util-ui/ModalPage';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { TextField } from '../util-ui/TextField';
@@ -422,13 +422,13 @@ export class PricedItemEditor extends React.Component {
             return modal();
         }
 
-        return <SequentialPages
-            pageCount={1}
-            onRenderPage={this.onRenderPage}
-            onFinish={this.onFinish}
-            onCancel={this.onCancel}
-            isNextDisabled={!isOKToSave}
-        />;
+        return <ModalPage
+            onDone = {this.onFinish}
+            onCancel = {this.onCancel}
+            doneDisabled={!isOKToSave}
+        >
+            {this.onRenderPage()}
+        </ModalPage>;
     }
 }
 

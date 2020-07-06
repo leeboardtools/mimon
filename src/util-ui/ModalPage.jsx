@@ -79,7 +79,8 @@ export class ModalPage extends React.Component {
     render() {
         const body = this.renderBody();
 
-        const { title, onCancel, onDone, actionButtons, classExtras } = this.props;
+        const { title, onCancel, onDone, doneDisabled,
+            actionButtons, classExtras } = this.props;
 
         let cancelBtn;
         if (onCancel) {
@@ -136,6 +137,7 @@ export class ModalPage extends React.Component {
                 className = {btnClassName}
                 key = {-1}
                 onClick = {onDone}
+                disabled = {doneDisabled}
             >
                 {userMsg('done')}
             </button>
@@ -186,6 +188,8 @@ export class ModalPage extends React.Component {
  * @typedef {object} ModalPage~propTypes
  * @property {ModalPage~onDone} [onDone]    If specified, a Done button is added
  * and this is the callback called when it is chosen.
+ * @property {boolean}  [doneDisabled]  Only used if onDone is specified, disables
+ * the Done button.
  * @property {ModelPage-ButtonInfo[]}   [actionButtons] Optional array of button
  * definitions, these are added before the optional Done button.
  * @property {ModalPage~onCancel} [onCancel]  If specified, a Cancel button is
@@ -195,6 +199,7 @@ export class ModalPage extends React.Component {
  */
 ModalPage.propTypes = {
     onDone: PropTypes.func,
+    doneDisabled: PropTypes.bool,
     actionButtons: PropTypes.array,
     onCancel: PropTypes.func,
     title: PropTypes.string,
