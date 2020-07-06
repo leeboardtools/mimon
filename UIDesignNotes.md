@@ -502,6 +502,7 @@ AccountsList:
 
 - AccountRegister
     - Need to handle multiple splits for the same account.
+    - Make --Split-- item centered in display view.
 
 - Add an Imbalance account?
     - Root Imbalance account for the default currency.
@@ -509,6 +510,8 @@ AccountsList:
     - 
 
 - Add a transaction id based lock.
+
+- Remove memos in transactions, split descriptions will be what they are.
 
 
 - renderSplitQuantityEditor

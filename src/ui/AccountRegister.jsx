@@ -12,6 +12,8 @@ import { columnInfosToColumns,
 import deepEqual from 'deep-equal';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor';
+import { CellButton } from '../util-ui/CellButton';
+import { MultiSplitsEditor } from './MultiSplitsEditor';
 
 
 const allColumnInfoDefs = {};
@@ -192,6 +194,9 @@ function renderSplitsListDisplay(args) {
     if (splits) {
         const { caller } = rowEntry;
         const { accessor } = caller.props;
+        const { ariaLabel, inputSize } = columnInfo;
+        let classExtras = columnInfo.inputClassExtras;
+
         let text;
         let tooltip;
         if (splits.length === 2) {
@@ -209,11 +214,10 @@ function renderSplitsListDisplay(args) {
             </div>;
         }
 
-        const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
         const component = <CellSelectDisplay
             selectedValue = {text}
             ariaLabel = {ariaLabel}
-            classExtras = {inputClassExtras}
+            classExtras = {classExtras}
             size = {inputSize}
         />;
 
@@ -248,15 +252,41 @@ function addAccountIdsToItems(accessor, items, accountId, filter) {
 }
 
 
+function handleMultiSplitSelect(args) {
+    const { cellEditBuffer, } = args;
+    const { splits, rowEntry } = cellEditBuffer.value;
+    const { caller, splitIndex } = rowEntry;
+    // Multi-splits
+    const { accessor } = caller.props;
+    caller.setModal(() => {
+        return <MultiSplitsEditor
+            accessor = {accessor}
+            splits = {splits}
+            splitIndex = {splitIndex}
+            onFinish = {() => {
+                // TEST!!!
+                caller.setModal(undefined);
+            }}
+            onCancel = {() => {
+                caller.setModal(undefined);
+            }}
+        />;
+    });
+}
+
+
 function onSplitsListChange(e, args) {
     const value = parseInt(e.target.value);
     const { cellEditBuffer, setCellEditBuffer, } = args;
     const { splits, rowEntry } = cellEditBuffer.value;
-    const { caller, splitIndex } = rowEntry;
+    const { splitIndex } = rowEntry;
     if (value === -1) {
         // Multi-splits
-        caller;
-        return;
+        return handleMultiSplitSelect(args);
+    }
+
+    if (splits.length !== 2) {
+        // We need to convert to a 2 split.
     }
 
     const newSplits = Array.from(splits);
@@ -302,6 +332,18 @@ function renderSplitsListEditor(args) {
         }
     }
 
+    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+
+    const multiSplitsMsg = userMsg('AccountRegister-multi_splits');
+    if (splits.length !== 2) {
+        return <CellButton
+            value = {multiSplitsMsg}
+            ariaLabel = {ariaLabel}
+            classExtras = {inputClassExtras}
+            size = {inputSize}
+            onClick = {(e) => handleMultiSplitSelect(args)}
+        />;
+    }
 
     // Dropdown list, with one option the --Split-- button.
     // When the --Split-- button is chosen, we bring up a modal
@@ -309,7 +351,7 @@ function renderSplitsListEditor(args) {
     // 
     // To clear a multi-split, just remove the other accounts in the
     // multi-split selection component.
-    const items = [[ -1, userMsg('AccountRegister-multi_splits')]];
+    const items = [[ -1, multiSplitsMsg]];
     addAccountIdsToItems(accessor, items, accessor.getRootAssetAccountId(),
         (id) => id !== accountId);
     addAccountIdsToItems(accessor, items, accessor.getRootLiabilityAccountId(),
@@ -321,12 +363,8 @@ function renderSplitsListEditor(args) {
     addAccountIdsToItems(accessor, items, accessor.getRootExpenseAccountId(),
         (id) => id !== accountId);
 
-    let activeAccountId = -1;
-    if (splits.length === 2) {
-        activeAccountId = splits[1 - splitIndex].accountId;
-    }
+    const activeAccountId = splits[1 - splitIndex].accountId;
 
-    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
     return <CellSelectEditor
         selectedValue = {activeAccountId}
         items = {items}
@@ -435,14 +473,8 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
         };
 
         if (accountType.hasLots) {
-            // Need to think about this more, what exactly do we want to display
-            // when there are shares involved.
-            //  - market value? 
-            //  - cost basis?
-            //  - shares?
-            // Also, how does this affect the debit and credit columns?
-            //  - bought
-            //  - sold
+            // TODO:
+            // Going to replace all this at some point, as lots need special editing.
             columnInfoDefs.bought = CE.getSplitQuantityColumnInfo(
                 {
                     getCellValue: (args) => getSplitQuantityCellValue(args, 'bought'),
@@ -1119,9 +1151,21 @@ export class AccountRegister extends React.Component {
     }
 
 
+    setModal(modal) {
+        this.setState({
+            modal: modal,
+        });
+    }
+
+
 
     render() {
         const { state } = this;
+
+        const { modal } = state;
+        if (modal) {
+            return modal();
+        }
 
         return <div className = "RowTableContainer AccountRegister">
             <EditableRowTable
