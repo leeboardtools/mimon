@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
+import { ModalPage } from '../util-ui/ModalPage';
 
 
 /**
@@ -11,53 +12,12 @@ export class SequentialPages extends React.Component {
     constructor(props) {
         super(props);
 
-        this.watcher = this.watcher.bind(this);
         this.onClickBack = this.onClickBack.bind(this);
         this.onClickNext = this.onClickNext.bind(this);
-
-        this._mainRef = React.createRef();
-        this._buttonBarRef = React.createRef();
 
         this.state = {
             activePageIndex: this.props.activePageIndex || 0,
         };
-    }
-
-
-    watcher() {
-        if (!this._isUnmounted) {
-            if (this._buttonBarRef.current) {
-                this.updateLayout();
-                window.requestAnimationFrame(this.watcher);
-            }
-        }
-    }
-
-
-    componentDidMount() {
-        if (!this._isUnmounted) {
-            this.updateLayout();
-        }
-
-        window.requestAnimationFrame(this.watcher);
-    }
-
-    componentWillUnmount() {
-        this._isUnmounted = true;
-    }
-
-
-    updateLayout() {
-        if (this._mainRef.current && this._buttonBarRef.current) {
-            const mainHeight = this._mainRef.current.clientHeight;
-            const buttonBarHeight = this._buttonBarRef.current.clientHeight;
-            const bodyHeight = mainHeight - buttonBarHeight;
-            if ((bodyHeight > 0) && (bodyHeight !== this.state.bodyHeight)) {
-                this.setState({
-                    bodyHeight: bodyHeight,
-                });
-            }
-        }
     }
 
 
@@ -86,7 +46,7 @@ export class SequentialPages extends React.Component {
                 return { activePageIndex: newPageIndex };
             }
             else {
-                this.props.onFinish();
+                props.onFinish();
             }
         });
     }
@@ -106,110 +66,45 @@ export class SequentialPages extends React.Component {
             ));
         }
 
-        let style;
-        const { bodyHeight } = this.state;
-        if (bodyHeight !== undefined) {
-            style = {
-                height: bodyHeight,
-            };
-        }
-
-        return <div className = "container-fluid pl-0 pr-0 SequentialPages-body"
-            style = {style}
-        >
+        return <React.Fragment>
             {pages}
-        </div>;
+        </React.Fragment>;
     }
 
 
     render() {
         const body = this.renderBody();
 
-        const { pageCount, title } = this.props;
+        const { pageCount, title, onCancel,
+            isNextDisabled, isBackDisabled } = this.props;
         const { activePageIndex } = this.state;
-
-        let cancelBtn;
-        if (this.props.onCancel) {
-            cancelBtn = <button className = "btn btn-secondary m-2 mr-4"
-                onClick = {this.props.onCancel}>
-                {userMsg('cancel')}
-            </button>;
-        }
-
-        let titleComponent;
-        if (title) {
-            let titleCloseBtn;
-            if (cancelBtn) {
-                titleCloseBtn = <button type = "button" 
-                    className = "close" 
-                    aria-label = "Close"
-                    onClick = {this.props.onCancel}
-                >
-                    <span aria-hidden = "true">&times;</span>
-                </button>;
-            }
-
-            titleComponent = <div className = "border-bottom m-2 SequentialPages-title">
-                <div className = "row justify-content-between">
-                    <div className = "col-11 text-center">
-                        <h4 className = "">{title}</h4>
-                    </div>
-                    <div className = "col">
-                        {titleCloseBtn}
-                    </div>
-                </div>
-            </div>;
-        }
-
-
-        const btnClassName = 'btn btn-primary m-2';
-        let nextBtnDisabled;
-        if (this.props.isNextDisabled) {
-            nextBtnDisabled = 'disabled';
-        }
 
         const nextText = ((activePageIndex + 1) < pageCount)
             ? userMsg('SequentialPages-next_btn') 
             : userMsg('SequentialPages-finish-btn');
 
-        let backBtnDisabled;
-        if (this.props.isBackDisabled || !activePageIndex) {
-            backBtnDisabled = 'disabled';
-        }
-
-        let backButton;
+        const actionButtons = [];
         if (pageCount > 1) {
-            backButton = <button className = {btnClassName}
-                onClick = {this.onClickBack}
-                disabled = {backBtnDisabled}>
-                {userMsg('SequentialPages-back_btn')}
-            </button>;
+            actionButtons.push({
+                label: userMsg('SequentialPages-back_btn'),
+                onClick: this.onClickBack,
+                disabled: isBackDisabled || !activePageIndex,
+            });
         }
+        actionButtons.push({
+            label: nextText,
+            onClick: this.onClickNext,
+            disabled: isNextDisabled,
+        });
 
-        return <div 
-            className = "d-flex w-100 h-100 mx-auto flex-column SequentialPages"
-            ref = {this._mainRef}
+        return <ModalPage
+            title = {title}
+            onCancel = {onCancel}
+            actionButtons = {actionButtons}
+            classExtras = "SequentialPages"
         >
-            {titleComponent}
             {body}
-            <div className = "mt-auto SequentialPages-buttonBar"
-                ref = {this._buttonBarRef}
-            >
-                <div className = "row border-top m-2">
-                    <div className = "col text-left mt-2">
-                        {cancelBtn}
-                    </div>
-                    <div className = "col text-right mt-2">
-                        {backButton}
-                        <button className = {btnClassName}
-                            onClick = {this.onClickNext} 
-                            disabled = {nextBtnDisabled}>
-                            {nextText}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>;
+        </ModalPage>;
     }
 }
 
