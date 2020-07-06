@@ -1,12 +1,27 @@
 
-/* Needed for util-ui/FileSelector.jsx */
+/* For util-ui/FileSelector.jsx */
 .modal-full-height {
     height: calc(100% - 3.5em);
 }
 /* End util-ui/FileSelector.jsx */
 
 
-/* Needed for util-ui/CellTextEditor.jsx */
+/** For util-ui/CellButton.jsx */
+.cellButton {
+    margin: 0px;
+    padding: 0px 0px;
+    height: calc(1.5rem + .3rem + 2px);
+    border-radius: 1;
+    color: #007bff;
+}
+
+.cellButton:focus {
+    color: #007bff;
+}
+/** End util-ui/CellButton.jsx */
+
+
+/* For util-ui/CellTextEditor.jsx */
 .cellTextEditor-textInput {
     margin: 0px;
     padding: 0px 2px;
@@ -22,7 +37,7 @@
 /* End util-ui/CellTextEditor.jsx */
 
 
-/* Needed for util-ui/CellSelectEditor.jsx */
+/* For util-ui/CellSelectEditor.jsx */
 .cellSelectEditor-select {
     margin: 0px;
     padding: 0px 0px;
@@ -35,24 +50,25 @@
     background-color: inherit;
     border-radius: 0;
 }
-
+/*
 .cellToggleSelectEditor-button {
     margin: 0px;
     padding: 0px 0px;
     height: calc(1.5rem + .3rem + 2px);
-    border-radius: 0;
+    border-radius: 1;
 }
+*/
 /** End util-ui/CellSelectEditor.jsx */
 
 
-/** Needed for util-ui/CurrencyDisplay.jsx */
+/** For util-ui/CurrencyDisplay.jsx */
 .currencyDisplay {
     text-align: right;
 }
 /** End util-ui/CurrencyyDisplay.jsx */
 
 
-/** Needed for util-ui/Dropdown.jsx */
+/** For util-ui/Dropdown.jsx */
 .dropdown-item-checked::before {
     position: absolute;
     left: .4rem;
@@ -62,7 +78,7 @@
 /** End util-ui/Dropdown.jsx */
 
 
-/** Needed for util-ui/MenuList.jsx */
+/** For util-ui/MenuList.jsx */
 .dropdown-submenu {
     position: relative;
 }
@@ -90,7 +106,7 @@
 }
 
 
-/** Needed for util-ui/RowTable.jsx */
+/** For util-ui/RowTable.jsx */
 .RowTable {
     width: 100%;
     height: 100%;
@@ -155,14 +171,16 @@
     overflow: hidden;
 }
 
+/*
 .RowTableFooterCell {
 
 }
+*/
 
 /** End util-ui/RowTable.jsx */
 
 
-/** Needed for util-ui/CollapsibleRowTable.jsx */
+/** For util-ui/CollapsibleRowTable.jsx */
 .CollapsibleRowTable-expand-collapse-container {
     display: flex;
     flex-direction: row;
@@ -182,7 +200,7 @@
 /** End util-ui/CollapsibleRowTable.jsx */
 
 
-/** Needed for util-ui/DropdownField.jsx */
+/** For util-ui/DropdownField.jsx */
 .scrollable-menu {
     height: auto;
     max-height: 90vh;
@@ -191,7 +209,7 @@
 /** End util-ui/DropdownField.jsx */
   
 
-/** Needed for util-ui/QuantityDisplay.jsx */
+/** For util-ui/QuantityDisplay.jsx */
 .quantityDisplay {
     text-align: right;
 }
