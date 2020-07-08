@@ -15,6 +15,7 @@ export class ModalPage extends React.Component {
         this.watcher = this.watcher.bind(this);
 
         this._mainRef = React.createRef();
+        this._titleRef = React.createRef();
         this._buttonBarRef = React.createRef();
 
         this.state = {
@@ -48,8 +49,11 @@ export class ModalPage extends React.Component {
     updateLayout() {
         if (this._mainRef.current && this._buttonBarRef.current) {
             const mainHeight = this._mainRef.current.clientHeight;
+            const titleBarHeight = (this._titleRef.current)
+                ? this._titleRef.current.offsetHeight : 0;
             const buttonBarHeight = this._buttonBarRef.current.clientHeight;
-            const bodyHeight = mainHeight - buttonBarHeight;
+            const bodyHeight = mainHeight - titleBarHeight - buttonBarHeight;
+
             if ((bodyHeight > 0) && (bodyHeight !== this.state.bodyHeight)) {
                 this.setState({
                     bodyHeight: bodyHeight,
@@ -103,7 +107,9 @@ export class ModalPage extends React.Component {
                 </button>;
             }
 
-            titleComponent = <div className = "border-bottom m-2 ModalPage-title">
+            titleComponent = <div className = "border-bottom p-2 ModalPage-title"
+                ref = {this._titleRef}
+            >
                 <div className = "row justify-content-between">
                     <div className = "col-11 text-center">
                         <h4 className = "">{title}</h4>
@@ -113,6 +119,9 @@ export class ModalPage extends React.Component {
                     </div>
                 </div>
             </div>;
+        }
+        else {
+            this._titleRef.current = undefined;
         }
 
         let buttons = [];
@@ -144,10 +153,13 @@ export class ModalPage extends React.Component {
             );
         }
 
-        const className = 'd-flex w-100 h-100 mx-auto flex-column ModalPage';
+        let className = 'd-flex w-100 h-100 mx-auto flex-column ModalPage';
+        if (classExtras) {
+            className += ' ' + classExtras;
+        }
 
         return <div 
-            className = {className + ' ' + classExtras}
+            className = {className}
             ref = {this._mainRef}
         >
             {titleComponent}

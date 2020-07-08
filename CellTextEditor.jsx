@@ -8,7 +8,7 @@ import PropTypes from 'prop-types';
 export const CellTextEditor = React.forwardRef(
     function CellTextEditorImpl(props, ref) {
         const { ariaLabel, value, inputClassExtras, errorMsg, size,
-            onChange, onFocus, onBlur, disabled } = props;
+            onChange, onFocus, onBlur, disabled, placeholder } = props;
 
         const divClassName = 'input-group mb-0 ';
         let className = 'form-control cellTextEditor-textInput ' 
@@ -27,6 +27,7 @@ export const CellTextEditor = React.forwardRef(
             <input type={inputType}
                 className={className}
                 aria-label={ariaLabel}
+                placeholder={placeholder}
                 value={value || ''}
                 size={size}
                 disabled={disabled}
@@ -62,6 +63,7 @@ CellTextEditor.propTypes = {
     ariaLabel: PropTypes.string,
     value: PropTypes.string,
     inputType: PropTypes.string,
+    placeholder: PropTypes.string,
     inputClassExtras: PropTypes.string,
     size: PropTypes.number,
     errorMsg: PropTypes.string,
@@ -77,7 +79,7 @@ CellTextEditor.propTypes = {
  * @param {*} props 
  */
 export function CellTextDisplay(props) {
-    const { ariaLabel, inputClassExtras } = props;
+    const { ariaLabel, inputClassExtras, placeholder } = props;
     const inputType = props.inputType || 'text';
 
     let { value, size } = props;
@@ -96,6 +98,7 @@ export function CellTextDisplay(props) {
         <input type={inputType}
             className={className}
             aria-label={ariaLabel}
+            placeholder={placeholder}
             style={{backgroundColor: 'inherit'}}
             size={size}
             disabled
@@ -119,4 +122,5 @@ CellTextDisplay.propTypes = {
     inputClassExtras: PropTypes.string,
     size: PropTypes.number,
     inputType: PropTypes.string,
+    placeholder: PropTypes.string,
 };
