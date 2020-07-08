@@ -8,6 +8,7 @@ import { CellQuantityDisplay, CellQuantityEditor } from '../util-ui/CellQuantity
 import { getQuantityDefinition } from '../util/Quantities';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
+import * as AH from '../tools/AccountHelpers';
 import { ReconcileState, getReconcileStateName } from '../engine/Transactions';
 import { getCurrency } from '../util/Currency';
 
@@ -50,7 +51,7 @@ import { getCurrency } from '../util/Currency';
 /**
  * @typedef {object}    CellTextEditorArgs
  * {@link CellEditorArgs} where the cellEditBuffer's value property is:
- * @property {string}   value
+ * @property {string|CellTextValue}   value
  */
 
 /**
@@ -61,12 +62,27 @@ export function renderTextEditor(args) {
     const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
         refForFocus } = args;
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
-    const value = cellEditBuffer.value || '';
+
+    let { value } = cellEditBuffer;
+    let placeholder;
+    if (typeof value === 'object') {
+        placeholder = value.placeholder;
+        if (value.readOnly) {
+            args = Object.assign({}, args, {
+                value: value
+            });
+            return renderTextDisplay(args);
+        }
+        value = value.text;
+    }
+
+    value = value || '';
 
     return <CellTextEditor
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
         value = {value.toString()}
+        placeholder = {placeholder}
         inputClassExtras = {inputClassExtras}
         size = {inputSize}
         onChange = {(e) => {
@@ -85,14 +101,20 @@ function renderTextEditorWithTooltips(args, valueProperty) {
 
     const originalValue = cellEditBuffer.value || '';
     let value = originalValue;
+    let placeholder;
     if (typeof value === 'object') {
+        placeholder = value.placeholder;
         value = value[valueProperty];
+    }
+    if ((value === undefined) || (value === null)) {
+        value = '';
     }
 
     return <CellTextEditor
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
         value = {value.toString()}
+        placeholder = {placeholder}
         inputClassExtras = {inputClassExtras}
         size = {inputSize}
         onChange = {(e) => {
@@ -118,6 +140,7 @@ function renderTextEditorWithTooltips(args, valueProperty) {
  * @typedef {object}    CellTextValue
  * @property {string|number}    value
  * @property {string}   tooltip
+ * @property {boolean}  readOnly
  */
 
 /**
@@ -134,18 +157,21 @@ export function renderTextDisplay(args) {
     const { columnInfo } = args;
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
     let value = args.value;
+    let placeholder;
     let tooltip;
-    if ((value === undefined) || (value === null)) {
-        value = '';
-    }
-    else if (typeof value === 'object') {
+    if (typeof value === 'object') {
+        placeholder = value.placeholder;
         tooltip = value.tooltip;
         value = value.value;
+    }
+    if ((value === undefined) || (value === null)) {
+        value = '';
     }
 
     const component = <CellTextDisplay
         ariaLabel = {ariaLabel}
         value = {value.toString()}
+        placeholder = {placeholder}
         inputClassExtras = {inputClassExtras}
         size = {inputSize}
     />;
@@ -235,6 +261,7 @@ export function renderNameDisplay(args) {
             value: {
                 value: value.name,
                 tooltip: value.description,
+                placeholder: value.placeholder,
             },
         });
 
@@ -305,6 +332,7 @@ export function renderDescriptionDisplay(args) {
             value: {
                 value: value.description, 
                 tooltip: value.memo,
+                placeholder: value.placeholder,
             },
         });
     }
@@ -512,14 +540,155 @@ export function getAccountTypeColumnInfo(args) {
 }
 
 
-let reconcileItems;
+/**
+ * @callback CellAccountIdFilter
+ * @param {number} accountId
+ * @returns {boolean}   <code>true</code> if the account id should be included.
+ */
+
+/**
+ * @typedef {object}    CellAccountIdValue
+ * @property {number}   accountId
+ * @property {EngineAccessor}   accessor
+ * @property {CellAccountIdFilter}  [accountIdFilter]   Only needed for
+ * editing and if filtering is desired.
+ * @property {boolean}  readOnly
+ */
+
+/**
+ * @typedef {object}    CellAccountIdEditorArgs
+ * {@link CellEditorArgs} where the cellEditBuffer's value property is:
+ * @property {CellAccountIdValue}   value
+ */
+
+function addAccountIdsToItems(accessor, items, accountId, filter) {
+    const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+    if (!accountDataItem) {
+        return;
+    }
+
+    if (filter(accountId)) {
+        const name = AH.getShortAccountAncestorNames(accessor, accountId);
+        items.push([accountId, name]);
+    }
+
+    const { childAccountIds } = accountDataItem;
+    if (childAccountIds) {
+        childAccountIds.forEach((childId) => {
+            addAccountIdsToItems(accessor, items, childId, filter);
+        });
+    }
+}
+
+function onAccountIdChange(e, args) {
+    const value = parseInt(e.target.value);
+    const { cellEditBuffer, setCellEditBuffer, } = args;
+    setCellEditBuffer({
+        value: Object.assign({}, cellEditBuffer.value, {
+            accountId: value,
+        }),
+    });
+}
+
+/**
+ * Editor renderer for account id properties. Provides a list for choosing an
+ * account id.
+ * @param {CellAccountIdEditorArgs} args 
+ */
+export function renderAccountIdEditor(args) {
+    const { columnInfo, cellEditBuffer, errorMsg,
+        refForFocus } = args;
+    const { value } = cellEditBuffer;
+    if (!value || value.readOnly) {
+        args = Object.assign({}, args, {
+            value: value
+        });
+        return renderAccountIdDisplay(args);
+    }
+
+    const { accessor, accountId } = value;
+    const filter = value.accountIdFilter || (() => true);
+    const rootAccountIds = accessor.getRootAccountIds();
+    
+    const items = [];
+    rootAccountIds.forEach((id) => addAccountIdsToItems(accessor, items, 
+        id, filter));
+
+    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+
+    return <CellSelectEditor
+        selectedValue = {accountId}
+        items = {items}
+        errorMsg = {errorMsg}
+        ariaLabel = {ariaLabel}
+        classExtras = {inputClassExtras}
+        size = {inputSize}
+        onChange = {(e) => onAccountIdChange(e, args)}
+        ref = {refForFocus}
+    />;
+}
+
+
+/**
+ * @typedef {object}    CellAccountIdDisplayArgs  
+ * @property {ColumnInfo} columnInfo
+ * @property {CellAccountIdValue}   value
+ */
+
+/**
+ * Display renderer for account id properties.
+ * @param {CellAccountIdDisplayArgs} args 
+ */
+export function renderAccountIdDisplay(args) {
+    const { columnInfo, value } = args;
+    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+    const { accountId, accessor } = value;
+    const name = AH.getShortAccountAncestorNames(accessor, accountId);
+    if (name) {
+        return <CellSelectDisplay
+            ariaLabel = {ariaLabel}
+            selectedValue = {name}
+            classExtras = {inputClassExtras}
+            size = {inputSize}
+        />;
+    }
+}
+
+/**
+ * Retrieves a column info for account id cells.
+ * @param {getColumnInfoArgs} args 
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getAccountIdColumnInfo(args) {
+    return Object.assign({ key: 'accountId',
+        header: {
+            label: userMsg('AccountingCellEditors-accountId'),
+            classExtras: 'header-base accountId-base accountId-header',
+        },
+        inputClassExtras: 'accountId-base accountId-input',
+        cellClassName: 'cell-base accountId-base accountId-cell',
+
+        renderDisplayCell: renderAccountIdDisplay,
+        renderEditCell: renderAccountIdEditor,
+    },
+    args);
+}
+
+
+/**
+ * @typedef {object}    CellReconcileStateValue
+ * @property {string}   reconcileState
+ * @property {boolean}  [readOnly]
+ */
 
 
 /**
  * @typedef {object}    CellReconcileStateEditorArgs
  * {@link CellEditorArgs} where the cellEditBuffer's value property is:
- * @property {string}   value
+ * @property {CellReconcileStateValue}   value
  */
+
+let reconcileItems;
 
 /**
  * Editor renderer for {@link ReconcileState} properties.
@@ -529,8 +698,20 @@ export function renderReconcileStateEditor(args) {
     const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
         refForFocus } = args;
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
-    const value = getReconcileStateName(
-        cellEditBuffer.value || ReconcileState.NOT_RECONCILED);
+    const { value } = cellEditBuffer;
+    if (!value) {
+        return;
+    }
+
+    if (value.readOnly) {
+        args = Object.assign({}, args, {
+            value: value
+        });
+        return renderReconcileStateDisplay(args);
+    }
+
+    const reconcileState = getReconcileStateName(
+        value.reconcileState || ReconcileState.NOT_RECONCILED);
     if (!reconcileItems) {
         reconcileItems = [];
         for (let name in ReconcileState) {
@@ -543,13 +724,15 @@ export function renderReconcileStateEditor(args) {
     return <CellToggleSelectEditor
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
-        selectedValue = {value.toString()}
+        selectedValue = {reconcileState.toString()}
         items = {reconcileItems}
         classExtras = {inputClassExtras}
         size = {inputSize}
         onChange = {(e) => {
             setCellEditBuffer({
-                value: e.target.value,
+                value: Object.assign({}, value, {
+                    reconcileState: e.target.value,
+                }),
             });
         }}
         errorMsg = {errorMsg}
@@ -560,7 +743,7 @@ export function renderReconcileStateEditor(args) {
 /**
  * @typedef {object}    CellReconcileStateDisplayArgs
  * @property {ColumnInfo} columnInfo
- * @property {string}   value
+ * @property {CellReconcileStateValue}  value
  */
 
 /**
@@ -569,8 +752,12 @@ export function renderReconcileStateEditor(args) {
  */
 export function renderReconcileStateDisplay(args) {
     const { columnInfo, value } = args;
+    let reconcileState;
+    if (value) {
+        reconcileState = value.reconcileState;
+    }
     const selectedValue = getReconcileStateName(
-        value || ReconcileState.NOT_RECONCILED);
+        reconcileState || ReconcileState.NOT_RECONCILED);
     return <CellToggleSelectDisplay
         selectedValue = {userMsg('AccountingCellEditors-reconcile_' + selectedValue)}
         ariaLabel = {columnInfo.ariaLabel}
@@ -608,6 +795,7 @@ export function getReconcileStateColumnInfo(args) {
  * @property {QuantityDefinition}   quantityDefinition
  * @property {number|string}   quantityBaseValue    This is normally a string after
  * something is typed in the editor.
+ * @property {boolean}  [readOnly]
  */
 
 
@@ -630,6 +818,13 @@ export function renderQuantityEditor(args) {
     const value = cellEditBuffer.value;
     if (!value) {
         return;
+    }
+
+    if (value.readOnly) {
+        args = Object.assign({}, args, {
+            value: value
+        });
+        return renderQuantityDisplay(args);
     }
 
     const { quantityBaseValue, quantityDefinition } = value;
@@ -680,6 +875,7 @@ export function renderQuantityDisplay(args) {
  * @property {Currency} [currency]
  * @property {number|string}   quantityBaseValue    This is normally a string
  * after something is typed in the editor.
+ * @property {boolean}  [readOnly]
  */
 
 
@@ -724,6 +920,12 @@ export function renderBalanceEditor(args) {
     const value = cellEditBuffer.value;
     if (!value) {
         return;
+    }
+    if (value.readOnly) {
+        args = Object.assign({}, args, {
+            value: value
+        });
+        return renderBalanceDisplay(args);
     }
 
     const quantitytValue = cellBalanceValueToQuantityValue(value);
@@ -833,6 +1035,7 @@ export function getSharesColumnInfo(args) {
  * @property {AccountType}  accountType
  * @property {QuantityDefinition}   quantityDefinition
  * @property {'bought'|'sold'|'credit'|'debit'} splitQuantityType 
+ * @property {boolean}  [readOnly]
  */
 
 /**

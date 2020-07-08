@@ -39,7 +39,7 @@ export function createTestTransactions(newFileContents) {
             { 
                 accountId: 'ASSET-Current Assets-Checking Account',
                 quantityBaseValue: 60000,
-                description: 'Paycheck',
+                description: 'First paycheck',
                 reconcileState: 'RECONCILED',
             },
             {
@@ -117,6 +117,7 @@ export function createTestTransactions(newFileContents) {
             { 
                 accountId: 'EXPENSE-Dining',
                 quantityBaseValue: 500,
+                description: 'Lunch with Dinah',
             },
         ] 
     });
@@ -128,7 +129,6 @@ export function createTestTransactions(newFileContents) {
             { 
                 accountId: 'ASSET-Current Assets-Checking Account',
                 quantityBaseValue: 60000,
-                description: 'Paycheck',
             },
             {
                 accountId: 'INCOME-Salary',

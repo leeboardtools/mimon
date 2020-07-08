@@ -649,6 +649,18 @@ export class EngineAccessor extends EventEmitter {
         return this._actionManager.asyncReapplyLastUndoneActions(actionCount);
     }
 
+    /**
+     * @returns {number[]}  An array containing the account ids of the root accounts.
+     */
+    getRootAccountIds() {
+        return [
+            this._accountManager.getRootAssetAccountId(),
+            this._accountManager.getRootLiabilityAccountId(),
+            this._accountManager.getRootIncomeAccountId(),
+            this._accountManager.getRootExpenseAccountId(),
+            this._accountManager.getRootEquityAccountId(),
+        ];
+    }
 
     /**
      * @returns {number}   The account id of the root asset account.

@@ -189,6 +189,19 @@ body {
 }
 
 
+.accountId-base {
+  text-align: left;
+}
+
+.accountId-header {
+  flex-grow: 2;
+}
+
+.accountId-cell {
+  flex-grow: 2;
+}
+
+
 .splits-base {
   text-align: left;
 }

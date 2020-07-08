@@ -85,3 +85,57 @@ export function getShortAccountAncestorNames(accessor, id, options) {
         + placeholder + accountDataItems[1].name
         + separator + accountDataItems[0].name;
 }
+
+
+/**
+ * @typedef {object}    AccountHelpersNameId
+ * @property {string}   name    The name as returned by 
+ * {@link getAncestorAccountDataItems}.
+ * @property {number}   id  The account id.
+ */
+
+
+/**
+ * Finds the account within an account tree with the longest name returned by
+ * {@link getAncestorAccountDataItems}.
+ * @param {EngineAccessor} accessor 
+ * @param {AccountHelpersNameId} [nameId] Updated with the information of the 
+ * account with the longest name, if <code>undefined</code> it will be created.
+ * @param {number} [accountId] The account id, if <code>undefined</code> 
+ * all the accounts will be checked.
+ * @returns {AccountHelpersNameId}
+ */
+export function getAccountWithLongestAncestorName(accessor, nameId, accountId) {
+    nameId = nameId || { name: '', id: -1, };
+
+    if (accountId === undefined) {
+        getAccountWithLongestAncestorName(accessor, nameId,
+            accessor.getRootAssetAccountId());
+        getAccountWithLongestAncestorName(accessor, nameId,
+            accessor.getRootLiabilityAccountId());
+        getAccountWithLongestAncestorName(accessor, nameId,
+            accessor.getRootIncomeAccountId());
+        getAccountWithLongestAncestorName(accessor, nameId,
+            accessor.getRootExpenseAccountId());
+        getAccountWithLongestAncestorName(accessor, nameId,
+            accessor.getRootEquityAccountId());
+        return nameId;
+    }
+
+    // We only need to check accounts with no children.
+    const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+    if (!accountDataItem.childAccountIds || !accountDataItem.childAccountIds.length) {
+        const name = getShortAccountAncestorNames(accessor, accountId);
+        if (name.length > nameId.name.length) {
+            nameId.name = name;
+            nameId.id = accountId;
+        }
+    }
+    else {
+        // Gotta check the children.
+        accountDataItem.childAccountIds.forEach((childAccountId) =>
+            getAccountWithLongestAncestorName(accessor, nameId, childAccountId));
+    }
+
+    return nameId;
+}

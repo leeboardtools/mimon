@@ -35,20 +35,24 @@ function saveTransactionCellValue(args, propertyName) {
 }
 
 
-function getSplitCellValue(args, propertyName) {
+function getSplitCellValue(args, propertyName, valueName) {
     const { rowEntry } = args;
     const { transactionDataItem, splitIndex } = rowEntry;
     if (transactionDataItem) {
-        return transactionDataItem.splits[splitIndex][propertyName];
+        valueName = valueName || propertyName;
+        const value = {};
+        value[valueName] = transactionDataItem.splits[splitIndex][propertyName];
+        return value;
     }
 }
 
-function saveSplitCellValue(args, propertyName) {
+function saveSplitCellValue(args, propertyName, valueName) {
     const { rowEntry, cellEditBuffer, saveBuffer } = args;
     const { splitIndex } = rowEntry;
     if (saveBuffer && propertyName) {
+        valueName = valueName || propertyName;
         saveBuffer.newTransactionDataItem.splits[splitIndex][propertyName] 
-            = cellEditBuffer.value;
+            = cellEditBuffer.value[valueName];
     }
 }
 
@@ -347,16 +351,10 @@ function renderSplitsListEditor(args) {
     // To clear a multi-split, just remove the other accounts in the
     // multi-split selection component.
     const items = [[ -1, multiSplitsMsg]];
-    addAccountIdsToItems(accessor, items, accessor.getRootAssetAccountId(),
-        (id) => id !== accountId);
-    addAccountIdsToItems(accessor, items, accessor.getRootLiabilityAccountId(),
-        (id) => id !== accountId);
-    addAccountIdsToItems(accessor, items, accessor.getRootEquityAccountId(),
-        (id) => id !== accountId);
-    addAccountIdsToItems(accessor, items, accessor.getRootIncomeAccountId(),
-        (id) => id !== accountId);
-    addAccountIdsToItems(accessor, items, accessor.getRootExpenseAccountId(),
-        (id) => id !== accountId);
+
+    const rootAccountIds = accessor.getRootAccountIds();
+    rootAccountIds.forEach((id) => addAccountIdsToItems(accessor, items, 
+        id, (id) => id !== accountId));
 
     const activeAccountId = splits[1 - splitIndex].accountId;
 
@@ -440,8 +438,8 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 saveCellValue: (args) => saveTransactionCellValue(args, 'ymdDate'),
             }),
             refNumb: CE.getRefNumColumnInfo({
-                getCellValue: (args) => getSplitCellValue(args, 'refNum'),
-                saveCellValue: (args) => saveSplitCellValue(args, 'refNumb'),
+                getCellValue: (args) => getSplitCellValue(args, 'refNum', 'value'),
+                saveCellValue: (args) => saveSplitCellValue(args, 'refNum', 'value'),
             }),
             description: CE.getDescriptionColumnInfo({
                 getCellValue: getDescriptionCellValue,
@@ -527,24 +525,6 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
 }
 
 
-function getAccountWithLongestAncestorName(accessor, accountId, nameId) {
-    // We only need to check accounts with no children.
-    const accountDataItem = accessor.getAccountDataItemWithId(accountId);
-    if (!accountDataItem.childAccountIds || !accountDataItem.childAccountIds.length) {
-        const name = AH.getShortAccountAncestorNames(accessor, accountId);
-        if (name.length > nameId.name.length) {
-            nameId.name = name;
-            nameId.id = accountId;
-        }
-    }
-    else {
-        // Gotta check the children.
-        accountDataItem.childAccountIds.forEach((childAccountId) =>
-            getAccountWithLongestAncestorName(accessor, childAccountId, nameId));
-    }
-}
-
-
 /**
  * Component for account registers.
  */
@@ -564,6 +544,7 @@ export class AccountRegister extends React.Component {
         this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
 
         this.getRowEntry = this.getRowEntry.bind(this);
+        this.startRowEdit = this.startRowEdit.bind(this);
         this.getSaveBuffer = this.getSaveBuffer.bind(this);
         this.asyncSaveBuffer = this.asyncSaveBuffer.bind(this);
 
@@ -574,6 +555,7 @@ export class AccountRegister extends React.Component {
                 managerState: state,
             }),
             getManagerState: () => this.state.managerState,
+            startRowEdit: this.startRowEdit,
             getSaveBuffer: this.getSaveBuffer,
             asyncSaveBuffer: this.asyncSaveBuffer,
         });
@@ -639,18 +621,7 @@ export class AccountRegister extends React.Component {
         */
 
         // Find the account that has the longest name for the splits...
-        const nameId = {
-            name: '',
-            id: -1,
-        };
-        getAccountWithLongestAncestorName(accessor,
-            accessor.getRootAssetAccountId(), nameId);
-        getAccountWithLongestAncestorName(accessor,
-            accessor.getRootLiabilityAccountId(), nameId);
-        getAccountWithLongestAncestorName(accessor,
-            accessor.getRootIncomeAccountId(), nameId);
-        getAccountWithLongestAncestorName(accessor,
-            accessor.getRootExpenseAccountId(), nameId);
+        const nameId = AH.getAccountWithLongestAncestorName(accessor);
 
         this._sizingRowEntry = {
             caller: this,
@@ -1071,6 +1042,11 @@ export class AccountRegister extends React.Component {
         return (isSizeRender)
             ? this._sizingRowEntry
             : this.state.rowEntries[rowIndex];
+    }
+
+
+    startRowEdit(args) {
+        return true;
     }
     
     

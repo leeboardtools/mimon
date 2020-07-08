@@ -161,6 +161,7 @@
     "AccountingCellEditors-name": "Name",
     "AccountingCellEditors-description": "Description",
     "AccountingCellEditors-accountType": "Type",
+    "AccountingCellEditors-accountId": "Account",
     "AccountingCellEditors-reconcile": "✔",
     "AccountingCellEditors-bought": "Bought",
     "AccountingCellEditors-sold": "Sold",
@@ -174,6 +175,9 @@
     "AccountingCellEditors-invalid_split_quantity": ["'", "' is not a valid number. ", ""],
 
     "MultiSplitsEditor-title": "Splits Editor",
+    "MultiSplitsEditor-new_description_placeholder": "New Split",
+    "MultiSplitsEditor-delete": "Delete",
+    "MultiSplitsEditor-delete_all": "Delete All",
 
 
     "PricedItemEditor-prompt_cancel_title": "Confirm Cancel",

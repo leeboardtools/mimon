@@ -564,4 +564,8 @@ AccountsList:
             - Needs to be smart enough to detect if future transactions are affected
             by the lots sold (i.e. do we run out of the lot?)
         
-        
+
+- MultiSplitsEditor:
+    - Need to track splits beyond props so we can delete entries.
+    - Need to add empty new split.
+    

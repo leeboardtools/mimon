@@ -5,6 +5,23 @@ import PropTypes from 'prop-types';
  * Manager object for use with {@link EditableRowTable} that handles the
  * management of the cell editing using callbacks in columns defined by
  * {@link CellEditorsManager~ColumnInfo}s.
+ * <p>
+ * At the start of a row edit, the getCellValue callback for each column
+ * is called and the result is assigned to the value property of the
+ * cell edit buffer for the column.
+ * Prior to the getCellValue callbacks being called the startRowEdit callback,
+ * if present, is called. If the row edit buffer is to be used, this can be
+ * used to initialize it.
+ * <p>
+ * The edit renderer for each cell is presumed to use the cell edit buffer
+ * for that cell. It can also use the row edit buffer via the setRowEditBuffer()
+ * callback.
+ * <p>
+ * When the row edit is completed, getSaveBuffer() is called to obtain a save
+ * buffer that will be passed to each saveCellValue() and also to asyncSaveBuffer.
+ * The rowEditBuffer is also passed to these calls, so if that is sufficient it may
+ * be used.
+ * 
  */
 export class CellEditorsManager {
     constructor(props) {
@@ -26,8 +43,8 @@ export class CellEditorsManager {
 
 
     onStartRowEdit(args) {
-        const { getSaveBuffer, asyncSaveBuffer } = this.props;
-        if (!getSaveBuffer || !asyncSaveBuffer) {
+        const { asyncSaveBuffer } = this.props;
+        if (!asyncSaveBuffer) {
             return;
         }
 
@@ -40,12 +57,21 @@ export class CellEditorsManager {
             setRowEditBuffer, setCellEditBuffer, } = args;
 
         const cellBufferArgs = {
-            rowEditBuffer: args.rowEditBuffer,
-            setRowEditBuffer: setRowEditBuffer,
+            rowIndex: args.rowIndex,
             rowEntry: rowEntry,
             cellEditBuffers: cellEditBuffers,
+            rowEditBuffer: args.rowEditBuffer,
+            setRowEditBuffer: setRowEditBuffer,
             isEdit: true,
         };
+
+        const { startRowEdit } = this.props;
+        if (startRowEdit) {
+            if (!startRowEdit(cellBufferArgs)) {
+                return;
+            }
+        }
+
         for (let i = 0; i < cellEditBuffers.length; ++i) {
             const columnInfo = this.props.getColumnInfo(i);
             const { getCellValue } = columnInfo;
@@ -72,15 +98,16 @@ export class CellEditorsManager {
 
     async asyncOnSaveRowEdit(args) {
         const { getSaveBuffer, asyncSaveBuffer } = this.props;
-        if (!getSaveBuffer || !asyncSaveBuffer) {
+        if (!asyncSaveBuffer) {
             return;
         }
 
         const rowEntry = this.props.getRowEntry(args);
-        const saveBuffer = getSaveBuffer(args);
+        const saveBuffer = (getSaveBuffer) ? getSaveBuffer(args) : undefined;
         const rowArgs = Object.assign({}, args,
             {
                 saveBuffer: saveBuffer,
+                rowIndex: args.rowIndex,
                 rowEntry: rowEntry,
             });
         const cellArgs = Object.assign({}, rowArgs);
@@ -160,10 +187,15 @@ export class CellEditorsManager {
             return renderEditCell(Object.assign({}, args, { 
                 columnInfo: columnInfo,
                 getColumnInfo: this.props.getColumnInfo,
+                rowIndex: args.rowIndex,
                 rowEntry: rowEntry,
+                setRowEditBuffer: (state.editInfo)
+                    ? state.editInfo.setRowEditBuffer : undefined,
                 setCellEditBuffer: (value, index) => {
-                    state.editInfo.setCellEditBuffer(
-                        (index === undefined) ? columnIndex : index, value);
+                    if (state.editInfo && state.editInfo.setCellEditBuffer) {
+                        state.editInfo.setCellEditBuffer(
+                            (index === undefined) ? columnIndex : index, value);
+                    }
                 },
                 errorMsg: state.errorMsgs[columnInfo.key],
             }));
@@ -203,6 +235,10 @@ export class CellEditorsManager {
  * @property {CellEditorsManager~ColumnInfo}    columnInfo
  * @property {boolean}  isEdit
  * @property {*}    rowEntry
+ * @property {object}   [rowEditBuffer] Only if isEdit is <code>true</code>.
+ * @property {EditableRowTable~setRowEditBuffer}    [setRowEditBuffer] Only 
+ * if isEdit is <code>true</code>.
+ * @property {object[]} [cellEditBuffers] Only if isEdit is <code>true</code>.
  */
 
 /**
@@ -246,6 +282,7 @@ export class CellEditorsManager {
  * {@link EditableRowTable~onRenderEditCellArgs} plus:
  * @property {ColumnInfo} columnInfo
  * @property {*}    rowEntry
+ * @property {EditableRowTable~setRowEditBuffer}    setRowEditBuffer
  * @property {EditableRowTable~setCellEditBuffer}   setCellEditBuffer
  * @property {string}   [errorMsg]
  */
@@ -296,6 +333,12 @@ export class CellEditorsManager {
  */
 
 /**
+ * @callback CellEditorsMaanger~startRowEdit
+ * @param {CellEditorsManager~getCellValueArgs} args
+ * @returns {boolean}   <code>false</code> if editing is not allowed.
+ */
+
+/**
  * @callback CellEditorsManager~getSaveBuffer
  * @param {EditableRowTable~onSaveRowEditArgs}  args
  * @returns {object}    The save buffer to be passed to the
@@ -322,7 +365,8 @@ export class CellEditorsManager {
  * @property {CellEditorsManager~getColumnInfo} getColumnInfo
  * @property {CellEditorsManager~setManagerState}   setManagerState
  * @property {CellEditorsManager~getManagerState}   getManagerState
- * @property {CellEditorsManager~getSaveBuffer} getSaveBuffer
+ * @property {CellEditorsMaanger~setupRowEditBuffer}    [startRowEdit]
+ * @property {CellEditorsManager~getSaveBuffer} [getSaveBuffer]
  * @property {CellEditorsManager~asyncSaveBuffer}   asyncSaveBuffer
  */
 CellEditorsManager.propTypes = {
@@ -330,6 +374,7 @@ CellEditorsManager.propTypes = {
     getColumnInfo: PropTypes.func.isRequired,
     setManagerState: PropTypes.func.isRequired,
     getManagerState: PropTypes.func.isRequired,
+    startRowEdit: PropTypes.func,
     getSaveBuffer: PropTypes.func,
     asyncSaveBuffer: PropTypes.func,
 };
