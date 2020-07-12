@@ -43,58 +43,31 @@ export class MainWindow extends React.Component {
         this.onSetErrorMsg = this.onSetErrorMsg.bind(this);
         this.onSetModal = this.onSetModal.bind(this);
         this.onOpenTab = this.onOpenTab.bind(this);
+        this.onRefreshUndoMenu = this.onRefreshUndoMenu.bind(this);
     
 
         this.onPostRenderTabs = this.onPostRenderTabs.bind(this);
 
 
-        this._accountsListHandler = new AccountsListHandler({
+        const handlerArgs = {
             accessor: this.props.accessor,
             onGetTabIdState: this.onGetTabIdState,
             onSetTabIdState: this.onSetTabIdState,
             onSetErrorMsg: this.onSetErrorMsg,
             onSetModal: this.onSetModal,
             onOpenTab: this.onOpenTab,
-        });
+            onRefreshUndoMenu: this.onRefreshUndoMenu,
+        };
+        this._accountsListHandler = new AccountsListHandler(handlerArgs);
 
-        this._accountRegisterHandler = new AccountRegisterHandler({
-            accessor: this.props.accessor,
-            onGetTabIdState: this.onGetTabIdState,
-            onSetTabIdState: this.onSetTabIdState,
-            onSetErrorMsg: this.onSetErrorMsg,
-            onSetModal: this.onSetModal,
-            onOpenTab: this.onOpenTab,
-        });
+        this._accountRegisterHandler = new AccountRegisterHandler(handlerArgs);
 
-        this._accountEditorHandler = new AccountEditorHandler({
-            accessor: this.props.accessor,
-            onGetTabIdState: this.onGetTabIdState,
-            onSetTabIdState: this.onSetTabIdState,
-            onSetErrorMsg: this.onSetErrorMsg,
-            onSetModal: this.onSetModal,
-            onOpenTab: this.onOpenTab,
-            onCloseTab: this.onCloseTab,
-        });
+        this._accountEditorHandler = new AccountEditorHandler(handlerArgs);
 
 
-        this._pricedItemsListHandler = new PricedItemsListHandler({
-            accessor: this.props.accessor,
-            onGetTabIdState: this.onGetTabIdState,
-            onSetTabIdState: this.onSetTabIdState,
-            onSetErrorMsg: this.onSetErrorMsg,
-            onSetModal: this.onSetModal,
-            onOpenTab: this.onOpenTab,
-        });
+        this._pricedItemsListHandler = new PricedItemsListHandler(handlerArgs);
 
-        this._pricedItemEditorHandler = new PricedItemEditorHandler({
-            accessor: this.props.accessor,
-            onGetTabIdState: this.onGetTabIdState,
-            onSetTabIdState: this.onSetTabIdState,
-            onSetErrorMsg: this.onSetErrorMsg,
-            onSetModal: this.onSetModal,
-            onOpenTab: this.onOpenTab,
-            onCloseTab: this.onCloseTab,
-        });
+        this._pricedItemEditorHandler = new PricedItemEditorHandler(handlerArgs);
         
         
         this.state = {
@@ -453,8 +426,34 @@ export class MainWindow extends React.Component {
     }
 
 
+    onRefreshUndoMenu() {
+        this.forceUpdate();
+    }
+
+
     onRenderPage(tabEntry, isActive) {
         return tabEntry.onRenderTabPage(tabEntry, isActive);
+    }
+
+
+    getUndoRedoInfo() {
+        const { lastAppliedAction, lastUndoneAction } = this.state;
+        const undoInfo = {};
+        if (lastAppliedAction) {
+            undoInfo.label = userMsg('MainWindow-undo_label', lastAppliedAction.name);
+            undoInfo.onClick = this.onUndo;
+        }
+
+        const redoInfo = {};
+        if (lastUndoneAction) {
+            redoInfo.label = userMsg('MainWindow-redo_label', lastUndoneAction.name);
+            redoInfo.onClick = this.onRedo;
+        }
+
+        return {
+            undoInfo: undoInfo,
+            redoInfo: redoInfo,
+        };
     }
 
 
@@ -462,46 +461,51 @@ export class MainWindow extends React.Component {
         // Have the undo/redo buttons...
         const baseClassName = 'nav nav-link pl-2 pr-2';
         const { accessor } = this.props;
-        const { lastAppliedAction, lastUndoneAction } = this.state;
+
+        const activeTabEntry = this._tabEntriesById.get(this.state.activeTabId);
+        let undoRedoInfo;
+        if (activeTabEntry) {
+            const { getUndoRedoInfo } = activeTabEntry;
+            if (getUndoRedoInfo) {
+                undoRedoInfo = getUndoRedoInfo(activeTabEntry);
+            }
+        }
+
+        undoRedoInfo = undoRedoInfo || this.getUndoRedoInfo();
+        let { undoInfo, redoInfo } = undoRedoInfo;
+        undoInfo = undoInfo || {};
+        redoInfo = redoInfo || {};
 
         let undoClassName = baseClassName + ' undo-tooltip';
-        let undoLabel;
-        if (lastAppliedAction) {
-            undoLabel = userMsg('MainWindow-undo_label', lastAppliedAction.name);
-        }
-        else {
+        if (!undoInfo.onClick) {
             undoClassName += ' disabled';
         }
 
         let undo = <a
             className={undoClassName}
-            onClick={this.onUndo}
+            onClick={undoInfo.onClick}
             aria-label="Undo"
             href="#"
             role="button"
         >
             <i className="material-icons">undo</i>
-            <span className="undo-tooltiptext">{undoLabel}</span>
+            <span className="undo-tooltiptext">{undoInfo.label}</span>
         </a>;
 
 
         let redoClassName = baseClassName + ' undo-tooltip';
-        let redoLabel;
-        if (lastUndoneAction) {
-            redoLabel = userMsg('MainWindow-redo_label', lastUndoneAction.name);
-        }
-        else {
+        if (!redoInfo.onClick) {
             redoClassName += ' disabled';
         }
         const redo = <a
             className={redoClassName}
-            onClick={this.onRedo}
+            onClick={redoInfo.onClick}
             aria-label="Redo"
             href="#"
             role="button"
         >
             <i className="material-icons">redo</i>
-            <span className="undo-tooltiptext">{redoLabel}</span>
+            <span className="undo-tooltiptext">{redoInfo.label}</span>
         </a>;
 
 

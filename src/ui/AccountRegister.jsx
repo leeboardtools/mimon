@@ -261,7 +261,7 @@ function handleMultiSplitSelect(args) {
 
     // Multi-splits
     const { accessor } = caller.props;
-    caller.setModal(() => {
+    caller.setModal((ref) => {
         return <MultiSplitsEditor
             accessor = {accessor}
             splits = {splits}
@@ -273,6 +273,7 @@ function handleMultiSplitSelect(args) {
             onCancel = {() => {
                 caller.setModal(undefined);
             }}
+            ref = {ref}
         />;
     });
 }
@@ -544,6 +545,8 @@ export class AccountRegister extends React.Component {
         this.onTransactionsModify = this.onTransactionsModify.bind(this);
         this.onTransactionsRemove = this.onTransactionsRemove.bind(this);
 
+        this.getUndoRedoInfo = this.getUndoRedoInfo.bind(this);
+
         this.getRowKey = this.getRowKey.bind(this);
         this.onLoadRows = this.onLoadRows.bind(this);
 
@@ -569,6 +572,7 @@ export class AccountRegister extends React.Component {
         });
 
         this._rowTableRef = React.createRef();
+        this._modalRef = React.createRef();
 
         const { accountId, accessor } = this.props;
         const accountDataItem = accessor.getAccountDataItemWithId(accountId);
@@ -1125,7 +1129,8 @@ export class AccountRegister extends React.Component {
         const { rowEditBuffer } = args;
         const { newTransactionDataItem, splitIndex } = rowEditBuffer;
         return {
-            newTransactionDataItem: T.getTransactionDataItem(newTransactionDataItem, true),
+            newTransactionDataItem: 
+                T.getTransactionDataItem(newTransactionDataItem, true),
             splitIndex: splitIndex,
         };
     }
@@ -1186,11 +1191,32 @@ export class AccountRegister extends React.Component {
 
 
     setModal(modal) {
-        this.setState({
-            modal: modal,
-        });
+        if (modal !== this.state.modal) {
+            this.setState({
+                modal: modal,
+            },
+            () => {
+                const { refreshUndoMenu} = this.props;
+                if (refreshUndoMenu) {
+                    refreshUndoMenu();
+                }
+            });
+        }
     }
 
+
+    getUndoRedoInfo() {
+        const { modal } = this.state;
+        if (modal) {
+            const { current } = this._modalRef;
+            if (current) {
+                const { getUndoRedoInfo } = current; 
+                if (getUndoRedoInfo) {
+                    return getUndoRedoInfo();
+                }
+            }
+        }
+    }
 
 
     render() {
@@ -1201,7 +1227,7 @@ export class AccountRegister extends React.Component {
         let modalComponent;
         let registerClassName = 'RowTableContainer AccountRegister';
         if (modal) {
-            modalComponent = modal();
+            modalComponent = modal(this._modalRef);
             registerClassName += ' d-none';
         }
 
@@ -1255,6 +1281,7 @@ AccountRegister.propTypes = {
     accountId: PropTypes.number.isRequired,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
+    refreshUndoMenu: PropTypes.func,
     columns: PropTypes.arrayOf(PropTypes.string),
     hiddenTransactionIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenTransactions: PropTypes.bool,

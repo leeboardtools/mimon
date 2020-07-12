@@ -11,9 +11,33 @@ export class MainWindowHandlerBase {
         this.setModal = props.onSetModal;
         this.openTab = props.onOpenTab;
         this.closeTab = props.onCloseTab;
+        this.refreshUndoMenu = props.onRefreshUndoMenu;
     }
     
 }
+
+/**
+ * @typedef {object}    MainWindowHandlerBase~undoInfo
+ * @property {string}   [label]
+ * @property {function} [onClick]   If onClick is not defined then
+ * the undo/redo menu is disabled.
+ */
+
+/**
+ * @typedef {object}    MainWindowHandlerBase~undoRedoInfo
+ * @property {MainWindowHandlerBase~undoInfo}   undoInfo
+ * @property {MainWindowHandlerBase~undoInfo}   redoInfo
+ */
+
+/**
+ * Optional callback that can be set as the getUndoRedoInfo property of
+ * the tab entry returned by createTabEntry(), used to override the
+ * main undo/redo menu handling for the active tab.
+ * @callback {MainWindowHandlerBase~getUndoRedoInfo}
+ * @param {TappedPages~TabEntry}    tabEntry
+ * @returns {MainWindowHandlerBase~undoRedoInfo|undefined}  If <code>undefined</code>
+ * is returned the normal handling is performed.
+ */
 
 /**
  * Retrieves the state associated with a tab entry.
@@ -46,4 +70,9 @@ export class MainWindowHandlerBase {
  * @function MainWindowHandlerBase#openTab
  * @param {string}  type    The type of tab to open.
  * @param {*}  ...args
+ */
+
+/**
+ * Refreshes the undo menu.
+ * @function MainWindowHandlerBase#refreshUndoMenu
  */

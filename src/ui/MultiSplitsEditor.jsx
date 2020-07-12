@@ -164,6 +164,8 @@ export class MultiSplitsEditor extends React.Component {
         this.onDeleteSplit = this.onDeleteSplit.bind(this);
         this.onDeleteAll = this.onDeleteAll.bind(this);
 
+        this.getUndoRedoInfo = this.getUndoRedoInfo.bind(this);
+
         this.onActiveRowChanged = this.onActiveRowChanged.bind(this);
 
         this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
@@ -240,6 +242,15 @@ export class MultiSplitsEditor extends React.Component {
 
         this.state = Object.assign(this.state, 
             this.buildRowEntries(this.props));
+    }
+
+
+    componentDidMount() {
+        console.log('multi-did mount');
+    }
+
+    componentWillUnmount() {
+        console.log('multi-will unmount');
     }
 
 
@@ -410,7 +421,8 @@ export class MultiSplitsEditor extends React.Component {
                     splits,
                     mainSplit.accountId);
                 if (balancingSplit.quantityBaseValue !== mainSplit.quantityBaseValue) {
-                    Object.assign(newRowEntries[splitIndexToBalance].split, balancingSplit);
+                    Object.assign(newRowEntries[splitIndexToBalance].split, 
+                        balancingSplit);
                 }
             }
 
@@ -496,7 +508,8 @@ export class MultiSplitsEditor extends React.Component {
                 return;
             }
 
-            let { splits, splitIndex, splitRowEntryIndices } = this.splitsFromRowEntries();
+            let { splits, splitIndex, splitRowEntryIndices } 
+                = this.splitsFromRowEntries();
             for (let i = 0; i < splitRowEntryIndices.length; ++i) {
                 if (splitRowEntryIndices[i] === activeRowIndex) {
                     // The one to delete...
@@ -536,6 +549,14 @@ export class MultiSplitsEditor extends React.Component {
                 splitIndex: 0,
             }));
         }
+    }
+
+    
+    getUndoRedoInfo() {
+        return {
+            undoInfo: {},
+            redoInfo: {},
+        };
     }
 
 

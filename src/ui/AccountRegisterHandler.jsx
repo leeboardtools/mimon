@@ -3,6 +3,16 @@ import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountRegister } from './AccountRegister';
 
+
+function getUndoRedoInfo(tabEntry) {
+    const { current } = tabEntry.accountRegisterRef;
+    if (current) {
+        const { getUndoRedoInfo } = current;
+        if (getUndoRedoInfo) {
+            return getUndoRedoInfo();
+        }
+    }
+}
  
 
 /**
@@ -119,6 +129,8 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             accountId: accountId,
             dropdownInfo: this.getTabDropdownInfo(tabId),
             onRenderTabPage: this.onRenderTabPage,
+            accountRegisterRef: React.createRef(),
+            getUndoRedoInfo: getUndoRedoInfo,
         };
     }
 
@@ -130,11 +142,13 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
      */
     onRenderTabPage(tabEntry, isActive) {
         const { accessor } = this.props;
-        const { accountId } = tabEntry;
+        const { accountId, accountRegisterRef } = tabEntry;
 
         return <AccountRegister
-            accessor={accessor}
-            accountId={accountId}
+            accessor = {accessor}
+            accountId = {accountId}
+            refreshUndoMenu = {this.refreshUndoMenu}
+            ref = {accountRegisterRef}
         />;
     }
 }
