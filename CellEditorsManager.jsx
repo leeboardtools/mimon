@@ -149,12 +149,12 @@ export class CellEditorsManager {
     async asyncEndRowEdit() {
         const state = this.props.getManagerState();
         if (!state) {
-            return;
+            return true;
         }
 
         const { editInfo } = state;
         if (!editInfo) {
-            return;
+            return true;
         }
 
         const { asyncEndRowEdit } = editInfo;
