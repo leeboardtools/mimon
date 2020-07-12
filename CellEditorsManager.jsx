@@ -143,6 +143,30 @@ export class CellEditorsManager {
 
 
     /**
+     * @returns {boolean}   <code>true</code> if a row is actively being edited.
+     */
+    isEditing() {
+        return this.getEditRowIndex() >= 0;
+    }
+
+    
+    /**
+     * @returns {number}  The index of the row actively being edited,
+     * -1 if not editing.
+     */
+    getEditRowIndex() {
+        const state = this.props.getManagerState();
+        if (state) {
+            const { editInfo } = state;
+            if (editInfo) {
+                return editInfo.rowIndex;
+            }
+        }
+        return -1;
+    }
+
+
+    /**
      * Helper that calls the {@link EditableRowTable~asyncEndRowEdit} callback from
      * the editable row table.
      */
@@ -220,6 +244,7 @@ export class CellEditorsManager {
 
         this._setManagerState({
             editInfo: {
+                rowIndex: args.rowIndex,
                 asyncEndRowEdit: asyncEndRowEdit,
                 cancelRowEdit: cancelRowEdit,
                 setRowEditBuffer: setRowEditBuffer, 
