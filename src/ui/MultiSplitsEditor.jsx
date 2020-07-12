@@ -372,30 +372,45 @@ export class MultiSplitsEditor extends React.Component {
             if (originalSplitIndex === undefined) {
                 originalSplitIndex = -1;
             }
+
+            const { newSplit } = saveBuffer;
             newRowEntries[rowIndex] = this.createSplitRowEntry(
-                saveBuffer.newSplit,
+                newSplit,
                 originalSplitIndex
             );
             newRowEntries[0].readOnly = true;
             
-            if (rowIndex + 1 >= newRowEntries.length) {
+            const isNewSplit = (rowIndex + 1) >= newRowEntries.length;
+            if (isNewSplit) {
                 // 'new' split, need to add another 'new' split...
                 newRowEntries.push(this.createSplitRowEntry());
             }
 
             if (rowIndex !== 0) {
-                const mainSplit = newRowEntries[0].split;
+                let splitIndexToBalance = 0;
+                if (isNewSplit) {
+                    // If the new split doesn't have any quantities defined then
+                    // we want to balance it.
+                    if (newSplit.quantityBaseValue === '') {
+                        splitIndexToBalance = rowIndex;
+                    }
+                }
+
                 const splits = [];
-                for (let i = newRowEntries.length - 2; i >= 1; --i) {
+                for (let i = newRowEntries.length - 2; i > splitIndexToBalance; --i) {
                     splits.push(newRowEntries[i].split);
                 }
+                for (let i = splitIndexToBalance - 1; i >= 0; --i) {
+                    splits.push(newRowEntries[i].split);
+                }
+                const mainSplit = newRowEntries[splitIndexToBalance].split;
 
                 const { accessor } = this.props;
                 const balancingSplit = accessor.createBalancingSplitDataItem(
                     splits,
                     mainSplit.accountId);
                 if (balancingSplit.quantityBaseValue !== mainSplit.quantityBaseValue) {
-                    Object.assign(newRowEntries[0].split, balancingSplit);
+                    Object.assign(newRowEntries[splitIndexToBalance].split, balancingSplit);
                 }
             }
 
@@ -476,6 +491,11 @@ export class MultiSplitsEditor extends React.Component {
         const { activeRowIndex, } = this.state;
         if (activeRowIndex > 0) {
             this._cellEditorsManager.cancelRowEdit();
+            if ((activeRowIndex + 1) === this.state.rowEntries.length) {
+                // Don't actually delete the new split row...
+                return;
+            }
+
             let { splits, splitIndex, splitRowEntryIndices } = this.splitsFromRowEntries();
             for (let i = 0; i < splitRowEntryIndices.length; ++i) {
                 if (splitRowEntryIndices[i] === activeRowIndex) {
@@ -485,16 +505,18 @@ export class MultiSplitsEditor extends React.Component {
                         --splitIndex;
                     }
 
-                    const nonMainSplits = Array.from(splits);
-                    nonMainSplits.splice(splitIndex, 1);
-                    const { accessor } = this.props;
-                    splits[splitIndex] = accessor.createBalancingSplitDataItem(
-                        nonMainSplits,
-                        splits[splitIndex].accountId);
+                    if (splits.length > 1) {
+                        const nonMainSplits = Array.from(splits);
+                        nonMainSplits.splice(splitIndex, 1);
+                        const { accessor } = this.props;
+                        splits[splitIndex] = accessor.createBalancingSplitDataItem(
+                            nonMainSplits,
+                            splits[splitIndex].accountId);
+                    }
 
                     this.setState(this.buildRowEntries({
-                        splits,
-                        splitIndex
+                        splits: splits,
+                        splitIndex: splitIndex,
                     }));
                     break;
                 }
@@ -504,7 +526,16 @@ export class MultiSplitsEditor extends React.Component {
 
 
     onDeleteAll() {
-
+        this._cellEditorsManager.cancelRowEdit();
+        const { rowEntries } = this.state;
+        if (rowEntries.length > 2) {
+            let { splits, splitIndex } = this.splitsFromRowEntries();
+            const newSplits = [splits[splitIndex]];
+            this.setState(this.buildRowEntries({
+                splits: newSplits,
+                splitIndex: 0,
+            }));
+        }
     }
 
 
@@ -558,12 +589,13 @@ export class MultiSplitsEditor extends React.Component {
             {
                 label: userMsg('MultiSplitsEditor-delete_all'),
                 onClick: this.onDeleteAll,
-                disabled: rowEntries.length < 2,
+                disabled: rowEntries.length <= 2,
                 classExtras: 'btn-secondary',
             },
         ];
 
-        const doneDisabled = rowEntries.length <= 1;
+        const doneDisabled = !this._cellEditorsManager.isEditing()
+            && (rowEntries.length <= 2);
 
         return <ModalPage
             title = {userMsg('MultiSplitsEditor-title')}
