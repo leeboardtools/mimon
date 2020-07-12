@@ -567,5 +567,7 @@ AccountsList:
 
 - MultiSplitsEditor:
     - Need to track splits beyond props so we can delete entries.
-    - Need to add empty new split.
+    - Either disable undo/redo buttons or add support for undo/redo.
+
+
     

@@ -1083,7 +1083,7 @@ function getSplitQuantityInfo(value) {
         quantityBaseValue = split.quantityBaseValue;
     }
 
-    const { category } = accountType;
+    const { category } = A.getAccountType(accountType);
     sign *= category.creditSign;
     if (typeof quantityBaseValue === 'number') {
         quantityBaseValue *= sign;
@@ -1213,6 +1213,12 @@ export function renderSplitQuantityEditor(args) {
     if ((typeof quantityBaseValue === 'number') && (quantityBaseValue <= 0)) {
         quantityBaseValue = '';
     }
+
+    /*
+    if (cellEditBuffer.changeId !== undefined) {
+        console.log('renderSplitQuantityEditor: ' + JSON.stringify(cellEditBuffer));
+    }
+    */
 
     return <CellQuantityEditor
         ariaLabel = {ariaLabel}

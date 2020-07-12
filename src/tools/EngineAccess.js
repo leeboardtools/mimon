@@ -78,6 +78,16 @@ export class EngineAccessor extends EventEmitter {
     }
 
 
+    /**
+     * Overridden to not write out any of the properties, primarily so we can
+     * dump objects that contain an accessor.
+     * @returns {string}
+     */
+    toJSON() {
+        return 'EngineAccessor';
+    }
+
+
     _setupForAccountingFile(accountingFile, fileFactoryIndex) {
         this._accountingFile = accountingFile;
 

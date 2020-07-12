@@ -20,7 +20,7 @@ function getSplitCellValue(args, propertyName) {
         if ((rowEntry.originalSplitIndex === undefined)
          && (propertyName === 'description')) {
             return {
-                value: split[propertyName],
+                description: split[propertyName],
                 placeholder: userMsg('MultiSplitsEditor-new_description_placeholder'),
             };
         }
@@ -33,7 +33,7 @@ function saveSplitCellValue(args, propertyName) {
     if (saveBuffer) {
         const { value } = cellEditBuffer;
         if (typeof value === 'object') {
-            saveBuffer.newSplit[propertyName] = cellEditBuffer.value.value;
+            saveBuffer.newSplit[propertyName] = cellEditBuffer.value[propertyName];
         }
         else {
             saveBuffer.newSplit[propertyName] = cellEditBuffer.value;
@@ -113,8 +113,10 @@ function saveSplitQuantityCellValue(args) {
             return;
         }
 
-        saveBuffer.newSplit
-            = CE.resolveSplitQuantityEditValueToSplitDataItem(args);
+        const { accountId } = saveBuffer.newSplit;
+        Object.assign(saveBuffer.newSplit, 
+            CE.resolveSplitQuantityEditValueToSplitDataItem(args));
+        saveBuffer.newSplit.accountId = accountId;
     }
 }
 
@@ -214,7 +216,7 @@ export class MultiSplitsEditor extends React.Component {
             columnInfos: columnInfos,
             rowEntries: [],
             activeRowIndex: 0,
-            accountType: A.getAccountType(accountDataItem.type),
+            accountType: accountDataItem.type,
             currency: pricedItemDataItem.currency,
             quantityDefinition: pricedItemDataItem.quantityDefinition,
         };
@@ -262,7 +264,7 @@ export class MultiSplitsEditor extends React.Component {
                 quantityBaseValue: '',
             };
 
-            switch (this.state.accountType.category) {
+            switch (A.getAccountType(this.state.accountType).category) {
             case A.AccountCategory.ASSET :
                 split.accountId = accessor.getRootExpenseAccountId();
                 break;
@@ -283,7 +285,7 @@ export class MultiSplitsEditor extends React.Component {
         let accountType;
         let quantityDefinition;
         if (accountDataItem) {
-            accountType = A.getAccountType(accountDataItem.type);
+            accountType = accountDataItem.type;
             
             const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
                 accountDataItem.pricedItemId);
@@ -366,10 +368,16 @@ export class MultiSplitsEditor extends React.Component {
         const { rowIndex, saveBuffer } = args;
         this.setState((state) => {
             const newRowEntries = Array.from(state.rowEntries);
+            let { originalSplitIndex } = newRowEntries[rowIndex];
+            if (originalSplitIndex === undefined) {
+                originalSplitIndex = -1;
+            }
             newRowEntries[rowIndex] = this.createSplitRowEntry(
                 saveBuffer.newSplit,
-                newRowEntries[rowIndex].id
+                originalSplitIndex
             );
+            newRowEntries[0].readOnly = true;
+            
             if (rowIndex + 1 >= newRowEntries.length) {
                 // 'new' split, need to add another 'new' split...
                 newRowEntries.push(this.createSplitRowEntry());
@@ -450,8 +458,12 @@ export class MultiSplitsEditor extends React.Component {
 
 
     onDone() {
-        const { onDone } = this.props;
-        onDone(this.splitsFromRowEntries());
+        process.nextTick(async () => {
+            if (await this._cellEditorsManager.asyncEndRowEdit()) {
+                const { onDone } = this.props;
+                onDone(this.splitsFromRowEntries());
+            }
+        });
     }
 
 

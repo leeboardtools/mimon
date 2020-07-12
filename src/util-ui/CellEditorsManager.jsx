@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import deepEqual from 'deep-equal';
 
 
 /**
@@ -42,21 +43,65 @@ export class CellEditorsManager {
     }
 
 
-    onStartRowEdit(args) {
-        const { asyncSaveBuffer } = this.props;
-        if (!asyncSaveBuffer) {
+    /**
+     * Helper that calls the getSaveBuffer callback and then calls the
+     * saveCellValue callbacks for each cell. This should only be called
+     * when editing is active.
+     * @param {EditableRowTable~onRenderEditCellArgs
+     *  | EditableRowTable~onStartRowEditArgs}   args
+     * @param {boolean} [ignoreErrors=false]
+     * @returns {*} The save buffer returned by the the getSaveBuffer callback.
+     */
+    grabSaveBuffer(args, ignoreErrors) {
+        const { getSaveBuffer } = this.props;
+        if (!getSaveBuffer) {
             return;
         }
 
+        const rowEntry = this.props.getRowEntry(args);
+        const saveBuffer = getSaveBuffer(args);
+        const rowArgs = Object.assign({}, args,
+            {
+                saveBuffer: saveBuffer,
+                rowIndex: args.rowIndex,
+                rowEntry: rowEntry,
+            });
+        const cellArgs = Object.assign({}, rowArgs);
+        const { cellEditBuffers } = args;
+        for (let i = 0; i < cellEditBuffers.length; ++i) {
+            const columnInfo = this.props.getColumnInfo(i);
+            const { saveCellValue } = columnInfo;
+            if (saveCellValue) {
+                cellArgs.columnIndex = i;
+                cellArgs.columnInfo = columnInfo;
+                cellArgs.cellEditBuffer = cellEditBuffers[i];
+                try {
+                    this.setErrorMsg(columnInfo.key, undefined);
+                    saveCellValue(cellArgs);
+                }
+                catch (e) {
+                    if (!ignoreErrors) {
+                        this.setErrorMsg(columnInfo.key, e.toString());
+                        return;
+                    }
+                }
+            }
+        }
+
+        return saveBuffer;
+    }
+
+
+    _makeCellBufferArgs(args) {
         const rowEntry = this.props.getRowEntry(args);
         if (rowEntry === undefined) {
             return;
         }
 
-        const { cellEditBuffers, asyncEndRowEdit, cancelRowEdit,
-            setRowEditBuffer, setCellEditBuffer, } = args;
+        const { cellEditBuffers,
+            setRowEditBuffer, } = args;
 
-        const cellBufferArgs = {
+        return {
             rowIndex: args.rowIndex,
             rowEntry: rowEntry,
             cellEditBuffers: cellEditBuffers,
@@ -64,6 +109,96 @@ export class CellEditorsManager {
             setRowEditBuffer: setRowEditBuffer,
             isEdit: true,
         };
+    }
+
+
+    /**
+     * Helper that calls the getCellValue callbacks for each column.
+     * @param {EditableRowTable~onRenderEditCellArgs
+     *  | EditableRowTable~onStartRowEditArgs}   args
+     */
+    reloadCellEditBuffers(args) {
+        const { setCellEditBuffer, cellEditBuffers } = args;
+        const cellBufferArgs = this._makeCellBufferArgs(args);
+        if (setCellEditBuffer && cellBufferArgs) {
+            for (let i = 0; i < cellEditBuffers.length; ++i) {
+                const columnInfo = this.props.getColumnInfo(i);
+                const { getCellValue } = columnInfo;
+                if (getCellValue) {
+                    cellBufferArgs.columnIndex = i;
+                    cellBufferArgs.columnInfo = columnInfo;
+                    const newValue = getCellValue(cellBufferArgs);
+                    if (!deepEqual(newValue, cellEditBuffers[i].value)) {
+                        // Need to specify the index because setCellEditBuffer
+                        // was set up to use the column index in the original args.
+                        setCellEditBuffer({
+                            value: newValue,
+                        },
+                        i);
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Helper that calls the {@link EditableRowTable~asyncEndRowEdit} callback from
+     * the editable row table.
+     */
+    async asyncEndRowEdit() {
+        const state = this.props.getManagerState();
+        if (!state) {
+            return;
+        }
+
+        const { editInfo } = state;
+        if (!editInfo) {
+            return;
+        }
+
+        const { asyncEndRowEdit } = editInfo;
+        if (asyncEndRowEdit) {
+            return asyncEndRowEdit();
+        }
+    }
+
+
+    /**
+     * Helper that calls the {@link EditableRowTable~cancelRowEdit} callback from
+     * the editable row table.
+     */
+    cancelRowEdit() {
+        const state = this.props.getManagerState();
+        if (!state) {
+            return;
+        }
+
+        const { editInfo } = state;
+        if (!editInfo) {
+            return;
+        }
+
+        const { cancelRowEdit } = editInfo;
+        if (cancelRowEdit) {
+            return cancelRowEdit();
+        }
+    }
+
+
+    onStartRowEdit(args) {
+        const { asyncSaveBuffer } = this.props;
+        if (!asyncSaveBuffer) {
+            return;
+        }
+
+        const cellBufferArgs = this._makeCellBufferArgs(args);
+        if (!cellBufferArgs) {
+            return;
+        }
+
+        const { asyncEndRowEdit, cancelRowEdit,
+            setRowEditBuffer, setCellEditBuffer, } = args;
 
         const { startRowEdit } = this.props;
         if (startRowEdit) {
@@ -72,6 +207,7 @@ export class CellEditorsManager {
             }
         }
 
+        const { cellEditBuffers } = args;
         for (let i = 0; i < cellEditBuffers.length; ++i) {
             const columnInfo = this.props.getColumnInfo(i);
             const { getCellValue } = columnInfo;
@@ -97,38 +233,22 @@ export class CellEditorsManager {
     
 
     async asyncOnSaveRowEdit(args) {
-        const { getSaveBuffer, asyncSaveBuffer } = this.props;
+        const { asyncSaveBuffer } = this.props;
         if (!asyncSaveBuffer) {
             return;
         }
 
+        const saveBuffer = this.grabSaveBuffer(args);
+        if (!saveBuffer) {
+            return;
+        }
         const rowEntry = this.props.getRowEntry(args);
-        const saveBuffer = (getSaveBuffer) ? getSaveBuffer(args) : undefined;
         const rowArgs = Object.assign({}, args,
             {
                 saveBuffer: saveBuffer,
                 rowIndex: args.rowIndex,
                 rowEntry: rowEntry,
             });
-        const cellArgs = Object.assign({}, rowArgs);
-        const { cellEditBuffers } = args;
-        for (let i = 0; i < cellEditBuffers.length; ++i) {
-            const columnInfo = this.props.getColumnInfo(i);
-            const { saveCellValue } = columnInfo;
-            if (saveCellValue) {
-                cellArgs.columnIndex = i;
-                cellArgs.columnInfo = columnInfo;
-                cellArgs.cellEditBuffer = cellEditBuffers[i];
-                try {
-                    this.setErrorMsg(columnInfo.key, undefined);
-                    saveCellValue(cellArgs);
-                }
-                catch (e) {
-                    this.setErrorMsg(columnInfo.key, e.toString());
-                    return;
-                }
-            }
-        }
 
         if (!await asyncSaveBuffer(rowArgs)) {
             return;

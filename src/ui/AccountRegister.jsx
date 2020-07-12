@@ -18,12 +18,20 @@ import { MultiSplitsEditor } from './MultiSplitsEditor';
 
 const allColumnInfoDefs = {};
 
+function getTransactionInfo(args) {
+    const { rowEditBuffer, rowEntry } = args;
+    return (rowEditBuffer) 
+        ? rowEditBuffer
+        : {
+            newTransactionDataItem: rowEntry.transactionDataItem,
+            splitIndex: rowEntry.splitIndex,
+        };
+}
 
 function getTransactionCellValue(args, propertyName) {
-    const { rowEntry, } = args;
-    const { transactionDataItem } = rowEntry;
-    if (transactionDataItem) {
-        return transactionDataItem[propertyName];
+    const { newTransactionDataItem } = getTransactionInfo(args);
+    if (newTransactionDataItem) {
+        return newTransactionDataItem[propertyName];
     }
 }
 
@@ -36,19 +44,18 @@ function saveTransactionCellValue(args, propertyName) {
 
 
 function getSplitCellValue(args, propertyName, valueName) {
-    const { rowEntry } = args;
-    const { transactionDataItem, splitIndex } = rowEntry;
-    if (transactionDataItem) {
+    const { newTransactionDataItem, splitIndex } = getTransactionInfo(args);
+    if (newTransactionDataItem) {
         valueName = valueName || propertyName;
         const value = {};
-        value[valueName] = transactionDataItem.splits[splitIndex][propertyName];
+        value[valueName] = newTransactionDataItem.splits[splitIndex][propertyName];
         return value;
     }
 }
 
 function saveSplitCellValue(args, propertyName, valueName) {
-    const { rowEntry, cellEditBuffer, saveBuffer } = args;
-    const { splitIndex } = rowEntry;
+    const { cellEditBuffer, saveBuffer } = args;
+    const { splitIndex } = getTransactionInfo(args);
     if (saveBuffer && propertyName) {
         valueName = valueName || propertyName;
         saveBuffer.newTransactionDataItem.splits[splitIndex][propertyName] 
@@ -77,11 +84,10 @@ function getAccountStateQuantityCellValue(args) {
 //---------------------------------------------------------
 //
 function getDescriptionCellValue(args) {
-    const { rowEntry } = args;
-    const { transactionDataItem, splitIndex } = rowEntry;
-    if (transactionDataItem) {
-        const split = transactionDataItem.splits[splitIndex];
-        let { description } = transactionDataItem;
+    const { newTransactionDataItem, splitIndex } = getTransactionInfo(args);
+    if (newTransactionDataItem) {
+        const split = newTransactionDataItem.splits[splitIndex];
+        let { description } = newTransactionDataItem;
         let memo;
         if (split.description) {
             memo = split.description;
@@ -98,22 +104,15 @@ function getDescriptionCellValue(args) {
 }
 
 function saveDescriptionCellValue(args) {
-    const { rowEntry, cellEditBuffer, saveBuffer } = args;
-    const { transactionDataItem, splitIndex } = rowEntry;
+    const { cellEditBuffer, saveBuffer } = args;
     if (saveBuffer) {
         const { newTransactionDataItem } = saveBuffer;
-        const split = transactionDataItem.splits[splitIndex];
         let { value } = cellEditBuffer;
         if (typeof value === 'object') {
             value = value.description;
         }
 
-        if (split.description) {
-            newTransactionDataItem.splits[splitIndex].description = value;
-        }
-        else {
-            newTransactionDataItem.description = value;
-        }
+        newTransactionDataItem.description = value;
     }
 }
 
@@ -122,10 +121,9 @@ function saveDescriptionCellValue(args) {
 //---------------------------------------------------------
 // splits
 function getSplitsListCellValue(args) {
-    const { rowEntry } = args;
-    const { transactionDataItem } = rowEntry;
-    if (transactionDataItem) {
-        let { splits } = transactionDataItem;
+    const { newTransactionDataItem } = getTransactionInfo(args);
+    if (newTransactionDataItem) {
+        let { splits } = newTransactionDataItem;
         if (args.isEdit) {
             splits = Array.from(splits);
             for (let i = 0; i < splits.length; ++i) {
@@ -134,14 +132,14 @@ function getSplitsListCellValue(args) {
         }
         return {
             splits: splits,
-            rowEntry: rowEntry,
+            rowEntry: args.rowEntry,
         };
     }
 }
 
 function saveSplitsListCellValue(args) {
-    const { rowEntry, cellEditBuffer, saveBuffer } = args;
-    const { splitIndex } = rowEntry;
+    const { cellEditBuffer, saveBuffer } = args;
+    const { splitIndex } = getTransactionInfo(args);
     if (saveBuffer) {
         const { newTransactionDataItem } = saveBuffer;
         const { value } = cellEditBuffer;
@@ -199,7 +197,8 @@ function renderSplitsListDisplay(args) {
         let text;
         let tooltip;
         if (splits.length === 2) {
-            const split = splits[1 - rowEntry.splitIndex];
+            const { splitIndex } = getTransactionInfo(args);
+            const split = splits[1 - splitIndex];
             text = AH.getShortAccountAncestorNames(accessor, split.accountId);
         }
         else {
@@ -253,8 +252,13 @@ function addAccountIdsToItems(accessor, items, accountId, filter) {
 
 function handleMultiSplitSelect(args) {
     const { cellEditBuffer, } = args;
-    const { splits, rowEntry } = cellEditBuffer.value;
-    const { caller, splitIndex } = rowEntry;
+    const { rowEntry } = cellEditBuffer.value;
+    const { caller } = rowEntry;
+
+    const { newTransactionDataItem, splitIndex }
+        = caller.grabEditedTransactionInfo(args);
+    const { splits } = newTransactionDataItem;
+
     // Multi-splits
     const { accessor } = caller.props;
     caller.setModal(() => {
@@ -262,8 +266,8 @@ function handleMultiSplitSelect(args) {
             accessor = {accessor}
             splits = {splits}
             splitIndex = {splitIndex}
-            onDone = {() => {
-                // TEST!!!
+            onDone = {({splits, splitIndex}) => {
+                caller.updateSplits(args, splits, splitIndex);
                 caller.setModal(undefined);
             }}
             onCancel = {() => {
@@ -277,8 +281,8 @@ function handleMultiSplitSelect(args) {
 function onSplitsListChange(e, args) {
     const value = parseInt(e.target.value);
     const { cellEditBuffer, setCellEditBuffer, } = args;
-    const { splits, rowEntry } = cellEditBuffer.value;
-    const { splitIndex } = rowEntry;
+    const { splits } = cellEditBuffer.value;
+    const { splitIndex } = getTransactionInfo(args);
     if (value === -1) {
         // Multi-splits
         return handleMultiSplitSelect(args);
@@ -309,7 +313,8 @@ function renderSplitsListEditor(args) {
         return;
     }
 
-    const { caller, splitIndex } = rowEntry;
+    const { splitIndex } = getTransactionInfo(args);
+    const { caller } = rowEntry;
     const { accountId, accessor } = caller.props;
 
     // If any of the other accounts are lot based then we can't change
@@ -378,26 +383,34 @@ function renderSplitsListEditor(args) {
 // Split quantities
 
 function getSplitQuantityCellValue(args, type) {
+    const { newTransactionDataItem, splitIndex } = getTransactionInfo(args);
     const { rowEntry } = args;
-    const { transactionDataItem, caller } = rowEntry;
-    if (!transactionDataItem) {
+    const { caller } = rowEntry;
+    if (!newTransactionDataItem) {
         return;
     }
+
     const { accountType, quantityDefinition } = caller.state;
-    const split = transactionDataItem.splits[rowEntry.splitIndex];
+    const split = newTransactionDataItem.splits[splitIndex];
     const value = {
         accessor: caller.props.accessor,
         split: split,
         accountType: accountType,
         quantityDefinition: quantityDefinition,
         splitQuantityType: type,
-        readOnly: transactionDataItem.splits.length !== 2,
+        readOnly: newTransactionDataItem.splits.length !== 2,
     };
+
+    if (args.isEdit) {
+        //const { rowEditBuffer } = args;
+        //value.changeId = rowEditBuffer.changeId;
+        console.log('getCell: ' + JSON.stringify(args.rowEditBuffer));
+    }
     return value;
 }
 
 function saveSplitQuantityCellValue(args) {
-    const { rowEntry, cellEditBuffer, saveBuffer } = args;
+    const { cellEditBuffer, saveBuffer } = args;
     const { value } = cellEditBuffer;
     if (saveBuffer && value) {
         if (value.readOnly) {
@@ -417,7 +430,7 @@ function saveSplitQuantityCellValue(args) {
         }
 
         const { newTransactionDataItem } = saveBuffer;
-        const { splitIndex } = rowEntry;
+        const { splitIndex } = getTransactionInfo(args);
 
         newTransactionDataItem.splits[splitIndex] 
             = CE.resolveSplitQuantityEditValueToSplitDataItem(args);
@@ -602,7 +615,7 @@ export class AccountRegister extends React.Component {
         ];
 
         this.state = {
-            accountType: accountType,
+            accountType: A.getAccountTypeName(accountType),
             columnInfos: columnInfos,
             rowEntries: [],
             rowEntriesByTransactionId: new Map(),
@@ -1046,16 +1059,81 @@ export class AccountRegister extends React.Component {
 
 
     startRowEdit(args) {
+        const { rowIndex, rowEditBuffer } = args;
+        const rowEntry = this.state.rowEntries[rowIndex];
+        const { transactionDataItem } = rowEntry;
+        rowEditBuffer.newTransactionDataItem 
+            = T.getTransactionDataItem(transactionDataItem, true);
+        rowEditBuffer.splitIndex = rowEntry.splitIndex;
+
+        // TEST!!!
+        const { cellEditBuffers } = args;
+        for (let i = 0; i < cellEditBuffers.length; ++i) {
+            const columnInfo = this.state.columnInfos[i];
+            if ((columnInfo.key === 'credit') || (columnInfo.key === 'debit')) {
+                cellEditBuffers[i].changeId = 0;
+            }
+        }
+
         return true;
+    }
+
+
+    grabEditedTransactionInfo(args) {
+        const saveBuffer = this._cellEditorsManager.grabSaveBuffer(args, true);
+        this.finalizeSaveBuffer(saveBuffer);
+        return saveBuffer;
+    }
+
+
+    finalizeSaveBuffer(saveBuffer) {
+        const { newTransactionDataItem, splitIndex } = saveBuffer;
+        const { splits } = newTransactionDataItem;
+        if (splits.length === 2) {
+            const { accessor } = this.props;
+            const thisSplit = newTransactionDataItem.splits[splitIndex];
+            const otherSplit = newTransactionDataItem.splits[1 - splitIndex];
+            const newSplit = Object.assign({}, otherSplit,
+                accessor.createBalancingSplitDataItem([thisSplit],
+                    otherSplit.accountId));
+            newTransactionDataItem.splits[1 - splitIndex]
+                = newSplit;
+        }
+        return saveBuffer;
+    }
+
+
+    // Callback for when a multi-split is done, updates the currently edited split.
+    updateSplits(args, splits, splitIndex) {
+        const { newTransactionDataItem } = this.grabEditedTransactionInfo(args);
+        if (deepEqual(newTransactionDataItem.splits, splits)) {
+            return;
+        }
+        newTransactionDataItem.splits = splits;
+
+        const { setRowEditBuffer } = args;
+        setRowEditBuffer({
+            newTransactionDataItem: newTransactionDataItem,
+            splitIndex: splitIndex,
+        },
+        (rowEditBuffer) => {
+            args = Object.assign({}, args, {
+                rowEditBuffer: rowEditBuffer,
+            });
+            this._cellEditorsManager.reloadCellEditBuffers(args);
+
+            console.log('updateSplits: ' + JSON.stringify(rowEditBuffer));
+        }
+        );
     }
     
     
     getSaveBuffer(args) {
-        const { rowIndex } = args;
-        const rowEntry = this.state.rowEntries[rowIndex];
-        const { transactionDataItem } = rowEntry;
+        const { rowEditBuffer } = args;
+        const { newTransactionDataItem, splitIndex } = rowEditBuffer;
         return {
-            newTransactionDataItem: T.getTransactionDataItem(transactionDataItem, true),
+            newTransactionDataItem: T.getTransactionDataItem(newTransactionDataItem, true),
+            splitIndex: splitIndex,
         };
     }
 
@@ -1071,20 +1149,12 @@ export class AccountRegister extends React.Component {
             }
 
             const rowEntry = this.state.rowEntries[rowIndex];
-            const { transactionDataItem, splitIndex } = rowEntry;
+            const { transactionDataItem } = rowEntry;
+
+            this.finalizeSaveBuffer(saveBuffer);
             const { newTransactionDataItem } = saveBuffer;
 
             const { accessor } = this.props;
-
-            if (transactionDataItem.splits.length === 2) {
-                const thisSplit = newTransactionDataItem.splits[splitIndex];
-                const otherSplit = newTransactionDataItem.splits[1 - splitIndex];
-                const newSplit = Object.assign({}, otherSplit,
-                    accessor.createBalancingSplitDataItem([thisSplit],
-                        otherSplit.accountId));
-                newTransactionDataItem.splits[1 - splitIndex]
-                    = newSplit;
-            }
 
             const accountingActions = accessor.getAccountingActions();
             let action;
@@ -1134,11 +1204,15 @@ export class AccountRegister extends React.Component {
         const { state } = this;
 
         const { modal } = state;
+
+        let modalComponent;
+        let registerClassName = 'RowTableContainer AccountRegister';
         if (modal) {
-            return modal();
+            modalComponent = modal();
+            registerClassName += ' d-none';
         }
 
-        return <div className = "RowTableContainer AccountRegister">
+        const table = <div className = {registerClassName}>
             <EditableRowTable
                 columns = {state.columns}
 
@@ -1169,6 +1243,11 @@ export class AccountRegister extends React.Component {
                 ref = {this._rowTableRef}
             />
             {this.props.children}
+        </div>;
+
+        return <div className="w-100 h-100">
+            {modalComponent}
+            {table}
         </div>;
     }
 }

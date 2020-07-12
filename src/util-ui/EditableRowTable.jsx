@@ -43,6 +43,7 @@ export function editableRowTable(WrappedTable) {
             }
             if (await this.asyncSaveRowEdit()) {
                 this.cancelRowEdit();
+                return true;
             }
         }
 
@@ -66,13 +67,23 @@ export function editableRowTable(WrappedTable) {
         }
 
 
-        setRowEditBuffer(bufferChanges) {
+        setRowEditBuffer(bufferChanges, callback) {
+            let setStateCallback;
+            if (callback) {
+                setStateCallback = () => {
+                    const { activeEditInfo } = this.state;
+                    callback(activeEditInfo.rowEditBuffer);
+                };
+            }
             this.setState((state) => {
                 const { activeEditInfo } = state;
                 if (activeEditInfo) {
                     const newRowEditBuffer = Object.assign({}, 
                         activeEditInfo.rowEditBuffer, 
                         bufferChanges);
+                    if (typeof newRowEditBuffer.changeId === 'number') {
+                        ++newRowEditBuffer.changeId;
+                    }
                     const newActiveEditInfo = Object.assign({},
                         activeEditInfo,
                         {
@@ -82,7 +93,8 @@ export function editableRowTable(WrappedTable) {
                         activeEditInfo: newActiveEditInfo,
                     };
                 }
-            });
+            },
+            setStateCallback);
         }
 
 
@@ -91,8 +103,13 @@ export function editableRowTable(WrappedTable) {
                 const { activeEditInfo } = state;
                 if (activeEditInfo) {
                     const newCellEditBuffers = Array.from(activeEditInfo.cellEditBuffers);
-                    newCellEditBuffers[columnIndex] = Object.assign({},
+                    const newCellEditBuffer = Object.assign({},
                         newCellEditBuffers[columnIndex], bufferChanges);
+                    if (typeof newCellEditBuffer.changeId === 'number') {
+                        ++newCellEditBuffer.changeId;
+                    }
+
+                    newCellEditBuffers[columnIndex] = newCellEditBuffer;
                     const newActiveEditInfo = Object.assign({},
                         activeEditInfo,
                         {
@@ -144,8 +161,12 @@ export function editableRowTable(WrappedTable) {
         startRealRowEdit({ rowIndex, columnIndex, }) {
             const { onStartRowEdit, columns } = this.props;
             if (onStartRowEdit) {
-                const newRowEditBuffer = {};
-                const newCellEditBuffers = columns.map((item) => { return {}; });
+                const newRowEditBuffer = {
+                    changeId: 0,
+                };
+                const newCellEditBuffers = columns.map((item) => { 
+                    return { }; 
+                });
 
                 if (onStartRowEdit({
                     rowIndex: rowIndex,
@@ -388,6 +409,7 @@ export function editableRowTable(WrappedTable) {
                         cellEditBuffer: activeEditInfo.cellEditBuffers[columnIndex],
                         refForFocus: activeEditInfo.refsForFocus[columnIndex],
                     });
+                    
                     return onRenderEditCell(args);
                 }
             }
@@ -496,6 +518,8 @@ export function editableRowTable(WrappedTable) {
      * Callback passed to EditableRowTable~onStartRowEdit that allows the creator
      * to end editing with save.
      * @callback EditableRowTable~asyncEndRowEdit
+     * @returns {boolean}   <code>true</code> if editing ended, that is, the
+     * asyncOnSaveRowEdit callback returned <code>true</code>.
      */
 
 
@@ -505,6 +529,11 @@ export function editableRowTable(WrappedTable) {
      * @callback EditableRowTable~cancelRowEdit
      */
 
+    /**
+     * @callback EditableRowTable~setRowEditBufferCallback
+     * @param {*}   rowEditBuffer
+     */
+
 
     /**
      * Callback passed to EditableRowTable~onStartRowEdit that allows the creator
@@ -512,6 +541,8 @@ export function editableRowTable(WrappedTable) {
      * @callback EditableRowTable~setRowEditBuffer
      * @param {object} rowEditBufferChanges The changes to be made to rowEditBuffer,
      * this is like React's setState() in that only specified properties are modified.
+     * @param {EditableRowTable~setRowEditBufferCallback}    [callback]  Optional 
+     * callback to be called after the row edit buffer has been updated.
      */
 
 
