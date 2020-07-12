@@ -416,12 +416,14 @@ export class MultiSplitsEditor extends React.Component {
     splitsFromRowEntries() {
         const splits = [];
         const originalIndices = [];
+        const splitRowEntryIndices = [];
         let splitIndex;
 
         // We shouldn't have more than a handful of splits, so let's go ahead
         // and sort brute force...
         const { rowEntries } = this.state;
         splits.push(rowEntries[0].split);
+        splitRowEntryIndices.push(0);
         originalIndices.push(rowEntries[0].originalIndex);
         splitIndex = 0;
 
@@ -431,6 +433,7 @@ export class MultiSplitsEditor extends React.Component {
             const originalIndex = rowEntry.originalIndex;
             if (originalIndex === undefined) {
                 splits.push(rowEntry.split);
+                splitRowEntryIndices.push(i);
                 originalIndices.push(Number.MAX_SAFE_INTEGER);
             }
             else {
@@ -443,6 +446,7 @@ export class MultiSplitsEditor extends React.Component {
                 }
 
                 splits.splice(j, 0, rowEntry.split);
+                splitRowEntryIndices.splice(j, 0, i);
                 originalIndices.splice(j, 0, originalIndex);
                 if (j <= splitIndex) {
                     ++splitIndex;
@@ -453,6 +457,7 @@ export class MultiSplitsEditor extends React.Component {
         return {
             splits: splits,
             splitIndex: splitIndex,
+            splitRowEntryIndices: splitRowEntryIndices,
         };
     }
 
@@ -468,7 +473,33 @@ export class MultiSplitsEditor extends React.Component {
 
 
     onDeleteSplit() {
+        const { activeRowIndex, } = this.state;
+        if (activeRowIndex > 0) {
+            this._cellEditorsManager.cancelRowEdit();
+            let { splits, splitIndex, splitRowEntryIndices } = this.splitsFromRowEntries();
+            for (let i = 0; i < splitRowEntryIndices.length; ++i) {
+                if (splitRowEntryIndices[i] === activeRowIndex) {
+                    // The one to delete...
+                    splits.splice(i, 1);
+                    if (i < splitIndex) {
+                        --splitIndex;
+                    }
 
+                    const nonMainSplits = Array.from(splits);
+                    nonMainSplits.splice(splitIndex, 1);
+                    const { accessor } = this.props;
+                    splits[splitIndex] = accessor.createBalancingSplitDataItem(
+                        nonMainSplits,
+                        splits[splitIndex].accountId);
+
+                    this.setState(this.buildRowEntries({
+                        splits,
+                        splitIndex
+                    }));
+                    break;
+                }
+            }
+        }
     }
 
 
@@ -532,10 +563,13 @@ export class MultiSplitsEditor extends React.Component {
             },
         ];
 
+        const doneDisabled = rowEntries.length <= 1;
+
         return <ModalPage
             title = {userMsg('MultiSplitsEditor-title')}
             actionButtons = {actionButtons}
             onDone = {this.onDone}
+            doneDisabled = {doneDisabled}
             onCancel = {this.props.onCancel}
         >
             {this.renderSplitsTable()}

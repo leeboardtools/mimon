@@ -401,11 +401,6 @@ function getSplitQuantityCellValue(args, type) {
         readOnly: newTransactionDataItem.splits.length !== 2,
     };
 
-    if (args.isEdit) {
-        //const { rowEditBuffer } = args;
-        //value.changeId = rowEditBuffer.changeId;
-        console.log('getCell: ' + JSON.stringify(args.rowEditBuffer));
-    }
     return value;
 }
 
@@ -1121,8 +1116,6 @@ export class AccountRegister extends React.Component {
                 rowEditBuffer: rowEditBuffer,
             });
             this._cellEditorsManager.reloadCellEditBuffers(args);
-
-            console.log('updateSplits: ' + JSON.stringify(rowEditBuffer));
         }
         );
     }

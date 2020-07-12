@@ -1214,12 +1214,6 @@ export function renderSplitQuantityEditor(args) {
         quantityBaseValue = '';
     }
 
-    /*
-    if (cellEditBuffer.changeId !== undefined) {
-        console.log('renderSplitQuantityEditor: ' + JSON.stringify(cellEditBuffer));
-    }
-    */
-
     return <CellQuantityEditor
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
