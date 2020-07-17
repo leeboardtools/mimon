@@ -273,6 +273,7 @@ function handleMultiSplitSelect(args) {
             onCancel = {() => {
                 caller.setModal(undefined);
             }}
+            refreshUndoMenu = {caller.props.refreshUndoMenu}
             ref = {ref}
         />;
     });

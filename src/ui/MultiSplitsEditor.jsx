@@ -166,6 +166,9 @@ export class MultiSplitsEditor extends React.Component {
 
         this.getUndoRedoInfo = this.getUndoRedoInfo.bind(this);
 
+        this.onUndo = this.onUndo.bind(this);
+        this.onRedo = this.onRedo.bind(this);
+
         this.onActiveRowChanged = this.onActiveRowChanged.bind(this);
 
         this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
@@ -242,15 +245,9 @@ export class MultiSplitsEditor extends React.Component {
 
         this.state = Object.assign(this.state, 
             this.buildRowEntries(this.props));
-    }
-
-
-    componentDidMount() {
-        console.log('multi-did mount');
-    }
-
-    componentWillUnmount() {
-        console.log('multi-will unmount');
+        
+        this._undoStates = [];
+        this._redoStates = [];
     }
 
 
@@ -397,6 +394,8 @@ export class MultiSplitsEditor extends React.Component {
                 newRowEntries.push(this.createSplitRowEntry());
             }
 
+            this.saveUndoState();
+
             if (rowIndex !== 0) {
                 let splitIndexToBalance = 0;
                 if (isNewSplit) {
@@ -421,11 +420,14 @@ export class MultiSplitsEditor extends React.Component {
                     splits,
                     mainSplit.accountId);
                 if (balancingSplit.quantityBaseValue !== mainSplit.quantityBaseValue) {
-                    Object.assign(newRowEntries[splitIndexToBalance].split, 
-                        balancingSplit);
+                    newRowEntries[splitIndexToBalance] = Object.assign({},
+                        newRowEntries[splitIndexToBalance],
+                        {
+                            split: balancingSplit,
+                        });
                 }
             }
-
+                
             return {
                 rowEntries: newRowEntries,
             };
@@ -527,6 +529,7 @@ export class MultiSplitsEditor extends React.Component {
                             splits[splitIndex].accountId);
                     }
 
+                    this.saveUndoState();
                     this.setState(this.buildRowEntries({
                         splits: splits,
                         splitIndex: splitIndex,
@@ -544,6 +547,7 @@ export class MultiSplitsEditor extends React.Component {
         if (rowEntries.length > 2) {
             let { splits, splitIndex } = this.splitsFromRowEntries();
             const newSplits = [splits[splitIndex]];
+            this.saveUndoState();
             this.setState(this.buildRowEntries({
                 splits: newSplits,
                 splitIndex: 0,
@@ -551,11 +555,74 @@ export class MultiSplitsEditor extends React.Component {
         }
     }
 
+
+    saveUndoState() {
+        this._undoStates.push({
+            rowEntries: this.state.rowEntries.map((rowEntry) => 
+                Object.assign({}, rowEntry, {
+                    split: T.getSplitDataItem(rowEntry.split, true),
+                })),
+        });
+        
+        this._redoStates.length = 0;
+        this.refreshUndoMenu();
+    }
+
+
+    refreshUndoMenu() {
+        const { refreshUndoMenu } = this.props;
+        if (refreshUndoMenu) {
+            refreshUndoMenu();
+        }
+    }
+
+
+    onUndo() {
+        const {_undoStates } = this;
+        const undoCount = _undoStates.length;
+        if (undoCount) {
+            const undoState = _undoStates[undoCount - 1];
+            --_undoStates.length;
+
+            this._redoStates.push({
+                rowEntries: this.state.rowEntries,
+            });
+            this.setState(undoState, () => this.refreshUndoMenu());
+        }
+    }
+
+
+    onRedo() {
+        const {_redoStates } = this;
+        const redoCount = _redoStates.length;
+        if (redoCount) {
+            const redoState = _redoStates[redoCount - 1];
+            --_redoStates.length;
+
+            this._undoStates.push({
+                rowEntries: this.state.rowEntries,
+            });
+            this.setState(redoState, () => this.refreshUndoMenu());
+        }
+    }
+
     
     getUndoRedoInfo() {
+        const undoInfo = {};
+        if (this._undoStates.length) {
+            undoInfo.label = userMsg('MainWindow-undo_label');
+            undoInfo.onClick = this.onUndo;
+        }
+
+        const redoInfo = {};
+        if (this._redoStates.length) {
+            redoInfo.label = userMsg('MainWindow-redo_label');
+            redoInfo.onClick = this.onRedo;
+        }
+        
         return {
-            undoInfo: {},
-            redoInfo: {},
+            undoInfo: undoInfo,
+            redoInfo: redoInfo,
         };
     }
 
@@ -637,5 +704,6 @@ MultiSplitsEditor.propTypes = {
     splitIndex: PropTypes.number.isRequired,
     onDone: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,
+    refreshUndoMenu: PropTypes.func,
     columns: PropTypes.arrayOf(PropTypes.string),
 };

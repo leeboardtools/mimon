@@ -503,6 +503,8 @@ AccountsList:
 - AccountRegister
     - Need to handle multiple splits for the same account.
     - Make --Split-- item centered in display view.
+    - Add confirmation of modifying the quantities of a reconciled split.
+    
 
 - Add an Imbalance account?
     - Root Imbalance account for the default currency.
@@ -566,7 +568,6 @@ AccountsList:
         
 
 - MultiSplitsEditor:
-    - Either disable undo/redo buttons or add support for undo/redo.
-
+    
 
     
