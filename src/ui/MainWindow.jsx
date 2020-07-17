@@ -56,6 +56,7 @@ export class MainWindow extends React.Component {
             onSetErrorMsg: this.onSetErrorMsg,
             onSetModal: this.onSetModal,
             onOpenTab: this.onOpenTab,
+            onCloseTab: this.onCloseTab,
             onRefreshUndoMenu: this.onRefreshUndoMenu,
         };
         this._accountsListHandler = new AccountsListHandler(handlerArgs);
