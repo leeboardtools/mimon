@@ -13,7 +13,9 @@ import deepEqual from 'deep-equal';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor';
 import { CellButton } from '../util-ui/CellButton';
-import { MultiSplitsEditor } from './MultiSplitsEditor';
+import { getDefaultAccountIdForNewSplit, 
+    MultiSplitsEditor } from './MultiSplitsEditor';
+import { YMDDate } from '../util/YMDDate';
 
 
 const allColumnInfoDefs = {};
@@ -623,15 +625,11 @@ export class AccountRegister extends React.Component {
             quantityDefinition: pricedItemDataItem.quantityDefinition,
         };
 
-        /*
-                newRowEntry.accountStateDataItem = resultEntry.accountStateDataItem;
-                newRowEntry.transactionDataItem = resultEntry.transactionDataItem;
-                newRowEntry.splitIndex = resultEntry.splitIndex;
-                key: key.id.toString() + '_' + splitOccurrance,
-                rowIndex: newRowEntries.length,
-                transactionId: key.id,
-                splitOccurrance: splitOccurrance,
-        */
+
+        this._lastYMDDate = new YMDDate().toString();
+        this._lastOtherSplitAccountId
+            = getDefaultAccountIdForNewSplit(accessor, this.state.accountType);
+
 
         // Find the account that has the longest name for the splits...
         const nameId = AH.getAccountWithLongestAncestorName(accessor);
@@ -854,8 +852,29 @@ export class AccountRegister extends React.Component {
                 }
             });
 
-            // TODO:
-            // Need to add the 'new transaction' row entry
+
+            newRowEntries.push({
+                key: '',
+                transactionDataItem: {
+                    ymdDate: this._lastYMDDate,
+                    splits: [
+                        {
+                            reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+                            accountId: this.props.accountId,
+                            quantityBaseValue: '',
+                        },
+                        {
+                            reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+                            accountId: this._lastOtherSplitAccountId,
+                            quantityBaseValue: '',
+                        },
+                    ]
+                },
+                splitIndex: 0,
+                splitOccurrance: 0,
+                caller: this,
+            });
+
 
             // Update the row entry indices.
             let newTopVisibleRow;
@@ -936,21 +955,25 @@ export class AccountRegister extends React.Component {
         const { rowEntries } = this.state;
         const rowEntry = rowEntries[rowIndex];
         if (rowEntry) {
-            return rowEntry.transactionId;
+            return rowEntry.key;
         }
-        return -rowIndex;
+        return (-rowIndex).toString();
     }
 
 
     async asyncLoadRows() {
+        const { rowEntries } = this.state;
+
         const firstRowIndex = this._firstRowIndexToLoad;
         const lastRowIndex = this._lastRowIndexToLoad;
 
+        // Don't try to load the 'new transaction' row...
+        const lastRowToLoadIndex = Math.min(rowEntries.length - 2, lastRowIndex);
+
         const { accessor } = this.props;
         const { accountId } = this.props;
-        const { rowEntries } = this.state;
         const transactionIdA = rowEntries[firstRowIndex].transactionId;
-        const transactionIdB = rowEntries[lastRowIndex].transactionId;
+        const transactionIdB = rowEntries[lastRowToLoadIndex].transactionId;
 
         const results = await accessor.asyncGetAccountStateAndTransactionDataItems(
             accountId, transactionIdA, transactionIdB);
@@ -960,7 +983,7 @@ export class AccountRegister extends React.Component {
             = new Map(this.state.rowEntriesByTransactionId);
 
         let resultIndex = 0;
-        for (let rowIndex = firstRowIndex; rowIndex <= lastRowIndex; 
+        for (let rowIndex = firstRowIndex; rowIndex <= lastRowToLoadIndex; 
             ++rowIndex, ++resultIndex) {
             const newRowEntry = Object.assign({}, rowEntries[rowIndex]);
             const id = newRowEntry.transactionId;
@@ -1013,7 +1036,7 @@ export class AccountRegister extends React.Component {
         let needsLoading = false;
         for (let i = firstRowIndex; i <= lastRowIndex; ++i) {
             const rowEntry = rowEntries[i];
-            if (!rowEntry.accountStateDataItem) {
+            if (!rowEntry.transactionDataItem) {
                 needsLoading = true;
                 break;
             }
@@ -1065,15 +1088,6 @@ export class AccountRegister extends React.Component {
         rowEditBuffer.newTransactionDataItem 
             = T.getTransactionDataItem(transactionDataItem, true);
         rowEditBuffer.splitIndex = rowEntry.splitIndex;
-
-        // TEST!!!
-        const { cellEditBuffers } = args;
-        for (let i = 0; i < cellEditBuffers.length; ++i) {
-            const columnInfo = this.state.columnInfos[i];
-            if ((columnInfo.key === 'credit') || (columnInfo.key === 'debit')) {
-                cellEditBuffers[i].changeId = 0;
-            }
-        }
 
         return true;
     }
@@ -1151,7 +1165,8 @@ export class AccountRegister extends React.Component {
             const { transactionDataItem } = rowEntry;
 
             this.finalizeSaveBuffer(saveBuffer);
-            const { newTransactionDataItem } = saveBuffer;
+            const { newTransactionDataItem, splitIndex } = saveBuffer;
+            const { splits } = newTransactionDataItem;
 
             const { accessor } = this.props;
 
@@ -1159,9 +1174,20 @@ export class AccountRegister extends React.Component {
             let action;
             if ((rowIndex + 1) === this.state.rowEntries.length) {
                 // Last row is new transaction...
-                action = accountingActions.createAddTransactionsAction(
-                    newTransactionDataItem
-                );
+                // Don't allow missing quantities.
+                let isMissingQuantity = false;
+                for (let i = 0; i < splits.length; ++i) {
+                    if (typeof splits[i].quantityBaseValue !== 'number') {
+                        isMissingQuantity = true;
+                        break;
+                    }
+                }
+
+                if (!isMissingQuantity) {
+                    action = accountingActions.createAddTransactionsAction(
+                        newTransactionDataItem
+                    );
+                }
             }
             else {
                 if (!T.areTransactionsSimilar(
@@ -1175,6 +1201,20 @@ export class AccountRegister extends React.Component {
 
             if (action) {
                 await accessor.asyncApplyAction(action);
+
+                this._lastYMDDate = newTransactionDataItem.ymdDate;
+                let largestQuantityBaseValue = 0;
+                for (let i = 0; i < splits.length; ++i) {
+                    if (i !== splitIndex) {
+                        const { quantityBaseValue } = splits[i];
+                        if (typeof quantityBaseValue === 'number') {
+                            const absValue = Math.abs(quantityBaseValue);
+                            if (absValue > largestQuantityBaseValue) {
+                                this._lastOtherSplitAccountId = splits[i].accountId;
+                            }
+                        }
+                    }
+                }
             }
         }
         catch (e) {

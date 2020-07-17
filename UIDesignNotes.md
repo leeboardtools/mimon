@@ -488,14 +488,6 @@ PricedItemsEditor:
     - Double click needs to open priced item editor???
 
 
-AccountsList:
-    - Add tooltip with description for name.
-
-
-- Add splits list editor.
-- Add split quantity editor.
-- Add adding new transaction for last row.
-
 - Splits List:
     - Need appropriate sign for split values.
 
@@ -504,7 +496,7 @@ AccountsList:
     - Need to handle multiple splits for the same account.
     - Make --Split-- item centered in display view.
     - Add confirmation of modifying the quantities of a reconciled split.
-    
+
 
 - Add an Imbalance account?
     - Root Imbalance account for the default currency.
@@ -570,4 +562,10 @@ AccountsList:
 - MultiSplitsEditor:
     
 
-    
+- Account Register
+    - Auto-complete
+    - Set Split for new transaction row to a better default value.
+    - Don't add new transaction if its incomplete (i.e. no quantity specified)
+
+
+- Date Editor

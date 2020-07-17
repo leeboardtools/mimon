@@ -13,6 +13,21 @@ import * as T from '../engine/Transactions';
 import deepEqual from 'deep-equal';
 
 
+export function getDefaultAccountIdForNewSplit(accessor, accountType) {
+    switch (A.getAccountType(accountType).category) {
+    case A.AccountCategory.ASSET :
+        return accessor.getRootExpenseAccountId();
+
+    case A.AccountCategory.LIABILITY :
+    case A.AccountCategory.INCOME :
+    case A.AccountCategory.EXPENSE :
+    case A.AccountCategory.EQUITY :
+    default :
+        return accessor.getRootAssetAccountId();
+    }
+}
+
+
 function getSplitCellValue(args, propertyName) {
     const { rowEntry } = args;
     const { split } = rowEntry;
@@ -272,19 +287,8 @@ export class MultiSplitsEditor extends React.Component {
                 quantityBaseValue: '',
             };
 
-            switch (A.getAccountType(this.state.accountType).category) {
-            case A.AccountCategory.ASSET :
-                split.accountId = accessor.getRootExpenseAccountId();
-                break;
-
-            case A.AccountCategory.LIABILITY :
-            case A.AccountCategory.INCOME :
-            case A.AccountCategory.EXPENSE :
-            case A.AccountCategory.EQUITY :
-            default :
-                split.accountId = accessor.getRootAssetAccountId();
-                break;
-            }
+            split.accountId = getDefaultAccountIdForNewSplit(accessor, 
+                this.state.accountType);
         }
 
         const { accountId } = split;
