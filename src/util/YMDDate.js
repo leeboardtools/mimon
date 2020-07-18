@@ -164,18 +164,51 @@ export class YMDDate {
     valueOf() { return this._date.valueOf(); }
 
     /**
-     * @returns {Date}  A {@link Date} representation of this date.
+     * @returns {Date}  A {@link Date} representation of this date. Note that the
+     * YMD date is UTC.
      */
     toDate() { return new Date(this._date.valueOf()); }
 
     /**
-     * Creates a date only object from a {@link Date}.
+     * Creates a date only object from a {@link Date}. The YMD date is the UTC
+     * date.
      * @param {Date} date
      * @returns {YMDDate}
      */
     static fromDate(date) {
         return new YMDDate(date);
     }
+
+
+    /**
+     * @returns {Date}  A {@link Date} representation of this date that is in
+     * local date/time, the default of Date.
+     */
+    toLocalDate() {
+        const date = new Date();
+        date.setFullYear(this.getFullYear());
+        date.setMonth(this.getMonth());
+        date.setDate(this.getDate());
+        return date;
+    }
+
+
+    /**
+     * Creates a YMDDate object from a {@link Date}, using the local date.
+     * Note that the YMDDate object will represent the date internally using UTC,
+     * so the date returned by {@link YMDDate#toDate} will not be the same
+     * as the date passed to this unless the time zone offset is 0.
+     * @param {Date} date 
+     * @returns {YMDDate}
+     */
+    static fromLocalDate(date) {
+        return new YMDDate(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate()
+        );
+    }
+
 
     /**
      * @returns {string}    The date in the form of yyyy-mm-dd, where leading 0s are 

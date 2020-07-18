@@ -637,7 +637,7 @@ export class AccountRegister extends React.Component {
         this._sizingRowEntry = {
             caller: this,
             transactionDataItem: {
-                ymdDate: '2020-12-31',
+                ymdDate: '2020-12-3112',
                 description: userMsg('AccountRegister-dummy_description'),
                 splits: [
                     {
@@ -659,7 +659,7 @@ export class AccountRegister extends React.Component {
                 ],
             },
             accountStateDataItem: {
-                ymdDate: '2020-12-31',
+                ymdDate: '2020-12-3112',
                 quantityBaseValue: 999999999,
                 lotStates: [
                     { quantityBaseValue: 999999999, },

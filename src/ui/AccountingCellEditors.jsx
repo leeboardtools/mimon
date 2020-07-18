@@ -3,7 +3,7 @@ import { userMsg, userError } from '../util/UserMessages';
 import { CellTextDisplay, CellTextEditor } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay, CellSelectEditor,
     CellToggleSelectDisplay, CellToggleSelectEditor, } from '../util-ui/CellSelectEditor';
-import { CellDateDisplay } from '../util-ui/CellDateEditor';
+import { CellDateDisplay, CellDateEditor } from '../util-ui/CellDateEditor';
 import { CellQuantityDisplay, CellQuantityEditor } from '../util-ui/CellQuantityEditor';
 import { getQuantityDefinition } from '../util/Quantities';
 import * as A from '../engine/Accounts';
@@ -368,13 +368,30 @@ export function getDescriptionColumnInfo(args) {
  * {@link CellEditorArgs} where the cellEditBuffer's value property is:
  * @property {string}   value
  */
+const dateFormat = 'yyyy/MM/dd';
+
 
 /**
  * Editor renderer for {@link YMDDate} properties.
  * @param {CellDateEditorArgs}  args
  */
 export function renderDateEditor(args) {
-    // TODO:
+    const { columnInfo, cellEditBuffer, setCellEditBuffer } = args;
+    const { ariaLabel, inputClassExtras } = columnInfo;
+    let value = cellEditBuffer.value;
+
+    return <CellDateEditor
+        ariaLabel = {ariaLabel}
+        value = {value}
+        inputClassExtras = {inputClassExtras}
+        onChange = {(ymdDate) => {
+            setCellEditBuffer({
+                value: ymdDate,
+            });
+        }}
+        size = {columnInfo.inputSize}
+        dateFormat = {dateFormat}
+    />;
 }
 
 /**
@@ -396,6 +413,7 @@ export function renderDateDisplay(args) {
         classExtras = {columnInfo.cellClassExtras}
         inputClassExtras = {columnInfo.inputClassExtras}
         size = {columnInfo.inputSize}
+        dateFormat = {dateFormat}
     />;
 }
 

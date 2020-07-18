@@ -20,4 +20,4 @@ This project incorporates the following (I may have missed some projects, especi
 - [deep-equal](https://www.npmjs.com/package/deep-equal) for performing deep object comparisons.
 - [uuid](https://github.com/kelektiv/node-uuid#readme) for generating UUIDs.
 - [Material Design Icons](https://material.io/resources/icons/?style=baseline), Google's Material icons
-
+- [React Date Picker](https://github.com/Hacker0x01/react-datepicker) for picking dates.

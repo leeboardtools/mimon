@@ -1,21 +1,79 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import DatePicker from 'react-datepicker';
+import { getYMDDate, YMDDate } from '../util/YMDDate';
+import 'react-datepicker/dist/react-datepicker.css';
+import { format } from 'date-fns';
+
+//
+// How do we want to do this?
+// Very simple.
+//  - Edit directly
+//      - Left, right arrow changes active field.
+//      - Up, down arrow changes increments/decrements date.
+//      
+//  - Drop down calendar
+//      - Space bar toggles
+//      - Home, end back, forward year
+//      - PgUp, PgDn back, forward month
+//      - Up, down back, forward week
+//      - Left, right back, forward day
+
+
+function adjustDate(ymdDate, delta, onChange) {
+    ymdDate = getYMDDate(ymdDate);
+    if (ymdDate) {
+        onChange(ymdDate.addDays(delta).toString());
+    }
+}
+
+function onKeyDown(e, ymdDate, onChange, state, setState) {
+    const { isCalendarOpen } = state;
+    if (isCalendarOpen) {
+        if (e.key === 'Escape') {
+            e.stopPropagation();
+            return;
+        }
+    }
+
+    switch (e.key) {
+    case ' ' :
+        setState({
+            openCalendar: !isCalendarOpen,
+        });
+        e.stopPropagation();
+        e.preventDefault();
+        break;
+    
+    case '=' :
+        adjustDate(ymdDate, 1, onChange);
+        e.stopPropagation();
+        e.preventDefault();
+        break;
+    
+    case '-' :
+        adjustDate(ymdDate, -1, onChange);
+        e.stopPropagation();
+        e.preventDefault();
+        break;
+    }
+}
+
 
 /**
  * React component for editing text in a table cell.
  * @class
  */
-/*
+
 export const CellDateEditor = React.forwardRef(
     function CellDateEditorImpl(props, ref) {
-        const { ariaLabel, value, inputClassExtras, errorMsg, size,
-            onChange, onFocus, onBlur, disabled } = props;
+        const { ariaLabel, inputClassExtras, errorMsg,
+            onChange, onFocus, onBlur, disabled, size,
+            dateFormat, locale } = props;
 
         const divClassName = 'input-group mb-0 ';
         let className = 'form-control cellDateEditor-textInput ' 
             + (inputClassExtras || '');
-
-        const inputType = props.inputType || 'text';
 
         let errorMsgComponent;
         if (errorMsg) {
@@ -24,23 +82,51 @@ export const CellDateEditor = React.forwardRef(
                 {errorMsg}
             </div>;
         }
-        return <div className={divClassName}>
-            <input type={inputType}
-                className={className}
-                aria-label={ariaLabel}
-                value={value || ''}
-                size={size}
-                disabled={disabled}
-                onChange={onChange}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                ref={ref}
+
+        const [ state, setState ] = useState({
+            isCalendarOpen: false,
+        });
+
+        let { value } = props;
+        value = value || new YMDDate();
+        const valueDate = getYMDDate(value).toLocalDate();
+
+        return <div className = {divClassName}>
+            <DatePicker
+                className = {className}
+                selected = {valueDate}
+                onChange = {(e) => {
+                    const newDate = new Date(e);
+                    onChange(YMDDate.fromLocalDate(newDate).toString());
+                }}
+                onKeyDown = {(e) => {
+                    onKeyDown(e, value, onChange, state, setState);
+                }}
+                onCalendarOpen = {() => setState({ 
+                    isCalendarOpen: true, 
+                    openCalendar: undefined, 
+                })}
+                onCalendarClose = {() => setState({ 
+                    isCalendarOpen: false,
+                    openCalendar: undefined,
+                })}
+                onBlur = {onBlur}
+                onFocus = {onFocus}
+                disabled = {disabled || !onChange}
+                aria-label = {ariaLabel}
+                dateFormat = {dateFormat}
+                locale = {locale}
+                size = {size}
+                ref = {ref}
+                preventOpenOnFocus = "true"
+                open = {state.openCalendar}
+                enableTabLoop = "false"
             />
             {errorMsgComponent}
         </div>;
     }
 );
-*/
+
 
 /**
  * @typedef {object} CellDateEditor~propTypes
@@ -59,11 +145,9 @@ export const CellDateEditor = React.forwardRef(
  * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
  * @property {boolean} [disabled]
  */
-/*
 CellDateEditor.propTypes = {
     ariaLabel: PropTypes.string,
     value: PropTypes.string,
-    inputType: PropTypes.string,
     inputClassExtras: PropTypes.string,
     size: PropTypes.number,
     errorMsg: PropTypes.string,
@@ -71,15 +155,17 @@ CellDateEditor.propTypes = {
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
     disabled: PropTypes.bool,
+    dateFormat: PropTypes.string,
+    locale: PropTypes.string,
 };
-*/
+
 
 /**
  * React component that's a display representation of {@link CellDateEditor}.
  * @param {*} props 
  */
 export function CellDateDisplay(props) {
-    const { ariaLabel, inputClassExtras, } = props;
+    const { ariaLabel, inputClassExtras, dateFormat, locale } = props;
     const inputType = props.inputType || 'text';
     let { value, size } = props;
     value = value || '';
@@ -87,6 +173,17 @@ export function CellDateDisplay(props) {
         if (size < 0) {
             size = Math.max(-size, value.length);
         }
+    }
+
+    if (dateFormat && value) {
+        const localDate = getYMDDate(value).toLocalDate();
+        let localeArg;
+        if (locale) {
+            localeArg = {
+                locale: locale
+            };
+        }
+        value = format(localDate, dateFormat, localeArg);
     }
 
     const divClassName = 'input-group mb-0 ';
@@ -120,4 +217,6 @@ CellDateDisplay.propTypes = {
     inputClassExtras: PropTypes.string,
     size: PropTypes.number,
     inputType: PropTypes.string,
+    dateFormat: PropTypes.string,
+    locale: PropTypes.string,
 };

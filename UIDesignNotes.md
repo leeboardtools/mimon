@@ -569,3 +569,4 @@ PricedItemsEditor:
 
 
 - Date Editor
+    - Add date format to be used by both CellDateEditor and CellDateDisplay

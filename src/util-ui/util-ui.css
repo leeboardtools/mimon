@@ -21,6 +21,22 @@
 /** End util-ui/CellButton.jsx */
 
 
+/* For util-ui/CellDateEditor.jsx */
+.cellDateEditor-textInput {
+    margin: 0px;
+    padding: 0px 2px;
+    height: calc(1.5rem + .3rem + 2px);
+    border-radius: 0;
+}
+
+.cellDateEditor-textDisplay {
+    border: none;
+    background-color: inherit;
+    border-radius: 0;
+}
+/* End util-ui/CellDateEditor.jsx */
+
+
 /* For util-ui/CellTextEditor.jsx */
 .cellTextEditor-textInput {
     margin: 0px;
