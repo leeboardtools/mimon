@@ -121,6 +121,7 @@ export const CellDateEditor = React.forwardRef(
                 preventOpenOnFocus = "true"
                 open = {state.openCalendar}
                 enableTabLoop = "false"
+                dropdownMode = "select"
             />
             {errorMsgComponent}
         </div>;

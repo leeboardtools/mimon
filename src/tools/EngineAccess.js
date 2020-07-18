@@ -27,6 +27,10 @@ import { asyncSetupNewFile } from './NewFileSetup';
  * user of this feature, as it hooks the transaction data items returned
  * to temporarily update their reconcile state while the Reconciler
  * is active.
+ * <p>
+ * {@link EngineAccessor#getDateFormat} and {@link EngineAccessor#getLocale}
+ * are not actually associated with the accounting system, they are provide
+ * for the use of the UI to simplify passing those settings around.
  */
 export class EngineAccessor extends EventEmitter {
     constructor(options) {
@@ -75,6 +79,9 @@ export class EngineAccessor extends EventEmitter {
         this._removeReconciler = this._removeReconciler.bind(this);
 
         this._getTransactionDataItemCallbacks = [];
+
+        this._dateFormat = 'MM/dd/yyyy';
+        this._locale = 'en';
     }
 
 
@@ -183,6 +190,23 @@ export class EngineAccessor extends EventEmitter {
             this._lotManager = undefined;
             this._reminderManager = undefined;
         }
+    }
+
+
+
+    /**
+     * @returns {string}    The date format string in effect. The string is compatible
+     * with {@link https://date-fns.org/v2.0.0-alpha.18/docs/I18n}
+     */
+    getDateFormat() {
+        return this._dateFormat;
+    }
+
+    /**
+     * @returns {string}    The locale in effect.
+     */
+    getLocale() {
+        return this._locale;
     }
 
 

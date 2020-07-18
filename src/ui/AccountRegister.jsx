@@ -30,20 +30,6 @@ function getTransactionInfo(args) {
         };
 }
 
-function getTransactionCellValue(args, propertyName) {
-    const { newTransactionDataItem } = getTransactionInfo(args);
-    if (newTransactionDataItem) {
-        return newTransactionDataItem[propertyName];
-    }
-}
-
-function saveTransactionCellValue(args, propertyName) {
-    const { saveBuffer, cellEditBuffer } = args;
-    if (saveBuffer) {
-        saveBuffer.newTransactionDataItem[propertyName] = cellEditBuffer.value;
-    }
-}
-
 
 function getSplitCellValue(args, propertyName, valueName) {
     const { newTransactionDataItem, splitIndex } = getTransactionInfo(args);
@@ -80,6 +66,32 @@ function getAccountStateQuantityCellValue(args) {
 }
 
 // Don't have saveAccountStateQuantityCellValue() as it is read-only...
+
+
+//
+//---------------------------------------------------------
+//
+function getDateCellValue(args) {
+    const { newTransactionDataItem } = getTransactionInfo(args);
+    if (newTransactionDataItem) {
+        const { rowEntry } = args;
+        const { caller } = rowEntry;
+        return {
+            ymdDate: newTransactionDataItem.ymdDate,
+            accessor: caller.props.accessor,
+        };
+    }
+}
+
+function saveDateCellValue(args) {
+    const { cellEditBuffer, saveBuffer } = args;
+    if (saveBuffer) {
+        const { newTransactionDataItem } = saveBuffer;
+        let { value } = cellEditBuffer;
+        newTransactionDataItem.ymdDate = value.ymdDate;
+    }
+
+}
 
 
 //
@@ -446,8 +458,8 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
     if (!columnInfoDefs) {
         columnInfoDefs = {
             date: CE.getDateColumnInfo({
-                getCellValue: (args) => getTransactionCellValue(args, 'ymdDate'),
-                saveCellValue: (args) => saveTransactionCellValue(args, 'ymdDate'),
+                getCellValue: getDateCellValue,
+                saveCellValue: saveDateCellValue,
             }),
             refNumb: CE.getRefNumColumnInfo({
                 getCellValue: (args) => getSplitCellValue(args, 'refNum', 'value'),

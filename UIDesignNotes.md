@@ -565,8 +565,5 @@ PricedItemsEditor:
 - Account Register
     - Auto-complete
     - Set Split for new transaction row to a better default value.
-    - Don't add new transaction if its incomplete (i.e. no quantity specified)
 
 
-- Date Editor
-    - Add date format to be used by both CellDateEditor and CellDateDisplay

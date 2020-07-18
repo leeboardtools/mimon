@@ -364,11 +364,17 @@ export function getDescriptionColumnInfo(args) {
 
 
 /**
+ * @typedef {object}    CellDateValue
+ * @property {string}   ymdDate
+ * @property {EngineAccessor}   accessor
+ */
+
+
+/**
  * @typedef {object}    CellDateEditorArgs
  * {@link CellEditorArgs} where the cellEditBuffer's value property is:
- * @property {string}   value
+ * @property {CellDateValue}   value
  */
-const dateFormat = 'yyyy/MM/dd';
 
 
 /**
@@ -378,15 +384,19 @@ const dateFormat = 'yyyy/MM/dd';
 export function renderDateEditor(args) {
     const { columnInfo, cellEditBuffer, setCellEditBuffer } = args;
     const { ariaLabel, inputClassExtras } = columnInfo;
-    let value = cellEditBuffer.value;
+    let value = cellEditBuffer.value || {};
+    const { accessor } = value;
+    let dateFormat = (accessor) ? accessor.getDateFormat() : undefined;
 
     return <CellDateEditor
         ariaLabel = {ariaLabel}
-        value = {value}
+        value = {value.ymdDate}
         inputClassExtras = {inputClassExtras}
         onChange = {(ymdDate) => {
             setCellEditBuffer({
-                value: ymdDate,
+                value: Object.assign({}, cellEditBuffer.value, {
+                    ymdDate: ymdDate,
+                }),
             });
         }}
         size = {columnInfo.inputSize}
@@ -405,11 +415,15 @@ export function renderDateEditor(args) {
  * @param {CellDateDisplayArgs} args 
  */
 export function renderDateDisplay(args) {
-    const { columnInfo, value } = args;
+    const { columnInfo } = args;
+    
+    const value = args.value || {};
+    const { accessor } = value;
+    let dateFormat = (accessor) ? accessor.getDateFormat() : undefined;
 
     return <CellDateDisplay
         ariaLabel = {columnInfo.ariaLabel}
-        value = {value}
+        value = {value.ymdDate}
         classExtras = {columnInfo.cellClassExtras}
         inputClassExtras = {columnInfo.inputClassExtras}
         size = {columnInfo.inputSize}
