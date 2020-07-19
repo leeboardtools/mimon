@@ -133,8 +133,7 @@ export function editableRowTable(WrappedTable) {
 
                 //let focusColumnIndex;
                 for (let i = columnIndex; i < refsForFocus.length; ++i) {
-                    const { current } = refsForFocus[i];
-                    if (current && (current.tabIndex >= 0)) {
+                    if (this.canRefFocus(refsForFocus[i])) {
                         refForFocus = refsForFocus[i];
                         //focusColumnIndex = i;
                         break;
@@ -143,17 +142,14 @@ export function editableRowTable(WrappedTable) {
 
                 if (!refForFocus) {
                     for (let i = 0; i < columnIndex; ++i) {
-                        const { current } = refsForFocus[i];
-                        if (current && (current.tabIndex >= 0)) {
+                        if (this.canRefFocus(refsForFocus[i])) {
                             refForFocus = refsForFocus[i];
                             //focusColumnIndex = i;
                         }
                     }
                 }
                 
-                if (refForFocus) {
-                    refForFocus.current.focus();
-                }
+                this.focusToRef(refForFocus);
             }
         }
 
@@ -306,9 +302,8 @@ export function editableRowTable(WrappedTable) {
                     ? refsForFocus.length 
                     : -1;
                 for (let i = startIndex; i !== endIndex; i += increment) {
-                    const ref = refsForFocus[i];
-                    if (ref.current && (ref.current.tabIndex >= 0)) {
-                        return ref;
+                    if (this.canRefFocus(refsForFocus[i])) {
+                        return refsForFocus[i];
                     }
                 }
             }
@@ -352,6 +347,30 @@ export function editableRowTable(WrappedTable) {
         }
 
 
+        canRefFocus(ref) {
+            if (ref && ref.current) {
+                if (typeof ref.current.tabIndex === 'number') {
+                    return ref.current.tabIndex >= 0;
+                }
+                if ((typeof ref.current.props === 'object')
+                 && (typeof ref.current.props.tabIndex === 'number')) {
+                    return ref.current.props.tabIndex >= 0;
+                }
+            }
+        }
+
+        focusToRef(ref) {
+            if (ref && ref.current) {
+                if (typeof ref.current.focus === 'function') {
+                    ref.current.focus();
+                }
+                if (typeof ref.current.setFocus === 'function') {
+                    ref.current.setFocus();
+                }
+            }
+        }
+
+
         onKeyDown(e) {
             if (this._isSaving) {
                 return;
@@ -371,9 +390,7 @@ export function editableRowTable(WrappedTable) {
                         if (!newFocus) {
                             newFocus = this.getLastCellFocus();
                         }
-                        if (newFocus) {
-                            newFocus.current.focus();
-                        }
+                        this.focusToRef(newFocus);
                     }
                     else {
                         let newFocus = this.getNextCellFocus();
@@ -387,7 +404,7 @@ export function editableRowTable(WrappedTable) {
                             });
                         }
                         else {
-                            newFocus.current.focus();
+                            this.focusToRef(newFocus);
                         }
                     }
                     e.preventDefault();
