@@ -37,7 +37,10 @@ export class MainWindow extends React.Component {
         this.onCheckReminders = this.onCheckReminders.bind(this);
         this.onUpdatePrices = this.onUpdatePrices.bind(this);
 
+        this.onGetSharedState = this.onGetSharedState.bind(this);
+        this.onSetSharedState = this.onSetSharedState.bind(this);
 
+        this.onGetTabIdsWithType = this.onGetTabIdsWithType.bind(this);
         this.onGetTabIdState = this.onGetTabIdState.bind(this);
         this.onSetTabIdState = this.onSetTabIdState.bind(this);
         this.onSetErrorMsg = this.onSetErrorMsg.bind(this);
@@ -51,6 +54,9 @@ export class MainWindow extends React.Component {
 
         const handlerArgs = {
             accessor: this.props.accessor,
+            onGetSharedState: this.onGetSharedState,
+            onSetSharedState: this.onSetSharedState,
+            onGetTabIdsWithType: this.onGetTabIdsWithType,
             onGetTabIdState: this.onGetTabIdState,
             onSetTabIdState: this.onSetTabIdState,
             onSetErrorMsg: this.onSetErrorMsg,
@@ -73,8 +79,9 @@ export class MainWindow extends React.Component {
         
         this.state = {
             tabEntries: [],
+            sharedState: {},
         };
-        this._tabEntriesById = new Map();
+        this._tabItemsById = new Map();
         this._accountRegistersByAccountId = new Map();
         this._accountEditorsByAccountId = new Map();
         this._pricedItemEditorsByPricedItemId = {};
@@ -86,7 +93,8 @@ export class MainWindow extends React.Component {
             'masterAccountsList'
         );
         this.state.tabEntries.push(masterAccountsList);
-        this._tabEntriesById.set(masterAccountsList.tabId, masterAccountsList);
+        this._tabItemsById.set(masterAccountsList.tabId, 
+            [masterAccountsList, 'masterAccountsList']);
 
 
         this.state.activeTabId = this.state.tabEntries[0].tabId;
@@ -120,11 +128,11 @@ export class MainWindow extends React.Component {
     }
 
 
-    addTabEntry(tabEntry) {
+    addTabEntry(tabEntry, tabType) {
         this.setState((oldState) => {
             const newTabEntries = Array.from(oldState.tabEntries);
             newTabEntries.push(tabEntry);
-            this._tabEntriesById.set(tabEntry.tabId, tabEntry);
+            this._tabItemsById.set(tabEntry.tabId, [tabEntry, tabType]);
             return {
                 tabEntries: newTabEntries,
             };
@@ -133,7 +141,12 @@ export class MainWindow extends React.Component {
 
 
     onCloseTab(tabId) {
-        const tabEntry = this._tabEntriesById.get(tabId);
+        const tabItem = this._tabItemsById.get(tabId);
+        if (!tabItem) {
+            return;
+        }
+
+        const tabEntry = tabItem[0];
         if (tabEntry.onCanCloseTab) {
             if (!tabEntry.onCanCloseTab()) {
                 return;
@@ -163,7 +176,7 @@ export class MainWindow extends React.Component {
                     tabEntry.pricedItemId);
             }
 
-            this._tabEntriesById.delete(tabId);
+            this._tabItemsById.delete(tabId);
             this.setState((oldState) => {
                 const oldTabEntries = oldState.tabEntries;
                 const newTabEntries = [];
@@ -281,17 +294,48 @@ export class MainWindow extends React.Component {
     }
 
 
-    onGetTabIdState(tabId) {
-        return this._tabEntriesById.get(tabId);
+    onGetSharedState() {
+        return this.state.sharedState;
+    }
+
+    onSetSharedState(stateChanges) {
+        this.setState((state) => {
+            const newSharedState = Object.assign({}, state.sharedState, stateChanges);
+            if (!deepEqual(state.sharedState, newSharedState)) {
+                return {
+                    sharedState: newSharedState,
+                };
+            }
+        });
     }
 
 
-    onSetTabIdState(tabId, state) {
-        const oldTabEntry = this._tabEntriesById.get(tabId);
-        if (oldTabEntry) {
+    onGetTabIdsWithType(type) {
+        const tabIds = [];
+        this._tabItemsById.forEach((tabItem) => {
+            if (tabItem[1] === type) {
+                tabIds.push(tabItem[0].tabId);
+            }
+        });
+        return tabIds;
+    }
+
+
+    onGetTabIdState(tabId) {
+        const tabItem = this._tabItemsById.get(tabId);
+        if (tabItem) {
+            return tabItem[0];
+        }
+    }
+
+
+    onSetTabIdState(tabId, state, callback) {
+        const oldTabItem = this._tabItemsById.get(tabId);
+        if (oldTabItem) {
+            const oldTabEntry = oldTabItem[0];
             const newTabEntry = Object.assign({}, oldTabEntry, state);
             if (!deepEqual(oldTabEntry, newTabEntry)) {
-                this._tabEntriesById.set(tabId, newTabEntry);
+                this._tabItemsById.set(tabId, [newTabEntry, oldTabItem[1]]);
 
                 this.setState((oldState) => {
                     const newTabEntries = oldState.tabEntries.map((tabEntry) => 
@@ -299,7 +343,8 @@ export class MainWindow extends React.Component {
                     return {
                         tabEntries: newTabEntries,
                     };
-                });
+                },
+                callback);
             }
         }
     }
@@ -321,11 +366,12 @@ export class MainWindow extends React.Component {
     openAccountRegister(accountId) {
         let tabId = this._accountRegistersByAccountId.get(accountId);
         if (!tabId) {
-            tabId = 'accountRegister_' + accountId;
+            const tabType = 'accountRegister';
+            tabId = tabType + '_' + accountId;
             this._accountRegistersByAccountId.set(accountId, tabId);
             const tabEntry = this._accountRegisterHandler.createTabEntry(
                 tabId, accountId);
-            this.addTabEntry(tabEntry);
+            this.addTabEntry(tabEntry, tabType);
         }
 
         this.setState({
@@ -337,11 +383,12 @@ export class MainWindow extends React.Component {
     openAccountEditor(accountId, parentAccountId, childListIndex) {
         let tabId = this._accountEditorsByAccountId.get(accountId);
         if (!tabId) {
-            tabId = 'accountEditor_' + (accountId || '_new');
+            const tabType = 'accountEditor';
+            tabId = tabType + '_' + (accountId || '_new');
             this._accountEditorsByAccountId.set(accountId, tabId);
             const tabEntry = this._accountEditorHandler.createTabEntry(
                 tabId, accountId, parentAccountId, childListIndex);
-            this.addTabEntry(tabEntry);
+            this.addTabEntry(tabEntry, tabType);
         }
 
         this.setState({
@@ -351,11 +398,12 @@ export class MainWindow extends React.Component {
 
 
     openPricedItemsList(pricedItemTypeName) {
-        const tabId = 'pricedItemsList_' + pricedItemTypeName;
-        if (!this._tabEntriesById.has(tabId)) {
+        const tabType = 'pricedItemsList';
+        const tabId = tabType + '_' + pricedItemTypeName;
+        if (!this._tabItemsById.has(tabId)) {
             const tabEntry = this._pricedItemsListHandler.createTabEntry(
                 tabId, pricedItemTypeName);
-            this.addTabEntry(tabEntry);
+            this.addTabEntry(tabEntry, tabType);
         }
 
         this.setState({
@@ -369,11 +417,12 @@ export class MainWindow extends React.Component {
             = this._pricedItemEditorsByPricedItemId[pricedItemTypeName];
         let tabId = editorsByPricedItemId.get(pricedItemId);
         if (!tabId) {
-            tabId = 'pricedItemEditor_' + (pricedItemId || (pricedItemTypeName + '_new'));
+            const tabType = 'pricedItemEditor';
+            tabId = tabType + '_' + (pricedItemId || (pricedItemTypeName + '_new'));
             editorsByPricedItemId.set(pricedItemId, tabId);
             const tabEntry = this._pricedItemEditorHandler.createTabEntry(
                 tabId, pricedItemId, pricedItemTypeName);
-            this.addTabEntry(tabEntry);
+            this.addTabEntry(tabEntry, tabType);
         }
 
         this.setState({
@@ -463,7 +512,8 @@ export class MainWindow extends React.Component {
         const baseClassName = 'nav nav-link pl-2 pr-2';
         const { accessor } = this.props;
 
-        const activeTabEntry = this._tabEntriesById.get(this.state.activeTabId);
+        const activeTabItem = this._tabItemsById.get(this.state.activeTabId);
+        const activeTabEntry = (activeTabItem) ? activeTabItem[0] : undefined;
         let undoRedoInfo;
         if (activeTabEntry) {
             const { getUndoRedoInfo } = activeTabEntry;
@@ -522,7 +572,7 @@ export class MainWindow extends React.Component {
             },
             { id: 'viewPricesList', 
                 label: userMsg('MainWindow-viewPricesList'),
-                disabled: !this._tabEntriesById.get('pricesList'),
+                disabled: !this._tabItemsById.get('pricesList'),
                 onChooseItem: () => this.onOpenTab('pricesList'),
             },
             {},
@@ -532,7 +582,7 @@ export class MainWindow extends React.Component {
             },
             { id: 'viewRemindersList', 
                 label: userMsg('MainWindow-viewRemindersList'),
-                disabled: !this._tabEntriesById.get('remindersList'),
+                disabled: !this._tabItemsById.get('remindersList'),
                 onChooseItem: () => this.onOpenTab('remindersList'),
             },
             {},

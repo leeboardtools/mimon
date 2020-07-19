@@ -5,6 +5,10 @@ export class MainWindowHandlerBase {
     constructor(props) {
         this.props = props;
 
+        this.getSharedState = props.onGetSharedState;
+        this.setSharedState = props.onSetSharedState;
+
+        this.getTabIdsWithType = props.onGetTabIdsWithType;
         this.getTabIdState = props.onGetTabIdState;
         this.setTabIdState = props.onSetTabIdState;
         this.setErrorMsg = props.onSetErrorMsg;
@@ -40,6 +44,14 @@ export class MainWindowHandlerBase {
  */
 
 /**
+ * Retrievse an array of all the tab ids with a given type.
+ * Types are defined by {@link MainWindow}.
+ * @function MainWindowHandlerBase#getTabIdsWithType
+ * @param {string}  type
+ * @returns {number[]}
+ */
+
+/**
  * Retrieves the state associated with a tab entry.
  * @function MainWindowHandlerBase#getTabIdState
  * @param {string}  tabId
@@ -51,6 +63,7 @@ export class MainWindowHandlerBase {
  * @function MainWindowHandlerBase#setTabIdState
  * @param {string}  tabId
  * @param {object}  newState
+ * @param {function}    [callback]
  */
 
 /**

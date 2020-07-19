@@ -774,31 +774,37 @@ export class AccountRegister extends React.Component {
         }
 
         if (rowsNeedUpdating) {
-            const prevActiveTransactionId
-                = this.getActiveTransactionId();
+            const prevActiveRowInfo = this.getActiveRowInfo();
 
             this.updateRowEntries();
 
-            const activeTransactionId = this.getActiveTransactionId();
-            if (prevActiveTransactionId !== activeTransactionId) {
-                const { onSelectTransaction } = this.props;
-                if (onSelectTransaction) {
-                    onSelectTransaction(activeTransactionId);
+            const { onSelectSplit } = this.props;
+            if (onSelectSplit) {
+                const activeRowInfo = this.getActiveRowInfo();
+                if (!deepEqual(prevActiveRowInfo, activeRowInfo)) {
+                    onSelectSplit(activeRowInfo);
                 }
             }
         }
     }
 
 
-    getActiveTransactionId() {
-        let { activeRowIndex } = this.state;
-        if ((activeRowIndex !== undefined) && (activeRowIndex >= 0)) {
+    getActiveRowInfo() {
+        const { activeRowIndex } = this.state;
+        if (activeRowIndex !== undefined) {
             const rowEntry = this.state.rowEntries[activeRowIndex];
             if (rowEntry) {
-                return rowEntry.transactionId;
+                return {
+                    transactionId: rowEntry.transactionId,
+                    transactionDataItem: T.getTransactionDataItem(
+                        rowEntry.transactionDataItem, true
+                    ),
+                    splitIndex: rowEntry.splitIndex,
+                };
             }
         }
-}
+    }
+
 
 
     updateRowEntries(modifiedTransactionIds) {
@@ -887,6 +893,8 @@ export class AccountRegister extends React.Component {
             });
 
 
+            //
+            // The 'new transaction' row...
             newRowEntries.push({
                 key: '',
                 transactionDataItem: {
@@ -1105,9 +1113,9 @@ export class AccountRegister extends React.Component {
             activeRowIndex: rowIndex,
         },
         () => {
-            const { onSelectTransaction } = this.props;
-            if (onSelectTransaction) {
-                onSelectTransaction(this.getActiveTransactionId());
+            const { onSelectSplit } = this.props;
+            if (onSelectSplit) {
+                onSelectSplit(this.getActiveRowInfo());
             }
         });
     }
@@ -1300,6 +1308,71 @@ export class AccountRegister extends React.Component {
     }
 
 
+    handlePasteCommand(splitInfoForCopy, apply) {
+        const { transactionDataItem, splitIndex } = splitInfoForCopy;
+        const newTransactionDataItem 
+            = T.getTransactionDataItem(transactionDataItem, true);
+        const { splits } = newTransactionDataItem;
+
+        const { accountId } = this.props;
+        let isAccountSplit;
+        for (let i = 0; i < splits.length; ++i) {
+            if (splits[i].accountId === accountId) {
+                isAccountSplit = true;
+                break;
+            }
+        }
+
+        const { accessor } = this.props;
+
+        if (!isAccountSplit) {
+            const split = splits[splitIndex];
+            const toCopyAccountDataItem = accessor.getAccountDataItemWithId(
+                split.accountId);
+            const toCopyAccountCategory = A.getAccountType(
+                toCopyAccountDataItem.type
+            ).category;
+
+            const myAccountDataItem = accessor.getAccountDataItemWithId(
+                accountId);
+            const myCategory = A.getAccountType(
+                myAccountDataItem.type
+            ).category;
+            
+            if (myCategory === toCopyAccountCategory) {
+                split.accountId = accountId;
+                isAccountSplit = true;
+            }
+        }
+        else {
+            // In the same account register, let's update the date to today.
+            newTransactionDataItem.ymdDate = new YMDDate().toString();
+        }
+
+        if (!isAccountSplit) {
+            return;
+        }
+
+        if (apply) {
+            // Clear out all the reconciled flags.
+            splits.forEach((split) => {
+                split.reconcileState = T.ReconcileState.NOT_RECONCILED.name;
+            });
+            process.nextTick(async () => {
+                const accountingActions = accessor.getAccountingActions();
+                const action = accountingActions.createAddTransactionAction(
+                    newTransactionDataItem);
+                accessor.asyncApplyAction(action)
+                    .catch((e) => {
+                        this.setErrorMsg(e);
+                    });
+            });
+        }
+
+        return true;
+    }
+
+
     render() {
         const { state } = this;
 
@@ -1360,7 +1433,7 @@ export class AccountRegister extends React.Component {
 AccountRegister.propTypes = {
     accessor: PropTypes.object.isRequired,
     accountId: PropTypes.number.isRequired,
-    onSelectTransaction: PropTypes.func,
+    onSelectSplit: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
     refreshUndoMenu: PropTypes.func,

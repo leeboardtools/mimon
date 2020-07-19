@@ -32,7 +32,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
 
         this.onReconcileAccount = this.onReconcileAccount.bind(this);
 
-        this.onSelectTransaction = this.onSelectTransaction.bind(this);
+        this.onSelectSplit = this.onSelectSplit.bind(this);
     }
 
     onReconcileAccount(tabId) {
@@ -44,13 +44,13 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
 
 
     onRemoveTransaction(tabId) {
-        const { activeTransactionId } = this.getTabIdState(tabId);
-        if (activeTransactionId) {
+        const { activeSplitInfo } = this.getTabIdState(tabId);
+        if (activeSplitInfo) {
             process.nextTick(async () => {
                 const { accessor } = this.props;
                 const accountingActions = accessor.getAccountingActions();
                 const action = accountingActions.createRemoveTransactionAction(
-                    activeTransactionId);
+                    activeSplitInfo.transactionId);
                 accessor.asyncApplyAction(action)
                     .catch((e) => {
                         this.setErrorMsg(e);
@@ -61,31 +61,70 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     
 
     onCopyTransaction(tabId) {
-        this.setErrorMsg('onCopyTransaction is not yet implemented.');
+        const { activeSplitInfo } = this.getTabIdState(tabId);
+        if (activeSplitInfo) {
+            const tabIds = this.getTabIdsWithType('accountRegister');
+            tabIds.forEach((tabId) => {
+                this.setTabIdState(tabId, {
+                    splitInfoForCopy: activeSplitInfo,
+                },
+                () => {
+                    this.setTabIdState(tabId, {
+                        dropdownInfo: this.getTabDropdownInfo(tabId),
+                    });
+                });
+            });
+        }
+    }
+
+
+    handlePasteTransaction(tabId, apply) {
+        const state = this.getTabIdState(tabId);
+        if (!state) {
+            return;
+        }
+        const { current } = state.accountRegisterRef;
+        const { splitInfoForCopy } = state;
+        if (!splitInfoForCopy || !current) {
+            return;
+        }
+
+        if (current.handlePasteCommand) {
+            return current.handlePasteCommand(splitInfoForCopy, apply);
+        }
     }
     
 
     onPasteTransaction(tabId) {
-        this.setErrorMsg('onPasteTransaction is not yet implemented.');
+        this.handlePasteTransaction(tabId, true);
+    }
+
+    canPaste(tabId) {
+        return this.handlePasteTransaction(tabId);
     }
     
 
-    getTabDropdownInfo(tabId, activeTransactionId) {
+    getTabDropdownInfo(tabId) {
+        let activeSplitInfo;
+        const state = this.getTabIdState(tabId);
+        if (state) {
+            activeSplitInfo = state.activeSplitInfo;
+        }
         const menuItems = [
             { id: 'removeTransaction',
                 label: userMsg('AccountRegisterHandler-removeTransaction'),
-                disabled: !activeTransactionId,
+                disabled: !activeSplitInfo,
                 onChooseItem: () => this.onRemoveTransaction(tabId),
             },
             {},
             { id: 'copyTransaction',
                 label: userMsg('AccountRegisterHandler-copyTransaction'),
-                disabled: !activeTransactionId,
+                disabled: !activeSplitInfo,
                 onChooseItem: () => this.onCopyTransaction(tabId),
             },
             { id: 'pasteTransaction',
                 label: userMsg('AccountRegisterHandler-pasteTransaction'),
-                disabled: !activeTransactionId,
+                disabled: !this.canPaste(tabId),
                 onChooseItem: () => this.onPasteTransaction(tabId),
             },
             {},
@@ -103,23 +142,21 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     }
 
 
-    onSelectTransaction(tabId, transactionId) {
-        const state = this.getTabIdState(tabId);
-        const prevActiveTransactionId = state.activeTransactionId;
-        if ((!prevActiveTransactionId && transactionId)
-         || (prevActiveTransactionId && !transactionId)) {
-            this.setTabIdState(tabId,
-                {
-                    activeTransactionId: transactionId,
-                    dropdownInfo: this.getTabDropdownInfo(tabId, transactionId),
-                });
-        }
-        else {
-            this.setTabIdState(tabId,
-                {
-                    activeTransactionId: transactionId,
-                });
-        }
+    //
+    // splitInfo is:
+    //      transactionId
+    //      transactionDataItem
+    //      splitIndex
+    //
+    onSelectSplit(tabId, splitInfo) {
+        this.setTabIdState(tabId, {
+            activeSplitInfo: splitInfo,
+        },
+        () => {
+            this.setTabIdState(tabId, {
+                dropdownInfo: this.getTabDropdownInfo(tabId),
+            });
+        });
     }
 
 
@@ -165,8 +202,8 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         return <AccountRegister
             accessor = {accessor}
             accountId = {accountId}
-            onSelectTransaction = {(transactionId) =>
-                this.onSelectTransaction(tabEntry.tabId, transactionId)}
+            onSelectSplit = {(splitInfo) =>
+                this.onSelectSplit(tabEntry.tabId, splitInfo)}
             contextMenuItems={contextMenuItems}
             refreshUndoMenu = {this.refreshUndoMenu}
             ref = {accountRegisterRef}

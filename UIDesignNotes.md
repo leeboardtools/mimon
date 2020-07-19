@@ -566,5 +566,7 @@ PricedItemsEditor:
         - Implement Copy Transaction
         - Implement Paste Transaction
 
+    - Paste transaction:
+        - Should it be a full paste, or a paste into a new transaction being edited?
 
 
