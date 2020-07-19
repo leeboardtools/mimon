@@ -145,6 +145,7 @@
 
 
     "AccountRegisterHandler-removeTransaction": "Delete Transaction",
+    "AccountRegisterHandler-duplicateTransaction": "Duplicate Transaction",
     "AccountRegisterHandler-copyTransaction": "Copy Transaction",
     "AccountRegisterHandler-pasteTransaction": "Paste Transaction",
 

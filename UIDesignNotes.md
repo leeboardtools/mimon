@@ -562,11 +562,5 @@ PricedItemsEditor:
     when not editing.
     - Need to handle multiple splits for the same account.
     - Add confirmation of modifying the quantities of a reconciled split.
-    - Menus:
-        - Implement Copy Transaction
-        - Implement Paste Transaction
-
-    - Paste transaction:
-        - Should it be a full paste, or a paste into a new transaction being edited?
 
 

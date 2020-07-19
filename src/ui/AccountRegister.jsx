@@ -1358,15 +1358,38 @@ export class AccountRegister extends React.Component {
             splits.forEach((split) => {
                 split.reconcileState = T.ReconcileState.NOT_RECONCILED.name;
             });
-            process.nextTick(async () => {
-                const accountingActions = accessor.getAccountingActions();
-                const action = accountingActions.createAddTransactionAction(
-                    newTransactionDataItem);
-                accessor.asyncApplyAction(action)
-                    .catch((e) => {
-                        this.setErrorMsg(e);
+
+            if (this._rowTableRef.current) {
+                // Replace the new transaction row with the pasted transaction
+                // and start editing.
+                const newRowEntries = Array.from(this.state.rowEntries);
+                const editIndex = newRowEntries.length - 1;
+                const newRowEntry = newRowEntries[editIndex];
+                newRowEntry.transactionDataItem = newTransactionDataItem;
+                newRowEntry.splitIndex = splitIndex;
+                this.setState({
+                    activeRowIndex: editIndex,
+                    rowEntries: newRowEntries,
+                },
+                () => {
+                    this._rowTableRef.current.startRowEdit({
+                        rowIndex: editIndex,
+                        columnIndex: 0,
                     });
-            });
+                });
+            }
+            else {
+                // Just add the transaction.
+                process.nextTick(async () => {
+                    const accountingActions = accessor.getAccountingActions();
+                    const action = accountingActions.createAddTransactionAction(
+                        newTransactionDataItem);
+                    accessor.asyncApplyAction(action)
+                        .catch((e) => {
+                            this.setErrorMsg(e);
+                        });
+                });    
+            }
         }
 
         return true;

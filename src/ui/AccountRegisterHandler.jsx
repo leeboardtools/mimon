@@ -27,6 +27,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
 
         this.onRemoveTransaction = this.onRemoveTransaction.bind(this);
 
+        this.onDuplicateTransaction = this.onDuplicateTransaction.bind(this);
         this.onCopyTransaction = this.onCopyTransaction.bind(this);
         this.onPasteTransaction = this.onPasteTransaction.bind(this);
 
@@ -59,6 +60,20 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         }
     }
     
+
+    onDuplicateTransaction(tabId) {
+        const state = this.getTabIdState(tabId);
+        if (!state) {
+            return;
+        }
+
+        const { activeSplitInfo } = state;
+        const { current } = state.accountRegisterRef;
+        if (activeSplitInfo && current && current.handlePasteCommand) {
+            return current.handlePasteCommand(activeSplitInfo, true);
+        }
+    }
+
 
     onCopyTransaction(tabId) {
         const { activeSplitInfo } = this.getTabIdState(tabId);
@@ -117,6 +132,11 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
                 onChooseItem: () => this.onRemoveTransaction(tabId),
             },
             {},
+            { id: 'duplicateTransaction',
+                label: userMsg('AccountRegisterHandler-duplicateTransaction'),
+                disabled: !activeSplitInfo,
+                onChooseItem: () => this.onDuplicateTransaction(tabId),
+            },
             { id: 'copyTransaction',
                 label: userMsg('AccountRegisterHandler-copyTransaction'),
                 disabled: !activeSplitInfo,
