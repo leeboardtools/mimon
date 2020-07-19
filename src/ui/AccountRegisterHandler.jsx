@@ -25,14 +25,14 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
 
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
 
-        this.onNewTransaction = this.onNewTransaction.bind(this);
-        this.onModifyTransaction = this.onModifyTransaction.bind(this);
         this.onRemoveTransaction = this.onRemoveTransaction.bind(this);
 
         this.onCopyTransaction = this.onCopyTransaction.bind(this);
         this.onPasteTransaction = this.onPasteTransaction.bind(this);
 
         this.onReconcileAccount = this.onReconcileAccount.bind(this);
+
+        this.onSelectTransaction = this.onSelectTransaction.bind(this);
     }
 
     onReconcileAccount(tabId) {
@@ -43,18 +43,20 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     }
 
 
-    onNewTransaction(tabId) {
-        this.setErrorMsg('onNewTransaction is not yet implemented.');
-    }
-
-
-    onModifyTransaction(tabId) {
-        this.setErrorMsg('onMpdifyTransaction is not yet implemented.');
-    }
-    
-
     onRemoveTransaction(tabId) {
-        this.setErrorMsg('onRemoveTransaction is not yet implemented.');
+        const { activeTransactionId } = this.getTabIdState(tabId);
+        if (activeTransactionId) {
+            process.nextTick(async () => {
+                const { accessor } = this.props;
+                const accountingActions = accessor.getAccountingActions();
+                const action = accountingActions.createRemoveTransactionAction(
+                    activeTransactionId);
+                accessor.asyncApplyAction(action)
+                    .catch((e) => {
+                        this.setErrorMsg(e);
+                    });
+            });
+        }
     }
     
 
@@ -68,19 +70,8 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     }
     
 
-    getTabDropdownInfo(tabId) {
-        let activeTransactionId;
-
+    getTabDropdownInfo(tabId, activeTransactionId) {
         const menuItems = [
-            { id: 'newTransaction',
-                label: userMsg('AccountRegisterHandler-newTransaction'),
-                onChooseItem: () => this.onNewTransaction(tabId),
-            },
-            { id: 'modifyTransaction',
-                label: userMsg('AccountRegisterHandler-modifyTransaction'),
-                disabled: !activeTransactionId,
-                onChooseItem: () => this.onModifyTransaction(tabId),
-            },
             { id: 'removeTransaction',
                 label: userMsg('AccountRegisterHandler-removeTransaction'),
                 disabled: !activeTransactionId,
@@ -109,6 +100,26 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         return {
             items: menuItems,
         };
+    }
+
+
+    onSelectTransaction(tabId, transactionId) {
+        const state = this.getTabIdState(tabId);
+        const prevActiveTransactionId = state.activeTransactionId;
+        if ((!prevActiveTransactionId && transactionId)
+         || (prevActiveTransactionId && !transactionId)) {
+            this.setTabIdState(tabId,
+                {
+                    activeTransactionId: transactionId,
+                    dropdownInfo: this.getTabDropdownInfo(tabId, transactionId),
+                });
+        }
+        else {
+            this.setTabIdState(tabId,
+                {
+                    activeTransactionId: transactionId,
+                });
+        }
     }
 
 
@@ -144,9 +155,19 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         const { accessor } = this.props;
         const { accountId, accountRegisterRef } = tabEntry;
 
+        const state = this.getTabIdState(tabEntry.tabId);
+        const { dropdownInfo } = state;
+        let contextMenuItems;
+        if (dropdownInfo) {
+            contextMenuItems = dropdownInfo.items;
+        }
+
         return <AccountRegister
             accessor = {accessor}
             accountId = {accountId}
+            onSelectTransaction = {(transactionId) =>
+                this.onSelectTransaction(tabEntry.tabId, transactionId)}
+            contextMenuItems={contextMenuItems}
             refreshUndoMenu = {this.refreshUndoMenu}
             ref = {accountRegisterRef}
         />;

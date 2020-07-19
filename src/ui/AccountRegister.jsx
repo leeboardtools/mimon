@@ -774,9 +774,31 @@ export class AccountRegister extends React.Component {
         }
 
         if (rowsNeedUpdating) {
+            const prevActiveTransactionId
+                = this.getActiveTransactionId();
+
             this.updateRowEntries();
+
+            const activeTransactionId = this.getActiveTransactionId();
+            if (prevActiveTransactionId !== activeTransactionId) {
+                const { onSelectTransaction } = this.props;
+                if (onSelectTransaction) {
+                    onSelectTransaction(activeTransactionId);
+                }
+            }
         }
     }
+
+
+    getActiveTransactionId() {
+        let { activeRowIndex } = this.state;
+        if ((activeRowIndex !== undefined) && (activeRowIndex >= 0)) {
+            const rowEntry = this.state.rowEntries[activeRowIndex];
+            if (rowEntry) {
+                return rowEntry.transactionId;
+            }
+        }
+}
 
 
     updateRowEntries(modifiedTransactionIds) {
@@ -1081,6 +1103,12 @@ export class AccountRegister extends React.Component {
     onActiveRowChanged(rowIndex) {
         this.setState({
             activeRowIndex: rowIndex,
+        },
+        () => {
+            const { onSelectTransaction } = this.props;
+            if (onSelectTransaction) {
+                onSelectTransaction(this.getActiveTransactionId());
+            }
         });
     }
 
@@ -1332,6 +1360,7 @@ export class AccountRegister extends React.Component {
 AccountRegister.propTypes = {
     accessor: PropTypes.object.isRequired,
     accountId: PropTypes.number.isRequired,
+    onSelectTransaction: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
     refreshUndoMenu: PropTypes.func,

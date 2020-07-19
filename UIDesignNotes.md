@@ -488,24 +488,6 @@ PricedItemsEditor:
     - Double click needs to open priced item editor???
 
 
-- Splits List:
-    - Need appropriate sign for split values.
-
-
-- AccountRegister
-    - Need to handle multiple splits for the same account.
-    - Make --Split-- item centered in display view.
-    - Add confirmation of modifying the quantities of a reconciled split.
-
-
-- Add an Imbalance account?
-    - Root Imbalance account for the default currency.
-    - Additional imbalance accounts as needed for other currencies.
-    - 
-
-- Add a transaction id based lock.
-
-
 - renderSplitQuantityEditor
     - Lots
         - Split has LotChangeDataItem array lotChanges
@@ -563,7 +545,26 @@ PricedItemsEditor:
     
 
 - Account Register
+
+
+- Splits List:
+    - Need appropriate sign for split values.
+
+
+- Add an Imbalance account?
+    - Root Imbalance account for the default currency.
+    - Additional imbalance accounts as needed for other currencies.
+
+
+- AccountRegister
     - Auto-complete
-    - Set Split for new transaction row to a better default value.
+    - Set Split for new transaction row to a better default value. Maybe display no value
+    when not editing.
+    - Need to handle multiple splits for the same account.
+    - Add confirmation of modifying the quantities of a reconciled split.
+    - Menus:
+        - Implement Copy Transaction
+        - Implement Paste Transaction
+
 
 

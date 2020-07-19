@@ -144,8 +144,6 @@
     "AccountEditor-pricedItem_required": ["Please select a ", "."],
 
 
-    "AccountRegisterHandler-newTransaction": "New Transaction",
-    "AccountRegisterHandler-modifyTransaction": "Modify Transaction",
     "AccountRegisterHandler-removeTransaction": "Delete Transaction",
     "AccountRegisterHandler-copyTransaction": "Copy Transaction",
     "AccountRegisterHandler-pasteTransaction": "Paste Transaction",
