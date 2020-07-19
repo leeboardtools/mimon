@@ -382,7 +382,8 @@ export function getDescriptionColumnInfo(args) {
  * @param {CellDateEditorArgs}  args
  */
 export function renderDateEditor(args) {
-    const { columnInfo, cellEditBuffer, setCellEditBuffer } = args;
+    const { columnInfo, cellEditBuffer, setCellEditBuffer,
+        refForFocus } = args;
     const { ariaLabel, inputClassExtras } = columnInfo;
     let value = cellEditBuffer.value || {};
     const { accessor } = value;
@@ -399,6 +400,8 @@ export function renderDateEditor(args) {
                 }),
             });
         }}
+        ref = {refForFocus}
+        tabIndex = {0}
         size = {columnInfo.inputSize}
         dateFormat = {dateFormat}
     />;

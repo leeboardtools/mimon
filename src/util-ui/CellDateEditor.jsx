@@ -69,6 +69,7 @@ export const CellDateEditor = React.forwardRef(
     function CellDateEditorImpl(props, ref) {
         const { ariaLabel, inputClassExtras, errorMsg,
             onChange, onFocus, onBlur, disabled, size,
+            tabIndex,
             dateFormat, locale } = props;
 
         const divClassName = 'input-group mb-0 ';
@@ -117,6 +118,7 @@ export const CellDateEditor = React.forwardRef(
                 dateFormat = {dateFormat}
                 locale = {locale}
                 size = {size}
+                tabIndex = {tabIndex}
                 ref = {ref}
                 preventOpenOnFocus = "true"
                 open = {state.openCalendar}
@@ -158,6 +160,7 @@ CellDateEditor.propTypes = {
     disabled: PropTypes.bool,
     dateFormat: PropTypes.string,
     locale: PropTypes.string,
+    tabIndex: PropTypes.number,
 };
 
 
