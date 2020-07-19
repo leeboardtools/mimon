@@ -558,8 +558,6 @@ PricedItemsEditor:
 
 - AccountRegister
     - Auto-complete
-    - Set Split for new transaction row to a better default value. Maybe display no value
-    when not editing.
     - Need to handle multiple splits for the same account.
     - Add confirmation of modifying the quantities of a reconciled split.
 

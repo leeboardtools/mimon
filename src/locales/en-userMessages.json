@@ -153,6 +153,7 @@
     "AccountRegister-multi_splits": "-Split-",
     "AccountRegister-dummy_description": "This is a sample description for a transaction",
     "AccountRegister-dummy_accountName": "Sample Account Name",
+    "AccountRegister-new_description": "New transaction",
 
 
     "AccountingCellEditors-date": "Date",

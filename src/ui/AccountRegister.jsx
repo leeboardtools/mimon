@@ -103,14 +103,20 @@ function getDescriptionCellValue(args) {
         const split = newTransactionDataItem.splits[splitIndex];
         let { description } = newTransactionDataItem;
         let memo;
+        let placeholder;
         if (split.description) {
             memo = split.description;
         }
 
-        if (memo && (memo !== description)) {
+        if (!newTransactionDataItem.id) {
+            placeholder = userMsg('AccountRegister-new_description');
+        }
+
+        if ((memo && (memo !== description)) || placeholder) {
             return {
                 description: description,
                 memo: memo,
+                placeholder: placeholder,
             };
         }
         return description;
@@ -197,7 +203,7 @@ function renderSplitsListDisplay(args) {
         value = cellEditBuffer.value;
     }
 
-    if (!value) {
+    if (!value || !rowEntry.transactionId) {
         return;
     }
 

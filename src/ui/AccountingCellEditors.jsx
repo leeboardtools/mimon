@@ -226,6 +226,7 @@ export function getRefNumColumnInfo(args) {
  * @typedef {object}    CellNameDescriptionValue
  * @property {string}   [name]
  * @property {string}   [description]
+ * @property {string}   [placeholder]
  */
 
 
