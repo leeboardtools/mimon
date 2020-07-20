@@ -11,6 +11,7 @@ import { AccountEditorHandler } from './AccountEditorHandler';
 import { PricedItemsListHandler } from './PricedItemsListHandler';
 import { PricedItemEditorHandler } from './PricedItemEditorHandler';
 import * as PI from '../engine/PricedItems';
+import { ErrorBoundary } from '../util-ui/ErrorBoundary';
 
 
 
@@ -482,7 +483,9 @@ export class MainWindow extends React.Component {
 
 
     onRenderPage(tabEntry, isActive) {
-        return tabEntry.onRenderTabPage(tabEntry, isActive);
+        return <ErrorBoundary>
+            {tabEntry.onRenderTabPage(tabEntry, isActive)}
+        </ErrorBoundary>;
     }
 
 
