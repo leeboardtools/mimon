@@ -279,6 +279,10 @@
                 },
                 {
                     "type": "EXPENSE",
+                    "name": "Miscellaneous"
+                },
+                {
+                    "type": "EXPENSE",
                     "name": "Rent"
                 },
                 {
