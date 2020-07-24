@@ -39,6 +39,7 @@ export function bSearchNumberArray(array, value) {
 
 /**
  * @callback bSearchCompare The comparison function used by {@link bSearch}.
+ * Note that value may be an element in the array.
  * @param {object} value    The value to compare against.
  * @param {object} arrayValue   The value in the array to compare against.
  * @param {object[]}    array   The array passed into {@link bSearch}.

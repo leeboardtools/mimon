@@ -56,4 +56,9 @@ test('bSearchCompare', () => {
     expect(bSearch(arrayA, 'MR', stringCompare)).toEqual(3);
     expect(bSearch(arrayA, 'P', stringCompare)).toEqual(4);
     expect(bSearch(arrayA, 'Q', stringCompare)).toEqual(4);
+
+    const arrayB = ['K', 'M'];
+    expect(bSearch(arrayB, 'K', stringCompare)).toEqual(0);
+    expect(bSearch(arrayB, 'M', stringCompare)).toEqual(1);
+    expect(bSearch(arrayB, 'N', stringCompare)).toEqual(1);
 });
