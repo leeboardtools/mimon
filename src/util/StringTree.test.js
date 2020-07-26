@@ -1,6 +1,8 @@
 import { StringTree } from './StringTree';
 
 test('StringTree', () => {
+    let result;
+
     const tree = new StringTree();
     expect(tree.size).toEqual(0);
     expect(tree.get('abc')).toBeUndefined();
@@ -79,7 +81,7 @@ test('StringTree', () => {
     //          -o (undefined)
     //              -p ('zzz')
     //              -s (60)
-    let result = tree.getNodePath('mno');
+    result = tree.getNodePath('mno');
     let { nodePath } = result;
     expect(result.isPartial).toBeFalsy();
     expect(nodePath.length).toEqual(3);
@@ -203,5 +205,109 @@ test('StringTree', () => {
         ['mnkp', 3], 
         ['mno', undefined],
         ['mnop', 'zzz'],
-        ['mnos', 60]]);
+        ['mnos', 60],
+    ]);
+    
+    // @@iterator test
+    expect(Array.from(tree)).toEqual([
+        ['mnkp', 3], 
+        ['mno', undefined],
+        ['mnop', 'zzz'],
+        ['mnos', 60],
+    ]);
+
+    result = [];
+    tree.forEach((value, key) => result.push([key, value]));
+    expect(result).toEqual([
+        ['mnkp', 3], 
+        ['mno', undefined],
+        ['mnop', 'zzz'],
+        ['mnos', 60],
+    ]);
+    
+    result = {
+        list: [],
+        callback: function (value, key, tree) {
+            this.list.push([key, value]);
+            this.tree = tree;
+        },
+    };
+    tree.forEach(result.callback, result);
+    expect(result.tree).toEqual(tree);
+
+    expect(result.list).toEqual([
+        ['mnkp', 3], 
+        ['mno', undefined],
+        ['mnop', 'zzz'],
+        ['mnos', 60],
+    ]);
+
+
+    // Test iterator constructor arg.
+    const tree2 = new StringTree(tree);
+    expect(Array.from(tree2)).toEqual([
+        ['mnkp', 3], 
+        ['mno', undefined],
+        ['mnop', 'zzz'],
+        ['mnos', 60],
+    ]);
+
+    const tree3 = new StringTree([
+        ['mnop', 'zzz'],
+        ['mnkp', 3], 
+        ['mnos', 60],
+        ['mno', undefined],
+    ]);
+    expect(Array.from(tree3)).toEqual([
+        ['mnkp', 3], 
+        ['mno', undefined],
+        ['mnop', 'zzz'],
+        ['mnos', 60],
+    ]);
+
+    // Test entriesStartingWith()
+    expect(Array.from(tree.entriesStartingWith('m'))).toEqual([
+        ['mnkp', 3], 
+        ['mno', undefined],
+        ['mnop', 'zzz'],
+        ['mnos', 60],
+    ]);
+    expect(Array.from(tree.entriesStartingWith('mn'))).toEqual([
+        ['mnkp', 3], 
+        ['mno', undefined],
+        ['mnop', 'zzz'],
+        ['mnos', 60],
+    ]);
+
+    expect(Array.from(tree.entriesStartingWith('mnk'))).toEqual([
+        ['mnkp', 3], 
+    ]);
+    expect(Array.from(tree.entriesStartingWith('mnkp'))).toEqual([
+        ['mnkp', 3], 
+    ]);
+    expect(Array.from(tree.entriesStartingWith('mno'))).toEqual([
+        ['mno', undefined],
+        ['mnop', 'zzz'],
+        ['mnos', 60],
+    ]);
+
+
+    tree.set('jkl', 456);
+    expect(Array.from(tree.entriesStartingWith('j'))).toEqual([
+        ['jkl', 456],
+    ]);
+    expect(Array.from(tree.entriesStartingWith('mno'))).toEqual([
+        ['mno', undefined],
+        ['mnop', 'zzz'],
+        ['mnos', 60],
+    ]);
+
+    expect(Array.from(tree.entriesStartingWith(''))).toEqual([
+        ['jkl', 456],
+        ['mnkp', 3], 
+        ['mno', undefined],
+        ['mnop', 'zzz'],
+        ['mnos', 60],
+    ]);
+
 });

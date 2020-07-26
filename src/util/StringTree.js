@@ -8,50 +8,34 @@ function nodeHasValue(node) {
     return Object.prototype.hasOwnProperty.call(node, 'value');
 }
 
-function getNextValueNode(root, stack) {
-    if (!stack.length) {
-        // Initial root...
-        stack.push([root, 0]);
-        if (nodeHasValue(root)) {
-            return root;
-        }
-    }
 
-    for (;;) {
-        const entry = stack[stack.length - 1];
-        const [ parentNode, childIndex ] = entry;
-
-        const node = parentNode.childNodes[childIndex];
-        if (!node) {
-            // This could happen if the root has no child nodes but has a value...
-            return;
-        }
-
-        ++(entry[1]);
-
-        if (node.childNodes.length) {
-            stack.push([node, 0]);
-        }
-        else if (entry[1] >= parentNode.childNodes.length) {
-            --stack.length;
-            if (!stack.length) {
-                return;
+function getNextValueNode(stack) {
+    for (; stack.length;) {    
+        const stackEntry = stack[stack.length - 1];
+        let [node, childIndex] = stackEntry;
+        let valueNode;
+        if (childIndex === -1) {
+            if (nodeHasValue(node)) {
+                valueNode = node;
             }
         }
 
-        if (nodeHasValue(node)) {
-            return node;
+        ++childIndex;
+        if (childIndex >= node.childNodes.length) {
+            --stack.length;
+        }
+        else {
+            stack.push([node.childNodes[childIndex], -1]);
+            stackEntry[1] = childIndex;
+        }
+
+        if (valueNode) {
+            return valueNode;
         }
     }
 }
 
 
-//
-// Tree has nodes
-// A node has:
-//  - child nodes
-//  - optional value
-//  - key
 
 /**
  * @typedef {object}    StringTree~Node
@@ -79,11 +63,13 @@ function getNextValueNode(root, stack) {
  */
 export class StringTree {
     constructor(iterator) {
+        this[Symbol.iterator] = this.entries;
+
         this.clear();
 
         if (iterator) {
-            for (let result = iterator.next(); !result.done; result = iterator.next()) {
-                this.set((result.value[0], result.value[1]));
+            for (let result of iterator) {
+                this.set(result[0], result[1]);
             }
         }
     }
@@ -150,15 +136,15 @@ export class StringTree {
     }
 
 
-    _createIterator(valueCallback) {
-        const root = this._root;
-        const stack = [];
+    _createIterator(valueCallback, root) {
+        root = root || this._root;
+        const stack = [[root, -1]];
         return {
             next: function () {
-                const nextNode = getNextValueNode(root, stack);
-                if (nextNode) {
+                const node = getNextValueNode(stack);
+                if (node) {
                     return {
-                        value: valueCallback(nextNode),
+                        value: valueCallback(node),
                         done: false,
                     };
                 }
@@ -166,7 +152,10 @@ export class StringTree {
                     done: true,
                 };
             },
-            [Symbol.iterator]: function () { return this; }
+            
+            [Symbol.iterator]: function () {
+                return this;
+            }
         };
     }
 
@@ -180,12 +169,29 @@ export class StringTree {
     }
     
 
-    /*
-    // TODO
-    forEach() {
+    /**
+     * @callback StringTree~forEachCallback
+     * Callback function for {@link StringTree#forEach}
+     * @param {*} value
+     * @param {string} key
+     * @param {StringTree}  tree
+     */
 
+    /**
+     * Calls a callback function for each element in the tree.
+     * @param {StringTree~forEachCallback} callback 
+     * @param {*} thisArg   Value to use as <code>this</code> when executing
+     * callback.
+     */
+    forEach(callback, thisArg) {
+        const callbackToUse = (thisArg)
+            ? (value, key, tree) => callback.call(thisArg, value, key, tree)
+            : callback;
+        for (let node of this._createIterator((node) => node)) {
+            callbackToUse(node.value, node.key, this);
+        }
     }
-    */
+    
 
     _getNodeWithKey(key) {
         key = key || '';
@@ -358,7 +364,53 @@ export class StringTree {
     }
 
 
-    // TODO:
-    // Add getEntriesStartsWith()
-    // Add entriesStartsWith() -> returns an Iterator.
+    /**
+     * Retrieves an iterator whose elements are the elements whose keys start with
+     * a given string. If there is an element that matches the key it is the first
+     * element returned by the iterator.
+     * <p>
+     * The elements returned by the iterator are [key, value] pairs.
+     * @param {string} key 
+     * @returns {Iterator}
+     */
+    entriesStartingWith(key) {
+        if (!key) {
+            return this.entries();
+        }
+        
+        const { nodePath, isPartial } = this.getNodePath(key);
+        if (isPartial) {
+            return [];
+        }
+
+        const result = [];
+        let baseNode;
+        let nodesToCheck;
+        if (!nodePath.length) {
+            baseNode = this._root;
+            if (nodeHasValue(baseNode)) {
+                result.push([baseNode.key, baseNode.value]);
+            }
+        }
+        else {
+            const { parentNode, childIndex} = nodePath[nodePath.length - 1];
+            baseNode = parentNode.childNodes[childIndex];
+            if (nodeHasValue(baseNode)) {
+                result.push([baseNode.key, baseNode.value]);
+                nodesToCheck = baseNode.childNodes;
+            }
+        }
+
+        if (!nodesToCheck) {
+            nodesToCheck = [baseNode];
+        }
+
+        nodesToCheck.forEach((nodeToCheck) => {
+            for (let node of this._createIterator((node) => node, nodeToCheck)) {
+                result.push([node.key, node.value]);
+            }
+        });
+
+        return result;
+    }
 }
