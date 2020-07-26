@@ -337,7 +337,7 @@ Common menus:
 - Test Revert
 - Test Save
 
-a- Think about transitioning to a Navbar based or other entirely render side based menu system.
+- Think about transitioning to a Navbar based or other entirely render side based menu system.
     - Cleaner appearance.
     - Need to think over the command structure.
 
@@ -434,15 +434,6 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
 
         - Auto-complete for description
             
-        - Date editor
-            - Need editor.
-            - Display needs to use locale to display date.
-        
-        - Splits editor
-            - Split button?
-                - What will button do?
-                    - Put up modal in account register?
-        
         - For account types with lots, add:
             - Price
             - Commission
@@ -462,16 +453,6 @@ a- Think about transitioning to a Navbar based or other entirely render side bas
     - NewFileSetup.js
         - Finish adding support for Prices
         - Add test prices to CreateTestTransactions.js
-
-
-    - General Table Support:
-        - Virtual loading
-            - Scroll only body
-            - Only needed for AccountRegister, prices.
-                - For AccountRegister, actually want to scroll from bottom up.
-                - For prices, probably same.
-
-        - Resizable columns
 
 
 
@@ -544,11 +525,8 @@ PricedItemsEditor:
 - MultiSplitsEditor:
     
 
-- Account Register
-
-
 - Splits List:
-    - Need appropriate sign for split values.
+    - Need to test appropriate sign with mortgages, etc.
 
 
 - Add an Imbalance account?
@@ -558,7 +536,16 @@ PricedItemsEditor:
 
 - AccountRegister
     - Auto-complete
-    - Need to handle multiple splits for the same account.
-    - Add confirmation of modifying the quantities of a reconciled split.
+    - Actually add row to the clipboard when Copy Transaction is chosen.
+        - Both HTML and text.
+        - For HTML include the split drop down???
 
 
+- Auto-complete:
+    - Based on transaction split descriptions.
+    - Do we use a tree based mechanism?
+    - When would it be constructed?
+    - Case insensitive
+    - At the leaf have the transaction info.
+    - Account based.
+    - Need to support multi-splits.

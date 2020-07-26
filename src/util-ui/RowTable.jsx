@@ -65,6 +65,7 @@ export class RowTable extends React.Component {
         this.state.bottomVisibleRow = -1;
 
         this.state.isSizeRender = this.state.isAutoSize;
+        this.state.clientWidth = this.state.clientHeight = 0;
     }
 
 
@@ -196,8 +197,22 @@ export class RowTable extends React.Component {
     }
 
 
+    getAdjustedMainRefSize() {
+        let { clientWidth, clientHeight } = this._mainRef.current;
+        if (Math.abs(clientWidth - this.state.clientWidth) <= 2) {
+            clientWidth = this.state.clientWidth;
+        }
+        if (Math.abs(clientHeight - this.state.clientHeight) <= 2) {
+            clientHeight = this.state.clientHeight;
+        }
+        return {
+            clientWidth: clientWidth,
+            clientHeight: clientHeight,
+        };
+    }
+
     updateFromClientSize() {
-        const { clientWidth, clientHeight } = this._mainRef.current;
+        const { clientWidth, clientHeight } = this.getAdjustedMainRefSize();
 
         let {
             headerHeight,
@@ -265,7 +280,11 @@ export class RowTable extends React.Component {
             return;
         }
 
-        const { clientWidth, clientHeight } = this._mainRef.current;
+        const { clientWidth, clientHeight } = this.getAdjustedMainRefSize();
+        if ((clientWidth <= 0) || (clientHeight <= 0)) {
+            return;
+        }
+
         if ((clientWidth === this.state.clientWidth)
          && (clientHeight === this.state.clientHeight)) {
             if (this.state.isSizeRender) {

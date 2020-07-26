@@ -52,7 +52,10 @@ export class ModalPage extends React.Component {
             const titleBarHeight = (this._titleRef.current)
                 ? this._titleRef.current.offsetHeight : 0;
             const buttonBarHeight = this._buttonBarRef.current.clientHeight;
-            const bodyHeight = mainHeight - titleBarHeight - buttonBarHeight;
+            let bodyHeight = mainHeight - titleBarHeight - buttonBarHeight;
+            if (Math.abs(bodyHeight - this.state.bodyHeight) <= 2) {
+                return;
+            }
 
             if ((bodyHeight > 0) && (bodyHeight !== this.state.bodyHeight)) {
                 this.setState({
