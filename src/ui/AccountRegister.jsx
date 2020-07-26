@@ -16,6 +16,7 @@ import { CellButton } from '../util-ui/CellButton';
 import { getDefaultAccountIdForNewSplit, 
     MultiSplitsEditor } from './MultiSplitsEditor';
 import { YMDDate } from '../util/YMDDate';
+import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 
 
 const allColumnInfoDefs = {};
@@ -174,17 +175,25 @@ function saveSplitsListCellValue(args) {
     }
 }
 
-function renderSplitItemTooltip(caller, splits, index) {
+function renderSplitItemTooltip(caller, splits, index, aleCreditSign) {
     const split = splits[index];
     const splitAccountDataItem 
         = caller.props.accessor.getAccountDataItemWithId(split.accountId);
     if (!splitAccountDataItem) {
         return;
     }
+
+    const category = A.getAccountType(splitAccountDataItem.type).category;
+    let creditSign = category.creditSign;
+    if (category.isALE) {
+        creditSign *= aleCreditSign;
+    }
+    
     
     const { quantityDefinition } = caller.state;
     const value = getQuantityDefinition(quantityDefinition)
-        .baseValueToValueText(split.quantityBaseValue);
+        .baseValueToValueText(split.quantityBaseValue * creditSign);
+
     return <div className = "row" key = {index}>
         <div className = "col col-sm-auto text-left">{splitAccountDataItem.name}</div>
         <div className = "col text-right">{value}</div>
@@ -213,19 +222,34 @@ function renderSplitsListDisplay(args) {
         const { accessor } = caller.props;
         const { ariaLabel, inputSize } = columnInfo;
         let classExtras = columnInfo.inputClassExtras;
+        const { splitIndex } = getTransactionInfo(args);
 
         let text;
         let tooltip;
         if (splits.length === 2) {
-            const { splitIndex } = getTransactionInfo(args);
             const split = splits[1 - splitIndex];
             text = AH.getShortAccountAncestorNames(accessor, split.accountId);
         }
         else {
             text = userMsg('AccountRegister-multi_splits');
+
+            const accountDataItem = accessor.getAccountDataItemWithId(
+                caller.props.accountId
+            );
+
+            const baseSplit = splits[splitIndex];
+            const category = A.getAccountType(accountDataItem.type).category;
+            let baseCreditSign = -category.creditSign;
+            if (baseSplit.quantityBaseValue < 0) {
+                baseCreditSign *= -1;
+            }
+
             const tooltipEntries = [];
             for (let i = 0; i < splits.length; ++i) {
-                tooltipEntries.push(renderSplitItemTooltip(caller, splits, i));
+                const aleCreditSign = (i === splitIndex)
+                    ? -1 : baseCreditSign;
+                tooltipEntries.push(renderSplitItemTooltip(caller, splits, i,
+                    aleCreditSign));
             }
             tooltip = <div className = "simple-tooltiptext">
                 {tooltipEntries}
@@ -1219,7 +1243,7 @@ export class AccountRegister extends React.Component {
             const { transactionDataItem } = rowEntry;
 
             this.finalizeSaveBuffer(saveBuffer);
-            const { newTransactionDataItem, splitIndex } = saveBuffer;
+            const { newTransactionDataItem } = saveBuffer;
             const { splits } = newTransactionDataItem;
 
             const { accessor } = this.props;
@@ -1247,28 +1271,72 @@ export class AccountRegister extends React.Component {
                 if (!T.areTransactionsSimilar(
                     newTransactionDataItem, transactionDataItem)) {
 
+                    // Check for formerly reconciled items...
+                    let areReconciledChanges;
+                    const oldSplits = transactionDataItem.splits;
+                    const newSplits = newTransactionDataItem.splits;
+                    for (let i = 0; i < oldSplits.length; ++i) {
+                        const oldSplit = oldSplits[i];
+                        if (oldSplit.reconcileState === T.ReconcileState.RECONCILED.name) {
+                            // Did it change in the new splits?
+                            areReconciledChanges = true;
+
+                            let newSplit;
+                            // TODO: Put together a tracking multi-split instance system.
+                            for (let j = 0; j < newSplits.length; ++j) {
+                                if (newSplits[j].accountId === oldSplit.accountId) {
+                                    newSplit = newSplits[i];
+                                    break;
+                                }
+                            }
+                            if (newSplit) {
+                                if ((newSplit.reconcileState
+                                  === oldSplit.reconcileState)
+                                 && (newSplit.quantityBaseValue
+                                  === oldSplit.quantityBaseValue)) {
+                                    areReconciledChanges = false;
+                                }
+                            }
+                            if (areReconciledChanges) {
+                                break;
+                            }
+                        }
+                    }
+
                     action = accountingActions.createModifyTransactionsAction(
                         newTransactionDataItem
                     );
+
+                    if (areReconciledChanges) {
+                        // 
+                        const msg = userMsg('AccountRegister-confirm_reconcile_change');
+                        this.setModal(() => <QuestionPrompter
+                            message = {msg}
+                            onButton = {(buttonId) => {
+                                if (buttonId === 'yes') {
+                                    process.nextTick(async () => {
+                                        await this.asyncApplyAction(args, action);
+                                        if (this._rowTableRef.current) {
+                                            this._rowTableRef.current.cancelRowEdit();
+                                        }
+
+                                        this.setModal(undefined);
+                                    });
+                                }
+                                else {
+                                    this.setModal(undefined);
+                                }
+                            }}
+                            buttons = {StandardButton.YES_NO}
+                        />);
+                        return;
+                    }
+
                 }
             }
 
             if (action) {
-                await accessor.asyncApplyAction(action);
-
-                this._lastYMDDate = newTransactionDataItem.ymdDate;
-                let largestQuantityBaseValue = 0;
-                for (let i = 0; i < splits.length; ++i) {
-                    if (i !== splitIndex) {
-                        const { quantityBaseValue } = splits[i];
-                        if (typeof quantityBaseValue === 'number') {
-                            const absValue = Math.abs(quantityBaseValue);
-                            if (absValue > largestQuantityBaseValue) {
-                                this._lastOtherSplitAccountId = splits[i].accountId;
-                            }
-                        }
-                    }
-                }
+                await this.asyncApplyAction(args, action);
             }
         }
         catch (e) {
@@ -1277,6 +1345,31 @@ export class AccountRegister extends React.Component {
         }
 
         return true;
+    }
+
+
+    async asyncApplyAction(args, action) {
+        const { saveBuffer } = args;
+        const { newTransactionDataItem, splitIndex } = saveBuffer;
+        const { splits } = newTransactionDataItem;
+
+        const { accessor } = this.props;
+
+        await accessor.asyncApplyAction(action);
+
+        this._lastYMDDate = newTransactionDataItem.ymdDate;
+        let largestQuantityBaseValue = 0;
+        for (let i = 0; i < splits.length; ++i) {
+            if (i !== splitIndex) {
+                const { quantityBaseValue } = splits[i];
+                if (typeof quantityBaseValue === 'number') {
+                    const absValue = Math.abs(quantityBaseValue);
+                    if (absValue > largestQuantityBaseValue) {
+                        this._lastOtherSplitAccountId = splits[i].accountId;
+                    }
+                }
+            }
+        }
     }
 
 

@@ -50,6 +50,17 @@
                             "name": "401(k) Account"
                         }
                     ]
+                },
+                {
+                    "type": "ASSET",
+                    "name": "Fixed Assets",
+                    "childAccounts": [
+                        {
+                            "type": "REAL_ESTATE",
+                            "name": "House",
+                            "pricedItemId": "House"
+                        }
+                    ]
                 }
             ],
 
@@ -88,6 +99,10 @@
                         {
                             "type": "LOAN",
                             "name": "College Loan"
+                        },
+                        {
+                            "type": "MORTGAGE",
+                            "name": "Home Mortgage"
                         }
                     ]
                 }
