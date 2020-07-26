@@ -140,7 +140,8 @@ export const CellToggleSelectEditor = React.forwardRef(
             onChange, onFocus, onBlur, disabled } = props;
 
         const divClassName = 'input-group mb-0 ';
-        let className = 'form-control cellButton cellToggleSelectEditor-button ' + classExtras;
+        let className = 'form-control cellButton cellToggleSelectEditor-button ' 
+            + classExtras;
 
         let value = selectedValue;
         let nextKey;
