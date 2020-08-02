@@ -164,6 +164,12 @@ export class AccountsList extends React.Component {
         this.props.accessor.on('accountAdd', this.onAccountAdd);
         this.props.accessor.on('accountsModify', this.onAccountsModify);
         this.props.accessor.on('accountRemove', this.onAccountRemove);
+
+        const { activeRowKey } = this.state;
+        const { onSelectAccount } = this.props;
+        if (onSelectAccount) {
+            onSelectAccount(activeRowKey);
+        }
     }
 
     componentWillUnmount() {
