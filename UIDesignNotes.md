@@ -462,10 +462,8 @@ Common menus:
 - CollapsibleRowTable
     - Need to tweak the expand/collapse indenting.
 
-- Fix AccountEditor modifying root account.
 
-
-PricedItemsEditor:
+- PricedItemsEditor:
     - Double click needs to open priced item editor???
 
 
@@ -543,9 +541,16 @@ PricedItemsEditor:
 
 - Auto-complete:
     - Based on transaction split descriptions.
-    - Do we use a tree based mechanism?
-    - When would it be constructed?
     - Case insensitive
-    - At the leaf have the transaction info.
     - Account based.
     - Need to support multi-splits.
+    - How to manage the database?
+        - Separate auto-complete engine?
+        - Listens to accounts and transactions.
+            - Accounts just used to purge/reload.
+        - Maintain account based databases.
+            - Each account has StringTree
+                - key is uppercase description
+                - value is array of transaction ids.
+            - Don't track lot based accounts.
+            - Only track asset and liability accounts?

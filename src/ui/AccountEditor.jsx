@@ -11,6 +11,7 @@ import * as PI from '../engine/PricedItems';
 import { DropdownField } from '../util-ui/DropdownField';
 import { PricedItemSelector } from './PricedItemSelector';
 import { ModalPage } from '../util-ui/ModalPage';
+import { ErrorBoundary } from '../util-ui/ErrorBoundary';
 
 
 /**
@@ -207,15 +208,18 @@ export class AccountEditor extends React.Component {
                  || (originalAccountDataItem.name !== newAccountDataItem.name)) {
                     const parentAccountDataItem = accessor.getAccountDataItemWithId(
                         newAccountDataItem.parentAccountId);
-                    const { childAccountIds } = parentAccountDataItem;
-                    for (let i = 0; i < childAccountIds.length; ++i) {
-                        const siblingAccountDataItem = accessor.getAccountDataItemWithId(
-                            childAccountIds[i]
-                        );
-                        if (siblingAccountDataItem.name === newAccountDataItem.name) {
-                            isOKToSave = false;
-                            nameErrorMsg = userMsg('AccountEditor-name_duplicate');
-                            break;
+                    if (parentAccountDataItem) {
+                        const { childAccountIds } = parentAccountDataItem;
+                        for (let i = 0; i < childAccountIds.length; ++i) {
+                            const siblingAccountDataItem 
+                                = accessor.getAccountDataItemWithId(
+                                    childAccountIds[i]
+                                );
+                            if (siblingAccountDataItem.name === newAccountDataItem.name) {
+                                isOKToSave = false;
+                                nameErrorMsg = userMsg('AccountEditor-name_duplicate');
+                                break;
+                            }
                         }
                     }
                 }
@@ -306,6 +310,8 @@ export class AccountEditor extends React.Component {
         const { accessor, accountId } = this.props;
         const { accountDataItem } = this.state;
         const accountEntries = [];
+        let disabled;
+        let disabledRoot;
 
         if (accountId) {
             // Limit to the current category...
@@ -314,6 +320,11 @@ export class AccountEditor extends React.Component {
             const type = A.getAccountType(accountDataItem.type);
             const rootAccountId = accessor.getCategoryRootAccountId(type.category);
             this.addAccountsToAccountEntries(rootAccountId, accountEntries);
+
+            if (!accountDataItem.parentAccountId) {
+                disabled = true;
+                disabledRoot = true;
+            }
         }
         else {
             // Grab all the categories...
@@ -339,6 +350,8 @@ export class AccountEditor extends React.Component {
             selectedAccountId={accountDataItem.parentAccountId}
             errorMsg={this.state.parentErrorMsg}
             onChange={this.onParentChange}
+            disabled = {disabled}
+            disabledRoot = {disabledRoot}
         />;
     }
 
@@ -353,12 +366,16 @@ export class AccountEditor extends React.Component {
     renderTypeEditor() {
         // Rules:
         //  - Cannot change a lot based account.
+        //  - Cannot change a root account.
         const { accessor, accountId } = this.props;
         const { accountDataItem } = this.state;
         const parentAccountDataItem = accessor.getAccountDataItemWithId(
             accountDataItem.parentAccountId);
         
+        const type = A.getAccountType(accountDataItem.type);
+
         const typeItems = [];
+        let disabled = false;
         if (parentAccountDataItem) {
             const parentType = A.getAccountType(parentAccountDataItem.type);
             parentType.allowedChildTypes.forEach((type) => 
@@ -367,9 +384,15 @@ export class AccountEditor extends React.Component {
                     text: type.description,
                 }) );
         }
+        else {
+            typeItems.push({
+                value: type.name,
+                text: type.description,
+            });
+            disabled = true;
+        }
 
-        const type = A.getAccountType(accountDataItem.type);
-        const disabled = type.hasLots && accountId;
+        disabled |= type.hasLots && accountId;
 
         return <DropdownField
             id={this._idBase + '_type'}
@@ -499,26 +522,28 @@ export class AccountEditor extends React.Component {
         const pricedItemEditor = this.renderPricedItemEditor();
         const refIdEditor = this.renderRefIdEditor();
 
-        return <div className="container-fluid mt-auto mb-auto text-left">
-            <div className="row">
-                <div className="col">
-                    {parentEditor}
+        return <ErrorBoundary>
+            <div className="container-fluid mt-auto mb-auto text-left">
+                <div className="row">
+                    <div className="col">
+                        {parentEditor}
+                    </div>
+                    <div className="col">
+                        {typeEditor}
+                    </div>
                 </div>
-                <div className="col">
-                    {typeEditor}
+                <div className="row">
+                    <div className="col">
+                        {nameEditor}
+                    </div>
+                    <div className="col">
+                        {refIdEditor}
+                    </div>
                 </div>
+                {descriptionEditor}
+                {pricedItemEditor}
             </div>
-            <div className="row">
-                <div className="col">
-                    {nameEditor}
-                </div>
-                <div className="col">
-                    {refIdEditor}
-                </div>
-            </div>
-            {descriptionEditor}
-            {pricedItemEditor}
-        </div>;
+        </ErrorBoundary>;
     }
 
 

@@ -144,6 +144,9 @@
     "AccountEditor-pricedItem_required": ["Please select a ", "."],
 
 
+    "AccountSelector-disabled_root": "--Root--",
+
+
     "AccountRegisterHandler-removeTransaction": "Delete Transaction",
     "AccountRegisterHandler-duplicateTransaction": "Duplicate Transaction",
     "AccountRegisterHandler-copyTransaction": "Copy Transaction",

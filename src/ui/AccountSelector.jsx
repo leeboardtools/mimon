@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { DropdownField } from '../util-ui/DropdownField';
+import { userMsg } from '../util/UserMessages';
 
 
 /**
@@ -9,31 +10,40 @@ import { DropdownField } from '../util-ui/DropdownField';
  */
 export function AccountSelector(props) {
     const { accessor, accountEntries, selectedAccountId, 
+        disabledRoot,
         ...passThroughProps } = props;
     const items = [];
-    const parentStack = [];
-    accountEntries.forEach((entry) => {
-        const { accountId } = entry;
-        while (parentStack.length) {
-            const parent = parentStack[parentStack.length - 1];
-            if (parent.childAccountIds 
-             && (parent.childAccountIds.indexOf(accountId) >= 0)) {
-                break;
-            }
-            else {
-                --parentStack.length;
-            }
-        }
-
-        const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+    if (disabledRoot) {
         items.push({
-            value: accountId,
-            text: accountDataItem.name,
-            indent: parentStack.length,
+            value: selectedAccountId,
+            text: userMsg('AccountSelector-disabled_root'),
         });
+    }
+    else {
+        const parentStack = [];
+        accountEntries.forEach((entry) => {
+            const { accountId } = entry;
+            while (parentStack.length) {
+                const parent = parentStack[parentStack.length - 1];
+                if (parent.childAccountIds 
+                && (parent.childAccountIds.indexOf(accountId) >= 0)) {
+                    break;
+                }
+                else {
+                    --parentStack.length;
+                }
+            }
 
-        parentStack.push(accountDataItem);
-    });
+            const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+            items.push({
+                value: accountId,
+                text: accountDataItem.name,
+                indent: parentStack.length,
+            });
+
+            parentStack.push(accountDataItem);
+        });
+    }
 
     return <DropdownField
         {...passThroughProps}
@@ -63,4 +73,5 @@ AccountSelector.propTypes = {
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
     disabled: PropTypes.bool,
+    disabledRoot: PropTypes.bool,
 };
