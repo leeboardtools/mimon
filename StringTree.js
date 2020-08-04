@@ -62,10 +62,27 @@ function getNextValueNode(stack) {
  * The nodes of the tree are based on the code points of the key strings.
  */
 export class StringTree {
-    constructor(iterator) {
+    constructor(args) {
         this[Symbol.iterator] = this.entries;
 
         this.clear();
+
+        this._filterCodePoint = (codePoint) => codePoint;
+
+        let iterator;
+        if (args) {
+            if (typeof args[Symbol.iterator] === 'function') {
+                iterator = args;
+            }
+            else {
+                if (args.caseInsensitive) {
+                    this._filterCodePoint = (codePoint) =>
+                        ((codePoint >= 97) && (codePoint <= 122))
+                            ? (codePoint - 32) : codePoint;
+                }
+                iterator = args.initialEntries;
+            }
+        }
 
         if (iterator) {
             for (let result of iterator) {
@@ -82,7 +99,7 @@ export class StringTree {
             childNodes: [],
             key: '',
         };
-        this.size = 0;
+        this._size = 0;
         this._keyValueMap = undefined;
     }
 
@@ -98,7 +115,7 @@ export class StringTree {
         if (!key) {
             if (nodeHasValue(this._root)) {
                 delete this._root.value;
-                --this.size;
+                --this._size;
                 this._keyValueMap = undefined;
                 return true;
             }
@@ -116,7 +133,7 @@ export class StringTree {
             }
 
             delete childNode.value;
-            --this.size;
+            --this._size;
             this._keyValueMap = undefined;
 
             // Prune any dead branches going upstream...
@@ -206,6 +223,15 @@ export class StringTree {
         }
     }
 
+
+    /**
+     * @returns {number}    The number of elements in the tree.
+     */
+    get size() {
+        return this._size;
+    }
+
+
     /**
      * Retrieves the element associated with a key.
      * @param {string} key 
@@ -249,7 +275,7 @@ export class StringTree {
         key = key || '';
         if (!key) {
             if (!nodeHasValue(this._root)) {
-                ++this.size;
+                ++this._size;
                 this._keyValueMap = undefined;
             }
             this._root.value = value;
@@ -267,8 +293,11 @@ export class StringTree {
             // node should go.
 
             const codePoints = [];
+            const filteredCodePoints = [];
             for (let i = 0; i < nodePath.length; ++i) {
-                codePoints.push(key.codePointAt(i));
+                const codePoint = key.codePointAt(i);
+                codePoints.push(codePoint);
+                filteredCodePoints.push(this._filterCodePoint(codePoint));
             }
 
             const keyLength = key.length;
@@ -276,7 +305,7 @@ export class StringTree {
                 const subKey = String.fromCodePoint(...codePoints);
                 const newNode = {
                     key: subKey,
-                    codePoint: codePoints[i],
+                    codePoint: filteredCodePoints[i],
                     childNodes: [],
                 };
 
@@ -288,13 +317,14 @@ export class StringTree {
                 }
 
                 codePoints.push(codePoint);
+                filteredCodePoints.push(this._filterCodePoint(codePoint));
                 parentNode = newNode;
                 childIndex = -1;
             }
 
             ++childIndex;
 
-            ++this.size;
+            ++this._size;
             this._keyValueMap = undefined;
         }
 
@@ -333,12 +363,14 @@ export class StringTree {
         let parentNode = this._root;
         const keyLength = key.length;
         for (let i = 0; i < keyLength; ++i) {
-            const codePoint = key.codePointAt(i);
+            let codePoint = key.codePointAt(i);
             if (codePoint === undefined) {
                 // May be fewer code points than key.length, but will
                 // always be <= length.
                 break;
             }
+
+            codePoint = this._filterCodePoint(codePoint);
 
             const { childNodes } = parentNode;
             compareValue.codePoint = codePoint;

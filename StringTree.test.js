@@ -311,3 +311,28 @@ test('StringTree', () => {
     ]);
 
 });
+
+
+test('StringTree-caseInsensitive', () => {
+    const tree = new StringTree({
+        initialEntries: [
+            ['Abc', 'abc'],
+            ['abcd', 123],
+            ['Ghi', 234],
+            ['GhIj', 456],
+            ['xyZ', 567],
+            ['XYzw', 789],
+        ],
+        caseInsensitive: true,
+    });
+
+    expect(tree.size).toEqual(6);
+    expect(tree.get('aBc')).toEqual('abc');
+    expect(tree.get('xyz')).toEqual(567);
+    expect(tree.get('XYZW')).toEqual(789);
+
+    expect(tree.entriesStartingWith('xy')).toEqual([
+        ['xyZ', 567],
+        ['XYzw', 789],
+    ]);
+});
