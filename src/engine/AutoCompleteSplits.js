@@ -119,7 +119,8 @@ export class AutoCompleteSplitsManager {
 
         entriesToRemove.forEach((entry) => {
             const { transactionId } = entry;
-            const treeEntry = this._stringTree.get(entry.description);
+            const description = cleanupDescription(entry.description);
+            const treeEntry = this._stringTree.get(description);
             if (treeEntry) {
                 const { treeItems } = treeEntry;
                 for (let i = 0; i < treeItems.length; ++i) {
@@ -129,7 +130,7 @@ export class AutoCompleteSplitsManager {
                     }
                 }
                 if (!treeItems.length) {
-                    this._stringTree.delete(entry.description);
+                    this._stringTree.delete(description);
                 }
             }
             this._entriesByTransactionId.delete(transactionId);
@@ -185,7 +186,7 @@ export class AutoCompleteSplitsManager {
         const entries = this._stringTree.entriesStartingWith(partialDescription);
         if (entries) {
             // Look for the entries with the accountId...
-            for (let treeEntry of entries) {
+            for (let [, treeEntry] of entries) {
                 for (let treeItem of treeEntry.treeItems) {
                     const { accountIds } = treeItem;
                     for (let i = 0; i < accountIds.length; ++i) {
