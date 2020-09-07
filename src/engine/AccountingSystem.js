@@ -5,6 +5,7 @@ import { LotManager } from './Lots';
 import { TransactionManager } from './Transactions';
 import { PriceManager } from './Prices';
 import { ReminderManager } from './Reminders';
+import { AutoCompleteSplitsManager } from './AutoCompleteSplits';
 import { UndoManager } from '../util/Undo';
 import { ActionManager } from '../util/Actions';
 import { AccountingActions } from './AccountingActions';
@@ -44,6 +45,9 @@ export class AccountingSystem extends EventEmitter {
         
         this._reminderManager = new ReminderManager(this, options.reminderManager);
 
+        this._autoCompleteSplitsManager 
+            = new AutoCompleteSplitsManager(this, options.autoCompleteSplitsManager);
+
         this._accountingActions = new AccountingActions(this);
 
 
@@ -65,6 +69,7 @@ export class AccountingSystem extends EventEmitter {
         await this._lotManager.asyncSetupForUse();
         await this._transactionManager.asyncSetupForUse();
         await this._reminderManager.asyncSetupForUse();
+        await this._autoCompleteSplitsManager.asyncSetupForUse();
         await this._actionManager.asyncSetupForUse();
     }
 
@@ -77,6 +82,11 @@ export class AccountingSystem extends EventEmitter {
         if (this.undoManager) {
             this._undoManager.shutDownFromUse();
             this._undoManager = undefined;
+        }
+
+        if (this._autoCompleteSplitsManager) {
+            this._autoCompleteSplitsManager.shutdownFromUse();
+            this._autoCompleteSplitsManager = undefined;
         }
 
         if (this._reminderManager) {
@@ -139,6 +149,11 @@ export class AccountingSystem extends EventEmitter {
      * @returns {ReminderManager}
      */
     getReminderManager() { return this._reminderManager; }
+
+    /**
+     * @returns {AutoCompleteSplitsManager}
+     */
+    getAutoCompleteSplitsManager() { return this._autoCompleteSplitsManager; }
 
     /**
      * @returns {UndoManager}

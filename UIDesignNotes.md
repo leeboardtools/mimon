@@ -510,6 +510,7 @@ Common menus:
 
         - Sell
             - Need to choose lots, which may be parts of a lot.
+                - Also options for automatic LIFO, FIFO
             - Lot picker:
                 - Shows available lots, with shares, cost basis, select how much of each lot is to be sold.
                 - Have price, commission & fees, so can show gain/loss.
@@ -518,6 +519,14 @@ Common menus:
 
             - Needs to be smart enough to detect if future transactions are affected
             by the lots sold (i.e. do we run out of the lot?)
+        
+        - Reinvested Dividends
+
+        - Return of Capital
+            - Shares: 0
+            - Price: 0
+            - Sell: amount
+            - Effect is to reduce the cost basis, # shares do not change.
         
 
 - MultiSplitsEditor:
@@ -537,6 +546,20 @@ Common menus:
     - Actually add row to the clipboard when Copy Transaction is chosen.
         - Both HTML and text.
         - For HTML include the split drop down???
+    
+    - Lot based account register:
+        - Columns:
+            - Date
+            - Description
+            - Account
+            - Reconciled
+            - Shares (+buy, -sell)
+            - Value
+            - Commission/fee
+            - Price
+            - Balance
+
+            - Schwab: Quantity | Unit Price | Total Amount
 
 
 - Auto-complete:

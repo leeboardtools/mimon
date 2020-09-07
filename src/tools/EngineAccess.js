@@ -139,6 +139,8 @@ export class EngineAccessor extends EventEmitter {
                 this._handleTransactionsRemove);
 
             this._reminderManager = _accountingSystem.getReminderManager();
+            this._autoCompleteSplitsManager 
+                = _accountingSystem.getAutoCompleteSplitsManager();
 
         }
         else {
@@ -189,6 +191,7 @@ export class EngineAccessor extends EventEmitter {
             this._priceManager = undefined;
             this._lotManager = undefined;
             this._reminderManager = undefined;
+            this._autoCompleteSplitsManager = undefined;
         }
     }
 
@@ -1243,6 +1246,19 @@ export class EngineAccessor extends EventEmitter {
         return this._reminderManager.getReminderDataItemWithId(id);
     }
 
+
+    /**
+     * Retrieves an array containing {@link AutoCompleteSplitsInfo}s
+     * for transactions with splits with the given account id and a description
+     * containing the partial description. Descriptions are cleaned up.
+     * @param {number} accountId 
+     * @param {string} partialDescription 
+     * @returns {AutoCompleteSplitsInfo[]}
+     */
+    getAutoCompleteSplitInfos(accountId, partialDescription) {
+        return this._autoCompleteSplitsManager.getSplitInfos(
+            accountId, partialDescription);
+    }
 
 
     /**

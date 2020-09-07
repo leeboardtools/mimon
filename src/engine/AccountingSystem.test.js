@@ -6,6 +6,7 @@ import { InMemoryPricesHandler } from './Prices';
 import { InMemoryRemindersHandler } from './Reminders';
 import { InMemoryTransactionsHandler } from './Transactions';
 import { InMemoryLotsHandler } from './Lots';
+import { InMemoryAutoCompleteSplitsHandler } from './AutoCompleteSplits';
 
 test('AccountingSystem', async () => {
     const handler = new InMemoryAccountingSystemHandler();
@@ -30,6 +31,9 @@ test('AccountingSystem', async () => {
             reminderManager: { handler: new InMemoryRemindersHandler(), },
             lotManager: { handler: new InMemoryLotsHandler(), },
             transactionManager: { handler: new InMemoryTransactionsHandler(), },
+            autoCompleteSplitsManager: { 
+                handler: new InMemoryAutoCompleteSplitsHandler(), 
+            },
         });
 
     const undoManager = accountingSystem.getUndoManager();

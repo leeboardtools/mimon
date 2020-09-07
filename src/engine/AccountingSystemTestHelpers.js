@@ -11,6 +11,7 @@ import { getDecimalDefinition } from '../util/Quantities';
 import { InMemoryPricesHandler } from './Prices';
 import { InMemoryTransactionsHandler } from './Transactions';
 import { InMemoryRemindersHandler } from './Reminders';
+import { InMemoryAutoCompleteSplitsHandler } from './AutoCompleteSplits';
 import { InMemoryUndoHandler } from '../util/Undo';
 import { InMemoryActionsHandler } from '../util/Actions';
 import { getYMDDate } from '../util/YMDDate';
@@ -46,6 +47,10 @@ export async function asyncCreateAccountingSystem(options) {
 
             reminderManager: {
                 handler: new InMemoryRemindersHandler(),
+            },
+
+            autoCompleteSplitsManager: {
+                handler: new InMemoryAutoCompleteSplitsHandler(),
             },
 
             actionManager: {
