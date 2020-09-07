@@ -57,11 +57,22 @@ function getNextValueNode(stack) {
  */
 
 /**
+ * @typedef {object}    StringTree~constructorArgs
+ * @property {Iterable} [initialEntries]    If specified an array of two element 
+ * sub arrays whose first element is the key and second element the value.
+ * @property {boolean}  [caseInsensitive=false]
+ */
+
+/**
  * A collection of string keys and values, stored in tree form.
  * <p>
  * The nodes of the tree are based on the code points of the key strings.
  */
 export class StringTree {
+    /**
+     * 
+     * @param {StringTree~constructorArgs|Iterable} [args]
+     */
     constructor(args) {
         this[Symbol.iterator] = this.entries;
 
