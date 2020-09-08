@@ -630,10 +630,8 @@ class JSONGzipLedgerFile {
         this._remindersHandler.fromJSON(json.remindersHandler);
         this._lotsHandler.fromJSON(json.lotsHandler);
 
-        if (this._autoCompleteSplitsHandler) {
-            this._autoCompleteSplitsHandler.fromJSON(
-                json.autoCompleteSplitsHandlerHandler);
-        }
+        this._autoCompleteSplitsHandler.fromJSON(
+            json.autoCompleteSplitsHandler || {});
 
         this.cleanIsModified();
 

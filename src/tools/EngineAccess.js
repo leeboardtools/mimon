@@ -526,7 +526,8 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * Closes the file, once called the accounting file object should not be used.
-     * Any changes that have been made to the accounting system are lots.
+     * Any changes that have been made to the accounting system since the last call
+     * to {@link EngineAccessor#asyncWriteAccountingFile} are lost.
      */
     async asyncCloseAccountingFile() {
         if (this._accountingFile) {

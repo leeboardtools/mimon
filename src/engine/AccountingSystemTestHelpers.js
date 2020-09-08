@@ -557,7 +557,7 @@ export async function asyncAddOpeningBalances(sys) {
 //      - charity:      +15000      N
 //      - checking:     -15000      N
 //
-//  - transI    2013-12-15
+//  - transN    2013-12-15
 //      - charity:      +20000      N
 //      - checking:     -20000      N
 export async function asyncAddBasicTransactions(sys) {

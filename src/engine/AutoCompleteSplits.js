@@ -65,6 +65,12 @@ export class AutoCompleteSplitsManager {
         // No need to make case insensitive, we condition the descriptions
         // before adding them to the tree...
         this._stringTree = new StringTree();
+
+
+        const entries = this._handler.getAutoCompleteEntries();
+        if (entries) {
+            entries.forEach((entry) => this._addEntry(entry));
+        }
     }
 
     async asyncSetupForUse() {
@@ -95,6 +101,21 @@ export class AutoCompleteSplitsManager {
             arg.oldTransactionDataItems, arg.newTransactionDataItems);
     }
 
+
+    _addEntry(entry) {
+        let { transactionId, description } = entry;
+        description = cleanupDescription(description);
+        let treeEntry = this._stringTree.get(description);
+        if (!treeEntry) {
+            treeEntry = {
+                treeItems: [],
+            };
+            this._stringTree.set(description, treeEntry);
+        }
+        const { treeItems } = treeEntry;
+        treeItems.push(entry);
+        this._entriesByTransactionId.set(transactionId, entry);
+    }
 
     _updateTransactionDataItems(oldTransactionDataItems, newTransactionDataItems) {
         const entriesToRemove = [];
@@ -136,20 +157,7 @@ export class AutoCompleteSplitsManager {
             this._entriesByTransactionId.delete(transactionId);
         });
 
-        entriesToAdd.forEach((entry) => {
-            let { transactionId, description } = entry;
-            description = cleanupDescription(description);
-            let treeEntry = this._stringTree.get(description);
-            if (!treeEntry) {
-                treeEntry = {
-                    treeItems: [],
-                };
-                this._stringTree.set(description, treeEntry);
-            }
-            const { treeItems } = treeEntry;
-            treeItems.push(entry);
-            this._entriesByTransactionId.set(transactionId, entry);
-        });
+        entriesToAdd.forEach((entry) => this._addEntry(entry));
 
         process.nextTick(async () => {
             await this._handler.asyncUpdateAutoCompleteEntries(
@@ -215,9 +223,9 @@ export class AutoCompleteSplitsHandler {
      * {@link AutoCompleteSplitsManager} is constructed.
      * @returns {ReminderDataItem[]}
      */
-    getAutoCompleteDataItems() {
+    getAutoCompleteEntries() {
         throw Error(
-            'AutoCompleteSplitsHandler.getAutoCompleteDataItems() abstract method!');
+            'AutoCompleteSplitsHandler.getAutoCompleteEntries() abstract method!');
     }
 
 
@@ -230,8 +238,15 @@ export class AutoCompleteSplitsHandler {
 
 
 export class InMemoryAutoCompleteSplitsHandler extends AutoCompleteSplitsHandler {
-    constructor(autoCompleteSplitsIems) {
+    constructor(autoCompleteSplitsEntries) {
         super();
+
+        this._entriesByTransactionId = new Map();
+        if (autoCompleteSplitsEntries) {
+            autoCompleteSplitsEntries.forEach((entry) => {
+                this._entriesByTransactionId.set(entry.transactionId, entry);
+            });
+        }
 
         this._lastChangeId = 0;
     }
@@ -242,17 +257,37 @@ export class InMemoryAutoCompleteSplitsHandler extends AutoCompleteSplitsHandler
 
 
     toJSON() {
-
+        return {
+            entries: Array.from(this._entriesByTransactionId.values()),
+        };
     }
 
     fromJSON(json) {
+        this._entriesByTransactionId.clear();
+        if (json.entries) {
+            json.entries.forEach((entry) => {
+                this._entriesByTransactionId.set(entry.transactionId, entry);
+            });
+        }
 
+        this.markChanged();
     }
+
+
+    getAutoCompleteEntries() {
+        return Array.from(this._entriesByTransactionId.values());
+    }
+
 
     async asyncUpdateAutoCompleteEntries(removedEntries, addedEntries) {
         if (!removedEntries.length && !addedEntries.length) {
             return;
         }
+
+        removedEntries.forEach((entry) => 
+            this._entriesByTransactionId.delete(entry.transactionId));
+        addedEntries.forEach((entry) =>
+            this._entriesByTransactionId.set(entry.transactionId, entry));
 
         this.markChanged();
     }

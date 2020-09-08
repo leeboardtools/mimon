@@ -1,5 +1,10 @@
 import * as ASTH from './AccountingSystemTestHelpers';
-import * as T from './Transactions';
+import { createDir, cleanupDir } from '../util/FileTestHelpers';
+import * as EATH from '../tools/EngineAccessTestHelpers';
+import { accessSync } from 'fs';
+
+const path = require('path');
+
 
 test('AutoCompleteSplitsManager-getSplitInfos', async () => {
     const sys = await ASTH.asyncCreateBasicAccountingSystem();
@@ -165,4 +170,105 @@ test('AutoCompleteSplitsManager-getSplitInfos', async () => {
             splitIndex: 0,
         },
     ]));
+});
+
+
+test('AutoCompleteSplits-Handler', async () => {
+    const baseDir = await createDir('AutoCompleteSplits');
+
+    try {
+        await cleanupDir(baseDir, true);
+
+        const pathName = path.join(baseDir, 'test');
+        const { accessor, sys } = await EATH.asyncSetupTestEngineAccess(pathName);
+
+        let result;
+        result = accessor.getAutoCompleteSplitInfos(sys.checkingId, 'Char');
+        expect(result.length).toEqual(3);
+        expect(result).toEqual(expect.arrayContaining([
+            { description: 'Charity donation',
+                transactionId: sys.transLId,
+                splitIndex: 1,
+            },
+            { description: 'Charity donation',
+                transactionId: sys.transMId,
+                splitIndex: 1,
+            },
+            { description: 'Charity donation',
+                transactionId: sys.transNId,
+                splitIndex: 1,
+            },
+        ]));
+
+        const accountingActions = accessor.getAccountingActions();
+        const modifyTransMAction = accountingActions.createModifyTransactionAction({
+            id: sys.transMId,
+            description: 'Char1 donation',
+        });
+        await accessor.asyncApplyAction(modifyTransMAction);
+
+        const removeTransLAction = accountingActions.createRemoveTransactionAction(
+            sys.transLId
+        );
+        await accessor.asyncApplyAction(removeTransLAction);
+
+
+        result = accessor.getAutoCompleteSplitInfos(sys.checkingId, 'Char');
+        expect(result.length).toEqual(2);
+        expect(result).toEqual(expect.arrayContaining([
+            { description: 'Char1 donation',
+                transactionId: sys.transMId,
+                splitIndex: 1,
+            },
+            { description: 'Charity donation',
+                transactionId: sys.transNId,
+                splitIndex: 1,
+            },
+        ]));
+
+        result = accessor.getAutoCompleteSplitInfos(sys.checkingId, 'Charity');
+        expect(result.length).toEqual(1);
+        expect(result).toEqual(expect.arrayContaining([
+            { description: 'Charity donation',
+                transactionId: sys.transNId,
+                splitIndex: 1,
+            },
+        ]));
+
+        await accessor.asyncWriteAccountingFile();
+        await accessor.asyncCloseAccountingFile();
+
+
+        await accessor.asyncOpenAccountingFile(pathName);
+
+        result = accessor.getAutoCompleteSplitInfos(sys.checkingId, 'Char');
+
+        expect(result.length).toEqual(2);
+        expect(result).toEqual(expect.arrayContaining([
+            { description: 'Char1 donation',
+                transactionId: sys.transMId,
+                splitIndex: 1,
+            },
+            { description: 'Charity donation',
+                transactionId: sys.transNId,
+                splitIndex: 1,
+            },
+        ]));
+
+        result = accessor.getAutoCompleteSplitInfos(sys.checkingId, 'Charity');
+        expect(result.length).toEqual(1);
+        expect(result).toEqual(expect.arrayContaining([
+            { description: 'Charity donation',
+                transactionId: sys.transNId,
+                splitIndex: 1,
+            },
+        ]));
+
+
+        await accessor.asyncCloseAccountingFile();
+    }
+    finally {
+        await cleanupDir(baseDir);
+    }
+
 });

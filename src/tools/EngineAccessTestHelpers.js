@@ -3,15 +3,21 @@ import { EngineAccessor } from './EngineAccess';
 import * as ASTH from '../engine/AccountingSystemTestHelpers';
 
 
-export async function asyncSetupTestEngineAccess(pathName) {
+export async function asyncSetupTestEngineAccess(pathName, options) {
+    options = options || {};
     // Create a test JSONGzip file.
     const factory = new JSONGzipAccountingFileFactory();
 
     const originalFile = await factory.asyncCreateFile(pathName);
     const accountingSystem = originalFile.getAccountingSystem();
     const sys = await ASTH.asyncSetupBasicAccounts(accountingSystem);
-    await ASTH.asyncAddOpeningBalances(sys);
-    await ASTH.asyncAddBasicTransactions(sys);
+
+    if (!options.noOpeningBalances) {
+        await ASTH.asyncAddOpeningBalances(sys);
+        if (!options.noBasicTransactions) {
+            await ASTH.asyncAddBasicTransactions(sys);
+        }
+    }
 
     await originalFile.asyncWriteFile();
     await originalFile.asyncCloseFile();
