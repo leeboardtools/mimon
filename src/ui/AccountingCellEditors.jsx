@@ -1182,6 +1182,10 @@ export function resolveSplitQuantityEditValueToSplitDataItem(args) {
     const { cellEditBuffer } = args;
     const { value } = cellEditBuffer;
     const quantityInfo = getSplitQuantityInfo(value);
+    if (!quantityInfo) {
+        return;
+    }
+
     let { isLots, quantityBaseValue, sign } = quantityInfo;
     if (isLots) {
         // FIX ME!!!
@@ -1240,6 +1244,10 @@ export function renderSplitQuantityEditor(args) {
 
     const { quantityDefinition } = value;
     const quantityInfo = getSplitQuantityInfo(value);
+    if (!quantityInfo) {
+        return;
+    }
+
     let { isLots, quantityBaseValue } = quantityInfo;
     if (isLots) {
         // FIX ME!!!
@@ -1272,8 +1280,12 @@ export function renderSplitQuantityDisplay(args) {
     if (!value) {
         return;
     }
+    const quantityInfo = getSplitQuantityInfo(value);
+    if (!quantityInfo) {
+        return;
+    }
     
-    let { sign, isLots, quantityBaseValue } = getSplitQuantityInfo(value);
+    let { sign, isLots, quantityBaseValue } = quantityInfo;
     
     const { accessor, split, } = value;
     const { lotChanges } = split;
