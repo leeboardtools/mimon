@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { EditableRowTable } from '../util-ui/EditableRowTable';
-import { getQuantityDefinition } from '../util/Quantities';
+import { getCurrency } from '../util/Currency';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
 import * as CE from './AccountingCellEditors';
@@ -177,8 +177,9 @@ function saveSplitsListCellValue(args) {
 
 function renderSplitItemTooltip(caller, splits, index, aleCreditSign) {
     const split = splits[index];
+    const { accessor } = caller.props;
     const splitAccountDataItem 
-        = caller.props.accessor.getAccountDataItemWithId(split.accountId);
+        = accessor.getAccountDataItemWithId(split.accountId);
     if (!splitAccountDataItem) {
         return;
     }
@@ -189,9 +190,10 @@ function renderSplitItemTooltip(caller, splits, index, aleCreditSign) {
         creditSign *= aleCreditSign;
     }
     
-    
-    const { quantityDefinition } = caller.state;
-    const value = getQuantityDefinition(quantityDefinition)
+    const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
+        splitAccountDataItem.pricedItemId);
+    const currency = getCurrency(pricedItemDataItem.currency);
+    const value = currency.getQuantityDefinition()
         .baseValueToValueText(split.quantityBaseValue * creditSign);
 
     return <div className = "row" key = {index}>
