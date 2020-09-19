@@ -115,7 +115,7 @@ export async function asyncCreateAccountingSystem(options) {
 //      -bonusId
 //      -dividendsId
 //      -giftsReceivedId
-//      -interestId
+//      -interestIncomeId
 //      -otherIncomeId
 //      -salaryId
 //
@@ -136,6 +136,8 @@ export async function asyncCreateAccountingSystem(options) {
 //          -healthInsuranceId
 //          -dentalInsuranceId
 //          -lifeInsuranceId
+//
+//      -interestExpenseId
 //
 //      -medicalId
 //      -miscId
@@ -328,15 +330,25 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
     )).newAccountDataItem.id;
 
     sys.dividendsId = (await accountManager.asyncAddAccount(
-        { parentAccountId: rootIncomeId, type: A.AccountType.INCOME, pricedItemId: currencyBasePricedItemId, name: 'Dividend Income', },
+        { parentAccountId: rootIncomeId, 
+            type: A.AccountType.INCOME, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'Dividend Income', 
+            tags: [A.StandardAccountTag.DIVIDENDS.name, ],
+        },
     )).newAccountDataItem.id;
 
     sys.giftsReceivedId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootIncomeId, type: A.AccountType.INCOME, pricedItemId: currencyBasePricedItemId, name: 'Gifts Received', },
     )).newAccountDataItem.id;
 
-    sys.interestId = (await accountManager.asyncAddAccount(
-        { parentAccountId: rootIncomeId, type: A.AccountType.INCOME, pricedItemId: currencyBasePricedItemId, name: 'Interest Income', },
+    sys.interestIncomeId = (await accountManager.asyncAddAccount(
+        { parentAccountId: rootIncomeId, 
+            type: A.AccountType.INCOME, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'Interest Income', 
+            tags: [A.StandardAccountTag.INTEREST.name, ],
+        },
     )).newAccountDataItem.id;
 
     sys.otherIncomeId = (await accountManager.asyncAddAccount(
@@ -366,11 +378,21 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
 
 
     sys.commissionsId = (await accountManager.asyncAddAccount(
-        { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: currencyBasePricedItemId, name: 'Commissions', },
+        { parentAccountId: rootExpenseId, 
+            type: A.AccountType.EXPENSE, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'Commissions', 
+            tags: [A.StandardAccountTag.FEES.name],
+        },
     )).newAccountDataItem.id;
 
     sys.feesId = (await accountManager.asyncAddAccount(
-        { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: currencyBasePricedItemId, name: 'Fees', },
+        { parentAccountId: rootExpenseId, 
+            type: A.AccountType.EXPENSE, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'Fees', 
+            tags: [A.StandardAccountTag.FEES.name],
+        },
     )).newAccountDataItem.id;
     
     sys.charityId = (await accountManager.asyncAddAccount(
@@ -400,6 +422,15 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
     )).newAccountDataItem.id;
     sys.lifeInsuranceId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.insurancePremiumsId, type: A.AccountType.EXPENSE, pricedItemId: currencyBasePricedItemId, name: 'Life Insurance', },
+    )).newAccountDataItem.id;
+
+    sys.interestExpenseId = (await accountManager.asyncAddAccount(
+        { parentAccountId: rootExpenseId, 
+            type: A.AccountType.EXPENSE, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'Interest Expense', 
+            tags: [A.StandardAccountTag.INTEREST.name, ],
+        },
     )).newAccountDataItem.id;
 
     sys.medicalId = (await accountManager.asyncAddAccount(

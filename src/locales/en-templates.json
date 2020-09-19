@@ -116,6 +116,10 @@
                 {
                     "type": "INCOME",
                     "name": "Interest and Dividends",
+                    "tags": [
+                        "INTEREST",
+                        "DIVIDENDS"
+                    ],
                     "childAccounts": [
                         {
                             "type": "INCOME",
@@ -182,7 +186,8 @@
                 },
                 {
                     "type": "EXPENSE",
-                    "name": "Bank Service Charges"
+                    "name": "Bank Service Charges",
+                    "tags": ["FEES"]
                 },
                 {
                     "type": "EXPENSE",
@@ -204,7 +209,8 @@
                 },
                 {
                     "type": "EXPENSE",
-                    "name": "Commissions"
+                    "name": "Commissions",
+                    "tags": ["FEES"]
                 },
                 {
                     "type": "EXPENSE",
@@ -269,6 +275,7 @@
                 {
                     "type": "EXPENSE",
                     "name": "Interest",
+                    "tags:": ["INTEREST"],
                     "childAccounts": [
                         {
                             "type": "EXPENSE",
@@ -303,6 +310,7 @@
                 {
                     "type": "EXPENSE",
                     "name": "Taxes",
+                    "tags": ["TAXES"],
                     "childAccounts": [
                         {
                             "type": "EXPENSE",

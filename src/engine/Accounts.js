@@ -5,6 +5,7 @@ import { PricedItemType, getPricedItemType } from './PricedItems';
 import { getYMDDate, getYMDDateString } from '../util/YMDDate';
 import deepEqual from 'deep-equal';
 import { areSimilar } from '../util/AreSimilar';
+import { cleanSpaces } from '../util/StringUtils';
 
 
 /**
@@ -261,8 +262,62 @@ export function loadAccountsUserMessages() {
         type.debitLabel = userMsg('AccountType-' + type.name + '_debit_label');
         type.creditLabel = userMsg('AccountType-' + type.name + '_credit_label');
     }
+
+    for (const tag of Object.values(StandardAccountTag)) {
+        tag.description = userMsg('AccountTag-' + tag.name);
+    }
 }
 
+
+/**
+ * @typedef {object} StandardAccountTagDef
+ * @property {string}   name    The identifying name of the standard tag.
+ * @property {string}   description The user description of the tag.
+ */
+
+/**
+ * Enumeration of the standard account tags
+ * @readonly
+ * @enum {StandardAccountTag}
+ * @property {StandardAccountTag}   INTEREST
+ * @property {StandardAccountTag}   DIVIDENDS
+ * @property {StandardAccountTag}   FEES
+ * @property {StandardAccountTag}   TAXES
+ */
+export const StandardAccountTag = {
+    INTEREST: { name: 'INTEREST' },
+    DIVIDENDS: { name: 'DIVIDENDS' },
+    FEES: { name: 'FEES' },
+    TAXES: { name: 'TAXES' },
+};
+
+/**
+ * Retrieves the user description representation of a tag, which is the
+ * description property of the tag if it is a {@link StandardAccountTag}
+ * or the tag itself.
+ * @param {StandardAccountTag|string} tag 
+ * @returns {string}    The user description representation of the tag.
+ */
+export function getTagDescription(tag) {
+    return (tag && tag.description) ? tag.description : tag;
+}
+
+/**
+ * Retrieves the storable string representation of a tag. Basically if the
+ * tag has a name property, like {@link StandardAccountTag}s do, the name
+ * property is returned, otherwise the tag is returned after being
+ * passed to {@link cleanSpaces}.
+ * @param {StandardAccountTag|string} tag 
+ * @returns {string}
+ */
+export function getTagString(tag) {
+    if (tag) {
+        if (tag.name) {
+            return tag.name;
+        }
+        return cleanSpaces(tag);
+    }
+}
 
 
 /**
@@ -274,6 +329,7 @@ export function loadAccountsUserMessages() {
  * @property {string}   type    The name property of one of {@link AccountType}.
  * @property {number}   pricedItemId   The local id of the priced item the account 
  * represents.
+ * @property {string[]} [tags]  Array of tags associated with the account.
  * @property {string}   [name]  The name of the account.
  * @property {string}   [description]   The description of the account.
  * @property {string}   [lastReconcileYMDDate] The closing date of the last 
@@ -291,6 +347,7 @@ export function loadAccountsUserMessages() {
  * @property {AccountType}  type    The account's type.
  * @property {number}   pricedItemId   The local id of the priced item the account 
  * represents.
+ * @property {string[]} [tags]  Array of tags associated with the account.
  * @property {string}   [name]  The name of the account.
  * @property {string}   [description]   The description of the account.
  * @property {YMDDate}   [lastReconcileYMDDate] The closing date of the last 
@@ -320,6 +377,9 @@ export function getAccount(accountDataItem, alwaysCopy) {
             }
             if (lastReconcileYMDDate !== undefined) {
                 account.lastReconcileYMDDate = lastReconcileYMDDate;
+            }
+            if (accountDataItem.tags !== undefined) {
+                account.tags = Array.from(accountDataItem.tags);
             }
             if (accountDataItem.childAccountIds !== undefined) {
                 account.childAccountIds = Array.from(accountDataItem.childAccountIds);
@@ -351,6 +411,9 @@ export function getAccountDataItem(account, alwaysCopy) {
             }
             if (lastReconcileYMDDate !== undefined) {
                 accountDataItem.lastReconcileYMDDate = lastReconcileYMDDate;
+            }
+            if (account.tags !== undefined) {
+                accountDataItem.tags = Array.from(account.tags);
             }
             if (account.childAccountIds !== undefined) {
                 accountDataItem.childAccountIds = Array.from(account.childAccountIds);
@@ -621,6 +684,83 @@ export class AccountManager extends EventEmitter {
     }
 
 
+    _getAccountIdsWithTags(tagsToFind, accountId, result) {
+        const accountDataItem = this.getAccountDataItemWithId(accountId);
+        if (accountDataItem) {
+            const { tags, childAccountIds } = accountDataItem;
+            if (tags) {
+                // We'll presume there will generally be only one tag in tagsToFind,
+                // so search by the account tags.
+                for (let tag of tags) {
+                    tag = cleanSpaces(tag).toUpperCase();
+                    if (tagsToFind.indexOf(tag) >= 0) {
+                        result.push(accountId);
+                        break;
+                    }
+                }
+            }
+
+            for (let childAccountId of childAccountIds) {
+                this._getAccountIdsWithTags(tagsToFind, childAccountId, result);
+            }
+        }
+    }
+
+
+    /**
+     * Retrieves the account ids of accounts with at least one tag matching
+     * a desired tag or tags.
+     * @param {string|string[]} tags The array of tags of interest, if an account data
+     * item has any of the tags in this list it is retrieved.
+     * Tags are case insensitive, and spaces are cleaned up with {@link cleanSpaces}.
+     * @param {number} [topAccountId]   Optional account id of the account to search
+     * from, only the account and its children will be searched. If 
+     * <code>undefined</code> all the accounts will be checked.
+     * @returns {number[]}
+     */
+    getAccountIdsWithTags(tags, topAccountId) {
+        if (!tags) {
+            return [];
+        }
+        if (!Array.isArray(tags)) {
+            return this.getAccountIdsWithTags([tags], topAccountId);
+        }
+
+        tags = tags.map((tag) => cleanSpaces(getTagString(tag)).toUpperCase());
+
+        let result = [];
+        if (topAccountId) {
+            this._getAccountIdsWithTags(tags, topAccountId, result);
+        }
+        else {
+            this._getAccountIdsWithTags(tags, this._rootAssetAccountId, result);
+            this._getAccountIdsWithTags(tags, this._rootLiabilityAccountId, result);
+            this._getAccountIdsWithTags(tags, this._rootIncomeAccountId, result);
+            this._getAccountIdsWithTags(tags, this._rootExpenseAccountId, result);
+            this._getAccountIdsWithTags(tags, this._rootEquityAccountId, result);
+        }
+        return result;
+    }
+
+
+    /**
+     * Determines if the account with a given id belongs to a given 
+     * {@link AccountCategory}.
+     * @param {number} accountId 
+     * @param {AccountCategory} category 
+     * @returns {boolean|undefined} <code>true</code> if there is an account with
+     * accountId and its category matches category
+     */
+    isAccountIdOfCategory(accountId, category) {
+        const accountDataItem = this.getAccountDataItemWithId(accountId);
+        if (accountDataItem) {
+            const accountType = getAccountType(accountDataItem.type);
+            category = accountCategory(category);
+            return (accountType.category === category);
+        }
+    }
+
+
     /**
      * Determines if an account is a child of another account.
      * @param {(Account|AccountDataItem|number)} test A reference to the 
@@ -857,6 +997,14 @@ export class AccountManager extends EventEmitter {
     }
 
 
+    _cleanTags(accountDataItem) {
+        if (accountDataItem.tags) {
+            accountDataItem.tags = accountDataItem.tags.map((tag) =>
+                cleanSpaces(getTagString(tag)));
+        }
+    }
+
+
     /**
      * Fired by {@link AccountManager#asyncAddAccount} after an account has been added.
      * @event AccountManager~accountAdd
@@ -896,7 +1044,7 @@ export class AccountManager extends EventEmitter {
 
         
         const type = getAccountType(accountDataItem.type);
-        
+
         if (accountDataItem.childAccountIds) {
             // Verify that all the accounts in childAccountIds can be moved to this 
             // account's type.
@@ -928,6 +1076,8 @@ export class AccountManager extends EventEmitter {
         if (validateOnly) {
             return;
         }
+
+        this._cleanTags(accountDataItem);
 
         const originalIdGeneratorOptions = this._idGenerator.toJSON();
 
@@ -1193,6 +1343,8 @@ export class AccountManager extends EventEmitter {
         if (validateOnly) {
             return;
         }
+
+        this._cleanTags(newAccountDataItem);
 
         if (deepEqual(newAccountDataItem, oldAccountDataItem)) {
             return;

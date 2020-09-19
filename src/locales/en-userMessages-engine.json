@@ -56,6 +56,11 @@
     "AccountType-OPENING_BALANCE_debit_label": "Decrease",
     "AccountType-OPENING_BALANCE_credit_label": "Increase",
 
+    "AccountTag-INTEREST": "Interest",
+    "AccountTag-DIVIDENDS": "Dividends",
+    "AccountTag-FEES": "Fees",
+    "AccountTag-TAXES": "Taxes",
+
     "Account-Root_Assets_name": "Assets",
     "Account-Root_Assets_desc": "Top Level Asset Account",
     "Account-Root_Liabilities_name": "Liabilities",
@@ -98,6 +103,10 @@
     "AccountManager-child_account_not_found": ["A child account with id '", "' was not found."],
     "AccountManager-remove_parent_account_not_found": ["The parent account with id '", "' was not found."],
     "AccountManager-child_not_compatible": ["The account contains a child account of type '", "', which is not allowed in the parent account, which is of type '", "'."],
+    "AccountManager-interest_income_account_invalid": ["The account chosen for the default interest income account is not an Income account."],
+    "AccountManager-dividend_income_account_invalid": ["The account chosen for the default dividend income account is not an Income account."],
+    "AccountManager-interest_expense_account_invalid": ["The account chosen for the default interest expense account is not an Expense account."],
+    "AccountManager-fees_expense_account_invalid": ["The account chosen for the default fees expense account is not an Expense account."],
 
 
     "Actions-setBaseCurrency": "Set Base Currency",

@@ -934,3 +934,43 @@ test('AccountManager-removeAccount', async () => {
 });
 
 
+
+//
+//---------------------------------------------------------
+//
+test('AccountManager-tags', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    const { accountingSystem } = sys;
+    const accountManager = accountingSystem.getAccountManager();
+
+    let result;
+    result = accountManager.getAccountIdsWithTags(A.StandardAccountTag.INTEREST);
+    expect(result).toEqual(expect.arrayContaining(
+        [sys.interestIncomeId, sys.interestExpenseId]));
+    expect(result.length).toEqual(2);
+
+    result = accountManager.getAccountIdsWithTags(A.StandardAccountTag.INTEREST,
+        accountManager.getRootAssetAccountDataItem());
+    expect(result).toEqual([]);
+
+    result = accountManager.getAccountIdsWithTags(A.StandardAccountTag.INTEREST.name,
+        accountManager.getRootIncomeAccountId());
+    expect(result).toEqual(expect.arrayContaining([sys.interestIncomeId]));
+    expect(result.length).toEqual(1);
+
+    result = accountManager.getAccountIdsWithTags(A.StandardAccountTag.INTEREST,
+        accountManager.getRootExpenseAccountId());
+    expect(result).toEqual(expect.arrayContaining([sys.interestExpenseId]));
+    expect(result.length).toEqual(1);
+
+    
+    result = accountManager.getAccountIdsWithTags(
+        [ A.StandardAccountTag.INTEREST,
+            A.StandardAccountTag.DIVIDENDS,
+        ],);
+    expect(result).toEqual(expect.arrayContaining(
+        [sys.interestIncomeId, sys.dividendsId, sys.interestExpenseId]
+    ));
+    expect(result.length).toEqual(3);
+
+});

@@ -776,6 +776,21 @@ export class EngineAccessor extends EventEmitter {
 
 
     /**
+     * Retrieves the account ids of accounts with at least one tag matching
+     * a desired tag or tags.
+     * @param {string|string[]} tags The array of tags of interest, if an account data
+     * item has any of the tags in this list it is retrieved.
+     * @param {number} [topAccountId]   Optional account id of the account to search
+     * from, only the account and its children will be searched. If 
+     * <code>undefined</code> all the accounts will be checked.
+     * @returns {number[]}
+     */
+    getAccountIdsWithTags(tags, topAccountId) {
+        return this._accountManager.getAccountIdsWithTags(tags, topAccountId);
+    }
+
+
+    /**
      * Helper that converts a quantity in an account's quantity definition
      * to a user-presentable string.
      * @param {*} quantityBaseValue 
