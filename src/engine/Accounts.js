@@ -319,7 +319,14 @@ export function getTagString(tag) {
     }
 }
 
+/**
+ * @typedef {object}    DefaultSplitAccountIds
+ * This is an object whose properties are account ids for default accounts
+ * for different splits. For example, interestIncomeId could be a property
+ * for an interest income split. We're not defining the properties.
+ */
 
+ 
 /**
  * @typedef {object} AccountDataItem
  * @property {number}   id  The account's id.
@@ -336,6 +343,8 @@ export function getTagString(tag) {
  * account reconciliation.
  * @property {number}   [lastReconcileBalanceBaseValue]  The closing balance quantity
  * of the last account reconciliation.
+ * @property {DefaultSplitAccountIds}   [defaultSplitAccountIds]    Optional object
+ * containing account ids for default accounts for different splits.
  */
 
 /**
@@ -354,6 +363,8 @@ export function getTagString(tag) {
  * account reconciliation.
  * @property {number}   [lastReconcileBalanceBaseValue]  The closing balance quantity
  * of the last account reconciliation.
+ * @property {DefaultSplitAccountIds}   [defaultSplitAccountIds]    Optional object
+ * containing account ids for default accounts for different splits.
  */
 
 /**
@@ -383,6 +394,10 @@ export function getAccount(accountDataItem, alwaysCopy) {
             }
             if (accountDataItem.childAccountIds !== undefined) {
                 account.childAccountIds = Array.from(accountDataItem.childAccountIds);
+            }
+            if (accountDataItem.defaultSplitAccountIds) {
+                account.defaultSplitAccountIds 
+                    = Object.assign({}, accountDataItem.defaultSplitAccountIds);
             }
             return account;
         }
@@ -417,6 +432,10 @@ export function getAccountDataItem(account, alwaysCopy) {
             }
             if (account.childAccountIds !== undefined) {
                 accountDataItem.childAccountIds = Array.from(account.childAccountIds);
+            }
+            if (account.defaultSplitAccountIds !== undefined) {
+                accountDataItem.defaultSplitAccountIds
+                    = Object.assign({}, account.defaultSplitAccountIds);
             }
             return accountDataItem;
         }
@@ -905,9 +924,7 @@ export class AccountManager extends EventEmitter {
 
 
     async _asyncAddAccount(account, childListIndex) {
-        account = getAccountDataItem(account);
-        
-        const accountDataItem = Object.assign({}, account);
+        const accountDataItem = getAccountDataItem(account, true);
 
         accountDataItem.childAccountIds = accountDataItem.childAccountIds || [];
 
@@ -969,7 +986,7 @@ export class AccountManager extends EventEmitter {
 
         if (accountDataItem.refId) {
             const refIdAccount = this._accountsByRefId.get(accountDataItem.refId);
-            if (refIdAccount) {
+            if (refIdAccount && (refIdAccount.id !== accountDataItem.id)) {
                 return userError('AccountManager-duplicate_ref_id', 
                     accountDataItem.refId);
             }
@@ -1197,7 +1214,7 @@ export class AccountManager extends EventEmitter {
 
         const undoId = await this._accountingSystem.getUndoManager()
             .asyncRegisterUndoDataItem('removeAccount', 
-                { removedAccountDataItem: Object.assign({}, accountDataItem), 
+                { removedAccountDataItem: getAccountDataItem(accountDataItem, true), 
                     parentChildIndex: parentChildIndex });
 
         this.emit('accountRemove', { removedAccountDataItem: accountDataItem });
@@ -1218,7 +1235,7 @@ export class AccountManager extends EventEmitter {
      */
 
     /**
-     * @typedef {object}    TransactionManager~ModifyAccountResult
+     * @typedef {object}    AccountManager~ModifyAccountResult
      * @property {AccountDataItem}  newAccountDataItem
      * @property {AccountDataItem}  oldAccountDataItem
      * @property {number}   undoId
@@ -1231,7 +1248,7 @@ export class AccountManager extends EventEmitter {
      * type and priced item accounts. Note that the childAccountIds can 
      * only be shuffled about, the accounts in the list cannot be changed.
      * @param {boolean} validateOnly 
-     * @returns {TransactionManager~ModifyAccountResult|undefined}  
+     * @returns {AccountManager~ModifyAccountResult|undefined}  
      * <code>undefined</code> is returned if validateOnly is true or
      * no changes were made to the account.
      * @throws {Error}
@@ -1377,7 +1394,7 @@ export class AccountManager extends EventEmitter {
             }
         });
 
-        const result = [Object.assign({}, newAccountDataItem), oldAccountDataItem];
+        const result = [getAccountDataItem(newAccountDataItem, true), oldAccountDataItem];
         
         const undoDataItem = { 
             oldAccountDataItem: getAccountDataItem(oldAccountDataItem, true), 

@@ -270,19 +270,38 @@ test('AccountManager-add', async () => {
     //
     // BANK
     //
+    const bankTags = [ 'Abc', '123' ];
+    const bankDefaultSplitAccountIds = {
+        interestIncomeId: 123,
+    };
     const bankOptionsA = {
         parentAccountId: assetA.id,
         type: A.AccountType.BANK,
         pricedItemId: pricedItemManager.getBaseCurrencyPricedItemId(),
         name: 'Checking Account',
         description: 'This is a checking account',
+        tags: [ bankTags[0], ' ' + bankTags[1] + '  ', ],   // Make sure tags get cleaned
+        defaultSplitAccountIds: bankDefaultSplitAccountIds,
     };
     result = await accountManager.asyncAddAccount(bankOptionsA);
+    bankOptionsA.tags = bankTags;
     const bankA = result.newAccountDataItem;
     ATH.expectAccount(bankA, bankOptionsA);
 
     accountDataItem = accountManager.getAccountDataItemWithId(assetA.id);
     expect(accountDataItem.childAccountIds).toEqual(expect.arrayContaining([bankA.id]));
+
+    // Make sure tags is copied.
+    bankA.tags[0] = 'ZZZ';
+    expect(bankA.tags).not.toEqual(bankTags);
+    bankA.tags[0] = bankTags[0];
+
+    // Make sure defaultSplitAccountIds is copied...
+    bankA.defaultSplitAccountIds.interestIncomeId = 456;
+    expect(bankA.defaultSplitAccountIds).not.toEqual(
+        bankDefaultSplitAccountIds);
+    bankA.defaultSplitAccountIds.interestIncomeId 
+        = bankDefaultSplitAccountIds.interestIncomeId;
 
 
     let removeArg;
@@ -838,6 +857,44 @@ test('AccountManager-modify', async () => {
     await accountManager.asyncModifyAccount({ id: sys.savingsId, refId: '8'});
     account = accountManager.getAccountDataItemWithRefId('8');
     expect(account.id).toEqual(sys.savingsId);
+
+
+    // Check tags...
+    result = await accountManager.asyncModifyAccount(
+        {id: sys.savingsId, tags: [ 'Abc' ]}
+    );
+    let newAccount = result.newAccountDataItem;
+    expect(newAccount.tags).toEqual(['Abc']);
+
+    // Make sure it's a copy
+    newAccount.tags[0] = 'Def';
+    expect(accountManager.getAccountDataItemWithId(sys.savingsId).tags).toEqual(
+        ['Abc']
+    );
+
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    ATH.expectAccount(accountManager.getAccountDataItemWithId(sys.savingsId), account);
+    
+
+    // Check DefaultSplitAccountIds...
+    result = await accountManager.asyncModifyAccount(
+        {id: sys.savingsId, defaultSplitAccountIds: { interestIncomeId: 123, }}
+    );
+    newAccount = result.newAccountDataItem;
+    expect(newAccount.defaultSplitAccountIds).toEqual({ interestIncomeId: 123, });
+
+    // Make sure it's a copy
+    newAccount.defaultSplitAccountIds.interestIncomeId = 456;
+    expect(accountManager.getAccountDataItemWithId(sys.savingsId)
+        .defaultSplitAccountIds).toEqual(
+        { interestIncomeId: 123 }
+    );
+
+    result = await accountManager.asyncModifyAccount(
+        {id: sys.savingsId, defaultSplitAccountIds: undefined, }
+    );
+    newAccount = result.newAccountDataItem;
+    expect(newAccount.defaultSplitAccountIds).toBeUndefined();
 });
 
 
@@ -953,7 +1010,9 @@ test('AccountManager-tags', async () => {
         accountManager.getRootAssetAccountDataItem());
     expect(result).toEqual([]);
 
-    result = accountManager.getAccountIdsWithTags(A.StandardAccountTag.INTEREST.name,
+    // Also check that the tag arg gets cleaned...
+    result = accountManager.getAccountIdsWithTags(
+        ' ' + A.StandardAccountTag.INTEREST.name + '  ',
         accountManager.getRootIncomeAccountId());
     expect(result).toEqual(expect.arrayContaining([sys.interestIncomeId]));
     expect(result.length).toEqual(1);

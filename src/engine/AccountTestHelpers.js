@@ -43,4 +43,12 @@ export function expectAccount(account, ref) {
         expect(account.childAccountLocalIds).toEqual(ref.childAccountLocalIds);
     }
 
+    if (ref.tags) {
+        expect(account.tags).toEqual(ref.tags);
+    }
+
+    if (ref.defaultSplitAccountIds) {
+        expect(account.defaultSplitAccountIds).toEqual(ref.defaultSplitAccountIds);
+    }
+
 }
