@@ -77,9 +77,75 @@ test('AccountHelpers', async () => {
             asset.name + '_' + brokerageA.name + '-' + aaplBrokerageA.name
         );
 
+
+        //
+        // Test crawlAccountTree()...
+        const crawlIdResults = [];
+        const crawlResult = AH.crawlAccountTree(accessor, 
+            accessor.getRootAssetAccountId(), (accountDataItem) => {
+                crawlIdResults.push(accountDataItem.id);
+                if (accountDataItem.id === sys.secondHouseId) {
+                    return true;
+                }
+            });
+        expect(crawlResult).toBeTruthy();
+        expect(crawlIdResults).toEqual([
+            accessor.getRootAssetAccountId(),
+            sys.currentAssetsId,
+            sys.cashId,
+            sys.checkingId,
+            sys.savingsId,
+            sys.fixedAssetsId,
+            sys.houseId,
+            sys.secondHouseId,
+        ]);
+
+        // Nothing stopped the crawl, should return false.
+        expect(AH.crawlAccountTree(accessor,
+            accessor.getRootAssetAccountId(), () => {})).toBeFalsy();
+
+
+        //
+        // getDefaultSplitAccountId
+        let result;
+
+        // No explicit account id, no named sub-account.
+        result = AH.getDefaultSplitAccountId(accessor, sys.checkingId, 
+            AH.DefaultSplitAccountType.INTEREST_INCOME);
+        expect(result).toEqual(sys.interestIncomeId);
+
+        // Named sub-account.
+        result = AH.getDefaultSplitAccountId(accessor, sys.mmmBrokerageAId,
+            AH.DefaultSplitAccountType.DIVIDENDS_INCOME);
+        expect(result).toEqual(sys.dividendsMMMId);
+        
+
+        // Explicitly set
+        result = AH.getDefaultSplitAccountId(accessor, sys.aaplBrokerageAId,
+            AH.DefaultSplitAccountType.DIVIDENDS_INCOME);
+        expect(result).toEqual(sys.dividendsAAPLId);
+
+        result = AH.getDefaultSplitAccountId(accessor, sys.aaplBrokerageAId,
+            AH.DefaultSplitAccountType.FEES_EXPENSE);
+        expect(result).toEqual(sys.commissionsAAPLId);
+
+
+        // Remaining DefaultSplitAccountTypes
+        result = AH.getDefaultSplitAccountId(accessor, sys.checkingId,
+            AH.DefaultSplitAccountType.TAXES_EXPENSE);
+        expect(result).toEqual(sys.taxesId);
+
+        result = AH.getDefaultSplitAccountId(accessor, sys.checkingId,
+            AH.DefaultSplitAccountType.INTEREST_EXPENSE);
+        expect(result).toEqual(sys.interestExpenseId);
+
+        //
+        // All done...
         await accessor.asyncCloseAccountingFile();
     }
     finally {
         await cleanupDir(baseDir);
     }
 });
+
+

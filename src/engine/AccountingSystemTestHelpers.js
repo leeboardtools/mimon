@@ -114,6 +114,9 @@ export async function asyncCreateAccountingSystem(options) {
 //  -Root Income
 //      -bonusId
 //      -dividendsId
+//          -dividendsAAPLId,
+//          -dividendsMMMId,
+//
 //      -giftsReceivedId
 //      -interestIncomeId
 //      -otherIncomeId
@@ -126,6 +129,8 @@ export async function asyncCreateAccountingSystem(options) {
 //          -autoMaintenanceId
 //
 //      -commissionsId
+//          -commissionsAAPLId,
+//          -commissionsMSFTId,
 //      -feesId
 //      -charityId
 //      -groceriesId
@@ -338,6 +343,22 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
         },
     )).newAccountDataItem.id;
 
+    sys.dividendsAAPLId = (await accountManager.asyncAddAccount(
+        { parentAccountId: sys.dividendsId, 
+            type: A.AccountType.INCOME, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'AAPL', 
+        },
+    )).newAccountDataItem.id;
+
+    sys.dividendsMMMId = (await accountManager.asyncAddAccount(
+        { parentAccountId: sys.dividendsId, 
+            type: A.AccountType.INCOME, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'MMM', 
+        },
+    )).newAccountDataItem.id;
+
     sys.giftsReceivedId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootIncomeId, type: A.AccountType.INCOME, pricedItemId: currencyBasePricedItemId, name: 'Gifts Received', },
     )).newAccountDataItem.id;
@@ -383,6 +404,22 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
             pricedItemId: currencyBasePricedItemId, 
             name: 'Commissions', 
             tags: [A.StandardAccountTag.FEES.name],
+        },
+    )).newAccountDataItem.id;
+
+    sys.commissionsAAPLId = (await accountManager.asyncAddAccount(
+        { parentAccountId: sys.commissionsId, 
+            type: A.AccountType.EXPENSE, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'AAPL', 
+        },
+    )).newAccountDataItem.id;
+
+    sys.commissionsMSFTId = (await accountManager.asyncAddAccount(
+        { parentAccountId: sys.commissionsId, 
+            type: A.AccountType.EXPENSE, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'MSFT', 
         },
     )).newAccountDataItem.id;
 
@@ -443,7 +480,12 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
 
 
     sys.taxesId = (await accountManager.asyncAddAccount(
-        { parentAccountId: rootExpenseId, type: A.AccountType.EXPENSE, pricedItemId: currencyBasePricedItemId, name: 'Taxes', },
+        { parentAccountId: rootExpenseId, 
+            type: A.AccountType.EXPENSE, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'Taxes',
+            tags: [A.StandardAccountTag.TAXES, ],
+        },
     )).newAccountDataItem.id;
     sys.federalTaxesId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.taxesId, type: A.AccountType.EXPENSE, pricedItemId: currencyBasePricedItemId, name: 'Federal Taxes', },
@@ -475,6 +517,14 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
         { parentAccountId: sys.utilitiesId, type: A.AccountType.EXPENSE, pricedItemId: currencyBasePricedItemId, name: 'Internet', },
     )).newAccountDataItem.id;
 
+
+    await accountManager.asyncModifyAccount({
+        id: sys.aaplBrokerageAId,
+        defaultSplitAccountIds: {
+            dividendIncomeId: sys.dividendsAAPLId,
+            feesExpenseId: sys.commissionsAAPLId,
+        }
+    });
 
     return sys;
 }

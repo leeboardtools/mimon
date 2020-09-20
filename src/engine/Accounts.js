@@ -278,11 +278,11 @@ export function loadAccountsUserMessages() {
 /**
  * Enumeration of the standard account tags
  * @readonly
- * @enum {StandardAccountTag}
- * @property {StandardAccountTag}   INTEREST
- * @property {StandardAccountTag}   DIVIDENDS
- * @property {StandardAccountTag}   FEES
- * @property {StandardAccountTag}   TAXES
+ * @enum {StandardAccountTagDef}
+ * @property {StandardAccountTagDef}   INTEREST
+ * @property {StandardAccountTagDef}   DIVIDENDS
+ * @property {StandardAccountTagDef}   FEES
+ * @property {StandardAccountTagDef}   TAXES
  */
 export const StandardAccountTag = {
     INTEREST: { name: 'INTEREST' },

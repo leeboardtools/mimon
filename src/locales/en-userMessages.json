@@ -142,6 +142,10 @@
     "AccountEditor-pricedItem_label": ["", ""],
     "AccountEditor-newPricedItem_label": ["New ", ""],
     "AccountEditor-pricedItem_required": ["Please select a ", "."],
+    "AccountEditor-default_account_label_interestIncomeAccountId": "Default account for interest income",
+    "AccountEditor-default_account_label_dividendIncomeAccountId": "Default account for dividend income",
+    "AccountEditor-default_account_label_interestExpenseAccountId": "Default account for interest expenses",
+    "AccountEditor-default_account_label_feesExpenseAccountId": "Default account for fee/commission expenses",
 
 
     "AccountSelector-disabled_root": "--Root--",

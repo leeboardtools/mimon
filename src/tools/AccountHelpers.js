@@ -1,3 +1,6 @@
+import * as A from '../engine/Accounts';
+import { cleanSpaces } from '../util/StringUtils';
+
 /**
  * Builds an array containing the {@link AccountDataItem}s of an account and
  * all its parents.
@@ -138,4 +141,135 @@ export function getAccountWithLongestAncestorName(accessor, nameId, accountId) {
     }
 
     return nameId;
+}
+
+
+/**
+ * Callback for {@link crawlAccountTree}
+ * @callback crawlAccountTreeCallback
+ * @param {AccountDataItem} accountDataItem
+ * @returns {boolean|undefined}   <code>true</code> if crawling should be halted.
+ */
+
+/**
+ * @param {EngineAccessor} accessor 
+ * @param {AccountDataItem|number} accountDataItem 
+ * @param {crawlAccountTreeCallback} callback 
+ * @return {boolean|undefined}  <code>true</code> if at any point the callback
+ * returned <code>true</code>.
+ */
+export function crawlAccountTree(accessor, accountDataItem, callback) {
+    if (typeof accountDataItem === 'number') {
+        accountDataItem = accessor.getAccountDataItemWithId(accountDataItem);
+    }
+    
+    if (accountDataItem) {
+        if (callback(accountDataItem)) {
+            return true;
+        }
+
+        const { childAccountIds } = accountDataItem;
+        if (childAccountIds) {
+            for (let accountId of childAccountIds) {
+                if (crawlAccountTree(accessor, accountId, callback)) {
+                    return true;
+                }
+            }
+        }
+    }
+}
+
+/**
+ * @typedef {object} DefaultSplitAccountTypeDef
+ * @property {string}   property    The name of the property in the
+ * {@link DefaultSplitAccountIds} object of the {@link AccountDataItem}
+ * @property {AccountCategory}  category
+ * @property {StandardAccountTag[]}   tags
+ */
+
+
+/**
+ * Enumeration of the built-in default split account types
+ * @readonly
+ * @enum {DefaultSplitAccountTypeDef}
+ * @property {DefaultSplitAccountTypeDef}   INTEREST_INCOME
+ * @property {DefaultSplitAccountTypeDef}   DIVIDENDS_INCOME
+ * @property {DefaultSplitAccountTypeDef}   INTEREST_EXPENSE
+ * @property {DefaultSplitAccountTypeDef}   FEES_EXPENSE
+ * @property {DefaultSplitAccountTypeDef}   TAXES_EXPENSE
+ */export const DefaultSplitAccountType = {
+    INTEREST_INCOME: { property: 'interestIncomeId',
+        category: A.AccountCategory.INCOME,
+        tags: [ A.StandardAccountTag.INTEREST],
+    },
+    DIVIDENDS_INCOME: { property: 'dividendsIncomeId',
+        category: A.AccountCategory.INCOME,
+        tags: [ A.StandardAccountTag.DIVIDENDS],
+    },
+    INTEREST_EXPENSE: { property: 'interestExpenseId',
+        category: A.AccountCategory.EXPENSE,
+        tags: [ A.StandardAccountTag.INTEREST],
+    },
+    FEES_EXPENSE: { property: 'feesExpenseId',
+        category: A.AccountCategory.EXPENSE,
+        tags: [ A.StandardAccountTag.FEES],
+    },
+    TAXES_EXPENSE: { property: 'taxesExpenseId',
+        category: A.AccountCategory.EXPENSE,
+        tags: [ A.StandardAccountTag.TAXES],
+    },
+};
+
+
+/**
+ * Retrieves the account id to use for a default split account associated with an 
+ * accountDataItem.
+ * @param {EngineAccessor} accessor 
+ * @param {AccountDataItem|number} accountDataItem 
+ * @param {DefaultSplitAccountType} defaultSplitAccountType 
+ * @returns {number}
+ */
+export function getDefaultSplitAccountId(accessor, accountDataItem, 
+    defaultSplitAccountType) {
+    
+    if (typeof accountDataItem === 'number') {
+        accountDataItem = accessor.getAccountDataItemWithId(accountDataItem);
+    }
+    accountDataItem = A.getAccountDataItem(accountDataItem);
+    const { defaultSplitAccountIds } = accountDataItem;
+
+    let accountId;
+    if (defaultSplitAccountIds) {
+        accountId = defaultSplitAccountIds[defaultSplitAccountType.property];
+    }
+
+    if (accessor.getAccountDataItemWithId(accountId)) {
+        return accountId;
+    }
+    accountId = undefined;
+
+    const { category, tags } = defaultSplitAccountType;
+
+    const rootAccountId = accessor.getCategoryRootAccountId(category);
+    const accountIds = accessor.getAccountIdsWithTags(tags, rootAccountId);
+    if (accountIds && accountIds.length) {
+        const name = cleanSpaces(accountDataItem.name).toUpperCase();
+
+        for (let searchAccountId of accountIds) {
+            if (crawlAccountTree(accessor, searchAccountId, (accountDataItem) => {
+                if (cleanSpaces(accountDataItem.name).toUpperCase() === name) {
+                    accountId = accountDataItem.id;
+                    return true;
+                }
+            })) {
+                break;
+            }
+        }
+
+        if (!accountId) {
+            accountId = accountIds[0];
+        }
+    }
+
+    return accountId || rootAccountId;
 }
