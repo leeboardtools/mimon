@@ -6,6 +6,7 @@ import { getYMDDate, getYMDDateString } from '../util/YMDDate';
 import deepEqual from 'deep-equal';
 import { areSimilar } from '../util/AreSimilar';
 import { cleanSpaces } from '../util/StringUtils';
+import { getTagString } from './StandardTags';
 
 
 /**
@@ -261,61 +262,6 @@ export function loadAccountsUserMessages() {
         type.description = userMsg('AccountType-' + type.name);
         type.debitLabel = userMsg('AccountType-' + type.name + '_debit_label');
         type.creditLabel = userMsg('AccountType-' + type.name + '_credit_label');
-    }
-
-    for (const tag of Object.values(StandardAccountTag)) {
-        tag.description = userMsg('AccountTag-' + tag.name);
-    }
-}
-
-
-/**
- * @typedef {object} StandardAccountTagDef
- * @property {string}   name    The identifying name of the standard tag.
- * @property {string}   description The user description of the tag.
- */
-
-/**
- * Enumeration of the standard account tags
- * @readonly
- * @enum {StandardAccountTagDef}
- * @property {StandardAccountTagDef}   INTEREST
- * @property {StandardAccountTagDef}   DIVIDENDS
- * @property {StandardAccountTagDef}   FEES
- * @property {StandardAccountTagDef}   TAXES
- */
-export const StandardAccountTag = {
-    INTEREST: { name: 'INTEREST' },
-    DIVIDENDS: { name: 'DIVIDENDS' },
-    FEES: { name: 'FEES' },
-    TAXES: { name: 'TAXES' },
-};
-
-/**
- * Retrieves the user description representation of a tag, which is the
- * description property of the tag if it is a {@link StandardAccountTag}
- * or the tag itself.
- * @param {StandardAccountTag|string} tag 
- * @returns {string}    The user description representation of the tag.
- */
-export function getTagDescription(tag) {
-    return (tag && tag.description) ? tag.description : tag;
-}
-
-/**
- * Retrieves the storable string representation of a tag. Basically if the
- * tag has a name property, like {@link StandardAccountTag}s do, the name
- * property is returned, otherwise the tag is returned after being
- * passed to {@link cleanSpaces}.
- * @param {StandardAccountTag|string} tag 
- * @returns {string}
- */
-export function getTagString(tag) {
-    if (tag) {
-        if (tag.name) {
-            return tag.name;
-        }
-        return cleanSpaces(tag);
     }
 }
 

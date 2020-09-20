@@ -12,6 +12,7 @@ import { DropdownField } from '../util-ui/DropdownField';
 import { PricedItemSelector } from './PricedItemSelector';
 import { ModalPage } from '../util-ui/ModalPage';
 import { ErrorBoundary } from '../util-ui/ErrorBoundary';
+import * as AH from '../tools/AccountHelpers';
 
 
 /**
@@ -37,6 +38,8 @@ export class AccountEditor extends React.Component {
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onRefIdChange = this.onRefIdChange.bind(this);
+
+        this.onDefaultAccountChange = this.onDefaultAccountChange.bind(this);
 
         this.onRenderPage = this.onRenderPage.bind(this);
 
@@ -392,7 +395,7 @@ export class AccountEditor extends React.Component {
             disabled = true;
         }
 
-        disabled |= type.hasLots && accountId;
+        disabled = disabled || (type.hasLots && accountId);
 
         return <DropdownField
             id={this._idBase + '_type'}
@@ -514,6 +517,78 @@ export class AccountEditor extends React.Component {
     }
 
 
+    onDefaultAccountChange(e, property) {
+        const update = {
+            defaultSplitAccountIds: {},
+        };
+        update.defaultSplitAccountIds[property] = parseInt(e.target.value);
+        this.updateAccountDataItem(update);
+    }
+
+
+    renderDefaultSplitAccountEditor(defaultSplitAccountType) {
+        const { accessor } = this.props;
+        const { accountDataItem } = this.state;
+
+        const { property, category } = defaultSplitAccountType;
+        const tags = AH.getDefaultSplitAccountTags(accountDataItem, 
+            defaultSplitAccountType);
+        let labelName = 'AccountEditor-default_split_account_label_' 
+            + defaultSplitAccountType.name;
+        if (tags && tags[0]) {
+            labelName += '_' + tags[0].name;
+        }
+        const label = userMsg(labelName);
+        const rootAccountId = accessor.getCategoryRootAccountId(category);
+        const accountEntries = [];
+        this.addAccountsToAccountEntries(rootAccountId, accountEntries);
+
+        let selectedAccountId = AH.getDefaultSplitAccountId(accessor, accountDataItem,
+            defaultSplitAccountType);
+
+        return <AccountSelector
+            accessor={accessor}
+            id={this._idBase + property}
+            accountEntries={accountEntries}
+            ariaLabel={label}
+            label={label}
+            selectedAccountId={selectedAccountId}
+            errorMsg={this.state.parentErrorMsg}
+            onChange={(e) => this.onDefaultAccountChange(e, property)}
+        />;
+
+    }
+
+
+    renderDefaultSplitAccountEditors() {
+        const { accountDataItem } = this.state;
+        const type = A.getAccountType(accountDataItem.type);
+        const category = type.category;
+        let dividendsEditor;
+        if (type.hasLots) {
+            dividendsEditor = this.renderDefaultSplitAccountEditor(
+                AH.DefaultSplitAccountType.DIVIDENDS_INCOME
+            );
+        }
+
+        switch (category) {
+        case A.AccountCategory.ASSET :
+        case A.AccountCategory.LIABILITY :
+            return <React.Fragment>
+                <div className="row">
+                    <div className="col">
+                        {this.renderDefaultSplitAccountEditor(
+                            AH.DefaultSplitAccountType.FEES_EXPENSE)}
+                    </div>
+                    <div className="col">
+                        {dividendsEditor}
+                    </div>
+                </div>
+            </React.Fragment>;
+        }
+    }
+
+
     onRenderPage() {
         const parentEditor = this.renderParentEditor();
         const typeEditor = this.renderTypeEditor();
@@ -521,6 +596,7 @@ export class AccountEditor extends React.Component {
         const descriptionEditor = this.renderDescriptionEditor();
         const pricedItemEditor = this.renderPricedItemEditor();
         const refIdEditor = this.renderRefIdEditor();
+        const defaultSplitAccountEditors = this.renderDefaultSplitAccountEditors();
 
         return <ErrorBoundary>
             <div className="container-fluid mt-auto mb-auto text-left">
@@ -542,6 +618,7 @@ export class AccountEditor extends React.Component {
                 </div>
                 {descriptionEditor}
                 {pricedItemEditor}
+                {defaultSplitAccountEditors}
             </div>
         </ErrorBoundary>;
     }

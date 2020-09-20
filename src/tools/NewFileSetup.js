@@ -262,6 +262,9 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
             name: item.name,
             description: item.description,
         };
+        if (item.tags) {
+            accountSettings.tags = item.tags;
+        }
         if (item.pricedItemId) {
             const { pricedItemNameMapping } = setupInfo;
             const pricedItemId = pricedItemNameMapping.get(item.pricedItemId);

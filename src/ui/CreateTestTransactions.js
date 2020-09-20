@@ -374,7 +374,7 @@ export function createTestTransactions(newFileContents) {
                     lotChanges: [aaplLotChangeA],
                 },
                 {
-                    accountId: 'EXPENSE-Commissions',
+                    accountId: 'EXPENSE-Brokerage Commissions',
                     quantityBaseValue: commissionBaseValueA,
                 },
             ],
@@ -418,7 +418,7 @@ export function createTestTransactions(newFileContents) {
                     lotChanges: [aaplLotChangeB],
                 },
                 {
-                    accountId: 'EXPENSE-Commissions',
+                    accountId: 'EXPENSE-Brokerage Commissions',
                     quantityBaseValue: commissionBaseValueB,
                 },
             ],

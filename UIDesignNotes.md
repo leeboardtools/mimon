@@ -505,10 +505,20 @@ Common menus:
                 - Account Register for account with lots.
 
         - Buy
-            - Auto-create lots
-            - Manually specify lots???
+            - Auto-create lot
+            - Splits editor:
+                - Cash source (brokerage account) - Currency
+                - Fees - Currency
+                - Shares - #shares
+
+        - Reinvested Dividends
+            - Basically same as Buy, except cash source is income account.
 
         - Sell
+            - Proceeds destination (brokerage account) - Currency
+            - Fees - Currency
+            - Lots
+            
             - Need to choose lots, which may be parts of a lot.
                 - Also options for automatic LIFO, FIFO
             - Lot picker:
@@ -520,13 +530,17 @@ Common menus:
             - Needs to be smart enough to detect if future transactions are affected
             by the lots sold (i.e. do we run out of the lot?)
         
-        - Reinvested Dividends
-
         - Return of Capital
             - Shares: 0
             - Price: 0
             - Sell: amount
             - Effect is to reduce the cost basis, # shares do not change.
+        
+        - 
+        - Split/Merge
+            - Number of shares added/removed, or new share quantity???
+            - Cash in lieu
+            - 
         
 
 - MultiSplitsEditor:
@@ -540,6 +554,7 @@ Common menus:
     - Root Imbalance account for the default currency.
     - Additional imbalance accounts as needed for other currencies.
 
+- Should we be able to disable lots?
 
 - AccountRegister
     - Auto-complete
@@ -561,19 +576,73 @@ Common menus:
 
             - Schwab: Quantity | Unit Price | Total Amount
 
+- Commission in Stock register displays in drop down using shares QDef not currency QDef
+- Also splits editor - may need to replace that for stocks
+- Add (optional?) default income, commissions account to brokerage accounts?
 
-- Auto-complete:
-    - Based on transaction split descriptions.
-    - Case insensitive
-    - Account based.
-    - Need to support multi-splits.
-    - How to manage the database?
-        - Separate auto-complete engine?
-        - Listens to accounts and transactions.
-            - Accounts just used to purge/reload.
-        - Maintain account based databases.
-            - Each account has StringTree
-                - key is uppercase description
-                - value is array of transaction ids.
-            - Don't track lot based accounts.
-            - Only track asset and liability accounts?
+- Lot based transaction editing:
+    - Important information:
+        - Date
+        - Split info:
+            - Share lots
+            - Fees/commissions
+            - Interest/dividends
+            - Funds in/out
+    
+    - Editor fields:
+        - Date
+        - Action:
+            - Buy
+            - Sell
+            - Reinvested Dividend
+            - Return of Capital
+            - Split
+            - Merge
+
+        - Shares
+            - Sell - lots
+            - Split/Merge: shares added/removed? or total end shares?
+
+        - Total Amount/Cash in lieu
+
+        - Fees/Commissions
+
+        - Unit Price
+
+        - Details:
+            - Buy action:
+                - Shares
+                - Amount spent
+                - Fees/commissions
+
+            - Sell action:
+                - Sold lots
+                - Received amount
+                - Fees/commissions
+
+            - Reinvested Dividend Type:
+                - Shares
+                - Dividend amount
+                - Fees/commissions
+            
+            - Return of Capital Type:
+                - Return of capital amount
+                - Fees/commissions
+            
+            - Split/Merge Type:
+                - New shares
+                - Cash in lieu
+                - Fees/commissions
+
+
+- Account Editor
+    - Interest Income account - default to root Income, button to create default
+        account in Income - Interest - Account Name
+    - Dividend Income account - default to root Income, button to create default
+        account in Income - Dividends - Account Name
+    - Interest Expense account - default to root Expense, button to create default
+        account in Expenses - Interest - Account Name
+    - Fees Expense account - default to root Expense, button to create default
+        account in Expenses - Fees - Account Name
+    - Instead of button, have drop down list with placeholder for the
+        specific account selected, but maybe italicized if not existing.

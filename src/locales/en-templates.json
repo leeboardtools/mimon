@@ -115,11 +115,8 @@
                 },
                 {
                     "type": "INCOME",
-                    "name": "Interest and Dividends",
-                    "tags": [
-                        "INTEREST",
-                        "DIVIDENDS"
-                    ],
+                    "name": "Interest",
+                    "tags": ["INTEREST"],
                     "childAccounts": [
                         {
                             "type": "INCOME",
@@ -142,6 +139,11 @@
                             "name": "401(k) Account"
                         }
                     ]
+                },
+                {
+                    "type": "INCOME",
+                    "name": "Dividends",
+                    "tags": ["DIVIDENDS"]
                 },
                 {
                     "type": "INCOME",
@@ -187,7 +189,7 @@
                 {
                     "type": "EXPENSE",
                     "name": "Bank Service Charges",
-                    "tags": ["FEES"]
+                    "tags": ["BANK_FEES"]
                 },
                 {
                     "type": "EXPENSE",
@@ -209,8 +211,8 @@
                 },
                 {
                     "type": "EXPENSE",
-                    "name": "Commissions",
-                    "tags": ["FEES"]
+                    "name": "Brokerage Commissions",
+                    "tags": ["BROKERAGE_COMMISSIONS"]
                 },
                 {
                     "type": "EXPENSE",
@@ -219,6 +221,11 @@
                 {
                     "type": "EXPENSE",
                     "name": "Entertainment"
+                },
+                {
+                    "type": "EXPENSE",
+                    "name": "Fees",
+                    "tags": ["FEES"]
                 },
                 {
                     "type": "EXPENSE",

@@ -1,5 +1,6 @@
 import * as A from '../engine/Accounts';
 import { cleanSpaces } from '../util/StringUtils';
+import { StandardAccountTag } from '../engine/StandardTags';
 
 /**
  * Builds an array containing the {@link AccountDataItem}s of an account and
@@ -184,7 +185,7 @@ export function crawlAccountTree(accessor, accountDataItem, callback) {
  * @property {string}   property    The name of the property in the
  * {@link DefaultSplitAccountIds} object of the {@link AccountDataItem}
  * @property {AccountCategory}  category
- * @property {StandardAccountTag[]}   tags
+ * @property {TagDef[]}   tags
  */
 
 
@@ -197,28 +198,60 @@ export function crawlAccountTree(accessor, accountDataItem, callback) {
  * @property {DefaultSplitAccountTypeDef}   INTEREST_EXPENSE
  * @property {DefaultSplitAccountTypeDef}   FEES_EXPENSE
  * @property {DefaultSplitAccountTypeDef}   TAXES_EXPENSE
- */export const DefaultSplitAccountType = {
-    INTEREST_INCOME: { property: 'interestIncomeId',
+ */
+export const DefaultSplitAccountType = {
+    INTEREST_INCOME: { name: 'INTEREST_INCOME',
+        property: 'interestIncomeId',
         category: A.AccountCategory.INCOME,
-        tags: [ A.StandardAccountTag.INTEREST],
+        tags: [ StandardAccountTag.INTEREST],
     },
-    DIVIDENDS_INCOME: { property: 'dividendsIncomeId',
+    DIVIDENDS_INCOME: { name: 'DIVIDENDS_INCOME',
+        property: 'dividendsIncomeId',
         category: A.AccountCategory.INCOME,
-        tags: [ A.StandardAccountTag.DIVIDENDS],
+        tags: [ StandardAccountTag.DIVIDENDS],
     },
-    INTEREST_EXPENSE: { property: 'interestExpenseId',
+    INTEREST_EXPENSE: { name: 'INTEREST_EXPENSE',
+        property: 'interestExpenseId',
         category: A.AccountCategory.EXPENSE,
-        tags: [ A.StandardAccountTag.INTEREST],
+        tags: [ StandardAccountTag.INTEREST],
     },
-    FEES_EXPENSE: { property: 'feesExpenseId',
+    FEES_EXPENSE: { name: 'FEES_EXPENSE',
+        property: 'feesExpenseId',
         category: A.AccountCategory.EXPENSE,
-        tags: [ A.StandardAccountTag.FEES],
+        tags: [ StandardAccountTag.FEES],
+        specialTags: {
+            'BANK': [ StandardAccountTag.BANK_FEES ],
+            'SECURITY': [ StandardAccountTag.BROKERAGE_COMMISSIONS ],
+            'MUTUAL_FUND': [StandardAccountTag.BROKERAGE_COMMISSIONS ],
+        }
     },
-    TAXES_EXPENSE: { property: 'taxesExpenseId',
+    TAXES_EXPENSE: { name: 'TAXES_EXPENSE',
+        property: 'taxesExpenseId',
         category: A.AccountCategory.EXPENSE,
-        tags: [ A.StandardAccountTag.TAXES],
+        tags: [ StandardAccountTag.TAXES],
     },
 };
+
+
+/**
+ * Retrieves the tags array for a {@link DefaultSplitAccountTypeDef},
+ * handling the special cases for a specific account data item.
+ * @param {AccountDataItem} accountDataItem 
+ * @param {DefaultSplitAccountTypeDef} defaultSplitAccountType 
+ * @return {TagDef[]}
+ */
+export function getDefaultSplitAccountTags(accountDataItem,
+    defaultSplitAccountType) {
+
+    let { tags, specialTags } = defaultSplitAccountType;
+    if (specialTags) {
+        if (specialTags[accountDataItem.type]) {
+            return specialTags[accountDataItem.type];
+        }
+    }
+
+    return tags;
+}
 
 
 /**
@@ -248,7 +281,8 @@ export function getDefaultSplitAccountId(accessor, accountDataItem,
     }
     accountId = undefined;
 
-    const { category, tags } = defaultSplitAccountType;
+    let { category } = defaultSplitAccountType;
+    const tags = getDefaultSplitAccountTags(accountDataItem, defaultSplitAccountType);
 
     const rootAccountId = accessor.getCategoryRootAccountId(category);
     const accountIds = accessor.getAccountIdsWithTags(tags, rootAccountId);

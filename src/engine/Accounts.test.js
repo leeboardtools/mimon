@@ -3,6 +3,7 @@ import * as PI from './PricedItems';
 import * as ASTH from './AccountingSystemTestHelpers';
 import * as ATH from './AccountTestHelpers';
 import { getDecimalDefinition } from '../util/Quantities';
+import { StandardAccountTag } from './StandardTags';
 
 function testAccountDataItem(account) {
     const dataItem = A.getAccountDataItem(account);
@@ -1001,31 +1002,31 @@ test('AccountManager-tags', async () => {
     const accountManager = accountingSystem.getAccountManager();
 
     let result;
-    result = accountManager.getAccountIdsWithTags(A.StandardAccountTag.INTEREST);
+    result = accountManager.getAccountIdsWithTags(StandardAccountTag.INTEREST);
     expect(result).toEqual(expect.arrayContaining(
         [sys.interestIncomeId, sys.interestExpenseId]));
     expect(result.length).toEqual(2);
 
-    result = accountManager.getAccountIdsWithTags(A.StandardAccountTag.INTEREST,
+    result = accountManager.getAccountIdsWithTags(StandardAccountTag.INTEREST,
         accountManager.getRootAssetAccountDataItem());
     expect(result).toEqual([]);
 
     // Also check that the tag arg gets cleaned...
     result = accountManager.getAccountIdsWithTags(
-        ' ' + A.StandardAccountTag.INTEREST.name + '  ',
+        ' ' + StandardAccountTag.INTEREST.name + '  ',
         accountManager.getRootIncomeAccountId());
     expect(result).toEqual(expect.arrayContaining([sys.interestIncomeId]));
     expect(result.length).toEqual(1);
 
-    result = accountManager.getAccountIdsWithTags(A.StandardAccountTag.INTEREST,
+    result = accountManager.getAccountIdsWithTags(StandardAccountTag.INTEREST,
         accountManager.getRootExpenseAccountId());
     expect(result).toEqual(expect.arrayContaining([sys.interestExpenseId]));
     expect(result.length).toEqual(1);
 
     
     result = accountManager.getAccountIdsWithTags(
-        [ A.StandardAccountTag.INTEREST,
-            A.StandardAccountTag.DIVIDENDS,
+        [ StandardAccountTag.INTEREST,
+            StandardAccountTag.DIVIDENDS,
         ],);
     expect(result).toEqual(expect.arrayContaining(
         [sys.interestIncomeId, sys.dividendsId, sys.interestExpenseId]

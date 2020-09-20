@@ -3,6 +3,7 @@ import { setUserSettingsPathName } from '../util/UserSettings';
 import { loadAccountsUserMessages } from './Accounts';
 import { loadPricedItemUserMessages } from './PricedItems';
 import { loadTransactionsUserMessages } from './Transactions';
+import { loadStandardTags } from './StandardTags';
 import defUserMessages from '../locales/en-userMessages.json';
 import defUserMessagesUtil from '../locales/en-userMessages-util.json';
 import defUserMessagesEngine from '../locales/en-userMessages-engine.json';
@@ -50,4 +51,6 @@ export async function initializeEngine(settingsPathName, appPathName) {
     loadAccountsUserMessages();
     loadPricedItemUserMessages();
     loadTransactionsUserMessages();
+
+    loadStandardTags();
 }

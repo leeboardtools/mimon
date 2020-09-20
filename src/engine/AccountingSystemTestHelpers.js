@@ -16,6 +16,7 @@ import { InMemoryUndoHandler } from '../util/Undo';
 import { InMemoryActionsHandler } from '../util/Actions';
 import { getYMDDate } from '../util/YMDDate';
 import { getQuantityDefinition } from '../util/Quantities';
+import { StandardAccountTag } from './StandardTags';
 
 
 //
@@ -339,7 +340,7 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
             type: A.AccountType.INCOME, 
             pricedItemId: currencyBasePricedItemId, 
             name: 'Dividend Income', 
-            tags: [A.StandardAccountTag.DIVIDENDS.name, ],
+            tags: [StandardAccountTag.DIVIDENDS.name, ],
         },
     )).newAccountDataItem.id;
 
@@ -368,7 +369,7 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
             type: A.AccountType.INCOME, 
             pricedItemId: currencyBasePricedItemId, 
             name: 'Interest Income', 
-            tags: [A.StandardAccountTag.INTEREST.name, ],
+            tags: [StandardAccountTag.INTEREST.name, ],
         },
     )).newAccountDataItem.id;
 
@@ -403,7 +404,7 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
             type: A.AccountType.EXPENSE, 
             pricedItemId: currencyBasePricedItemId, 
             name: 'Commissions', 
-            tags: [A.StandardAccountTag.FEES.name],
+            tags: [StandardAccountTag.FEES.name],
         },
     )).newAccountDataItem.id;
 
@@ -428,7 +429,7 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
             type: A.AccountType.EXPENSE, 
             pricedItemId: currencyBasePricedItemId, 
             name: 'Fees', 
-            tags: [A.StandardAccountTag.FEES.name],
+            tags: [StandardAccountTag.FEES.name],
         },
     )).newAccountDataItem.id;
     
@@ -466,7 +467,7 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
             type: A.AccountType.EXPENSE, 
             pricedItemId: currencyBasePricedItemId, 
             name: 'Interest Expense', 
-            tags: [A.StandardAccountTag.INTEREST.name, ],
+            tags: [StandardAccountTag.INTEREST.name, ],
         },
     )).newAccountDataItem.id;
 
@@ -484,7 +485,7 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
             type: A.AccountType.EXPENSE, 
             pricedItemId: currencyBasePricedItemId, 
             name: 'Taxes',
-            tags: [A.StandardAccountTag.TAXES, ],
+            tags: [StandardAccountTag.TAXES, ],
         },
     )).newAccountDataItem.id;
     sys.federalTaxesId = (await accountManager.asyncAddAccount(

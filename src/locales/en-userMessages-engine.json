@@ -59,6 +59,8 @@
     "AccountTag-INTEREST": "Interest",
     "AccountTag-DIVIDENDS": "Dividends",
     "AccountTag-FEES": "Fees",
+    "AccountTag-BANK_FEES": "Bank Fees",
+    "AccountTag-BROKERAGE_COMMISSIONS": "Brokerage Commissions",
     "AccountTag-TAXES": "Taxes",
 
     "Account-Root_Assets_name": "Assets",
