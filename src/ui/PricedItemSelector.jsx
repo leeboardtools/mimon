@@ -80,7 +80,7 @@ PricedItemSelector.propTypes = {
     onChange: PropTypes.func,
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
-    disabled: PropTypes.bool,
+    disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
     prependComponent: PropTypes.object,
     appendComponent: PropTypes.object,
 };

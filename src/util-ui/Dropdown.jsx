@@ -72,7 +72,7 @@ Dropdown.propTypes = {
     id: PropTypes.string,
     ariaLabel: PropTypes.string,
     items: PropTypes.array.isRequired,
-    disabled: PropTypes.bool,
+    disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
     topClassExtras: PropTypes.string,
     noArrow: PropTypes.bool,
     buttonClassExtras: PropTypes.string,

@@ -72,6 +72,6 @@ AccountSelector.propTypes = {
     onChange: PropTypes.func,
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
-    disabled: PropTypes.bool,
-    disabledRoot: PropTypes.bool,
+    disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
+    disabledRoot: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
 };

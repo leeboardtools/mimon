@@ -67,5 +67,5 @@ CurrencySelector.propTypes = {
     onChange: PropTypes.func.isRequired,
     ariaLabel: PropTypes.string,
     classExtras: PropTypes.string,
-    disabled: PropTypes.bool,
+    disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
 };
