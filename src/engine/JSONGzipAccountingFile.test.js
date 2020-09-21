@@ -2,6 +2,7 @@
 import { createDir, cleanupDir } from '../util/FileTestHelpers';
 import { JSONGzipAccountingFileFactory } from './JSONGzipAccountingFile';
 import * as A from './Accounts';
+import * as T from './Transactions';
 import * as PI from './PricedItems';
 import * as ASTH from './AccountingSystemTestHelpers';
 import * as RE from '../util/Repeats';
@@ -469,6 +470,7 @@ test('JSONGzipAccountingFile-history', async () => {
                 { 
                     accountId: sys.aaplBrokerageAId, 
                     quantityBaseValue: aaplCostBasisBaseValueF1, 
+                    lotTransactionType: T.LotTransactionType.BUY.name,
                     lotChanges: [ aaplLotChangeF1 ],
                 },
             ]
@@ -502,6 +504,7 @@ test('JSONGzipAccountingFile-history', async () => {
                 { 
                     accountId: sys.aaplBrokerageAId, 
                     quantityBaseValue: aaplCostBasisBaseValueG1,
+                    lotTransactionType: T.LotTransactionType.SELL.name,
                     lotChanges: [ aaplLotChangeG1 ],
                 },
                 

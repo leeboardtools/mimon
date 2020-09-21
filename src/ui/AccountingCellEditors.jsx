@@ -1030,41 +1030,6 @@ export function getBalanceColumnInfo(args) {
 
 
 /**
- * Editor renderer for share quantities.
- * @param {CellQuantityEditorArgs}  args
- */
-export const renderSharesEditor = renderQuantityEditor;
-
-/**
- * Display renderer for share quantities.
- * @param {CellQuantityDisplayArgs} args
- */
-export const renderSharesDisplay = renderQuantityDisplay;
-
-
-/**
- * Retrieves a column info for share totals cells.
- * @param {getColumnInfoArgs} args
- * @returns {CellEditorsManager~ColumnInfo}
- */
-export function getSharesColumnInfo(args) {
-    return Object.assign({ key: 'shares',
-        header: {
-            label: userMsg('AccountingCellEditors-shares'),
-            ariaLabel: 'Shares',
-            classExtras: 'header-base shares-base shares-header',
-        },
-        inputClassExtras: 'shares-base shares-input',
-        cellClassName: 'cell-base shares-base shares-cell',
-
-        renderDisplayCell: renderSharesDisplay,
-        renderEditCell: renderSharesEditor,
-    },
-    args);
-}
-
-
-/**
  * @typedef {object}    CellSplitValue
  * @property {EngineAccessor}   accessor
  * @property {SplitDataItem} split

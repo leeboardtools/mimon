@@ -101,6 +101,7 @@ test('Transaction-Data Items', () => {
             quantityBaseValue: 1234,
             description: 'Hello',
             currencyToUSDRatio: new Ratio(1234, 1),
+            lotTransactionType: T.LotTransactionType.SPLIT,
             lotChanges: [
                 { lotId: 123, quantityBaseValue: 12345, costBasisBaseValue: 98765, },
                 { lotId: 33, quantityBaseValue: 444, isSplitMerge: true, },
@@ -110,6 +111,7 @@ test('Transaction-Data Items', () => {
             reconcileState: T.ReconcileState.RECONCILED,
             accountId: 10,
             quantityBaseValue: -1234,
+            lotTransactionType: T.LotTransactionType.SPLIT,
             lotChanges: [
                 { lotId: 123, quantityBaseValue: -12345, costBasisBaseValue: 98765, },
                 { lotId: 33, quantityBaseValue: 444, isSplitMerge: true, },
@@ -155,6 +157,7 @@ test('Transaction-Data Items', () => {
                 reconcileState: T.ReconcileState.PENDING,
                 accountId: 10,
                 quantityBaseValue: -1234,
+                lotTransactionType: T.LotTransactionType.SPLIT,
                 lotChanges: [
                     { lotId: 123, quantityBaseValue: 12345, costBasisBaseValue: 98765, },
                     { lotId: 33, quantityBaseValue: 444, isSplitMerge: true, },
@@ -186,6 +189,7 @@ test('Transaction-Data Items', () => {
                 reconcileState: T.ReconcileState.PENDING,
                 accountId: 10,
                 quantityBaseValue: -1234,
+                lotTransactionType: T.LotTransactionType.SPLIT.name,
                 lotChanges: [
                     { lotId: 123, quantityBaseValue: 12345, costBasisBaseValue: 98765, },
                     { lotId: 33, quantityBaseValue: 444, isSplitMerge: true, },
@@ -1686,6 +1690,7 @@ test('Transactions-lotTransactions', async () => {
             { accountId: aaplId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: changeA.costBasisBaseValue, 
+                lotTransactionType: T.LotTransactionType.BUY.name,
                 lotChanges: [ changeA ]
             },
         ]
@@ -1741,6 +1746,7 @@ test('Transactions-lotTransactions', async () => {
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: changeB1.costBasisBaseValue 
                     + changeB2.costBasisBaseValue, 
+                lotTransactionType: T.LotTransactionType.BUY.name,
                 lotChanges: [ changeB1, changeB2 ],
             },
         ],
@@ -1781,6 +1787,7 @@ test('Transactions-lotTransactions', async () => {
                 accountId: aaplId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: changeC.costBasisBaseValue, 
+                lotTransactionType: T.LotTransactionType.BUY.name,
                 lotChanges: [ changeC ],
             },
         ]
@@ -1852,6 +1859,7 @@ test('Transactions-lotTransactions', async () => {
                 accountId: aaplId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: changeD.costBasisBaseValue, 
+                lotTransactionType: T.LotTransactionType.BUY.name,
                 lotChanges: [ changeD ],
             },
         ]
@@ -1977,6 +1985,7 @@ test('Transactions-lotTransactions', async () => {
                 accountId: aaplId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: changeE.costBasisBaseValue, 
+                lotTransactionType: T.LotTransactionType.BUY.name,
                 lotChanges: [ changeE ],
             },
         ]
@@ -2056,6 +2065,7 @@ test('Transactions-lotTransactions', async () => {
                 accountId: aaplId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: changeF.quantityBaseValue * changeFPrice, 
+                lotTransactionType: T.LotTransactionType.SELL.name,
                 lotChanges: [ changeF ],
             },
         ]
@@ -2109,6 +2119,7 @@ test('Transactions-lotTransactions', async () => {
                 accountId: aaplId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: changeG.quantityBaseValue * changeGPrice, 
+                lotTransactionType: T.LotTransactionType.SELL.name,
                 lotChanges: [ changeG ],
             },
         ]
@@ -2223,6 +2234,7 @@ test('Transactions-lotValidation', async () => {
                 accountId: aaplId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: changeA.costBasisBaseValue, 
+                lotTransactionType: T.LotTransactionType.SELL.name,
                 lotChanges: [ changeA ]
             },
         ]
@@ -2263,6 +2275,7 @@ test('Transactions-lotValidation', async () => {
                 accountId: aaplId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: changeB.costBasisBaseValue, 
+                lotTransactionType: T.LotTransactionType.BUY.name,
                 lotChanges: [ changeB ]
             },
         ]
@@ -2289,6 +2302,7 @@ test('Transactions-lotValidation', async () => {
                 accountId: aaplId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: -10000, 
+                lotTransactionType: T.LotTransactionType.SELL.name,
                 lotChanges: [ changeC ]
             },
         ]
@@ -2323,6 +2337,7 @@ test('Transactions-lotValidation', async () => {
                 accountId: aaplId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: changeD.costBasisBaseValue, 
+                lotTransactionType: T.LotTransactionType.BUY.name,
                 lotChanges: [ changeD ]
             },
         ]
@@ -2358,6 +2373,7 @@ test('Transactions-lotValidation', async () => {
                 accountId: aaplId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: changeE.costBasisBaseValue, 
+                lotTransactionType: T.LotTransactionType.BUY.name,
                 lotChanges: [ changeE ]
             },
         ]
@@ -2383,6 +2399,7 @@ test('Transactions-lotValidation', async () => {
                 accountId: aaplId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: changeF.costBasisBaseValue, 
+                lotTransactionType: T.LotTransactionType.BUY.name,
                 lotChanges: [ changeF ]
             },
         ]
@@ -2409,6 +2426,7 @@ test('Transactions-lotValidation', async () => {
                 accountId: aaplId, 
                 reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                 quantityBaseValue: changeG.costBasisBaseValue, 
+                lotTransactionType: T.LotTransactionType.BUY.name,
                 lotChanges: [ changeG ]
             },
         ]

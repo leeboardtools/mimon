@@ -131,12 +131,19 @@
     "Actions-removeTransactions": "Delete Transaction",
     "Actions-modifyTransactions": "Modify Transactions",
 
-
     "LotManager-invalid_pricedItem_id": ["A priced item with id '", "' was not found."],
     "LotManager-remove_no_id": ["The lot cannot be deleted. An item with id '", "' was not found."],
     "LotManager-modify_no_id": ["The lot could not be modified. An item with id '", "' was not found."],
 
     "LotState-remove_split_no_state": "The split could not be removed, the lot state is missing.",
+
+    "LotTransactionType-BUY": "Buy",
+    "LotTransactionType-SELL": "Sell",
+    "LotTransactionType-REINVESTED_DIVIDEND": "Reinvested dividend",
+    "LotTransactionType-RETURN_OF_CAPITAL": "Return of capital",
+    "LotTransactionType-SPLIT": "Split",
+    "LotTransactionType-MERGE": "Merge",
+
 
     "PricedItemType-CURRENCY": "Currency",
     "PricedItemType-SECURITY": "Security",
@@ -186,6 +193,7 @@
         ["Could not determine the account state for a transaction, the transaction with id '", "' was not found."],
     "TransactionManager-account_state_update_account_invalid":
         ["Could not determine the account state for a transaction, the account with id '", "' was not found."],
+    "TransactionManager-lot_type_missing": "Splits for accounts with lots must contain a lot transaction type.",
     "TransactionManager-lot_changes_missing": "Splits for accounts with lots must contain lot changes.",
     "TransactionManager-lot_change_invalid_lot_id":  ["A lot with the id '", "' was not found."],
     "TransactionManager-lot_still_in_use": ["The lot with id '", "' cannot be removed, there are still transactions referring to the lot."],

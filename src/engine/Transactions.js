@@ -15,6 +15,53 @@ import { areSimilar } from '../util/AreSimilar';
 
 
 /**
+ * @typedef {object} LotTransactionTypeDef
+ * @property {string}   name    The identifying name of the lot transaction type.
+ * @property {string}   description The user description of the lot transaction type.
+ */
+
+/**
+ * Enumeration for the lot transaction types
+ * @readonly
+ * @enum {LotTransactionType}
+ * @property {LotTransactionTypeDef} BUY
+ * @property {LotTransactionTypeDef} SELL
+ * @property {LotTransactionTypeDef} REINVESTED_DIVIDEND
+ * @property {LotTransactionTypeDef} RETURN_OF_CAPITAL
+ * @property {LotTransactionTypeDef} SPLIT
+ * @property {LotTransactionTypeDef} MERGE
+*/
+export const LotTransactionType = {
+    BUY: { name: 'BUY', },
+    SELL: { name: 'SELL', },
+    REINVESTED_DIVIDEND: { name: 'REINVESTED_DIVIDEND', },
+    RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', },
+    SPLIT: { name: 'SPLIT', },
+    MERGE: { name: 'MERGE', },
+};
+
+/**
+ * 
+ * @param {(string|LotTransactionType|undefined)} ref 
+ * @returns {(LotTransactionType|undefined)}
+ */
+export function getLotTransactionType(ref) {
+    return (typeof ref === 'string') ? LotTransactionType[ref] : ref;
+}
+
+
+/**
+ * 
+ * @param {(string|LotTransactionType|undefined)} ref 
+ * @returns {(string|undefined)}
+ */
+export function getLotTransactionTypeName(ref) {
+    return ((ref === undefined) || (typeof ref === 'string')) ? ref : ref.name;
+}
+
+
+
+/**
  * @typedef {object} ReconcileStateDef
  * @property {string}   name    The identifying name of the reconcilation state.
  * @property {string}   description The user description of the reconcilation state.
@@ -58,10 +105,9 @@ export function loadTransactionsUserMessages() {
     for (const reconcileState of Object.values(ReconcileState)) {
         reconcileState.description = userMsg('ReconcileState-' + reconcileState.name);
     }
-/*    for (const type of Object.values(TransactionType)) {
-        type.description = userMsg('TransactionType-' + type.name);
+    for (const type of Object.values(LotTransactionType)) {
+        type.description = userMsg('LotTransactionType-' + type.name);
     }
-*/
 }
 
 
@@ -76,6 +122,8 @@ export function loadTransactionsUserMessages() {
  * currency conversion between the items in the split and this split's currency is 
  * not USD, this is either the price, or a numerator/denominator pair for the price 
  * {@link Ratio}.
+ * @property {string}   [lotTransactionType]    Required if the account 
+ * has lots, this is the lot transaction type
  * @property {LotChangeDataItem[]}  [lotChanges]    Array of changes to any lots.
  * @property {string}   [description]
  * @property {string}   [refNum]
@@ -92,6 +140,8 @@ export function loadTransactionsUserMessages() {
  * currency conversion between the items in the split and this split's currency is 
  * not USD, this is either the price, or a numerator/denominator pair for the price 
  * {@link Ratio}.
+ * @property {LotTransactionType}   [lotTransactionType]    Required if the account 
+ * has lots, this is the lot transaction type
  * @property {LotChange[]}  [lotChanges]    Array of changes to any lots.
  * @property {string}   [description]
  * @property {string}   [refNum]
@@ -109,15 +159,20 @@ export function loadTransactionsUserMessages() {
 export function getSplitDataItem(split, alwaysCopy) {
     if (split) {
         const reconcileStateName = getReconcileStateName(split.reconcileState);
+        const lotTransactionTypeName = getLotTransactionTypeName(split.lotTransactionType);
         const lotChangeDataItems = LS.getLotChangeDataItems(split.lotChanges, alwaysCopy);
         const currencyToUSDRatioJSON = getRatioJSON(split.currencyToUSDRatio);
         if (alwaysCopy
          || (reconcileStateName !== split.reconcileState)
+         || (lotTransactionTypeName !== split.lotTransactionType)
          || (lotChangeDataItems !== split.lotChanges)
          || (currencyToUSDRatioJSON !== split.currencyToUSDRatio)) {
             const splitDataItem = Object.assign({}, split);
             if (reconcileStateName !== undefined) {
                 splitDataItem.reconcileState = reconcileStateName;
+            }
+            if (lotTransactionTypeName !== undefined) {
+                splitDataItem.lotTransactionType = lotTransactionTypeName;
             }
             if (lotChangeDataItems !== undefined) {
                 splitDataItem.lotChanges = lotChangeDataItems;
@@ -143,15 +198,21 @@ export function getSplitDataItem(split, alwaysCopy) {
 export function getSplit(splitDataItem, alwaysCopy) {
     if (splitDataItem) {
         const reconcileState = getReconcileState(splitDataItem.reconcileState);
+        const lotTransactionType = getLotTransactionType(
+            splitDataItem.lotTransactionType);
         const lotChanges = LS.getLotChanges(splitDataItem.lotChanges, alwaysCopy);
         const currencyToUSDRatio = getRatio(splitDataItem.currencyToUSDRatio);
         if (alwaysCopy
          || (reconcileState !== splitDataItem.reconcileState)
+         || (lotTransactionType !== splitDataItem.lotTransactionType)
          || (lotChanges !== splitDataItem.lotChanges)
          || (currencyToUSDRatio !== splitDataItem.currencyToUSDRatio)) {
             const split = Object.assign({}, splitDataItem);
             if (reconcileState !== undefined) {
                 split.reconcileState = reconcileState;
+            }
+            if (lotTransactionType !== undefined) {
+                split.lotTransactionType = lotTransactionType;
             }
             if (lotChanges !== undefined) {
                 split.lotChanges = lotChanges;
@@ -590,7 +651,10 @@ class AccountStatesUpdater {
 
     _validateLotSplit(transactionKey, accountState, split, newAccountStatesByOrder, 
         removedLotIds) {
-        const { lotChanges } = split;
+        const { lotTransactionType, lotChanges } = split;
+        if (!lotTransactionType) {
+            throw userError('TransactionManager-lot_type_missing');
+        }
         if (!lotChanges) {
             throw userError('TransactionManager-lot_changes_missing');
         }

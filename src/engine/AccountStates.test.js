@@ -1,4 +1,5 @@
 import * as A from './AccountStates';
+import * as T from './Transactions';
 import { YMDDate } from '../util/YMDDate';
 
 function testAccountStateDataItem(accountState) {
@@ -68,7 +69,10 @@ test('AccountState-add_remove_split', () => {
         previousBaseValues: [ [0, 0] ],
     };
 
-    const splitB = { accountId: 1, quantityBaseValue: 100, lotChanges: [lotChangeA], };
+    const splitB = { accountId: 1, 
+        quantityBaseValue: 100, 
+        lotTransactionType: T.LotTransactionType.BUY.name,
+        lotChanges: [lotChangeA], };
     const accountStateB = {
         ymdDate: '2019-03-31',
         quantityBaseValue: lotStateA.quantityBaseValue,
@@ -101,6 +105,7 @@ test('AccountState-add_remove_split', () => {
 
     const splitC = { accountId: 2, 
         quantityBaseValue: 300, 
+        lotTransactionType: T.LotTransactionType.BUY.name,
         lotChanges: [lotChangeB, lotChangeA1],
     };
     const accountStateC = {
@@ -127,6 +132,7 @@ test('AccountState-add_remove_split', () => {
     };
     const splitD = { accountId: 2, 
         quantityBaseValue: 200, 
+        lotTransactionType: T.LotTransactionType.SELL.name,
         lotChanges: [ lotChangeD, lotChangeB1, ],
     };
     const accountStateD = {
@@ -149,7 +155,10 @@ test('AccountState-add_remove_split', () => {
             [lotStateD.quantityBaseValue, lotStateD.costBasisBaseValue] 
         ],
     };
-    const splitE = { accountId: 2, quantityBaseValue: 0, lotChanges: [ lotChangeD1, ]};
+    const splitE = { accountId: 2, 
+        quantityBaseValue: 0, 
+        lotTransactionType: T.LotTransactionType.SPLIT.name,
+        lotChanges: [ lotChangeD1, ]};
     const accountStateE = {
         ymdDate: '2019-03-31',
         quantityBaseValue: lotStateA1.quantityBaseValue + lotStateD1.quantityBaseValue,
@@ -175,7 +184,10 @@ test('AccountState-add_remove_split', () => {
             [lotStateD1.quantityBaseValue, lotStateD1.costBasisBaseValue],
         ],
     };
-    const splitF = { accountId: 2, quantityBaseValue: 0, lotChanges: [ lotChangeD2, ]};
+    const splitF = { accountId: 2, 
+        quantityBaseValue: 0, 
+        lotTransactionType: T.LotTransactionType.SPLIT.name,
+        lotChanges: [ lotChangeD2, ]};
     const accountStateF = {
         ymdDate: '2019-03-31',
         quantityBaseValue: lotStateA1.quantityBaseValue + lotStateD2.quantityBaseValue,

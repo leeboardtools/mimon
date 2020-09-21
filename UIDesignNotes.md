@@ -635,14 +635,3 @@ Common menus:
                 - Fees/commissions
 
 
-- Account Editor
-    - Interest Income account - default to root Income, button to create default
-        account in Income - Interest - Account Name
-    - Dividend Income account - default to root Income, button to create default
-        account in Income - Dividends - Account Name
-    - Interest Expense account - default to root Expense, button to create default
-        account in Expenses - Interest - Account Name
-    - Fees Expense account - default to root Expense, button to create default
-        account in Expenses - Fees - Account Name
-    - Instead of button, have drop down list with placeholder for the
-        specific account selected, but maybe italicized if not existing.

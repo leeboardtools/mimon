@@ -5,7 +5,8 @@ import { EditableRowTable } from '../util-ui/EditableRowTable';
 import { getCurrency } from '../util/Currency';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
-import * as CE from './AccountingCellEditors';
+import * as ACE from './AccountingCellEditors';
+import * as LCE from './LotCellEditors';
 import * as AH from '../tools/AccountHelpers';
 import { columnInfosToColumns, 
     stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
@@ -476,7 +477,7 @@ function saveSplitQuantityCellValue(args) {
         const { splitIndex } = getTransactionInfo(args);
 
         newTransactionDataItem.splits[splitIndex] 
-            = CE.resolveSplitQuantityEditValueToSplitDataItem(args);
+            = ACE.resolveSplitQuantityEditValueToSplitDataItem(args);
     }
 }
 
@@ -489,19 +490,69 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
     let columnInfoDefs = allColumnInfoDefs[accountType.name];
     if (!columnInfoDefs) {
         columnInfoDefs = {
-            date: CE.getDateColumnInfo({
+            date: ACE.getDateColumnInfo({
                 getCellValue: getDateCellValue,
                 saveCellValue: saveDateCellValue,
             }),
-            refNumb: CE.getRefNumColumnInfo({
+            refNumb: ACE.getRefNumColumnInfo({
                 getCellValue: (args) => getSplitCellValue(args, 'refNum', 'value'),
                 saveCellValue: (args) => saveSplitCellValue(args, 'refNum', 'value'),
             }),
-            description: CE.getDescriptionColumnInfo({
-                getCellValue: getDescriptionCellValue,
-                saveCellValue: saveDescriptionCellValue,
-            }),
-            splits: { key: 'splits',
+        };
+
+        if (accountType.hasLots) {
+            // TODO:
+            // Going to replace all this at some point, as lots need special editing.
+
+            // action
+
+            // description
+
+            columnInfoDefs.reconcile = ACE.getReconcileStateColumnInfo(
+                {
+                    getCellValue: (args) => getSplitCellValue(args, 'reconcileState'),
+                    saveCellValue: (args) => saveSplitCellValue(args, 'reconcileState'),
+                }
+            );
+
+            // shares
+
+            // value
+
+            // fees/commissions
+
+            // price
+
+            // goes away
+            columnInfoDefs.bought = ACE.getSplitQuantityColumnInfo(
+                {
+                    getCellValue: (args) => getSplitQuantityCellValue(args, 'bought'),
+                    saveCellValue: saveSplitQuantityCellValue,
+                },
+                'bought');
+            // goes away
+            columnInfoDefs.sold = ACE.getSplitQuantityColumnInfo(
+                {
+                    getCellValue: (args) => getSplitQuantityCellValue(args, 'sold'),
+                    saveCellValue: saveSplitQuantityCellValue,
+                },
+                'sold');
+            columnInfoDefs.sold.oppositeColumnInfo = columnInfoDefs.bought;
+            columnInfoDefs.bought.oppositeColumnInfo = columnInfoDefs.sold;
+
+            columnInfoDefs.totalShares = LCE.getTotalSharesColumnInfo({
+                getCellValue: getAccountStateQuantityCellValue,
+            });
+        }
+        else {
+            columnInfoDefs.description = ACE.getDescriptionColumnInfo(
+                {
+                    getCellValue: getDescriptionCellValue,
+                    saveCellValue: saveDescriptionCellValue,
+                }
+            );
+
+            columnInfoDefs.splits = { key: 'splits',
                 header: {
                     label: userMsg('AccountRegister-split'),
                     classExtras: 'header-base splits-base splits-header',
@@ -514,37 +565,16 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 saveCellValue: saveSplitsListCellValue,
                 renderDisplayCell: renderSplitsListDisplay,
                 renderEditCell: renderSplitsListEditor,
-            },
-            reconcile: CE.getReconcileStateColumnInfo({
-                getCellValue: (args) => getSplitCellValue(args, 'reconcileState'),
-                saveCellValue: (args) => saveSplitCellValue(args, 'reconcileState'),
-            }),
-        };
+            };
 
-        if (accountType.hasLots) {
-            // TODO:
-            // Going to replace all this at some point, as lots need special editing.
-            columnInfoDefs.bought = CE.getSplitQuantityColumnInfo(
+            columnInfoDefs.reconcile = ACE.getReconcileStateColumnInfo(
                 {
-                    getCellValue: (args) => getSplitQuantityCellValue(args, 'bought'),
-                    saveCellValue: saveSplitQuantityCellValue,
-                },
-                'bought');
-            columnInfoDefs.sold = CE.getSplitQuantityColumnInfo(
-                {
-                    getCellValue: (args) => getSplitQuantityCellValue(args, 'sold'),
-                    saveCellValue: saveSplitQuantityCellValue,
-                },
-                'sold');
-            columnInfoDefs.sold.oppositeColumnInfo = columnInfoDefs.bought;
-            columnInfoDefs.bought.oppositeColumnInfo = columnInfoDefs.sold;
+                    getCellValue: (args) => getSplitCellValue(args, 'reconcileState'),
+                    saveCellValue: (args) => saveSplitCellValue(args, 'reconcileState'),
+                }
+            );
 
-            columnInfoDefs.shares = CE.getSharesColumnInfo({
-                getCellValue: getAccountStateQuantityCellValue,
-            });
-        }
-        else {
-            columnInfoDefs.debit = CE.getSplitQuantityColumnInfo(
+            columnInfoDefs.debit = ACE.getSplitQuantityColumnInfo(
                 {
                     getCellValue: (args) => getSplitQuantityCellValue(args, 'debit'),
                     saveCellValue: saveSplitQuantityCellValue,
@@ -552,7 +582,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 'debit',
                 accountType.debitLabel
             );
-            columnInfoDefs.credit = CE.getSplitQuantityColumnInfo(
+            columnInfoDefs.credit = ACE.getSplitQuantityColumnInfo(
                 {
                     getCellValue: (args) => getSplitQuantityCellValue(args, 'credit'),
                     saveCellValue: saveSplitQuantityCellValue,
@@ -563,7 +593,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
             columnInfoDefs.credit.oppositeColumnInfo = columnInfoDefs.debit;
             columnInfoDefs.debit.oppositeColumnInfo = columnInfoDefs.credit;
 
-            columnInfoDefs.balance = CE.getBalanceColumnInfo({
+            columnInfoDefs.balance = ACE.getBalanceColumnInfo({
                 getCellValue: getAccountStateQuantityCellValue,
             });
         }
@@ -688,6 +718,7 @@ export class AccountRegister extends React.Component {
                         reconcileState: T.ReconcileState.NOT_RECONCILED,
                         accountId: nameId.id,
                         quantityBaseValue: 999999999,
+                        lotTransactionType: T.LotTransactionType.REINVESTED_DIVIDEND.name,
                         lotChanges: [
                             { quantityBaseValue: 999999999, },
                         ],
@@ -696,6 +727,7 @@ export class AccountRegister extends React.Component {
                         reconcileState: T.ReconcileState.NOT_RECONCILED,
                         accountId: nameId.id,
                         quantityBaseValue: 999999999,
+                        lotTransactionType: T.LotTransactionType.REINVESTED_DIVIDEND.name,
                         lotChanges: [
                             { quantityBaseValue: 999999999, },
                         ],
@@ -1279,7 +1311,8 @@ export class AccountRegister extends React.Component {
                     const newSplits = newTransactionDataItem.splits;
                     for (let i = 0; i < oldSplits.length; ++i) {
                         const oldSplit = oldSplits[i];
-                        if (oldSplit.reconcileState === T.ReconcileState.RECONCILED.name) {
+                        if (oldSplit.reconcileState 
+                            === T.ReconcileState.RECONCILED.name) {
                             // Did it change in the new splits?
                             areReconciledChanges = true;
 

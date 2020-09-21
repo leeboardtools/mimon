@@ -7,7 +7,8 @@ import deepEqual from 'deep-equal';
 import { CollapsibleRowTable, ExpandCollapseState,
     findRowInfoWithKey, updateRowInfo } from '../util-ui/CollapsibleRowTable';
 import { getDecimalDefinition, getQuantityDefinitionName } from '../util/Quantities';
-import * as CE from './AccountingCellEditors';
+import * as ACE from './AccountingCellEditors';
+import * as LCE from './LotCellEditors';
 import { columnInfosToColumns,
     stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
 
@@ -33,10 +34,10 @@ export function getAccountsListColumnInfoDefs() {
                 cellClassName: 'm-0 w-50',
             },
             */
-            name: CE.getNameColumnInfo({}),
-            type: CE.getAccountTypeColumnInfo({}),
-            balance: CE.getBalanceColumnInfo({}),
-            shares: CE.getSharesColumnInfo({}),
+            name: ACE.getNameColumnInfo({}),
+            type: ACE.getAccountTypeColumnInfo({}),
+            balance: ACE.getBalanceColumnInfo({}),
+            shares: LCE.getTotalSharesColumnInfo({}),
         };
     }
 
@@ -380,7 +381,7 @@ export class AccountsList extends React.Component {
         }
 
         if (accountState && accountState.quantityBaseValue && currency) {
-            return CE.renderBalanceDisplay({
+            return ACE.renderBalanceDisplay({
                 columnInfo: columnInfo,
                 value: {
                     quantityBaseValue: accountState.quantityBaseValue,
@@ -409,7 +410,7 @@ export class AccountsList extends React.Component {
         }
 
         if (accountState && accountState.quantityBaseValue) {
-            return CE.renderSharesDisplay({
+            return LCE.renderTotalSharesDisplay({
                 columnInfo: columnInfo,
                 value: {
                     quantityBaseValue: accountState.quantityBaseValue,
@@ -434,7 +435,7 @@ export class AccountsList extends React.Component {
         }
         switch (columnInfo.key) {
         case 'name' :
-            return CE.renderNameDisplay({
+            return ACE.renderNameDisplay({
                 columnInfo: columnInfo,
                 value: {
                     name: accountDataItem.name,
@@ -443,7 +444,7 @@ export class AccountsList extends React.Component {
             });
         
         case 'accountType' :
-            return CE.renderAccountTypeDisplay({
+            return ACE.renderAccountTypeDisplay({
                 columnInfo: columnInfo,
                 value: {
                     accountType: accountDataItem.type,
