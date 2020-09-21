@@ -24,20 +24,16 @@ import { areSimilar } from '../util/AreSimilar';
  * Enumeration for the lot transaction types
  * @readonly
  * @enum {LotTransactionType}
- * @property {LotTransactionTypeDef} BUY
- * @property {LotTransactionTypeDef} SELL
+ * @property {LotTransactionTypeDef} BUY_SELL
  * @property {LotTransactionTypeDef} REINVESTED_DIVIDEND
  * @property {LotTransactionTypeDef} RETURN_OF_CAPITAL
- * @property {LotTransactionTypeDef} SPLIT
- * @property {LotTransactionTypeDef} MERGE
+ * @property {LotTransactionTypeDef} SPLIT_MERGE
 */
 export const LotTransactionType = {
-    BUY: { name: 'BUY', },
-    SELL: { name: 'SELL', },
+    BUY_SELL: { name: 'BUY_SELL', },
     REINVESTED_DIVIDEND: { name: 'REINVESTED_DIVIDEND', },
     RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', },
-    SPLIT: { name: 'SPLIT', },
-    MERGE: { name: 'MERGE', },
+    SPLIT_MERGE: { name: 'SPLIT_MERGE', },
 };
 
 /**

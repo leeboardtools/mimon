@@ -470,7 +470,7 @@ test('JSONGzipAccountingFile-history', async () => {
                 { 
                     accountId: sys.aaplBrokerageAId, 
                     quantityBaseValue: aaplCostBasisBaseValueF1, 
-                    lotTransactionType: T.LotTransactionType.BUY.name,
+                    lotTransactionType: T.LotTransactionType.BUY_SELL.name,
                     lotChanges: [ aaplLotChangeF1 ],
                 },
             ]
@@ -504,7 +504,7 @@ test('JSONGzipAccountingFile-history', async () => {
                 { 
                     accountId: sys.aaplBrokerageAId, 
                     quantityBaseValue: aaplCostBasisBaseValueG1,
-                    lotTransactionType: T.LotTransactionType.SELL.name,
+                    lotTransactionType: T.LotTransactionType.BUY_SELL.name,
                     lotChanges: [ aaplLotChangeG1 ],
                 },
                 

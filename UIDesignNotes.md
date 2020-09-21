@@ -634,4 +634,17 @@ Common menus:
                 - Cash in lieu
                 - Fees/commissions
 
+            - Add Shares
+                - Shares
+                - Cost basis
+                - Only difference between this and Buy is amount spent comes from equity
+
+            - Remove Shares
+                - Lots
+                - Only difference between this and Sell is amount recieved goes to equity
+                
+    
+- What about LIFO/FIFO lots?
+    - Kind of want to do this dynamically, so everything is automatic
+        IF there are no other lot transactions that identify specific lots.
 

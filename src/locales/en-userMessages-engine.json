@@ -137,12 +137,10 @@
 
     "LotState-remove_split_no_state": "The split could not be removed, the lot state is missing.",
 
-    "LotTransactionType-BUY": "Buy",
-    "LotTransactionType-SELL": "Sell",
+    "LotTransactionType-BUY_SELL": "Buy/Sell",
     "LotTransactionType-REINVESTED_DIVIDEND": "Reinvested dividend",
     "LotTransactionType-RETURN_OF_CAPITAL": "Return of capital",
-    "LotTransactionType-SPLIT": "Split",
-    "LotTransactionType-MERGE": "Merge",
+    "LotTransactionType-SPLIT_MERGE": "Split/Merge",
 
 
     "PricedItemType-CURRENCY": "Currency",

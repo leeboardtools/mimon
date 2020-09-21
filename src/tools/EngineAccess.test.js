@@ -376,7 +376,7 @@ test('EngineAccessor-actions', async () => {
                     accountId: aaplId, 
                     reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                     quantityBaseValue: changeI.costBasisBaseValue, 
-                    lotTransactionType: T.LotTransactionType.BUY.name,
+                    lotTransactionType: T.LotTransactionType.BUY_SELL.name,
                     lotChanges: [ changeI ],
                 },
             ]
