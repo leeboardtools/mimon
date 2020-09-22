@@ -155,7 +155,8 @@ export function loadTransactionsUserMessages() {
 export function getSplitDataItem(split, alwaysCopy) {
     if (split) {
         const reconcileStateName = getReconcileStateName(split.reconcileState);
-        const lotTransactionTypeName = getLotTransactionTypeName(split.lotTransactionType);
+        const lotTransactionTypeName 
+            = getLotTransactionTypeName(split.lotTransactionType);
         const lotChangeDataItems = LS.getLotChangeDataItems(split.lotChanges, alwaysCopy);
         const currencyToUSDRatioJSON = getRatioJSON(split.currencyToUSDRatio);
         if (alwaysCopy
@@ -593,9 +594,11 @@ class AccountStatesUpdater {
             if (accountEntry.hasLots) {
                 if (!isNewDataItem) {
                     const removedLotIds = new Set();
+                    const isSplitMerge = split.lotTransactionType 
+                        === LotTransactionType.SPLIT_MERGE.name;
                     const oldLotChanges = split.lotChanges;
                     oldLotChanges.forEach((lotChange) => {
-                        if (!lotChange.isSplitMerge 
+                        if (!isSplitMerge 
                             && (lotChange.quantityBaseValue > 0)) {
                             removedLotIds.add(lotChange.lotId);
                         }
@@ -606,8 +609,10 @@ class AccountStatesUpdater {
                         newSplits.forEach((newSplit) => {
                             if (newSplit.accountId === accountId) {
                                 const newLotChanges = newSplit.lotChanges;
+                                const isSplitMerge = newSplit.lotTransactionType
+                                    === LotTransactionType.SPLIT_MERGE.name;
                                 newLotChanges.forEach((lotChange) => {
-                                    if (!lotChange.isSplitMerge 
+                                    if (!isSplitMerge 
                                         && (lotChange.quantityBaseValue > 0)) {
                                         removedLotIds.delete(lotChange.lotId);
                                     }
@@ -664,8 +669,9 @@ class AccountStatesUpdater {
             }
         }
 
+        const isSplitMerge = lotTransactionType === LotTransactionType.SPLIT_MERGE.name;
         lotChanges.forEach((lotChange) => {
-            const { lotId, quantityBaseValue, costBasisBaseValue, isSplitMerge } 
+            const { lotId, quantityBaseValue, costBasisBaseValue } 
                 = lotChange;
             const lotManager = this._manager._accountingSystem.getLotManager();
             if (!lotManager.getLotDataItemWithId(lotId)) {
@@ -1436,15 +1442,17 @@ export class TransactionManager extends EventEmitter {
             isCurrencyExchange = isCurrencyExchange || (currency !== activeCurrency);
 
             if (account.type.hasLots) {
-                const { lotChanges } = split;
+                const { lotChanges, lotTransactionType } = split;
                 if (!lotChanges && creditBaseValue) {
                     return userError('TransactionManager~split_needs_lots', 
                         account.type.name);
                 }
 
                 if (lotChanges) {
+                    const isSplitMerge = lotTransactionType 
+                        === LotTransactionType.SPLIT_MERGE.name;
                     for (let j = lotChanges.length - 1; j >= 0; --j) {
-                        if (lotChanges[j].isSplitMerge) {
+                        if (isSplitMerge) {
                             ++splitMergeLotCount;
                             break;
                         }

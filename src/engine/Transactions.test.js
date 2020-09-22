@@ -104,7 +104,7 @@ test('Transaction-Data Items', () => {
             lotTransactionType: T.LotTransactionType.SPLIT_MERGE,
             lotChanges: [
                 { lotId: 123, quantityBaseValue: 12345, costBasisBaseValue: 98765, },
-                { lotId: 33, quantityBaseValue: 444, isSplitMerge: true, },
+                { lotId: 33, quantityBaseValue: 444, },
             ],
         },
         {
@@ -114,7 +114,7 @@ test('Transaction-Data Items', () => {
             lotTransactionType: T.LotTransactionType.SPLIT_MERGE,
             lotChanges: [
                 { lotId: 123, quantityBaseValue: -12345, costBasisBaseValue: 98765, },
-                { lotId: 33, quantityBaseValue: 444, isSplitMerge: true, },
+                { lotId: 33, quantityBaseValue: 444, },
             ],
         },
     ]);
@@ -160,7 +160,7 @@ test('Transaction-Data Items', () => {
                 lotTransactionType: T.LotTransactionType.SPLIT_MERGE,
                 lotChanges: [
                     { lotId: 123, quantityBaseValue: 12345, costBasisBaseValue: 98765, },
-                    { lotId: 33, quantityBaseValue: 444, isSplitMerge: true, },
+                    { lotId: 33, quantityBaseValue: 444, },
                 ],
             },
         ],
@@ -192,7 +192,7 @@ test('Transaction-Data Items', () => {
                 lotTransactionType: T.LotTransactionType.SPLIT_MERGE.name,
                 lotChanges: [
                     { lotId: 123, quantityBaseValue: 12345, costBasisBaseValue: 98765, },
-                    { lotId: 33, quantityBaseValue: 444, isSplitMerge: true, },
+                    { lotId: 33, quantityBaseValue: 444, },
                 ],
             },
         ],

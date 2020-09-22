@@ -1,3 +1,6 @@
+import * as T from '../engine/Transactions';
+
+
 function findAccountEntry(newFileContents, accountPath) {
     const accountNames = accountPath.split('-');
     if (!accountNames.length) {
@@ -371,6 +374,7 @@ export function createTestTransactions(newFileContents) {
                 {
                     accountId: accountId,
                     quantityBaseValue: stockBaseValueA,
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
                     lotChanges: [aaplLotChangeA],
                 },
                 {
@@ -382,7 +386,6 @@ export function createTestTransactions(newFileContents) {
 
         const aaplChangeSplit2014_06_09 = { 
             lotId: lotA, 
-            isSplitMerge: true, 
             quantityBaseValue: 6 * (aaplQuantityBaseValueA), 
         };
         transactions.push({
@@ -392,6 +395,7 @@ export function createTestTransactions(newFileContents) {
                 {
                     accountId: accountId,
                     quantityBaseValue: 0,
+                    lotTransactionType: T.LotTransactionType.SPLIT_MERGE,
                     lotChanges: [ aaplChangeSplit2014_06_09 ],
                 }
             ],
@@ -415,6 +419,7 @@ export function createTestTransactions(newFileContents) {
                 {
                     accountId: accountId,
                     quantityBaseValue: stockBaseValueB,
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
                     lotChanges: [aaplLotChangeB],
                 },
                 {
@@ -455,6 +460,7 @@ export function createTestTransactions(newFileContents) {
                 { accountId: accountId, 
                     quantityBaseValue: aaplCostBasisBaseValueC
                         + aaplCostBasisBaseValueD, 
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
                     lotChanges: [ aaplLotChangeC, aaplLotChangeD ],
                 },
                 

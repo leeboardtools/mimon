@@ -834,7 +834,7 @@ export async function asyncAddBasicTransactions(sys) {
 
 
     // Add the stock splits.
-    const aaplChangeSplit2005_02_28 = { lotId: aaplLot1.id, isSplitMerge: true, quantityBaseValue: aaplQuantityBaseValue1, };
+    const aaplChangeSplit2005_02_28 = { lotId: aaplLot1.id, quantityBaseValue: aaplQuantityBaseValue1, };
     const aaplTrans2005_02_28 = (await transactionManager.asyncAddTransaction(
         // transH
         {
@@ -853,7 +853,7 @@ export async function asyncAddBasicTransactions(sys) {
     )).newTransactionDataItem;
     sys.transHId = aaplTrans2005_02_28.id;
 
-    const aaplChangeSplit2014_06_09 = { lotId: aaplLot1.id, isSplitMerge: true, quantityBaseValue: 6 * (aaplChangeSplit2005_02_28.quantityBaseValue + aaplQuantityBaseValue1), };
+    const aaplChangeSplit2014_06_09 = { lotId: aaplLot1.id, quantityBaseValue: 6 * (aaplChangeSplit2005_02_28.quantityBaseValue + aaplQuantityBaseValue1), };
     const aaplTrans2014_06_09 = (await transactionManager.asyncAddTransaction(
         // transI
         {

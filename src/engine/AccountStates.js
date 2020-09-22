@@ -1,5 +1,5 @@
 import { getYMDDate, getYMDDateString } from '../util/YMDDate';
-import { getFullSplitDataItem } from './Transactions';
+import { getFullSplitDataItem, LotTransactionType } from './Transactions';
 import * as LS from './LotStates';
 import { userError } from '../util/UserMessages';
 import { areSimilar } from '../util/AreSimilar';
@@ -151,7 +151,7 @@ export function areAccountStatesSimilar(a, b) {
 
 function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) {
     split = getFullSplitDataItem(split);
-    const { lotChanges } = split;
+    const { lotTransactionType, lotChanges } = split;
 
     const hasLots = lotChanges && lotChanges.length;
     const accountStateDataItem = getFullAccountStateDataItem(accountState, hasLots);
@@ -185,6 +185,8 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) 
             removedLotStates = new Map(accountStateDataItem.removedLotStates);
         }
 
+        const isSplitMerge = lotTransactionType === LotTransactionType.SPLIT_MERGE.name;
+
         for (let i = start; i !== end; i += sign) {
             const lotChange = lotChanges[i];
             const { lotId } = lotChange;
@@ -207,7 +209,7 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) 
                 }
             }
 
-            lotStateDataItem = lotStateFunc(lotStateDataItem, lotChange);
+            lotStateDataItem = lotStateFunc(lotStateDataItem, lotChange, isSplitMerge);
 
             if (lotStateDataItem.quantityBaseValue) {
                 lotStateDataItemsByLotId.set(lotId, lotStateDataItem);

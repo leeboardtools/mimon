@@ -145,7 +145,7 @@ test('AccountState-add_remove_split', () => {
 
 
     // Basic split/merge
-    const lotChangeD1 = { lotId: 3, quantityBaseValue: 123, isSplitMerge: true };
+    const lotChangeD1 = { lotId: 3, quantityBaseValue: 123, };
     const lotStateD1 = {
         lotId: 3, 
         quantityBaseValue: 246, 
@@ -172,7 +172,6 @@ test('AccountState-add_remove_split', () => {
     const lotChangeD2 = { lotId: 3, 
         quantityBaseValue: 123, 
         costBasisBaseValue: 700, 
-        isSplitMerge: true,
     };
     const lotStateD2 = {
         lotId: 3, 

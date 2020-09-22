@@ -130,8 +130,6 @@ export const getEmptyLotState = getEmptyLotStateDataItem;
  * the cost basis is not changed. If isSplitMerge is <code>false</code> if the 
  * previous quantityBaseValue is 0 (which normally indicates a new purchase) this 
  * is the initial cost basis.
- * @property {boolean}  [isSplitMerge]  Optional, if <code>true</code> then the 
- * lot change is a split or a merge.
  */
 
 
@@ -144,8 +142,6 @@ export const getEmptyLotState = getEmptyLotStateDataItem;
  * the cost basis is not changed. If isSplitMerge is <code>false</code>  if the 
  * previous quantityBaseValue is 0 (which normally indicates a new purchase) this 
  * is the initial cost basis.
- * @property {boolean}  [isSplitMerge]  Optional, if <code>true</code> then the 
- * lot change is a split or a merge.
  */
 
 /**
@@ -206,7 +202,7 @@ export const getLotChangeDataItems = getLotChanges;
 
 
 
-function adjustLotStateDataItemForLotChange(lotState, lotChange, sign) {
+function adjustLotStateDataItemForLotChange(lotState, lotChange, isSplitMerge, sign) {
     const lotStateDataItem = getLotStateDataItem(lotState, true);
 
     const { previousBaseValues } = lotStateDataItem;
@@ -219,7 +215,7 @@ function adjustLotStateDataItemForLotChange(lotState, lotChange, sign) {
 
         const oldQuantityBaseValue = lotStateDataItem.quantityBaseValue;
         lotStateDataItem.quantityBaseValue += lotChange.quantityBaseValue;
-        if (!lotChange.isSplitMerge) {
+        if (!isSplitMerge) {
             if (oldQuantityBaseValue) {
                 lotStateDataItem.costBasisBaseValue 
                     = Math.round(lotStateDataItem.quantityBaseValue 
@@ -255,11 +251,12 @@ function adjustLotStateDataItemForLotChange(lotState, lotChange, sign) {
  * or removed being in the lot state.
  * @param {LotState|LotStateDataItem} lotState 
  * @param {LotChange|LotChangeDataItem} lotChange 
+ * @param {boolean} isSplitMerge
  * @returns {LotStateDataItem}
  * @throws {Error}
  */
-export function addLotChangeToLotStateDataItem(lotState, lotChange) {
-    return adjustLotStateDataItemForLotChange(lotState, lotChange, 1);
+export function addLotChangeToLotStateDataItem(lotState, lotChange, isSplitMerge) {
+    return adjustLotStateDataItemForLotChange(lotState, lotChange, isSplitMerge, 1);
 }
 
 
@@ -268,9 +265,10 @@ export function addLotChangeToLotStateDataItem(lotState, lotChange) {
  * from the lot state. This is the opposite of {@link addLotChangeToLotStateDataItem}.
  * @param {LotState|LotStateDataItem} lotState 
  * @param {LotChange|LotChangeDataItem} lotChange 
+ * @param {boolean} isSplitMerge
  * @returns {LotStateDataItem}
  * @throws {Error}
  */
-export function removeLotChangeFromLotStateDataItem(lotState, lotChange) {
-    return adjustLotStateDataItemForLotChange(lotState, lotChange, -1);
+export function removeLotChangeFromLotStateDataItem(lotState, lotChange, isSplitMerge) {
+    return adjustLotStateDataItemForLotChange(lotState, lotChange, isSplitMerge, -1);
 }
