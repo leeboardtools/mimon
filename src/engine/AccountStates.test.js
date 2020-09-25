@@ -78,7 +78,10 @@ test('AccountState-add_remove_split', () => {
         quantityBaseValue: lotStateA.quantityBaseValue,
         lotStates: [ lotStateA ],
     };
+    lotStateA.ymdDateCreated = accountStateB.ymdDate;
     const testB = A.addSplitToAccountStateDataItem(stateB, splitB, '2019-03-31');
+
+    lotStateA.ymdDateCreated = accountStateB.ymdDate;
     expect(testB).toEqual(accountStateB);
 
 
@@ -101,6 +104,7 @@ test('AccountState-add_remove_split', () => {
             [0, 0],
             [lotStateA.quantityBaseValue, lotStateA.costBasisBaseValue], 
         ],
+        ymdDateCreated: lotStateA.ymdDateCreated,
     };
 
     const splitC = { accountId: 2, 
@@ -113,6 +117,7 @@ test('AccountState-add_remove_split', () => {
         quantityBaseValue: lotStateA1.quantityBaseValue + lotStateB.quantityBaseValue,
         lotStates: [ lotStateA1, lotStateB, ],
     };
+    lotStateB.ymdDateCreated = accountStateC.ymdDate;
     const testC = A.addSplitToAccountStateDataItem(testB, splitC);
     expect(testC).toEqual(accountStateC);
 
@@ -140,6 +145,7 @@ test('AccountState-add_remove_split', () => {
         quantityBaseValue: lotStateA1.quantityBaseValue + lotStateD.quantityBaseValue,
         lotStates: [ lotStateA1, lotStateD ],
     };
+    lotStateD.ymdDateCreated = accountStateD.ymdDate;
     const testD = A.addSplitToAccountStateDataItem(testC, splitD);
     expect(testD).toEqual(expect.objectContaining(accountStateD));
 
@@ -154,6 +160,7 @@ test('AccountState-add_remove_split', () => {
             [0, 0], 
             [lotStateD.quantityBaseValue, lotStateD.costBasisBaseValue] 
         ],
+        ymdDateCreated: lotStateD.ymdDateCreated,
     };
     const splitE = { accountId: 2, 
         quantityBaseValue: 0, 
@@ -182,6 +189,7 @@ test('AccountState-add_remove_split', () => {
             [lotStateD.quantityBaseValue, lotStateD.costBasisBaseValue],
             [lotStateD1.quantityBaseValue, lotStateD1.costBasisBaseValue],
         ],
+        ymdDateCreated: lotStateD.ymdDateCreated,
     };
     const splitF = { accountId: 2, 
         quantityBaseValue: 0, 

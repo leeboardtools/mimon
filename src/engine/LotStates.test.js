@@ -79,3 +79,141 @@ test('LotState-add_remove_lotChange', () => {
     });
 
 });
+
+
+test('LotStates-FIFO-LIFO', () => {
+    let result;
+
+    const statesA = [
+        {
+            lotId: 1,
+            quantityBaseValue: 100,
+            costBasisBaseValue: 10000,
+            ymdDateCreated: '2020-01-02',
+        }
+    ];
+    result = L.createFIFOLotChangeDataItems(statesA, 100);
+    expect(result).toEqual([
+        { lotId: 1, quantityBaseValue: 100, },
+    ]);
+
+    result = L.createLIFOLotChangeDataItems(statesA, 100);
+    expect(result).toEqual([
+        { lotId: 1, quantityBaseValue: 100, },
+    ]);
+
+
+    result = L.createFIFOLotChangeDataItems(statesA, 10);
+    expect(result).toEqual([
+        { lotId: 1, quantityBaseValue: 10, },
+    ]);
+
+    result = L.createLIFOLotChangeDataItems(statesA, 10);
+    expect(result).toEqual([
+        { lotId: 1, quantityBaseValue: 10, },
+    ]);
+
+    expect(() => L.createLIFOLotChangeDataItems(statesA, 101)).toThrow(Error);
+
+
+    // 2020-01-10: lot 2 2000
+    // 2020-01-15: lot 1 1000
+    // 2020-01-25: lot 3 3000
+    const statesB = [
+        { lotId: 1, 
+            quantityBaseValue: 1000, 
+            costBasisBaseValue: 10000, 
+            ymdDateCreated: '2020-01-15', 
+        },
+        { lotId: 2, 
+            quantityBaseValue: 2000, 
+            costBasisBaseValue: 20000, 
+            ymdDateCreated: '2020-01-10', 
+        },
+        { lotId: 3, 
+            quantityBaseValue: 3000, 
+            costBasisBaseValue: 30000, 
+            ymdDateCreated: '2020-01-25', 
+        },
+    ];
+
+    result = L.createFIFOLotChangeDataItems(statesB, 100);
+    expect(result).toEqual([
+        { lotId: 2, quantityBaseValue: 100, }
+    ]);
+
+    result = L.createFIFOLotChangeDataItems(statesB, 2000);
+    expect(result).toEqual([
+        { lotId: 2, quantityBaseValue: 2000, }
+    ]);
+
+    result = L.createFIFOLotChangeDataItems(statesB, 2001);
+    expect(result).toEqual([
+        { lotId: 2, quantityBaseValue: 2000, },
+        { lotId: 1, quantityBaseValue: 1, },
+    ]);
+
+    result = L.createFIFOLotChangeDataItems(statesB, 3000);
+    expect(result).toEqual([
+        { lotId: 2, quantityBaseValue: 2000, },
+        { lotId: 1, quantityBaseValue: 1000, },
+    ]);
+
+    result = L.createFIFOLotChangeDataItems(statesB, 3001);
+    expect(result).toEqual([
+        { lotId: 2, quantityBaseValue: 2000, },
+        { lotId: 1, quantityBaseValue: 1000, },
+        { lotId: 3, quantityBaseValue: 1, },
+    ]);
+
+    result = L.createFIFOLotChangeDataItems(statesB, 6000);
+    expect(result).toEqual([
+        { lotId: 2, quantityBaseValue: 2000, },
+        { lotId: 1, quantityBaseValue: 1000, },
+        { lotId: 3, quantityBaseValue: 3000, },
+    ]);
+
+    expect(() => L.createFIFOLotChangeDataItems(statesB, 6001)).toThrow(Error);
+
+
+    // 2020-01-10: lot 2 2000
+    // 2020-01-15: lot 1 1000
+    // 2020-01-25: lot 3 3000
+    result = L.createLIFOLotChangeDataItems(statesB, 100);
+    expect(result).toEqual([
+        { lotId: 3, quantityBaseValue: 100, }
+    ]);
+
+    result = L.createLIFOLotChangeDataItems(statesB, 3000);
+    expect(result).toEqual([
+        { lotId: 3, quantityBaseValue: 3000, }
+    ]);
+
+    result = L.createLIFOLotChangeDataItems(statesB, 3001);
+    expect(result).toEqual([
+        { lotId: 3, quantityBaseValue: 3000, },
+        { lotId: 1, quantityBaseValue: 1, },
+    ]);
+
+    result = L.createLIFOLotChangeDataItems(statesB, 4000);
+    expect(result).toEqual([
+        { lotId: 3, quantityBaseValue: 3000, },
+        { lotId: 1, quantityBaseValue: 1000, },
+    ]);
+
+    result = L.createLIFOLotChangeDataItems(statesB, 4001);
+    expect(result).toEqual([
+        { lotId: 3, quantityBaseValue: 3000, },
+        { lotId: 1, quantityBaseValue: 1000, },
+        { lotId: 2, quantityBaseValue: 1, },
+    ]);
+
+    result = L.createLIFOLotChangeDataItems(statesB, 6000);
+    expect(result).toEqual([
+        { lotId: 3, quantityBaseValue: 3000, },
+        { lotId: 1, quantityBaseValue: 1000, },
+        { lotId: 2, quantityBaseValue: 2000, },
+    ]);
+
+    expect(() => L.createLIFOLotChangeDataItems(statesB, 6001)).toThrow(Error);
+});

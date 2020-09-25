@@ -1,9 +1,13 @@
+import { userError } from '../util/UserMessages';
+import { YMDDate, getYMDDate, getYMDDateString } from '../util/YMDDate';
+
 /**
  * @typedef {object}    LotStateDataItem
  * @property {number}   lotId   The id of the lot this state represents.
  * @property {number}   quantityBaseValue   The base value of the quantity 
  * of the lot state.
  * @property {number}   costBasisBaseValue  The base value of the cost basis of the lot.
+ * @property {string}   ymdDateCreated    The date the lot was created.
  * @property {number[][]}   previousBaseValues  Array containing two element 
  * sub-arrays of the previous lot states, the first element of each sub array 
  * is the quantityBaseValue, the second element
@@ -17,6 +21,7 @@
  * @property {number}   quantityBaseValue   The base value of the quantity of 
  * the lot state.
  * @property {number}   costBasisBaseValue  The base value of the cost basis of the lot.
+ * @property {YMDDate}  ymdDateCreated The date the lot was created.
  * @property {number[][]}   previousBaseValues  Array containing two element 
  * sub-arrays of the previous lot states, the first element of each sub array 
  * is the quantityBaseValue, the second element
@@ -34,12 +39,19 @@
  */
 export function getLotState(lotStateDataItem, alwaysCopy) {
     if (lotStateDataItem) {
-        if (alwaysCopy) {
-            return Object.assign({}, lotStateDataItem);
+        const ymdDateCreated = getYMDDate(lotStateDataItem.ymdDateCreated);
+        if (alwaysCopy
+         || (ymdDateCreated !== lotStateDataItem.ymdDateCreated)) {
+            const lotState = Object.assign({}, lotStateDataItem);
+            if (ymdDateCreated !== undefined) {
+                lotState.ymdDateCreated = ymdDateCreated;
+            }
+            return lotState;
         }
     }
     return lotStateDataItem;
 }
+
 
 /**
  * Retrieves an {@link LotStateDataItem} representation of a {@link LotState} object, 
@@ -50,7 +62,20 @@ export function getLotState(lotStateDataItem, alwaysCopy) {
  * be created.
  * @returns {LotStateDataItem}
  */
-export const getLotStateDataItem = getLotState;
+export function getLotStateDataItem(lotState, alwaysCopy) {
+    if (lotState) {
+        const ymdDateString = getYMDDateString(lotState.ymdDateCreated);
+        if (alwaysCopy
+            || (ymdDateString !== lotState.ymdDateCreated)) {
+            const lotStateDataItem = Object.assign({}, lotState);
+            if (ymdDateString !== undefined) {
+                lotStateDataItem.ymdDateCreated = ymdDateString;
+            }
+            return lotStateDataItem;
+        }
+    }
+    return lotState;
+}
 
 
 
@@ -271,4 +296,69 @@ export function addLotChangeToLotStateDataItem(lotState, lotChange, isSplitMerge
  */
 export function removeLotChangeFromLotStateDataItem(lotState, lotChange, isSplitMerge) {
     return adjustLotStateDataItemForLotChange(lotState, lotChange, isSplitMerge, -1);
+}
+
+
+function createLotChangeDataItems(sortedLotStates, requiredQuantityBaseValue) {
+    const lotChanges = [];
+    if (requiredQuantityBaseValue < 0) {
+        throw userError('LotState-XIFO_invalid_quantity');
+    }
+
+    for (let lotState of sortedLotStates) {
+        const { quantityBaseValue } = lotState;
+        if (quantityBaseValue < requiredQuantityBaseValue) {
+            lotChanges.push({
+                lotId: lotState.lotId,
+                quantityBaseValue: quantityBaseValue,
+            });
+            requiredQuantityBaseValue -= quantityBaseValue;
+        }
+        else {
+            lotChanges.push({
+                lotId: lotState.lotId,
+                quantityBaseValue: requiredQuantityBaseValue,
+            });
+            return lotChanges;
+        }
+    }
+
+    throw userError('LotState-XIFO_not_enough_lots');
+}
+
+
+function sortLotStates(lotStates, compare) {
+    const sortedLotStates = lotStates.map((lotState) => getLotState(lotState));
+    sortedLotStates.sort(compare);
+    return sortedLotStates;
+}
+
+
+/**
+ * Creates an array of {@link LotChangeDataItem}s for a number of shares based on
+ * first-in first-out.
+ * @param {LotState[]|LotStateDataItem[]} lotStates 
+ * @param {number} quantityBaseValue Must be >= 0.
+ * @returns {LotChangeDataItem[]}
+ * @throws {Error}
+ */
+export function createFIFOLotChangeDataItems(lotStates, quantityBaseValue) {
+    const sortedLotStates = sortLotStates(lotStates, (a, b) => 
+        YMDDate.compare(a.ymdDateCreated, b.ymdDateCreated));
+    return createLotChangeDataItems(sortedLotStates, quantityBaseValue);
+}
+
+
+/**
+ * Creates an array of {@link LotChangeDataItem}s for a number of shares based on
+ * last-in first-out.
+ * @param {LotState[]|LotStateDataItem[]} lotStates 
+ * @param {number} quantityBaseValue Must be >= 0.
+ * @returns {LotChangeDataItem[]}
+ * @throws {Error}
+ */
+export function createLIFOLotChangeDataItems(lotStates, quantityBaseValue) {
+    const sortedLotStates = sortLotStates(lotStates, (a, b) => 
+        YMDDate.compare(b.ymdDateCreated, a.ymdDateCreated));
+    return createLotChangeDataItems(sortedLotStates, quantityBaseValue);
 }

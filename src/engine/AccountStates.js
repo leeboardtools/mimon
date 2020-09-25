@@ -149,9 +149,11 @@ export function areAccountStatesSimilar(a, b) {
 }
 
 
-function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) {
+function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, lotChanges,
+    sign) {
     split = getFullSplitDataItem(split);
-    const { lotTransactionType, lotChanges } = split;
+    const { lotTransactionType } = split;
+    lotChanges = lotChanges || split.lotChanges;
 
     const hasLots = lotChanges && lotChanges.length;
     const accountStateDataItem = getFullAccountStateDataItem(accountState, hasLots);
@@ -197,9 +199,10 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) 
                     // Adding a new lot.
                     lotStateDataItem = LS.getEmptyLotStateDataItem();
                     lotStateDataItem.lotId = lotId;
+                    lotStateDataItem.ymdDateCreated = ymdDate;
                 }
                 else {
-                    // Must have been a lot that was remove.
+                    // Must have been a lot that was removed.
                     lotStateDataItem = removedLotStates.get(lotId);
                     if (!lotStateDataItem) {
                         console.log('removedLotStates: ' + lotId + ' ' 
@@ -266,11 +269,15 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, sign) 
  * or removed being in the account state.
  * @param {AccountState|AccountStateDataItem} accountState 
  * @param {Split|SplitDataItem} split 
+ * @param {YMDDate} [ymdDate]   Optional date for the new account state data item.
+ * @param {LotChange[]|LotChangeDataItem[]} [lotChanges]    If <code>undefined</code>
+ * the lot changes from the split will be used.
  * @returns {AccountStateDataItem}
  * @throws {Error}
  */
-export function addSplitToAccountStateDataItem(accountState, split, ymdDate) {
-    return adjustAccountStateDataItemForSplit(accountState, split, ymdDate, 1);
+export function addSplitToAccountStateDataItem(accountState, split, ymdDate, lotChanges) {
+    return adjustAccountStateDataItemForSplit(accountState, split, ymdDate, lotChanges, 
+        1);
 }
 
 
@@ -281,9 +288,14 @@ export function addSplitToAccountStateDataItem(accountState, split, ymdDate) {
  * the account state.
  * @param {AccountState|AccountStateDataItem} accountState 
  * @param {Split|SplitDataItem} split 
+ * @param {YMDDate} [ymdDate]   Optional date for the new account state data item.
+ * @param {LotChange[]|LotChangeDataItem[]} [lotChanges]    If <code>undefined</code>
+ * the lot changes from the split will be used.
  * @returns {AccountStateDataItem}
  * @throws {Error}
  */
-export function removeSplitFromAccountStateDataItem(accountState, split, ymdDate) {
-    return adjustAccountStateDataItemForSplit(accountState, split, ymdDate, -1);
+export function removeSplitFromAccountStateDataItem(accountState, split, ymdDate, 
+    lotChanges) {
+    return adjustAccountStateDataItemForSplit(accountState, split, ymdDate, lotChanges,
+        -1);
 }

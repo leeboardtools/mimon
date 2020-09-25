@@ -136,6 +136,11 @@
     "LotManager-modify_no_id": ["The lot could not be modified. An item with id '", "' was not found."],
 
     "LotState-remove_split_no_state": "The split could not be removed, the lot state is missing.",
+    "LotState-XIFO_invalid_quantity": "The number of shares must be >= 0.",
+    "LotState-XIFO_not_enough_lots": "There are not enough shares available.",
+
+    "AutoLotType-FIFO": "FIFO: First in, first out",
+    "AutoLotType-LIFO": "LIFO: Last in, first out",
 
     "LotTransactionType-BUY_SELL": "Buy/Sell",
     "LotTransactionType-REINVESTED_DIVIDEND": "Reinvested dividend",
@@ -184,7 +189,10 @@
     "TransactionManager~split_priced_item_not_found": ["The priced item with id '", "', for account with id '", "', was not found."],
     "TransactionManager~split_needs_currency_price": ["The split with currency '", "' requires a price in USD."],
     "TransactionManager~splits_dont_add_up": ["The splits do not add up, there is a difference of ", "."],
+    "TransactionManager-split_needs_lot_transaction": ["Splits for accounts of type '", "' require a lot transaction type."],
     "TransactionManager~split_needs_lots": ["Splits for accounts of type '", "' require lots."],
+    "TransactionManager-no_lots_for_return_of_capital": ["Return of capital splits cannot change lots."],
+    "TransactionManager-no_lots_for_sell_auto_lots": ["Sell transactions with auto-lots cannot have specified lots."],
     "TransactionManager-remove_invalid_id": ["A transaction with id '", "' was not found."],
     "TransactionManager~modify_id_not_found": ["A transaction with id '", "' was not found."],
     "TransactionManager-account_state_update_invalid_transaction_id": 

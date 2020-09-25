@@ -1697,7 +1697,8 @@ test('Transactions-lotTransactions', async () => {
     };
     const lot1StateA = { lotId: lot1.id, 
         quantityBaseValue: changeA.quantityBaseValue, 
-        costBasisBaseValue: changeA.costBasisBaseValue 
+        costBasisBaseValue: changeA.costBasisBaseValue,
+        ymdDateCreated: settingsA.ymdDate,
     };
     const aaplStateA = { ymdDate: settingsA.ymdDate, 
         quantityBaseValue: lot1StateA.quantityBaseValue, 
@@ -1756,10 +1757,12 @@ test('Transactions-lotTransactions', async () => {
     const lot2StateB = { lotId: lot2.id, 
         quantityBaseValue: changeB1.quantityBaseValue, 
         costBasisBaseValue: changeB1.costBasisBaseValue, 
+        ymdDateCreated: settingsB.ymdDate,
     };
     const lot3StateB = { lotId: lot3.id, 
         quantityBaseValue: changeB2.quantityBaseValue, 
         costBasisBaseValue: changeB2.costBasisBaseValue, 
+        ymdDateCreated: settingsB.ymdDate,
     };
 
     const aaplStateB = { 
@@ -1799,6 +1802,7 @@ test('Transactions-lotTransactions', async () => {
     const lot4StateC = { lotId: lot4.id, 
         quantityBaseValue: changeC.quantityBaseValue, 
         costBasisBaseValue: changeC.costBasisBaseValue, 
+        ymdDateCreated: settingsC.ymdDate,
     };
     
     const aaplStateC = { 
@@ -1872,6 +1876,7 @@ test('Transactions-lotTransactions', async () => {
     const lot5StateD = { lotId: lot5.id, 
         quantityBaseValue: changeD.quantityBaseValue, 
         costBasisBaseValue: changeD.costBasisBaseValue, 
+        ymdDateCreated: settingsD.ymdDate,
     };
 
     const aaplStateD = { 
@@ -2009,6 +2014,7 @@ test('Transactions-lotTransactions', async () => {
     const lot5StateE = { lotId: lot5.id, 
         quantityBaseValue: changeE.quantityBaseValue, 
         costBasisBaseValue: changeE.costBasisBaseValue, 
+        ymdDateCreated: settingsE.ymdDate,
     };
 
     const aaplStateE = { 
@@ -2081,6 +2087,7 @@ test('Transactions-lotTransactions', async () => {
         costBasisBaseValue: Math.round((lot5StateE.quantityBaseValue 
             + changeF.quantityBaseValue) 
             * lot5StateD.costBasisBaseValue / lot5StateD.quantityBaseValue), 
+        ymdDateCreated: lot5StateE.ymdDateCreated,
     };
 
     const aaplStateF = { 
