@@ -310,14 +310,14 @@ function createLotChangeDataItems(sortedLotStates, requiredQuantityBaseValue) {
         if (quantityBaseValue < requiredQuantityBaseValue) {
             lotChanges.push({
                 lotId: lotState.lotId,
-                quantityBaseValue: quantityBaseValue,
+                quantityBaseValue: -quantityBaseValue,
             });
             requiredQuantityBaseValue -= quantityBaseValue;
         }
         else {
             lotChanges.push({
                 lotId: lotState.lotId,
-                quantityBaseValue: requiredQuantityBaseValue,
+                quantityBaseValue: -requiredQuantityBaseValue,
             });
             return lotChanges;
         }
