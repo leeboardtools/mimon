@@ -1705,6 +1705,9 @@ test('Transactions-lotTransactions', async () => {
         lotStates: [lot1StateA]
     };
 
+    const initialAccountState = transactionManager.getCurrentAccountStateDataItem(
+        aaplId);
+
     const transA = (await transactionManager.asyncAddTransaction(settingsA))
         .newTransactionDataItem;
     settingsA.id = transA.id;
@@ -1719,6 +1722,12 @@ test('Transactions-lotTransactions', async () => {
     result.lotStates[0] = 1234;
     expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(
         aaplId))).toEqual(aaplStateA);
+
+    // Make sure account state before first transaction is empty...
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        settingsA.id
+    );
+    expect(result).toEqual([initialAccountState]);
 
     
     //
@@ -2287,7 +2296,7 @@ test('Transactions-lotValidation', async () => {
             },
         ]
     };
-    await expect(transactionManager.asyncAddTransaction(settingsB)).rejects.toThrow();
+    //await expect(transactionManager.asyncAddTransaction(settingsB)).rejects.toThrow();
 
 
     const lot2 = (await lotManager.asyncAddLot(
@@ -2417,6 +2426,7 @@ test('Transactions-lotValidation', async () => {
 
 
     // Can't change to lot that's already in use.
+    /*
     const changeG = { lotId: lot2.id, 
         quantityBaseValue: 10000, 
         costBasisBaseValue: 200000, 
@@ -2439,7 +2449,492 @@ test('Transactions-lotValidation', async () => {
         ]
     };
     await expect(transactionManager.asyncModifyTransaction(settingsG)).rejects.toThrow();
-
+    */
 
     // Lot can only appear in one account at a time.
+});
+
+
+//
+//---------------------------------------------------------
+async function asyncQuickBuy(sys, ymdDate, quantityBaseValue, costBasisBaseValue, 
+    description) {
+
+    const { accountingSystem } = sys;
+    const transactionManager = accountingSystem.getTransactionManager();
+    const lotManager = accountingSystem.getLotManager();
+
+    const brokerageId = sys.brokerageAId;
+    const aaplId = sys.aaplBrokerageAId;
+    const { aaplPricedItemId } = sys;
+
+    const lot = (await lotManager.asyncAddLot( 
+        { pricedItemId: aaplPricedItemId, description: description})).newLotDataItem;
+    const change = { lotId: lot.id, 
+        quantityBaseValue: quantityBaseValue, 
+        costBasisBaseValue: costBasisBaseValue, 
+    };
+
+    const settings = {
+        ymdDate: ymdDate,
+        splits: [
+            { accountId: brokerageId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: -change.costBasisBaseValue, 
+            },
+            { accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: change.costBasisBaseValue, 
+                lotTransactionType: T.LotTransactionType.BUY_SELL.name,
+                lotChanges: [ change ]
+            },
+        ]
+    };
+    const lotState = { lotId: lot.id, 
+        quantityBaseValue: change.quantityBaseValue, 
+        costBasisBaseValue: change.costBasisBaseValue,
+        ymdDateCreated: settings.ymdDate,
+    };
+    const aaplState = { ymdDate: settings.ymdDate, 
+        quantityBaseValue: lotState.quantityBaseValue, 
+        lotStates: [lotState]
+    };
+
+    const trans = (await transactionManager.asyncAddTransaction(settings))
+        .newTransactionDataItem;
+    settings.id = trans.id;
+    return {
+        trans: trans,
+        settings: settings,
+        aaplState: aaplState,
+        lotState: lotState,
+    };
+}
+
+//
+//---------------------------------------------------------
+async function asyncQuickSell(sys, ymdDate, quantityBaseValue, saleBaseValue, 
+    sellAutoLotType, description) {
+    const { accountingSystem } = sys;
+    const transactionManager = accountingSystem.getTransactionManager();
+    //const lotManager = accountingSystem.getLotManager();
+
+    const brokerageId = sys.brokerageAId;
+    const aaplId = sys.aaplBrokerageAId;
+    //const { aaplPricedItemId } = sys;
+
+    const settings = {
+        ymdDate: ymdDate,
+        splits: [
+            { accountId: brokerageId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: saleBaseValue, 
+            },
+            { accountId: aaplId, 
+                reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
+                quantityBaseValue: -saleBaseValue,
+                lotTransactionType: T.LotTransactionType.BUY_SELL.name,
+                sellAutoLotType: sellAutoLotType,
+                sellAutoLotQuantityBaseValue: quantityBaseValue,
+                lotChanges: []
+            },
+        ]
+    };
+
+    const result = (await transactionManager.asyncAddTransaction(settings));
+    const trans = result.newTransactionDataItem;
+    settings.id = trans.id;
+    return {
+        undoId: result.undoId,
+        trans: trans,
+        settings: settings,
+    };
+}
+
+
+//
+//---------------------------------------------------------
+//
+test('Transactions-AutoLot', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    const { accountingSystem } = sys;
+    const transactionManager = accountingSystem.getTransactionManager();
+
+    const brokerageId = sys.brokerageAId; brokerageId;
+    const aaplId = sys.aaplBrokerageAId;
+    const { aaplPricedItemId } = sys; aaplPricedItemId;
+
+    let result;
+    
+    result = await asyncQuickBuy(sys, '2010-05-10', 10000, 200000, 'Lot 1');
+    const lot1State_A = result.lotState;
+    const lot1Settings_A = result.settings; lot1Settings_A;
+    expect(result.trans).toEqual(result.settings);
+    const trans_A = result.trans;
+
+    result
+        = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+            aaplId, trans_A.id);
+    const emptyAccountState = ACSTH.cleanAccountState(result[0]);
+    const trans_A1 = result.trans; trans_A1;
+
+    
+    result = await asyncQuickBuy(sys, '2010-05-20', 5000, 300000, 'Lot 2');
+    const lot2State_A = result.lotState;
+    expect(result.trans).toEqual(result.settings);
+    const trans_A2 = result.trans; trans_A2;
+    
+        
+    result = await asyncQuickBuy(sys, '2010-05-15', 20000, 100000, 'Lot 3');
+    const lot3State_A = result.lotState;
+    expect(result.trans).toEqual(result.settings);
+    const trans_A3 = result.trans; trans_A3;
+
+    
+    result = await asyncQuickBuy(sys, '2010-05-25', 15000, 150000, 'Lot 4');
+    const lot4State_A = result.lotState;
+    expect(result.trans).toEqual(result.settings);
+    const trans_A4 = result.trans; trans_A4;
+
+    // Now have the following lots:
+    // Lot 1: 2010-05-10, 10000 sh
+    // Lot 3: 2010-05-15, 20000 sh
+    // Lot 2: 2010-05-20, 5000 sh
+    // Lot 4: 2010-05-25, 15000 sh
+    const aaplState_A = {
+        ymdDate: '2010-05-25',
+        quantityBaseValue: 10000 + 5000 + 20000 + 15000,
+        lotStates: [ lot1State_A, lot3State_A, lot2State_A, lot4State_A, ],
+    };
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_A);
+
+    // Make sure we unwind account states back to nothing...
+    await transactionManager.asyncFlushAccountStateDataItems(aaplId, trans_A.id);
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_A.id);
+    ACSTH.expectAccountState(result, emptyAccountState);
+
+
+    // FIFO all of first lot
+    result = await asyncQuickSell(sys, '2020-01-02', 10000, 30000, T.AutoLotType.FIFO);
+    const aaplState_B = {
+        ymdDate: '2020-01-02',
+        quantityBaseValue: 5000 + 20000 + 15000,
+        lotStates: [ lot3State_A, lot2State_A, lot4State_A, ],
+    };
+    const trans_B = result.trans; trans_B;
+    const undoId_B = result.undoId;
+
+
+    // Now have the following lots:
+    // Lot 3: 2010-05-15, 20000 sh
+    // Lot 2: 2010-05-20, 5000 sh
+    // Lot 4: 2010-05-25, 15000 sh
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_B);
+
+    // Make sure we unwind account states back...
+    //transactionManager.isDebug = true;
+    await transactionManager.asyncFlushAccountStateDataItems(aaplId, trans_A.id);
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_B.id);
+    ACSTH.expectAccountState(result, aaplState_A);
+    //transactionManager.isDebug = false;
+
+
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_A.id);
+    ACSTH.expectAccountState(result, emptyAccountState);
+
+
+    //
+    // Undo
+    await accountingSystem.getUndoManager().asyncUndoToId(undoId_B);
+
+    await transactionManager.asyncFlushAccountStateDataItems(aaplId, trans_A.id);
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_A);
+
+    
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_A.id);
+    ACSTH.expectAccountState(result, emptyAccountState);
+
+
+    // Lot 1: 2010-05-10, 10000 sh
+    // Lot 3: 2010-05-15, 20000 sh
+    // Lot 2: 2010-05-20, 5000 sh
+    // Lot 4: 2010-05-25, 15000 sh
+    // FIFO part of first lot
+    result = await asyncQuickSell(sys, '2020-01-02', 1000, 30000, T.AutoLotType.FIFO);
+    const lot1State_C = Object.assign({}, lot1State_A);
+    lot1State_C.quantityBaseValue -= 1000;
+    lot1State_C.costBasisBaseValue = Math.round(lot1State_A.costBasisBaseValue 
+        * lot1State_C.quantityBaseValue / lot1State_A.quantityBaseValue);
+    const aaplState_C = {
+        ymdDate: '2020-01-02',
+        quantityBaseValue: 9000 + 5000 + 20000 + 15000,
+        lotStates: [ lot1State_C, lot3State_A, lot2State_A, lot4State_A, ],
+    };
+    const undoId_C = result.undoId; undoId_C;
+
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_C);
+        
+    await accountingSystem.getUndoManager().asyncUndoToId(undoId_C);
+    
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_A);
+    
+
+    // Lot 1: 2010-05-10, 10000 sh
+    // Lot 3: 2010-05-15, 20000 sh
+    // Lot 2: 2010-05-20, 5000 sh
+    // Lot 4: 2010-05-25, 15000 sh
+
+    // FIFO first lot and part of second lot
+    result = await asyncQuickSell(sys, '2020-01-02', 11000, 30000, T.AutoLotType.FIFO);
+    const trans_D = result.trans;
+    const undoId_D = result.undoId; undoId_D;
+    const lot3State_D = Object.assign({}, lot3State_A);
+    lot3State_D.quantityBaseValue -= 1000;
+    lot3State_D.costBasisBaseValue = Math.round(lot3State_A.costBasisBaseValue 
+        * lot3State_D.quantityBaseValue / lot3State_A.quantityBaseValue);
+    const aaplState_D = {
+        ymdDate: '2020-01-02',
+        quantityBaseValue: 4000 + 20000 + 15000,
+        lotStates: [ lot3State_D, lot2State_A, lot4State_A, ],
+    };
+    // Lot 3: 2010-05-15, 19000 sh
+    // Lot 2: 2010-05-20, 5000 sh
+    // Lot 4: 2010-05-25, 15000 sh
+
+    await transactionManager.asyncFlushAccountStateDataItems(aaplId, trans_A.id);
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_D);
+    
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_D.id);
+    ACSTH.expectAccountState(result, aaplState_A);
+
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_A.id);
+    ACSTH.expectAccountState(result, emptyAccountState);
+    
+    
+    
+    // Adjust first lot size
+    const splits_E = Array.from(lot1Settings_A.splits);
+    splits_E[1] = Object.assign({}, splits_E[1]);
+    const lotChanges_E = Array.from(splits_E[1].lotChanges);
+    lotChanges_E[0] = Object.assign({}, lotChanges_E[0]);
+    lotChanges_E[0].quantityBaseValue = 11000;
+    splits_E[1].lotChanges = lotChanges_E;
+
+    result = await transactionManager.asyncModifyTransaction({
+        id: trans_A.id,
+        splits: splits_E,
+    });
+    const undoId_E = result.undoId; undoId_E;
+    const trans_E = result.trans; trans_E;
+    
+    const aaplState_E = {
+        ymdDate: '2020-01-02',
+        quantityBaseValue: 5000 + 20000 + 15000,
+        lotStates: [ lot3State_A, lot2State_A, lot4State_A, ],
+    };
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_E);
+
+    await transactionManager.asyncFlushAccountStateDataItems(aaplId, trans_A.id);
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_A.id);
+    ACSTH.expectAccountState(result, emptyAccountState);
+
+
+    //
+    // Undo...
+    //
+    await accountingSystem.getUndoManager().asyncUndoToId(undoId_E);
+
+    await transactionManager.asyncFlushAccountStateDataItems(aaplId, trans_A.id);
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_D);
+    
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_D.id);
+    ACSTH.expectAccountState(result, aaplState_A);
+
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_A.id);
+    ACSTH.expectAccountState(result, emptyAccountState);
+
+
+    await accountingSystem.getUndoManager().asyncUndoToId(undoId_D);
+
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_A);
+
+
+    // Lot 1: 2010-05-10, 10000 sh
+    // Lot 3: 2010-05-15, 20000 sh
+    // Lot 2: 2010-05-20, 5000 sh
+    // Lot 4: 2010-05-25, 15000 sh
+
+    // FIFO all of first lot.
+    result = await asyncQuickSell(sys, '2020-01-02', 10000, 30000, T.AutoLotType.FIFO);
+    const trans_F = result.trans; trans_F;
+    const undoId_F = result.undoId;
+
+    // Lot 3: 2010-05-15, 20000 sh
+    // Lot 2: 2010-05-20, 5000 sh
+    // Lot 4: 2010-05-25, 15000 sh
+    const aaplState_F = {
+        ymdDate: '2020-01-02',
+        quantityBaseValue: 20000 + 5000 + 15000,
+        lotStates: [ lot3State_A, lot2State_A, lot4State_A, ],
+    };
+
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_F);
+
+    //
+    // Back to state A
+    await accountingSystem.getUndoManager().asyncUndoToId(undoId_F);
+
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_A);
+
+
+    // Lot 1: 2010-05-10, 10000 sh
+    // Lot 3: 2010-05-15, 20000 sh
+    // Lot 2: 2010-05-20, 5000 sh
+    // Lot 4: 2010-05-25, 15000 sh
+
+    // LIFO part of last lot
+    result = await asyncQuickSell(sys, '2020-02-03', 10000, 20000, T.AutoLotType.LIFO);
+    const trans_G = result.trans; trans_G;
+    const undoId_G = result.undoId; undoId_G;
+    const lot4State_G = Object.assign({}, lot4State_A);
+    lot4State_G.quantityBaseValue -= 10000;
+    lot4State_G.costBasisBaseValue = Math.round(lot4State_A.costBasisBaseValue 
+        * lot4State_G.quantityBaseValue / lot4State_A.quantityBaseValue);
+    const aaplState_G = {
+        ymdDate: '2020-02-03',
+        quantityBaseValue: 10000 + 20000 + 5000 + 5000,
+        lotStates: [ lot1State_A, lot3State_A, lot2State_A, lot4State_G, ],
+    };
+
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_G);
+    
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_G.id);
+    ACSTH.expectAccountState(result, aaplState_A);
+
+    await transactionManager.asyncFlushAccountStateDataItems(aaplId, trans_A.id);
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_G.id);
+    ACSTH.expectAccountState(result, aaplState_A);
+
+    //
+    // Back to state A
+    await accountingSystem.getUndoManager().asyncUndoToId(undoId_G);
+
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_A);
+
+    
+
+    // Lot 1: 2010-05-10, 10000 sh
+    // Lot 3: 2010-05-15, 20000 sh
+    // Lot 2: 2010-05-20, 5000 sh
+    // Lot 4: 2010-05-25, 15000 sh
+
+    // LIFO all of last lot
+    result = await asyncQuickSell(sys, '2020-02-03', 15000, 30000, T.AutoLotType.LIFO);
+    const trans_H = result.trans; trans_H;
+    const undoId_H = result.undoId; undoId_H;
+    const aaplState_H = {
+        ymdDate: '2020-02-03',
+        quantityBaseValue: 10000 + 20000 + 5000,
+        lotStates: [ lot1State_A, lot3State_A, lot2State_A, ],
+    };
+
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_H);
+    
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_H.id);
+    ACSTH.expectAccountState(result, aaplState_A);
+
+    await transactionManager.asyncFlushAccountStateDataItems(aaplId, trans_A.id);
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_H.id);
+    ACSTH.expectAccountState(result, aaplState_A);
+
+    //
+    // Back to state A
+    await accountingSystem.getUndoManager().asyncUndoToId(undoId_H);
+
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_A);
+
+
+
+    // Lot 1: 2010-05-10, 10000 sh
+    // Lot 3: 2010-05-15, 20000 sh
+    // Lot 2: 2010-05-20, 5000 sh
+    // Lot 4: 2010-05-25, 15000 sh
+
+    // LIFO last lot and part of next lot
+    result = await asyncQuickSell(sys, '2020-02-03', 17000, 340000, T.AutoLotType.LIFO);
+    const trans_I = result.trans; trans_I;
+    const undoId_I = result.undoId; undoId_I;
+    const lot2State_I = Object.assign({}, lot2State_A);
+    lot2State_I.quantityBaseValue -= 2000;
+    lot2State_I.costBasisBaseValue = Math.round(lot2State_A.costBasisBaseValue 
+        * lot2State_I.quantityBaseValue / lot2State_A.quantityBaseValue);
+    const aaplState_I = {
+        ymdDate: '2020-02-03',
+        quantityBaseValue: 10000 + 20000 + 3000,
+        lotStates: [ lot1State_A, lot3State_A, lot2State_I ],
+    };
+
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_I);
+    
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_I.id);
+    ACSTH.expectAccountState(result, aaplState_A);
+
+    await transactionManager.asyncFlushAccountStateDataItems(aaplId, trans_A.id);
+    result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId, trans_I.id);
+    ACSTH.expectAccountState(result, aaplState_A);
+
+    //
+    // Back to state A
+    await accountingSystem.getUndoManager().asyncUndoToId(undoId_I);
+
+    ACSTH.expectAccountState(
+        transactionManager.getCurrentAccountStateDataItem(aaplId),
+        aaplState_A);
 });

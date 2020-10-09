@@ -15,6 +15,44 @@ import { areSimilar } from '../util/AreSimilar';
 
 
 /**
+ * @typedef {object} AutoLotTypeDef
+ * @property {string}   name    The identifying name if the auto-lot type.
+ * @property {string}   description The user description of the auto-lot type.
+ */
+
+/**
+ * Enumeration for the auto-lot types
+ * @readonly
+ * @enum {AutoLotType}
+ * @property {AutoLotTypeDef}   FIFO
+ * @property {AutoLotTypeDef}   LIFO
+ */
+export const AutoLotType = {
+    FIFO: { name: 'FIFO', },
+    LIFO: { name: 'LIFO', },
+};
+
+/**
+ * 
+ * @param {(string|AutoLotType|undefined)} ref 
+ * @returns {(AutoLotType|undefined)}
+ */
+export function getAutoLotType(ref) {
+    return (typeof ref === 'string') ? AutoLotType[ref] : ref;
+}
+
+
+/**
+ * 
+ * @param {(string|AutoLotType|undefined)} ref 
+ * @returns {(string|undefined)}
+ */
+export function getAutoLotTypeName(ref) {
+    return ((ref === undefined) || (typeof ref === 'string')) ? ref : ref.name;
+}
+
+
+/**
  * @typedef {object} LotTransactionTypeDef
  * @property {string}   name    The identifying name of the lot transaction type.
  * @property {string}   description The user description of the lot transaction type.
@@ -101,8 +139,13 @@ export function loadTransactionsUserMessages() {
     for (const reconcileState of Object.values(ReconcileState)) {
         reconcileState.description = userMsg('ReconcileState-' + reconcileState.name);
     }
+
     for (const type of Object.values(LotTransactionType)) {
         type.description = userMsg('LotTransactionType-' + type.name);
+    }
+
+    for (const type of Object.values(AutoLotType)) {
+        type.description = userMsg('AutoLotType-' + type.name);
     }
 }
 
@@ -120,6 +163,10 @@ export function loadTransactionsUserMessages() {
  * {@link Ratio}.
  * @property {string}   [lotTransactionType]    Required if the account 
  * has lots, this is the lot transaction type
+ * @property {string}   [sellAutoLotType]   Only valid for sell lot transaction types,
+ * if specified then lotChanges should be an empty array.
+ * @property {number}   [sellAutoLotQuantityBaseValue]  Required if sellAutoLotType is
+ * being used, the number shares being sold.
  * @property {LotChangeDataItem[]}  [lotChanges]    Array of changes to any lots.
  * @property {string}   [description]
  * @property {string}   [refNum]
@@ -138,6 +185,10 @@ export function loadTransactionsUserMessages() {
  * {@link Ratio}.
  * @property {LotTransactionType}   [lotTransactionType]    Required if the account 
  * has lots, this is the lot transaction type
+ * @property {AutoLotType}  [sellAutoLotType]   Only valid for sell lot transaction 
+ * types, if specified then lotChanges should be an empty array.
+ * @property {number}   [sellAutoLotQuantityBaseValue]  Required if sellAutoLotType is
+ * being used, the number shares being sold.
  * @property {LotChange[]}  [lotChanges]    Array of changes to any lots.
  * @property {string}   [description]
  * @property {string}   [refNum]
@@ -157,11 +208,14 @@ export function getSplitDataItem(split, alwaysCopy) {
         const reconcileStateName = getReconcileStateName(split.reconcileState);
         const lotTransactionTypeName 
             = getLotTransactionTypeName(split.lotTransactionType);
+        const sellAutoLotTypeName
+            = getAutoLotTypeName(split.sellAutoLotType);
         const lotChangeDataItems = LS.getLotChangeDataItems(split.lotChanges, alwaysCopy);
         const currencyToUSDRatioJSON = getRatioJSON(split.currencyToUSDRatio);
         if (alwaysCopy
          || (reconcileStateName !== split.reconcileState)
          || (lotTransactionTypeName !== split.lotTransactionType)
+         || (sellAutoLotTypeName !== split.sellAutoLotType)
          || (lotChangeDataItems !== split.lotChanges)
          || (currencyToUSDRatioJSON !== split.currencyToUSDRatio)) {
             const splitDataItem = Object.assign({}, split);
@@ -170,6 +224,9 @@ export function getSplitDataItem(split, alwaysCopy) {
             }
             if (lotTransactionTypeName !== undefined) {
                 splitDataItem.lotTransactionType = lotTransactionTypeName;
+            }
+            if (sellAutoLotTypeName !== undefined) {
+                splitDataItem.sellAutoLotType = sellAutoLotTypeName;
             }
             if (lotChangeDataItems !== undefined) {
                 splitDataItem.lotChanges = lotChangeDataItems;
@@ -197,11 +254,14 @@ export function getSplit(splitDataItem, alwaysCopy) {
         const reconcileState = getReconcileState(splitDataItem.reconcileState);
         const lotTransactionType = getLotTransactionType(
             splitDataItem.lotTransactionType);
+        const sellAutoLotType = getAutoLotTypeName(
+            splitDataItem.sellAutoLotType);
         const lotChanges = LS.getLotChanges(splitDataItem.lotChanges, alwaysCopy);
         const currencyToUSDRatio = getRatio(splitDataItem.currencyToUSDRatio);
         if (alwaysCopy
          || (reconcileState !== splitDataItem.reconcileState)
          || (lotTransactionType !== splitDataItem.lotTransactionType)
+         || (sellAutoLotType !== splitDataItem.sellAutoLotType)
          || (lotChanges !== splitDataItem.lotChanges)
          || (currencyToUSDRatio !== splitDataItem.currencyToUSDRatio)) {
             const split = Object.assign({}, splitDataItem);
@@ -210,6 +270,9 @@ export function getSplit(splitDataItem, alwaysCopy) {
             }
             if (lotTransactionType !== undefined) {
                 split.lotTransactionType = lotTransactionType;
+            }
+            if (sellAutoLotType !== undefined) {
+                split.sellAutoLotType = sellAutoLotType;
             }
             if (lotChanges !== undefined) {
                 split.lotChanges = lotChanges;
@@ -734,7 +797,8 @@ class AccountStatesUpdater {
                 }
                 else {
                     if (quantityBaseValue > 0) {
-                        throw userError('TransactionManager-modify_lot_quantity_invalid');
+                        // throw userError('TransactionManager-modify_lot_
+                        // quantity_invalid');
                     }
                     else if (
                         (existingLotState.quantityBaseValue + quantityBaseValue) < 0) {
@@ -743,6 +807,56 @@ class AccountStatesUpdater {
                 }
             }
         });
+    }
+
+
+    _updateAccountStateFromSplit(transactionKey, accountState,
+        split, newAccountStatesByOrder, removedLotIds, ymdDate) {
+        this._validateLotSplit(transactionKey, 
+            accountState, split, newAccountStatesByOrder, 
+            removedLotIds);
+        
+        const isDebug = this._manager.isDebug;
+
+        let lotChanges = split.lotChanges;
+        const { lotTransactionType, sellAutoLotType } = split;
+        let storeLotChangesInAccountState;
+        if (lotTransactionType === LotTransactionType.BUY_SELL.name) {
+            switch (sellAutoLotType) {
+            case AutoLotType.FIFO.name :
+                lotChanges = LS.createFIFOLotChangeDataItems(
+                    accountState.lotStates, 
+                    split.sellAutoLotQuantityBaseValue);
+                storeLotChangesInAccountState 
+                    = (lotChanges !== undefined) && (lotChanges.length);
+                break;
+
+            case AutoLotType.LIFO.name :
+                lotChanges = LS.createLIFOLotChangeDataItems(
+                    accountState.lotStates, 
+                    split.sellAutoLotQuantityBaseValue);
+                storeLotChangesInAccountState 
+                    = (lotChanges !== undefined) && (lotChanges.length);
+                break;
+            }
+        }
+
+        if (isDebug) {
+            /*
+            console.log('accountStateUpdate: ' + JSON.stringify({
+                transactionKey: transactionKey,
+                lotStates: accountState.lotStates,
+                lotChanges: lotChanges,
+                sellAutoLotType: sellAutoLotType,
+                sellAutoLotQuantityBaseValue: split.sellAutoLotQuantityBaseValue,
+            }));
+            */
+        }
+        
+        accountState = AS.addSplitToAccountStateDataItem(
+            accountState, split, ymdDate, lotChanges, storeLotChangesInAccountState);
+
+        return accountState;
     }
 
 
@@ -763,18 +877,15 @@ class AccountStatesUpdater {
                 const latestEntry = updatedSortedTransctionEntries.at(
                     updatedSortedTransctionEntries.length - 1);
                 if (latestEntry) {
-                    if (!latestEntry[0]) {
-                        console.log('latestEntry: ' + JSON.stringify(latestEntry));
-                        console.log(JSON.stringify(
-                            updatedSortedTransctionEntries.getValues()));
-                    }
                     ymdDate = latestEntry[0].ymdDate;
                 }
             }
 
             if (hasLots) {
+                const isDebug = this._manager.isDebug;
+
                 // We want to unwind the account state all the way back to the 
-                // oldest transaction Then we need to rewind back up but we need to 
+                // oldest transaction. Then we need to rewind back up but we need to 
                 // use the updated splits.
                 const { sortedTransactionKeys } = accountEntry;
                 const { oldestIndex, removedLotIds } = processor;
@@ -785,9 +896,20 @@ class AccountStatesUpdater {
                         .asyncGetAccountStateDataItemsBeforeTransaction(
                             accountId, transactionId));
                     accountState = accountStates[accountStates.length - 1];
+
+                    if (isDebug) {
+                        /*
+                        console.log('transactionId: ' + transactionId);
+                        console.log('accountStates: ' + JSON.stringify(accountStates));
+                        */
+                    }
                 }
                 else {
                     accountState = { lotStates: [] };
+                }
+
+                if (isDebug) {
+                    //console.log('lotStates: ' + JSON.stringify(accountState.lotStates));
                 }
 
                 const newAccountStatesByOrder 
@@ -805,29 +927,40 @@ class AccountStatesUpdater {
                     newAccountStatesByOrder.push(accountStates);
 
                     const { id, ymdDate } = transactionKey;
+
                     if (!newSplits) {
                         const transactionDataItem 
                             = await this._manager.asyncGetTransactionDataItemsWithIds(id);
                         const { splits, ymdDate } = transactionDataItem;
                         splits.forEach((split) => {
                             if (split.accountId === accountId) {
-                                this._validateLotSplit(transactionKey, 
-                                    accountState, split, newAccountStatesByOrder, 
-                                    removedLotIds);
-                                accountState = AS.addSplitToAccountStateDataItem(
-                                    accountState, split, ymdDate);
+                                accountState = this._updateAccountStateFromSplit(
+                                    transactionKey, accountState,
+                                    split, newAccountStatesByOrder, 
+                                    removedLotIds, ymdDate);
                                 accountStates.push(accountState);
                             }
                         });
                     }
                     else {
                         newSplits.forEach((newSplit) => {
-                            this._validateLotSplit(transactionKey, accountState, 
-                                newSplit, newAccountStatesByOrder, removedLotIds);
-                            accountState = AS.addSplitToAccountStateDataItem(
-                                accountState, newSplit, ymdDate);
+                            accountState = this._updateAccountStateFromSplit(
+                                transactionKey, accountState,
+                                newSplit, newAccountStatesByOrder, 
+                                removedLotIds, ymdDate);
                             accountStates.push(accountState);
                         });
+                    }
+
+                    if (isDebug) {
+                        /*
+                        console.log('updated: ' + JSON.stringify({
+                            i: i,
+                            id: id,
+                            newSplits: (newSplits) ? true : false,
+                            accountStates: accountStates,
+                        }));
+                        */
                     }
                 }
             }
@@ -854,6 +987,8 @@ class AccountStatesUpdater {
     }
 
 
+    // This updates the account entries in the TransactionManager
+    // with the current account states.
     updateAccountEntries() {
         const accountProcessors 
             = Array.from(this._accountProcessorsByAccountIds.values());
@@ -1108,6 +1243,17 @@ export class TransactionManager extends EventEmitter {
     }
 
 
+    async asyncDumpAccountStatesByTransactionId(accountId, msg) {
+        const accountEntry = await this._asyncLoadAccountEntry(accountId);
+        console.log((msg || '') + ' ' + JSON.stringify({
+            accountId: accountId,
+            //accountStatesByTransactionId: 
+            //    Array.from(accountEntry.accountStatesByTransactionId.entries()),
+            accountStatesbyOrder: accountEntry.accountStatesByOrder,
+        }));
+    }
+
+
     async _asyncLoadAccountStateDataItemsForTransactionId(accountId, transactionId) {
         const accountEntry = await this._asyncLoadAccountEntry(accountId);
         let accountStateDataItems 
@@ -1115,6 +1261,12 @@ export class TransactionManager extends EventEmitter {
 
         if (!accountStateDataItems) {
             let workingAccountState = this.getCurrentAccountStateDataItem(accountId);
+
+            if (this.isDebug) {
+                console.log('start: ' + JSON.stringify({
+                    workingAccountState: workingAccountState,
+                }));
+            }
 
             const { sortedTransactionKeys, accountStatesByOrder, 
                 accountStatesByTransactionId } = accountEntry;
@@ -1124,6 +1276,14 @@ export class TransactionManager extends EventEmitter {
                 if (accountStatesByOrder[i]) {                    
                     accountStateDataItems = accountStatesByOrder[i];
                     workingAccountState = accountStateDataItems[0];
+
+                    if (this.isDebug) {
+                        console.log('cached: ' + JSON.stringify({
+                            i: i,
+                            id: id,
+                            workingAccountState: workingAccountState,
+                        }));
+                    }
                 }
                 else {
                     let ymdDate = getYMDDateString(sortedTransactionKeys[i].ymdDate);
@@ -1137,8 +1297,18 @@ export class TransactionManager extends EventEmitter {
                         if (split.accountId === accountId) {
                             workingAccountState 
                                 = AS.removeSplitFromAccountStateDataItem(
-                                    workingAccountState, split, ymdDate);
+                                    workingAccountState, split, ymdDate,
+                                    workingAccountState.storedLotChanges);
                             newAccountStateDataItems.push(workingAccountState);
+
+                            if (this.isDebug) {
+                                console.log('remove: ' + JSON.stringify({
+                                    i: i,
+                                    id: id,
+                                    split: split,
+                                    workingAccountState: workingAccountState,
+                                }));
+                            }
                         }
                     }
 
@@ -1210,6 +1380,20 @@ export class TransactionManager extends EventEmitter {
 
 
     /**
+     * For testing...
+     * @param {number} accountId 
+     * @param {number} transactionId 
+     * @param {number} byOrderLength
+     */
+    async asyncFlushAccountStateDataItems(accountId, transactionId, byOrderLength) {
+        const accountEntry = await this._asyncLoadAccountEntry(accountId);
+        accountEntry.accountStatesByTransactionId.delete(transactionId);
+        byOrderLength = byOrderLength || 0;
+        accountEntry.accountStatesByOrder.length = byOrderLength;
+    }
+
+
+    /**
      * Retrieves the account state data item(s) immediately before a transaction has 
      * been applied to the account.
      * @param {number} accountId 
@@ -1223,6 +1407,12 @@ export class TransactionManager extends EventEmitter {
         const accountStateDataItems 
             = await this._asyncLoadAccountStateDataItemsForTransactionId(
                 accountId, transactionId);
+        if (!accountStateDataItems) {
+            return [{
+                quantityBaseValue: 0,
+                lotStates: [],
+            }];
+        }
         return accountStateDataItems.slice(0, accountStateDataItems.length - 1);
     }
 
@@ -1360,7 +1550,7 @@ export class TransactionManager extends EventEmitter {
 
         const currency = getCurrency(pricedItem.currency);
 
-        const result = this.sumSplits(splits, currency);
+        const result = this._sumSplits(splits, currency);
         if (result instanceof Error) {
             throw result;
         }
@@ -1399,7 +1589,7 @@ export class TransactionManager extends EventEmitter {
     }
 
 
-    sumSplits(splits, activeCurrency) {
+    _sumSplits(splits, activeCurrency) {
         const accountManager = this._accountingSystem.getAccountManager();
         const pricedItemManager = this._accountingSystem.getPricedItemManager();
 
@@ -1442,13 +1632,35 @@ export class TransactionManager extends EventEmitter {
             isCurrencyExchange = isCurrencyExchange || (currency !== activeCurrency);
 
             if (account.type.hasLots) {
-                const { lotChanges, lotTransactionType } = split;
+                const { lotChanges, lotTransactionType, sellAutoLotType } = split;
+                if (!lotTransactionType) {
+                    return userError('TransactionManager-split_needs_lot_transaction',
+                        account.type.name);
+                }
                 if (!lotChanges && creditBaseValue) {
                     return userError('TransactionManager~split_needs_lots', 
                         account.type.name);
                 }
 
                 if (lotChanges) {
+                    if (lotTransactionType 
+                        === LotTransactionType.RETURN_OF_CAPITAL.name) {
+                        if (lotChanges.length) {
+                            return userError(
+                                'TransactionManager-no_lots_for_return_of_capital');
+                        }
+                    }
+
+                    if (lotTransactionType
+                        === LotTransactionType.BUY_SELL.name) {
+                        if (sellAutoLotType) {
+                            if (lotChanges.length) {
+                                return userError(
+                                    'TransactionManager-no_lots_for_sell_auto_lots');
+                            }
+                        }
+                    }
+                    
                     const isSplitMerge = lotTransactionType 
                         === LotTransactionType.SPLIT_MERGE.name;
                     for (let j = lotChanges.length - 1; j >= 0; --j) {
@@ -1514,7 +1726,7 @@ export class TransactionManager extends EventEmitter {
         }
 
         // We need to ensure that the sum of the values of the splits add up.
-        const result = this.sumSplits(splits);
+        const result = this._sumSplits(splits);
         if (result instanceof Error) {
             return result;
         }

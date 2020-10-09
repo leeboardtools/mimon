@@ -51,15 +51,21 @@ export function getAccountState(accountStateDataItem, alwaysCopy) {
         const ymdDate = getYMDDate(accountStateDataItem.ymdDate);
         const lotStates = LS.getLotStates(accountStateDataItem.lotStates, 
             alwaysCopy);
+        const storedLotChanges = LS.getLotChanges(accountStateDataItem.storedLotChanges,
+            alwaysCopy);
         if (alwaysCopy 
          || (ymdDate !== accountStateDataItem.ymdDate)
-         || (lotStates !== accountStateDataItem.lotStates)) {
+         || (lotStates !== accountStateDataItem.lotStates)
+         || (storedLotChanges !== accountStateDataItem.storedLotChanges)) {
             const accountState = Object.assign({}, accountStateDataItem);
             if (ymdDate !== undefined) {
                 accountState.ymdDate = ymdDate;
             }
             if (lotStates !== undefined) {
                 accountState.lotStates = lotStates;
+            }
+            if (storedLotChanges !== undefined) {
+                accountState.storedLotChanges = storedLotChanges;
             }
             return accountState;
         }
@@ -81,15 +87,21 @@ export function getAccountStateDataItem(accountState, alwaysCopy) {
         const ymdDateString = getYMDDateString(accountState.ymdDate);
         const lotStateDataItems = LS.getLotStateDataItems(accountState.lotStates, 
             alwaysCopy);
+        const storedLotChangeDataItems = LS.getLotChangeDataItems(
+            accountState.storedLotChanges, alwaysCopy);
         if (alwaysCopy 
          || (ymdDateString !== accountState.ymdDate)
-         || (lotStateDataItems !== accountState.lotStates)) {
+         || (lotStateDataItems !== accountState.lotStates)
+         || (storedLotChangeDataItems !== accountState.storedLotChanges)) {
             const accountStateDataItem = Object.assign({}, accountState);
             if (ymdDateString !== undefined) {
                 accountStateDataItem.ymdDate = ymdDateString;
             }
             if (lotStateDataItems !== undefined) {
                 accountStateDataItem.lotStates = lotStateDataItems;
+            }
+            if (storedLotChangeDataItems !== undefined) {
+                accountStateDataItem.storedLotChanges = storedLotChangeDataItems;
             }
             return accountStateDataItem;
         }
@@ -150,7 +162,7 @@ export function areAccountStatesSimilar(a, b) {
 
 
 function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, lotChanges,
-    sign) {
+    sign, storeLotChangesInAccountState) {
     split = getFullSplitDataItem(split);
     const { lotTransactionType } = split;
     lotChanges = lotChanges || split.lotChanges;
@@ -160,6 +172,8 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, lotCha
 
     ymdDate = getYMDDateString(ymdDate) || accountStateDataItem.ymdDate;
     accountStateDataItem.ymdDate = ymdDate;
+    
+    delete accountStateDataItem.storedLotChanges;
 
     if (lotChanges) {
         const { lotStates } = accountStateDataItem;
@@ -254,6 +268,10 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, lotCha
         accountStateDataItem.lotStates.forEach(
             (lotState) => { quantityBaseValue += lotState.quantityBaseValue; });
         accountStateDataItem.quantityBaseValue = quantityBaseValue;
+
+        if (storeLotChangesInAccountState) {
+            accountStateDataItem.storedLotChanges = lotChanges;
+        }
     }
     else {
         accountStateDataItem.quantityBaseValue += sign * split.quantityBaseValue;
@@ -272,12 +290,15 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, lotCha
  * @param {YMDDate} [ymdDate]   Optional date for the new account state data item.
  * @param {LotChange[]|LotChangeDataItem[]} [lotChanges]    If <code>undefined</code>
  * the lot changes from the split will be used.
+ * @param {boolean} [storeLotChangesInAccountState=false]   If <code>true</code> then
+ * lot changes made will be stored in the storedLotChanges property of the account state.
  * @returns {AccountStateDataItem}
  * @throws {Error}
  */
-export function addSplitToAccountStateDataItem(accountState, split, ymdDate, lotChanges) {
+export function addSplitToAccountStateDataItem(accountState, split, ymdDate, lotChanges,
+    storeLotChangesInAccountState) {
     return adjustAccountStateDataItemForSplit(accountState, split, ymdDate, lotChanges, 
-        1);
+        1, storeLotChangesInAccountState);
 }
 
 
