@@ -50,7 +50,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             process.nextTick(async () => {
                 const { accessor } = this.props;
                 const accountingActions = accessor.getAccountingActions();
-                const action = accountingActions.createRemoveTransactionAction(
+                const action = await accountingActions.asyncCreateRemoveTransactionAction(
                     activeSplitInfo.transactionId);
                 accessor.asyncApplyAction(action)
                     .catch((e) => {

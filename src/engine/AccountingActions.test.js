@@ -434,7 +434,7 @@ test('AccountingActions-Tranasctions', async () => {
         }
     ];
 
-    const modifyAction = actions.createModifyTransactionsAction(settingsA1);
+    const modifyAction = await actions.asyncCreateModifyTransactionsAction(settingsA1);
     await actionManager.asyncApplyAction(modifyAction);
 
     const modifiedA0 = Object.assign({}, settingsA[0], settingsA1[0]);
@@ -462,7 +462,7 @@ test('AccountingActions-Tranasctions', async () => {
 
 
     // Remove transaction.
-    const removeAction = actions.createRemoveTransactionsAction(settingsA[1].id);
+    const removeAction = await actions.asyncCreateRemoveTransactionsAction(settingsA[1].id);
     await actionManager.asyncApplyAction(removeAction);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id))
         .toBeUndefined();
@@ -477,7 +477,7 @@ test('AccountingActions-Tranasctions', async () => {
 
 
     // Multiple remove transactions
-    const removeActionB = actions.createRemoveTransactionsAction(
+    const removeActionB = await actions.asyncCreateRemoveTransactionsAction(
         [settingsA[0].id, settingsB.id]);
     await actionManager.asyncApplyAction(removeActionB);
 
@@ -523,7 +523,7 @@ test('AccountingActions-Tranasctions', async () => {
             ],    
         }
     ];
-    const invalidModifyAction = actions.createModifyTransactionsAction(invalidA1);
+    const invalidModifyAction = await actions.asyncCreateModifyTransactionsAction(invalidA1);
     expect(await actionManager.asyncValidateApplyAction(invalidModifyAction))
         .toBeInstanceOf(Error);
 

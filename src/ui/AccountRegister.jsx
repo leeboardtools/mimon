@@ -1418,7 +1418,7 @@ export class AccountRegister extends React.Component {
                         }
                     }
 
-                    action = accountingActions.createModifyTransactionsAction(
+                    action = await accountingActions.asyncCreateModifyTransactionsAction(
                         newTransactionDataItem
                     );
 

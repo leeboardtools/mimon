@@ -269,7 +269,7 @@ export class Reconciler {
         });
 
         const accountingActions = this._accessor.getAccountingActions();
-        const transactionModifyAction = accountingActions.createModifyTransactionAction(
+        const transactionModifyAction = await accountingActions.asyncCreateModifyTransactionAction(
             transactionDataItemsToChange
         );
 

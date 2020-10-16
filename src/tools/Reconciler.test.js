@@ -141,7 +141,7 @@ test('Reconciler', async () => {
         const accountingActions = accessor.getAccountingActions();
         result = await accessor.asyncGetTransactionDataItemWithId(sys.transFId);
         result.splits[6].reconcileState = T.ReconcileState.RECONCILED;
-        action = accountingActions.createModifyTransactionAction(result);
+        action = await accountingActions.asyncCreateModifyTransactionAction(result);
         await accessor.asyncApplyAction(action);
 
         result = await reconcilerB.asyncGetNonReconciledSplitInfos();
@@ -233,7 +233,7 @@ test('Reconciler', async () => {
 
         // Remove transZ
         // Once we remove a transaction we lose the marked state.
-        action = accountingActions.createRemoveTransactionAction(transZId);
+        action = await accountingActions.asyncCreateRemoveTransactionAction(transZId);
         await accessor.asyncApplyAction(action);
     
         result = await reconcilerB.asyncGetNonReconciledSplitInfos();

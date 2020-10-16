@@ -128,8 +128,10 @@ export class AccountingActions extends EventEmitter {
         
         // Some synonyms
         this.createAddTransactionAction = this.createAddTransactionsAction;
-        this.createRemoveTransactionAction = this.createRemoveTransactionsAction;
-        this.createModifyTransactionAction = this.createModifyTransactionsAction;
+        this.asyncCreateRemoveTransactionAction 
+            = this.asyncCreateRemoveTransactionsAction;
+        this.asyncCreateModifyTransactionAction 
+            = this.asyncCreateModifyTransactionsAction;
         
     }
 
@@ -213,7 +215,7 @@ export class AccountingActions extends EventEmitter {
         if (transactionKeys.length) {
             const transactionIds = transactionKeys.map((key) => key.id);
             const transactionsAction 
-                = this.createRemoveTransactionsAction(transactionIds);
+                = await this.asyncCreateRemoveTransactionsAction(transactionIds);
             action = createCompositeAction(
                 {
                     name: userMsg('Actions-remove_transactions_and_account',
@@ -446,7 +448,7 @@ export class AccountingActions extends EventEmitter {
             if (transactionKeys.length) {
                 const transactionIds = transactionKeys.map((key) => key.id);
                 const transactionsAction 
-                    = this.createRemoveTransactionsAction(transactionIds);
+                    = await this.asyncCreateRemoveTransactionsAction(transactionIds);
                 action = createCompositeAction(
                     {
                         name: userMsg('Actions-remove_transactions_and_lot'),
@@ -587,7 +589,7 @@ export class AccountingActions extends EventEmitter {
      * @param {number|number[]} transactionIds 
      * @returns {ActionDataItem}
      */
-    createRemoveTransactionsAction(transactionIds) {
+    async asyncCreateRemoveTransactionsAction(transactionIds) {
         if (Array.isArray(transactionIds)) {
             transactionIds = Array.from(transactionIds);
         }
@@ -614,7 +616,7 @@ export class AccountingActions extends EventEmitter {
      * an id property is required.
      * @returns {ActionDataItem}
      */
-    createModifyTransactionsAction(transactions) {
+    async asyncCreateModifyTransactionsAction(transactions) {
         let transactionDataItems;
         if (!Array.isArray(transactions)) {
             transactionDataItems = T.getTransactionDataItem(transactions, true);
