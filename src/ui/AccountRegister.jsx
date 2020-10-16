@@ -22,6 +22,24 @@ import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 
 const allColumnInfoDefs = {};
 
+/**
+ * @typedef {object} AccountRegister~RowEditBuffer
+ * @private
+ * @property {TransactionDataItem}  newTransactionDataItem
+ * @property {number}   splitIndex
+ * 
+ */
+
+/**
+ * @typedef {object} AccountRegister~SaveBuffer
+ * Returned by {@link AccountRegister#getSaveBuffer}, passed on to the
+ * saveCellValue callbacks.
+ * @private
+ * @property {TransactionDataItem}  newTransactionDataItem
+ * @property {number}   splitIndex
+ * 
+ */
+
 function getTransactionInfo(args) {
     const { rowEditBuffer, rowEntry } = args;
     return (rowEditBuffer) 
@@ -31,6 +49,24 @@ function getTransactionInfo(args) {
             splitIndex: rowEntry.splitIndex,
         };
 }
+
+
+function getSplitInfo(args) {
+    const { saveBuffer, rowEditBuffer, rowEntry } = args;
+    return (saveBuffer) 
+        ? saveBuffer.lceSplitInfo
+        : (rowEditBuffer) 
+            ? rowEditBuffer.lceSplitInfo
+            : rowEntry.lceSplitInfo;
+}
+
+
+function updateSplitInfo(args, newSplitInfo) {
+    const { rowEntry } = args;
+    const { caller } = rowEntry;
+    caller.updateLCESplitInfo(args, newSplitInfo);
+}
+
 
 
 function getSplitCellValue(args, propertyName, valueName) {
@@ -501,45 +537,38 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
         };
 
         if (accountType.hasLots) {
-            // TODO:
-            // Going to replace all this at some point, as lots need special editing.
+            const lceArgs = {
+                getSplitInfo: getSplitInfo,
+                updateSplitInfo: updateSplitInfo,
+            };
 
             // action
+            columnInfoDefs.action = LCE.getActionColumnInfo(lceArgs);
 
             // description
 
-            columnInfoDefs.reconcile = ACE.getReconcileStateColumnInfo(
-                {
-                    getCellValue: (args) => getSplitCellValue(args, 'reconcileState'),
-                    saveCellValue: (args) => saveSplitCellValue(args, 'reconcileState'),
-                }
-            );
+            // reconcileState
+            columnInfoDefs.reconcile = ACE.getReconcileStateColumnInfo({
+                getCellValue: (args) => getSplitCellValue(args, 'reconcileState'),
+                saveCellValue: (args) => saveSplitCellValue(args, 'reconcileState'),
+            });
 
             // shares
+            columnInfoDefs.shares = LCE.getSharesColumnInfo(lceArgs);
 
-            // value
+            // amount
+            columnInfoDefs.monetaryAmount = LCE.getMonetaryAmountColumnInfo(lceArgs);
 
             // fees/commissions
+            columnInfoDefs.fees = LCE.getFeesCommissionsColumnInfo(lceArgs);
 
             // price
+            columnInfoDefs.price = LCE.getPriceColumnInfo(lceArgs);
 
-            // goes away
-            columnInfoDefs.bought = ACE.getSplitQuantityColumnInfo(
-                {
-                    getCellValue: (args) => getSplitQuantityCellValue(args, 'bought'),
-                    saveCellValue: saveSplitQuantityCellValue,
-                },
-                'bought');
-            // goes away
-            columnInfoDefs.sold = ACE.getSplitQuantityColumnInfo(
-                {
-                    getCellValue: (args) => getSplitQuantityCellValue(args, 'sold'),
-                    saveCellValue: saveSplitQuantityCellValue,
-                },
-                'sold');
-            columnInfoDefs.sold.oppositeColumnInfo = columnInfoDefs.bought;
-            columnInfoDefs.bought.oppositeColumnInfo = columnInfoDefs.sold;
+            // market value
+            // columnInfoDefs.marketValue = LCE.getMarketValueColumnInfo(lceArgs);
 
+            // total shares
             columnInfoDefs.totalShares = LCE.getTotalSharesColumnInfo({
                 getCellValue: getAccountStateQuantityCellValue,
             });
@@ -600,8 +629,10 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
 
         for (let name in columnInfoDefs) {
             const columnInfo = columnInfoDefs[name];
-            columnInfo.ariaLabel = columnInfo.ariaLabel 
-                || columnInfo.header.ariaLabel;
+            if (columnInfo) {
+                columnInfo.ariaLabel = columnInfo.ariaLabel 
+                    || columnInfo.header.ariaLabel;
+            }
         }
 
         allColumnInfoDefs[accountType.name] = columnInfoDefs;
@@ -674,7 +705,10 @@ export class AccountRegister extends React.Component {
 
         if (!columnInfos.length) {
             for (let name in columnInfoDefs) {
-                columnInfos.push(columnInfoDefs[name]);
+                const columnInfoDef = columnInfoDefs[name];
+                if (columnInfoDef) {
+                    columnInfos.push(columnInfoDef);
+                }
             }
         }
 
@@ -750,8 +784,17 @@ export class AccountRegister extends React.Component {
         this.state.columns = columnInfosToColumns(this.state);
 
         this.updateRowEntries();
+
+        this.updateRowEntryForLotCellEditors(this._sizingRowEntry);
     }
 
+
+    hasLots() {
+        const { accessor, accountId } = this.props;
+        const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+        const accountType = A.getAccountType(accountDataItem.type);
+        return accountType.hasLots;
+    }
     
     isTransactionForThis(transactionDataItem) {
         const { splits } = transactionDataItem;
@@ -870,6 +913,15 @@ export class AccountRegister extends React.Component {
     }
 
 
+    updateRowEntryForLotCellEditors(rowEntry) {
+        if (this.hasLots()) {
+            rowEntry.lceSplitInfo = LCE.createSplitInfo(
+                rowEntry.transactionDataItem || rowEntry.newTransactionDataItem,
+                rowEntry.splitIndex,
+                this.props.accessor
+            );
+        }
+    }
 
     updateRowEntries(modifiedTransactionIds) {
         if (this._rowTableRef.current) {
@@ -923,6 +975,7 @@ export class AccountRegister extends React.Component {
                                         existingRowEntry);
                                     existingRowEntry.transactionDataItem = undefined;
                                     existingRowEntry.accountStateDataItem = undefined;
+                                    existingRowEntry.lceSplitInfo = undefined;
                                 }
 
                                 if (activeRowIndex === existingRowEntry.rowIndex) {
@@ -959,7 +1012,8 @@ export class AccountRegister extends React.Component {
 
             //
             // The 'new transaction' row...
-            newRowEntries.push({
+
+            const newTransactionRowEntry = {
                 key: '',
                 transactionDataItem: {
                     ymdDate: this._lastYMDDate,
@@ -979,7 +1033,10 @@ export class AccountRegister extends React.Component {
                 splitIndex: 0,
                 splitOccurrance: 0,
                 caller: this,
-            });
+            };
+            this.updateRowEntryForLotCellEditors(newTransactionRowEntry);
+            
+            newRowEntries.push(newTransactionRowEntry);
 
 
             // Update the row entry indices.
@@ -1115,6 +1172,8 @@ export class AccountRegister extends React.Component {
             newRowEntry.transactionDataItem = resultEntry.transactionDataItem;
             newRowEntry.splitIndex = resultEntry.splitIndex;
 
+            this.updateRowEntryForLotCellEditors(newRowEntry);
+
             newRowEntries[rowIndex] = newRowEntry;
             let transactionIdRowEntries 
                 = Array.from(newRowEntriesByTransactionIds.get(id));
@@ -1201,6 +1260,8 @@ export class AccountRegister extends React.Component {
             = T.getTransactionDataItem(transactionDataItem, true);
         rowEditBuffer.splitIndex = rowEntry.splitIndex;
 
+        this.updateRowEntryForLotCellEditors(rowEditBuffer);
+
         return true;
     }
 
@@ -1225,6 +1286,7 @@ export class AccountRegister extends React.Component {
             newTransactionDataItem.splits[1 - splitIndex]
                 = newSplit;
         }
+        
         return saveBuffer;
     }
 
@@ -1238,16 +1300,33 @@ export class AccountRegister extends React.Component {
         newTransactionDataItem.splits = splits;
 
         const { setRowEditBuffer } = args;
-        setRowEditBuffer({
-            newTransactionDataItem: newTransactionDataItem,
-            splitIndex: splitIndex,
-        },
-        (rowEditBuffer) => {
-            args = Object.assign({}, args, {
-                rowEditBuffer: rowEditBuffer,
-            });
-            this._cellEditorsManager.reloadCellEditBuffers(args);
-        }
+        setRowEditBuffer(
+            {
+                newTransactionDataItem: newTransactionDataItem,
+                splitIndex: splitIndex,
+            },
+            (rowEditBuffer) => {
+                args = Object.assign({}, args, {
+                    rowEditBuffer: rowEditBuffer,
+                });
+                this._cellEditorsManager.reloadCellEditBuffers(args);
+            }
+        );
+    }
+
+
+    updateLCESplitInfo(args, lceSplitInfo) {
+        const { setRowEditBuffer } = args;
+        setRowEditBuffer(
+            {
+                lceSplitInfo: LCE.copySplitInfo(lceSplitInfo),
+            },
+            (rowEditBuffer) => {
+                args = Object.assign({}, args, {
+                    rowEditBuffer: rowEditBuffer,
+                });
+                this._cellEditorsManager.reloadCellEditBuffers(args);
+            }
         );
     }
     
@@ -1259,6 +1338,7 @@ export class AccountRegister extends React.Component {
             newTransactionDataItem: 
                 T.getTransactionDataItem(newTransactionDataItem, true),
             splitIndex: splitIndex,
+            lceSplitInfo: rowEditBuffer.lceSplitInfo,
         };
     }
 
@@ -1501,6 +1581,9 @@ export class AccountRegister extends React.Component {
                 const newRowEntry = newRowEntries[editIndex];
                 newRowEntry.transactionDataItem = newTransactionDataItem;
                 newRowEntry.splitIndex = splitIndex;
+
+                this.updateRowEntryForLotCellEditors(newRowEntry);
+
                 this.setState({
                     activeRowIndex: editIndex,
                     rowEntries: newRowEntries,

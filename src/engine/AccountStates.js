@@ -201,7 +201,7 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, lotCha
             removedLotStates = new Map(accountStateDataItem.removedLotStates);
         }
 
-        const isSplitMerge = lotTransactionType === LotTransactionType.SPLIT_MERGE.name;
+        const isSplitMerge = lotTransactionType === LotTransactionType.SPLIT.name;
 
         for (let i = start; i !== end; i += sign) {
             const lotChange = lotChanges[i];

@@ -598,53 +598,71 @@ Common menus:
             - Return of Capital
             - Split
             - Merge
+            - Add Shares
+            - Remove Shares
 
         - Shares
-            - Sell - lots
+            - Sell - lots - Similar to Splits Editor
             - Split/Merge: shares added/removed? or total end shares?
+            - Editable for all but Return of Capital
 
-        - Total Amount/Cash in lieu
+        - Amount/Cash in lieu
+            - Editable for all
 
         - Fees/Commissions
+            - Editable for all
 
         - Unit Price
+            - Editable for Buy, Sell, Reinvested Dividend
 
-        - Details:
-            - Buy action:
-                - Shares
-                - Amount spent
-                - Fees/commissions
+        - Market Value
+            - Not editable
 
-            - Sell action:
-                - Sold lots
-                - Received amount
-                - Fees/commissions
+        - Cost Basis
+            - Not editable
 
-            - Reinvested Dividend Type:
-                - Shares
-                - Dividend amount
-                - Fees/commissions
+        - Total Shares
+            - Not editable
+
+    - Details:
+        - Buy action:
+            - Shares
+            - Amount spent
+            - Fees/commissions
+
+        - Sell action:
+            - Sold lots
+            - Received amount
+            - Fees/commissions
+
+        - Reinvested Dividend Type:
+            - Shares
+            - Dividend amount
+            - Fees/commissions
+        
+        - Return of Capital Type:
+            - Return of capital amount
+            - Fees/commissions
+        
+        - Split/Merge Type:
+            - New shares
+            - Cash in lieu
+            - Fees/commissions
+
+        - Add Shares
+            - Shares
+            - Cost basis
+            - Only difference between this and Buy is amount spent comes from equity
+
+        - Remove Shares
+            - Lots
+            - Only difference between this and Sell is amount recieved goes to equity
             
-            - Return of Capital Type:
-                - Return of capital amount
-                - Fees/commissions
-            
-            - Split/Merge Type:
-                - New shares
-                - Cash in lieu
-                - Fees/commissions
 
-            - Add Shares
-                - Shares
-                - Cost basis
-                - Only difference between this and Buy is amount spent comes from equity
+Transaction:
+Date | Action | Details | Symbol | Description | Quantity | Price | Fees & Comm | Amount
 
-            - Remove Shares
-                - Lots
-                - Only difference between this and Sell is amount recieved goes to equity
-                
-    
-- What about LIFO/FIFO lots?
-    - Kind of want to do this dynamically, so everything is automatic
-        IF there are no other lot transactions that identify specific lots.
+Summary:
+Name | Quantity | Price | Price Change | Market Value | Day Change | Cost Basis | Gain/Loss | % of Account
+
 

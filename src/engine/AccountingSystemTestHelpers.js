@@ -845,7 +845,7 @@ export async function asyncAddBasicTransactions(sys) {
                     accountId: sys.aaplIRAId,
                     reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                     quantityBaseValue: 0,
-                    lotTransactionType: T.LotTransactionType.SPLIT_MERGE.name,
+                    lotTransactionType: T.LotTransactionType.SPLIT.name,
                     lotChanges: [ aaplChangeSplit2005_02_28 ],
                 }
             ],
@@ -864,7 +864,7 @@ export async function asyncAddBasicTransactions(sys) {
                     accountId: sys.aaplIRAId,
                     reconcileState: T.ReconcileState.NOT_RECONCILED.name, 
                     quantityBaseValue: 0,
-                    lotTransactionType: T.LotTransactionType.SPLIT_MERGE.name,
+                    lotTransactionType: T.LotTransactionType.SPLIT.name,
                     lotChanges: [ aaplChangeSplit2014_06_09 ],
                 }
             ],

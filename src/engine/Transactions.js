@@ -65,13 +65,13 @@ export function getAutoLotTypeName(ref) {
  * @property {LotTransactionTypeDef} BUY_SELL
  * @property {LotTransactionTypeDef} REINVESTED_DIVIDEND
  * @property {LotTransactionTypeDef} RETURN_OF_CAPITAL
- * @property {LotTransactionTypeDef} SPLIT_MERGE
+ * @property {LotTransactionTypeDef} SPLIT
 */
 export const LotTransactionType = {
     BUY_SELL: { name: 'BUY_SELL', },
     REINVESTED_DIVIDEND: { name: 'REINVESTED_DIVIDEND', },
     RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', },
-    SPLIT_MERGE: { name: 'SPLIT_MERGE', },
+    SPLIT: { name: 'SPLIT', },
 };
 
 /**
@@ -658,7 +658,7 @@ class AccountStatesUpdater {
                 if (!isNewDataItem) {
                     const removedLotIds = new Set();
                     const isSplitMerge = split.lotTransactionType 
-                        === LotTransactionType.SPLIT_MERGE.name;
+                        === LotTransactionType.SPLIT.name;
                     const oldLotChanges = split.lotChanges;
                     oldLotChanges.forEach((lotChange) => {
                         if (!isSplitMerge 
@@ -673,7 +673,7 @@ class AccountStatesUpdater {
                             if (newSplit.accountId === accountId) {
                                 const newLotChanges = newSplit.lotChanges;
                                 const isSplitMerge = newSplit.lotTransactionType
-                                    === LotTransactionType.SPLIT_MERGE.name;
+                                    === LotTransactionType.SPLIT.name;
                                 newLotChanges.forEach((lotChange) => {
                                     if (!isSplitMerge 
                                         && (lotChange.quantityBaseValue > 0)) {
@@ -732,7 +732,7 @@ class AccountStatesUpdater {
             }
         }
 
-        const isSplitMerge = lotTransactionType === LotTransactionType.SPLIT_MERGE.name;
+        const isSplitMerge = lotTransactionType === LotTransactionType.SPLIT.name;
         lotChanges.forEach((lotChange) => {
             const { lotId, quantityBaseValue, costBasisBaseValue } 
                 = lotChange;
@@ -1662,7 +1662,7 @@ export class TransactionManager extends EventEmitter {
                     }
                     
                     const isSplitMerge = lotTransactionType 
-                        === LotTransactionType.SPLIT_MERGE.name;
+                        === LotTransactionType.SPLIT.name;
                     for (let j = lotChanges.length - 1; j >= 0; --j) {
                         if (isSplitMerge) {
                             ++splitMergeLotCount;

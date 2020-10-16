@@ -145,7 +145,7 @@
     "LotTransactionType-BUY_SELL": "Buy/Sell",
     "LotTransactionType-REINVESTED_DIVIDEND": "Reinvested dividend",
     "LotTransactionType-RETURN_OF_CAPITAL": "Return of capital",
-    "LotTransactionType-SPLIT_MERGE": "Split/Merge",
+    "LotTransactionType-SPLIT": "Split/Reverse split",
 
 
     "PricedItemType-CURRENCY": "Currency",

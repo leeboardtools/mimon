@@ -164,7 +164,7 @@ test('AccountState-add_remove_split', () => {
     };
     const splitE = { accountId: 2, 
         quantityBaseValue: 0, 
-        lotTransactionType: T.LotTransactionType.SPLIT_MERGE.name,
+        lotTransactionType: T.LotTransactionType.SPLIT.name,
         lotChanges: [ lotChangeD1, ]};
     const accountStateE = {
         ymdDate: '2019-03-31',
@@ -193,7 +193,7 @@ test('AccountState-add_remove_split', () => {
     };
     const splitF = { accountId: 2, 
         quantityBaseValue: 0, 
-        lotTransactionType: T.LotTransactionType.SPLIT_MERGE.name,
+        lotTransactionType: T.LotTransactionType.SPLIT.name,
         lotChanges: [ lotChangeD2, ]};
     const accountStateF = {
         ymdDate: '2019-03-31',

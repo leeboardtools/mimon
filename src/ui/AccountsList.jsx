@@ -37,7 +37,7 @@ export function getAccountsListColumnInfoDefs() {
             name: ACE.getNameColumnInfo({}),
             type: ACE.getAccountTypeColumnInfo({}),
             balance: ACE.getBalanceColumnInfo({}),
-            shares: LCE.getTotalSharesColumnInfo({}),
+            totalShares: LCE.getTotalSharesColumnInfo({}),
         };
     }
 
@@ -455,7 +455,7 @@ export class AccountsList extends React.Component {
             return this.renderBalanceDisplay(columnInfo, accountDataItem,
                 accountState);
         
-        case 'shares' :
+        case 'totalShares' :
             return this.renderSharesDisplay(columnInfo, accountDataItem,
                 accountState, quantityDefinition);
         }

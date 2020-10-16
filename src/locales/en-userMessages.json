@@ -173,9 +173,6 @@
     "AccountingCellEditors-accountType": "Type",
     "AccountingCellEditors-accountId": "Account",
     "AccountingCellEditors-reconcile": "✔",
-    "AccountingCellEditors-bought": "Bought",
-    "AccountingCellEditors-sold": "Sold",
-    "AccountingCellEditors-shares": "Shares",
     "AccountingCellEditors-balance": "Balance",
 
     "AccountingCellEditors-reconcile_NOT_RECONCILED": "-",
@@ -183,6 +180,25 @@
     "AccountingCellEditors-reconcile_RECONCILED": "\u2713",
 
     "AccountingCellEditors-invalid_split_quantity": ["'", "' is not a valid number. ", ""],
+
+
+    "LotCellEditors-action": "Action",
+    "LotCellEditors-costBasis": "Cost Basis",
+    "LotCellEditors-fees": "Fees & Comm.",
+    "LotCellEditors-marketValue": "Market Value",
+    "LotCellEditors-monetaryAmount": "Amount",
+    "LotCellEditors-price": "Price",
+    "LotCellEditors-shares": "Shares",
+    "LotCellEditors-totalShares": "Total Shares",
+
+    "LotCellEditors-action-BUY": "Buy",
+    "LotCellEditors-action-SELL": "Sell",
+    "LotCellEditors-action-REINVESTED_DIVIDEND": "Reinvested Dividends",
+    "LotCellEditors-action-RETURN_OF_CAPITAL": "Return of Capital",
+    "LotCellEditors-action-SPLIT": "Stock Split",
+    "LotCellEditors-action-REVERSE_SPLIT": "Reverse Split",
+    "LotCellEditors-action-ADD_SHARES": "Add Shares",
+    "LotCellEditors-action-REMOVE_SHARES": "Remove Shares",
 
     "MultiSplitsEditor-title": "Splits Editor",
     "MultiSplitsEditor-new_description_placeholder": "New Split",

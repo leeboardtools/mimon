@@ -88,6 +88,7 @@ export function renderTextEditor(args) {
         onChange = {(e) => {
             setCellEditBuffer({
                 value: e.target.value,
+                isEdited: true,
             });
         }}
         errorMsg = {errorMsg}
@@ -123,12 +124,14 @@ function renderTextEditorWithTooltips(args, valueProperty) {
                 newValue[valueProperty] = e.target.value;
                 setCellEditBuffer({
                     value: newValue,
+                    isEdited: true,
                 });
 
             }
             else {
                 setCellEditBuffer({
                     value: e.target.value,
+                    isEdited: true,
                 });
             }
         }}
@@ -399,6 +402,7 @@ export function renderDateEditor(args) {
                 value: Object.assign({}, cellEditBuffer.value, {
                     ymdDate: ymdDate,
                 }),
+                isEdited: true,
             });
         }}
         ref = {refForFocus}
@@ -526,6 +530,7 @@ export function renderAccountTypeEditor(args) {
                 value: Object.assign({}, value, {
                     accountType: e.target.value,
                 }),
+                isEdited: true,
             });
         }}
         errorMsg = {errorMsg}
@@ -623,6 +628,7 @@ function onAccountIdChange(e, args) {
         value: Object.assign({}, cellEditBuffer.value, {
             accountId: value,
         }),
+        isEdited: true,
     });
 }
 
@@ -769,6 +775,7 @@ export function renderReconcileStateEditor(args) {
                 value: Object.assign({}, value, {
                     reconcileState: e.target.value,
                 }),
+                isEdited: true,
             });
         }}
         errorMsg = {errorMsg}
@@ -878,6 +885,7 @@ export function renderQuantityEditor(args) {
                     quantityBaseValue: e.target.value,
                     quantityDefinition: quantityDefinition,
                 }),
+                isEdited: true,
             });
         }}
         errorMsg = {errorMsg}
@@ -979,6 +987,7 @@ export function renderBalanceEditor(args) {
                 value: Object.assign({}, value, {
                     quantityBaseValue: e.target.value,
                 }),
+                isEdited: true,
             });
         }}
         errorMsg = {errorMsg}
@@ -1016,10 +1025,13 @@ export function getBalanceColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-balance'),
             ariaLabel: 'Balance',
-            classExtras: 'header-base balance-base balance-header',
+            classExtras: 'header-base monetary-base monetary-header '
+                + 'balance-base balance-header',
         },
-        inputClassExtras: 'balance-base balance-input',
-        cellClassName: 'cell-base balance-base balance-cell',
+        inputClassExtras: 'monetary-base monetary-input '
+            + 'balance-base balance-input',
+        cellClassName: 'cell-base monetary-base monetary-cell '
+            + 'balance-base balance-cell',
 
         renderDisplayCell: renderBalanceDisplay,
         renderEditCell: renderBalanceEditor,
@@ -1112,6 +1124,7 @@ function setSplitQuantityValue(args, quantityValue, index) {
     });
     setCellEditBuffer({
         value: newValue,
+        isEdited: true,
     },
     index);
 }

@@ -236,6 +236,10 @@ export function createTestTransactions(newFileContents) {
             { ymdDate: '2005-03-04', close: 6.12 * 7, },
             { ymdDate: '2005-03-11', close: 5.75 * 7, },
 
+            // Dividend paid $3.29 * 4
+            { ymdDate: '2014-05-15', close: 84.12 * 7, },
+            { ymdDate: '2014-05-18', close: 85.36 * 7, },
+
             { ymdDate: '2014-06-04', close: 92.12 * 7, },
             { ymdDate: '2014-06-05', close: 92.48 * 7, },
             { ymdDate: '2014-06-06', close: 92.22 * 7, },
@@ -244,6 +248,10 @@ export function createTestTransactions(newFileContents) {
             { ymdDate: '2014-06-10', close: 94.25, },
             { ymdDate: '2014-06-13', close: 91.28, },
             { ymdDate: '2014-06-20', close: 90.91, },
+
+            // Dividend paid $0.47 * 4
+            { ymdDate: '2014-08-14', close: 97.52, },
+            { ymdDate: '2014-08-15', close: 98.00, },
 
             { ymdDate: '2015-03-12', close: 124.45, },
 
@@ -348,13 +356,6 @@ export function createTestTransactions(newFileContents) {
             description: lotA,
         });
 
-        // { ymdDate: '2014-06-13', close: 91.28, },
-        const lotB = '100 sh 2014-06-13';
-        lots.push({
-            pricedItemId: 'AAPL',
-            description: lotB,
-        });
-
         const commissionBaseValueA = 495;
         const aaplQuantityBaseValueA = 500000;
         const stockBaseValueA = 50 * 9212 * 7;
@@ -395,10 +396,18 @@ export function createTestTransactions(newFileContents) {
                 {
                     accountId: accountId,
                     quantityBaseValue: 0,
-                    lotTransactionType: T.LotTransactionType.SPLIT_MERGE,
+                    lotTransactionType: T.LotTransactionType.SPLIT,
                     lotChanges: [ aaplChangeSplit2014_06_09 ],
                 }
             ],
+        });
+
+
+        // { ymdDate: '2014-06-13', close: 91.28, },
+        const lotB = '100 sh 2014-06-13';
+        lots.push({
+            pricedItemId: 'AAPL',
+            description: lotB,
         });
 
         const commissionBaseValueB = 495;
@@ -466,6 +475,44 @@ export function createTestTransactions(newFileContents) {
                 
             ]
         });
+
+
+        // Reinvested Dividends
+        // Dividend paid $0.47 * 4
+        // { ymdDate: '2014-08-14', close: 97.52, },
+        const lotE = '';
+        lots.push({
+            pricedItemId: 'AAPL',
+            description: lotE,
+        });
+
+        // 450 sh
+        // $1.88/sh => $846
+        // $97.52/sh => round down => 8.6751 shares
+        const stockBaseValueE = 84600;
+        const costBasisBaseValueE = stockBaseValueE;
+        const aaplLotChangeE = { lotId: lotE, 
+            quantityBaseValue: 86751, 
+            costBasisBaseValue: costBasisBaseValueE,
+        };
+        transactions.push({
+            ymdDate: '2014-08-14',
+            description: 'Reinvested Dividend AAPL',
+            splits: [
+                {
+                    accountId: 'INCOME-Dividends',
+                    quantityBaseValue: costBasisBaseValueE,
+                },
+                {
+                    accountId: accountId,
+                    quantityBaseValue: stockBaseValueE,
+                    lotTransactionType: T.LotTransactionType.REINVESTED_DIVIDEND,
+                    lotChanges: [aaplLotChangeE],
+                },
+            ],
+        });
+
+        // Need a return of capital example...
     }
 
     const iraAccount = findAccountEntry(newFileContents,
