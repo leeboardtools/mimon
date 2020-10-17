@@ -9,6 +9,7 @@ import { getYMDDateString, YMDDate } from '../util/YMDDate';
 import { userMsg } from '../util/UserMessages';
 import { createCompositeAction } from '../util/Actions';
 
+
 /**
  * @event AccountingActions#actionApply
  * @param {ActionDataItem}  actionDataItem  The action that was applied.
@@ -192,19 +193,27 @@ export class AccountingActions extends EventEmitter {
 
 
     /**
+     * @typedef {object} AccountingActions~RemoveAccountOptions
+     * @property {boolean}  ignoreMissingAccounts
+     */
+
+
+    /**
      * Creates an action for removing an account.
      * <p>If the account has dependees, the action will have a
      * dependees property set to an array containing the types of dependees.
      * @param {number} accountId 
+     * @param {AccountingActions~RemoveAccountOptions} [options]
      * @returns {ActionDataItem}
      */
-    async asyncCreateRemoveAccountAction(accountId) {
+    async asyncCreateRemoveAccountAction(accountId, options) {
         const accountDataItem = this._accountingSystem.getAccountManager()
             .getAccountDataItemWithId(accountId);
         let action = { 
             type: 'removeAccount', 
             accountId: accountId, 
             name: userMsg('Actions-removeAccount', accountDataItem.name), 
+            options: options,
         };
 
         const transactionManager = this._accountingSystem.getTransactionManager();
@@ -215,7 +224,10 @@ export class AccountingActions extends EventEmitter {
         if (transactionKeys.length) {
             const transactionIds = transactionKeys.map((key) => key.id);
             const transactionsAction 
-                = await this.asyncCreateRemoveTransactionsAction(transactionIds);
+                = await this.asyncCreateRemoveTransactionsAction(transactionIds, 
+                    {
+                        ignoreMissingTransactions: true,
+                    });
             action = createCompositeAction(
                 {
                     name: userMsg('Actions-remove_transactions_and_account',
@@ -232,9 +244,20 @@ export class AccountingActions extends EventEmitter {
     }
 
     async _asyncRemoveAccountApplier(isValidateOnly, action) {
+        const accountManager = this._accountingSystem.getAccountManager();
+        const { accountId, options } = action;
+        if (options) {
+            if (options.ignoreMissingAccounts) {
+                if (!accountManager.getAccountDataItemWithId(accountId)) {
+                    return {
+                    };
+                }
+            }
+        }
+
         const result 
-            = await this._accountingSystem.getAccountManager().asyncRemoveAccount(
-                action.accountId, isValidateOnly);
+            = await accountManager.asyncRemoveAccount(
+                accountId, isValidateOnly);
         this._emitActionEvent(isValidateOnly, action, result);
     }
 
@@ -290,14 +313,21 @@ export class AccountingActions extends EventEmitter {
 
 
     /**
+     * @typedef {object} AccountingActions~RemovePricedItemOptions
+     * @property {boolean}  ignoreMissingPricedItems
+     */
+
+
+    /**
      * Creates an action for removing a priced item.
      * <p>
      * If the priced item has dependees, the action will have a dependees
      * property that's an array containing the types of dependees.
      * @param {number} pricedItemId 
+     * @param {AccountingActions~RemovePricedItemOptions} [options]
      * @returns {ActionDataItem}
      */
-    async asyncCreateRemovePricedItemAction(pricedItemId) {
+    async asyncCreateRemovePricedItemAction(pricedItemId, options) {
         const pricedItemDataItem = this._accountingSystem.getPricedItemManager()
             .getPricedItemDataItemWithId(pricedItemId);
         const typeDescription = PI.getPricedItemType(pricedItemDataItem.type)
@@ -309,6 +339,7 @@ export class AccountingActions extends EventEmitter {
             pricedItemId: pricedItemId, 
             name: userMsg('Actions-removePricedItem', 
                 typeDescription, name), 
+            options,
         };
 
         const accountIds = [];
@@ -332,21 +363,27 @@ export class AccountingActions extends EventEmitter {
         if (accountIds.length || lotIds.length) {
             const actions = [];
             const dependees = new Set();
-            for (let i = 0; i < accountIds.length; ++i) {
-                const action = await this.asyncCreateRemoveAccountAction(accountIds[i]);
-                if (action.dependees) {
-                    action.dependees.forEach((dependee) => dependees.add(dependee));
-                }
-                dependees.add('ACCOUNT');
-                actions.push(action);
-            }
-
             for (let i = 0; i < lotIds.length; ++i) {
-                const action = await this.asyncCreateRemoveLotAction(lotIds[i], true);
+                const action = await this.asyncCreateRemoveLotAction(lotIds[i],
+                    {
+                        ignoreMissingLots: true,
+                    });
                 if (action.dependees) {
                     action.dependees.forEach((dependee) => dependees.add(dependee));
                 }
                 dependees.add('LOT');
+                actions.push(action);
+            }
+
+            for (let i = 0; i < accountIds.length; ++i) {
+                const action = await this.asyncCreateRemoveAccountAction(accountIds[i], 
+                    {
+                        ignoreMissingAccounts: true,
+                    });
+                if (action.dependees) {
+                    action.dependees.forEach((dependee) => dependees.add(dependee));
+                }
+                dependees.add('ACCOUNT');
                 actions.push(action);
             }
 
@@ -366,9 +403,18 @@ export class AccountingActions extends EventEmitter {
     }
 
     async _asyncRemovePricedItemApplier(isValidateOnly, action) {
+        const pricedItemManager = this._accountingSystem.getPricedItemManager();
+        const { pricedItemId, options } = action;
+        if (options) {
+            if (options.ignoreMissingPricedItems) {
+                if (!pricedItemManager.getPricedItemDataItemWithId(pricedItemId)) {
+                    return {};
+                }
+            }
+        }
         const result 
-            = await this._accountingSystem.getPricedItemManager().asyncRemovePricedItem(
-                action.pricedItemId, isValidateOnly);
+            = await pricedItemManager.asyncRemovePricedItem(
+                pricedItemId, isValidateOnly);
         this._emitActionEvent(isValidateOnly, action, result);
     }
 
@@ -439,20 +485,30 @@ export class AccountingActions extends EventEmitter {
 
 
     /**
+     * @typedef {object} AccountingActions~RemoveLotOptions
+     * @property {boolean}  ignoreMissingLots
+     */
+
+
+    /**
      * Creates an action for removing a lot.
      * <p>If the lot has dependees, the action will have a dependees property that's
      * an array containing the types of dependees.
      * @param {number} lotId 
+     * @param {AccountingActions~RemoveLotOptions}  [options]
      * @returns {ActionDataItem}
      */
-    async asyncCreateRemoveLotAction(lotId, ignoreTransactions) {
+    async asyncCreateRemoveLotAction(lotId, options) {
+        options = options || {};
+
         let action = { 
             type: 'removeLot', 
             lotId: lotId, 
             name: userMsg('Actions-removeLot'), 
+            options: options,
         };
 
-        if (!ignoreTransactions) {
+        if (!options.ignoreTransactions) {
             const transactionManager = this._accountingSystem.getTransactionManager();
             const transactionKeys 
                 = await transactionManager.asyncGetSortedTransactionKeysForLot(
@@ -462,7 +518,10 @@ export class AccountingActions extends EventEmitter {
                 const transactionIds = transactionKeys.map((key) => key.id);
                 const transactionsAction 
                     = await this.asyncCreateRemoveTransactionsAction(transactionIds,
-                        true);
+                        {
+                            noSpecialActions: true,
+                            ignoreMissingTransactions: true,   
+                        });
                 action = createCompositeAction(
                     {
                         name: userMsg('Actions-remove_transactions_and_lot'),
@@ -479,9 +538,19 @@ export class AccountingActions extends EventEmitter {
     }
 
     async _asyncRemoveLotApplier(isValidateOnly, action) {
+        const lotManager = this._accountingSystem.getLotManager();
+        const { lotId, options } = action;
+        if (options) {
+            if (options.ignoreMissingLots) {
+                if (!lotManager.getLotDataItemWithId(lotId)) {
+                    return {};
+                }
+            }
+        }
+
         const result 
-            = await this._accountingSystem.getLotManager().asyncRemoveLot(
-                action.lotId, isValidateOnly);
+            = await lotManager.asyncRemoveLot(
+                lotId, isValidateOnly);
         this._emitActionEvent(isValidateOnly, action, result);
     }
 
@@ -575,7 +644,7 @@ export class AccountingActions extends EventEmitter {
         if (accountDataItem) {
             const accountType = A.getAccountType(accountDataItem.type);
             if (accountType && accountType.hasLots) {
-                if (splitFilter(split, transactionDataItem)) {
+                if (!splitFilter || splitFilter(split, transactionDataItem)) {
                     return true;
                 }
             }
@@ -584,7 +653,6 @@ export class AccountingActions extends EventEmitter {
 
     _isLotTransactionDataItem(transactionDataItem, splitFilter) {
         const { splits } = transactionDataItem;
-        splitFilter = splitFilter || ((split) => true);
         if (splits) {
             for (let split of splits) {
                 if (this._isLotSplitDataItem(split, splitFilter, transactionDataItem)) {
@@ -611,7 +679,9 @@ export class AccountingActions extends EventEmitter {
     }
 
 
-    _createAddLotTransactionsAction(transactionDataItem, baseAction) {
+    _createAddLotTransactionsAction(transactionDataItem, baseAction,
+        postApplyCallback) {
+
         transactionDataItem = T.getTransactionDataItem(transactionDataItem, true);
 
         const accountManager = this._accountingSystem.getAccountManager();
@@ -648,6 +718,7 @@ export class AccountingActions extends EventEmitter {
         return createCompositeAction(
             {
                 name: baseAction.name,
+                postApplyCallback: postApplyCallback,
             },
             subActions);
     }
@@ -655,6 +726,13 @@ export class AccountingActions extends EventEmitter {
     
     /**
      * Creates an action for adding transactions.
+     * <p>
+     * When the action is applied {@link ActionManager#asyncApplyAction} returns the
+     * result from the call(s) to {@link TransactionManager#asyncAddTransactions}
+     * <p>
+     * Note that if you want to add a postApplyCallback to the action you should
+     * call the existing postApplyCallback, if any, if you care about the results
+     * coming back.
      * @param {Transaction|TransactionDataItem|Transaction[]
      *          |TransactionDataItem[]} transactions 
      * @param {boolean} [noSpecialActions=false]    If this is not truthy and
@@ -693,9 +771,18 @@ export class AccountingActions extends EventEmitter {
             if (lotTransactionIndices.length) {
                 if (!Array.isArray(transactions)) {
                     return this._createAddLotTransactionsAction(transactionDataItems, 
-                        action);
+                        action,
+                        (action, result) => {
+                            // The last result is for the transaction, which is what 
+                            // we want...
+                            return result[result.length - 1];
+                        });
                 }
                 else {
+                    const result = {
+                        newTransactionDataItems: []
+                    };
+
                     const subActions = [];
                     let lastNormalIndex = 0;
                     for (let i = 0; i < lotTransactionIndices.length; ++i) {
@@ -705,15 +792,52 @@ export class AccountingActions extends EventEmitter {
                                 transactionDataItems: transactionDataItems.slice(
                                     lastNormalIndex,
                                     lotIndex),
+                                postApplyCallback: (action, actionResult) => {
+                                    result.newTransactionDataItems 
+                                        = result.newTransactionDataItems.concat(
+                                            actionResult.newTransactionDataItems
+                                        );
+                                    return result;
+                                }
                             }));
                         }
+
                         subActions.push(this._createAddLotTransactionsAction(
-                            transactionDataItems[i],
-                            action
+                            transactionDataItems[lotIndex],
+                            action,
+                            (action, actionResult) => {
+                                actionResult = actionResult[actionResult.length - 1];
+
+                                result.newTransactionDataItems.push(
+                                    actionResult.newTransactionDataItem);
+                                return result;
+                            }
                         ));
 
                         lastNormalIndex = lotIndex + 1;
                     }
+
+                    if (lastNormalIndex < transactionDataItems.length) {
+                        subActions.push(Object.assign({}, action, {
+                            transactionDataItems: transactionDataItems.slice(
+                                lastNormalIndex,
+                                transactionDataItems.length),
+                            postApplyCallback: (action, actionResult) => {
+                                result.newTransactionDataItems 
+                                    = result.newTransactionDataItems.concat(
+                                        actionResult.newTransactionDataItems
+                                    );
+                                return result;
+                            }
+                        }));
+                    }
+
+                    return createCompositeAction(
+                        {
+                            name: action.name,
+                            postApplyCallback: (action, actionResult) => result,
+                        },
+                        subActions);
                 }
             }
         }
@@ -726,22 +850,40 @@ export class AccountingActions extends EventEmitter {
             = await this._accountingSystem.getTransactionManager().asyncAddTransactions(
                 action.transactionDataItems, isValidateOnly);
         this._emitActionEvent(isValidateOnly, action, result);
+
+        return result;
     }
+
+
+    /**
+     * @typedef {object} AccountingActions~RemoveTransactionsOptions
+     * @property {boolean}  ignoreMissingLots
+     * @property {boolean} [noSpecialActions=false]  If this is not truthy and the 
+     * transaction had created lots, the lots it created will be removed.
+     */
 
 
     /**
      * Creates an action for removing transactions.
      * @param {number|number[]} transactionIds 
-     * @param {boolean} [noSpecialActions=false]  If this is not truthy and the 
-     * transaction had created lots, the lots it created will be removed.
+     * @param {AccountingActions~RemoveTransactionsOptions} [options]
      * @returns {ActionDataItem}
      */
-    async asyncCreateRemoveTransactionsAction(transactionIds, noSpecialActions) {
+    async asyncCreateRemoveTransactionsAction(transactionIds, options) {
+        options = options || {};
+
         if (Array.isArray(transactionIds)) {
             transactionIds = Array.from(transactionIds);
         }
 
-        if (!noSpecialActions) {
+        const action = { 
+            type: 'removeTransactions', 
+            transactionIds: transactionIds, 
+            name: userMsg('Actions-removeTransactions'), 
+            options: options,
+        };
+
+        if (!options.noSpecialActions) {
             const transactionManager = this._accountingSystem.getTransactionManager();
             const transactionDataItems 
                 = await transactionManager.asyncGetTransactionDataItemsWithIds(
@@ -750,30 +892,135 @@ export class AccountingActions extends EventEmitter {
             // If there are any transactions that added new lots we want to remove
             // those lots. We'll let the lot removal action handle removing those
             // transactions.
-            
-            transactionDataItems;
-            /*
-            const lotTransactionIndices = this._getLotTransactionIndices(
-                transactionDataItems,
-                (split) => this._getLotsAddedBySplit(split).length);
-            if (lotTransactionIndices.length) {
-                // 
+            let lastNormalIndex = 0;
+            const subActions = [];
+            const lotIdsToRemove = [];
+            for (let i = 0; i < transactionDataItems.length; ++i) {
+                const transactionDataItem = transactionDataItems[i];
+
+                let skipTransaction;
+                const { splits } = transactionDataItem;
+                for (let split of splits) {
+                    if (!this._isLotSplitDataItem(split)) {
+                        continue;
+                    }
+
+                    const { accountId } = split;
+                    const preAccountStates 
+                        = await transactionManager
+                            .asyncGetAccountStateDataItemsBeforeTransaction(
+                                accountId,
+                                transactionDataItem.id
+                            );
+                    const postAccountStates
+                        = await transactionManager
+                            .asyncGetAccountStateDataItemsAfterTransaction(
+                                accountId,
+                                transactionDataItem.id
+                            );
+                    if (!preAccountStates || !postAccountStates) {
+                        continue;
+                    }
+
+                    // We'll gather up the lot ids before, and remove the lot ids after,
+                    // what's left is what was added.
+                    const lotIds = new Set();
+                    for (let accountState of postAccountStates) {
+                        const { lotStates } = accountState;
+                        for (let lotState of lotStates) {
+                            lotIds.add(lotState.lotId);
+                        }
+                    }
+
+                    for (let accountState of preAccountStates) {
+                        const { lotStates } = accountState;
+                        for (let lotState of lotStates) {
+                            lotIds.delete(lotState.lotId);
+                        }
+                    }
+
+                    if (lotIds.size) {
+                        for (let id of lotIds) {
+                            lotIdsToRemove.push(id);
+                        }
+                        skipTransaction = true;
+                    }
+                }
+
+                if (skipTransaction) {
+                    if (lastNormalIndex < i) {
+                        subActions.push(Object.assign({}, action, {
+                            transactionIds: transactionIds.slice(
+                                lastNormalIndex,
+                                i),
+                        }));
+                    }
+                    lastNormalIndex = i + 1;
+                }
             }
-            */
+
+            if (lotIdsToRemove.length) {
+                if (lastNormalIndex < transactionIds.length) {
+                    subActions.push(Object.assign({}, action, {
+                        transactionIds: transactionIds.slice(
+                            lastNormalIndex,
+                            transactionIds.length),
+                    }));
+                }
+                
+                for (let lotId of lotIdsToRemove) {
+                    subActions.push(await this.asyncCreateRemoveLotAction(lotId,
+                        {
+                            ignoreMissingLots: true,
+                        }));
+                }
+            }
+
+            if (subActions.length) {
+                return createCompositeAction(
+                    {
+                        name: action.name,
+                    },
+                    subActions);
+            }
         }
 
-        return { 
-            type: 'removeTransactions', 
-            transactionIds: transactionIds, 
-            name: userMsg('Actions-removeTransactions'), 
-        };
+        return action;
     }
 
     async _asyncRemoveTransactionsApplier(isValidateOnly, action) {
+        const transactionManager = this._accountingSystem.getTransactionManager();
+        const { options } = action;
+        let { transactionIds } = action;
+
+        if (options) {
+            if (options.ignoreMissingTransactions) {
+                if (Array.isArray(transactionIds)) {
+                    const newTransactionIds = [];
+                    for (let id of transactionIds) {
+                        if (await transactionManager.asyncGetTransactionDataItemWithId(
+                            id)) {
+                            newTransactionIds.push(id);
+                        }
+                    }
+                    transactionIds = newTransactionIds;
+                }
+                else {
+                    if (!(await transactionManager.asyncGetTransactionDataItemWithId(
+                        transactionIds
+                    ))) {
+                        return {};
+                    }
+                }
+            }
+        }
+
         const result 
-            = await this._accountingSystem.getTransactionManager()
-                .asyncRemoveTransactions(action.transactionIds, isValidateOnly);
+            = await transactionManager
+                .asyncRemoveTransactions(transactionIds, isValidateOnly);
         this._emitActionEvent(isValidateOnly, action, result);
+
+        return result;
     }
 
     
