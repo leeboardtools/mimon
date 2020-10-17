@@ -120,22 +120,20 @@ test('NewFileSetup', async () => {
 
         const pricedItemA = accessor.getPricedItemDataItemWithId(
             pricedItemIds1[corePricedItemIds.length]);
-        expect(pricedItemA).toEqual(
-            expect.objectContaining(test1.pricedItems.pricedItems[0]));
+        expect(pricedItemA).toMatchObject(test1.pricedItems.pricedItems[0]);
 
         const pricedItemB = accessor.getPricedItemDataItemWithId(
             pricedItemIds1[corePricedItemIds.length + 1]);
         delete test1.pricedItems.pricedItems[1].id;
-        expect(pricedItemB).toEqual(
-            expect.objectContaining(test1.pricedItems.pricedItems[1]));
+        expect(pricedItemB).toMatchObject(test1.pricedItems.pricedItems[1]);
 
 
         const checkingA = accessor.getAccountDataItemWithRefId('Checking');
-        expect(checkingA).toEqual(expect.objectContaining({
+        expect(checkingA).toMatchObject({
             type: A.AccountType.BANK.name,
             name: 'Checking Account',
             refId: 'Checking',
-        }));
+        });
 
         const checkingBalanceA = accessor.getCurrentAccountStateDataItem(checkingA.id);
         expect(checkingBalanceA).toEqual({
@@ -144,10 +142,10 @@ test('NewFileSetup', async () => {
         });
 
         const brokerageAA = accessor.getAccountDataItemWithRefId('Brokerage A');
-        expect(brokerageAA).toEqual(expect.objectContaining({
+        expect(brokerageAA).toMatchObject({
             type: A.AccountType.BROKERAGE.name,
             name: 'Brokerage A',
-        }));
+        });
 
         const brokerageABalanceA 
             = accessor.getCurrentAccountStateDataItem(brokerageAA.id);
@@ -157,10 +155,10 @@ test('NewFileSetup', async () => {
         });
 
         const iraA = accessor.getAccountDataItemWithRefId('IRA');
-        expect(iraA).toEqual(expect.objectContaining({
+        expect(iraA).toMatchObject({
             type: A.AccountType.BROKERAGE.name,
             name: 'IRA',
-        }));
+        });
 
         const iraBalanceA 
             = accessor.getCurrentAccountStateDataItem(iraA.id);
@@ -171,19 +169,19 @@ test('NewFileSetup', async () => {
         
 
         const investmentsA = accessor.getAccountDataItemWithRefId('Investments');
-        expect(investmentsA).toEqual(expect.objectContaining({
+        expect(investmentsA).toMatchObject({
             type: A.AccountType.ASSET.name,
             name: 'Investments',
             description: 'All my investment accounts',
             childAccountIds: [ brokerageAA.id, iraA.id ],
-        }));
+        });
 
 
         const visaA = accessor.getAccountDataItemWithRefId('VISA');
-        expect(visaA).toEqual(expect.objectContaining({
+        expect(visaA).toMatchObject({
             type: A.AccountType.CREDIT_CARD.name,
             name: 'VISA',
-        }));
+        });
 
         const visaBalanceA 
             = accessor.getCurrentAccountStateDataItem(visaA.id);
@@ -194,10 +192,10 @@ test('NewFileSetup', async () => {
 
 
         const salaryA = accessor.getAccountDataItemWithRefId('Salary');
-        expect(salaryA).toEqual(expect.objectContaining({
+        expect(salaryA).toMatchObject({
             type: A.AccountType.INCOME.name,
             name: 'Salary',
-        }));
+        });
 
         const salaryBalanceA
             = accessor.getCurrentAccountStateDataItem(salaryA.id);
@@ -208,10 +206,10 @@ test('NewFileSetup', async () => {
 
 
         const groceriesA = accessor.getAccountDataItemWithRefId('Groceries');
-        expect(groceriesA).toEqual(expect.objectContaining({
+        expect(groceriesA).toMatchObject({
             type: A.AccountType.EXPENSE.name,
             name: 'My Groceries',
-        }));
+        });
 
         const groceriesBalanceA
             = accessor.getCurrentAccountStateDataItem(groceriesA.id);

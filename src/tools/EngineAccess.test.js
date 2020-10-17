@@ -121,7 +121,7 @@ test('EngineAccessor-actions', async () => {
         expect(accountA).toBeDefined();
 
         settingsA.id = accountA.id;
-        expect(accountA).toEqual(expect.objectContaining(settingsA));
+        expect(accountA).toMatchObject(settingsA);
 
         expect(accessor.isAccountingFileModified()).toBeTruthy();
 
@@ -147,11 +147,11 @@ test('EngineAccessor-actions', async () => {
 
         const accountB = resultB.newAccountDataItem;
         settingsB.id = accountB.id;
-        expect(accountB).toEqual(expect.objectContaining(settingsB));
+        expect(accountB).toMatchObject(settingsB);
 
         let result;
         result = accessor.getAccountDataItemWithId(accountB.id);
-        expect(result).toEqual(expect.objectContaining(settingsB));
+        expect(result).toMatchObject(settingsB);
 
         const groceriesId = accountB.id;
 
@@ -167,7 +167,7 @@ test('EngineAccessor-actions', async () => {
 
         const accountC = result.newAccountDataItem;
         settingsC.id = accountC.id;
-        expect(accountC).toEqual(expect.objectContaining(settingsC));
+        expect(accountC).toMatchObject(settingsC);
 
 
         const brokerageId = accountC.id;
@@ -233,7 +233,7 @@ test('EngineAccessor-actions', async () => {
         result = await accessor.asyncApplyAction(actionD);
         const aaplPricedItem = result.newPricedItemDataItem;
         settingsD.id = aaplPricedItem.id;
-        expect(aaplPricedItem).toEqual(expect.objectContaining(settingsD));
+        expect(aaplPricedItem).toMatchObject(settingsD);
 
         result = accessor.getPricedItemDataItemWithId(settingsD.id);
         expect(result).toEqual(aaplPricedItem);
@@ -253,7 +253,7 @@ test('EngineAccessor-actions', async () => {
 
         const accountD1 = result.newAccountDataItem;
         settingsD1.id = accountD1.id;
-        expect(accountD1).toEqual(expect.objectContaining(settingsD1));
+        expect(accountD1).toMatchObject(settingsD1);
 
         const aaplId = accountD1.id;
 
@@ -269,7 +269,7 @@ test('EngineAccessor-actions', async () => {
         result = await accessor.asyncApplyAction(actionE);
         const lot1 = result.newLotDataItem;
         settingsE.id = lot1.id;
-        expect(lot1).toEqual(expect.objectContaining(settingsE));
+        expect(lot1).toMatchObject(settingsE);
 
         result = accessor.getLotDataItemWithId(lot1.id);
         expect(result).toEqual(lot1);
@@ -299,7 +299,7 @@ test('EngineAccessor-actions', async () => {
         result = await accessor.asyncApplyAction(actionF);
         const transF = result.newTransactionDataItem;
         settingsF.id = transF.id;
-        expect(transF).toEqual(expect.objectContaining(settingsF));
+        expect(transF).toMatchObject(settingsF);
         expect(await accessor.asyncGetTransactionDataItemWithId(transF.id))
             .toEqual(transF);
         
@@ -328,7 +328,7 @@ test('EngineAccessor-actions', async () => {
         result = await accessor.asyncApplyAction(actionG);
         const transG = result.newTransactionDataItem;
         settingsG.id = transG.id;
-        expect(transG).toEqual(expect.objectContaining(settingsG));
+        expect(transG).toMatchObject(settingsG);
         expect(await accessor.asyncGetTransactionDataItemWithId(transG.id))
             .toEqual(transG);
 
@@ -355,7 +355,7 @@ test('EngineAccessor-actions', async () => {
         result = await accessor.asyncApplyAction(actionH);
         const transH = result.newTransactionDataItem;
         settingsH.id = transH.id;
-        expect(transH).toEqual(expect.objectContaining(settingsH));
+        expect(transH).toMatchObject(settingsH);
         expect(await accessor.asyncGetTransactionDataItemWithId(transH.id))
             .toEqual(transH);
 
@@ -385,7 +385,7 @@ test('EngineAccessor-actions', async () => {
         result = await accessor.asyncApplyAction(actionI);
         const transI = result.newTransactionDataItem;
         settingsI.id = transI.id;
-        expect(transI).toEqual(expect.objectContaining(settingsI));
+        expect(transI).toMatchObject(settingsI);
         expect(await accessor.asyncGetTransactionDataItemWithId(transI.id))
             .toEqual(transI);
 

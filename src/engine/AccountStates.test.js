@@ -147,7 +147,7 @@ test('AccountState-add_remove_split', () => {
     };
     lotStateD.ymdDateCreated = accountStateD.ymdDate;
     const testD = A.addSplitToAccountStateDataItem(testC, splitD);
-    expect(testD).toEqual(expect.objectContaining(accountStateD));
+    expect(testD).toMatchObject(accountStateD);
 
 
     // Basic split/merge
@@ -172,7 +172,7 @@ test('AccountState-add_remove_split', () => {
         lotStates: [ lotStateA1, lotStateD1 ],
     };
     const testE = A.addSplitToAccountStateDataItem(testD, splitE);
-    expect(testE).toEqual(expect.objectContaining(accountStateE));
+    expect(testE).toMatchObject(accountStateE);
 
 
     // Split merge with cost basis
@@ -201,24 +201,24 @@ test('AccountState-add_remove_split', () => {
         lotStates: [ lotStateA1, lotStateD2 ],
     };
     const testF = A.addSplitToAccountStateDataItem(testE, splitF);
-    expect(testF).toEqual(expect.objectContaining(accountStateF));
+    expect(testF).toMatchObject(accountStateF);
 
 
     // Reverse...
     const revTestF = A.removeSplitFromAccountStateDataItem(testF, splitF);
-    expect(revTestF).toEqual(expect.objectContaining(accountStateE));
+    expect(revTestF).toMatchObject(accountStateE);
 
     const revTestE = A.removeSplitFromAccountStateDataItem(testE, splitE);
-    expect(revTestE).toEqual(expect.objectContaining(accountStateD));
+    expect(revTestE).toMatchObject(accountStateD);
 
     const revTestD = A.removeSplitFromAccountStateDataItem(testD, splitD);
-    expect(revTestD).toEqual(expect.objectContaining(accountStateC));
+    expect(revTestD).toMatchObject(accountStateC);
 
     const revTestC = A.removeSplitFromAccountStateDataItem(revTestD, splitC, 
         accountStateB.ymdDate);
-    expect(revTestC).toEqual(expect.objectContaining(accountStateB));
+    expect(revTestC).toMatchObject(accountStateB);
 
     const revTestB = A.removeSplitFromAccountStateDataItem(revTestC, splitB, 
         stateB.ymdDate);
-    expect(revTestB).toEqual(expect.objectContaining(stateB));
+    expect(revTestB).toMatchObject(stateB);
 });

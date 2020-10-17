@@ -3,6 +3,7 @@ import * as A from './Accounts';
 import * as PI from './PricedItems';
 import * as RE from '../util/Repeats';
 import * as T from './Transactions';
+import * as Q from '../util/Quantities';
 
 
 
@@ -39,7 +40,7 @@ test('AccountingActions-Accounts', async () => {
     currentSettings = settingsA;
     await actionManager.asyncApplyAction(newAccountAction);
     expect(accountManager.getAccountDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
 
     // Remove Account
@@ -52,14 +53,14 @@ test('AccountingActions-Accounts', async () => {
 
     await actionManager.asyncUndoLastAppliedActions(1);
     expect(accountManager.getAccountDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
     await actionManager.asyncUndoLastAppliedActions(1);
     expect(accountManager.getAccountDataItemWithId(settingsA.id)).toBeUndefined();
 
     await actionManager.asyncReapplyLastUndoneActions(1);
     expect(accountManager.getAccountDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
 
     // Modify account.
@@ -71,15 +72,15 @@ test('AccountingActions-Accounts', async () => {
     const modifyAccountAction = actions.createModifyAccountAction(settingsA1);
     await actionManager.asyncApplyAction(modifyAccountAction);
     expect(accountManager.getAccountDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA1));
+        .toMatchObject(settingsA1);
 
     await actionManager.asyncUndoLastAppliedActions();
     expect(accountManager.getAccountDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
     await actionManager.asyncReapplyLastUndoneActions();
     expect(accountManager.getAccountDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA1));
+        .toMatchObject(settingsA1);
 
 
     // Validation.
@@ -91,7 +92,7 @@ test('AccountingActions-Accounts', async () => {
     await expect(actionManager.asyncApplyAction(invalidModifyAction)).rejects.toThrow();
 
     expect(accountManager.getAccountDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA1));
+        .toMatchObject(settingsA1);
 });
 
 
@@ -127,7 +128,7 @@ test('AccountingActions-PricedItems', async () => {
     currentSettings = settingsA;
     await actionManager.asyncApplyAction(newPricedItemAction);
     expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
 
     // Remove PricedItem
@@ -140,14 +141,14 @@ test('AccountingActions-PricedItems', async () => {
 
     await actionManager.asyncUndoLastAppliedActions(1);
     expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
     await actionManager.asyncUndoLastAppliedActions(1);
     expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id)).toBeUndefined();
 
     await actionManager.asyncReapplyLastUndoneActions(1);
     expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
 
     // Modify priced item.
@@ -161,15 +162,15 @@ test('AccountingActions-PricedItems', async () => {
     const modifyPricedItemAction = actions.createModifyPricedItemAction(settingsA1);
     await actionManager.asyncApplyAction(modifyPricedItemAction);
     expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA1));
+        .toMatchObject(settingsA1);
 
     await actionManager.asyncUndoLastAppliedActions();
     expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
     await actionManager.asyncReapplyLastUndoneActions();
     expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA1));
+        .toMatchObject(settingsA1);
 
 
     // Invalid modify.
@@ -180,7 +181,7 @@ test('AccountingActions-PricedItems', async () => {
     const invalidModifyAction = actions.createModifyPricedItemAction(invalidA1);
     await expect(actionManager.asyncApplyAction(invalidModifyAction)).rejects.toThrow();
     expect(pricedItemManager.getPricedItemDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA1));
+        .toMatchObject(settingsA1);
 });
 
 
@@ -214,7 +215,7 @@ test('AccountingActions-Lots', async () => {
     currentSettings = settingsA;
     await actionManager.asyncApplyAction(newLotAction);
     expect(lotManager.getLotDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
 
     // Remove Lot
@@ -226,14 +227,14 @@ test('AccountingActions-Lots', async () => {
 
     await actionManager.asyncUndoLastAppliedActions(1);
     expect(lotManager.getLotDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
     await actionManager.asyncUndoLastAppliedActions(1);
     expect(lotManager.getLotDataItemWithId(settingsA.id)).toBeUndefined();
 
     await actionManager.asyncReapplyLastUndoneActions(1);
     expect(lotManager.getLotDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
 
     // Modify Lot.
@@ -245,15 +246,15 @@ test('AccountingActions-Lots', async () => {
     const modifyLotAction = actions.createModifyLotAction(settingsA1);
     await actionManager.asyncApplyAction(modifyLotAction);
     expect(lotManager.getLotDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA1));
+        .toMatchObject(settingsA1);
 
     await actionManager.asyncUndoLastAppliedActions();
     expect(lotManager.getLotDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
     await actionManager.asyncReapplyLastUndoneActions();
     expect(lotManager.getLotDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA1));
+        .toMatchObject(settingsA1);
 
 });
 
@@ -368,9 +369,9 @@ test('AccountingActions-Tranasctions', async () => {
     await actionManager.asyncApplyAction(actionA);
 
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id))
-        .toEqual(expect.objectContaining(settingsA[0]));
+        .toMatchObject(settingsA[0]);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id))
-        .toEqual(expect.objectContaining(settingsA[1]));
+        .toMatchObject(settingsA[1]);
 
 
     const settingsB = {
@@ -392,7 +393,7 @@ test('AccountingActions-Tranasctions', async () => {
     currentSettings = undefined;
 
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id))
-        .toEqual(expect.objectContaining(settingsB));
+        .toMatchObject(settingsB);
 
     await actionManager.asyncUndoLastAppliedActions(2);
 
@@ -404,15 +405,15 @@ test('AccountingActions-Tranasctions', async () => {
 
     await actionManager.asyncReapplyLastUndoneActions();
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id))
-        .toEqual(expect.objectContaining(settingsA[0]));
+        .toMatchObject(settingsA[0]);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id))
-        .toEqual(expect.objectContaining(settingsA[1]));
+        .toMatchObject(settingsA[1]);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id))
         .toBeUndefined();
 
     await actionManager.asyncReapplyLastUndoneActions();
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id))
-        .toEqual(expect.objectContaining(settingsB));
+        .toMatchObject(settingsB);
 
 
     // Modify transaction
@@ -439,37 +440,38 @@ test('AccountingActions-Tranasctions', async () => {
 
     const modifiedA0 = Object.assign({}, settingsA[0], settingsA1[0]);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id))
-        .toEqual(expect.objectContaining(modifiedA0));
+        .toMatchObject(modifiedA0);
 
     const modifiedB = Object.assign({}, settingsB, settingsA1[1]);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id))
-        .toEqual(expect.objectContaining(modifiedB));
+        .toMatchObject(modifiedB);
 
     await actionManager.asyncUndoLastAppliedActions();
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id))
-        .toEqual(expect.objectContaining(settingsA[0]));
+        .toMatchObject(settingsA[0]);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id))
-        .toEqual(expect.objectContaining(settingsA[1]));
+        .toMatchObject(settingsA[1]);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id))
-        .toEqual(expect.objectContaining(settingsB));
+        .toMatchObject(settingsB);
 
 
     await actionManager.asyncReapplyLastUndoneActions();
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id))
-        .toEqual(expect.objectContaining(modifiedA0));
+        .toMatchObject(modifiedA0);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id))
-        .toEqual(expect.objectContaining(modifiedB));
+        .toMatchObject(modifiedB);
 
 
     // Remove transaction.
-    const removeAction = await actions.asyncCreateRemoveTransactionsAction(settingsA[1].id);
+    const removeAction 
+        = await actions.asyncCreateRemoveTransactionsAction(settingsA[1].id);
     await actionManager.asyncApplyAction(removeAction);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id))
         .toBeUndefined();
 
     await actionManager.asyncUndoLastAppliedActions();
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id))
-        .toEqual(expect.objectContaining(settingsA[1]));
+        .toMatchObject(settingsA[1]);
 
     await actionManager.asyncReapplyLastUndoneActions();
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id))
@@ -488,9 +490,9 @@ test('AccountingActions-Tranasctions', async () => {
 
     await actionManager.asyncUndoLastAppliedActions();
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id))
-        .toEqual(expect.objectContaining(modifiedA0));
+        .toMatchObject(modifiedA0);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id))
-        .toEqual(expect.objectContaining(modifiedB));
+        .toMatchObject(modifiedB);
 
     await actionManager.asyncReapplyLastUndoneActions();
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id))
@@ -500,9 +502,9 @@ test('AccountingActions-Tranasctions', async () => {
 
     await actionManager.asyncUndoLastAppliedActions(2);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[0].id))
-        .toEqual(expect.objectContaining(modifiedA0));
+        .toMatchObject(modifiedA0);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsB.id))
-        .toEqual(expect.objectContaining(modifiedB));
+        .toMatchObject(modifiedB);
 
 
     // Check validation.
@@ -523,13 +525,13 @@ test('AccountingActions-Tranasctions', async () => {
             ],    
         }
     ];
-    const invalidModifyAction = await actions.asyncCreateModifyTransactionsAction(invalidA1);
+    const invalidModifyAction 
+        = await actions.asyncCreateModifyTransactionsAction(invalidA1);
     expect(await actionManager.asyncValidateApplyAction(invalidModifyAction))
         .toBeInstanceOf(Error);
 
     await expect(actionManager.asyncApplyAction(invalidModifyAction)).rejects.toThrow();
 });
-
 
 
 //
@@ -557,8 +559,8 @@ test('AccountingActions-AccountingSystem', async () => {
     await actionManager.asyncApplyAction(modifyOptionsActionA);
     
     expect(accountingSystem.getOptions()).toEqual(settingsA);
-    expect(lastResult).toEqual(expect.objectContaining(
-        { newOptions: settingsA, oldOptions: {} }));
+    expect(lastResult).toMatchObject(
+        { newOptions: settingsA, oldOptions: {} });
 
 
     const settingsB = {
@@ -570,8 +572,8 @@ test('AccountingActions-AccountingSystem', async () => {
     await actionManager.asyncApplyAction(modifyOptionsActionB);
 
     expect(accountingSystem.getOptions()).toEqual(optionsB);
-    expect(lastResult).toEqual(expect.objectContaining(
-        { newOptions: optionsB, oldOptions: settingsA }));
+    expect(lastResult).toMatchObject(
+        { newOptions: optionsB, oldOptions: settingsA });
     
 
     await actionManager.asyncUndoLastAppliedAction();
@@ -580,8 +582,8 @@ test('AccountingActions-AccountingSystem', async () => {
     lastResult = undefined;
     await actionManager.asyncReapplyLastUndoneAction();
     expect(accountingSystem.getOptions()).toEqual(optionsB);
-    expect(lastResult).toEqual(expect.objectContaining(
-        { newOptions: optionsB, oldOptions: settingsA }));
+    expect(lastResult).toMatchObject(
+        { newOptions: optionsB, oldOptions: settingsA });
 });
 
 
@@ -630,7 +632,7 @@ test('AccountingActions-Reminders', async () => {
     currentSettings = settingsA;
     await actionManager.asyncApplyAction(newReminderAction);
     expect(reminderManager.getReminderDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
 
     // Remove Reminder
@@ -640,14 +642,14 @@ test('AccountingActions-Reminders', async () => {
 
     await actionManager.asyncUndoLastAppliedActions(1);
     expect(reminderManager.getReminderDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
     await actionManager.asyncUndoLastAppliedActions(1);
     expect(reminderManager.getReminderDataItemWithId(settingsA.id)).toBeUndefined();
 
     await actionManager.asyncReapplyLastUndoneActions(1);
     expect(reminderManager.getReminderDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
 
     // Modify Reminder.
@@ -666,15 +668,15 @@ test('AccountingActions-Reminders', async () => {
     const modifyReminderAction = actions.createModifyReminderAction(settingsA1);
     await actionManager.asyncApplyAction(modifyReminderAction);
     expect(reminderManager.getReminderDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA1));
+        .toMatchObject(settingsA1);
 
     await actionManager.asyncUndoLastAppliedActions();
     expect(reminderManager.getReminderDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA));
+        .toMatchObject(settingsA);
 
     await actionManager.asyncReapplyLastUndoneActions();
     expect(reminderManager.getReminderDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA1));
+        .toMatchObject(settingsA1);
 
 
     // Invalid modify.
@@ -685,7 +687,7 @@ test('AccountingActions-Reminders', async () => {
     const invalidModifyAction = actions.createModifyReminderAction(invalidA1);
     await expect(actionManager.asyncApplyAction(invalidModifyAction)).rejects.toThrow();
     expect(reminderManager.getReminderDataItemWithId(settingsA.id))
-        .toEqual(expect.objectContaining(settingsA1));
+        .toMatchObject(settingsA1);
 });
 
 
