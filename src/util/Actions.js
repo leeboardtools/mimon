@@ -30,8 +30,10 @@ import { bug } from './Bug';
 
 /**
  * Optional callback called after an action has been applied.
- * @function {ActionManager~PostActionCallback}
+ * @function {ActionManager~PostApplyCallback}
  * @param {ActionDataItem} action   The action that was applied.
+ * @param {*}   result  The result from the action applier
+ * @return {*}  The result to return.
  */
 
 /**
@@ -40,7 +42,7 @@ import { bug } from './Bug';
  * applying the action.
  * @property {string}   name    Simple name for the action.
  * @property {string}   [description]
- * @property {ActionManager~PostActionCallback} [postActionCallback]
+ * @property {ActionManager~PostApplyCallback} [postApplyCallback]
  */
 
 
@@ -181,16 +183,16 @@ export class ActionManager extends EventEmitter {
                 + action.type + '"!');
         }
 
-        const result = await asyncApplier(isValidateOnly, action);
+        let result = await asyncApplier(isValidateOnly, action);
 
         if (!isValidateOnly) {
-            const { postActionCallback } = action;
-            if (postActionCallback) {
-                postActionCallback(action);
+            const { postApplyCallback } = action;
+            if (postApplyCallback) {
+                result = postApplyCallback(action, result);
             }
-        }
 
-        return result;
+            return result;
+        }
     }
 
 

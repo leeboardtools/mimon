@@ -83,8 +83,9 @@ test('ActionManager', async () => {
 
     const actionA2 = { type: 'actionA', 
         value: 2, 
-        postActionCallback: (action) => {
+        postApplyCallback: (action, result) => {
             postActionA2 = action;
+            return result;
         }};
     result = await manager.asyncApplyAction(actionA2);
     expect(valueA[0]).toEqual(2);
@@ -101,8 +102,9 @@ test('ActionManager', async () => {
 
     const actionB1 = { type: 'actionB', 
         value: 10, 
-        postActionCallback: (action) => {
+        postApplyCallback: (action, result) => {
             postActionB1 = action;
+            return result;
         }};
     await manager.asyncApplyAction(actionB1);
     expect(valueB[0]).toEqual(10);
