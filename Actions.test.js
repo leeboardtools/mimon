@@ -199,7 +199,7 @@ test('ActionManager', async () => {
     expect(manager.getAppliedActionCount()).toEqual(1);
 
     action = await manager.asyncGetAppliedActionAtIndex(0);
-    expect(action).toEqual(expect.objectContaining(main1));
+    expect(action).toMatchObject(main1);
 
 
     const main2 = { name: 'Composite 2', };
