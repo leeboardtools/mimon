@@ -725,6 +725,13 @@ export class AccountingActions extends EventEmitter {
 
     
     /**
+     * @typedef {object} AccountingActions~AddTransactionsOptions
+     * @property {boolean} [noSpecialActions=false]  If this is not truthy and the 
+     * transaction needs lots created those lots will be crated.
+     */
+
+
+    /**
      * Creates an action for adding transactions.
      * <p>
      * When the action is applied {@link ActionManager#asyncApplyAction} returns the
@@ -735,12 +742,12 @@ export class AccountingActions extends EventEmitter {
      * coming back.
      * @param {Transaction|TransactionDataItem|Transaction[]
      *          |TransactionDataItem[]} transactions 
-     * @param {boolean} [noSpecialActions=false]    If this is not truthy and
-     * a transaction generates lots and the lots have not already been specified
-     * (via the lotId property of the {@link LotChange}s), a new lot will be added.
+     * @param {AccountingActions~AddTransactionsOptions} [options]
      * @returns {ActionDataItem}
      */
-    createAddTransactionsAction(transactions, noSpecialActions) {
+    createAddTransactionsAction(transactions, options) {
+        options = options || {};
+
         let transactionDataItems;
         if (!Array.isArray(transactions)) {
             transactionDataItems = T.getTransactionDataItem(transactions, true);
@@ -756,7 +763,7 @@ export class AccountingActions extends EventEmitter {
             name: userMsg('Actions-addTransactions'), 
         };
 
-        if (!noSpecialActions) {
+        if (!options.noSpecialActions) {
             const lotTransactionIndices = this._getLotTransactionIndices(
                 transactionDataItems,
                 (split) => {
@@ -1023,18 +1030,26 @@ export class AccountingActions extends EventEmitter {
         return result;
     }
 
+
+    /**
+     * @typedef {object} AccountingActions~ModifyTransactionsOptions
+     * @property {boolean} [noSpecialActions=false]    If this is not truthy and any
+     * of the transactions are lot based, this will add or remove appropriate lot actions
+     * as needed.
+     */
+
     
     /**
      * Creates an action for modifying transactions.
      * @param {Transaction|TransactionDataItem|Transaction[]
      * |TransactionDataItem[]} transactions The transaction modifications, 
      * an id property is required.
-     * @param {boolean} [noSpecialActions=false]    If this is not truthy and any
-     * of the transactions are lot based, this will add appropriate lot actions
-     * as needed.
+     * @param {AccountingActions~ModifyTransactionsOptions} [options]
      * @returns {ActionDataItem}
      */
-    async asyncCreateModifyTransactionsAction(transactions, noSpecialActions) {
+    async asyncCreateModifyTransactionsAction(transactions, options) {
+        options = options || {};
+
         let transactionDataItems;
         if (!Array.isArray(transactions)) {
             transactionDataItems = T.getTransactionDataItem(transactions, true);
@@ -1044,7 +1059,7 @@ export class AccountingActions extends EventEmitter {
                 T.getTransactionDataItem(transaction, true));
         }
 
-        if (!noSpecialActions) {
+        if (!options.noSpecialActions) {
             // TODO:
             // We need to figure out if any of the transaction modifications need
             // a change in lots.
