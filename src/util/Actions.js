@@ -5,6 +5,7 @@ import { bug } from './Bug';
 /**
  * @event ActionManager#actionApply
  * @param {ActionDataItem}  action
+ * @param {*}   [result]    The result returned by the action applier.
  */
 
 /**
@@ -15,6 +16,8 @@ import { bug } from './Bug';
 /**
  * @event ActionManager#actionReapply
  * @param {ActionDataItem}  lastAction
+ * @param {*}   [lastResult]    The result returned by the action applier that
+ * applied lastAction.
  */
 
 /**
@@ -25,6 +28,11 @@ import { bug } from './Bug';
  * @event ActionManager#undoneActionsClear
  */
 
+/**
+ * Optional callback called after an action has been applied.
+ * @function {ActionManager~PostActionCallback}
+ * @param {ActionDataItem} action   The action that was applied.
+ */
 
 /**
  * @typedef {object}    ActionDataItem
@@ -32,11 +40,13 @@ import { bug } from './Bug';
  * applying the action.
  * @property {string}   name    Simple name for the action.
  * @property {string}   [description]
+ * @property {ActionManager~PostActionCallback} [postActionCallback]
  */
 
 
 /**
  * Helper for creating a composite action, which is an action made up of other actions.
+ * The composite action applier returns an array containing the results of each action.
  * @param {ActionDataItem} mainAction The main action information.
  * @param {ActionDataItem[]} subActions The array of sub actions.
  * @returns {ActionDataItem}
@@ -154,9 +164,13 @@ export class ActionManager extends EventEmitter {
             // eslint-disable-next-line max-len
             throw bug('Action of type "Composite" does not have a subActions property! Action: ' + JSON.stringify(action));
         }
+
+        const results = [];
         for (let i = 0; i < subActions.length; ++i) {
-            await this._asyncApplyAction(subActions[i], isValidateOnly);
+            results.push(await this._asyncApplyAction(subActions[i], isValidateOnly));
         }
+
+        return results;
     }
 
 
@@ -167,7 +181,16 @@ export class ActionManager extends EventEmitter {
                 + action.type + '"!');
         }
 
-        await asyncApplier(isValidateOnly, action);
+        const result = await asyncApplier(isValidateOnly, action);
+
+        if (!isValidateOnly) {
+            const { postActionCallback } = action;
+            if (postActionCallback) {
+                postActionCallback(action);
+            }
+        }
+
+        return result;
     }
 
 
@@ -208,10 +231,11 @@ export class ActionManager extends EventEmitter {
         };
 
         try {
-            await this._asyncApplyAction(action);
+            const result = await this._asyncApplyAction(action);
             await this._handler.asyncAddAppliedActionEntry(actionEntry);
 
-            this.emit('actionApply', action);
+            this.emit('actionApply', action, result);
+            return result;
         }
         catch (e) {
             if (this._undoManager.getNextUndoId() !== undoId) {
@@ -275,15 +299,16 @@ export class ActionManager extends EventEmitter {
             const lastIndex = Math.max(totalCount - actionCount, 0);
 
             let lastAction;
+            let lastActionResult;
             for (let index = totalCount - 1; index >= lastIndex; --index) {
                 const action = await this.asyncGetUndoneActionAtIndex(index);
 
                 await this._handler.asyncRemoveLastUndoneActions(1);
-                await this.asyncApplyAction(action);
+                lastActionResult = await this.asyncApplyAction(action);
                 lastAction = action;
             }
 
-            this.emit('actionReapply', lastAction);
+            this.emit('actionReapply', lastAction, lastActionResult);
         }
     }
 
@@ -294,6 +319,7 @@ export class ActionManager extends EventEmitter {
      * @param {boolean} isValidateOnly  <code>true</code> if the applier is being 
      * called from {@link ActionManager#asyncValidateApplyAction}.
      * @param {ActionDataItem} actionDataItem   The action data item to be applied.
+     * @return {*}  Optional, will be returned by {@link ActionManager#asyncApplyAction}.
      */
 
 

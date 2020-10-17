@@ -13,6 +13,7 @@ function applyAction(isValidateOnly, action, undoManager, values, undoName) {
     }
     undoManager.asyncRegisterUndoDataItem(undoName, { value: values[0], });
     values[0] = action.value;
+    return values[0];
 }
 
 test('ActionManager', async () => {
@@ -31,11 +32,11 @@ test('ActionManager', async () => {
 
     manager.registerAsyncActionApplier('actionA', 
         (isValidateOnly, action) => { 
-            applyAction(isValidateOnly, action, undoManager, valueA, 'A'); 
+            return applyAction(isValidateOnly, action, undoManager, valueA, 'A'); 
         });
     manager.registerAsyncActionApplier('actionB', 
         (isValidateOnly, action) => { 
-            applyAction(isValidateOnly, action, undoManager, valueB, 'B'); 
+            return applyAction(isValidateOnly, action, undoManager, valueB, 'B'); 
         });
 
     expect(manager.getAppliedActionCount()).toEqual(0);
@@ -44,24 +45,65 @@ test('ActionManager', async () => {
     expect(await manager.asyncGetUndoneActionAtIndex(0)).toBeUndefined();
 
 
+    let applyEventAction;
+    let applyEventResult;
+    manager.on('actionApply', (action, result) => {
+        applyEventAction = action;
+        applyEventResult = result;
+    });
+
+    let undoEventAction;
+    manager.on('actionUndo', (action) => {
+        undoEventAction = action;
+    });
+
+    let reapplyEventAction;
+    let reapplyEventResult;
+    manager.on('actionReapply', (action, result) => {
+        reapplyEventAction = action;
+        reapplyEventResult = result;
+    });
+
+
+    let result;
+
     const actionA1 = { type: 'actionA', value: 1, };
-    await manager.asyncApplyAction(actionA1);
+    result = await manager.asyncApplyAction(actionA1);
     expect(valueA[0]).toEqual(1);
+    expect(result).toEqual(1);
+
+    expect(applyEventAction).toEqual(actionA1);
+    expect(applyEventResult).toEqual(result);
 
     expect(manager.getAppliedActionCount()).toEqual(1);
     expect(await manager.asyncGetAppliedActionAtIndex(0)).toEqual(actionA1);
 
 
-    const actionA2 = { type: 'actionA', value: 2, };
-    await manager.asyncApplyAction(actionA2);
+    let postActionA2;
+
+    const actionA2 = { type: 'actionA', 
+        value: 2, 
+        postActionCallback: (action) => {
+            postActionA2 = action;
+        }};
+    result = await manager.asyncApplyAction(actionA2);
     expect(valueA[0]).toEqual(2);
+    expect(result).toEqual(2);
+
+    expect(postActionA2).toEqual(actionA2);
 
     expect(manager.getAppliedActionCount()).toEqual(2);
     expect(await manager.asyncGetAppliedActionAtIndex(0)).toEqual(actionA1);
     expect(await manager.asyncGetAppliedActionAtIndex(1)).toEqual(actionA2);
 
 
-    const actionB1 = { type: 'actionB', value: 10, };
+    let postActionB1;
+
+    const actionB1 = { type: 'actionB', 
+        value: 10, 
+        postActionCallback: (action) => {
+            postActionB1 = action;
+        }};
     await manager.asyncApplyAction(actionB1);
     expect(valueB[0]).toEqual(10);
     expect(valueA[0]).toEqual(2);
@@ -99,6 +141,9 @@ test('ActionManager', async () => {
     await manager.asyncUndoLastAppliedActions();
     expect(valueA[0]).toEqual(actionA2.value);
 
+    expect(undoEventAction).toEqual(actionA3);
+
+
     expect(manager.getAppliedActionCount()).toEqual(5);
     expect(manager.getUndoneActionCount()).toEqual(1);
 
@@ -108,6 +153,10 @@ test('ActionManager', async () => {
     // Redo single action.
     await manager.asyncReapplyLastUndoneActions();
     expect(valueA[0]).toEqual(actionA3.value);
+
+    expect(reapplyEventAction).toEqual(actionA3);
+    expect(reapplyEventResult).toEqual(actionA3.value);
+
 
     expect(manager.getAppliedActionCount()).toEqual(6);
     expect(manager.getUndoneActionCount()).toEqual(0);
@@ -191,10 +240,19 @@ test('ActionManager', async () => {
     const main1 = { name: 'Composite1', };
     const subActions1 = [ actionA1, actionA2, actionB1, ];
     const composite1 = createCompositeAction(main1, subActions1);
+
+    postActionA2 = undefined;
+    postActionB1 = undefined;
     
-    await manager.asyncApplyAction(composite1);
+    result = await manager.asyncApplyAction(composite1);
     expect(valueA[0]).toEqual(actionA2.value);
     expect(valueB[0]).toEqual(actionB1.value);
+    expect(result).toEqual([actionA1.value, actionA2.value, actionB1.value, ]);
+    expect(applyEventAction).toEqual(composite1);
+    expect(applyEventResult).toEqual(result);
+
+    expect(postActionA2).toEqual(actionA2);
+    expect(postActionB1).toEqual(actionB1);
 
     expect(manager.getAppliedActionCount()).toEqual(1);
 
