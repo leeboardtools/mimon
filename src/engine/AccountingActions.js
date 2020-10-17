@@ -402,18 +402,25 @@ export class AccountingActions extends EventEmitter {
     }
 
 
+    /**
+     * @callback AccountingActions~PostAddCallback
+     * @param {LotManager~AddLotResult} addLotResult
+     */
+
 
     /**
      * Creates an action for adding a new lot.
      * @param {Lot|LotDataItem} lot The information for the new lot.
+     * @param {AccountingActions~PostAddCallback}   [postAddCallback]
      * @returns {ActionDataItem}
      */
-    createAddLotAction(lot) {
+    createAddLotAction(lot, postAddCallback) {
         const lotDataItem = L.getLotDataItem(lot, true);
         return { 
             type: 'addLot', 
             lotDataItem: lotDataItem, 
-            name: userMsg('Actions-addLot'), 
+            name: userMsg('Actions-addLot'),
+            postAddCallback: postAddCallback,
         };
     }
 
@@ -421,6 +428,12 @@ export class AccountingActions extends EventEmitter {
         const result 
             = await this._accountingSystem.getLotManager().asyncAddLot(
                 action.lotDataItem, isValidateOnly);
+
+        const { postAddCallback } = action;
+        if (postAddCallback) {
+            postAddCallback(result);
+        }
+
         this._emitActionEvent(isValidateOnly, action, result);
     }
 
@@ -448,7 +461,8 @@ export class AccountingActions extends EventEmitter {
             if (transactionKeys.length) {
                 const transactionIds = transactionKeys.map((key) => key.id);
                 const transactionsAction 
-                    = await this.asyncCreateRemoveTransactionsAction(transactionIds);
+                    = await this.asyncCreateRemoveTransactionsAction(transactionIds,
+                        true);
                 action = createCompositeAction(
                     {
                         name: userMsg('Actions-remove_transactions_and_lot'),
@@ -553,14 +567,102 @@ export class AccountingActions extends EventEmitter {
         this._emitActionEvent(isValidateOnly, action, result);        
     }
 
+
+    _isLotSplitDataItem(split, splitFilter, transactionDataItem) {
+        const accountManager = this._accountingSystem.getAccountManager();
+        const accountDataItem = accountManager.getAccountDataItemWithId(
+            split.accountId);
+        if (accountDataItem) {
+            const accountType = A.getAccountType(accountDataItem.type);
+            if (accountType && accountType.hasLots) {
+                if (splitFilter(split, transactionDataItem)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    _isLotTransactionDataItem(transactionDataItem, splitFilter) {
+        const { splits } = transactionDataItem;
+        splitFilter = splitFilter || ((split) => true);
+        if (splits) {
+            for (let split of splits) {
+                if (this._isLotSplitDataItem(split, splitFilter, transactionDataItem)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+
+    _getLotTransactionIndices(transactionDataItems, splitFilter) {
+        if (!Array.isArray(transactionDataItems)) {
+            transactionDataItems = [ transactionDataItems ];
+        }
+
+        const indices = [];
+        for (let i = 0; i < transactionDataItems.length; ++i) {
+            if (this._isLotTransactionDataItem(transactionDataItems[i],
+                splitFilter)) {
+                indices.push(i);
+            }
+        }
+        return indices;
+    }
+
+
+    _createAddLotTransactionsAction(transactionDataItem, baseAction) {
+        transactionDataItem = T.getTransactionDataItem(transactionDataItem, true);
+
+        const accountManager = this._accountingSystem.getAccountManager();
+        const subActions = [];
+        const { splits } = transactionDataItem;
+        for (let split of splits) {
+            const { lotChanges } = split;
+            if (!lotChanges) {
+                continue;
+            }
+
+            const accountDataItem = accountManager.getAccountDataItemWithId(
+                split.accountId);
+            const { pricedItemId } = accountDataItem;
+            for (let lotChange of lotChanges) {
+                if (!lotChange.lotId) {
+                    subActions.push(
+                        this.createAddLotAction({
+                            pricedItemId: pricedItemId,
+                        },
+                        (result) => {
+                            lotChange.lotId = result.newLotDataItem.id;
+                        })
+                    );
+                }
+            }
+        }
+
+        // Finally add the transaction
+        subActions.push(Object.assign({}, baseAction,
+            {
+                transactionDataItems: transactionDataItem,
+            }));
+        return createCompositeAction(
+            {
+                name: baseAction.name,
+            },
+            subActions);
+    }
+
     
     /**
      * Creates an action for adding transactions.
      * @param {Transaction|TransactionDataItem|Transaction[]
      *          |TransactionDataItem[]} transactions 
+     * @param {boolean} [noSpecialActions=false]    If this is not truthy and
+     * a transaction generates lots and the lots have not already been specified
+     * (via the lotId property of the {@link LotChange}s), a new lot will be added.
      * @returns {ActionDataItem}
      */
-    createAddTransactionsAction(transactions) {
+    createAddTransactionsAction(transactions, noSpecialActions) {
         let transactionDataItems;
         if (!Array.isArray(transactions)) {
             transactionDataItems = T.getTransactionDataItem(transactions, true);
@@ -569,11 +671,54 @@ export class AccountingActions extends EventEmitter {
             transactionDataItems = transactions.map((transaction) => 
                 T.getTransactionDataItem(transaction, true));
         }
-        return { 
+
+        const action = { 
             type: 'addTransactions', 
             transactionDataItems: transactionDataItems, 
             name: userMsg('Actions-addTransactions'), 
         };
+
+        if (!noSpecialActions) {
+            const lotTransactionIndices = this._getLotTransactionIndices(
+                transactionDataItems,
+                (split) => {
+                    // We only want to do lot processing if a lot does not yet exist.
+                    const { lotChanges } = split;
+                    for (let lotChange of lotChanges) {
+                        if (!lotChange.lotId) {
+                            return true;
+                        }
+                    }
+                });
+            if (lotTransactionIndices.length) {
+                if (!Array.isArray(transactions)) {
+                    return this._createAddLotTransactionsAction(transactionDataItems, 
+                        action);
+                }
+                else {
+                    const subActions = [];
+                    let lastNormalIndex = 0;
+                    for (let i = 0; i < lotTransactionIndices.length; ++i) {
+                        const lotIndex = lotTransactionIndices[i];
+                        if (lastNormalIndex < lotIndex) {
+                            subActions.push(Object.assign({}, action, {
+                                transactionDataItems: transactionDataItems.slice(
+                                    lastNormalIndex,
+                                    lotIndex),
+                            }));
+                        }
+                        subActions.push(this._createAddLotTransactionsAction(
+                            transactionDataItems[i],
+                            action
+                        ));
+
+                        lastNormalIndex = lotIndex + 1;
+                    }
+                }
+            }
+        }
+
+        return action;
     }
 
     async _asyncAddTransactionsApplier(isValidateOnly, action) {
@@ -587,11 +732,34 @@ export class AccountingActions extends EventEmitter {
     /**
      * Creates an action for removing transactions.
      * @param {number|number[]} transactionIds 
+     * @param {boolean} [noSpecialActions=false]  If this is not truthy and the 
+     * transaction had created lots, the lots it created will be removed.
      * @returns {ActionDataItem}
      */
-    async asyncCreateRemoveTransactionsAction(transactionIds) {
+    async asyncCreateRemoveTransactionsAction(transactionIds, noSpecialActions) {
         if (Array.isArray(transactionIds)) {
             transactionIds = Array.from(transactionIds);
+        }
+
+        if (!noSpecialActions) {
+            const transactionManager = this._accountingSystem.getTransactionManager();
+            const transactionDataItems 
+                = await transactionManager.asyncGetTransactionDataItemsWithIds(
+                    transactionIds);
+            
+            // If there are any transactions that added new lots we want to remove
+            // those lots. We'll let the lot removal action handle removing those
+            // transactions.
+            
+            transactionDataItems;
+            /*
+            const lotTransactionIndices = this._getLotTransactionIndices(
+                transactionDataItems,
+                (split) => this._getLotsAddedBySplit(split).length);
+            if (lotTransactionIndices.length) {
+                // 
+            }
+            */
         }
 
         return { 
@@ -614,9 +782,12 @@ export class AccountingActions extends EventEmitter {
      * @param {Transaction|TransactionDataItem|Transaction[]
      * |TransactionDataItem[]} transactions The transaction modifications, 
      * an id property is required.
+     * @param {boolean} [noSpecialActions=false]    If this is not truthy and any
+     * of the transactions are lot based, this will add appropriate lot actions
+     * as needed.
      * @returns {ActionDataItem}
      */
-    async asyncCreateModifyTransactionsAction(transactions) {
+    async asyncCreateModifyTransactionsAction(transactions, noSpecialActions) {
         let transactionDataItems;
         if (!Array.isArray(transactions)) {
             transactionDataItems = T.getTransactionDataItem(transactions, true);
@@ -625,6 +796,13 @@ export class AccountingActions extends EventEmitter {
             transactionDataItems = transactions.map((transaction) => 
                 T.getTransactionDataItem(transaction, true));
         }
+
+        if (!noSpecialActions) {
+            // TODO:
+            // We need to figure out if any of the transaction modifications need
+            // a change in lots.
+        }
+
         return { 
             type: 'modifyTransactions', 
             transactionDataItems: transactionDataItems, 
@@ -639,11 +817,6 @@ export class AccountingActions extends EventEmitter {
         this._emitActionEvent(isValidateOnly, action, result);
     }
 
-
-    // Special transaction actions:
-    // - Buy Transactions
-    // - Merge/Split Transaction?
-    // - Reconcile Transactions?
 
 
     /**

@@ -534,6 +534,273 @@ test('AccountingActions-Tranasctions', async () => {
 });
 
 
+
+//
+//---------------------------------------------------------
+//
+test('AccountingActions-addLotTranasctions', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+    const { accountingSystem } = sys;
+    const transactionManager = accountingSystem.getTransactionManager();
+    const actions = accountingSystem.getAccountingActions();
+    const actionManager = accountingSystem.getActionManager();
+
+    const lotManager = accountingSystem.getLotManager();
+    const pricedItemManager = accountingSystem.getPricedItemManager();
+    const aaplPricedItem = pricedItemManager.getPricedItemDataItemWithId(
+        sys.aaplPricedItemId);
+    const lotQuantityDefinition = Q.getQuantityDefinition(
+        aaplPricedItem.quantityDefinition);
+    const priceQuantityDefinition = pricedItemManager
+        .getBaseCurrency().getQuantityDefinition();
+
+    let lastResult;
+    actions.on('addTransactions', (action, result) => {
+        lastResult = result;
+    });
+    actions.on('addLot', (action, result) => {
+        lastResult = result;
+    });
+
+    const aaplPriceA = { close: 200 };
+    const aaplQuantityA = 100;
+    const aaplCostBasisA = aaplQuantityA * aaplPriceA.close;
+    const aaplQuantityBaseValueA 
+        = lotQuantityDefinition.numberToBaseValue(aaplQuantityA);
+    const aaplCostBasisBaseValueA 
+        = priceQuantityDefinition.numberToBaseValue(aaplCostBasisA);
+    const aaplLotChangeA = {
+        quantityBaseValue: aaplQuantityBaseValueA, 
+        costBasisBaseValue: aaplCostBasisBaseValueA, 
+    };
+    const settingsA = {
+        ymdDate: '2010-02-01',
+        splits: [
+            {
+                accountId: sys.brokerageAId,
+                quantityBaseValue: -aaplCostBasisBaseValueA,
+            },
+            {
+                accountId: sys.aaplBrokerageAId, 
+                quantityBaseValue: aaplCostBasisBaseValueA, 
+                lotTransactionType: T.LotTransactionType.BUY_SELL.name,
+                lotChanges: [ aaplLotChangeA ],
+            },
+        ]
+    };
+    const stateA = {
+        lotStates: [
+            {
+                quantityBaseValue: aaplQuantityBaseValueA, 
+                costBasisBaseValue: aaplCostBasisBaseValueA,
+                ymdDateCreated: settingsA.ymdDate,
+            }
+        ],
+        quantityBaseValue: aaplQuantityBaseValueA,
+        ymdDate: settingsA.ymdDate,
+    };
+
+    const actionA = actions.createAddTransactionsAction(settingsA);
+
+    await actionManager.asyncApplyAction(actionA);
+    const transA = lastResult.newTransactionDataItem;
+    const lotAId = transA.splits[1].lotChanges[0].lotId;
+
+    expect(lotManager.getLotDataItemWithId(lotAId)).toMatchObject({
+        pricedItemId: aaplPricedItem.id,
+    });
+
+
+    const aaplBrokerageAStateA = transactionManager.getCurrentAccountStateDataItem(
+        sys.aaplBrokerageAId);
+    expect(aaplBrokerageAStateA).toMatchObject(stateA);
+
+    await actionManager.asyncUndoLastAppliedActions();
+
+    expect(lotManager.getLotDataItemWithId(lotAId)).toBeUndefined();
+    expect(await transactionManager.asyncGetTransactionDataItemWithId(transA.id))
+        .toBeUndefined();
+
+    await actionManager.asyncReapplyLastUndoneAction();
+
+    expect(lotManager.getLotDataItemWithId(lotAId)).toMatchObject({
+        pricedItemId: aaplPricedItem.id,
+    });
+    expect(transactionManager.getCurrentAccountStateDataItem(sys.aaplBrokerageAId))
+        .toMatchObject(stateA);
+
+    //
+    // Also support multiple lots...
+    const aaplPriceB = { close: 200 };
+    const aaplQuantityB = 100;
+    const aaplCostBasisB = aaplQuantityB * aaplPriceB.close;
+    const aaplQuantityBaseValueB 
+        = lotQuantityDefinition.numberToBaseValue(aaplQuantityB);
+    const aaplCostBasisBaseValueB 
+        = priceQuantityDefinition.numberToBaseValue(aaplCostBasisB);
+    const aaplLotChangeB1 = {
+        quantityBaseValue: aaplQuantityBaseValueB * 3 / 4, 
+        costBasisBaseValue: aaplCostBasisBaseValueB * 3 / 4, 
+    };
+    const aaplLotChangeB2 = {
+        quantityBaseValue: aaplQuantityBaseValueB - aaplLotChangeB1.quantityBaseValue, 
+        costBasisBaseValue: aaplCostBasisBaseValueB - aaplLotChangeB1.costBasisBaseValue, 
+    };
+    const settingsB = {
+        ymdDate: '2010-03-01',
+        splits: [
+            {
+                accountId: sys.aaplBrokerageAId, 
+                quantityBaseValue: aaplCostBasisBaseValueB, 
+                lotTransactionType: T.LotTransactionType.BUY_SELL.name,
+                lotChanges: [ aaplLotChangeB1, aaplLotChangeB2 ],
+            },
+            {
+                accountId: sys.brokerageAId,
+                quantityBaseValue: -aaplCostBasisBaseValueB,
+            },
+        ]
+    };
+    const stateB = {
+        lotStates: [
+            {
+                quantityBaseValue: aaplQuantityBaseValueA, 
+                costBasisBaseValue: aaplCostBasisBaseValueA,
+                ymdDateCreated: settingsA.ymdDate,
+            },
+            {
+                quantityBaseValue: aaplLotChangeB1.quantityBaseValue, 
+                costBasisBaseValue: aaplLotChangeB1.costBasisBaseValue,
+                ymdDateCreated: settingsB.ymdDate,
+            },
+            {
+                quantityBaseValue: aaplLotChangeB2.quantityBaseValue, 
+                costBasisBaseValue: aaplLotChangeB2.costBasisBaseValue,
+                ymdDateCreated: settingsB.ymdDate,
+            }
+        ],
+        quantityBaseValue: aaplQuantityBaseValueA + aaplQuantityBaseValueB,
+        ymdDate: settingsB.ymdDate,
+    };
+
+    const actionB = actions.createAddTransactionsAction(settingsB);
+
+    await actionManager.asyncApplyAction(actionB);
+
+    const transB = lastResult.newTransactionDataItem;
+    const lotB1Id = transB.splits[0].lotChanges[0].lotId;
+    const lotB2Id = transB.splits[0].lotChanges[1].lotId;
+    expect(lotManager.getLotDataItemWithId(lotB1Id)).toBeDefined();
+    expect(lotManager.getLotDataItemWithId(lotB2Id)).toBeDefined();
+
+    expect(transactionManager.getCurrentAccountStateDataItem(sys.aaplBrokerageAId))
+        .toMatchObject(stateB);
+
+    await actionManager.asyncUndoLastAppliedActions();
+
+    expect(lotManager.getLotDataItemWithId(lotAId)).toMatchObject({
+        pricedItemId: aaplPricedItem.id,
+    });
+    expect(transactionManager.getCurrentAccountStateDataItem(sys.aaplBrokerageAId))
+        .toMatchObject(stateA);
+
+    expect(lotManager.getLotDataItemWithId(lotB1Id)).toBeUndefined();
+    expect(lotManager.getLotDataItemWithId(lotB2Id)).toBeUndefined();
+
+
+    await actionManager.asyncReapplyLastUndoneAction();
+
+    expect(lotManager.getLotDataItemWithId(lotB1Id)).toBeDefined();
+    expect(lotManager.getLotDataItemWithId(lotB2Id)).toBeDefined();
+
+    expect(transactionManager.getCurrentAccountStateDataItem(sys.aaplBrokerageAId))
+        .toMatchObject(stateB);
+
+    await actionManager.asyncUndoLastAppliedActions();
+
+    expect(lotManager.getLotDataItemWithId(lotAId)).toMatchObject({
+        pricedItemId: aaplPricedItem.id,
+    });
+    expect(transactionManager.getCurrentAccountStateDataItem(sys.aaplBrokerageAId))
+        .toMatchObject(stateA);
+
+    expect(lotManager.getLotDataItemWithId(lotB1Id)).toBeUndefined();
+    expect(lotManager.getLotDataItemWithId(lotB2Id)).toBeUndefined();
+
+
+
+
+    // To Test:
+    // Reinvested dividends
+    const aaplPriceC = { close: 200 };
+    const aaplQuantityC = 10;
+    const aaplCostBasisC = aaplQuantityC * aaplPriceC.close;
+    const aaplQuantityBaseValueC 
+        = lotQuantityDefinition.numberToBaseValue(aaplQuantityC);
+    const aaplCostBasisBaseValueC 
+        = priceQuantityDefinition.numberToBaseValue(aaplCostBasisC);
+    const aaplLotChangeC = {
+        quantityBaseValue: aaplQuantityBaseValueC, 
+        costBasisBaseValue: aaplCostBasisBaseValueC, 
+    };
+    const settingsC = {
+        ymdDate: '2010-03-01',
+        splits: [
+            {
+                accountId: sys.aaplBrokerageAId, 
+                quantityBaseValue: aaplCostBasisBaseValueC, 
+                lotTransactionType: T.LotTransactionType.REINVESTED_DIVIDEND.name,
+                lotChanges: [ aaplLotChangeC ],
+            },
+            {
+                accountId: sys.dividendsAAPLId,
+                quantityBaseValue: aaplCostBasisBaseValueC,
+            },
+        ]
+    };
+    const stateC = {
+        lotStates: [
+            {
+                quantityBaseValue: aaplQuantityBaseValueA, 
+                costBasisBaseValue: aaplCostBasisBaseValueA,
+                ymdDateCreated: settingsA.ymdDate,
+            },
+            {
+                quantityBaseValue: aaplLotChangeC.quantityBaseValue, 
+                costBasisBaseValue: aaplLotChangeC.costBasisBaseValue,
+                ymdDateCreated: settingsC.ymdDate,
+            },
+        ],
+        quantityBaseValue: aaplQuantityBaseValueA + aaplQuantityBaseValueC,
+        ymdDate: settingsC.ymdDate,
+    };
+
+    const actionC = actions.createAddTransactionsAction(settingsC);
+
+    await actionManager.asyncApplyAction(actionC);
+
+    const transC = lastResult.newTransactionDataItem;
+    const lotCId = transC.splits[0].lotChanges[0].lotId;
+    expect(lotManager.getLotDataItemWithId(lotCId)).toBeDefined();
+
+    expect(transactionManager.getCurrentAccountStateDataItem(sys.aaplBrokerageAId))
+        .toMatchObject(stateC);
+
+    await actionManager.asyncUndoLastAppliedActions();
+
+    expect(lotManager.getLotDataItemWithId(lotAId)).toMatchObject({
+        pricedItemId: aaplPricedItem.id,
+    });
+    expect(transactionManager.getCurrentAccountStateDataItem(sys.aaplBrokerageAId))
+        .toMatchObject(stateA);
+
+    expect(lotManager.getLotDataItemWithId(lotCId)).toBeUndefined();
+
+
+    // Add shares
+});
+
+
 //
 //---------------------------------------------------------
 //
