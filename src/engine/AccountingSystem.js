@@ -120,6 +120,12 @@ export class AccountingSystem extends EventEmitter {
         }
     }
 
+    toJSON() {
+        // Just so we can JSON.stringify() the various managers without
+        // running into a circular reference...
+        return 'AccountingSystem';
+    }
+
     /**
      * @returns {AccountManager}
      */
