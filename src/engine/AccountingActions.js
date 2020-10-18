@@ -6,7 +6,7 @@ import * as L from './Lots';
 import * as P from './Prices';
 import * as T from './Transactions';
 import { getYMDDateString, YMDDate } from '../util/YMDDate';
-import { userMsg } from '../util/UserMessages';
+import { userError, userMsg } from '../util/UserMessages';
 import { createCompositeAction } from '../util/Actions';
 
 
@@ -486,7 +486,9 @@ export class AccountingActions extends EventEmitter {
 
     /**
      * @typedef {object} AccountingActions~RemoveLotOptions
-     * @property {boolean}  ignoreMissingLots
+     * @property {boolean}  [ignoreMissingLots=false]
+     * @property {boolean}  [ignoreTransactions=false]
+     * @property {number[]} [transactionIdsToIgnore=undefined]
      */
 
 
@@ -515,7 +517,21 @@ export class AccountingActions extends EventEmitter {
                     lotId) || [];
             
             if (transactionKeys.length) {
-                const transactionIds = transactionKeys.map((key) => key.id);
+                let transactionIds;
+                const { transactionIdsToIgnore } = options;
+                if (transactionIdsToIgnore) {
+                    transactionIds = [];
+                    const ignoreSet = new Set(transactionIdsToIgnore);
+                    transactionKeys.forEach((key) => {
+                        if (!ignoreSet.has(key.id)) {
+                            transactionIds.push(key.id);
+                        }
+                    })
+                }
+                else {
+                    transactionIds = transactionKeys.map((key) => key.id);
+                }
+
                 const transactionsAction 
                     = await this.asyncCreateRemoveTransactionsAction(transactionIds,
                         {
@@ -862,6 +878,40 @@ export class AccountingActions extends EventEmitter {
     }
 
 
+    async _asyncGetLotIdsAddedByTransaction(accountId, transactionId, lotIds) {
+        const transactionManager = this._accountingSystem.getTransactionManager();
+        const preAccountStates 
+            = await transactionManager
+                .asyncGetAccountStateDataItemsBeforeTransaction(
+                    accountId,
+                    transactionId
+                );
+        const postAccountStates
+            = await transactionManager
+                .asyncGetAccountStateDataItemsAfterTransaction(
+                    accountId,
+                    transactionId
+                );
+        if (!preAccountStates || !postAccountStates) {
+            return;
+        }
+
+        for (let accountState of postAccountStates) {
+            const { lotStates } = accountState;
+            for (let lotState of lotStates) {
+                lotIds.add(lotState.lotId);
+            }
+        }
+
+        for (let accountState of preAccountStates) {
+            const { lotStates } = accountState;
+            for (let lotState of lotStates) {
+                lotIds.delete(lotState.lotId);
+            }
+        }
+    }
+
+
     /**
      * @typedef {object} AccountingActions~RemoveTransactionsOptions
      * @property {boolean}  ignoreMissingLots
@@ -912,39 +962,11 @@ export class AccountingActions extends EventEmitter {
                         continue;
                     }
 
-                    const { accountId } = split;
-                    const preAccountStates 
-                        = await transactionManager
-                            .asyncGetAccountStateDataItemsBeforeTransaction(
-                                accountId,
-                                transactionDataItem.id
-                            );
-                    const postAccountStates
-                        = await transactionManager
-                            .asyncGetAccountStateDataItemsAfterTransaction(
-                                accountId,
-                                transactionDataItem.id
-                            );
-                    if (!preAccountStates || !postAccountStates) {
-                        continue;
-                    }
-
                     // We'll gather up the lot ids before, and remove the lot ids after,
                     // what's left is what was added.
                     const lotIds = new Set();
-                    for (let accountState of postAccountStates) {
-                        const { lotStates } = accountState;
-                        for (let lotState of lotStates) {
-                            lotIds.add(lotState.lotId);
-                        }
-                    }
-
-                    for (let accountState of preAccountStates) {
-                        const { lotStates } = accountState;
-                        for (let lotState of lotStates) {
-                            lotIds.delete(lotState.lotId);
-                        }
-                    }
+                    await this._asyncGetLotIdsAddedByTransaction(
+                        split.accountId, transactionDataItem.id, lotIds);
 
                     if (lotIds.size) {
                         for (let id of lotIds) {
@@ -1059,17 +1081,143 @@ export class AccountingActions extends EventEmitter {
                 T.getTransactionDataItem(transaction, true));
         }
 
-        if (!options.noSpecialActions) {
-            // TODO:
-            // We need to figure out if any of the transaction modifications need
-            // a change in lots.
-        }
-
-        return { 
+        const action = { 
             type: 'modifyTransactions', 
             transactionDataItems: transactionDataItems, 
             name: userMsg('Actions-modifyTransactions'), 
+            options: options,
         };
+
+        if (!options.noSpecialActions) {
+            // We need to figure out if any of the transaction modifications need
+            // a change in lots.
+            // Possible scenarios:
+            //  No lots -> no lots      Normal modification
+            //  No lots -> has lots     Need to add new lots before.
+            //  Has lots -> has lots    Normal modification
+            //  Has lots -> no lots     Need to remove lots after.
+            let workingTransactionDataItems;
+            if (!Array.isArray(transactions)) {
+                workingTransactionDataItems = [transactionDataItems];
+            }
+            else {
+                workingTransactionDataItems = transactionDataItems;
+            }
+
+            const transactionManager = this._accountingSystem.getTransactionManager();
+            const accountManager = this._accountingSystem.getAccountManager();
+            const addLotEntries = [];
+            const removeLotIds = new Set();
+            const transactionIdsToKeep = new Set();
+            for (let i = 0; i < workingTransactionDataItems.length; ++i) {
+                const transactionDataItemMods = workingTransactionDataItems[i];
+                let newSplits = transactionDataItemMods.splits;
+                if (!newSplits) {
+                    // Need splits to change lots...
+                    continue;
+                }
+
+                const { id } = transactionDataItemMods;
+                const transactionDataItem 
+                    = await transactionManager.asyncGetTransactionDataItemWithId(id);
+                if (!transactionDataItem) {
+                    throw userError('TransactionManager-remove_invalid_id', 
+                        id);
+                }
+
+                const lotIds = new Set();
+                const { splits } = transactionDataItem;
+                for (let split of splits) {
+                    // We want a list of all lot ids added by this split.
+                    if (!this._isLotSplitDataItem(split)) {
+                        continue;
+                    }
+
+                    await this._asyncGetLotIdsAddedByTransaction(split.accountId,
+                        id, lotIds);
+                }
+
+
+                // We want a list of all lot ids based on the split modifications.
+                // Any old lot ids not found in the new lot ids need to be removed.
+                // Any lot changes without a lot id need a new lot.
+                workingTransactionDataItems[i] = T.getTransactionDataItem(
+                    workingTransactionDataItems[i],
+                    true
+                );
+                newSplits = workingTransactionDataItems[i].splits;
+
+                for (let split of newSplits) {
+                    if (!this._isLotSplitDataItem(split)) {
+                        continue;
+                    }
+
+                    const accountDataItem = accountManager.getAccountDataItemWithId(
+                        split.accountId);
+
+                    const { lotChanges } = split;
+                    for (let lotChange of lotChanges) {
+                        const { lotId } = lotChange;
+                        if (!lotId) {
+                            addLotEntries.push({
+                                pricedItemId: accountDataItem.pricedItemId,
+                                lotChange: lotChange,
+                            });
+                        }
+                        else {
+                            lotIds.delete(lotId);
+                        }
+                    }
+                }
+
+                for (let lotId of lotIds) {
+                    removeLotIds.add(lotId);
+                }
+                if (lotIds.size) {
+                    transactionIdsToKeep.add(id);
+                }
+            }
+
+            if (addLotEntries.length || removeLotIds.size) {
+                const subActions = [];
+                for (let entry of addLotEntries) {
+                    subActions.push(
+                        this.createAddLotAction(
+                            {
+                                pricedItemId: entry.pricedItemId,
+                            },
+                            (result) => {
+                                entry.lotChange.lotId = result.newLotDataItem.id;
+                            }
+                        )
+                    );
+                }
+
+                if (!Array.isArray(transactions)) {
+                    workingTransactionDataItems = workingTransactionDataItems[0];
+                }
+                subActions.push(Object.assign({}, action, {
+                    transactionDataItems: workingTransactionDataItems,
+                }));
+
+                for (let lotId of removeLotIds) {
+                    subActions.push(await this.asyncCreateRemoveLotAction(lotId,
+                        {
+                            ignoreMissingLots: true,
+                            transactionIdsToIgnore: 
+                                Array.from(transactionIdsToKeep.values()),
+                        }));
+                }
+
+                return createCompositeAction(
+                    {
+                        name: action.name,
+                    },
+                    subActions);
+            }
+        }
+
+        return action;
     }
 
     async _asyncModifyTransactionsApplier(isValidateOnly, action) {
