@@ -1,8 +1,40 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { userMsg } from '../util/UserMessages';
+import { userError } from '../util/UserMessages';
 import { getQuantityDefinition } from '../util/Quantities';
 import { CellTextEditor, CellTextDisplay } from './CellTextEditor';
+
+
+/**
+ * Retrieves the quantity base value of a value from a quantity cell editor.
+ * @param {number|string|undefined} value 
+ * @param {QuantityDefinition} quantityDefinition 
+ * @returns {number|undefined}  <code>undefined</code> is returned if value is the
+ * empty string (after any trimming)
+ * @throws {Error}
+ */
+export function getValidQuantityBaseValue(value, quantityDefinition) {
+    switch (typeof value) {
+    case 'number' :
+        return quantityDefinition.numberToBaseValue(value);
+
+    case 'string' :
+        value = value.trim();
+        if (value !== '') {
+            const result = quantityDefinition.fromValueText(value);
+            if ((result !== undefined) && !result.remainingText) {
+                return result.quantity.getBaseValue();
+            }
+        }
+        else {
+            return;
+        }
+        break;
+    }
+
+    throw userError('CellQuantityEditor-invalid_value', 
+        quantityDefinition.getDisplayText());
+}
 
 /**
  * React component for editing a quantity in a table cell.
@@ -30,11 +62,11 @@ export const CellQuantityEditor = React.forwardRef(
         }
         else if (!errorMsg) {
             // Validate the value.
-            if (value !== '') {
-                if (quantityDefinition.fromValueText(value) === undefined) {
-                    errorMsg = userMsg('CellQuantityEditor-invalid_value', 
-                        quantityDefinition.getDisplayText());
-                }
+            try {
+                getValidQuantityBaseValue(value, quantityDefinition);
+            }
+            catch (e) {
+                errorMsg = e.toString();
             }
         }
 
@@ -58,6 +90,7 @@ export const CellQuantityEditor = React.forwardRef(
  * @typedef {object} CellQuantityEditor~propTypes
  * @property {string}   [ariaLabel]
  * @property {string}   [value]
+ * @property {string}   [placeholder]
  * @property {string}   [inputClassExtras]  If specified additional CSS
  * classes to add to the &lt;input&gt; entity.
  * @property {string}   [errorMsg]  If specified an error message to be displayed
@@ -81,6 +114,7 @@ CellQuantityEditor.propTypes = {
         PropTypes.string,
         PropTypes.object,
     ]),
+    placeholder: PropTypes.string,
     inputClassExtras: PropTypes.string,
     size: PropTypes.number,
     errorMsg: PropTypes.string,
