@@ -46,6 +46,8 @@ export const CellTextEditor = React.forwardRef(
  * @typedef {object} CellTextEditor~propTypes
  * @property {string}   [ariaLabel]
  * @property {string}   [value]
+ * @property {string}   [inputType] The type attribute for the input element.
+ * @property {string}   [placeholder]
  * @property {string}   [inputClassExtras]  If specified additional CSS
  * classes to add to the &lt;input&gt; entity.
  * @property {string}   [errorMsg]  If specified an error message to be displayed

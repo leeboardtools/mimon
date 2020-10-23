@@ -51,7 +51,7 @@ import { bug } from './Bug';
  * The composite action applier returns an array containing the results of each action.
  * @param {ActionDataItem} mainAction The main action information.
  * @param {ActionDataItem[]} subActions The array of sub actions.
- * @returns {ActionDataItem}
+ * @returns {ActionDataItem}    The action has a subActions field.
  */
 export function createCompositeAction(mainAction, subActions) {
     return Object.assign({}, mainAction, 
