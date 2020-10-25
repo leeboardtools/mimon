@@ -791,6 +791,16 @@ export class EngineAccessor extends EventEmitter {
 
 
     /**
+     * Retrieves the category of a given account id.
+     * @param {number} accountId 
+     * @returns {AccountCategory}
+     */
+    getCategoryOfAccountId(accountId) {
+        return this._accountManager.getCategoryOfAccountId(accountId);
+    }
+    
+
+    /**
      * Helper that converts a quantity in an account's quantity definition
      * to a user-presentable string.
      * @param {*} quantityBaseValue 

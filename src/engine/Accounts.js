@@ -709,19 +709,17 @@ export class AccountManager extends EventEmitter {
 
 
     /**
-     * Determines if the account with a given id belongs to a given 
-     * {@link AccountCategory}.
+     * Retrieves the category of a given account id.
      * @param {number} accountId 
-     * @param {AccountCategory} category 
-     * @returns {boolean|undefined} <code>true</code> if there is an account with
-     * accountId and its category matches category
+     * @returns {AccountCategory}
      */
-    isAccountIdOfCategory(accountId, category) {
+    getCategoryOfAccountId(accountId) {
         const accountDataItem = this.getAccountDataItemWithId(accountId);
         if (accountDataItem) {
             const accountType = getAccountType(accountDataItem.type);
-            category = accountCategory(category);
-            return (accountType.category === category);
+            if (accountType) {
+                return accountType.category;
+            }
         }
     }
 

@@ -262,6 +262,9 @@ test('AccountManager-add', async () => {
     expect(accountManager.getRootAssetAccountDataItem()
         .childAccountIds.includes(assetA.id)).toBeTruthy();
     
+    expect(accountManager.getCategoryOfAccountId(assetA.id))
+        .toEqual(A.AccountCategory.ASSET);
+    
 
     // Verify that the account data items returned are copies.,
     assetA.name = 'blah blah';
@@ -304,6 +307,9 @@ test('AccountManager-add', async () => {
     bankA.defaultSplitAccountIds.interestIncomeId 
         = bankDefaultSplitAccountIds.interestIncomeId;
 
+    expect(accountManager.getCategoryOfAccountId(bankA.id))
+        .toEqual(A.AccountCategory.ASSET);
+    
 
     let removeArg;
     accountManager.on('accountRemove', (result) => { removeArg = result; });
@@ -492,6 +498,10 @@ test('AccountManager-add', async () => {
     const liabilityA = (await accountManager.asyncAddAccount(liabilityOptionsA))
         .newAccountDataItem;
     ATH.expectAccount(liabilityA, liabilityOptionsA);
+
+    expect(accountManager.getCategoryOfAccountId(liabilityA.id))
+        .toEqual(A.AccountCategory.LIABILITY);
+    
 
 
     //
