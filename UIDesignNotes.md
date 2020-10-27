@@ -666,3 +666,5 @@ Summary:
 Name | Quantity | Price | Price Change | Market Value | Day Change | Cost Basis | Gain/Loss | % of Account
 
 
+New Transaction:
+    - Changing the date for new Lot transactions doesn't update the date.

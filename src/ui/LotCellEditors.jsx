@@ -303,7 +303,7 @@ function setupSplitInfoEditStates(splitInfo) {
         sharesBaseValue *= sharesSign;
     }
 
-    if (splitDataItem.quantityBaseValue !== undefined) {
+    if (typeof splitDataItem.quantityBaseValue === 'number') {
         monetaryAmountBaseValue = splitDataItem.quantityBaseValue
             * sharesSign;
     }
@@ -313,7 +313,7 @@ function setupSplitInfoEditStates(splitInfo) {
         feesBaseValue = splits[feesSplitIndex].quantityBaseValue;
     }
 
-    if (sharesBaseValue && (monetaryAmountBaseValue !== undefined)) {
+    if (sharesBaseValue && (typeof monetaryAmountBaseValue === 'number')) {
         let sharesValue = sharesQuantityDefinition.baseValueToNumber(
             sharesBaseValue);
 
@@ -329,7 +329,7 @@ function setupSplitInfoEditStates(splitInfo) {
             .getBaseValue();
     }
 
-    // Need to initialize...
+
     editStates.shares = { editHit: 0, 
         editorBaseValue: sharesBaseValue, 
         quantityDefinition: sharesQuantityDefinition,
@@ -574,17 +574,6 @@ export function copySplitInfo(splitInfo) {
 //
 //---------------------------------------------------------
 //
-/*
-function throwError(columnInfoKey, error) {
-    error.columnInfoKey = columnInfoKey;
-    throw error;
-}
-*/
-
-
-//
-//---------------------------------------------------------
-//
 function getFeesSplitIndex(splitInfo, transactionDataItem) {
     transactionDataItem = transactionDataItem || splitInfo.transactionDataItem;
     const { accessor } = splitInfo;
@@ -623,19 +612,26 @@ function updateTransactionDataItem(splitInfo, transactionDataItem,
         fees, price, } = valuesToUse;
 
     const { splits } = transactionDataItem;
+    const splitDataItem = splits[splitIndex];
+
+    const splitAccountDataItem 
+        = accessor.getAccountDataItemWithId(splitDataItem.accountId);
+    
+    const newSplits = [];
+    newSplits.length = splits.length;
+    newSplits[splitIndex] = splitDataItem;
 
     const feesSplitIndex = getFeesSplitIndex(splitInfo, transactionDataItem);
     let feesBaseValue = (fees) ? fees.editorBaseValue : 0;
     if (feesBaseValue) {
         // Are fees, set the appropriate split.
         if (feesSplitIndex >= 0) {
-            splits[feesSplitIndex].quantityBaseValue = feesBaseValue;
+            newSplits[feesSplitIndex] = Object.assign({}, splits[feesSplitIndex], {
+                quantityBaseValue: feesBaseValue,
+            });
         }
         else {
-            const splitAccountDataItem 
-                = accessor.getAccountDataItemWithId(splitDataItem.accountId);
-
-            splits.push({
+            newSplits.push({
                 accountId: AH.getDefaultSplitAccountId(accessor, 
                     splitAccountDataItem,
                     AH.DefaultSplitAccountType.FEES_EXPENSE),
@@ -644,18 +640,9 @@ function updateTransactionDataItem(splitInfo, transactionDataItem,
         }
     }
     else {
-        // No fees, remove the spilt if there is one.
-        if (feesSplitIndex >= 0) {
-            splits.splice(feesSplitIndex, 1);
-            if (splitIndex > feesSplitIndex) {
-                --splitIndex;
-            }
-        }
-
         feesBaseValue = 0;
     }
 
-    const splitDataItem = splits[splitIndex];
 
     splitDataItem.lotTransactionType = lotType;
 
@@ -702,9 +689,16 @@ function updateTransactionDataItem(splitInfo, transactionDataItem,
             for (let i = 0; i < splits.length; ++i) {
                 const split = splits[i];
                 if (split.accountId === monetaryAmountAccountId) {
+                    newSplits[i] = split;
                     monetaryAmountSplitDataItem = split;
                     break;
                 }
+            }
+            if (!monetaryAmountSplitDataItem) {
+                monetaryAmountSplitDataItem = {
+                    accountId: monetaryAmountAccountId,
+                };
+                newSplits.push(monetaryAmountSplitDataItem);
             }
         }
 
@@ -728,6 +722,17 @@ function updateTransactionDataItem(splitInfo, transactionDataItem,
 
     if (price) {
         // 
+    }
+
+    
+    splits.length = 0;
+    for (let i = 0; i < newSplits.length; ++i) {
+        if (i === splitIndex) {
+            splitIndex = splits.length;
+        }
+        if (newSplits[i]) {
+            splits.push(newSplits[i]);
+        }
     }
 
     return splitIndex;

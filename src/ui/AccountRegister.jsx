@@ -1024,7 +1024,8 @@ export class AccountRegister extends React.Component {
                         reconcileState: T.ReconcileState.NOT_RECONCILED.name,
                         accountId: this.props.accountId,
                         quantityBaseValue: '',
-                        lotTransactionType: T.LotTransactionType.BUY_SELL.name,
+                        lotTransactionType: this._lastLotTransactionType 
+                            || T.LotTransactionType.BUY_SELL.name,
                         lotChanges: [],
                     },
                     {
@@ -1408,6 +1409,8 @@ export class AccountRegister extends React.Component {
 
             const accountingActions = accessor.getAccountingActions();
             let action;
+            let isNewTransaction;
+
             if ((rowIndex + 1) === this.state.rowEntries.length) {
                 // Last row is new transaction...
                 // Don't allow missing quantities.
@@ -1423,6 +1426,8 @@ export class AccountRegister extends React.Component {
                     action = accountingActions.createAddTransactionsAction(
                         newTransactionDataItem
                     );
+
+                    isNewTransaction = true;
                 }
             }
             else {
@@ -1495,7 +1500,7 @@ export class AccountRegister extends React.Component {
             }
 
             if (action) {
-                await this.asyncApplyAction(args, action);
+                await this.asyncApplyAction(args, action, isNewTransaction);
             }
         }
         catch (e) {
@@ -1510,7 +1515,7 @@ export class AccountRegister extends React.Component {
     }
 
 
-    async asyncApplyAction(args, action) {
+    async asyncApplyAction(args, action, isNewTransaction) {
         const { saveBuffer } = args;
         const { newTransactionDataItem, splitIndex } = saveBuffer;
         const { splits } = newTransactionDataItem;
@@ -1519,16 +1524,21 @@ export class AccountRegister extends React.Component {
 
         await accessor.asyncApplyAction(action);
 
-        this._lastYMDDate = newTransactionDataItem.ymdDate;
-        let largestQuantityBaseValue = 0;
-        for (let i = 0; i < splits.length; ++i) {
-            if (i !== splitIndex) {
-                const { quantityBaseValue } = splits[i];
-                if (typeof quantityBaseValue === 'number') {
-                    const absValue = Math.abs(quantityBaseValue);
-                    if (absValue > largestQuantityBaseValue) {
-                        this._lastOtherSplitAccountId = splits[i].accountId;
+        if (isNewTransaction) {
+            this._lastYMDDate = newTransactionDataItem.ymdDate;
+            let largestQuantityBaseValue = 0;
+            for (let i = 0; i < splits.length; ++i) {
+                if (i !== splitIndex) {
+                    const { quantityBaseValue } = splits[i];
+                    if (typeof quantityBaseValue === 'number') {
+                        const absValue = Math.abs(quantityBaseValue);
+                        if (absValue > largestQuantityBaseValue) {
+                            this._lastOtherSplitAccountId = splits[i].accountId;
+                        }
                     }
+                }
+                else if (this.hasLots()) {
+                    this._lastLotTransactionType = splits[i].lotTransactionType;
                 }
             }
         }
