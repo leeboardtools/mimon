@@ -230,6 +230,11 @@ export const DefaultSplitAccountType = {
         category: A.AccountCategory.EXPENSE,
         tags: [ StandardAccountTag.TAXES],
     },
+    EQUITY: { name: 'EQUITY',
+        property: 'equityId',
+        category: A.AccountCategory.EQUITY,
+        tags: [ StandardAccountTag.EQUITY],
+    },
 };
 
 
