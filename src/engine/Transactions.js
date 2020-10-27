@@ -790,9 +790,9 @@ class AccountStatesUpdater {
                 // OK, the lot exists.
                 // For now only allow selling or split/merge, don't allow buying more.
                 if (isSplitMerge) {
-                    if ((quantityBaseValue + existingLotState.quantityBaseValue) < 0) {
+                    if ((quantityBaseValue + existingLotState.quantityBaseValue) <= 0) {
                         // eslint-disable-next-line max-len
-                        throw userError('TransactionManager-lot_split_merge_quantity_too_big');
+                        throw userError('TransactionManager-lot_merge_quantity_too_big');
                     }
                 }
                 else {

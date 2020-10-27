@@ -208,7 +208,7 @@
     "TransactionManager-new_lot_invalid_cost_basis": "New lots must have a cost basis greater than or equal to 0.",
     "TransactionManager-modify_lot_quantity_invalid": "The quantity for lot sales must be greater than or equal to 0.",
     "TransactionManager-modify_lot_quantity_too_big": "The quantity for the lot sale must be less than or equal to the quantity in the lot.",
-    "TransactionManager-lot_split_merge_quantity_too_big":  "The amount to modify the lot split/merge must ",
+    "TransactionManager-lot_merge_quantity_too_big":  "The merge amount must be less than the existing shares. ",
 
     
     "JSONGzipAccountingFile-not_dir": ["'", "' is an existing file. It must be an empty folder."],
