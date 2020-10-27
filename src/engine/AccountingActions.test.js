@@ -465,6 +465,8 @@ test('AccountingActions-Tranasctions', async () => {
     // Remove transaction.
     const removeAction 
         = await actions.asyncCreateRemoveTransactionsAction(settingsA[1].id);
+    expect(removeAction.lotIdsToRemove).toBeUndefined();
+
     await actionManager.asyncApplyAction(removeAction);
     expect(await transactionManager.asyncGetTransactionDataItemWithId(settingsA[1].id))
         .toBeUndefined();
@@ -991,6 +993,7 @@ test('AccountingActions-removeLotTranasctions', async () => {
         transA.id,
         transD.id,
     ]);
+    expect(actionR.lotIdsForRemoval).toEqual([lotAId]);
 
     await actionManager.asyncApplyAction(actionR);
 
@@ -1327,10 +1330,6 @@ test('AccountingActions-modifyLotTranasctions', async () => {
     };
     const actionB1 = await actions.asyncCreateModifyTransactionsAction(settingsB1);
 
-    console.log(JSON.stringify({
-        actionB1: actionB1,
-    }));
-
     await actionManager.asyncApplyAction(actionB1);
 
     const transB1 = await transactionManager.asyncGetTransactionDataItemWithId(transB.id);
@@ -1598,6 +1597,14 @@ test('AccountingActions-removeAccounts With Transactions', async () => {
 
     const removeAccountAction = await actions.asyncCreateRemoveAccountAction(sys.cashId);
     expect(removeAccountAction.dependees).toEqual(['TRANSACTION']);
+    expect(removeAccountAction.transactionIdsForRemoval).toEqual(
+        expect.arrayContaining(
+            [
+                sys.cashOpeningBalanceTransId,
+                sys.transAId,
+                sys.transBId,
+            ]
+        ));
 
     await actionManager.asyncApplyAction(removeAccountAction);
 
@@ -1638,6 +1645,13 @@ test('AccountingActions-removeLots With Accounts', async () => {
 
     const removeLotAction = await actions.asyncCreateRemoveLotAction(sys.aaplLot1.id);
     expect(removeLotAction.dependees).toEqual(['TRANSACTION']);
+    expect(removeLotAction.transactionIdsForRemoval).toEqual(expect.arrayContaining(
+        [
+            sys.transGId,
+            sys.transHId,
+            sys.transIId,
+        ]
+    ));
 
     await actionManager.asyncApplyAction(removeLotAction);
 

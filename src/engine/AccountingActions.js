@@ -202,6 +202,9 @@ export class AccountingActions extends EventEmitter {
      * Creates an action for removing an account.
      * <p>If the account has dependees, the action will have a
      * dependees property set to an array containing the types of dependees.
+     * <p>If the account will result in transactions being removed the action
+     * will have a transactionIdsForRemoval property set to an array of
+     * the ids of the transactions that will be removed.
      * @param {number} accountId 
      * @param {AccountingActions~RemoveAccountOptions} [options]
      * @returns {ActionDataItem}
@@ -231,7 +234,8 @@ export class AccountingActions extends EventEmitter {
             action = createCompositeAction(
                 {
                     name: userMsg('Actions-remove_transactions_and_account',
-                        accountDataItem.name)
+                        accountDataItem.name),
+                    transactionIdsForRemoval: transactionIds,
                 },
                 [
                     transactionsAction,
@@ -323,6 +327,10 @@ export class AccountingActions extends EventEmitter {
      * <p>
      * If the priced item has dependees, the action will have a dependees
      * property that's an array containing the types of dependees.
+     * <p>If the priced item will result in transactions/lots/accounts
+     * being removed the action will have a transactionIdsForRemoval,
+     * lotIdsForRemoval, and accountIdsForRemoval properties that will
+     * hold arrays of the appropriate ids for removal.
      * @param {number} pricedItemId 
      * @param {AccountingActions~RemovePricedItemOptions} [options]
      * @returns {ActionDataItem}
@@ -361,6 +369,7 @@ export class AccountingActions extends EventEmitter {
         });
 
         if (accountIds.length || lotIds.length) {
+            let transactionIdsForRemoval = [];
             const actions = [];
             const dependees = new Set();
             for (let i = 0; i < lotIds.length; ++i) {
@@ -370,6 +379,10 @@ export class AccountingActions extends EventEmitter {
                     });
                 if (action.dependees) {
                     action.dependees.forEach((dependee) => dependees.add(dependee));
+                }
+                if (action.transactionIdsForRemoval) {
+                    transactionIdsForRemoval = transactionIdsForRemoval.concat(
+                        action.transactionIdsForRemoval);
                 }
                 dependees.add('LOT');
                 actions.push(action);
@@ -383,6 +396,10 @@ export class AccountingActions extends EventEmitter {
                 if (action.dependees) {
                     action.dependees.forEach((dependee) => dependees.add(dependee));
                 }
+                if (action.transactionIdsForRemoval) {
+                    transactionIdsForRemoval = transactionIdsForRemoval.concat(
+                        action.transactionIdsForRemoval);
+                }
                 dependees.add('ACCOUNT');
                 actions.push(action);
             }
@@ -394,6 +411,9 @@ export class AccountingActions extends EventEmitter {
                 {
                     name: userMsg('Actions-remove_accounts_and_pricedItem',
                         typeDescription, name), 
+                    transactionIdsForRemoval: transactionIdsForRemoval,
+                    lotIdsForRemoval: lotIds,
+                    accountsForRemoval: accountIds,
                 },
                 actions);
             action.dependees = Array.from(dependees.values());
@@ -492,10 +512,14 @@ export class AccountingActions extends EventEmitter {
      */
 
 
+
     /**
      * Creates an action for removing a lot.
      * <p>If the lot has dependees, the action will have a dependees property that's
      * an array containing the types of dependees.
+     * <p>If the lot will result in transactions being removed the action
+     * will have a transactionIdsForRemoval property set to an array of
+     * the ids of the transactions that will be removed.
      * @param {number} lotId 
      * @param {AccountingActions~RemoveLotOptions}  [options]
      * @returns {ActionDataItem}
@@ -526,7 +550,7 @@ export class AccountingActions extends EventEmitter {
                         if (!ignoreSet.has(key.id)) {
                             transactionIds.push(key.id);
                         }
-                    })
+                    });
                 }
                 else {
                     transactionIds = transactionKeys.map((key) => key.id);
@@ -541,6 +565,7 @@ export class AccountingActions extends EventEmitter {
                 action = createCompositeAction(
                     {
                         name: userMsg('Actions-remove_transactions_and_lot'),
+                        transactionIdsForRemoval: transactionIds,
                     },
                     [
                         transactionsAction,
@@ -922,6 +947,9 @@ export class AccountingActions extends EventEmitter {
 
     /**
      * Creates an action for removing transactions.
+     * <p>If the transaction will result in lots being removed the action
+     * will have a lotIdsForRemoval property set to an array of
+     * the ids of the lots that will be removed.
      * @param {number|number[]} transactionIds 
      * @param {AccountingActions~RemoveTransactionsOptions} [options]
      * @returns {ActionDataItem}
@@ -1009,6 +1037,7 @@ export class AccountingActions extends EventEmitter {
                 return createCompositeAction(
                     {
                         name: action.name,
+                        lotIdsForRemoval: lotIdsToRemove,
                     },
                     subActions);
             }
