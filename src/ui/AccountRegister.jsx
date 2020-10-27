@@ -543,7 +543,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
             };
 
             // action
-            columnInfoDefs.action = LCE.getActionColumnInfo(lceArgs);
+            columnInfoDefs.actionType = LCE.getActionColumnInfo(lceArgs);
 
             // description
 
@@ -560,7 +560,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
             columnInfoDefs.monetaryAmount = LCE.getMonetaryAmountColumnInfo(lceArgs);
 
             // fees/commissions
-            columnInfoDefs.fees = LCE.getFeesCommissionsColumnInfo(lceArgs);
+            columnInfoDefs.fees = LCE.getFeesColumnInfo(lceArgs);
 
             // price
             columnInfoDefs.price = LCE.getPriceColumnInfo(lceArgs);
@@ -1012,24 +1012,46 @@ export class AccountRegister extends React.Component {
 
             //
             // The 'new transaction' row...
+            const newTransactionDataItem = {
+                ymdDate: this._lastYMDDate,
+            };
+
+            if (this.hasLots()) {
+                const { accessor, accountId } = this.props;
+                const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+                newTransactionDataItem.splits = [
+                    {
+                        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+                        accountId: this.props.accountId,
+                        quantityBaseValue: '',
+                        lotTransactionType: T.LotTransactionType.BUY_SELL.name,
+                        lotChanges: [],
+                    },
+                    {
+                        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+                        accountId: accountDataItem.parentAccountId,
+                        quantityBaseValue: '',
+                    },
+                ];
+            }
+            else {
+                newTransactionDataItem.splits = [
+                    {
+                        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+                        accountId: this.props.accountId,
+                        quantityBaseValue: '',
+                    },
+                    {
+                        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+                        accountId: this._lastOtherSplitAccountId,
+                        quantityBaseValue: '',
+                    },
+                ];
+            }
 
             const newTransactionRowEntry = {
                 key: '',
-                transactionDataItem: {
-                    ymdDate: this._lastYMDDate,
-                    splits: [
-                        {
-                            reconcileState: T.ReconcileState.NOT_RECONCILED.name,
-                            accountId: this.props.accountId,
-                            quantityBaseValue: '',
-                        },
-                        {
-                            reconcileState: T.ReconcileState.NOT_RECONCILED.name,
-                            accountId: this._lastOtherSplitAccountId,
-                            quantityBaseValue: '',
-                        },
-                    ]
-                },
+                transactionDataItem: newTransactionDataItem,
                 splitIndex: 0,
                 splitOccurrance: 0,
                 caller: this,
@@ -1275,6 +1297,7 @@ export class AccountRegister extends React.Component {
 
     finalizeSaveBuffer(saveBuffer) {
         const { newTransactionDataItem, splitIndex } = saveBuffer;
+
         const { splits } = newTransactionDataItem;
         if (splits.length === 2) {
             const { accessor } = this.props;
@@ -1345,12 +1368,22 @@ export class AccountRegister extends React.Component {
 
     async asyncSaveBuffer(args) {
         try {
-            const { rowIndex, saveBuffer } = args;
+            const { rowIndex, cellEditBuffers, saveBuffer } = args;
 
-            // TODO:
             // Need to catch known errors...
             if (this._cellEditorsManager.areAnyErrors()) {
                 return;
+            }
+            if (cellEditBuffers) {
+                for (let buffer of cellEditBuffers) {
+                    if (buffer.errorMsg
+                     || (buffer.value && buffer.value.errorMsg)) {
+                        // The check for buffer.value.errorMsg is a hack to support
+                        // the local error message handling of 
+                        // ACE.renderQuantityEditor()...
+                        return;
+                    }
+                }
             }
 
             const rowEntry = this.state.rowEntries[rowIndex];
@@ -1358,6 +1391,17 @@ export class AccountRegister extends React.Component {
 
             this.finalizeSaveBuffer(saveBuffer);
             const { newTransactionDataItem } = saveBuffer;
+            if (this.hasLots()) {
+                const result = LCE.transactionDataItemFromSplitInfo(
+                    saveBuffer.lceSplitInfo,
+                    newTransactionDataItem);
+                if (result instanceof Error) {
+                    this.setErrorMsg(result.columnInfoKey, result.toString());
+                    return;
+                }
+                saveBuffer.splitIndex = result;
+            }
+            
             const { splits } = newTransactionDataItem;
 
             const { accessor } = this.props;
@@ -1418,7 +1462,7 @@ export class AccountRegister extends React.Component {
                         }
                     }
 
-                    action = await accountingActions.asyncCreateModifyTransactionsAction(
+                    action = await accountingActions.asyncCreateModifyTransactionAction(
                         newTransactionDataItem
                     );
 
@@ -1455,7 +1499,10 @@ export class AccountRegister extends React.Component {
             }
         }
         catch (e) {
-            this.setErrorMsg('description', e.toString());
+            const columnName = (this.hasLots())
+                ? 'shares' 
+                : 'description';
+            this.setErrorMsg(columnName, e.toString());
             return;
         }
 

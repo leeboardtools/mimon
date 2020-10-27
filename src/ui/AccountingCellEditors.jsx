@@ -4,7 +4,8 @@ import { CellTextDisplay, CellTextEditor } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay, CellSelectEditor,
     CellToggleSelectDisplay, CellToggleSelectEditor, } from '../util-ui/CellSelectEditor';
 import { CellDateDisplay, CellDateEditor } from '../util-ui/CellDateEditor';
-import { CellQuantityDisplay, CellQuantityEditor } from '../util-ui/CellQuantityEditor';
+import { CellQuantityDisplay, CellQuantityEditor,
+    getValidQuantityBaseValue } from '../util-ui/CellQuantityEditor';
 import { getQuantityDefinition } from '../util/Quantities';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
@@ -855,7 +856,7 @@ export function getReconcileStateColumnInfo(args) {
  * @param {CellQuantityEditorArgs} args 
  */
 export function renderQuantityEditor(args) {
-    const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
+    const { columnInfo, cellEditBuffer, setCellEditBuffer,
         refForFocus } = args;
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
     const value = cellEditBuffer.value;
@@ -870,7 +871,23 @@ export function renderQuantityEditor(args) {
         return renderQuantityDisplay(args);
     }
 
-    const { quantityBaseValue, quantityDefinition } = value;
+    let errorMsg = args.errorMsg || value.errorMsg;
+
+    let { quantityBaseValue, quantityDefinition, enteredText } = value;
+
+    if (enteredText && (quantityBaseValue !== enteredText)) {
+        try {
+            // Use the text that was entered if it represents the
+            // quantity base value.
+            if (getValidQuantityBaseValue(enteredText, quantityDefinition)
+             === quantityBaseValue) {
+                quantityBaseValue = enteredText;
+            }
+        }
+        catch (e) {
+            // Do nothing...
+        }
+    }
 
     return <CellQuantityEditor
         ariaLabel = {ariaLabel}
@@ -880,11 +897,24 @@ export function renderQuantityEditor(args) {
         inputClassExtras = {inputClassExtras}
         size = {inputSize}
         onChange = {(e) => {
+            let quantityBaseValue = e.target.value.trim();
+            let errorMsg = args.errorMsg;
+            try {
+                quantityBaseValue = getValidQuantityBaseValue(
+                    quantityBaseValue,
+                    quantityDefinition
+                );
+            }
+            catch (e) {
+                errorMsg = e.toString();
+            }
             setCellEditBuffer({
                 value: Object.assign({}, value, {
-                    quantityBaseValue: e.target.value,
+                    quantityBaseValue: quantityBaseValue,
                     quantityDefinition: quantityDefinition,
+                    enteredText: e.target.value.trim(),
                 }),
+                errorMsg: errorMsg,
                 isEdited: true,
             });
         }}

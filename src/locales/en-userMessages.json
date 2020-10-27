@@ -182,7 +182,7 @@
     "AccountingCellEditors-invalid_split_quantity": ["'", "' is not a valid number. ", ""],
 
 
-    "LotCellEditors-action": "Action",
+    "LotCellEditors-actionType": "Action",
     "LotCellEditors-costBasis": "Cost Basis",
     "LotCellEditors-fees": "Fees & Comm.",
     "LotCellEditors-marketValue": "Market Value",
@@ -191,14 +191,21 @@
     "LotCellEditors-shares": "Shares",
     "LotCellEditors-totalShares": "Total Shares",
 
-    "LotCellEditors-action-BUY": "Buy",
-    "LotCellEditors-action-SELL": "Sell",
-    "LotCellEditors-action-REINVESTED_DIVIDEND": "Reinvested Dividends",
-    "LotCellEditors-action-RETURN_OF_CAPITAL": "Return of Capital",
-    "LotCellEditors-action-SPLIT": "Stock Split",
-    "LotCellEditors-action-REVERSE_SPLIT": "Reverse Split",
-    "LotCellEditors-action-ADD_SHARES": "Add Shares",
-    "LotCellEditors-action-REMOVE_SHARES": "Remove Shares",
+    "LotCellEditors-actionType-BUY": "Buy",
+    "LotCellEditors-actionType-SELL": "Sell",
+    "LotCellEditors-actionType-REINVESTED_DIVIDEND": "Reinvested Dividends",
+    "LotCellEditors-actionType-RETURN_OF_CAPITAL": "Return of Capital",
+    "LotCellEditors-actionType-SPLIT": "Stock Split",
+    "LotCellEditors-actionType-REVERSE_SPLIT": "Reverse Split",
+    "LotCellEditors-actionType-ADD_SHARES": "Add Shares",
+    "LotCellEditors-actionType-REMOVE_SHARES": "Remove Shares",
+
+    "LotCellEditors-shares_lt_zero": "The number of shares must be >= 0.",
+    "LotCellEditors-monetaryAmount_lt_zero": "The amount must be >= 0.",
+    "LotCellEditors-price_lt_zero": "The price must be >= 0.",
+    "LotCellEditors-shares_required": "The number of shares is required.",
+    "LotCellEditors-shares_monetaryAmount_required": "Two of shares, amount, or price must be specified.",
+    "LotCellEditors-monetaryAmount_required": "An amount is required.",
 
     "MultiSplitsEditor-title": "Splits Editor",
     "MultiSplitsEditor-new_description_placeholder": "New Split",

@@ -1,15 +1,17 @@
 import React from 'react';
-import { userMsg, userError } from '../util/UserMessages';
+import { userError, userMsg } from '../util/UserMessages';
 import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor';
 import * as ACE from './AccountingCellEditors';
+import * as AH from '../tools/AccountHelpers';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
 import { getCurrency } from '../util/Currency';
 import { getQuantityDefinition } from '../util/Quantities';
+import deepEqual from 'deep-equal';
 
 //
 // TODO:
-// When the action changes, we need to trigger an render, this implies
+// When the action type changes, we need to trigger an render, this implies
 // we have a callback for doing so.
 
 /**
@@ -24,6 +26,9 @@ import { getQuantityDefinition } from '../util/Quantities';
  * @property {string}   description
  * @property {boolean}  [noShares]
  * @property {boolean}  [noCostBasis]
+ * @property {boolean}  [noFees]
+ * @property {number}   [sharesNegative]
+ * @property {boolean}  [needsCostBasis]
  */
 
 
@@ -42,28 +47,81 @@ import { getQuantityDefinition } from '../util/Quantities';
 export const LotActionType = {
     BUY: { name: 'BUY', 
         fromSplitInfo: buyFromSplitInfo, 
+        needsCostBasis: true,
     },
     SELL: { name: 'SELL', 
         fromSplitInfo: sellFromSplitInfo, 
+        sharesNegative: true,
     },
     REINVESTED_DIVIDEND: { name: 'REINVESTED_DIVIDEND', 
         fromSplitInfo: reinvestedDividendFromSplitInfo,
+        needsCostBasis: true,
     },
     // RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', noShares: true, },
     SPLIT: { name: 'SPLIT', 
         fromSplitInfo: splitFromSplitInfo,
         noCostBasis: true, 
+        noFees: true,
     },
     REVERSE_SPLIT: { name: 'REVERSE_SPLIT', 
         fromSplitInfo: reverseSplitFromSplitInfo,
-        noCostBasis: true, },
+        noCostBasis: true, 
+        noFees: true,
+        sharesNegative: true,
+    },
     ADD_SHARES: { name: 'ADD_SHARES', 
         fromSplitInfo: addSharesFromSplitInfo,
+        needsCostBasis: true,
     },
     REMOVE_SHARES: { name: 'REMOVE_SHARES', 
         fromSplitInfo: removeSharesFromSplitInfo,
+        sharesNegative: true,
     },
 };
+
+/*
+BUY: 
+shares | total amount | [fees] | price
+- total amount comes from parent
+- fees comes from fees expense
+
+SELL: 
+lots | total amount | [fees] | price
+- total amount goes to parent
+- fees comes from fees expense
+
+REINVESTED_DIVIDENDS:
+shares | total amount | [fees] | price
+- total amount (or shares * price?) is income
+- fees comes from fees expense
+
+RETURN_OF_CAPITAL:
+total amount
+
+SPLIT:
+shares | cash in lieu | [price]
+- total shares added
+- cash in lieu goes to income?
+- what is price for???
+
+
+REVERSE_SPLIT:
+shares | cash in lieu | [price]
+- total shares removed
+- cash in lieu goes to income?
+- what is price for???
+
+ADD_SHARES:
+shares | total amount | price
+- no fees
+- total amount goes to Equity
+
+
+REMOVE_SHARES:
+lots | total amount |  price
+- no fees
+- total amount goes to Equity
+*/
 
 
 //
@@ -71,8 +129,9 @@ export const LotActionType = {
 //
 function loadLotCellEditors() {
     if (!LotActionType.BUY.description) {
-        for (const action of Object.values(LotActionType)) {
-            action.description = userMsg('LotCellEditors-action-' + action.name);
+        for (const actionType of Object.values(LotActionType)) {
+            actionType.description = userMsg('LotCellEditors-actionType-' 
+                + actionType.name);
         }
     }
 }
@@ -88,7 +147,8 @@ function lotActionTypeFromTransactionInfo(splitDataItem) {
 
     switch (splitDataItem.lotTransactionType) {
     case T.LotTransactionType.BUY_SELL.name :
-        return (splitDataItem.quantityBaseValue > 0)
+        return ((splitDataItem.quantityBaseValue > 0)
+         || !splitDataItem.quantityBaseValue)   // The undefined/new transaction case...
             ? LotActionType.BUY
             : LotActionType.SELL;
     
@@ -112,32 +172,39 @@ function lotActionTypeFromTransactionInfo(splitDataItem) {
 
 
 /**
- * @typedef {object} LotCellEditors~Lots
- * @property {number}   quantityBaseValue
- * @property {QuantityDefinition}   quantityDefinition
+ * @typedef {object} LotCellEditors~QuantityEditState
+ * @private
+ * @property {number}   editHit
+ * @property {number|undefined} editorBaseValue
+ * @property {QuantityDefinition} quantityDefinition
  */
 
 /**
- * @typedef {object} LotCellEditors~Monetary
- * @property {QuantityDefinition}   quantityDefintion
- * @property {number}   marketValueBaseValue
- * @property {number}   costBasisBaseValue
- * @property {number}   priceBaseValue
+ * @typedef {object} LotCellEditors~LotsEditState
+ * ???
+ * @private
  */
 
+/**
+ * @typedef {object} LotCellEditors~EditStates
+ * @private
+ * @property {LotCellEditors~QuantityEditState} shares
+ * @property {LotCellEditors~QuantityEditState} monetaryAmount
+ * @property {LotCellEditors~QuantityEditState} fees
+ * @property {LotCellEditors~QuantityEditState} price
+ * @property {LotCellEditors`LotEditState} lots
+ */
 
 /**
  * @typedef {object} LotCellEditors~SplitInfo
  * @property {EngineAccessor}   accessor
  * @property {TransactionDataItem}  transactionDataItem
  * @property {number}   splitIndex
- * @property {SplitDataItem}    splitDataItem
- * @property {SplitDataItem}    feesSplitDataItem
- * @property {LotActionType}    lotActionType
- * @property {AccountDataItem}  splitAccountDataItem
- * @property {PricedItemDataItem}   pricedItemDataItem
- * @property {LotCellEditors~Lots}  lots
- * @property {LotCellEditors~Monetary}  monetary
+ * @property {LotActionType}    actionType
+ * @property {QuantityDefinition}   currencyQuantityDefinition
+ * @property {QuantityDefinition}   sharesQuantityDefinition
+ * @property {LotCellEditors~EditStates} editStates
+ * @property {number}   nextQuantityEditHit
  */
 
 /**
@@ -161,8 +228,8 @@ export function createSplitInfo(transactionDataItem, splitIndex, accessor) {
         return;
     }
 
-    const action = lotActionTypeFromTransactionInfo(splitDataItem);
-    if (!action) {
+    const actionType = lotActionTypeFromTransactionInfo(splitDataItem);
+    if (!actionType) {
         return;
     }
 
@@ -178,6 +245,9 @@ export function createSplitInfo(transactionDataItem, splitIndex, accessor) {
         return;
     }
 
+    const sharesQuantityDefinition = getQuantityDefinition(
+        pricedItemDataItem.quantityDefinition);
+
     let currency = pricedItemDataItem.currency || accessor.getBaseCurrencyCode();
     currency = getCurrency(currency);
     if (!currency) {
@@ -189,19 +259,99 @@ export function createSplitInfo(transactionDataItem, splitIndex, accessor) {
         accessor: accessor,
         transactionDataItem: transactionDataItem,
         splitIndex: splitIndex,
-        splitDataItem: splitDataItem,
-        action: action,
-        splitAccountDataItem: splitAccountDataItem,
-        pricedItemDataItem: pricedItemDataItem,
-        lots: {
-            quantityDefinition: pricedItemDataItem.quantityDefinition,
-        },
-        monetary: {
-            quantityDefinition: currencyQuantityDefinition,
-        },
+        currencyQuantityDefinition: currencyQuantityDefinition,
+        sharesQuantityDefinition: sharesQuantityDefinition,
+
+        actionType: actionType,
+
+        editStates: {},
     };
 
-    return updateSplitInfoValues(splitInfo);
+    setupSplitInfoEditStates(splitInfo);
+    return splitInfo;
+}
+
+
+//
+//---------------------------------------------------------
+//
+function setupSplitInfoEditStates(splitInfo) {
+    const { splitIndex, 
+        sharesQuantityDefinition,
+        currencyQuantityDefinition,
+        editStates,
+        actionType,
+    } = splitInfo;
+
+    const { splits } = splitInfo.transactionDataItem;
+    const splitDataItem = splits[splitIndex];
+
+    const sharesSign = actionType.sharesNegative ? -1 : 1;
+
+    let sharesBaseValue;
+    let monetaryAmountBaseValue;
+    let feesBaseValue;
+    let priceBaseValue;
+
+    const { lotChanges } = splitDataItem;
+    if (lotChanges && lotChanges.length) {
+        sharesBaseValue = 0;
+        for (let lotChange of lotChanges) {
+            sharesBaseValue += lotChange.quantityBaseValue;
+        }
+
+        sharesBaseValue *= sharesSign;
+    }
+
+    if (splitDataItem.quantityBaseValue !== undefined) {
+        monetaryAmountBaseValue = splitDataItem.quantityBaseValue
+            * sharesSign;
+    }
+
+    const feesSplitIndex = getFeesSplitIndex(splitInfo);
+    if (feesSplitIndex >= 0) {
+        feesBaseValue = splits[feesSplitIndex].quantityBaseValue;
+    }
+
+    if (sharesBaseValue && (monetaryAmountBaseValue !== undefined)) {
+        let sharesValue = sharesQuantityDefinition.baseValueToNumber(
+            sharesBaseValue);
+
+        let monetaryAmountValue = currencyQuantityDefinition.baseValueToNumber(
+            monetaryAmountBaseValue);
+
+        let feesValue = (feesBaseValue)
+            ? currencyQuantityDefinition.baseValueToNumber(feesBaseValue)
+            : 0;
+
+        let priceValue = (monetaryAmountValue - feesValue) / sharesValue;
+        priceBaseValue = currencyQuantityDefinition.quantityFromNumber(priceValue)
+            .getBaseValue();
+    }
+
+    // Need to initialize...
+    editStates.shares = { editHit: 0, 
+        editorBaseValue: sharesBaseValue, 
+        quantityDefinition: sharesQuantityDefinition,
+        name: 'shares',
+    };
+    editStates.monetaryAmount = { editHit: 0, 
+        editorBaseValue: monetaryAmountBaseValue, 
+        quantityDefinition: currencyQuantityDefinition,
+        name: 'monetaryAmount',
+    };
+    editStates.fees = { editHit: 0, 
+        editorBaseValue: feesBaseValue, 
+        quantityDefinition: currencyQuantityDefinition,
+        name: 'fees',
+    };
+    editStates.price = { editHit: -1, 
+        editorBaseValue: priceBaseValue, 
+        quantityDefinition: currencyQuantityDefinition,
+        name: 'price',
+    };
+
+    splitInfo.nextQuantityEditHit = 1;
 }
 
 
@@ -209,75 +359,199 @@ export function createSplitInfo(transactionDataItem, splitIndex, accessor) {
 //---------------------------------------------------------
 //
 function updateSplitInfoValues(splitInfo) {
-    const { splitIndex, accessor, action,
-        splitDataItem, pricedItemDataItem,
-        lots, monetary,
+    const {
+        actionType,
+        sharesQuantityDefinition,
+        currencyQuantityDefinition,
+        editStates,
     } = splitInfo;
-    const { splits } = splitInfo.transactionDataItem;
 
-    let sharesBaseValue = 0;
-    const { lotChanges } = splitDataItem;
-    if (lotChanges) {
-        for (let lotChange of lotChanges) {
-            sharesBaseValue += lotChange.quantityBaseValue;
-        }
+
+
+    const sharesState = editStates.shares;
+    const monetaryAmountState = editStates.monetaryAmount;
+    const feesState = editStates.fees;
+    const priceState = editStates.price;
+
+
+    let sharesValue;
+    if (typeof sharesState.editorBaseValue === 'number') {
+        sharesValue = sharesQuantityDefinition.baseValueToNumber(
+            sharesState.editorBaseValue);
     }
 
-    let feesSplitDataItem;
-    for (let i = 0; i < splits.length; ++i) {
-        if (i === splitIndex) {
-            continue;
-        }
+    let monetaryAmountValue;
+    if (typeof monetaryAmountState.editorBaseValue === 'number') {
+        monetaryAmountValue = currencyQuantityDefinition.baseValueToNumber(
+            monetaryAmountState.editorBaseValue);
+    }
 
-        const split = splits[i];
-        const accountDataItem = accessor.getAccountDataItemWithId(split.accountId);
-        const accountType = A.getAccountType(accountDataItem.type);
-        if (accountType.category === A.AccountCategory.EXPENSE) {
-            feesSplitDataItem = split;
+    let feesValue;
+    if (typeof feesState.editorBaseValue === 'number') {
+        feesValue = currencyQuantityDefinition.baseValueToNumber(
+            feesState.editorBaseValue);
+    }
+    else if (feesState.editorBaseValue === undefined) {
+        feesValue = 0;
+    }
+
+    let priceValue;
+    if (typeof priceState.editorBaseValue === 'number') {
+        priceValue = currencyQuantityDefinition.baseValueToNumber(
+            priceState.editorBaseValue);
+    }
+
+
+    // We want a ranking based on the hits...
+    let mostRecentEditState = editStates.shares;
+    let oldestEditState = editStates.shares;
+
+    for (let name in editStates) {
+        const editState = editStates[name];
+        if (editState.editHit > mostRecentEditState.editHit) {
+            mostRecentEditState = editState;
+        }
+        else if (editState.editHit < oldestEditState.editHit) {
+            oldestEditState = editState;
+        }
+        editState.errorMsg = undefined;
+    }
+
+
+    switch (mostRecentEditState.name) {
+    case 'shares' :
+        if ((sharesValue !== undefined) && (sharesValue < 0)) {
+            mostRecentEditState.errorMsg = userMsg('LotCellEditors-shares_lt_zero');
+            return;
+        }
+        break;
+
+    case 'monetaryAmount' :
+        if ((monetaryAmountValue !== undefined) && (monetaryAmountValue < 0)) {
+            mostRecentEditState.errorMsg = userMsg(
+                'LotCellEditors-monetaryAmount_lt_zero');
+            return;
+        }
+        break;
+
+    case 'fees' :
+        break;
+
+    case 'price' :
+        if ((priceValue !== undefined) && (priceValue < 0)) {
+            mostRecentEditState.errorMsg = userMsg('LotCellEditors-price_lt_zero');
+            return;
+        }
+        break;
+    }
+
+
+    let editStateToCalc;
+
+    if ((sharesValue === undefined)
+     && !actionType.noShares) {
+        editStateToCalc = editStates.shares;
+    }
+    else if ((monetaryAmountValue === undefined)
+     && !actionType.noCostBasis) {
+        editStateToCalc = editStates.monetaryAmount;
+    }
+    else if ((feesValue === undefined)
+     && !actionType.noFees) {
+        editStateToCalc = editStates.fees;
+    }
+    else if ((priceValue === undefined)
+     && !actionType.noCostBasis) {
+        editStateToCalc = editStates.price;
+    }
+    else {
+        editStateToCalc = oldestEditState;
+
+        switch (mostRecentEditState.name) {
+        case 'shares' :
+            if (monetaryAmountState.editHit
+                && (monetaryAmountState.editHit >= priceState.editHit)) {
+                editStateToCalc = priceState;
+            }
+            else {
+                editStateToCalc = monetaryAmountState;
+            }
+            break;
+        
+        case 'monetaryAmount' :
+            if (feesState
+                && (feesState.editHit > sharesState.editHit)
+                && (feesState.editHit > priceState.editHit)) {
+                editStateToCalc = (sharesState.editHit >= priceState.editHit)
+                    ? priceState
+                    : sharesState;
+            }
+            break;
+        
+        case 'fees' :
+            editStateToCalc = monetaryAmountState;
+            break;
+        
+        case 'price' :
+            if (monetaryAmountState.editHit > sharesState.editHit) {
+                editStateToCalc = sharesState;
+            }
+            else {
+                editStateToCalc = (!feesState
+                    || (feesState.editHit >= monetaryAmountState.editHit))
+                    ? monetaryAmountState
+                    : feesState;
+            }
             break;
         }
     }
 
-    const currencyQuantityDefinition = monetary.quantityDefinition;
-    let costBasisBaseValue;
-    let priceBaseValue;
-    if (!action.noCostBasis) {
-        //
-        // Computation rules:
-        // Have:
-        //  - shares, costBasis => calc priceBaseValue
-        //  - shares, price => costBasis
-        //  - costBasis, price => shares
+    // Basic equation:
+    // costBasisValue = monetaryAmountValue = sharesValue * priceValue + feesValue
 
-        costBasisBaseValue = splitDataItem.quantityBaseValue;
-        if (feesSplitDataItem) {
-            costBasisBaseValue += feesSplitDataItem.quantityBaseValue;
+    switch (editStateToCalc.name) {
+    case 'shares' :
+        if (priceValue
+         && (monetaryAmountValue !== undefined)
+         && (feesValue !== undefined)) {
+            sharesValue = (monetaryAmountValue - feesValue) / priceValue;
+            sharesState.editorBaseValue = sharesQuantityDefinition.numberToBaseValue(
+                sharesValue);
         }
-
-        if (sharesBaseValue) {
-            // priceBaseValue calculated...
-            const lotQuantityDefinition = getQuantityDefinition(
-                pricedItemDataItem.quantityDefinition);
-            const lotQuantity = lotQuantityDefinition.fromBaseValue(
-                sharesBaseValue);
-
-            let totalPriceQuantity = currencyQuantityDefinition.fromBaseValue(
-                splitDataItem.quantityBaseValue);
-            
-            const price = totalPriceQuantity.toNumber() / lotQuantity.toNumber();
-            priceBaseValue = currencyQuantityDefinition.quantityFromNumber(price)
-                .getBaseValue();
+        break;
+    
+    case 'monetaryAmount' :
+        if ((sharesValue !== undefined)
+         && (priceValue !== undefined)
+         && (feesValue !== undefined)) {
+            monetaryAmountValue = sharesValue * priceValue + feesValue;
+            monetaryAmountState.editorBaseValue 
+                = currencyQuantityDefinition.numberToBaseValue(
+                    monetaryAmountValue);
         }
+        break;
+    
+    case 'fees' :
+        if ((monetaryAmountValue !== undefined)
+         && (sharesValue !== undefined)
+         && (priceValue !== undefined)) {
+            feesValue = monetaryAmountValue - sharesValue * priceValue;
+            feesState.editorBaseValue = currencyQuantityDefinition.numberToBaseValue(
+                feesValue);
+        }
+        break;
+    
+    case 'price' :
+        if (sharesValue
+         && (monetaryAmountValue !== undefined)
+         && (feesValue !== undefined)) {
+            priceValue = (monetaryAmountValue - feesValue) / sharesValue;
+            priceState.editorBaseValue = currencyQuantityDefinition.numberToBaseValue(
+                priceValue);
+        }
+        break;
+
     }
-
-    let marketValueBaseValue = 0;
-    lots.quantityBaseValue = sharesBaseValue;
-    monetary.marketValueBaseValue = marketValueBaseValue;
-    monetary.costBasisBaseValue = costBasisBaseValue;
-    monetary.priceBaseValue = priceBaseValue;
-
-    splitInfo.feesSplitDataItem = feesSplitDataItem;
-
 
     return splitInfo;
 }
@@ -291,8 +565,7 @@ function updateSplitInfoValues(splitInfo) {
 export function copySplitInfo(splitInfo) {
     if (splitInfo) {
         return Object.assign({}, splitInfo, {
-            lots: Object.assign({}, splitInfo.lots),
-            monetary: Object.assign({}, splitInfo.monetary),
+            editStates: Object.assign({}, splitInfo.editStates),
         });
     }
 }
@@ -301,12 +574,163 @@ export function copySplitInfo(splitInfo) {
 //
 //---------------------------------------------------------
 //
-function updateFeesFromSplitInfo(splitInfo, transactionDataItem) {
-    // Fees or no fees?
-    // If fees,
-    //      add a new split item if necessary.
-    // No fees
-    //      If there's fees, remove that split item.
+/*
+function throwError(columnInfoKey, error) {
+    error.columnInfoKey = columnInfoKey;
+    throw error;
+}
+*/
+
+
+//
+//---------------------------------------------------------
+//
+function getFeesSplitIndex(splitInfo, transactionDataItem) {
+    transactionDataItem = transactionDataItem || splitInfo.transactionDataItem;
+    const { accessor } = splitInfo;
+
+    const { splits } = transactionDataItem;
+    for (let i = 0; i < splits.length; ++i) {
+        const split = splits[i];
+        const category = accessor.getCategoryOfAccountId(split.accountId);
+        if (category === A.AccountCategory.EXPENSE) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+
+
+//
+//---------------------------------------------------------
+//
+function errorWithColumnInfoKey(error, key) {
+    error.columnInfoKey = key;
+    return error;
+}
+
+//
+//---------------------------------------------------------
+//
+function updateTransactionDataItem(splitInfo, transactionDataItem,
+    valuesToUse) {
+
+    const { accessor, actionType } = splitInfo;
+    let { splitIndex } = splitInfo;
+    const { lotType, shares, monetaryAmount, monetaryAmountAccountId,
+        fees, price, } = valuesToUse;
+
+    const { splits } = transactionDataItem;
+
+    const feesSplitIndex = getFeesSplitIndex(splitInfo, transactionDataItem);
+    let feesBaseValue = (fees) ? fees.editorBaseValue : 0;
+    if (feesBaseValue) {
+        // Are fees, set the appropriate split.
+        if (feesSplitIndex >= 0) {
+            splits[feesSplitIndex].quantityBaseValue = feesBaseValue;
+        }
+        else {
+            const splitAccountDataItem 
+                = accessor.getAccountDataItemWithId(splitDataItem.accountId);
+
+            splits.push({
+                accountId: AH.getDefaultSplitAccountId(accessor, 
+                    splitAccountDataItem,
+                    AH.DefaultSplitAccountType.FEES_EXPENSE),
+                quantityBaseValue: feesBaseValue,
+            });
+        }
+    }
+    else {
+        // No fees, remove the spilt if there is one.
+        if (feesSplitIndex >= 0) {
+            splits.splice(feesSplitIndex, 1);
+            if (splitIndex > feesSplitIndex) {
+                --splitIndex;
+            }
+        }
+
+        feesBaseValue = 0;
+    }
+
+    const splitDataItem = splits[splitIndex];
+
+    splitDataItem.lotTransactionType = lotType;
+
+    const sharesSign = actionType.sharesNegative ? -1 : 1;
+    let sharesBaseValue;
+    if (shares) {
+        const { editorBaseValue } = shares;
+        if (typeof editorBaseValue !== 'number') {
+            if (monetaryAmount) {
+                return errorWithColumnInfoKey(
+                    userError('LotCellEditors-shares_monetaryAmount_required'),
+                    'shares');
+            }
+            return errorWithColumnInfoKey(
+                userError('LotCellEditors-shares_required'),
+                'shares');
+        }
+
+        sharesBaseValue = editorBaseValue * sharesSign;
+        if (!splitDataItem.lotChanges[0]) {
+            splitDataItem.lotChanges[0] = {};
+        }
+        splitDataItem.lotChanges[0].quantityBaseValue = sharesBaseValue;
+    }
+
+    if (monetaryAmount) {
+        const { editorBaseValue } = monetaryAmount;
+        if (typeof editorBaseValue !== 'number') {
+            if (shares) {
+                return errorWithColumnInfoKey(
+                    userError('LotCellEditors-shares_monetaryAmount_required'),
+                    'monetaryAmount');
+            }
+            return errorWithColumnInfoKey(
+                userError('LotCellEditors-monetaryAmount_required'),
+                'monetaryAmount');
+        }
+
+        let monetaryAmountSplitDataItem;
+        if (monetaryAmountAccountId === splitDataItem.accountId) {
+            monetaryAmountSplitDataItem = splitDataItem;
+        }
+        else {
+            for (let i = 0; i < splits.length; ++i) {
+                const split = splits[i];
+                if (split.accountId === monetaryAmountAccountId) {
+                    monetaryAmountSplitDataItem = split;
+                    break;
+                }
+            }
+        }
+
+        const category = accessor.getCategoryOfAccountId(
+            monetaryAmountAccountId);
+        monetaryAmountSplitDataItem.quantityBaseValue = monetaryAmount.editorBaseValue
+            * category.creditSign;
+
+        
+        if (shares) {
+            splitDataItem.quantityBaseValue 
+                = (monetaryAmount.editorBaseValue - feesBaseValue)
+                    * sharesSign;
+            
+            if (actionType.needsCostBasis) {
+                splitDataItem.lotChanges[0].costBasisBaseValue
+                    = monetaryAmount.editorBaseValue;
+            }
+        }
+    }
+
+    if (price) {
+        // 
+    }
+
+    return splitIndex;
 }
 
 
@@ -314,11 +738,19 @@ function updateFeesFromSplitInfo(splitInfo, transactionDataItem) {
 //---------------------------------------------------------
 //
 function buyFromSplitInfo(splitInfo, transactionDataItem) {
-    updateFeesFromSplitInfo(splitInfo, transactionDataItem);
+    const { accessor, splitIndex, editStates } = splitInfo;
+    const splitDataItem = splitInfo.transactionDataItem.splits[splitIndex];
+    const accountDataItem = accessor.getAccountDataItemWithId(splitDataItem.accountId);
 
-    // Update lot changes
-    // Update 
-    return splitInfo.splitIndex;
+    return updateTransactionDataItem(splitInfo, transactionDataItem,
+        {
+            lotType: T.LotTransactionType.BUY_SELL,
+            shares: editStates.shares,
+            monetaryAmount: editStates.monetaryAmount,
+            monetaryAmountAccountId: accountDataItem.parentAccountId,
+            fees: editStates.fees,
+            price: editStates.price,
+        });
 }
 
 
@@ -326,7 +758,7 @@ function buyFromSplitInfo(splitInfo, transactionDataItem) {
 //---------------------------------------------------------
 //
 function sellFromSplitInfo(splitInfo, transactionDataItem) {
-    updateFeesFromSplitInfo(splitInfo, transactionDataItem);
+    // TODO:
     return splitInfo.splitIndex;
 }
 
@@ -335,8 +767,22 @@ function sellFromSplitInfo(splitInfo, transactionDataItem) {
 //---------------------------------------------------------
 //
 function reinvestedDividendFromSplitInfo(splitInfo, transactionDataItem) {
-    updateFeesFromSplitInfo(splitInfo, transactionDataItem);
-    return splitInfo.splitIndex;
+    const { accessor, splitIndex, editStates } = splitInfo;
+    
+    const splitDataItem = splitInfo.transactionDataItem.splits[splitIndex];
+    const dividendsAccountId = AH.getDefaultSplitAccountId(accessor, 
+        splitDataItem.accountId,
+        AH.DefaultSplitAccountType.DIVIDENDS_INCOME);
+
+    return updateTransactionDataItem(splitInfo, transactionDataItem,
+        {
+            lotType: T.LotTransactionType.REINVESTED_DIVIDEND,
+            shares: editStates.shares,
+            monetaryAmount: editStates.monetaryAmount,
+            monetaryAmountAccountId: dividendsAccountId,
+            fees: editStates.fees,
+            price: editStates.price,
+        });
 }
 
 
@@ -344,8 +790,13 @@ function reinvestedDividendFromSplitInfo(splitInfo, transactionDataItem) {
 //---------------------------------------------------------
 //
 function splitFromSplitInfo(splitInfo, transactionDataItem) {
-    updateFeesFromSplitInfo(splitInfo, transactionDataItem);
-    return splitInfo.splitIndex;
+    const { editStates } = splitInfo;
+    return updateTransactionDataItem(splitInfo, transactionDataItem,
+        {
+            lotType: T.LotTransactionType.SPLIT,
+            shares: editStates.shares,
+            fees: editStates.fees,
+        });
 }
 
 
@@ -353,8 +804,14 @@ function splitFromSplitInfo(splitInfo, transactionDataItem) {
 //---------------------------------------------------------
 //
 function reverseSplitFromSplitInfo(splitInfo, transactionDataItem) {
-    updateFeesFromSplitInfo(splitInfo, transactionDataItem);
-    return splitInfo.splitIndex;
+    const { editStates } = splitInfo;
+    return updateTransactionDataItem(splitInfo, transactionDataItem,
+        {
+            lotType: T.LotTransactionType.SPLIT,
+            shares: editStates.shares,
+            sharesSign: -1,
+            fees: editStates.fees,
+        });
 }
 
 
@@ -362,7 +819,22 @@ function reverseSplitFromSplitInfo(splitInfo, transactionDataItem) {
 //---------------------------------------------------------
 //
 function addSharesFromSplitInfo(splitInfo, transactionDataItem) {
-    return splitInfo.splitIndex;
+    const { accessor, splitIndex, editStates } = splitInfo;
+    
+    const splitDataItem = splitInfo.transactionDataItem.splits[splitIndex];
+    const equityAccountId = AH.getDefaultSplitAccountId(accessor, 
+        splitDataItem.accountId,
+        AH.DefaultSplitAccountType.EQUITY);
+
+    return updateTransactionDataItem(splitInfo, transactionDataItem,
+        {
+            lotType: T.LotTransactionType.BUY_SELL,
+            shares: editStates.shares,
+            monetaryAmount: editStates.monetaryAmount,
+            monetaryAmountAccountId: equityAccountId,
+            fees: editStates.fees,
+            price: editStates.price,
+        });
 }
 
 
@@ -370,18 +842,43 @@ function addSharesFromSplitInfo(splitInfo, transactionDataItem) {
 //---------------------------------------------------------
 //
 function removeSharesFromSplitInfo(splitInfo, transactionDataItem) {
-    return splitInfo.splitIndex;
+    const { accessor, splitIndex, editStates } = splitInfo;
+    
+    const splitDataItem = splitInfo.transactionDataItem.splits[splitIndex];
+    const equityAccountId = AH.getDefaultSplitAccountId(accessor, 
+        splitDataItem.accountId,
+        AH.DefaultSplitAccountType.EQUITY);
+
+    return updateTransactionDataItem(splitInfo, transactionDataItem,
+        {
+            lotType: T.LotTransactionType.BUY_SELL,
+            shares: editStates.shares,
+            sharesSign: -1,
+            monetaryAmount: editStates.monetaryAmount,
+            monetaryAmountAccountId: equityAccountId,
+            fees: editStates.fees,
+            price: editStates.price,
+        });
 }
 
+
+/**
+ * @typedef {object}    LotCellEditors~Error
+ * The error object returned by transactionDataItemFromSplitInfo, this is
+ * an {@link Error} with the following additional properties:
+ * @property {string}   columnInfoKey   The key of the column most closely
+ * associated with the error, basically where the error ought to be reported.
+ */
 
 /**
  * Updates a transaction from the current state of a split info.
  * @param {LotCellEditors~splitInfo} splitInfo 
  * @param {TransactionDataItem} transactionDataItem 
- * @throws Error
+ * @returns {number}
+ * @throws {LotCellEditors~Error}
  */
 export function transactionDataItemFromSplitInfo(splitInfo, transactionDataItem) {
-    return splitInfo.action.fromSplitInfo(
+    return splitInfo.actionType.fromSplitInfo(
         splitInfo, transactionDataItem);
 }
 
@@ -411,7 +908,7 @@ function updateSplitInfo(args, columnInfoArgs, newSplitInfo) {
 function getActionCellValue(args, columnInfoArgs) {
     const splitInfo = getSplitInfo(args, columnInfoArgs);
     if (splitInfo) {
-        return splitInfo.action;
+        return splitInfo.actionType;
     }
 }
 
@@ -426,9 +923,9 @@ function renderActionDisplay(args, columnInfoArgs) {
         const { columnInfo, } = args;
         const { ariaLabel, inputSize } = columnInfo;
         let classExtras = columnInfo.inputClassExtras;
-        const { action } = splitInfo;
+        const { actionType } = splitInfo;
         return <CellSelectDisplay
-            selectedValue = {action.description}
+            selectedValue = {actionType.description}
             ariaLabel = {ariaLabel}
             classExtras = {classExtras}
             size = {inputSize}
@@ -444,9 +941,9 @@ function saveActionCellValue(args, columnInfoArgs) {
 function onActionChange(e, args, columnInfoArgs) {
     const oldSplitInfo = getSplitInfo(args, columnInfoArgs);
     const newAction = LotActionType[e.target.value];
-    if (newAction && (newAction !== oldSplitInfo.action)) {
+    if (newAction && (newAction !== oldSplitInfo.actionType)) {
         const newSplitInfo = copySplitInfo(oldSplitInfo);
-        newSplitInfo.action = newAction;
+        newSplitInfo.actionType = newAction;
         updateSplitInfo(args, columnInfoArgs, newSplitInfo);
     }
 }
@@ -460,7 +957,6 @@ function renderActionEditor(args, columnInfoArgs) {
     if (splitInfo) {
         const { 
             columnInfo, 
-            //cellEditBuffer, 
             errorMsg,
             refForFocus 
         } = args;
@@ -468,14 +964,14 @@ function renderActionEditor(args, columnInfoArgs) {
         const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
 
         const items = [];
-        for (const action of Object.values(LotActionType)) {
-            items.push([action.name, action.description]);
+        for (const actionType of Object.values(LotActionType)) {
+            items.push([actionType.name, actionType.description]);
         }
 
         return <CellSelectEditor
             ariaLabel = {ariaLabel}
             ref = {refForFocus}
-            selectedValue = {splitInfo.action.name}
+            selectedValue = {splitInfo.actionType.name}
             items = {items}
             classExtras = {inputClassExtras}
             size = {inputSize}
@@ -486,7 +982,7 @@ function renderActionEditor(args, columnInfoArgs) {
 }
 
 /**
- * Retrieves a column info for lot action cells.
+ * Retrieves a column info for lot actionType cells.
  * @param {getColumnInfoArgs} args
  * @returns {CellEditorsManager~ColumnInfo}
  */
@@ -494,14 +990,14 @@ export function getActionColumnInfo(args) {
     loadLotCellEditors();
 
     const columnInfoArgs = args;
-    return Object.assign({ key: 'action',
+    return Object.assign({ key: 'actionType',
         header: {
-            label: userMsg('LotCellEditors-action'),
+            label: userMsg('LotCellEditors-actionType'),
             ariaLabel: 'Action',
-            classExtras: 'header-base action-base action-header',
+            classExtras: 'header-base actionType-base actionType-header',
         },
-        inputClassExtras: 'action-base action-input',
-        cellClassName: 'cell-base action-base action-cell',
+        inputClassExtras: 'actionType-base actionType-input',
+        cellClassName: 'cell-base actionType-base actionType-cell',
 
         getCellValue: (args) => getActionCellValue(args, columnInfoArgs),
         saveCellValue: (args) => saveActionCellValue(args, columnInfoArgs),
@@ -516,49 +1012,80 @@ export function getActionColumnInfo(args) {
 //
 //---------------------------------------------------------
 //
-function getSharesCellValue(args, columnInfoArgs) {
+function getQuantityEditorCellValue(editorName, args, columnInfoArgs) {
     const splitInfo = getSplitInfo(args, columnInfoArgs);
     if (splitInfo) {
-        const { lots } = splitInfo;
-        return {
-            quantityBaseValue: Math.abs(lots.quantityBaseValue),
-            quantityDefinition: lots.quantityDefinition,
-        };
+        const { editStates } = splitInfo;
+        if (editStates) {
+            const editorState = editStates[editorName];
+            if (editorState) {
+                const { editorBaseValue } = editorState;
+                return {
+                    quantityBaseValue: (editorBaseValue === undefined)
+                        ? '' : editorBaseValue,
+                    quantityDefinition: editorState.quantityDefinition,
+                    enteredText: editorState.enteredText,
+                    errorMsg: editorState.errorMsg,
+                };
+            }
+        }
     }
+}
+
+function saveQuantityEditorCellValue(editorName, args, columnInfoArgs) {
+    // splitInfo is already updated...
 }
 
 
 //
 //---------------------------------------------------------
 //
-function isSharesUsed(args, columnInfoArgs) {
-    const splitInfo = getSplitInfo(args, columnInfoArgs);
-    if (splitInfo) {
-        const { action } = splitInfo;
-        return !action.noShares;
-    }
+function renderQuantityDisplay(editorName, args, columnInfoArgs) {
+    return ACE.renderQuantityDisplay(args);
 }
 
 
 //
 //---------------------------------------------------------
 //
-function renderQuantityEditor(editor, args, columnInfoArgs) {
+function renderQuantityEditor(editorName, args, columnInfoArgs) {
 
     const { setCellEditBuffer } = args;
     args = Object.assign({}, args, {
-        setCellEditBuffer: (value, index) => {
-            setCellEditBuffer(value, index);
+        setCellEditBuffer: (cellEditBuffer, index) => {
+            const { isEdited } = cellEditBuffer;
+            delete cellEditBuffer.isEdited;
 
-            let splitInfo = getSplitInfo(args, columnInfoArgs);
-            if (splitInfo) {
-                if (editor !== splitInfo.lastEditor) {
-                    splitInfo = copySplitInfo(splitInfo);
-                    splitInfo.secondToLastEditor = splitInfo.lastEditor;
-                    splitInfo.lastEditor = editor;
+            const { value } = cellEditBuffer;
+            let originalSplitInfo = getSplitInfo(args, columnInfoArgs);
+            if (isEdited && originalSplitInfo) {
+                const splitInfo = copySplitInfo(originalSplitInfo);
+
+                const { editStates, nextQuantityEditHit } = splitInfo;
+                const editorState = editStates[editorName];
+                if (typeof value.quantityBaseValue === 'number') {
+                    // Valid value, try updating things...
+                    if (editorState.editorBaseValue !== value.quantityBaseValue) {
+                        editorState.editorBaseValue = value.quantityBaseValue;
+                        editorState.enteredText = value.enteredText;
+
+                        editorState.editHit = nextQuantityEditHit;
+                        ++splitInfo.nextQuantityEditHit;
+
+                        updateSplitInfoValues(splitInfo);
+                    }
+                }
+                else {
+                    // Invalid value, mark editor as potentially getting update.
+                    editorState.editHit = -1;
+                }
+
+                if (!deepEqual(splitInfo, originalSplitInfo)) {
                     updateSplitInfo(args, columnInfoArgs, splitInfo);
                 }
             }
+
+            setCellEditBuffer(cellEditBuffer, index);
         }
     });
     
@@ -569,32 +1096,30 @@ function renderQuantityEditor(editor, args, columnInfoArgs) {
 //
 //---------------------------------------------------------
 //
-function saveSharesCellValue(args, columnInfoArgs) {
-    const splitInfo = getSplitInfo(args, columnInfoArgs);
-    if (splitInfo) {
-        let { value } = args.cellEditBuffer;
-        splitInfo.lots.quantityBaseValue = value.quantityBaseValue;
-    }
-}
+function getQuantityEditorColumnInfo(editorName, args, className) {
+    className = className || editorName;
+    const columnInfoArgs = args;
+    const label = userMsg('LotCellEditors-' + editorName);
+    return Object.assign({ key: editorName,
+        header: {
+            label: label,
+            ariaLabel: label,
+            classExtras: 'header-base ' + className + '-base '
+                + className + '-header',
+        },
+        inputClassExtras: className + '-base ' + className + '-input',
+        cellClassName: 'cell-base ' + className + '-base ' + className + '-cell',
 
-
-//
-//---------------------------------------------------------
-//
-function renderSharesDisplay(args, columnInfoArgs) {
-    if (isSharesUsed(args, columnInfoArgs)) {
-        return ACE.renderQuantityDisplay(args);
-    }
-}
-
-
-//
-//---------------------------------------------------------
-//
-function renderSharesEditor(args, columnInfoArgs) {
-    if (isSharesUsed(args, columnInfoArgs)) {
-        return renderQuantityEditor('shares', args, columnInfoArgs);
-    }
+        getCellValue: (args) => 
+            getQuantityEditorCellValue(editorName, args, columnInfoArgs),
+        saveCellValue: (args) => 
+            saveQuantityEditorCellValue(editorName, args, columnInfoArgs),
+        renderDisplayCell: (args) => 
+            renderQuantityDisplay(editorName, args, columnInfoArgs),
+        renderEditCell: (args) => 
+            renderQuantityEditor(editorName, args, columnInfoArgs),
+    },
+    args);
 }
 
 
@@ -604,142 +1129,18 @@ function renderSharesEditor(args, columnInfoArgs) {
  * @returns {CellEditorsManager~ColumnInfo}
  */
 export function getSharesColumnInfo(args) {
-    const columnInfoArgs = args;
-    return Object.assign({ key: 'shares',
-        header: {
-            label: userMsg('LotCellEditors-shares'),
-            ariaLabel: 'Shares',
-            classExtras: 'header-base shares-base shares-header',
-        },
-        inputClassExtras: 'shares-base shares-input',
-        cellClassName: 'cell-base shares-base shares-cell',
-
-        getCellValue: (args) => getSharesCellValue(args, columnInfoArgs),
-        saveCellValue: (args) => saveSharesCellValue(args, columnInfoArgs),
-        renderDisplayCell: (args) => renderSharesDisplay(args, columnInfoArgs),
-        renderEditCell: (args) => renderSharesEditor(args, columnInfoArgs),
-    },
-    args);
-}
-
-
-//
-//---------------------------------------------------------
-//
-function getMonetaryAmountCellValue(args, columnInfoArgs) {
-    const splitInfo = getSplitInfo(args, columnInfoArgs);
-    if (splitInfo) {
-        const { monetary } = splitInfo;
-        if (monetary.costBasisBaseValue !== undefined) {
-            return {
-                quantityBaseValue: Math.abs(monetary.costBasisBaseValue),
-                quantityDefinition: monetary.quantityDefinition,
-            };
-        }
-    }
-}
-
-function saveMonetaryAmountCellValue(args, columnInfoArgs) {
-    const splitInfo = getSplitInfo(args, columnInfoArgs);
-    const { cellEditBuffer, saveBuffer } = args;
-    if (splitInfo && saveBuffer) {
-        let { value } = cellEditBuffer;
-        splitInfo.monetary.costBasisBaseValue = value.quantityBaseValue;
-        if (splitInfo.action === LotActionType.SELL) {
-            splitInfo.monetary.costBasisBaseValue 
-                = -splitInfo.monetary.costBasisBaseValue;
-        }
-    }
-}
-
-
-//
-//---------------------------------------------------------
-//
-function renderMonetaryAmountDisplay(args, columnInfoArgs) {
-    return ACE.renderQuantityDisplay(args);
-}
-
-
-//
-//---------------------------------------------------------
-//
-function renderMonetaryAmountEditor(args, columnInfoArgs) {
-    return renderQuantityEditor('monetaryAmount', args, columnInfoArgs);    
+    return getQuantityEditorColumnInfo('shares', args);
 }
 
 
 /**
  * Retrieves a column info for monetary amount cells.
+ * This is primarily the total currency amount.
  * @param {getColumnInfoArgs} args
  * @returns {CellEditorsManager~ColumnInfo}
  */
 export function getMonetaryAmountColumnInfo(args) {
-    const columnInfoArgs = args;
-    return Object.assign({ key: 'monetaryAmount',
-        header: {
-            label: userMsg('LotCellEditors-monetaryAmount'),
-            ariaLabel: 'Price',
-            classExtras: 'header-base monetary-base + monetary-header '
-                + 'monetaryAmount-base monetaryAmount-header',
-        },
-        inputClassExtras: 'monetary-base monetary-input ' 
-            + ' monetaryAmount-base monetaryAmount-input',
-        cellClassName: 'cell-base monetary-base + monetary-cell '
-            + ' monetaryAmount-base monetaryAmount-cell',
-
-        getCellValue: (args) => getMonetaryAmountCellValue(args, columnInfoArgs),
-        saveCellValue: (args) => saveMonetaryAmountCellValue(args, columnInfoArgs),
-        renderDisplayCell: (args) => renderMonetaryAmountDisplay(args, columnInfoArgs),
-        renderEditCell: (args) => renderMonetaryAmountEditor(args, columnInfoArgs),
-    },
-    args);
-}
-
-
-//
-//---------------------------------------------------------
-//
-function getFeesCommissionsCellValue(args, columnInfoArgs) {
-    const splitInfo = getSplitInfo(args, columnInfoArgs);
-    if (splitInfo && splitInfo.feesSplitDataItem) {
-        const { feesSplitDataItem, monetary } = splitInfo;
-        return {
-            quantityBaseValue: Math.abs(feesSplitDataItem.quantityBaseValue),
-            quantityDefinition: monetary.quantityDefinition,
-        };
-    }
-}
-
-
-//
-//---------------------------------------------------------
-//
-function saveFeesCommissionsCellValue(args, columnInfoArgs) {
-    const { cellEditBuffer, saveBuffer } = args;
-    if (saveBuffer) {
-        console.log('saveFeesCommissionsCellValue: ' + JSON.stringify(cellEditBuffer));
-        //const { newTransactionDataItem } = saveBuffer;
-        //let { value } = cellEditBuffer;
-        //newTransactionDataItem.ymdDate = value.ymdDate;
-    }
-
-}
-
-
-//
-//---------------------------------------------------------
-//
-function renderFeesCommissionsDisplay(args, columnInfoArgs) {
-    return ACE.renderQuantityDisplay(args);
-}
-
-
-//
-//---------------------------------------------------------
-//
-function renderFeesCommissionsEditor(args, columnInfoArgs) {
-    return ACE.renderQuantityEditor(args);
+    return getQuantityEditorColumnInfo('monetaryAmount', args, 'monetary');
 }
 
 
@@ -748,62 +1149,8 @@ function renderFeesCommissionsEditor(args, columnInfoArgs) {
  * @param {getColumnInfoArgs} args
  * @returns {CellEditorsManager~ColumnInfo}
  */
-export function getFeesCommissionsColumnInfo(args) {
-    const columnInfoArgs = args;
-    return Object.assign({ key: 'fees',
-        header: {
-            label: userMsg('LotCellEditors-fees'),
-            ariaLabel: 'Fees and Commissions',
-            classExtras: 'header-base monetary-base monetary-header '
-                + 'fees-base fees-header',
-        },
-        inputClassExtras: 'monetary-base monetary-input '
-            + 'fees-base fees-input',
-        cellClassName: 'cell-base monetary-base monetary-cell '
-            + 'fees-base fees-cell',
-
-        getCellValue: (args) => getFeesCommissionsCellValue(args, columnInfoArgs),
-        saveCellValue: (args) => saveFeesCommissionsCellValue(args, columnInfoArgs),
-        renderDisplayCell: (args) => renderFeesCommissionsDisplay(args, columnInfoArgs),
-        renderEditCell: (args) => renderFeesCommissionsEditor(args, columnInfoArgs),
-    },
-    args);
-}
-
-
-//
-//---------------------------------------------------------
-//
-function getPriceCellValue(args, columnInfoArgs) {
-    if (isSharesUsed(args, columnInfoArgs)) {
-        const splitInfo = getSplitInfo(args, columnInfoArgs);
-        const { monetary } = splitInfo;
-        if (monetary.priceBaseValue) {
-            return {
-                quantityBaseValue: Math.abs(monetary.priceBaseValue),
-                quantityDefinition: monetary.quantityDefinition,
-            };
-        }
-    }
-
-}
-
-
-//
-//---------------------------------------------------------
-//
-function renderPriceDisplay(args, columnInfoArgs) {
-    return ACE.renderQuantityDisplay(args);    
-}
-
-
-//
-//---------------------------------------------------------
-//
-function renderPriceEditor(args, columnInfoArgs) {
-    if (isSharesUsed(args, columnInfoArgs)) {
-        return renderQuantityEditor('price', args, columnInfoArgs);
-    }
+export function getFeesColumnInfo(args) {
+    return getQuantityEditorColumnInfo('fees', args, 'monetary');
 }
 
 
@@ -813,79 +1160,7 @@ function renderPriceEditor(args, columnInfoArgs) {
  * @returns {CellEditorsManager~ColumnInfo}
  */
 export function getPriceColumnInfo(args) {
-    const columnInfoArgs = args;
-    return Object.assign({ key: 'price',
-        header: {
-            label: userMsg('LotCellEditors-price'),
-            ariaLabel: 'Price',
-            classExtras: 'header-base monetary-base monetary-header '
-                + 'price-base price-header',
-        },
-        inputClassExtras: 'monetary-base monetary-input '
-            + 'price-base price-input',
-        cellClassName: 'cell-base monetary-base monetary-cell '
-            + 'price-base price-cell',
-
-        getCellValue: (args) => getPriceCellValue(args, columnInfoArgs),
-        renderDisplayCell: (args) => renderPriceDisplay(args, columnInfoArgs),
-        renderEditCell: (args) => renderPriceEditor(args, columnInfoArgs),
-    },
-    args);
-}
-
-
-//
-//---------------------------------------------------------
-//
-function getMarketValueCellValue(args, columnInfoArgs) {
-    const splitInfo = getSplitInfo(args, columnInfoArgs);
-    if (splitInfo) {
-        const { monetary } = splitInfo;
-        return {
-            quantityBaseValue: monetary.marketValueBaseValue,
-            quantityDefinition: monetary.quantityDefinition,
-        };
-    }
-}
-
-
-//
-//---------------------------------------------------------
-//
-const renderMarketValueDisplay = ACE.renderQuantityDisplay;
-//function renderMarketValueDisplay(args, columnInfoArgs) {}
-
-
-//
-//---------------------------------------------------------
-//
-// No editing of market value
-//function renderMarketValueEditor(args, columnInfoArgs) {}
-
-/**
- * Retrieves a column info for market value cells.
- * @param {getColumnInfoArgs} args
- * @returns {CellEditorsManager~ColumnInfo}
- */
-export function getMarketValueColumnInfo(args) {
-    const columnInfoArgs = args;
-    return Object.assign({ key: 'marketValue',
-        header: {
-            label: userMsg('LotCellEditors-marketValue'),
-            ariaLabel: 'Market Value',
-            classExtras: 'header-base monetary-base monetary-header '
-                + 'marketValue-base marketValue-header',
-        },
-        inputClassExtras: 'monetary-base monetary-input '
-            + 'marketValue-base marketValue-input',
-        cellClassName: 'cell-base monetary-base monetary-cell '
-            + 'marketValue-base marketValue-cell',
-
-        getCellValue: (args) => getMarketValueCellValue(args, columnInfoArgs),
-        renderDisplayCell: (args) => renderMarketValueDisplay(args, columnInfoArgs),
-        //renderEditCell: (args) => renderMarketValueEditor(args, columnInfoArgs),
-    },
-    args);
+    return getQuantityEditorColumnInfo('price', args, 'monetary');
 }
 
 
