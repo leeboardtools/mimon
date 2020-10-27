@@ -18,6 +18,7 @@ import { cleanSpaces } from '../util/StringUtils';
  * @property {TagDef}   BANK_FEES
  * @property {TagDef}   BROKERAGE_COMMISSIONS
  * @property {TagDef}   TAXES
+ * @property {TagDef}   EQUITY
  */
 export const StandardAccountTag = {
     INTEREST: { name: 'INTEREST' },
@@ -26,6 +27,7 @@ export const StandardAccountTag = {
     BANK_FEES: { name: 'BANK_FEES' },
     BROKERAGE_COMMISSIONS: { name: 'BROKERAGE_COMMISSIONS' },
     TAXES: { name: 'TAXES' },
+    EQUITY: { name: 'EQUITY' },
 };
 
 
