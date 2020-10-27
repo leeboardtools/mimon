@@ -546,7 +546,7 @@ export async function asyncAddOpeningBalances(sys) {
     sys.brokerageBOBQuantityBaseValue = 2000000;
     sys.iraOBQuantityBaseValue = 3000000;
 
-    await transactionManager.asyncAddTransaction([
+    const result = await transactionManager.asyncAddTransaction([
         { ymdDate: initialYMDDate, 
             splits: [
                 { accountId: sys.checkingId, 
@@ -581,6 +581,12 @@ export async function asyncAddOpeningBalances(sys) {
         },
 
     ]);
+
+    sys.checkingOpeningBalanceTransId = result.newTransactionDataItems[0].id;
+    sys.cashOpeningBalanceTransId = result.newTransactionDataItems[1].id;
+    sys.brokerageAOpeningBalanceTransId = result.newTransactionDataItems[2].id;
+    sys.brokerageBOpeningBalanceTransId = result.newTransactionDataItems[3].id;
+    sys.iraOpeningBalanceTransId = result.newTransactionDataItems[4].id;
 }
 
 
@@ -870,7 +876,7 @@ export async function asyncAddBasicTransactions(sys) {
             ],
         }
     )).newTransactionDataItem;
-    sys.transIId = aaplChangeSplit2014_06_09.id;
+    sys.transIId = aaplTrans2014_06_09.id;
 
 
     const aaplLot2 = (await lotManager.asyncAddLot({ pricedItemId: sys.aaplPricedItemId, description: 'Lot 2015-03-12'})).newLotDataItem;
