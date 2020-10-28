@@ -530,7 +530,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
                 getCellValue: getDateCellValue,
                 saveCellValue: saveDateCellValue,
             }),
-            refNumb: ACE.getRefNumColumnInfo({
+            refNum: ACE.getRefNumColumnInfo({
                 getCellValue: (args) => getSplitCellValue(args, 'refNum', 'value'),
                 saveCellValue: (args) => saveSplitCellValue(args, 'refNum', 'value'),
             }),
@@ -1341,9 +1341,23 @@ export class AccountRegister extends React.Component {
 
     updateLCESplitInfo(args, lceSplitInfo) {
         const { setRowEditBuffer } = args;
+        const { newTransactionDataItem: baseTransactionDataItem, 
+            splitIndex: baseSplitIndex } 
+            = this.grabEditedTransactionInfo(args);
+        const baseSplitDataItem = baseTransactionDataItem.splits[baseSplitIndex];
+
+        const newlceSplitInfo = LCE.copySplitInfo(lceSplitInfo);
+
+        const { splitIndex, transactionDataItem } = lceSplitInfo;
+        const newSplitDataItem = transactionDataItem.splits[splitIndex];
+        transactionDataItem.ymdDate = baseTransactionDataItem.ymdDate;
+        newSplitDataItem.reconcileState = baseSplitDataItem.reconcileState;
+        newSplitDataItem.refNum = baseSplitDataItem.refNum;
+
         setRowEditBuffer(
             {
-                lceSplitInfo: LCE.copySplitInfo(lceSplitInfo),
+                newTransactionDataItem: baseTransactionDataItem,
+                lceSplitInfo: newlceSplitInfo,
             },
             (rowEditBuffer) => {
                 args = Object.assign({}, args, {
