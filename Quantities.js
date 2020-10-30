@@ -733,16 +733,23 @@ class DecimalDefinition extends QuantityDefinition {
 
 
     baseValueToNumber(baseValue) {
-        return baseValue * this._numPow10 / this._denPow10;
+        return (baseValue !== undefined)
+            ? (baseValue * this._numPow10 / this._denPow10)
+            : undefined;
     }
 
 
     numberToBaseValue(number) {
-        return Math.round(number * this._denPow10 / this._numPow10);
+        return (number !== undefined)
+            ? Math.round(number * this._denPow10 / this._numPow10)
+            : undefined;
     }
 
 
     baseValueToValueText(baseValue) {
+        if (baseValue === undefined) {
+            return undefined;
+        }
         let text = baseValue.toString();
         if (!this._decimalPlaces) {
             return text;
@@ -791,6 +798,10 @@ class DecimalDefinition extends QuantityDefinition {
 
 
     fromValueText(valueText) {
+        if (valueText === undefined) {
+            return undefined;
+        }
+        
         let sign = 1;
         let value = 0;
 
@@ -927,6 +938,9 @@ class DecimalDefinition extends QuantityDefinition {
 
 
     negateQuantity(quantity) {
+        if (!quantity) {
+            return quantity;
+        }
         quantity = this.changeQuantityDefinition(quantity);
 
         return new Quantity({
