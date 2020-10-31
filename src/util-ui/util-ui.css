@@ -193,6 +193,14 @@
 }
 */
 
+
+.RowTableCell .invalid-feedback {
+  opacity: 1.0;
+  background-color: white;
+  z-index: 1000;
+}
+
+
 /** End util-ui/RowTable.jsx */
 
 
