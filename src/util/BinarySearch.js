@@ -3,8 +3,10 @@
  * @param {Array} array The sorted array in increasing order, array[i] &lt; array[i+1].
  * No check is made.
  * @param {Number} value    The value to locate.
- * @returns {Number}    The index of the first element in array that is &le; value, if
- * value is &lt; array[0] then -1 is returned.
+ * @returns {Number}    The index of the element in the array that is closest to and
+ * &le; value, if value is &lt; array[0] then -1 is returned. If there are multiple
+ * elements that satisfy the closest to and &le; value criteria then the smallest 
+ * index is returned.
  */
 export function bSearchNumberArray(array, value) {
     var lastIndex = array.length - 1;
@@ -55,8 +57,10 @@ export function bSearchNumberArray(array, value) {
  * No check is made.
  * @param {object} value    The value to locate.
  * @param {bSearchCompare}    compare The comparison function.
- * @returns {Number}    The index of the first element in array that is &le; value, if
- * value is &lt; array[0] then -1 is returned.
+ * @returns {Number}    The index of the element in the array that is closest to and
+ * &le; value, if value is &lt; array[0] then -1 is returned. If there are multiple
+ * elements that satisfy the closest to and &le; value criteria then the smallest 
+ * index is returned.
  */
 export function bSearch(array, value, compare) {
     const lastIndex = array.length - 1;
