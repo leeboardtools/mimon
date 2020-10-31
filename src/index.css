@@ -266,3 +266,16 @@ body {
   flex-basis: 10rem;
 }
 
+
+.button-input {
+  border-width: 1px;
+  border-radius: 2px;
+  border-color: darkgray;
+  text-align: center;
+}
+
+.all_none-button {
+  flex-basis: 5rem;
+}
+
+

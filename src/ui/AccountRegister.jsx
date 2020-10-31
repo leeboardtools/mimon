@@ -67,6 +67,12 @@ function updateSplitInfo(args, newSplitInfo) {
     caller.updateLCESplitInfo(args, newSplitInfo);
 }
 
+function setModal(args, modal) {
+    const { rowEntry } = args;
+    const { caller } = rowEntry;
+    caller.setModal(modal);
+}
+
 
 
 function getSplitCellValue(args, propertyName, valueName) {
@@ -540,6 +546,7 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
             const lceArgs = {
                 getSplitInfo: getSplitInfo,
                 updateSplitInfo: updateSplitInfo,
+                setModal: setModal,
             };
 
             // action
@@ -918,7 +925,8 @@ export class AccountRegister extends React.Component {
             rowEntry.lceSplitInfo = LCE.createSplitInfo(
                 rowEntry.transactionDataItem || rowEntry.newTransactionDataItem,
                 rowEntry.splitIndex,
-                this.props.accessor
+                this.props.accessor,
+                rowEntry.caller,
             );
         }
     }

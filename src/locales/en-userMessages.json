@@ -192,13 +192,17 @@
     "LotCellEditors-totalShares": "Total Shares",
 
     "LotCellEditors-actionType-BUY": "Buy",
-    "LotCellEditors-actionType-SELL": "Sell",
+    "LotCellEditors-actionType-SELL_FIFO": "Sell First In First Out",
+    "LotCellEditors-actionType-SELL_LIFO": "Sell Last In First Out",
+    "LotCellEditors-actionType-SELL_BY_LOTS": "Sell by Lots",
     "LotCellEditors-actionType-REINVESTED_DIVIDEND": "Reinvested Dividends",
     "LotCellEditors-actionType-RETURN_OF_CAPITAL": "Return of Capital",
     "LotCellEditors-actionType-SPLIT": "Stock Split",
     "LotCellEditors-actionType-REVERSE_SPLIT": "Reverse Split",
     "LotCellEditors-actionType-ADD_SHARES": "Add Shares",
-    "LotCellEditors-actionType-REMOVE_SHARES": "Remove Shares",
+    "LotCellEditors-actionType-REMOVE_SHARES_FIFO": "Remove Shares FIFO",
+    "LotCellEditors-actionType-REMOVE_SHARES_LIFO": "Remove Shares LIFO",
+    "LotCellEditors-actionType-REMOVE_SHARES_BY_LOTS": "Remove Shares by Lots",
 
     "LotCellEditors-shares_lt_zero": "The number of shares must be >= 0.",
     "LotCellEditors-monetaryAmount_lt_zero": "The amount must be >= 0.",
@@ -206,6 +210,26 @@
     "LotCellEditors-shares_required": "The number of shares is required.",
     "LotCellEditors-shares_monetaryAmount_required": "Two of shares, amount, or price must be specified.",
     "LotCellEditors-monetaryAmount_required": "An amount is required.",
+
+    "LotCellEditors-selectShares": "Select Shares",
+
+
+    "LotsSelectionEditor-term": "Term",
+    "LotsSelectionEditor-LONG_TERM": "Long term",
+    "LotsSelectionEditor-SHORT_TERM": "Short term",
+
+    "LotsSelectionEditor-availableShares": "Available",
+    "LotsSelectionEditor-selectedShares": "Selected",
+    "LotsSelectionEditor-all_button": "All",
+    "LotsSelectionEditor-none_button": "None",
+
+    "LotsSelectionEditor-shares_lt_zero": "The number of shares must be >= 0.",
+    "LotsSelectionEditor-shares_gt_available": ["The number of shares must be <= ", ""],
+
+    "LotsSelectionEditor-title": "Select Lots To Sell",
+    "LotsSelectionEditor-select_all": "Select All",
+    "LotsSelectionEditor-clear_all": "Clear All",
+
 
     "MultiSplitsEditor-title": "Splits Editor",
     "MultiSplitsEditor-new_description_placeholder": "New Split",

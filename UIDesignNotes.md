@@ -666,5 +666,20 @@ Summary:
 Name | Quantity | Price | Price Change | Market Value | Day Change | Cost Basis | Gain/Loss | % of Account
 
 
-New Transaction:
-    - Changing the date for new Lot transactions doesn't update the date.
+Lots Selection Test Scenario:
+    - Need transactions of:
+        - Buy shares
+        - Reinvested dividends
+        - FIFO lots sold
+        - LIFO lots sold
+        - Splits/Merge
+        - << The Sell By Lots Transaction >>
+        - Buy buy shares
+        - Other Sell By Lots Transaction
+        - Sell by FIFO
+        - Sell by LIFO
+    
+    List should contain state up to the sell by lots transaction.
+    Then exclude any future sell by lots lots.
+    Then reserve shares for sell by LIFO/FIFO.
+
