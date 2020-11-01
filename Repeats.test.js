@@ -107,7 +107,7 @@ test('Repeats-WEEKLY', () => {
     // Check the start date dow falling after the dow.
     // '2020-02-01 is a Saturday=7, therefore the start date is adjusted
     // to the following Wednesday, 2020-02-05
-    expect(R.getNextRepeatYMDDate(definition, '2020-01-39')).toEqual(
+    expect(R.getNextRepeatYMDDate(definition, '2020-01-31')).toEqual(
         getYMDDate('2020-02-05')
     );
     expect(R.getNextRepeatYMDDate(definition, '2020-02-04')).toEqual(
