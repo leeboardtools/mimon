@@ -68,8 +68,10 @@ export class YMDDate {
         this._date.setUTCMinutes(0);
         this._date.setUTCSeconds(0);
         this._date.setUTCMilliseconds(0);
-        this._date.setUTCDate(dom);
+        this._date.setUTCDate(1);   // This makes sure the dom doesn't force the month
+        // to advance.
         this._date.setUTCMonth(month);
+        this._date.setUTCDate(dom);
         this._date.setUTCFullYear(year);
     }
 
@@ -186,6 +188,8 @@ export class YMDDate {
      */
     toLocalDate() {
         const date = new Date();
+        date.setDate(1);    // Need to set the date to 1 to make sure it's not an
+        // invalid date for the month when setMonth() is called.
         date.setFullYear(this.getFullYear());
         date.setMonth(this.getMonth());
         date.setDate(this.getDate());
