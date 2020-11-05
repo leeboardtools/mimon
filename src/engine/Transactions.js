@@ -56,6 +56,8 @@ export function getAutoLotTypeName(ref) {
  * @typedef {object} LotTransactionTypeDef
  * @property {string}   name    The identifying name of the lot transaction type.
  * @property {string}   description The user description of the lot transaction type.
+ * @property {boolean}  [noShares=false]    If <code>true</code> the lot transaction
+ * type does not change the number of shares.
  */
 
 /**
@@ -70,7 +72,7 @@ export function getAutoLotTypeName(ref) {
 export const LotTransactionType = {
     BUY_SELL: { name: 'BUY_SELL', },
     REINVESTED_DIVIDEND: { name: 'REINVESTED_DIVIDEND', },
-    RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', },
+    RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', noShares: true, },
     SPLIT: { name: 'SPLIT', },
 };
 
