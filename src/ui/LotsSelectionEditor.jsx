@@ -12,7 +12,7 @@ import * as ACE from './AccountingCellEditors';
 import { getQuantityDefinition } from '../util/Quantities';
 import { getCurrency } from '../util/Currency';
 import { bSearch } from '../util/BinarySearch';
-//import * as T from '../engine/Transactions';
+import * as T from '../engine/Transactions';
 
 
 async function asyncProcessLotTransactions({ accessor, accountId, 
@@ -24,22 +24,38 @@ async function asyncProcessLotTransactions({ accessor, accountId,
     let futureLIFOSharesBaseValue = 0;
 
     ymdDate = getYMDDate(ymdDate);
-    if (!transactionId) {
-        // We want the transaction after the date, since we're going to be grabbing
-        // the account state before the transaction.
-        const transactionKeys = await accessor.asyncGetSortedTransactionKeysForAccount(
-            accountId);
-        let index = bSearch(transactionKeys, ymdDate, (value, arrayValue) => 
+
+    // We want the transaction after the date, since we're going to be grabbing
+    // the account state before the transaction.
+    const transactionKeys = await accessor.asyncGetSortedTransactionKeysForAccount(
+        accountId);
+
+    let transactionIndex;
+    if (transactionId) {
+        for (let transactionIndex = 0; transactionIndex < transactionKeys.length; 
+            ++transactionIndex) {
+            if (transactionKeys[transactionIndex].id === transactionId) {
+                break;
+            }
+        }
+    }
+    else {
+        transactionIndex = bSearch(transactionKeys, ymdDate, (value, arrayValue) => 
             YMDDate.compare(value, arrayValue.ymdDate));
-        if (index >= 0) {
-            for ( ; index < transactionKeys.length; ++index) {
-                if (YMDDate.compare(transactionKeys[index].ymdDate, ymdDate) > 0) {
+        if (transactionIndex >= 0) {
+            for ( ; transactionIndex < transactionKeys.length; ++transactionIndex) {
+                if (YMDDate.compare(transactionKeys[transactionIndex].ymdDate, ymdDate)
+                 > 0) {
                     break;
                 }
             }
-            if (index < transactionKeys.length) {
-                transactionId = transactionKeys[index].id;
+            if (transactionIndex < transactionKeys.length) {
+                transactionId = transactionKeys[transactionIndex].id;
             }
+
+            // Back up the index because we want to include the transaction in 
+            // future processing
+            --transactionIndex;
         }
     }
 
@@ -52,7 +68,60 @@ async function asyncProcessLotTransactions({ accessor, accountId,
         const accountState = accountStates[accountStates.length - 1];
         lotStates = accountState.lotStates;
 
+        // TODO:
         // Now we need to remove any lots that have been sold in the future.
+        const transactionIds = [];
+        for (let i = transactionIndex + 1; i < transactionKeys.length; ++i) {
+            transactionIds.push(transactionKeys[i].id);
+        }
+
+        const transactionDataItems = await accessor.asyncGetTransactionDataItemsWithIds(
+            transactionIds);
+        
+        transactionDataItems.forEach((transactionDataItem) => {
+            transactionDataItems.splits.forEach((split) => {
+                if (split.accountId !== accountId) {
+                    return;
+                }
+
+                switch (split.lotTransactionType) {
+                case T.LotTransactionType.BUY_SELL.name :
+                    if (split.quantityBaseValue < 0) {
+                        const { lotChanges } = split;
+
+                        switch (split.sellAutoLotType) {
+                        case T.AutoLotType.FIFO.name :
+                            futureFIFOSharesBaseValue 
+                                += split.sellAutoLotQuantityBaseValue;
+                            break;
+
+                        case T.AutoLotType.LIFO.name :
+                            futureLIFOSharesBaseValue 
+                                += split.sellAutoLotQuantityBaseValue;
+                            break;
+                        
+                        default :
+                            lotChanges.forEach((lotChange) => {
+                                for (let i = 0; i < lotStates.length; ++i) {
+                                    const lotState = lotStates[i];
+                                    if (lotState.lotId === lotChange.lotId) {
+                                        lotState.quantityBaseValue 
+                                            -= lotChange.quantityBaseValue;
+                                        if (lotState.quantityBaseValue <= 0) {
+                                            lotStates.splice(i, 1);
+                                        }
+                                        break;
+                                    }
+                                }
+                            });
+                            break;
+                        }
+
+                    }
+                    break;
+                }
+            });
+        });
 
         lotStates.forEach((lotState) => {
             availableSharesBaseValue += lotState.quantityBaseValue;

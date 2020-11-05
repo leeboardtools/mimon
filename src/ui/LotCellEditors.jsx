@@ -367,16 +367,32 @@ function setupSplitInfoEditStates(splitInfo) {
 
         sharesBaseValue *= sharesSign;
     }
+    else {
+        switch (actionType) {
+        case LotActionType.SELL_FIFO :
+        case LotActionType.SELL_LIFO :
+            sharesBaseValue = splitDataItem.sellAutoLotQuantityBaseValue;
+            break;
+        }
+    }
     sharesLotChanges = LS.getLotChangeDataItems(lotChanges, true);
 
-    if (typeof splitDataItem.quantityBaseValue === 'number') {
-        monetaryAmountBaseValue = splitDataItem.quantityBaseValue
-            * sharesSign;
+    if (!actionType.noCostBasis) {
+        if (typeof splitDataItem.quantityBaseValue === 'number') {
+            monetaryAmountBaseValue = splitDataItem.quantityBaseValue
+                * sharesSign;
+        }
     }
 
     const feesSplitIndex = getFeesSplitIndex(splitInfo);
     if (feesSplitIndex >= 0) {
         feesBaseValue = splits[feesSplitIndex].quantityBaseValue;
+    }
+
+    if (typeof monetaryAmountBaseValue === 'number') {
+        if (feesBaseValue) {
+            monetaryAmountBaseValue += feesBaseValue * sharesSign;
+        }
     }
 
     if (sharesBaseValue && (typeof monetaryAmountBaseValue === 'number')) {
@@ -390,7 +406,7 @@ function setupSplitInfoEditStates(splitInfo) {
             ? currencyQuantityDefinition.baseValueToNumber(feesBaseValue)
             : 0;
 
-        let priceValue = (monetaryAmountValue - feesValue) / sharesValue;
+        let priceValue = (monetaryAmountValue - sharesSign * feesValue) / sharesValue;
         priceBaseValue = currencyQuantityDefinition.quantityFromNumber(priceValue)
             .getBaseValue();
     }
@@ -433,7 +449,7 @@ function updateSplitInfoValues(splitInfo) {
         editStates,
     } = splitInfo;
 
-
+    const sharesSign = actionType.sharesNegative ? -1 : 1;
 
     const sharesState = editStates.shares;
     const monetaryAmountState = editStates.monetaryAmount;
@@ -457,6 +473,7 @@ function updateSplitInfoValues(splitInfo) {
     if (typeof feesState.editorBaseValue === 'number') {
         feesValue = currencyQuantityDefinition.baseValueToNumber(
             feesState.editorBaseValue);
+        feesValue *= sharesSign;
     }
     else if (feesState.editorBaseValue === undefined) {
         feesValue = 0;
@@ -470,9 +487,10 @@ function updateSplitInfoValues(splitInfo) {
 
 
     // We want a ranking based on the hits...
-    let mostRecentEditState = editStates.shares;
-    let oldestEditState = editStates.shares;
-    let secondOldestEditState;
+    let mostRecentEditState = sharesState;
+    let oldestEditState = sharesState;
+    let secondOldestEditState = monetaryAmountState
+        || feesState || priceState;
 
     for (let name in editStates) {
         const editState = editStates[name];
@@ -545,7 +563,7 @@ function updateSplitInfoValues(splitInfo) {
         switch (mostRecentEditState.name) {
         case 'shares' :
             if (monetaryAmountState.editHit
-                && (monetaryAmountState.editHit >= priceState.editHit)) {
+             && (monetaryAmountState.editHit >= priceState.editHit)) {
                 editStateToCalc = priceState;
             }
             else {
@@ -555,11 +573,12 @@ function updateSplitInfoValues(splitInfo) {
         
         case 'monetaryAmount' :
             if (feesState
-                && (feesState.editHit > sharesState.editHit)
-                && (feesState.editHit > priceState.editHit)) {
+             && (feesState.editHit > sharesState.editHit)
+             && (feesState.editHit > priceState.editHit)) {
                 editStateToCalc = (sharesState.editHit >= priceState.editHit)
                     ? priceState
                     : sharesState;
+                editStateToCalc = editStateToCalc || feesState;
             }
             break;
         
