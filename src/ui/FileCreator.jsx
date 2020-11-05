@@ -9,7 +9,7 @@ import { asyncGetNewFileTemplates } from '../tools/Templates';
 import { NewFileConfigurator} from './NewFileConfigurator';
 import { YMDDate } from '../util/YMDDate';
 import { CurrencySelector } from '../util-ui/CurrencySelector';
-import { createTestTransactions } from './CreateTestTransactions';
+import { createTestTransactions } from '../tools/CreateTestTransactions';
 
 const os = require('os');
 const path = require('path');
