@@ -1,6 +1,7 @@
 import { createDir, cleanupDir } from '../util/FileTestHelpers';
 import * as EATH from './EngineAccessTestHelpers';
 import * as AH from './AccountHelpers';
+import { getQuantityDefinition } from '../util/Quantities';
 const path = require('path');
 
 test('AccountHelpers', async () => {
@@ -138,6 +139,22 @@ test('AccountHelpers', async () => {
         result = AH.getDefaultSplitAccountId(accessor, sys.checkingId,
             AH.DefaultSplitAccountType.INTEREST_EXPENSE);
         expect(result).toEqual(sys.interestExpenseId);
+
+
+        result = AH.getPricedItemDataItemForAccountId(accessor, sys.aaplBrokerageAId);
+        const aaplPricedItem = accessor.getPricedItemDataItemWithId(sys.aaplPricedItemId);
+        expect(result).toEqual(aaplPricedItem);
+
+        result = AH.getPricedItemDataItemForAccountId(accessor, -1);
+        expect(result).toBeUndefined();
+
+
+        result = AH.getQuantityDefinitionForAccountId(accessor, sys.aaplBrokerageAId);
+        expect(result).toEqual(getQuantityDefinition(aaplPricedItem.quantityDefinition));
+
+        result = AH.getQuantityDefinitionForAccountId(accessor, -1);
+        expect(result).toBeUndefined();
+
 
         //
         // All done...

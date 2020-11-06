@@ -1,6 +1,7 @@
 import * as A from '../engine/Accounts';
 import { cleanSpaces } from '../util/StringUtils';
 import { StandardAccountTag } from '../engine/StandardTags';
+import { getQuantityDefinition } from '../util/Quantities';
 
 /**
  * Builds an array containing the {@link AccountDataItem}s of an account and
@@ -311,4 +312,33 @@ export function getDefaultSplitAccountId(accessor, accountDataItem,
     }
 
     return accountId || rootAccountId;
+}
+
+
+/**
+ * Retrieves the {@link PricedItemDataItem} of an account given the account id.
+ * @param {EngineAccessor} accessor 
+ * @param {number} accountId 
+ * @returns {PricedItemDataItem|undefined}
+ */
+export function getPricedItemDataItemForAccountId(accessor, accountId) {
+    const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+    if (accountDataItem) {
+        return accessor.getPricedItemDataItemWithId(accountDataItem.pricedItemId);
+    }
+}
+
+
+/**
+ * Retrieves the {@link QuantityDefinition} of the {@link PricedItemDataItem}
+ * of an account given the account id.
+ * @param {EngineAccessor} accessor 
+ * @param {number} accountId 
+ * @returns {QuantityDefinition|undefined}
+ */
+export function getQuantityDefinitionForAccountId(accessor, accountId) {
+    const pricedItemDataItem = getPricedItemDataItemForAccountId(accessor, accountId);
+    if (pricedItemDataItem) {
+        return getQuantityDefinition(pricedItemDataItem.quantityDefinition);
+    }
 }
