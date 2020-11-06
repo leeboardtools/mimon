@@ -235,6 +235,15 @@
     "EngineAccess-create_file_not_found": ["The file '", "' could not be created, a supported file type was not found."],
     "EngineAccess-reconcile_account_id_not_found": ["Could not obtain a reconciler, an account with id ", " was not found."],
 
+
+    "LotTransactionHelpers-invalid_account": ["The SPLIT/MERGE transaction could not be set up, an account with id ", " was not found."],
+    "LotTransactionHelpers-invalid_date": ["The SPLIT/MERGE transaction requires either a date or a transaction id. ", " is not valid."],
+    "LotTransactionHelpers-no_base_transaction": "The SPLIT/MERGE transaction cannot be the first transaction in the account.",
+    "LotTransactionHelpers-no_account_states": ["The account state could not be determined for the SPLIT/MERGE. The transaction with id ", " might not have been found."],
+    "LotTransactionHelpers-no_lots": "The SPLIT/MERGE transaction cannot be performed unless there are already shares in the account.",
+    "LotTransactionHelpers-merge_too_large": ["The MERGE transaction cannot be completed. The requested number of shares to remove, ", " is more than the available shares, ", "."],
+
+
     "Reconciler-reconcile_action_name": ["Reconcile ", ""],
 
 
