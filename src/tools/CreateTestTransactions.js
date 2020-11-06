@@ -365,7 +365,7 @@ export function createTestTransactions(newFileContents) {
         // A: Buy 50 sh for lot A
         //  { ymdDate: '2005-02-18', close: 1.55, },
         const lotA = 'Lot A';
-        const aaplQuantityBaseValueA = 500000;
+        let aaplQuantityBaseValueA = 500000;
         addLotTransaction(baseArgs,
             {
                 ymdDate: '2005-02-18',
@@ -379,6 +379,30 @@ export function createTestTransactions(newFileContents) {
 
         // On 2005-02-18 have
         // A: 2005-02-18: 50.0000
+
+        // 2 for 1 split
+        // '2005-02-28'
+        const aaplChangeSplit2005_02_28 = { 
+            lotId: lotA, 
+            quantityBaseValue: 1 * (aaplQuantityBaseValueA), 
+        };
+        transactions.push({
+            ymdDate: '2005-02-28',
+            description: '2 for 1 split',
+            splits: [
+                {
+                    accountId: accountId,
+                    quantityBaseValue: 0,
+                    lotTransactionType: T.LotTransactionType.SPLIT,
+                    lotChanges: [ aaplChangeSplit2005_02_28 ],
+                }
+            ],
+        });
+        aaplQuantityBaseValueA *= 2;
+
+        // On 2005-02-28 have
+        // A: 2005-02-28: 100.0000
+        
 
         // Buy 200 shares for lotC
         // { ymdDate: '2005-03-11', close: 1.44, },
@@ -396,7 +420,7 @@ export function createTestTransactions(newFileContents) {
             });
         
         // On 2014-03-11 have
-        // A: 2005-02-18: 50.0000
+        // A: 2005-02-18: 100.0000
         // C: 2005-03-11: 200.0000
 
         // Sell 50 shares LIFO
@@ -414,7 +438,7 @@ export function createTestTransactions(newFileContents) {
             });
         
         // On 2014-05-19 have
-        // A: 2005-02-18: 50.0000
+        // A: 2005-02-18: 100.0000
         // C: 2005-03-11: 150.0000
 
 
@@ -439,7 +463,7 @@ export function createTestTransactions(newFileContents) {
         });
         
         // On 2014-06-09 have
-        // A: 2005-02-18: 350.0000
+        // A: 2005-02-18: 700.0000
         // C: 2005-03-11: 1050.0000
 
 
@@ -459,7 +483,7 @@ export function createTestTransactions(newFileContents) {
             });
         
         // On 2014-06-10 have
-        // A: 2005-02-18: 350.0000
+        // A: 2005-02-18: 700.0000
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-10: 100.0000
 
@@ -477,7 +501,7 @@ export function createTestTransactions(newFileContents) {
             });
         
         // On 2014-06-20 have
-        // A: 2005-02-18: 335.0000
+        // A: 2005-02-18: 685.0000
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-13: 100.0000
 
@@ -500,7 +524,7 @@ export function createTestTransactions(newFileContents) {
             });
         
         // On 2014-08-14 have
-        // A: 2005-02-18: 335.0000
+        // A: 2005-02-18: 685.0000
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-13: 100.0000
         // E: 2014-08-14: 7.1570
@@ -529,7 +553,7 @@ export function createTestTransactions(newFileContents) {
 
         
         // On 2020-01-24 have
-        // A: 2005-02-18: 315.0000
+        // A: 2005-02-18: 665.0000
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-13: 90.0000
         // E: 2014-08-14: 7.1570
@@ -554,7 +578,7 @@ export function createTestTransactions(newFileContents) {
 
         
         // On 2020-01-31 have
-        // A: 2005-02-18: 315.0000
+        // A: 2005-02-18: 665.0000
         // C: 2005-03-11: 1050.0000
         // E: 2014-08-14: 7.1571
 
@@ -578,8 +602,29 @@ export function createTestTransactions(newFileContents) {
             ],
         });
 
+        
+        // On 2020-08-31 have
+        // A: 2005-02-18: 2660.0000
+        // C: 2005-03-11: 4200.0000
+        // E: 2014-08-14: 28.6284
+
 
         // Need a return of capital example...
+        // We have a total of 6888.6284 sh.
+        // If we return $5000.00 then the allocations to the cost bases will be:
+        // Lot A: 1930.72
+        // Lot C: 3048.50
+        // Lot E: 677.18 (from 5000.00 - 1930.72 - 3048.50)
+        //
+        // The cost bases coming in are:
+        // Lot A: 4127.70
+        // Lot C: 6051.71
+        // Lot E: 697.96
+        //
+        // And the final cost bases will be:
+        // Lot A: 2196.98
+        // Lot C: 3003.21
+        // Lot E: 677.18
     }
 
     const iraAccount = findAccountEntry(newFileContents,
