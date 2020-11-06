@@ -101,7 +101,7 @@ test('Transaction-Data Items', () => {
             quantityBaseValue: 1234,
             description: 'Hello',
             currencyToUSDRatio: new Ratio(1234, 1),
-            lotTransactionType: T.LotTransactionType.SPLIT,
+            lotTransactionType: T.LotTransactionType.BUY_SELL,
             lotChanges: [
                 { lotId: 123, quantityBaseValue: 12345, costBasisBaseValue: 98765, },
                 { lotId: 33, quantityBaseValue: 444, },
@@ -111,7 +111,7 @@ test('Transaction-Data Items', () => {
             reconcileState: T.ReconcileState.RECONCILED,
             accountId: 10,
             quantityBaseValue: -1234,
-            lotTransactionType: T.LotTransactionType.SPLIT,
+            lotTransactionType: T.LotTransactionType.BUY_SELL,
             lotChanges: [
                 { lotId: 123, quantityBaseValue: -12345, costBasisBaseValue: 98765, },
                 { lotId: 33, quantityBaseValue: 444, },
@@ -157,7 +157,7 @@ test('Transaction-Data Items', () => {
                 reconcileState: T.ReconcileState.PENDING,
                 accountId: 10,
                 quantityBaseValue: -1234,
-                lotTransactionType: T.LotTransactionType.SPLIT,
+                lotTransactionType: T.LotTransactionType.BUY_SELL,
                 lotChanges: [
                     { lotId: 123, quantityBaseValue: 12345, costBasisBaseValue: 98765, },
                     { lotId: 33, quantityBaseValue: 444, },
@@ -189,7 +189,7 @@ test('Transaction-Data Items', () => {
                 reconcileState: T.ReconcileState.PENDING,
                 accountId: 10,
                 quantityBaseValue: -1234,
-                lotTransactionType: T.LotTransactionType.SPLIT.name,
+                lotTransactionType: T.LotTransactionType.BUY_SELL.name,
                 lotChanges: [
                     { lotId: 123, quantityBaseValue: 12345, costBasisBaseValue: 98765, },
                     { lotId: 33, quantityBaseValue: 444, },
