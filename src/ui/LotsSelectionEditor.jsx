@@ -460,6 +460,7 @@ export class LotsSelectionEditor extends React.Component {
                     }
 
                     newRowEntries.push({
+                        key: newRowEntries.length,
                         caller: this,
                         lotId: lotId,
                         ymdDatePurchased: ymdDateCreated,
