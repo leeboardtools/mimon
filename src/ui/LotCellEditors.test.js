@@ -23,6 +23,11 @@ test('LotCellEditors', async () => {
         let accountStates;
         let accountState;
 
+        const lotAId = sys['Lot ALotId'];
+        const lotBId = sys['Lot BLotId'];
+        const lotCId = sys['Lot CLotId'];
+        const lotEId = sys['Lot ELotId'];
+
         //
         // A: Buy 50 sh for lot A
         //  { ymdDate: '2005-02-18', close: 1.55, },
@@ -52,6 +57,7 @@ test('LotCellEditors', async () => {
         expect(accountState).toEqual(expect.objectContaining({
             lotStates: expect.arrayContaining([
                 expect.objectContaining({
+                    lotId: lotAId,
                     quantityBaseValue: 500000,
                     costBasisBaseValue: 434495,
                     ymdDateCreated: '2005-02-18',
@@ -89,6 +95,7 @@ test('LotCellEditors', async () => {
         expect(accountState).toEqual(expect.objectContaining({
             lotStates: expect.arrayContaining([
                 expect.objectContaining({
+                    lotId: lotAId,
                     quantityBaseValue: 1000000,
                     costBasisBaseValue: 434495,
                     ymdDateCreated: '2005-02-18',
@@ -127,11 +134,13 @@ test('LotCellEditors', async () => {
         expect(accountState).toEqual(expect.objectContaining({
             lotStates: expect.arrayContaining([
                 expect.objectContaining({
+                    lotId: lotAId,
                     quantityBaseValue: 1000000,
                     costBasisBaseValue: 434495,
                     ymdDateCreated: '2005-02-18',
                 }),
                 expect.objectContaining({
+                    lotId: lotCId,
                     quantityBaseValue: 2000000,
                     costBasisBaseValue: 806895,
                     ymdDateCreated: '2005-03-11',
@@ -171,11 +180,13 @@ test('LotCellEditors', async () => {
         expect(accountState).toEqual(expect.objectContaining({
             lotStates: expect.arrayContaining([
                 expect.objectContaining({
+                    lotId: lotAId,
                     quantityBaseValue: 1000000,
                     costBasisBaseValue: 434495,
                     ymdDateCreated: '2005-02-18',
                 }),
                 expect.objectContaining({
+                    lotId: lotCId,
                     quantityBaseValue: 1500000,
                     costBasisBaseValue: 605171,
                     ymdDateCreated: '2005-03-11',
@@ -206,22 +217,20 @@ test('LotCellEditors', async () => {
         // On 2014-06-09 have
         // A: 2005-02-18: 700.0000
         // C: 2005-03-11: 1050.0000
-        /*
         accountStates = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
             aaplAccountId, transactionDataItem.id
         );
         accountState = accountStates[0];
-        console.log(JSON.stringify({
-            accountState: accountState,
-        }));
         expect(accountState).toEqual(expect.objectContaining({
             lotStates: expect.arrayContaining([
                 expect.objectContaining({
+                    lotId: lotAId,
                     quantityBaseValue: 7000000,
                     costBasisBaseValue: 434495,
                     ymdDateCreated: '2005-02-18',
                 }),
                 expect.objectContaining({
+                    lotId: lotCId,
                     quantityBaseValue: 10500000,
                     costBasisBaseValue: 605171,
                     ymdDateCreated: '2005-03-11',
@@ -230,7 +239,7 @@ test('LotCellEditors', async () => {
             quantityBaseValue: 17500000,
             ymdDate: '2014-06-09',
         }));
-        */
+
 
         // Buy 100 shares for lotB
         // { ymdDate: '2014-06-10', close: 23.56, },
@@ -254,6 +263,36 @@ test('LotCellEditors', async () => {
         // A: 2005-02-18: 700.0000
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-10: 100.0000
+        accountStates = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
+            aaplAccountId, transactionDataItem.id
+        );
+        accountState = accountStates[0];
+        expect(accountState).toEqual(expect.objectContaining({
+            lotStates: expect.arrayContaining([
+                expect.objectContaining({
+                    lotId: lotAId,
+                    quantityBaseValue: 7000000,
+                    costBasisBaseValue: 434495,
+                    ymdDateCreated: '2005-02-18',
+                }),
+                expect.objectContaining({
+                    lotId: lotCId,
+                    quantityBaseValue: 10500000,
+                    costBasisBaseValue: 605171,
+                    ymdDateCreated: '2005-03-11',
+                }),
+                expect.objectContaining({
+                    lotId: lotBId,
+                    quantityBaseValue: 1000000,
+                    costBasisBaseValue: 942400,
+                    ymdDateCreated: '2014-06-10'
+                }),
+            ]),
+            quantityBaseValue: 18500000,
+            ymdDate: '2014-06-10',
+        }));
+
+
 
         // Sell 15 shares FIFO
         //  { ymdDate: '2014-06-20', close: 22.73, },
@@ -278,6 +317,36 @@ test('LotCellEditors', async () => {
         // A: 2005-02-18: 685.0000
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-13: 100.0000
+        accountStates = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
+            aaplAccountId, transactionDataItem.id
+        );
+        accountState = accountStates[0];
+        expect(accountState).toEqual(expect.objectContaining({
+            lotStates: expect.arrayContaining([
+                expect.objectContaining({
+                    lotId: lotAId,
+                    quantityBaseValue: 6850000,
+                    costBasisBaseValue: 425184,
+                    ymdDateCreated: '2005-02-18',
+                }),
+                expect.objectContaining({
+                    lotId: lotCId,
+                    quantityBaseValue: 10500000,
+                    costBasisBaseValue: 605171,
+                    ymdDateCreated: '2005-03-11',
+                }),
+                expect.objectContaining({
+                    lotId: lotBId,
+                    quantityBaseValue: 1000000,
+                    costBasisBaseValue: 942400,
+                    ymdDateCreated: '2014-06-10'
+                }),
+            ]),
+            quantityBaseValue: 18350000,
+            ymdDate: '2014-06-20',
+        }));
+
+
 
         // Reinvested Dividends
         // Dividend paid $0.1175
@@ -304,6 +373,41 @@ test('LotCellEditors', async () => {
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-13: 100.0000
         // E: 2014-08-14: 7.1570
+        accountStates = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
+            aaplAccountId, transactionDataItem.id
+        );
+        accountState = accountStates[0];
+        expect(accountState).toEqual(expect.objectContaining({
+            lotStates: expect.arrayContaining([
+                expect.objectContaining({
+                    lotId: lotAId,
+                    quantityBaseValue: 6850000,
+                    costBasisBaseValue: 425184,
+                    ymdDateCreated: '2005-02-18',
+                }),
+                expect.objectContaining({
+                    lotId: lotCId,
+                    quantityBaseValue: 10500000,
+                    costBasisBaseValue: 605171,
+                    ymdDateCreated: '2005-03-11',
+                }),
+                expect.objectContaining({
+                    lotId: lotBId,
+                    quantityBaseValue: 1000000,
+                    costBasisBaseValue: 942400,
+                    ymdDateCreated: '2014-06-10'
+                }),
+                expect.objectContaining({
+                    lotId: lotEId,
+                    quantityBaseValue: 71571,
+                    costBasisBaseValue: 69796,
+                    ymdDateCreated: '2014-08-14'
+                }),
+            ]),
+            quantityBaseValue: 18421571,
+            ymdDate: '2014-08-14',
+        }));
+
 
         // Sell 10 shares from lotB, 20 shares from lotA
         // on { ymdDate: '2020-01-24', close: 79.58, },
@@ -336,6 +440,41 @@ test('LotCellEditors', async () => {
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-13: 90.0000
         // E: 2014-08-14: 7.1570
+        accountStates = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
+            aaplAccountId, transactionDataItem.id
+        );
+        accountState = accountStates[0];
+        expect(accountState).toEqual(expect.objectContaining({
+            lotStates: expect.arrayContaining([
+                expect.objectContaining({
+                    lotId: lotAId,
+                    quantityBaseValue: 6650000,
+                    costBasisBaseValue: 412770,
+                    ymdDateCreated: '2005-02-18',
+                }),
+                expect.objectContaining({
+                    lotId: lotCId,
+                    quantityBaseValue: 10500000,
+                    costBasisBaseValue: 605171,
+                    ymdDateCreated: '2005-03-11',
+                }),
+                expect.objectContaining({
+                    lotId: lotBId,
+                    quantityBaseValue: 900000,
+                    costBasisBaseValue: 848160,
+                    ymdDateCreated: '2014-06-10'
+                }),
+                expect.objectContaining({
+                    lotId: lotEId,
+                    quantityBaseValue: 71571,
+                    costBasisBaseValue: 69796,
+                    ymdDateCreated: '2014-08-14'
+                }),
+            ]),
+            quantityBaseValue: 18121571,
+            ymdDate: '2020-01-24',
+        }));
+
 
         // Sell all of lotB
         //  { ymdDate: '2020-01-31', close: 77.38, }
@@ -364,6 +503,35 @@ test('LotCellEditors', async () => {
         // A: 2005-02-18: 665.0000
         // C: 2005-03-11: 1050.0000
         // E: 2014-08-14: 7.1571
+        accountStates = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
+            aaplAccountId, transactionDataItem.id
+        );
+        accountState = accountStates[0];
+        expect(accountState).toEqual(expect.objectContaining({
+            lotStates: expect.arrayContaining([
+                expect.objectContaining({
+                    lotId: lotAId,
+                    quantityBaseValue: 6650000,
+                    costBasisBaseValue: 412770,
+                    ymdDateCreated: '2005-02-18',
+                }),
+                expect.objectContaining({
+                    lotId: lotCId,
+                    quantityBaseValue: 10500000,
+                    costBasisBaseValue: 605171,
+                    ymdDateCreated: '2005-03-11',
+                }),
+                expect.objectContaining({
+                    lotId: lotEId,
+                    quantityBaseValue: 71571,
+                    costBasisBaseValue: 69796,
+                    ymdDateCreated: '2014-08-14'
+                }),
+            ]),
+            quantityBaseValue: 17221571,
+            ymdDate: '2020-01-31',
+        }));
+
 
         // 4 for 1 split
         transactionDataItem = await accessor.asyncGetTransactionDataItemWithId(
@@ -373,7 +541,7 @@ test('LotCellEditors', async () => {
 
         splitInfo = LCE.createSplitInfo(transactionDataItem, 0, accessor);
         expect(splitInfo.actionType).toEqual(LCE.LotActionType.SPLIT);
-        expect(splitInfo.editStates.shares.editorBaseValue).toEqual(41164713);
+        expect(splitInfo.editStates.shares.editorBaseValue).toEqual(51664713);
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.fees.editorBaseValue)
@@ -385,6 +553,34 @@ test('LotCellEditors', async () => {
         // Lot A: 4127.70
         // Lot C: 6051.71
         // Lot E: 697.96
+        accountStates = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
+            aaplAccountId, transactionDataItem.id
+        );
+        accountState = accountStates[0];
+        expect(accountState).toEqual(expect.objectContaining({
+            lotStates: expect.arrayContaining([
+                expect.objectContaining({
+                    lotId: lotAId,
+                    quantityBaseValue: 26600000,
+                    costBasisBaseValue: 412770,
+                    ymdDateCreated: '2005-02-18',
+                }),
+                expect.objectContaining({
+                    lotId: lotCId,
+                    quantityBaseValue: 42000000,
+                    costBasisBaseValue: 605171,
+                    ymdDateCreated: '2005-03-11',
+                }),
+                expect.objectContaining({
+                    lotId: lotEId,
+                    quantityBaseValue: 286284,
+                    costBasisBaseValue: 69796,
+                    ymdDateCreated: '2014-08-14'
+                }),
+            ]),
+            quantityBaseValue: 68886284,
+            ymdDate: '2020-08-31',
+        }));
 
 
         await accessor.asyncCloseAccountingFile();

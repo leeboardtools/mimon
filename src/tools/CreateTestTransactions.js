@@ -443,10 +443,13 @@ export function createTestTransactions(newFileContents) {
 
 
         // 7 for 1 split
-        const aaplChangeSplit2014_06_09 = { 
+        const aaplChangeSplit2014_06_09_LotA = { 
             lotId: lotA, 
-            quantityBaseValue: 6 * (aaplQuantityBaseValueA 
-                + aaplQuantityBaseValueC
+            quantityBaseValue: 6 * (aaplQuantityBaseValueA), 
+        };
+        const aaplChangeSplit2014_06_09_LotC = { 
+            lotId: lotC, 
+            quantityBaseValue: 6 * (aaplQuantityBaseValueC
                 + aaplQuantityBaseValueD), 
         };
         transactions.push({
@@ -457,7 +460,10 @@ export function createTestTransactions(newFileContents) {
                     accountId: accountId,
                     quantityBaseValue: 0,
                     lotTransactionType: T.LotTransactionType.SPLIT,
-                    lotChanges: [ aaplChangeSplit2014_06_09 ],
+                    lotChanges: [ 
+                        aaplChangeSplit2014_06_09_LotA,
+                        aaplChangeSplit2014_06_09_LotC,
+                    ],
                 }
             ],
         });
@@ -510,7 +516,7 @@ export function createTestTransactions(newFileContents) {
         // Dividend paid $0.1175
         // 1485 sh * 0.1175 = $174.49
         // { ymdDate: '2014-08-14', close: 24.38, },
-        const lotE = 'Reinvested Dividend E';
+        const lotE = 'Lot E';
         const aaplQuantityBaseValueE = 71571;
         addLotTransaction(baseArgs,
             {
@@ -583,11 +589,17 @@ export function createTestTransactions(newFileContents) {
         // E: 2014-08-14: 7.1571
 
         // 4 for 1 split
-        const aaplChangeSplit2020_08_31 = { 
+        const aaplChangeSplit2020_08_31_LotA = { 
             lotId: lotA, 
-            quantityBaseValue: 3 * (3150000
-                + 10500000
-                + 71571), 
+            quantityBaseValue: 3 * 6650000, 
+        };
+        const aaplChangeSplit2020_08_31_LotC = { 
+            lotId: lotC, 
+            quantityBaseValue: 3 * 10500000, 
+        };
+        const aaplChangeSplit2020_08_31_LotE = { 
+            lotId: lotE, 
+            quantityBaseValue: 3 * 71571, 
         };
         transactions.push({
             ymdDate: '2020-08-31',
@@ -597,7 +609,11 @@ export function createTestTransactions(newFileContents) {
                     accountId: accountId,
                     quantityBaseValue: 0,
                     lotTransactionType: T.LotTransactionType.SPLIT,
-                    lotChanges: [ aaplChangeSplit2020_08_31 ],
+                    lotChanges: [ 
+                        aaplChangeSplit2020_08_31_LotA,
+                        aaplChangeSplit2020_08_31_LotC,
+                        aaplChangeSplit2020_08_31_LotE,
+                    ],
                 }
             ],
         });

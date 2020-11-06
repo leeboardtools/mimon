@@ -85,6 +85,24 @@ function grabPricedItems(accessor, sys, pricedItems) {
     }
 }
 
+function grabLots(accessor, sys, lots) {
+    const lotIdsByTypeAndName = new Map();
+    const lotIds = accessor.getLotIds();
+    for (let lotId of lotIds) {
+        const lotDataItem = accessor.getLotDataItemWithId(lotId);
+        lotIdsByTypeAndName.set(lotDataItem.description, lotId);
+    }
+
+    for (let lot of lots) {
+        const key = lot.description;
+        const lotId = lotIdsByTypeAndName.get(key);
+        if (lotId) {
+            const id = lot.description;
+            sys[id + 'LotId'] = lotId;
+        }
+    }
+}
+
 export async function asyncSetupWithTestTransactions(pathName, options) {
     options = options || {};
 
@@ -116,6 +134,9 @@ export async function asyncSetupWithTestTransactions(pathName, options) {
 
     const { pricedItems } = newFileContents;
     grabPricedItems(accessor, sys, pricedItems.pricedItems);
+
+    const { lots } = newFileContents;
+    grabLots(accessor, sys, lots.lots);
 
     return {
         accessor: accessor,
