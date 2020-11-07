@@ -1765,10 +1765,188 @@ test('LotCellEditors-REINVESTED_DIVIDEND', async () => {
 
 // ADD_SHARES
 
+
+//
+//---------------------------------------------------------
+//
+test('LotCellEditors-ADD_SHARES', async () => {
+    const baseDir = await createDir('LotCellEditors');
+
+    try {
+        await cleanupDir(baseDir, true);
+
+        const pathName = path.join(baseDir, 'ADD_SHARES');
+        const { accessor, sys } = await EATH.asyncSetupWithTestTransactions(pathName);
+
+        const equityAccountId = accessor.getRootEquityAccountId();
+        const aaplAccountId = sys['ASSET-Investments-Brokerage Account-AAPLAccountId'];
+        const feesAccountId = sys['EXPENSE-Brokerage CommissionsAccountId'];
+
+        const transactionKeys = await accessor.asyncGetSortedTransactionKeysForAccount(
+            aaplAccountId);
+        const transactionIdsByYMDDateString = new Map();
+
+        transactionKeys.forEach(({id, ymdDate, }) => 
+            transactionIdsByYMDDateString.set(ymdDate.toString(), id));
+        
+
+        let newTransactionDataItem = {};
+        let transactionDataItem;
+        let splitInfo;
+        let result;
+
+        // A brand new transaction data item...
+        transactionDataItem = {
+            ymdDate: '2014-05-06',
+            splits: [
+                {
+                    accountId: aaplAccountId,
+                    quantityBaseValue: '',
+                    lotTransactionType: T.LotTransactionType.BUY_SELL.name,
+                    lotChanges: [],
+                },
+                {
+                    accountId: equityAccountId,
+                    quantityBaseValue: '',
+                }
+            ]
+        };
+        
+        splitInfo = LCE.createSplitInfo(transactionDataItem, 0, accessor);
+        expect(splitInfo.actionType).toEqual(LCE.LotActionType.ADD_SHARES);
+        expect(splitInfo.editStates.shares.editorBaseValue).toBeUndefined();
+        expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
+            .toBeUndefined();
+        expect(splitInfo.editStates.fees.editorBaseValue)
+            .toBeUndefined();
+        expect(splitInfo.editStates.price.editorBaseValue)
+            .toBeUndefined();
+        
+
+        //
+        // Test asyncTransactionDataItemFromSplitInfo()
+
+        splitInfo.editStates.shares.editorBaseValue = 1000000;
+        //splitInfo.editStates.fees.editorBaseValue = 500;
+        splitInfo.editStates.monetaryAmount.editorBaseValue = 123000;
+
+        newTransactionDataItem = {};
+        result = await LCE.asyncTransactionDataItemFromSplitInfo(splitInfo, 
+            newTransactionDataItem);
+
+        expect(newTransactionDataItem).toEqual(expect.objectContaining({
+            ymdDate: '2014-05-06',
+            splits: expect.arrayContaining([
+                expect.objectContaining({
+                    accountId: equityAccountId,
+                    quantityBaseValue: 123000,
+                }),
+                expect.objectContaining({
+                    accountId: aaplAccountId,
+                    quantityBaseValue: 123000,
+                    lotTransactionType: T.LotTransactionType.BUY_SELL.name,
+                    lotChanges: [
+                        {
+                            quantityBaseValue: 1000000,
+                            costBasisBaseValue: 123000,
+                        }
+                    ]
+                }),
+            ]),
+        }));
+
+
+        //
+        // Existing transaction
+
+        // Add 100 sh for lotF
+        // { ymdDate: '2014-08-15', close: 24.50, },
+        const transactionId = transactionIdsByYMDDateString.get('2014-08-15');
+        transactionDataItem = await accessor.asyncGetTransactionDataItemWithId(
+            transactionId,
+        );
+
+        splitInfo = LCE.createSplitInfo(transactionDataItem, 1, accessor);
+        expect(splitInfo.actionType).toEqual(LCE.LotActionType.ADD_SHARES);
+        expect(splitInfo.editStates.shares.editorBaseValue).toEqual(1000000);
+        expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
+            .toEqual(980000);
+        expect(splitInfo.editStates.fees.editorBaseValue)
+            .toBeUndefined();
+        expect(splitInfo.editStates.price.editorBaseValue)
+            .toEqual(9800);
+
+
+        const originalSplitInfo = LCE.copySplitInfo(splitInfo);
+
+        // Simple copySplitInfo() test.
+        expect(originalSplitInfo).toEqual(splitInfo);
+
+
+        //
+        // Test asyncTransactionDataItemFromSplitInfo()
+
+        // Straight through...
+        newTransactionDataItem = {};
+        result = await LCE.asyncTransactionDataItemFromSplitInfo(splitInfo, 
+            newTransactionDataItem);
+
+        // We do lose any lot ids...
+        removeLotIds(transactionDataItem);
+        expect(newTransactionDataItem).toEqual(transactionDataItem);
+
+        
+        splitInfo = LCE.copySplitInfo(originalSplitInfo);
+        splitInfo.editStates.shares.editorBaseValue = 1000000;
+        splitInfo.editStates.monetaryAmount.editorBaseValue = 123000;
+        splitInfo.editStates.fees.editorBaseValue = '';
+
+        newTransactionDataItem = {
+            ymdDate: '2001-10-12',
+        };
+        result = await LCE.asyncTransactionDataItemFromSplitInfo(splitInfo, 
+            newTransactionDataItem);
+
+        expect(newTransactionDataItem.splits.length).toEqual(2);
+        expect(newTransactionDataItem.splits[result].accountId).toEqual(aaplAccountId);
+        expect(newTransactionDataItem).toEqual(expect.objectContaining({
+            id: splitInfo.transactionDataItem.id,
+            ymdDate: '2001-10-12',
+            splits: expect.arrayContaining([
+                expect.objectContaining({
+                    accountId: equityAccountId,
+                    quantityBaseValue: 123000,
+                }),
+                expect.objectContaining({
+                    accountId: aaplAccountId,
+                    quantityBaseValue: 123000,
+                    lotChanges: [
+                        {
+                            quantityBaseValue: 1000000,
+                            costBasisBaseValue: 123000,
+                        }
+                    ]
+                }),
+            ]),
+        }));
+
+
+
+        await accessor.asyncCloseAccountingFile();
+    }
+    finally {
+        await cleanupDir(baseDir);
+    }
+});
+
 // REMOVE_SHARES_FIFO
 
 // REMOVE_SHARES_LIFO
 
 // REMOVE_SHARES_BY_LOTS
+
+// SPLIT
+
+// REVERSE_SPLIT
 
 // RETURN_OF_CAPITAL
