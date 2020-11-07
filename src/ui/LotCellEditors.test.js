@@ -22,7 +22,7 @@ function removeLotIds(transactionDataItem) {
 //---------------------------------------------------------
 //
 test('LotCellEditors-Basic', async () => {
-    const baseDir = await createDir('Reconciler');
+    const baseDir = await createDir('LotCellEditors');
 
     try {
         await cleanupDir(baseDir, true);
@@ -431,6 +431,12 @@ test('LotCellEditors-Basic', async () => {
             ymdDate: '2014-08-14',
         }));
 
+        //
+        // Add/Remove lots, skip for now
+        ++index;    // Add shares
+        ++index;    // Remove shares LIFO
+        ++index;    // Remove shares by lots
+
 
         // Sell 10 shares from lotB, 20 shares from lotA
         // on { ymdDate: '2020-01-24', close: 79.58, },
@@ -556,6 +562,58 @@ test('LotCellEditors-Basic', async () => {
         }));
 
 
+        // Remove 15 sh FIFO
+        //  { ymdDate: '2020-02-04', close: 79.71, },
+        transactionDataItem = await accessor.asyncGetTransactionDataItemWithId(
+            transactionKeys[index].id
+        );
+        ++index;
+
+        splitInfo = LCE.createSplitInfo(transactionDataItem, 1, accessor);
+        expect(splitInfo.actionType).toEqual(LCE.LotActionType.REMOVE_SHARES_FIFO);
+        expect(splitInfo.editStates.shares.editorBaseValue).toEqual(150000);
+        expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
+            .toEqual(478260);
+        expect(splitInfo.editStates.fees.editorBaseValue)
+            .toBeUndefined();
+        expect(splitInfo.editStates.price.editorBaseValue)
+            .toEqual(31884);
+
+
+        // On 2020-02-04 have
+        // A: 2005-02-18: 650.0000
+        // C: 2005-03-11: 1050.0000
+        // E: 2014-08-14: 7.1571
+        accountStates = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
+            aaplAccountId, transactionDataItem.id
+        );
+        accountState = accountStates[0];
+        expect(accountState).toEqual(expect.objectContaining({
+            lotStates: expect.arrayContaining([
+                expect.objectContaining({
+                    lotId: lotAId,
+                    quantityBaseValue: 6500000,
+                    costBasisBaseValue: 403459,
+                    ymdDateCreated: '2005-02-18',
+                }),
+                expect.objectContaining({
+                    lotId: lotCId,
+                    quantityBaseValue: 10500000,
+                    costBasisBaseValue: 605171,
+                    ymdDateCreated: '2005-03-11',
+                }),
+                expect.objectContaining({
+                    lotId: lotEId,
+                    quantityBaseValue: 71571,
+                    costBasisBaseValue: 69796,
+                    ymdDateCreated: '2014-08-14'
+                }),
+            ]),
+            quantityBaseValue: 17071571,
+            ymdDate: '2020-02-04',
+        }));
+
+
         // 4 for 1 split
         transactionDataItem = await accessor.asyncGetTransactionDataItemWithId(
             transactionKeys[index].id
@@ -564,7 +622,7 @@ test('LotCellEditors-Basic', async () => {
 
         splitInfo = LCE.createSplitInfo(transactionDataItem, 0, accessor);
         expect(splitInfo.actionType).toEqual(LCE.LotActionType.SPLIT);
-        expect(splitInfo.editStates.shares.editorBaseValue).toEqual(51664713);
+        expect(splitInfo.editStates.shares.editorBaseValue).toEqual(51214713);
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.fees.editorBaseValue)
@@ -573,7 +631,7 @@ test('LotCellEditors-Basic', async () => {
             .toBeUndefined();
 
         // The cost bases coming in are:
-        // Lot A: 4127.70
+        // Lot A: 4034.59
         // Lot C: 6051.71
         // Lot E: 697.96
         accountStates = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
@@ -584,8 +642,8 @@ test('LotCellEditors-Basic', async () => {
             lotStates: expect.arrayContaining([
                 expect.objectContaining({
                     lotId: lotAId,
-                    quantityBaseValue: 26600000,
-                    costBasisBaseValue: 412770,
+                    quantityBaseValue: 26000000,
+                    costBasisBaseValue: 403459,
                     ymdDateCreated: '2005-02-18',
                 }),
                 expect.objectContaining({
@@ -601,9 +659,10 @@ test('LotCellEditors-Basic', async () => {
                     ymdDateCreated: '2014-08-14'
                 }),
             ]),
-            quantityBaseValue: 68886284,
+            quantityBaseValue: 68286284,
             ymdDate: '2020-08-31',
         }));
+
 
         await accessor.asyncCloseAccountingFile();
     }
@@ -617,7 +676,7 @@ test('LotCellEditors-Basic', async () => {
 //---------------------------------------------------------
 //
 test('LotCellEditors-BUY', async () => {
-    const baseDir = await createDir('Reconciler');
+    const baseDir = await createDir('LotCellEditors');
 
     try {
         await cleanupDir(baseDir, true);
@@ -690,6 +749,7 @@ test('LotCellEditors-BUY', async () => {
                 expect.objectContaining({
                     accountId: aaplAccountId,
                     quantityBaseValue: 123000,
+                    lotTransactionType: T.LotTransactionType.BUY_SELL.name,
                     lotChanges: [
                         {
                             quantityBaseValue: 1000000,
@@ -805,7 +865,7 @@ test('LotCellEditors-BUY', async () => {
 //---------------------------------------------------------
 //
 test('LotCellEditors-SELL_FIFO', async () => {
-    const baseDir = await createDir('Reconciler');
+    const baseDir = await createDir('LotCellEditors');
 
     try {
         await cleanupDir(baseDir, true);
@@ -1088,7 +1148,7 @@ test('LotCellEditors-SELL_FIFO', async () => {
 //---------------------------------------------------------
 //
 test('LotCellEditors-SELL_LIFO', async () => {
-    const baseDir = await createDir('Reconciler');
+    const baseDir = await createDir('LotCellEditors');
 
     try {
         await cleanupDir(baseDir, true);
@@ -1281,7 +1341,7 @@ test('LotCellEditors-SELL_LIFO', async () => {
 //---------------------------------------------------------
 //
 test('LotCellEditors-SELL_BY_LOTS', async () => {
-    const baseDir = await createDir('Reconciler');
+    const baseDir = await createDir('LotCellEditors');
 
     try {
         await cleanupDir(baseDir, true);
@@ -1302,7 +1362,7 @@ test('LotCellEditors-SELL_BY_LOTS', async () => {
         
         const lotAId = sys['Lot ALotId'];
         const lotBId = sys['Lot BLotId'];
-        const lotCId = sys['Lot CLotId'];
+        //const lotCId = sys['Lot CLotId'];
 
         let newTransactionDataItem = {};
         let transactionDataItem;
@@ -1506,7 +1566,202 @@ test('LotCellEditors-SELL_BY_LOTS', async () => {
     }
 });
 
-// REINVESTED_DIVIDENDS
+
+
+//
+//---------------------------------------------------------
+//
+test('LotCellEditors-REINVESTED_DIVIDEND', async () => {
+    const baseDir = await createDir('LotCellEditors');
+
+    try {
+        await cleanupDir(baseDir, true);
+
+        const pathName = path.join(baseDir, 'REINVESTED_DIVIDEND');
+        const { accessor, sys } = await EATH.asyncSetupWithTestTransactions(pathName);
+
+        const dividendsAccountId = sys['INCOME-DividendsAccountId'];
+        const brokerageAccountId = sys['ASSET-Investments-Brokerage AccountAccountId'];
+        const aaplAccountId = sys['ASSET-Investments-Brokerage Account-AAPLAccountId'];
+        //const feesAccountId = sys['EXPENSE-Brokerage CommissionsAccountId'];
+
+        const transactionKeys = await accessor.asyncGetSortedTransactionKeysForAccount(
+            aaplAccountId);
+        const transactionIdsByYMDDateString = new Map();
+
+        transactionKeys.forEach(({id, ymdDate, }) => 
+            transactionIdsByYMDDateString.set(ymdDate.toString(), id));
+        
+        //const lotAId = sys['Lot ALotId'];
+        //const lotBId = sys['Lot BLotId'];
+        //const lotCId = sys['Lot CLotId'];
+        //const lotEId = sys['Lot ELotId'];
+
+        let newTransactionDataItem = {};
+        let transactionDataItem;
+        let splitInfo;
+        let result;
+
+        // A brand new transaction data item...
+        transactionDataItem = {
+            ymdDate: '2014-05-06',
+            splits: [
+                {
+                    accountId: aaplAccountId,
+                    quantityBaseValue: '',
+                    lotTransactionType: T.LotTransactionType.REINVESTED_DIVIDEND.name,
+                    lotChanges: [],
+                },
+                {
+                    accountId: brokerageAccountId,
+                    quantityBaseValue: '',
+                }
+            ]
+        };
+        splitInfo = LCE.createSplitInfo(transactionDataItem, 0, accessor);
+        expect(splitInfo.actionType).toEqual(LCE.LotActionType.REINVESTED_DIVIDEND);
+        expect(splitInfo.editStates.shares.editorBaseValue).toBeUndefined();
+        expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
+            .toBeUndefined();
+        expect(splitInfo.editStates.fees.editorBaseValue)
+            .toBeUndefined();
+        expect(splitInfo.editStates.price.editorBaseValue)
+            .toBeUndefined();
+
+
+        
+
+        //
+        // Test asyncTransactionDataItemFromSplitInfo()
+
+        splitInfo.editStates.shares.editorBaseValue = 12345;
+        splitInfo.editStates.fees.editorBaseValue = 0;
+        splitInfo.editStates.monetaryAmount.editorBaseValue = 2469;
+
+        LCE.updateSplitInfoValues(splitInfo);
+        expect(splitInfo.actionType).toEqual(LCE.LotActionType.REINVESTED_DIVIDEND);
+        expect(splitInfo.editStates.shares.editorBaseValue).toEqual(12345);
+        expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
+            .toEqual(2469);
+        expect(splitInfo.editStates.fees.editorBaseValue)
+            .toEqual(0);
+        expect(splitInfo.editStates.price.editorBaseValue)
+            .toEqual(2000);
+
+        
+        newTransactionDataItem = {};
+        result = await LCE.asyncTransactionDataItemFromSplitInfo(splitInfo, 
+            newTransactionDataItem);
+        
+        expect(newTransactionDataItem).toEqual(expect.objectContaining({
+            ymdDate: '2014-05-06',
+            splits: expect.arrayContaining([
+                expect.objectContaining({
+                    accountId: dividendsAccountId,
+                    quantityBaseValue: 2469,
+                }),
+                expect.objectContaining({
+                    accountId: aaplAccountId,
+                    quantityBaseValue: 2469,
+                    lotTransactionType: T.LotTransactionType.REINVESTED_DIVIDEND.name,
+                    lotChanges: [
+                        {
+                            quantityBaseValue: 12345,
+                            costBasisBaseValue: 2469,
+                        }
+                    ]
+                }),
+            ]),
+        }));
+        
+
+        //
+        // Existing transaction
+
+        // Reinvested Dividends
+        // Dividend paid $0.1175
+        // 1485 sh * 0.1175 = $174.49
+        // { ymdDate: '2014-08-14', close: 24.38, },
+        const transactionId = transactionIdsByYMDDateString.get('2014-08-14');
+        transactionDataItem = await accessor.asyncGetTransactionDataItemWithId(
+            transactionId,
+        );
+
+        splitInfo = LCE.createSplitInfo(transactionDataItem, 1, accessor);
+        expect(splitInfo.actionType).toEqual(LCE.LotActionType.REINVESTED_DIVIDEND);
+        expect(splitInfo.editStates.shares.editorBaseValue).toEqual(71571);
+        expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
+            .toEqual(69796);
+        expect(splitInfo.editStates.fees.editorBaseValue)
+            .toBeUndefined();
+        expect(splitInfo.editStates.price.editorBaseValue)
+            .toEqual(9752);
+
+
+        const originalSplitInfo = LCE.copySplitInfo(splitInfo);
+
+        // Simple copySplitInfo() test.
+        expect(originalSplitInfo).toEqual(splitInfo);
+
+
+        //
+        // Test asyncTransactionDataItemFromSplitInfo()
+
+        // Straight through...
+        newTransactionDataItem = {};
+        result = await LCE.asyncTransactionDataItemFromSplitInfo(splitInfo, 
+            newTransactionDataItem);
+
+        // We do lose any lot ids...
+        removeLotIds(transactionDataItem);
+        expect(newTransactionDataItem).toEqual(transactionDataItem);
+
+
+        splitInfo = LCE.copySplitInfo(originalSplitInfo);
+        splitInfo.editStates.shares.editorBaseValue = 12345;
+        splitInfo.editStates.monetaryAmount.editorBaseValue = 2469;
+        splitInfo.editStates.fees.editorBaseValue = 0;
+        splitInfo.editStates.price.editorBaseValue = '';
+        LCE.updateSplitInfoValues(splitInfo);
+
+
+        newTransactionDataItem = {
+            ymdDate: '2001-10-12',
+        };
+        result = await LCE.asyncTransactionDataItemFromSplitInfo(splitInfo, 
+            newTransactionDataItem);
+
+        expect(newTransactionDataItem.splits.length).toEqual(2);
+        expect(newTransactionDataItem.splits[result].accountId).toEqual(aaplAccountId);
+        expect(newTransactionDataItem).toEqual(expect.objectContaining({
+            id: splitInfo.transactionDataItem.id,
+            ymdDate: '2001-10-12',
+            splits: expect.arrayContaining([
+                expect.objectContaining({
+                    accountId: dividendsAccountId,
+                    quantityBaseValue: 2469,
+                }),
+                expect.objectContaining({
+                    accountId: aaplAccountId,
+                    quantityBaseValue: 2469,
+                    lotChanges: [
+                        {
+                            quantityBaseValue: 12345,
+                            costBasisBaseValue: 2469,
+                        }
+                    ]
+                }),
+            ]),
+        }));
+        
+
+
+        await accessor.asyncCloseAccountingFile();
+    }
+    finally {
+        await cleanupDir(baseDir);
+    }
+});
 
 // ADD_SHARES
 
@@ -1515,3 +1770,5 @@ test('LotCellEditors-SELL_BY_LOTS', async () => {
 // REMOVE_SHARES_LIFO
 
 // REMOVE_SHARES_BY_LOTS
+
+// RETURN_OF_CAPITAL

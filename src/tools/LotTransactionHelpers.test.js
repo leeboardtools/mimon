@@ -101,7 +101,7 @@ test('asyncCreateSplitDataItemForSPLIT', async () => {
             accessor: accessor,
             accountId: aaplAccountId,
             ymdDate: '2020-08-30',
-            deltaSharesBaseValue: 51664713,
+            deltaSharesBaseValue: 51214713,
         });
         expect(result).toEqual({
             accountId: aaplAccountId,
@@ -109,7 +109,7 @@ test('asyncCreateSplitDataItemForSPLIT', async () => {
             lotChanges: [
                 {
                     lotId: lotAId,
-                    quantityBaseValue: 26600000 - 6650000,
+                    quantityBaseValue: 26000000 - 6500000,
                 },
                 {
                     lotId: lotCId,

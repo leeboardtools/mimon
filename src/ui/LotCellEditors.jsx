@@ -372,6 +372,8 @@ function setupSplitInfoEditStates(splitInfo) {
         switch (actionType) {
         case LotActionType.SELL_FIFO :
         case LotActionType.SELL_LIFO :
+        case LotActionType.REMOVE_SHARES_FIFO :
+        case LotActionType.REMOVE_SHARES_LIFO :
             sharesBaseValue = splitDataItem.sellAutoLotQuantityBaseValue;
             break;
         }
@@ -784,16 +786,19 @@ function updateTransactionDataItem(splitInfo, newTransactionDataItem,
     else if (lots) {
         switch (actionType) {
         case LotActionType.SELL_FIFO :
+        case LotActionType.REMOVE_SHARES_FIFO :
             splitDataItem.sellAutoLotType = T.AutoLotType.FIFO.name;
             splitDataItem.sellAutoLotQuantityBaseValue = lots.editorBaseValue;
             break;
         
         case LotActionType.SELL_LIFO :
+        case LotActionType.REMOVE_SHARESL_LIFO :
             splitDataItem.sellAutoLotType = T.AutoLotType.LIFO.name;
             splitDataItem.sellAutoLotQuantityBaseValue = lots.editorBaseValue;
             break;
         
         case LotActionType.SELL_BY_LOTS :
+        case LotActionType.REMOVE_SHARES_BY_LOTS :
             splitDataItem.lotChanges = lots.lotChanges;
             break;
         }
