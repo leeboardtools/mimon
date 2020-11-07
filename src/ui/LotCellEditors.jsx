@@ -3,6 +3,7 @@ import { userError, userMsg } from '../util/UserMessages';
 import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor';
 import * as ACE from './AccountingCellEditors';
 import * as AH from '../tools/AccountHelpers';
+import * as LTH from '../tools/LotTransactionHelpers';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
 import * as LS from '../engine/LotStates';
@@ -75,7 +76,7 @@ export const LotActionType = {
     },
     // RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', noShares: true, },
     SPLIT: { name: 'SPLIT', 
-        fromSplitInfo: splitFromSplitInfo,
+        fromSplitInfo: asyncSplitFromSplitInfo,
         noCostBasis: true, 
         noFees: true,
     },
@@ -441,7 +442,11 @@ function setupSplitInfoEditStates(splitInfo) {
 //
 //---------------------------------------------------------
 //
-function updateSplitInfoValues(splitInfo) {
+/**
+ * @private
+ * @param {LotCellEditors~SplitInfo} splitInfo 
+ */
+export function updateSplitInfoValues(splitInfo) {
     const {
         actionType,
         sharesQuantityDefinition,
@@ -452,6 +457,7 @@ function updateSplitInfoValues(splitInfo) {
     const sharesSign = actionType.sharesNegative ? -1 : 1;
 
     const sharesState = editStates.shares;
+    const { lotChanges } = sharesState;
     const monetaryAmountState = editStates.monetaryAmount;
     const feesState = editStates.fees;
     const priceState = editStates.price;
@@ -461,6 +467,16 @@ function updateSplitInfoValues(splitInfo) {
     if (typeof sharesState.editorBaseValue === 'number') {
         sharesValue = sharesQuantityDefinition.baseValueToNumber(
             sharesState.editorBaseValue);
+    }
+    else if (lotChanges && lotChanges.length) {
+        let sharesBaseValue = 0;
+        lotChanges.forEach((lotChange) => 
+            sharesBaseValue += lotChange.quantityBaseValue);
+        sharesValue = sharesSign * sharesQuantityDefinition.baseValueToNumber(
+            sharesBaseValue);
+
+        // Always make the shares state for lots the most recently edited.
+        sharesState.editHit = splitInfo.nextQuantityEditHit++;
     }
 
     let monetaryAmountValue;
@@ -484,7 +500,6 @@ function updateSplitInfoValues(splitInfo) {
         priceValue = currencyQuantityDefinition.baseValueToNumber(
             priceState.editorBaseValue);
     }
-
 
     // We want a ranking based on the hits...
     let mostRecentEditState = sharesState;
@@ -531,7 +546,6 @@ function updateSplitInfoValues(splitInfo) {
         }
         break;
     }
-
 
     let editStateToCalc;
 
@@ -600,6 +614,7 @@ function updateSplitInfoValues(splitInfo) {
         }
     }
 
+
     // Basic equation:
     // costBasisValue = monetaryAmountValue = sharesValue * priceValue + feesValue
 
@@ -629,7 +644,8 @@ function updateSplitInfoValues(splitInfo) {
         if ((monetaryAmountValue !== undefined)
          && (sharesValue !== undefined)
          && (priceValue !== undefined)) {
-            feesValue = monetaryAmountValue - sharesValue * priceValue;
+            // Note that we apply sharesSign to feesValue if fees are specified...
+            feesValue = sharesSign * (monetaryAmountValue - sharesValue * priceValue);
             feesState.editorBaseValue = currencyQuantityDefinition.numberToBaseValue(
                 feesValue);
         }
@@ -658,9 +674,23 @@ function updateSplitInfoValues(splitInfo) {
  */
 export function copySplitInfo(splitInfo) {
     if (splitInfo) {
-        return Object.assign({}, splitInfo, {
+        const newSplitInfo = Object.assign({}, splitInfo, {
             editStates: Object.assign({}, splitInfo.editStates),
         });
+
+        const { editStates } = newSplitInfo;
+        for (let editStateName in editStates) {
+            const newEditState = Object.assign({},
+                splitInfo.editStates[editStateName]);
+            editStates[editStateName] = newEditState;
+
+            if (newEditState.lotChanges) {
+                newEditState.lotChanges = LS.getLotChangeDataItems(
+                    newEditState.lotChanges, true);
+            }
+        }
+
+        return newSplitInfo;
     }
 }
 
@@ -697,48 +727,38 @@ function errorWithColumnInfoKey(error, key) {
 //
 //---------------------------------------------------------
 //
-function updateTransactionDataItem(splitInfo, transactionDataItem,
+function updateTransactionDataItem(splitInfo, newTransactionDataItem,
     valuesToUse) {
 
-    const { accessor, actionType } = splitInfo;
+    const { accessor, actionType, transactionDataItem } = splitInfo;
     let { splitIndex } = splitInfo;
     const { lotType, shares, lots, monetaryAmount, monetaryAmountAccountId,
         fees, price, } = valuesToUse;
 
     const { splits } = transactionDataItem;
-    const splitDataItem = splits[splitIndex];
+    let splitDataItem = T.getSplitDataItem(splits[splitIndex], true);
+    const { accountId: lotsAccountId } = splitDataItem;
 
     const splitAccountDataItem 
-        = accessor.getAccountDataItemWithId(splitDataItem.accountId);
-    
-    const newSplits = [];
-    newSplits.length = splits.length;
-    newSplits[splitIndex] = splitDataItem;
+        = accessor.getAccountDataItemWithId(lotsAccountId);
 
-    const feesSplitIndex = getFeesSplitIndex(splitInfo, transactionDataItem);
+    let feesSplit;
     let feesBaseValue = (fees) ? fees.editorBaseValue : 0;
     if (feesBaseValue) {
         // Are fees, set the appropriate split.
-        if (feesSplitIndex >= 0) {
-            newSplits[feesSplitIndex] = Object.assign({}, splits[feesSplitIndex], {
-                quantityBaseValue: feesBaseValue,
-            });
-        }
-        else {
-            newSplits.push({
-                accountId: AH.getDefaultSplitAccountId(accessor, 
-                    splitAccountDataItem,
-                    AH.DefaultSplitAccountType.FEES_EXPENSE),
-                quantityBaseValue: feesBaseValue,
-            });
-        }
+        feesSplit = {
+            accountId: AH.getDefaultSplitAccountId(accessor, 
+                splitAccountDataItem,
+                AH.DefaultSplitAccountType.FEES_EXPENSE),
+            quantityBaseValue: feesBaseValue,
+        };
     }
     else {
         feesBaseValue = 0;
     }
 
 
-    splitDataItem.lotTransactionType = lotType;
+    splitDataItem.lotTransactionType = lotType.name;
 
     const sharesSign = actionType.sharesNegative ? -1 : 1;
     let sharesBaseValue;
@@ -762,9 +782,25 @@ function updateTransactionDataItem(splitInfo, transactionDataItem,
         splitDataItem.lotChanges[0].quantityBaseValue = sharesBaseValue;
     }
     else if (lots) {
-        splitDataItem.lotChanges = lots.lotChanges;
+        switch (actionType) {
+        case LotActionType.SELL_FIFO :
+            splitDataItem.sellAutoLotType = T.AutoLotType.FIFO.name;
+            splitDataItem.sellAutoLotQuantityBaseValue = lots.editorBaseValue;
+            break;
+        
+        case LotActionType.SELL_LIFO :
+            splitDataItem.sellAutoLotType = T.AutoLotType.LIFO.name;
+            splitDataItem.sellAutoLotQuantityBaseValue = lots.editorBaseValue;
+            break;
+        
+        case LotActionType.SELL_BY_LOTS :
+            splitDataItem.lotChanges = lots.lotChanges;
+            break;
+        }
     }
 
+
+    let monetaryAmountSplit;
     if (monetaryAmount) {
         const { editorBaseValue } = monetaryAmount;
         if (typeof editorBaseValue !== 'number') {
@@ -778,33 +814,29 @@ function updateTransactionDataItem(splitInfo, transactionDataItem,
                 'monetaryAmount');
         }
 
-        let monetaryAmountSplitDataItem;
-        if (monetaryAmountAccountId === splitDataItem.accountId) {
-            monetaryAmountSplitDataItem = splitDataItem;
+        if (monetaryAmountAccountId === lotsAccountId) {
+            monetaryAmountSplit = splitDataItem;
         }
         else {
             for (let i = 0; i < splits.length; ++i) {
                 const split = splits[i];
                 if (split.accountId === monetaryAmountAccountId) {
-                    newSplits[i] = split;
-                    monetaryAmountSplitDataItem = split;
+                    monetaryAmountSplit = T.getSplitDataItem(split, true);
                     break;
                 }
             }
-            if (!monetaryAmountSplitDataItem) {
-                monetaryAmountSplitDataItem = {
+            if (!monetaryAmountSplit) {
+                monetaryAmountSplit = {
                     accountId: monetaryAmountAccountId,
                 };
-                newSplits.push(monetaryAmountSplitDataItem);
             }
         }
 
         const category = accessor.getCategoryOfAccountId(
             monetaryAmountAccountId);
-        monetaryAmountSplitDataItem.quantityBaseValue = monetaryAmount.editorBaseValue
+        monetaryAmountSplit.quantityBaseValue = monetaryAmount.editorBaseValue
             * category.creditSign * sharesSign;
 
-        
         if (shares || lots) {
             splitDataItem.quantityBaseValue 
                 = monetaryAmount.editorBaseValue * sharesSign - feesBaseValue;
@@ -814,22 +846,70 @@ function updateTransactionDataItem(splitInfo, transactionDataItem,
                     = monetaryAmount.editorBaseValue;
             }
         }
+
+        if (monetaryAmountSplit === splitDataItem) {
+            monetaryAmountSplit = undefined;
+        }
     }
 
     if (price) {
         // 
     }
-
     
-    splits.length = 0;
-    for (let i = 0; i < newSplits.length; ++i) {
-        if (i === splitIndex) {
-            splitIndex = splits.length;
+    const newSplits = [];
+
+    // Try to match up the old splits indices with the new splits
+    const feesAccountId = (feesSplit) ? feesSplit.accountId : undefined;
+
+    for (let i = 0; i < splits.length; ++i) {
+        const split = splits[i];
+        const { accountId } = split;
+        let splitToPush;
+        if (feesAccountId === accountId) {
+            splitToPush = feesSplit;
+            feesSplit = undefined;
         }
-        if (newSplits[i]) {
-            splits.push(newSplits[i]);
+        else if (monetaryAmountSplit && (monetaryAmountSplit.accountId === accountId)) {
+            splitToPush = monetaryAmountSplit;
+            monetaryAmountSplit = undefined;
+        }
+        else if (accountId === lotsAccountId) {
+            splitIndex = newSplits.length;
+            splitToPush = splitDataItem;
+            splitDataItem = undefined;
+        }
+
+        if (splitToPush) {
+            const newSplit = Object.assign({}, split, splitToPush);
+            const { lotChanges } = newSplit;
+            if (lotChanges && !actionType.hasLots) {
+                lotChanges.forEach((lotChange) => {
+                    delete lotChange.lotId;
+                });
+            }
+            newSplits.push(newSplit);
         }
     }
+
+    if (splitDataItem) {
+        splitIndex = newSplits.length;
+        newSplits.push(splitDataItem);
+    }
+    if (monetaryAmountSplit) {
+        newSplits.push(monetaryAmountSplit);
+    }
+    if (feesSplit) {
+        newSplits.push(feesSplit);
+    }
+
+    newTransactionDataItem.id 
+        = newTransactionDataItem.id || transactionDataItem.id;
+    newTransactionDataItem.ymdDate 
+        = newTransactionDataItem.ymdDate || transactionDataItem.ymdDate;
+    newTransactionDataItem.description
+        = newTransactionDataItem.description || transactionDataItem.description;
+
+    newTransactionDataItem.splits = newSplits;
 
     return splitIndex;
 }
@@ -901,12 +981,28 @@ function reinvestedDividendFromSplitInfo(splitInfo, transactionDataItem) {
 //
 //---------------------------------------------------------
 //
-function splitFromSplitInfo(splitInfo, transactionDataItem) {
+async function asyncSplitFromSplitInfo(splitInfo, transactionDataItem) {
     const { editStates } = splitInfo;
+    const args = {
+        accessor: splitInfo.accessor,
+        accountId: splitInfo.transactionDataItem.accountId,
+        deltaSharesBaseValue: editStates.shares.editorBaseValue,
+    };
+    const { id } = splitInfo.transactionDataItem;
+    if (id) {
+        args.transactionId = id;
+    }
+    else {
+        args.ymdDate = splitInfo.transactionDataItem.ymdDate;
+    }
+
+    const splitDataItem = await LTH.asyncCreateSplitDataItemForSPLIT(args);
     return updateTransactionDataItem(splitInfo, transactionDataItem,
         {
             lotType: T.LotTransactionType.SPLIT,
-            shares: editStates.shares,
+            lots: {
+                lotChanges: splitDataItem.lotChanges,
+            },
             fees: editStates.fees,
         });
 }
@@ -986,10 +1082,11 @@ function removeSharesFromSplitInfo(splitInfo, transactionDataItem) {
  * Updates a transaction from the current state of a split info.
  * @param {LotCellEditors~splitInfo} splitInfo 
  * @param {TransactionDataItem} transactionDataItem 
- * @returns {number}
+ * @returns {number}    The split index of the main split.
  * @throws {LotCellEditors~Error}
  */
-export function transactionDataItemFromSplitInfo(splitInfo, transactionDataItem) {
+export async function asyncTransactionDataItemFromSplitInfo(
+    splitInfo, transactionDataItem) {
     return splitInfo.actionType.fromSplitInfo(
         splitInfo, transactionDataItem);
 }

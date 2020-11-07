@@ -1415,7 +1415,7 @@ export class AccountRegister extends React.Component {
             this.finalizeSaveBuffer(saveBuffer);
             const { newTransactionDataItem } = saveBuffer;
             if (this.hasLots()) {
-                const result = LCE.transactionDataItemFromSplitInfo(
+                const result = await LCE.asyncTransactionDataItemFromSplitInfo(
                     saveBuffer.lceSplitInfo,
                     newTransactionDataItem);
                 if (result instanceof Error) {
