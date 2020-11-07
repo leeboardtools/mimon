@@ -35,16 +35,16 @@ export async function asyncSetupTestEngineAccess(pathName, options) {
 
 
 function grabAccounts(accessor, sys, baseAccountId, accounts, baseName) {
-    if (!accounts) {
-        return;
-    }
-
     const baseAccountDataItem = accessor.getAccountDataItemWithId(baseAccountId);
     if (!baseAccountDataItem) {
         return;
     }
 
     sys[baseName + 'AccountId'] = baseAccountId;
+
+    if (!accounts) {
+        return;
+    }
 
     const { childAccountIds } = baseAccountDataItem;
     if (!childAccountIds || (childAccountIds.length !== accounts.length)) {

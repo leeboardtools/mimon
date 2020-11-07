@@ -584,7 +584,7 @@ export function createTestTransactions(newFileContents) {
                     },
                 ],
                 //commissionBaseValue: 495,
-                priceBaseValue: 30.92,
+                priceBaseValue: 3092,
                 splitRatio: 4,
             });
         

@@ -33,6 +33,8 @@ import { LotsSelectionEditor } from './LotsSelectionEditor';
  * @property {boolean}  [noFees]
  * @property {number}   [sharesNegative]
  * @property {boolean}  [needsCostBasis]
+ * @property {boolean}  [hasLots]
+ * @property {AutoLotType}  [autoLotType]
  */
 
 
@@ -60,10 +62,12 @@ export const LotActionType = {
     SELL_FIFO: { name: 'SELL_FIFO', 
         fromSplitInfo: sellFromSplitInfo, 
         sharesNegative: true,
+        autoLotType: T.AutoLotType.FIFO,
     },
     SELL_LIFO: { name: 'SELL_LIFO', 
         fromSplitInfo: sellFromSplitInfo, 
         sharesNegative: true,
+        autoLotType: T.AutoLotType.LIFO,
     },
     SELL_BY_LOTS: { name: 'SELL_BY_LOTS', 
         fromSplitInfo: sellFromSplitInfo, 
@@ -93,10 +97,12 @@ export const LotActionType = {
     REMOVE_SHARES_FIFO: { name: 'REMOVE_SHARES_FIFO', 
         fromSplitInfo: removeSharesFromSplitInfo,
         sharesNegative: true,
+        autoLotType: T.AutoLotType.FIFO,
     },
     REMOVE_SHARES_LIFO: { name: 'REMOVE_SHARES_LIFO', 
         fromSplitInfo: removeSharesFromSplitInfo,
         sharesNegative: true,
+        autoLotType: T.AutoLotType.LIFO,
     },
     REMOVE_SHARES_BY_LOTS: { name: 'REMOVE_SHARES_BY_LOTS', 
         fromSplitInfo: removeSharesFromSplitInfo,
@@ -369,13 +375,8 @@ function setupSplitInfoEditStates(splitInfo) {
         sharesBaseValue *= sharesSign;
     }
     else {
-        switch (actionType) {
-        case LotActionType.SELL_FIFO :
-        case LotActionType.SELL_LIFO :
-        case LotActionType.REMOVE_SHARES_FIFO :
-        case LotActionType.REMOVE_SHARES_LIFO :
+        if (actionType.autoLotType) {
             sharesBaseValue = splitDataItem.sellAutoLotQuantityBaseValue;
-            break;
         }
     }
     sharesLotChanges = LS.getLotChangeDataItems(lotChanges, true);
@@ -784,23 +785,12 @@ function updateTransactionDataItem(splitInfo, newTransactionDataItem,
         splitDataItem.lotChanges[0].quantityBaseValue = sharesBaseValue;
     }
     else if (lots) {
-        switch (actionType) {
-        case LotActionType.SELL_FIFO :
-        case LotActionType.REMOVE_SHARES_FIFO :
-            splitDataItem.sellAutoLotType = T.AutoLotType.FIFO.name;
-            splitDataItem.sellAutoLotQuantityBaseValue = lots.editorBaseValue;
-            break;
-        
-        case LotActionType.SELL_LIFO :
-        case LotActionType.REMOVE_SHARESL_LIFO :
-            splitDataItem.sellAutoLotType = T.AutoLotType.LIFO.name;
-            splitDataItem.sellAutoLotQuantityBaseValue = lots.editorBaseValue;
-            break;
-        
-        case LotActionType.SELL_BY_LOTS :
-        case LotActionType.REMOVE_SHARES_BY_LOTS :
+        if (actionType.hasLots) {
             splitDataItem.lotChanges = lots.lotChanges;
-            break;
+        }
+        else if (actionType.autoLotType) {
+            splitDataItem.sellAutoLotType = actionType.autoLotType.name;
+            splitDataItem.sellAutoLotQuantityBaseValue = lots.editorBaseValue;
         }
     }
 
@@ -1065,7 +1055,7 @@ function removeSharesFromSplitInfo(splitInfo, transactionDataItem) {
     return updateTransactionDataItem(splitInfo, transactionDataItem,
         {
             lotType: T.LotTransactionType.BUY_SELL,
-            shares: editStates.shares,
+            lots: editStates.shares,
             sharesSign: -1,
             monetaryAmount: editStates.monetaryAmount,
             monetaryAmountAccountId: equityAccountId,
@@ -1436,7 +1426,7 @@ function handleSellByLots(args, columnInfoArgs) {
 //
 function renderSharesEditor(args, columnInfoArgs) {
     let splitInfo = getSplitInfo(args, columnInfoArgs);
-    if (splitInfo.actionType === LotActionType.SELL_BY_LOTS) {
+    if (splitInfo.actionType.hasLots) {
         const { editStates } = splitInfo;
         const { shares } = editStates;
         const { ariaLabel, inputClassExtras, inputSize } = args.columnInfo;
