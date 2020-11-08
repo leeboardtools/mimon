@@ -31,9 +31,11 @@ import { LotsSelectionEditor } from './LotsSelectionEditor';
  * @property {boolean}  [noShares]
  * @property {boolean}  [noCostBasis]
  * @property {boolean}  [noFees]
+ * @property {boolean}  [noSplitQuantity]
  * @property {number}   [sharesNegative]
  * @property {boolean}  [needsCostBasis]
  * @property {boolean}  [hasLots]
+ * @property {boolean}  [hasLotChanges]
  * @property {AutoLotType}  [autoLotType]
  */
 
@@ -73,21 +75,25 @@ export const LotActionType = {
         fromSplitInfo: sellFromSplitInfo, 
         sharesNegative: true,
         hasLots: true,
+        hasLotChanges: true,
     },
     REINVESTED_DIVIDEND: { name: 'REINVESTED_DIVIDEND', 
         fromSplitInfo: reinvestedDividendFromSplitInfo,
         needsCostBasis: true,
     },
-    // RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', noShares: true, },
     SPLIT: { name: 'SPLIT', 
         fromSplitInfo: asyncSplitFromSplitInfo,
         noCostBasis: true, 
         noFees: true,
+        noSplitQuantity: true,
+        hasLotChanges: true,
     },
     REVERSE_SPLIT: { name: 'REVERSE_SPLIT', 
-        fromSplitInfo: reverseSplitFromSplitInfo,
+        fromSplitInfo: asyncSplitFromSplitInfo,
         noCostBasis: true, 
         noFees: true,
+        noSplitQuantity: true,
+        hasLotChanges: true,
         sharesNegative: true,
     },
     ADD_SHARES: { name: 'ADD_SHARES', 
@@ -108,7 +114,9 @@ export const LotActionType = {
         fromSplitInfo: removeSharesFromSplitInfo,
         sharesNegative: true,
         hasLots: true,
+        hasLotChanges: true,
     },
+    // RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', noShares: true, },
 };
 
 /*
@@ -550,120 +558,121 @@ export function updateSplitInfoValues(splitInfo) {
         break;
     }
 
-    let editStateToCalc;
+    if (!actionType.noCostBasis) {
+        let editStateToCalc;
 
-    if ((sharesValue === undefined)
-     && !actionType.noShares
-     && !actionType.hasLots) {
-        editStateToCalc = editStates.shares;
-    }
-    else if ((monetaryAmountValue === undefined)
-     && !actionType.noCostBasis) {
-        editStateToCalc = editStates.monetaryAmount;
-    }
-    else if ((feesValue === undefined)
-     && !actionType.noFees) {
-        editStateToCalc = editStates.fees;
-    }
-    else if ((priceValue === undefined)
-     && !actionType.noCostBasis) {
-        editStateToCalc = editStates.price;
-    }
-    else {
-        if (actionType.hasLots) {
-            if (oldestEditState.name === 'shares') {
-                oldestEditState = secondOldestEditState;
+        if ((sharesValue === undefined)
+        && !actionType.noShares
+        && !actionType.hasLots) {
+            editStateToCalc = editStates.shares;
+        }
+        else if ((monetaryAmountValue === undefined)
+        && !actionType.noCostBasis) {
+            editStateToCalc = editStates.monetaryAmount;
+        }
+        else if ((feesValue === undefined)
+        && !actionType.noFees) {
+            editStateToCalc = editStates.fees;
+        }
+        else if ((priceValue === undefined)
+        && !actionType.noCostBasis) {
+            editStateToCalc = editStates.price;
+        }
+        else {
+            if (actionType.hasLots) {
+                if (oldestEditState.name === 'shares') {
+                    oldestEditState = secondOldestEditState;
+                }
+            }
+            editStateToCalc = oldestEditState;
+
+            switch (mostRecentEditState.name) {
+            case 'shares' :
+                if (monetaryAmountState.editHit
+                && (monetaryAmountState.editHit >= priceState.editHit)) {
+                    editStateToCalc = priceState;
+                }
+                else {
+                    editStateToCalc = monetaryAmountState;
+                }
+                break;
+            
+            case 'monetaryAmount' :
+                if (feesState
+                && (feesState.editHit > sharesState.editHit)
+                && (feesState.editHit > priceState.editHit)) {
+                    editStateToCalc = (sharesState.editHit >= priceState.editHit)
+                        ? priceState
+                        : sharesState;
+                    editStateToCalc = editStateToCalc || feesState;
+                }
+                break;
+            
+            case 'fees' :
+                editStateToCalc = monetaryAmountState;
+                break;
+            
+            case 'price' :
+                if (monetaryAmountState.editHit > sharesState.editHit) {
+                    editStateToCalc = sharesState;
+                }
+                else {
+                    editStateToCalc = (!feesState
+                        || (feesState.editHit >= monetaryAmountState.editHit))
+                        ? monetaryAmountState
+                        : feesState;
+                }
+                break;
             }
         }
-        editStateToCalc = oldestEditState;
 
-        switch (mostRecentEditState.name) {
+
+        // Basic equation:
+        // costBasisValue = monetaryAmountValue = sharesValue * priceValue + feesValue
+        switch (editStateToCalc.name) {
         case 'shares' :
-            if (monetaryAmountState.editHit
-             && (monetaryAmountState.editHit >= priceState.editHit)) {
-                editStateToCalc = priceState;
-            }
-            else {
-                editStateToCalc = monetaryAmountState;
+            if (priceValue
+            && (monetaryAmountValue !== undefined)
+            && (feesValue !== undefined)) {
+                sharesValue = (monetaryAmountValue - feesValue) / priceValue;
+                sharesState.editorBaseValue = sharesQuantityDefinition.numberToBaseValue(
+                    sharesValue);
             }
             break;
         
         case 'monetaryAmount' :
-            if (feesState
-             && (feesState.editHit > sharesState.editHit)
-             && (feesState.editHit > priceState.editHit)) {
-                editStateToCalc = (sharesState.editHit >= priceState.editHit)
-                    ? priceState
-                    : sharesState;
-                editStateToCalc = editStateToCalc || feesState;
+            if ((sharesValue !== undefined)
+            && (priceValue !== undefined)
+            && (feesValue !== undefined)) {
+                monetaryAmountValue = sharesValue * priceValue + feesValue;
+                monetaryAmountState.editorBaseValue 
+                    = currencyQuantityDefinition.numberToBaseValue(
+                        monetaryAmountValue);
             }
             break;
         
         case 'fees' :
-            editStateToCalc = monetaryAmountState;
+            if ((monetaryAmountValue !== undefined)
+            && (sharesValue !== undefined)
+            && (priceValue !== undefined)) {
+                // Note that we apply sharesSign to feesValue if fees are specified...
+                feesValue = sharesSign * (monetaryAmountValue - sharesValue * priceValue);
+                feesState.editorBaseValue = currencyQuantityDefinition.numberToBaseValue(
+                    feesValue);
+            }
             break;
         
         case 'price' :
-            if (monetaryAmountState.editHit > sharesState.editHit) {
-                editStateToCalc = sharesState;
-            }
-            else {
-                editStateToCalc = (!feesState
-                    || (feesState.editHit >= monetaryAmountState.editHit))
-                    ? monetaryAmountState
-                    : feesState;
+            if (sharesValue
+            && (monetaryAmountValue !== undefined)
+            && (feesValue !== undefined)) {
+                priceValue = (monetaryAmountValue - feesValue) / sharesValue;
+                priceState.editorBaseValue = currencyQuantityDefinition.numberToBaseValue(
+                    priceValue);
             }
             break;
-        }
-    }
 
-
-    // Basic equation:
-    // costBasisValue = monetaryAmountValue = sharesValue * priceValue + feesValue
-
-    switch (editStateToCalc.name) {
-    case 'shares' :
-        if (priceValue
-         && (monetaryAmountValue !== undefined)
-         && (feesValue !== undefined)) {
-            sharesValue = (monetaryAmountValue - feesValue) / priceValue;
-            sharesState.editorBaseValue = sharesQuantityDefinition.numberToBaseValue(
-                sharesValue);
         }
-        break;
-    
-    case 'monetaryAmount' :
-        if ((sharesValue !== undefined)
-         && (priceValue !== undefined)
-         && (feesValue !== undefined)) {
-            monetaryAmountValue = sharesValue * priceValue + feesValue;
-            monetaryAmountState.editorBaseValue 
-                = currencyQuantityDefinition.numberToBaseValue(
-                    monetaryAmountValue);
-        }
-        break;
-    
-    case 'fees' :
-        if ((monetaryAmountValue !== undefined)
-         && (sharesValue !== undefined)
-         && (priceValue !== undefined)) {
-            // Note that we apply sharesSign to feesValue if fees are specified...
-            feesValue = sharesSign * (monetaryAmountValue - sharesValue * priceValue);
-            feesState.editorBaseValue = currencyQuantityDefinition.numberToBaseValue(
-                feesValue);
-        }
-        break;
-    
-    case 'price' :
-        if (sharesValue
-         && (monetaryAmountValue !== undefined)
-         && (feesValue !== undefined)) {
-            priceValue = (monetaryAmountValue - feesValue) / sharesValue;
-            priceState.editorBaseValue = currencyQuantityDefinition.numberToBaseValue(
-                priceValue);
-        }
-        break;
-
     }
 
     return splitInfo;
@@ -785,7 +794,7 @@ function updateTransactionDataItem(splitInfo, newTransactionDataItem,
         splitDataItem.lotChanges[0].quantityBaseValue = sharesBaseValue;
     }
     else if (lots) {
-        if (actionType.hasLots) {
+        if (actionType.hasLotChanges) {
             splitDataItem.lotChanges = lots.lotChanges;
         }
         else if (actionType.autoLotType) {
@@ -810,7 +819,9 @@ function updateTransactionDataItem(splitInfo, newTransactionDataItem,
         }
 
         if (monetaryAmountAccountId === lotsAccountId) {
-            monetaryAmountSplit = splitDataItem;
+            if (!actionType.noSplitQuantity) {
+                monetaryAmountSplit = splitDataItem;
+            }
         }
         else {
             for (let i = 0; i < splits.length; ++i) {
@@ -827,23 +838,25 @@ function updateTransactionDataItem(splitInfo, newTransactionDataItem,
             }
         }
 
-        const category = accessor.getCategoryOfAccountId(
-            monetaryAmountAccountId);
-        monetaryAmountSplit.quantityBaseValue = monetaryAmount.editorBaseValue
-            * category.creditSign * sharesSign;
+        if (monetaryAmountSplit) {
+            const category = accessor.getCategoryOfAccountId(
+                monetaryAmountAccountId);
+            monetaryAmountSplit.quantityBaseValue = monetaryAmount.editorBaseValue
+                * category.creditSign * sharesSign;
 
-        if (shares || lots) {
-            splitDataItem.quantityBaseValue 
-                = monetaryAmount.editorBaseValue * sharesSign - feesBaseValue;
-            
-            if (actionType.needsCostBasis) {
-                splitDataItem.lotChanges[0].costBasisBaseValue
-                    = monetaryAmount.editorBaseValue;
+            if (shares || lots) {
+                splitDataItem.quantityBaseValue 
+                    = monetaryAmount.editorBaseValue * sharesSign - feesBaseValue;
+                
+                if (actionType.needsCostBasis) {
+                    splitDataItem.lotChanges[0].costBasisBaseValue
+                        = monetaryAmount.editorBaseValue;
+                }
             }
-        }
 
-        if (monetaryAmountSplit === splitDataItem) {
-            monetaryAmountSplit = undefined;
+            if (monetaryAmountSplit === splitDataItem) {
+                monetaryAmountSplit = undefined;
+            }
         }
     }
 
@@ -877,7 +890,7 @@ function updateTransactionDataItem(splitInfo, newTransactionDataItem,
         if (splitToPush) {
             const newSplit = Object.assign({}, split, splitToPush);
             const { lotChanges } = newSplit;
-            if (lotChanges && !actionType.hasLots) {
+            if (lotChanges && !actionType.hasLotChanges) {
                 lotChanges.forEach((lotChange) => {
                     delete lotChange.lotId;
                 });
@@ -977,28 +990,33 @@ function reinvestedDividendFromSplitInfo(splitInfo, transactionDataItem) {
 //---------------------------------------------------------
 //
 async function asyncSplitFromSplitInfo(splitInfo, transactionDataItem) {
-    const { editStates } = splitInfo;
+    const { editStates, splitIndex, actionType } = splitInfo;
     const args = {
         accessor: splitInfo.accessor,
-        accountId: splitInfo.transactionDataItem.accountId,
+        accountId: splitInfo.transactionDataItem.splits[splitIndex].accountId,
         deltaSharesBaseValue: editStates.shares.editorBaseValue,
     };
+    if (actionType.sharesNegative) {
+        args.deltaSharesBaseValue = -args.deltaSharesBaseValue;
+    }
+
     const { id } = splitInfo.transactionDataItem;
     if (id) {
         args.transactionId = id;
     }
     else {
-        args.ymdDate = splitInfo.transactionDataItem.ymdDate;
+        args.ymdDate = transactionDataItem.ymdDate 
+            || splitInfo.transactionDataItem.ymdDate;
     }
 
     const splitDataItem = await LTH.asyncCreateSplitDataItemForSPLIT(args);
+
     return updateTransactionDataItem(splitInfo, transactionDataItem,
         {
             lotType: T.LotTransactionType.SPLIT,
             lots: {
                 lotChanges: splitDataItem.lotChanges,
             },
-            fees: editStates.fees,
         });
 }
 
@@ -1013,7 +1031,6 @@ function reverseSplitFromSplitInfo(splitInfo, transactionDataItem) {
             lotType: T.LotTransactionType.SPLIT,
             shares: editStates.shares,
             sharesSign: -1,
-            fees: editStates.fees,
         });
 }
 
