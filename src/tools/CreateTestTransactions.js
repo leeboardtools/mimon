@@ -32,7 +32,8 @@ function findAccountEntry(newFileContents, accountPath) {
 }
 
 
-export function createTestTransactions(newFileContents) {
+export function createTestTransactions(newFileContents, options) {
+    options = options || {};
     const transactions = [];
     newFileContents.transactions = transactions;
 
@@ -541,6 +542,7 @@ export function createTestTransactions(newFileContents) {
         // B: 2014-06-13: 100.0000
         // E: 2014-08-14: 7.1571
 
+        
         //
         // Add 100 sh for lotF
         // { ymdDate: '2014-08-15', close: 24.50, },
@@ -725,6 +727,7 @@ export function createTestTransactions(newFileContents) {
             ],
         });
 
+        //}
         
         // On 2020-08-31 have
         // A: 2005-02-18: 2600.0000
@@ -734,34 +737,38 @@ export function createTestTransactions(newFileContents) {
 
         //
         // The following are pure test transactions with no grounding in reality...
-        const aaplChangeReverseSplit2020_08_31_LotA = { 
-            lotId: lotA, 
-            quantityBaseValue: -3 * 6500000, 
-        };
-        const aaplChangeReverseSplit2020_08_31_LotC = { 
-            lotId: lotC, 
-            quantityBaseValue: -3 * 10500000, 
-        };
-        const aaplChangeReverseSplit2020_08_31_LotE = { 
-            lotId: lotE, 
-            quantityBaseValue: -3 * 71571, 
-        };
-        transactions.push({
-            ymdDate: '2020-10-31',
-            description: '1 for 4 reverse split',
-            splits: [
-                {
-                    accountId: accountId,
-                    quantityBaseValue: 0,
-                    lotTransactionType: T.LotTransactionType.SPLIT,
-                    lotChanges: [ 
-                        aaplChangeReverseSplit2020_08_31_LotA,
-                        aaplChangeReverseSplit2020_08_31_LotC,
-                        aaplChangeReverseSplit2020_08_31_LotE,
-                    ],
-                }
-            ],
-        });
+        if (!options.noReverseSplit) {
+            // Reverse split
+            // '2020-10-31'
+            const aaplChangeReverseSplit2020_08_31_LotA = { 
+                lotId: lotA, 
+                quantityBaseValue: -3 * 6500000, 
+            };
+            const aaplChangeReverseSplit2020_08_31_LotC = { 
+                lotId: lotC, 
+                quantityBaseValue: -3 * 10500000, 
+            };
+            const aaplChangeReverseSplit2020_08_31_LotE = { 
+                lotId: lotE, 
+                quantityBaseValue: -3 * 71571, 
+            };
+            transactions.push({
+                ymdDate: '2020-10-31',
+                description: '1 for 4 reverse split',
+                splits: [
+                    {
+                        accountId: accountId,
+                        quantityBaseValue: 0,
+                        lotTransactionType: T.LotTransactionType.SPLIT,
+                        lotChanges: [ 
+                            aaplChangeReverseSplit2020_08_31_LotA,
+                            aaplChangeReverseSplit2020_08_31_LotC,
+                            aaplChangeReverseSplit2020_08_31_LotE,
+                        ],
+                    }
+                ],
+            });
+        }
 
         // On 2020-10-31 have:
         // A: 2005-02-18: 650.0000

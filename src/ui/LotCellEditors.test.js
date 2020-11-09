@@ -28,7 +28,11 @@ test('LotCellEditors-Basic', async () => {
         await cleanupDir(baseDir, true);
 
         const pathName = path.join(baseDir, 'basic');
-        const { accessor, sys } = await EATH.asyncSetupWithTestTransactions(pathName);
+        const { accessor, sys } = await EATH.asyncSetupWithTestTransactions(pathName, {
+            //isDebugAccountStates: true,
+            isReopen: true,
+            //noReverseSplit: true,
+        });
 
         const aaplAccountId = sys['ASSET-Investments-Brokerage Account-AAPLAccountId'];
         const transactionKeys = await accessor.asyncGetSortedTransactionKeysForAccount(
@@ -79,7 +83,7 @@ test('LotCellEditors-Basic', async () => {
             ymdDate: '2005-02-18',
         }));
 
-
+        //
         // 2 for 1 split
         // '2005-02-28'
         transactionId = transactionIdsByYMDDateString.get('2005-02-28');
@@ -118,6 +122,7 @@ test('LotCellEditors-Basic', async () => {
         }));
 
 
+        //
         // Buy 200 shares for lotC
         // { ymdDate: '2005-03-11', close: 1.44, },
         transactionId = transactionIdsByYMDDateString.get('2005-03-11');
@@ -164,6 +169,7 @@ test('LotCellEditors-Basic', async () => {
 
 
 
+        //
         // Sell 50 shares LIFO
         // { ymdDate: '2014-05-19', close: 21.59, },
         transactionId = transactionIdsByYMDDateString.get('2014-05-19');
@@ -197,6 +203,7 @@ test('LotCellEditors-Basic', async () => {
         }));
 
 
+        //
         // 7 for 1 split
         transactionId = transactionIdsByYMDDateString.get('2014-06-09');
 
@@ -229,6 +236,7 @@ test('LotCellEditors-Basic', async () => {
         }));
 
 
+        //
         // Buy 100 shares for lotB
         // { ymdDate: '2014-06-10', close: 23.56, },
         transactionId = transactionIdsByYMDDateString.get('2014-06-10');
@@ -282,6 +290,7 @@ test('LotCellEditors-Basic', async () => {
 
 
 
+        //
         // Sell 15 shares FIFO
         //  { ymdDate: '2014-06-20', close: 22.73, },
         transactionId = transactionIdsByYMDDateString.get('2014-06-20');
@@ -323,6 +332,7 @@ test('LotCellEditors-Basic', async () => {
 
 
 
+        //
         // Reinvested Dividends
         // Dividend paid $0.1175
         // 1485 sh * 0.1175 = $174.49
@@ -537,6 +547,7 @@ test('LotCellEditors-Basic', async () => {
         }));
 
 
+        //
         // Sell 10 shares from lotB, 20 shares from lotA
         // on { ymdDate: '2020-01-24', close: 79.58, },
         transactionId = transactionIdsByYMDDateString.get('2020-01-24');
@@ -584,6 +595,7 @@ test('LotCellEditors-Basic', async () => {
         }));
 
 
+        //
         // Sell all of lotB
         //  { ymdDate: '2020-01-31', close: 77.38, }
         transactionId = transactionIdsByYMDDateString.get('2020-01-31');
@@ -641,6 +653,7 @@ test('LotCellEditors-Basic', async () => {
         }));
 
 
+        //
         // Remove 15 sh FIFO
         //  { ymdDate: '2020-02-04', close: 79.71, },
         transactionId = transactionIdsByYMDDateString.get('2020-02-04');
@@ -681,6 +694,7 @@ test('LotCellEditors-Basic', async () => {
         }));
 
 
+        //
         // 4 for 1 split
         transactionId = transactionIdsByYMDDateString.get('2020-08-31');
         transactionDataItem = await accessor.asyncGetTransactionDataItemWithId(
@@ -729,6 +743,43 @@ test('LotCellEditors-Basic', async () => {
             ]),
             quantityBaseValue: 68286284,
             ymdDate: '2020-08-31',
+        }));
+
+
+        //
+        // Reverse split
+        // '2020-10-31'
+        transactionId = transactionIdsByYMDDateString.get('2020-10-31');
+
+        // splitInfo tested in LotCellEditors-REVERSE_SPLIT
+
+        accountStates = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
+            aaplAccountId, transactionId
+        );
+        accountState = accountStates[0];
+        expect(accountState).toEqual(expect.objectContaining({
+            lotStates: expect.arrayContaining([
+                expect.objectContaining({
+                    lotId: lotAId,
+                    quantityBaseValue: 6500000,
+                    costBasisBaseValue: 403459,
+                    ymdDateCreated: '2005-02-18',
+                }),
+                expect.objectContaining({
+                    lotId: lotCId,
+                    quantityBaseValue: 10500000,
+                    costBasisBaseValue: 605171,
+                    ymdDateCreated: '2005-03-11',
+                }),
+                expect.objectContaining({
+                    lotId: lotEId,
+                    quantityBaseValue: 71571,
+                    costBasisBaseValue: 69796,
+                    ymdDateCreated: '2014-08-14'
+                }),
+            ]),
+            quantityBaseValue: 17071571,
+            ymdDate: '2020-10-31',
         }));
 
 

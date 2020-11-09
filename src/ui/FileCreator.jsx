@@ -498,7 +498,9 @@ export class FileCreator extends React.Component {
             newFileContents.baseCurrency = this.state.baseCurrency;
 
             if (this.state.addTestTransactions) {
-                createTestTransactions(newFileContents);
+                createTestTransactions(newFileContents, {
+                    //noReverseSplit: true,
+                });
             }
             
             const pathName = path.join(baseDirName, projectName);

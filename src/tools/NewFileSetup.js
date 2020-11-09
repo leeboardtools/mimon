@@ -343,6 +343,9 @@ async function asyncLoadTransactions(setupInfo) {
     const { warnings, accountNameMapping, lotNameMapping } = setupInfo;
     let item;
     try {
+        setupInfo.transactionManager.isDebugAccountStates 
+            = setupInfo.initialContents.isDebugAccountStates;
+
         for (let i = 0; i < transactions.length; ++i) {
             item = transactions[i];
 
@@ -384,6 +387,9 @@ async function asyncLoadTransactions(setupInfo) {
     catch (e) {
         warnings.push(userMsg('NewFileSetup-addTransaction_failed',
             item.name, e));
+    }
+    finally {
+        setupInfo.transactionManager.isDebugAccountStates = false;
     }
 }
 

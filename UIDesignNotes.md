@@ -683,3 +683,6 @@ Lots Selection Test Scenario:
     Then exclude any future sell by lots lots.
     Then reserve shares for sell by LIFO/FIFO.
 
+
+Return of Capital:
+Add function for reducing lot cost bases to LotTransactionsHelper.js.

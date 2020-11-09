@@ -112,12 +112,22 @@ export async function asyncSetupWithTestTransactions(pathName, options) {
     const newFileTemplates = await asyncGetNewFileTemplates();
     const newFileContents = newFileTemplates[0];
 
-    createTestTransactions(newFileContents);
+    createTestTransactions(newFileContents, options);
+
+    if (options.isDebugAccountStates) {
+        newFileContents.isDebugAccountStates = true;
+    }
 
     const warnings = await accessor.asyncCreateAccountingFile(
         pathName, 0, newFileContents);
     if (warnings.length) {
         console.log('Warnings: ' + JSON.stringify(warnings));
+    }
+
+    if (options.isReopen) {
+        await accessor.asyncWriteAccountingFile();
+        await accessor.asyncCloseAccountingFile();
+        await accessor.asyncOpenAccountingFile(pathName);
     }
 
     const { accounts } = newFileContents;

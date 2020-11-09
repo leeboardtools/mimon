@@ -12,6 +12,7 @@ import { getCurrency } from '../util/Currency';
 import { getRatio, getRatioJSON } from '../util/Ratios';
 import { bSearch } from '../util/BinarySearch';
 import { areSimilar } from '../util/AreSimilar';
+import { BugException } from '../util/Bug';
 
 
 /**
@@ -811,15 +812,7 @@ class AccountStatesUpdater {
         });
     }
 
-
-    _updateAccountStateFromSplit(transactionKey, accountState,
-        split, newAccountStatesByOrder, removedLotIds, ymdDate) {
-        this._validateLotSplit(transactionKey, 
-            accountState, split, newAccountStatesByOrder, 
-            removedLotIds);
-        
-        const isDebug = this._manager.isDebug;
-
+    static addLotSplitToAccountState(accountState, split, ymdDate) {
         let lotChanges = split.lotChanges;
         const { lotTransactionType, sellAutoLotType } = split;
         let storeLotChangesInAccountState;
@@ -842,23 +835,19 @@ class AccountStatesUpdater {
                 break;
             }
         }
-
-        if (isDebug) {
-            /*
-            console.log('accountStateUpdate: ' + JSON.stringify({
-                transactionKey: transactionKey,
-                lotStates: accountState.lotStates,
-                lotChanges: lotChanges,
-                sellAutoLotType: sellAutoLotType,
-                sellAutoLotQuantityBaseValue: split.sellAutoLotQuantityBaseValue,
-            }));
-            */
-        }
         
-        accountState = AS.addSplitToAccountStateDataItem(
+        return AS.addSplitToAccountStateDataItem(
             accountState, split, ymdDate, lotChanges, storeLotChangesInAccountState);
+    }
 
-        return accountState;
+    _updateAccountStateFromSplit(transactionKey, accountState,
+        split, newAccountStatesByOrder, removedLotIds, ymdDate) {
+        this._validateLotSplit(transactionKey, 
+            accountState, split, newAccountStatesByOrder, 
+            removedLotIds);
+        
+        return AccountStatesUpdater.addLotSplitToAccountState(
+            accountState, split, ymdDate);
     }
 
 
@@ -1256,6 +1245,58 @@ export class TransactionManager extends EventEmitter {
     }
 
 
+    async _asyncLoadLotAccountStateDataItems(accountId, accountEntry) {
+        const { sortedTransactionKeys, accountStatesByOrder,
+            accountStatesByTransactionId } = accountEntry;
+        if (!sortedTransactionKeys.length) {
+            return;
+        }
+
+        const transactionIds = sortedTransactionKeys.map((key) => key.id);
+        const transactionDataItems 
+            = await this.asyncGetTransactionDataItemsWithIds(transactionIds);
+
+        let accountState = { lotStates: [] };
+
+        accountStatesByOrder.length = 0;
+        accountStatesByTransactionId.clear();
+
+        for (let i = 0; i < transactionDataItems.length; ++i) {
+            const transactionDataItem = transactionDataItems[i];
+            const { splits } = transactionDataItem;
+
+            const newAccountStateDataItems = [ accountState ];
+            splits.forEach((split) => {
+                if (split.accountId === accountId) {
+                    accountState = AccountStatesUpdater.addLotSplitToAccountState(
+                        accountState, split, transactionDataItem.ymdDate
+                    );
+                    
+                    if (this.isDebugLots) {
+                        console.log(JSON.stringify({
+                            i: i,
+                            id: transactionDataItem.id,
+                            lotChanges: split.lotChanges,
+                            accountState: accountState,
+                        }));
+                    }
+                    
+                    newAccountStateDataItems.push(accountState);
+                }
+            });
+
+            if (i > 0) {
+                newAccountStateDataItems[0].ymdDate 
+                    = getYMDDateString(sortedTransactionKeys[i - 1].ymdDate);
+            }
+
+            accountStatesByOrder[i] = newAccountStateDataItems;
+            accountStatesByTransactionId.set(transactionDataItem.id, 
+                newAccountStateDataItems);
+        }
+    }
+
+
     async _asyncLoadAccountStateDataItemsForTransactionId(accountId, transactionId) {
         const accountEntry = await this._asyncLoadAccountEntry(accountId);
         let accountStateDataItems 
@@ -1270,8 +1311,24 @@ export class TransactionManager extends EventEmitter {
                 }));
             }
 
-            const { sortedTransactionKeys, accountStatesByOrder, 
+            const { sortedTransactionKeys, accountStatesByOrder,
                 accountStatesByTransactionId } = accountEntry;
+            
+            let hasLots;
+            if (!accountStatesByOrder.length) {
+                // If we have lots, we need to load everything, otherwise we lose
+                // track of FIFO/LIFO lots.
+                const accountDataItem = this._accountingSystem.getAccountManager()
+                    .getAccountDataItemWithId(accountId);
+                if (accountDataItem) {
+                    const type = A.getAccountType(accountDataItem.type);
+                    if (type.hasLots) {
+                        await this._asyncLoadLotAccountStateDataItems(
+                            accountId, accountEntry);
+                        hasLots = true;
+                    }
+                }
+            }
 
             for (let i = sortedTransactionKeys.length - 1; i >= 0; --i) {
                 const { id } = sortedTransactionKeys[i];
@@ -1288,6 +1345,11 @@ export class TransactionManager extends EventEmitter {
                     }
                 }
                 else {
+                    if (hasLots) {
+                        throw new BugException(
+                            '_asyncLoadAccountStateDataItemsForTransactionId()'
+                            + ' bug with lots!');
+                    }
                     let ymdDate = getYMDDateString(sortedTransactionKeys[i].ymdDate);
                     const transaction 
                         = await this.asyncGetTransactionDataItemsWithIds(id);
@@ -2131,9 +2193,6 @@ export class TransactionManager extends EventEmitter {
         const oldDataItems = await this._handler.asyncGetTransactionDataItemsWithIds(
             transactionIds);
 
-        const accountManager = this._accountingSystem.getAccountManager();
-
-        let hasLots;
         let newDataItems = [];
         for (let i = 0; i < transactionIds.length; ++i) {
             const id = transactionIds[i];
@@ -2144,19 +2203,6 @@ export class TransactionManager extends EventEmitter {
             const newDataItem = Object.assign({}, oldDataItems[i], 
                 getTransactionDataItem(transactions[i]));
             newDataItems.push(newDataItem);
-
-            if (!hasLots) {
-                newDataItem.splits.forEach((split) => {
-                    const account = accountManager.getAccountDataItemWithId(
-                        split.accountId);
-                    if (account) {
-                        const type = A.getAccountType(account.type);
-                        if (type && type.hasLots) {
-                            hasLots = true;
-                        }
-                    }
-                });
-            }
         }
 
         const stateUpdater = new AccountStatesUpdater(this);
