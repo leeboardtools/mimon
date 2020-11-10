@@ -99,7 +99,7 @@ export async function asyncCreateSplitDataItemForSPLIT(args) {
     let remainingSharesBaseValue = deltaSharesBaseValue;
     for (let i = 0; i < lastIndex; ++i) {
         let deltaQuantityBaseValue = Math.round(
-            lotShareBaseValues[i] * deltaSharesBaseValue / totalSharesBaseValue, 0);
+            lotShareBaseValues[i] * deltaSharesBaseValue / totalSharesBaseValue);
         if (deltaQuantityBaseValue + lotStates[i].quantityBaseValue < 0) {
             deltaQuantityBaseValue = 0;
         }

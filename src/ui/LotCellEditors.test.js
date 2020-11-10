@@ -3142,12 +3142,12 @@ test('LotCellEditors-REVERSE_SPLIT', async () => {
         
         splitInfo = LCE.copySplitInfo(originalSplitInfo);
         sharesToRemoveBaseValue 
-            = Math.round(totalPreReverseSplitSharesBaseValue * 4 / 5, 0);
+            = Math.round(totalPreReverseSplitSharesBaseValue * 4 / 5);
         splitInfo.editStates.shares.editorBaseValue 
             = sharesToRemoveBaseValue;
 
-        let lotASharesToRemoveBaseValue = Math.round(lotASharesBaseValue * 4 / 5, 0);
-        let lotCSharesToRemoveBaseValue = Math.round(lotCSharesBaseValue * 4 / 5, 0);
+        let lotASharesToRemoveBaseValue = Math.round(lotASharesBaseValue * 4 / 5);
+        let lotCSharesToRemoveBaseValue = Math.round(lotCSharesBaseValue * 4 / 5);
         let lotESharesToRemoveBaseValue = sharesToRemoveBaseValue
             - lotASharesToRemoveBaseValue - lotCSharesToRemoveBaseValue;
 
