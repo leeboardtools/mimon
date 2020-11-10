@@ -178,7 +178,7 @@ test('AccountState-add_remove_split', () => {
     // Split merge with cost basis
     const lotChangeD2 = { lotId: 3, 
         quantityBaseValue: 123, 
-        costBasisBaseValue: 700, 
+        costBasisBaseValue: -89, 
     };
     const lotStateD2 = {
         lotId: 3, 

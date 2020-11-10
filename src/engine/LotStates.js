@@ -150,11 +150,9 @@ export const getEmptyLotState = getEmptyLotStateDataItem;
  * @typedef {object}    LotChangeDataItem
  * @property {number}   lotId   The id of the lot this change applies to.
  * @property {number}   quantityBaseValue   The change in the lot's quantityBaseValue.
- * @property {number}   [costBasisBaseValue]    If isSplitMerge is <code>true</code> 
- * and this is specified, it is the new cost basis for the lot, if not specified then 
- * the cost basis is not changed. If isSplitMerge is <code>false</code> if the 
- * previous quantityBaseValue is 0 (which normally indicates a new purchase) this 
- * is the initial cost basis.
+ * @property {number}   [costBasisBaseValue]    The change in the lot's 
+ * costBasisBaseValue, only used if the lot is new or the isCostBasisAdjustment
+ * arg to {@link addLotChangeToLotStateDataItem} is truthy.
  */
 
 
@@ -162,11 +160,9 @@ export const getEmptyLotState = getEmptyLotStateDataItem;
  * @typedef {object}    LotChange
  * @property {number}   lotId   The id of the lot this change applies to.
  * @property {number}   quantityBaseValue   The change in the lot's quantityBaseValue.
- * @property {number}   [costBasisBaseValue]    If isSplitMerge is <code>true</code> 
- * and this is specified, it is the new cost basis for the lot, if not specified then 
- * the cost basis is not changed. If isSplitMerge is <code>false</code>  if the 
- * previous quantityBaseValue is 0 (which normally indicates a new purchase) this 
- * is the initial cost basis.
+ * @property {number}   [costBasisBaseValue]    The change in the lot's 
+ * costBasisBaseValue, only used if the lot is new or the isCostBasisAdjustment
+ * arg to {@link addLotChangeToLotStateDataItem} is truthy.
  */
 
 /**
@@ -226,62 +222,50 @@ export function getLotChanges(lotChangeDataItems, alwaysCopy) {
 export const getLotChangeDataItems = getLotChanges;
 
 
-
-function adjustLotStateDataItemForLotChange(lotState, lotChange, isSplitMerge, sign) {
-    const lotStateDataItem = getLotStateDataItem(lotState, true);
-
-    const { previousBaseValues } = lotStateDataItem;
-
-    if (sign > 0) {
-        // add
-        lotStateDataItem.previousBaseValues = previousBaseValues.slice();
-        lotStateDataItem.previousBaseValues.push(
-            [ lotStateDataItem.quantityBaseValue, lotStateDataItem.costBasisBaseValue ]);
-
-        const oldQuantityBaseValue = lotStateDataItem.quantityBaseValue;
-        lotStateDataItem.quantityBaseValue += lotChange.quantityBaseValue;
-        if (!isSplitMerge) {
-            if (oldQuantityBaseValue) {
-                lotStateDataItem.costBasisBaseValue 
-                    = Math.round(lotStateDataItem.quantityBaseValue 
-                        * lotStateDataItem.costBasisBaseValue / oldQuantityBaseValue);
-            }
-            else {
-                lotStateDataItem.costBasisBaseValue = lotChange.costBasisBaseValue || 0;
-            }
-        }
-        else {
-            if (lotChange.costBasisBaseValue) {
-                lotStateDataItem.costBasisBaseValue = lotChange.costBasisBaseValue;
-            }
-        }
-    }
-    else {
-        // Just pop the last previous baseValues...
-        if (previousBaseValues.length) {
-            [ lotStateDataItem.quantityBaseValue, lotStateDataItem.costBasisBaseValue ] 
-                = previousBaseValues[previousBaseValues.length - 1];
-            lotStateDataItem.previousBaseValues 
-                = previousBaseValues.slice(0, previousBaseValues.length - 1);
-        }
-    }
-
-    return lotStateDataItem;
-}
-
-
 /**
  * Returns a new lot state data item that reflects the application of a {@link LotChange}
  * to the lot state. The only validation performed is a check for lots being modified
  * or removed being in the lot state.
  * @param {LotState|LotStateDataItem} lotState 
  * @param {LotChange|LotChangeDataItem} lotChange 
- * @param {boolean} isSplitMerge
+ * @param {boolean} isCostBasisAdjustment   If <code>true</code> and the lot change
+ * has a costBasisBaseValue specified, it is added to the lot's cost basis, otherwise
+ * if the lot did not have a previous quantityBaseValue it is assumed to be a new
+ * lot and the cost basis is set to the lot change's costBasisBaseValue. Otherwise
+ * if isCostBasisAdjustment is false the lot's cost basis is adjusted by the change
+ * in quantityBaseValue.
  * @returns {LotStateDataItem}
  * @throws {Error}
  */
-export function addLotChangeToLotStateDataItem(lotState, lotChange, isSplitMerge) {
-    return adjustLotStateDataItemForLotChange(lotState, lotChange, isSplitMerge, 1);
+export function addLotChangeToLotStateDataItem(lotState, lotChange, 
+    isCostBasisAdjustment) {
+
+    const lotStateDataItem = getLotStateDataItem(lotState, true);
+    const { previousBaseValues } = lotStateDataItem;
+
+    // add
+    lotStateDataItem.previousBaseValues = previousBaseValues.slice();
+    lotStateDataItem.previousBaseValues.push(
+        [ lotStateDataItem.quantityBaseValue, lotStateDataItem.costBasisBaseValue ]);
+
+    const oldQuantityBaseValue = lotStateDataItem.quantityBaseValue;
+    lotStateDataItem.quantityBaseValue += lotChange.quantityBaseValue;
+    if (!isCostBasisAdjustment) {
+        if (oldQuantityBaseValue) {
+            lotStateDataItem.costBasisBaseValue 
+                = Math.round(lotStateDataItem.quantityBaseValue 
+                    * lotStateDataItem.costBasisBaseValue / oldQuantityBaseValue);
+        }
+        else {
+            lotStateDataItem.costBasisBaseValue = lotChange.costBasisBaseValue || 0;
+        }
+    }
+    else {
+        if (lotChange.costBasisBaseValue) {
+            lotStateDataItem.costBasisBaseValue += lotChange.costBasisBaseValue;
+        }
+    }
+    return lotStateDataItem;
 }
 
 
@@ -290,15 +274,30 @@ export function addLotChangeToLotStateDataItem(lotState, lotChange, isSplitMerge
  * from the lot state. This is the opposite of {@link addLotChangeToLotStateDataItem}.
  * @param {LotState|LotStateDataItem} lotState 
  * @param {LotChange|LotChangeDataItem} lotChange 
- * @param {boolean} isSplitMerge
+ * @param {boolean} isCostBasisAdjustment
  * @returns {LotStateDataItem}
  * @throws {Error}
  */
-export function removeLotChangeFromLotStateDataItem(lotState, lotChange, isSplitMerge) {
-    return adjustLotStateDataItemForLotChange(lotState, lotChange, isSplitMerge, -1);
+export function removeLotChangeFromLotStateDataItem(lotState, lotChange, 
+    isCostBasisAdjustment) {
+
+    const lotStateDataItem = getLotStateDataItem(lotState, true);
+    const { previousBaseValues } = lotStateDataItem;
+
+    // Just pop the last previous baseValues...
+    if (previousBaseValues.length) {
+        [ lotStateDataItem.quantityBaseValue, lotStateDataItem.costBasisBaseValue ] 
+            = previousBaseValues[previousBaseValues.length - 1];
+        lotStateDataItem.previousBaseValues 
+            = previousBaseValues.slice(0, previousBaseValues.length - 1);
+    }
+    return lotStateDataItem;
 }
 
 
+//
+//---------------------------------------------------------
+//
 function createLotChangeDataItems(sortedLotStates, requiredQuantityBaseValue) {
     const lotChanges = [];
     if (requiredQuantityBaseValue < 0) {
@@ -361,4 +360,68 @@ export function createLIFOLotChangeDataItems(lotStates, quantityBaseValue) {
     const sortedLotStates = sortLotStates(lotStates, (a, b) => 
         YMDDate.compare(b.ymdDateCreated, a.ymdDateCreated));
     return createLotChangeDataItems(sortedLotStates, quantityBaseValue);
+}
+
+
+/**
+ * Creates an array of {@link LotChangeDataItem}s with changes in the cost basis
+ * representing a return of capital.
+ * @param {LotState[]|LotStateDataItem[]} lotStates 
+ * @param {number} rocBaseValue The capital returned, this is removed from the
+ * cost bases of the lots proportional to the number of shares.
+ * @returns {LotChangeDataItem[]}
+ * @throws {Error}
+ */
+export function createROCLotChangeDataItems(lotStates, rocBaseValue) {
+    let totalLotsBaseValue = 0;
+    lotStates.forEach((lotState) => {
+        totalLotsBaseValue += lotState.quantityBaseValue;
+    });
+
+    if (rocBaseValue <= 0) {
+        throw userError('LotState-roc_value_le_0');
+    }
+    if (!totalLotsBaseValue) {
+        throw userError('LotState-no_shares_for_ROC');
+    }
+
+    let capitalGains = 0;
+    let remainingROCBaseValue = rocBaseValue;
+    const lotChanges = [];
+    const lastIndex = lotStates.length - 1;
+    for (let i = 0; i < lastIndex; ++i) {
+        const lotState = lotStates[i];
+        let changeBaseValue = Math.round(rocBaseValue 
+                * lotState.quantityBaseValue / totalLotsBaseValue);
+        remainingROCBaseValue -= changeBaseValue;
+        if (changeBaseValue > lotState.costBasisBaseValue) {
+            capitalGains += (changeBaseValue - lotState.costBasisBaseValue);
+
+            // Since the excess goes out as capital gain, the cost basis must
+            // drop to 0.
+            changeBaseValue = lotState.costBasisBaseValue;
+        }
+
+        lotChanges.push({
+            lotId: lotState.lotId,
+            costBasisBaseValue: -changeBaseValue,
+        });
+    }
+
+    if (remainingROCBaseValue > 0) {
+        const lotState = lotStates[lastIndex];
+        if (remainingROCBaseValue > lotState.costBasisBaseValue) {
+            capitalGains += (remainingROCBaseValue - lotState.costBasisBaseValue);
+            remainingROCBaseValue = lotState.costBasisBaseValue;
+        }
+        lotChanges.push({
+            lotId: lotState.lotId,
+            costBasisBaseValue: -remainingROCBaseValue,
+        });
+    }
+
+    return {
+        lotChanges: lotChanges,
+        capitalGains: capitalGains,
+    };
 }

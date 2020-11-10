@@ -163,6 +163,7 @@ export function areAccountStatesSimilar(a, b) {
 
 function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, lotChanges,
     sign, storeLotChangesInAccountState) {
+
     split = getFullSplitDataItem(split);
     const { lotTransactionType } = split;
     lotChanges = lotChanges || split.lotChanges;
@@ -201,7 +202,9 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, lotCha
             removedLotStates = new Map(accountStateDataItem.removedLotStates);
         }
 
-        const isSplitMerge = lotTransactionType === LotTransactionType.SPLIT.name;
+        const isCostBasisAdjustment 
+            = (lotTransactionType === LotTransactionType.SPLIT.name)
+            || (lotTransactionType === LotTransactionType.RETURN_OF_CAPITAL.name);
 
         for (let i = start; i !== end; i += sign) {
             const lotChange = lotChanges[i];
@@ -226,7 +229,8 @@ function adjustAccountStateDataItemForSplit(accountState, split, ymdDate, lotCha
                 }
             }
 
-            lotStateDataItem = lotStateFunc(lotStateDataItem, lotChange, isSplitMerge);
+            lotStateDataItem = lotStateFunc(lotStateDataItem, lotChange, 
+                isCostBasisAdjustment);
 
             if (lotStateDataItem.quantityBaseValue) {
                 lotStateDataItemsByLotId.set(lotId, lotStateDataItem);

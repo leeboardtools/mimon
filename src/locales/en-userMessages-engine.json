@@ -138,6 +138,8 @@
     "LotState-remove_split_no_state": "The split could not be removed, the lot state is missing.",
     "LotState-XIFO_invalid_quantity": "The number of shares must be >= 0.",
     "LotState-XIFO_not_enough_lots": "There are not enough shares available.",
+    "LotState-roc_value_le_0": "The return of capital amount must be > 0.",
+    "LotState-no_shares_for_ROC": "Return of Capital requires there  be shares available.",
 
     "AutoLotType-FIFO": "FIFO: First in, first out",
     "AutoLotType-LIFO": "LIFO: Last in, first out",
