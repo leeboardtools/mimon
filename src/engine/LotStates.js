@@ -364,12 +364,20 @@ export function createLIFOLotChangeDataItems(lotStates, quantityBaseValue) {
 
 
 /**
+ * @typedef {object} LotStateROCLotChangeResult
+ * The object returned by {@link createROCLotChangeDataItems}.
+ * @property {LotChangeDataItem[]}  lotChanges
+ * @property {number}   capitalGainsBaseValue
+ */
+
+
+/**
  * Creates an array of {@link LotChangeDataItem}s with changes in the cost basis
  * representing a return of capital.
  * @param {LotState[]|LotStateDataItem[]} lotStates 
  * @param {number} rocBaseValue The capital returned, this is removed from the
  * cost bases of the lots proportional to the number of shares.
- * @returns {LotChangeDataItem[]}
+ * @returns {LotStateROCLotChangeResult}
  * @throws {Error}
  */
 export function createROCLotChangeDataItems(lotStates, rocBaseValue) {
@@ -385,7 +393,7 @@ export function createROCLotChangeDataItems(lotStates, rocBaseValue) {
         throw userError('LotState-no_shares_for_ROC');
     }
 
-    let capitalGains = 0;
+    let capitalGainsBaseValue = 0;
     let remainingROCBaseValue = rocBaseValue;
     const lotChanges = [];
     const lastIndex = lotStates.length - 1;
@@ -395,7 +403,7 @@ export function createROCLotChangeDataItems(lotStates, rocBaseValue) {
                 * lotState.quantityBaseValue / totalLotsBaseValue);
         remainingROCBaseValue -= changeBaseValue;
         if (changeBaseValue > lotState.costBasisBaseValue) {
-            capitalGains += (changeBaseValue - lotState.costBasisBaseValue);
+            capitalGainsBaseValue += (changeBaseValue - lotState.costBasisBaseValue);
 
             // Since the excess goes out as capital gain, the cost basis must
             // drop to 0.
@@ -411,7 +419,8 @@ export function createROCLotChangeDataItems(lotStates, rocBaseValue) {
     if (remainingROCBaseValue > 0) {
         const lotState = lotStates[lastIndex];
         if (remainingROCBaseValue > lotState.costBasisBaseValue) {
-            capitalGains += (remainingROCBaseValue - lotState.costBasisBaseValue);
+            capitalGainsBaseValue 
+                += (remainingROCBaseValue - lotState.costBasisBaseValue);
             remainingROCBaseValue = lotState.costBasisBaseValue;
         }
         lotChanges.push({
@@ -422,6 +431,6 @@ export function createROCLotChangeDataItems(lotStates, rocBaseValue) {
 
     return {
         lotChanges: lotChanges,
-        capitalGains: capitalGains,
+        capitalGainsBaseValue: capitalGainsBaseValue,
     };
 }

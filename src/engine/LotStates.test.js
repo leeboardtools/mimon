@@ -243,7 +243,7 @@ test('LotStates-ROC', () => {
             costBasisBaseValue: -150000,
         }
     ]);
-    expect(result.capitalGains).toEqual(0);
+    expect(result.capitalGainsBaseValue).toEqual(0);
 
 
     const statesB = [
@@ -290,7 +290,7 @@ test('LotStates-ROC', () => {
             costBasisBaseValue: changeB3,
         },
     ]);
-    expect(result.capitalGains).toEqual(0);
+    expect(result.capitalGainsBaseValue).toEqual(0);
 
 
     //
@@ -335,5 +335,5 @@ test('LotStates-ROC', () => {
             costBasisBaseValue: changeC3,
         },
     ]);
-    expect(result.capitalGains).toEqual(rocC + changeC1 + changeC2 + changeC3);
+    expect(result.capitalGainsBaseValue).toEqual(rocC + changeC1 + changeC2 + changeC3);
 });
