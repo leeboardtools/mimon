@@ -120,8 +120,10 @@ export async function asyncCreateAccountingSystem(options) {
 //
 //      -giftsReceivedId
 //      -interestIncomeId
+//      -longTermCapitalGainsId,
 //      -otherIncomeId
 //      -salaryId
+//      -shortTermCapitalGainsId,
 //
 //  -Root Expenses
 //      -autoId
@@ -373,6 +375,15 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
         },
     )).newAccountDataItem.id;
 
+    sys.longTermCapitalGainsId = (await accountManager.asyncAddAccount(
+        { parentAccountId: rootIncomeId, 
+            type: A.AccountType.INCOME, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'Long Term Capital Gains', 
+            tags: [StandardAccountTag.LONG_TERM_CAPITAL_GAINS.name, ]
+        },
+    )).newAccountDataItem.id;
+
     sys.otherIncomeId = (await accountManager.asyncAddAccount(
         { parentAccountId: rootIncomeId, type: A.AccountType.INCOME, pricedItemId: currencyBasePricedItemId, name: 'Other Income', },
     )).newAccountDataItem.id;
@@ -381,6 +392,15 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
         { parentAccountId: rootIncomeId, type: A.AccountType.INCOME, pricedItemId: currencyBasePricedItemId, name: 'Salary', },
     )).newAccountDataItem.id;
     
+    sys.shortTermCapitalGainsId = (await accountManager.asyncAddAccount(
+        { parentAccountId: rootIncomeId, 
+            type: A.AccountType.INCOME, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'Short Term Capital Gains', 
+            tags: [StandardAccountTag.SHORT_TERM_CAPITAL_GAINS.name, ]
+        },
+    )).newAccountDataItem.id;
+
     
     //
     // Expenses

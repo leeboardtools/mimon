@@ -58,6 +58,8 @@
 
     "AccountTag-INTEREST": "Interest",
     "AccountTag-DIVIDENDS": "Dividends",
+    "AccountTag-SHORT_TERM_CAPITAL_GAINS": "Short Term Capital Gains",
+    "AccountTag-LONG_TERM_CAPITAL_GAINS": "Long Term Capital Gains",
     "AccountTag-FEES": "Fees",
     "AccountTag-BANK_FEES": "Bank Fees",
     "AccountTag-BROKERAGE_COMMISSIONS": "Brokerage Commissions",
@@ -187,6 +189,7 @@
 
     "TransactionManager-date_required": "Transactions must have a date.",
     "TransactionManager~need_at_least_2_splits": "Normal transactions must have at least two split entries.",
+    "TransactionManager~only_1_split": ["", " transactions can only have a single split entry."],
     "TransactionManager~split_account_not_found": ["An account with id '", "' was not found."],
     "TransactionManager~split_priced_item_not_found": ["The priced item with id '", "', for account with id '", "', was not found."],
     "TransactionManager~split_needs_currency_price": ["The split with currency '", "' requires a price in USD."],

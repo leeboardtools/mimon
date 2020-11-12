@@ -14,6 +14,8 @@ import { cleanSpaces } from '../util/StringUtils';
  * @enum {TagDef}
  * @property {TagDef}   INTEREST
  * @property {TagDef}   DIVIDENDS
+ * @property {TagDef}   SHORT_TERM_CAPITAL_GAINS
+ * @property {TagDef}   LONG_TERM_CAPITAL_GAINS
  * @property {TagDef}   FEES
  * @property {TagDef}   BANK_FEES
  * @property {TagDef}   BROKERAGE_COMMISSIONS
@@ -23,6 +25,8 @@ import { cleanSpaces } from '../util/StringUtils';
 export const StandardAccountTag = {
     INTEREST: { name: 'INTEREST' },
     DIVIDENDS: { name: 'DIVIDENDS' },
+    SHORT_TERM_CAPITAL_GAINS: { name: 'SHORT_TERM_CAPITAL_GAINS'},
+    LONG_TERM_CAPITAL_GAINS: { name: 'LONG_TERM_CAPITAL_GAINS'},
     FEES: { name: 'FEES' },
     BANK_FEES: { name: 'BANK_FEES' },
     BROKERAGE_COMMISSIONS: { name: 'BROKERAGE_COMMISSIONS' },
