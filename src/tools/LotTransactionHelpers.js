@@ -151,8 +151,7 @@ export async function asyncCreateSplitDataItemForSPLIT(args) {
  * @property {number}   [transactionId] Either transactionId or ymdDate is required,
  * only one can be specified.
  * @property {YMDDate|string}   [ymdDate]
- * @property {number}   deltaSharesBaseValue    The change in the total number of 
- * shares, > 0 for a stock split, < 0 for a reverse stock split.
+ * @property {number}   rocBaseValue    The amount of capital returned, must be &gt; 0.
  */
 
 //
