@@ -5,6 +5,7 @@ import { userError } from '../util/UserMessages';
 import deepEqual from 'deep-equal';
 import { Reconciler } from './Reconciler';
 import { asyncSetupNewFile } from './NewFileSetup';
+import { getYMDDate, YMDDate } from '../util/YMDDate';
 
 
 /**
@@ -823,6 +824,23 @@ export class EngineAccessor extends EventEmitter {
         const accountDataItem = this._accountManager.getAccountDataItemWithId(id);
         return this.pricedItemQuantityTextToBaseValue(
             accountDataItem.pricedItemId, quantityText);
+    }
+
+
+    /**
+     * Determines if the time span between a purchase date and a sale date
+     * is considered a long term capital gain.
+     * @param {number} accountId 
+     * @param {YMDDate|string} ymdDatePurchase
+     * @param {YMDDate|string} ymdDateSale
+     * @returns {boolean}   <code>true</code> a transaction in the specified account
+     * sold on ymdDateSale and purchased on ymdDatePurchase represents a long
+     * term capital gain.
+     */
+    isLongTermCapitalGains(accountId, ymdDatePurchase, ymdDateSale) {
+        ymdDatePurchase = getYMDDate(ymdDatePurchase).addYears(1);
+        ymdDateSale = getYMDDate(ymdDateSale);
+        return YMDDate.compare(ymdDateSale, ymdDatePurchase) > 0;
     }
 
 

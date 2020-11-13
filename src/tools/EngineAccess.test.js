@@ -6,6 +6,7 @@ import * as T from '../engine/Transactions';
 import * as RE from '../util/Repeats';
 import { getDecimalDefinition } from '../util/Quantities';
 import { getYMDDate } from '../util/YMDDate';
+import * as EATH from './EngineAccessTestHelpers';
 
 const path = require('path');
 
@@ -539,3 +540,31 @@ test('EngineAccessor-actions', async () => {
 });
 
 
+//
+//---------------------------------------------------------
+//
+test('EngineAccess-misc', async () => {
+    const baseDir = await createDir('EngineAccessor-misc');
+
+    try {
+        await cleanupDir(baseDir, true);
+
+        const pathName = path.join(baseDir, 'test');
+        const { accessor, sys } = await EATH.asyncSetupWithTestTransactions(pathName);
+        
+        const aaplAccountId = sys['ASSET-Investments-Brokerage Account-AAPLAccountId'];
+
+        expect(accessor.isLongTermCapitalGains(aaplAccountId, '2019-02-28', '2020-02-28'))
+            .toBeFalsy();
+        expect(accessor.isLongTermCapitalGains(aaplAccountId, '2019-02-28', '2020-02-29'))
+            .toBeTruthy();
+        expect(accessor.isLongTermCapitalGains(aaplAccountId, '2020-02-29', '2021-02-28'))
+            .toBeFalsy();
+        expect(accessor.isLongTermCapitalGains(aaplAccountId, '2020-02-29', '2021-03-01'))
+            .toBeTruthy();
+    }
+    finally {
+        await cleanupDir(baseDir);
+    }
+
+});
