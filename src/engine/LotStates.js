@@ -249,7 +249,11 @@ export function addLotChangeToLotStateDataItem(lotState, lotChange,
         [ lotStateDataItem.quantityBaseValue, lotStateDataItem.costBasisBaseValue ]);
 
     const oldQuantityBaseValue = lotStateDataItem.quantityBaseValue;
-    lotStateDataItem.quantityBaseValue += lotChange.quantityBaseValue;
+    
+    if (lotChange.quantityBaseValue) {
+        lotStateDataItem.quantityBaseValue += lotChange.quantityBaseValue;
+    }
+
     if (!isCostBasisAdjustment) {
         if (oldQuantityBaseValue) {
             lotStateDataItem.costBasisBaseValue 
