@@ -367,7 +367,8 @@ async function asyncLoadTransactions(setupInfo) {
                         if (lotChanges[i].lotId) {
                             const lotDataItem = lotNameMapping.get(lotChanges[i].lotId);
                             if (!lotDataItem) {
-                                throw userError('NewFileSetup-addTransaction_invalid_lotId',
+                                throw userError(
+                                    'NewFileSetup-addTransaction_invalid_lotId',
                                     lotChanges[i].lotId);
                             }
                             lotChanges[i].lotId = lotDataItem.id;

@@ -390,17 +390,17 @@ test('LotCellEditors-Basic', async () => {
 
         //
         // Add 100 sh for lotF
-        // { ymdDate: '2014-08-15', close: 24.50, },
-        transactionId = transactionIdsByYMDDateString.get('2014-08-15');
+        // { ymdDate: '2014-08-18', close: 24.79, },
+        transactionId = transactionIdsByYMDDateString.get('2014-08-18');
 
         // splitInfo tested by LotCellEditors-ADD_SHARES test.
         
-        // On 2014-08-15 have
+        // On 2014-08-18 have
         // A: 2005-02-18: 685.0000
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-13: 100.0000
         // E: 2014-08-14: 7.1571
-        // F: 2014-08-15: 100.0000
+        // F: 2014-08-18: 100.0000
         accountStates = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
             aaplAccountId, transactionId
         );
@@ -434,12 +434,12 @@ test('LotCellEditors-Basic', async () => {
                 expect.objectContaining({
                     lotId: lotFId,
                     quantityBaseValue: 1000000,
-                    costBasisBaseValue: 980000,
-                    ymdDateCreated: '2014-08-15'
+                    costBasisBaseValue: 991600,
+                    ymdDateCreated: '2014-08-18'
                 }),
             ]),
             quantityBaseValue: 19421571,
-            ymdDate: '2014-08-15',
+            ymdDate: '2014-08-18',
         }));
 
     
@@ -455,7 +455,7 @@ test('LotCellEditors-Basic', async () => {
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-13: 100.0000
         // E: 2014-08-14: 7.1571
-        // F: 2014-08-15: 75.0000
+        // F: 2014-08-18: 75.0000
         accountStates = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
             aaplAccountId, transactionId
         );
@@ -489,8 +489,8 @@ test('LotCellEditors-Basic', async () => {
                 expect.objectContaining({
                     lotId: lotFId,
                     quantityBaseValue: 750000,
-                    costBasisBaseValue: 980000 * 3 / 4,
-                    ymdDateCreated: '2014-08-15'
+                    costBasisBaseValue: 991600 * 3 / 4,
+                    ymdDateCreated: '2014-08-18'
                 }),
             ]),
             quantityBaseValue: 19171571,
@@ -1979,8 +1979,8 @@ test('LotCellEditors-ADD_SHARES', async () => {
         // Existing transaction
 
         // Add 100 sh for lotF
-        // { ymdDate: '2014-08-15', close: 24.50, },
-        const transactionId = transactionIdsByYMDDateString.get('2014-08-15');
+        // { ymdDate: '2014-08-18', close: 24.79, },
+        const transactionId = transactionIdsByYMDDateString.get('2014-08-18');
         transactionDataItem = await accessor.asyncGetTransactionDataItemWithId(
             transactionId,
         );
@@ -1989,11 +1989,11 @@ test('LotCellEditors-ADD_SHARES', async () => {
         expect(splitInfo.actionType).toEqual(LCE.LotActionType.ADD_SHARES);
         expect(splitInfo.editStates.shares.editorBaseValue).toEqual(1000000);
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
-            .toEqual(980000);
+            .toEqual(991600);
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(9800);
+            .toEqual(9916);
 
 
         const originalSplitInfo = LCE.copySplitInfo(splitInfo);
@@ -2405,7 +2405,7 @@ test('LotCellEditors-REMOVE_SHARES_LIFO', async () => {
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-13: 100.0000
         // E: 2014-08-14: 7.1570
-        // F: 2014-08-15: 75.0000
+        // F: 2014-08-18: 75.0000
 
 
         //
@@ -2603,12 +2603,12 @@ test('LotCellEditors-REMOVE_SHARES_BY_LOTS', async () => {
         //
         // Existing transaction
 
-        // On 2014-08-15 have
+        // On 2014-08-18 have
         // A: 2005-02-18: 685.0000
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-13: 100.0000
         // E: 2014-08-14: 7.1570
-        // F: 2014-08-15: 100.0000
+        // F: 2014-08-18: 100.0000
 
         //
         // Remove 25 sh of lotF

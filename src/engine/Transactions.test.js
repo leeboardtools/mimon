@@ -2508,6 +2508,7 @@ async function asyncQuickBuy(sys, ymdDate, quantityBaseValue, costBasisBaseValue
         settings: settings,
         aaplState: aaplState,
         lotState: lotState,
+        lotId: lot.id,
     };
 }
 

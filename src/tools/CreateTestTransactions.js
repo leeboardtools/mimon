@@ -254,6 +254,7 @@ export function createTestTransactions(newFileContents, options) {
             // Dividend paid $0.1175
             { ymdDate: '2014-08-14', close: 24.38, },
             { ymdDate: '2014-08-15', close: 24.50, },
+            { ymdDate: '2014-08-18', close: 24.79, },
 
             { ymdDate: '2015-03-12', close: 30.92, },
 
@@ -545,7 +546,7 @@ export function createTestTransactions(newFileContents, options) {
         
         //
         // Add 100 sh for lotF
-        // { ymdDate: '2014-08-15', close: 24.50, },
+        // { ymdDate: '2014-08-18', close: 24.79, },
         
         const lotF = 'Lot F';
         const aaplQuantityBaseValueF = 1000000;
@@ -553,22 +554,22 @@ export function createTestTransactions(newFileContents, options) {
             {
                 otherAccountId: 'EQUITY',
                 costBasisSign: 1,
-                ymdDate: '2014-08-15',
+                ymdDate: '2014-08-18',
                 lotTransactionType: T.LotTransactionType.BUY_SELL,
                 lotId: lotF,
                 //commissionBaseValue: 495,
                 lotBaseValue: aaplQuantityBaseValueF,
-                priceBaseValue: 2450,
+                priceBaseValue: 2479,
                 splitRatio: 4,
             });
 
         
-        // On 2014-08-15 have
+        // On 2014-08-18 have
         // A: 2005-02-18: 685.0000
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-13: 100.0000
         // E: 2014-08-14: 7.1571
-        // F: 2014-08-15: 100.0000
+        // F: 2014-08-18: 100.0000
 
 
         //
@@ -597,7 +598,7 @@ export function createTestTransactions(newFileContents, options) {
         // C: 2005-03-11: 1050.0000
         // B: 2014-06-13: 100.0000
         // E: 2014-08-14: 7.1571
-        // F: 2014-08-15: 75.0000
+        // F: 2014-08-18: 75.0000
 
 
         //
@@ -730,9 +731,9 @@ export function createTestTransactions(newFileContents, options) {
         //}
         
         // On 2020-08-31 have
-        // A: 2005-02-18: 2600.0000
-        // C: 2005-03-11: 4200.0000
-        // E: 2014-08-14: 28.6284
+        // A: 2005-02-18: 2600.0000, cb: 4034.59
+        // C: 2005-03-11: 4200.0000, cb: 6051.71
+        // E: 2014-08-14: 28.6284, cb: 697.96
 
 
         //

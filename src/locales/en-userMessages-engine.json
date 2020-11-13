@@ -189,7 +189,9 @@
 
     "TransactionManager-date_required": "Transactions must have a date.",
     "TransactionManager~need_at_least_2_splits": "Normal transactions must have at least two split entries.",
-    "TransactionManager~only_1_split": ["", " transactions can only have a single split entry."],
+    "TransactionManager-ROC_too_many_splits": "Return of Capital transactions can only have up to three split entries.",
+    "TransactionManager-ROC_only_one_lot_split": "Return of Capital transactions can only have the Return of Capital lot split and optional capital gains splits.",
+    "TransactionManager~SPLIT_only_1_split": ["SPLIT/REVERSE SPLIT transactions can only have a single split entry."],
     "TransactionManager~split_account_not_found": ["An account with id '", "' was not found."],
     "TransactionManager~split_priced_item_not_found": ["The priced item with id '", "', for account with id '", "', was not found."],
     "TransactionManager~split_needs_currency_price": ["The split with currency '", "' requires a price in USD."],
@@ -247,6 +249,10 @@
     "LotTransactionHelpers-no_account_states": ["The account state could not be determined for the SPLIT/MERGE. The transaction with id ", " might not have been found."],
     "LotTransactionHelpers-no_lots": "The SPLIT/MERGE transaction cannot be performed unless there are already shares in the account.",
     "LotTransactionHelpers-merge_too_large": ["The MERGE transaction cannot be completed. The requested number of shares to remove, ", " is more than the available shares, ", "."],
+    "LotTransactionHelpers-invalid_roc_value": "The Return of Capital amount must be > 0.",
+    "LotTransactionHelpers-invalid_account_roc": ["The Return of Capital transaction could not be set up, an account with id ", " was not found."],
+    "LotTransactionHelpers-no_account_states_roc": ["The account state could not be determined for the Return of Capital. The transaction with id ", " might not have been found."],
+    "LotTransactionHelpers-no_lots_roc": "The Return of Capital transaction cannot be performed unless there are already shares in the account.",
 
 
     "Reconciler-reconcile_action_name": ["Reconcile ", ""],

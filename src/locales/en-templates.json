@@ -142,6 +142,22 @@
                 },
                 {
                     "type": "INCOME",
+                    "name": "Capital Gains",
+                    "childAccounts": [
+                        {
+                            "type": "INCOME",
+                            "name": "Long Term Capital Gains",
+                            "tags": ["LONG_TERM_CAPITAL_GAINS"]
+                        },
+                        {
+                            "type": "INCOME",
+                            "name": "Short Term Capital Gains",
+                            "tags": ["SHORT_TERM_CAPITAL_GAINS"]
+                        }
+                    ]
+                },
+                {
+                    "type": "INCOME",
                     "name": "Dividends",
                     "tags": ["DIVIDENDS"]
                 },

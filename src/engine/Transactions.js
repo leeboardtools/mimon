@@ -73,9 +73,47 @@ export function getAutoLotTypeName(ref) {
 export const LotTransactionType = {
     BUY_SELL: { name: 'BUY_SELL', },
     REINVESTED_DIVIDEND: { name: 'REINVESTED_DIVIDEND', },
-    RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', noShares: true, },
-    SPLIT: { name: 'SPLIT', },
+    RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', 
+        noShares: true, 
+        validateLotSplits: validateSplitsRETURN_OF_CAPITAL,
+    },
+    SPLIT: { name: 'SPLIT', 
+        validateLotSplits: validateSplitsSPLIT,
+    },
 };
+
+
+
+//
+//---------------------------------------------------------
+//
+function validateSplitsRETURN_OF_CAPITAL(transactionManager, splits) {
+    if (splits.length > 3) {
+        throw userError('TransactionManager-ROC_too_many_splits');
+    }
+
+    let lotSplits = 0;
+    for (let i = 0; i < splits.length; ++i) {
+        if (splits[i].lotTransactionType) {
+            ++lotSplits;
+        }
+    }
+
+    if (lotSplits !== 1) {
+        throw userError('TransactionManager-ROC_only_one_lot_split');
+    }
+}
+
+
+//
+//---------------------------------------------------------
+//
+function validateSplitsSPLIT(transactionManager, splits) {
+    if (splits.length !== 1) {
+        throw userError('TransactionManager~SPLIT_only_1_split');
+    }
+}
+
 
 /**
  * 
@@ -791,7 +829,6 @@ class AccountStatesUpdater {
             }
             else {
                 // OK, the lot exists.
-                // For now only allow selling or split/merge, don't allow buying more.
                 if (isSplitMerge) {
                     if ((quantityBaseValue + existingLotState.quantityBaseValue) <= 0) {
                         // eslint-disable-next-line max-len
@@ -1308,6 +1345,7 @@ export class TransactionManager extends EventEmitter {
             if (this.isDebug) {
                 console.log('start: ' + JSON.stringify({
                     workingAccountState: workingAccountState,
+                    accountEntry: accountEntry,
                 }));
             }
 
@@ -1662,7 +1700,8 @@ export class TransactionManager extends EventEmitter {
         const splitCurrencies = [];
         const splitCreditBaseValues = [];
         let isCurrencyExchange = false;
-        let splitMergeLotCount = 0;
+        let validateSplitsFunc;
+
 
         for (let i = 0; i < splits.length; ++i) {
             const split = splits[i];
@@ -1696,7 +1735,8 @@ export class TransactionManager extends EventEmitter {
             isCurrencyExchange = isCurrencyExchange || (currency !== activeCurrency);
 
             if (account.type.hasLots) {
-                const { lotChanges, lotTransactionType, sellAutoLotType } = split;
+                let { lotChanges, lotTransactionType, sellAutoLotType } = split;
+                lotTransactionType = getLotTransactionType(lotTransactionType);
                 if (!lotTransactionType) {
                     return userError('TransactionManager-split_needs_lot_transaction',
                         account.type.name);
@@ -1707,16 +1747,17 @@ export class TransactionManager extends EventEmitter {
                 }
 
                 if (lotChanges) {
-                    if (lotTransactionType 
-                        === LotTransactionType.RETURN_OF_CAPITAL.name) {
-                        if (lotChanges.length) {
-                            return userError(
-                                'TransactionManager-no_lots_for_return_of_capital');
-                        }
+                    if (lotTransactionType.noShares) {
+                        lotChanges.forEach((lotChange) => {
+                            if (lotChange.quantityBaseValue) {
+                                return userError(
+                                    'TransactionManager-no_lots_for_return_of_capital');
+                            }
+                        });
                     }
 
                     if (lotTransactionType
-                        === LotTransactionType.BUY_SELL.name) {
+                        === LotTransactionType.BUY_SELL) {
                         if (sellAutoLotType) {
                             if (lotChanges.length) {
                                 return userError(
@@ -1725,13 +1766,9 @@ export class TransactionManager extends EventEmitter {
                         }
                     }
                     
-                    const isSplitMerge = lotTransactionType 
-                        === LotTransactionType.SPLIT.name;
-                    for (let j = lotChanges.length - 1; j >= 0; --j) {
-                        if (isSplitMerge) {
-                            ++splitMergeLotCount;
-                            break;
-                        }
+                    if (lotTransactionType.validateLotSplits) {
+                        lotTransactionType.validateLotSplits(this, splits, i);
+                        validateSplitsFunc = lotTransactionType.validateLotSplits;
                     }
                 }
 
@@ -1769,7 +1806,7 @@ export class TransactionManager extends EventEmitter {
             isCurrencyExchange: isCurrencyExchange,
             splitCurrencies: splitCurrencies,
             activeCurrency: activeCurrency,
-            splitMergeLotCount: splitMergeLotCount,
+            validateSplitsFunc: validateSplitsFunc,
             splitCreditBaseValues: splitCreditBaseValues,
         };
     }
@@ -1797,24 +1834,26 @@ export class TransactionManager extends EventEmitter {
 
         let { creditSumBaseValue,
             activeCurrency,
-            splitMergeLotCount,
+            validateSplitsFunc,
         } = result;
 
 
-        if (splitMergeLotCount !== 1) {
+        if (!validateSplitsFunc) {
             if (splits.length < 2) {
                 return userError('TransactionManager~need_at_least_2_splits');
             }
-        }
 
-        if (creditSumBaseValue !== 0) {
-            if (!activeCurrency) {
-                const pricedItemManager = this._accountingSystem.getPricedItemManager();
-                activeCurrency = pricedItemManager.getBaseCurrencyPricedItemDataItem()
-                    .currency;
+
+            if (creditSumBaseValue !== 0) {
+                if (!activeCurrency) {
+                    const pricedItemManager 
+                        = this._accountingSystem.getPricedItemManager();
+                    activeCurrency = pricedItemManager.getBaseCurrencyPricedItemDataItem()
+                        .currency;
+                }
+                const excessAmount = activeCurrency.baseValueToString(creditSumBaseValue);
+                return userError('TransactionManager~splits_dont_add_up', excessAmount);
             }
-            const excessAmount = activeCurrency.baseValueToString(creditSumBaseValue);
-            return userError('TransactionManager~splits_dont_add_up', excessAmount);
         }
     }
 
