@@ -190,6 +190,8 @@
     "LotCellEditors-price": "Price",
     "LotCellEditors-shares": "Shares",
     "LotCellEditors-totalShares": "Total Shares",
+    "LotCellEditors-totalMarketValue": "Market Value",
+    "LotCellEditors-totalCostBasis": "Cost Basis",
 
     "LotCellEditors-actionType-BUY": "Buy",
     "LotCellEditors-actionType-SELL_FIFO": "Sell First In First Out",

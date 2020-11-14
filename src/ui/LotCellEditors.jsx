@@ -37,6 +37,7 @@ import { LotsSelectionEditor } from './LotsSelectionEditor';
  * @property {boolean}  [needsCostBasis]
  * @property {boolean}  [hasSelectedLots]
  * @property {boolean}  [hasLotChanges]
+ * @property {boolean}  [hasModifyLotIds]
  * @property {AutoLotType}  [autoLotType]
  * @property {boolean}  [monetaryAmountIsCostBasisChanges]
  */
@@ -63,6 +64,7 @@ export const LotActionType = {
     BUY: { name: 'BUY', 
         fromSplitInfo: buyFromSplitInfo, 
         needsCostBasis: true,
+        hasModifyLotIds: true,
     },
     SELL_FIFO: { name: 'SELL_FIFO', 
         fromSplitInfo: sellFromSplitInfo, 
@@ -83,6 +85,7 @@ export const LotActionType = {
     REINVESTED_DIVIDEND: { name: 'REINVESTED_DIVIDEND', 
         fromSplitInfo: reinvestedDividendFromSplitInfo,
         needsCostBasis: true,
+        hasModifyLotIds: true,
     },
     SPLIT: { name: 'SPLIT', 
         fromSplitInfo: asyncSplitFromSplitInfo,
@@ -104,6 +107,7 @@ export const LotActionType = {
     ADD_SHARES: { name: 'ADD_SHARES', 
         fromSplitInfo: addSharesFromSplitInfo,
         needsCostBasis: true,
+        hasModifyLotIds: true,
     },
     REMOVE_SHARES_FIFO: { name: 'REMOVE_SHARES_FIFO', 
         fromSplitInfo: removeSharesFromSplitInfo,
@@ -129,50 +133,6 @@ export const LotActionType = {
         monetaryAmountIsCostBasisChanges: true,
     },
 };
-
-/*
-BUY: 
-shares | total amount | [fees] | price
-- total amount comes from parent
-- fees comes from fees expense
-
-SELL: 
-lots | total amount | [fees] | price
-- total amount goes to parent
-- fees comes from fees expense
-
-REINVESTED_DIVIDENDS:
-shares | total amount | [fees] | price
-- total amount (or shares * price?) is income
-- fees comes from fees expense
-
-RETURN_OF_CAPITAL:
-total amount
-
-SPLIT:
-shares | cash in lieu | [price]
-- total shares added
-- cash in lieu goes to income?
-- what is price for???
-
-
-REVERSE_SPLIT:
-shares | cash in lieu | [price]
-- total shares removed
-- cash in lieu goes to income?
-- what is price for???
-
-ADD_SHARES:
-shares | total amount | price
-- no fees
-- total amount goes to Equity
-
-
-REMOVE_SHARES:
-lots | total amount |  price
-- no fees
-- total amount goes to Equity
-*/
 
 
 //
@@ -297,13 +257,20 @@ function lotActionTypeFromTransactionInfo(transactionDataItem, splitIndex, acces
  */
 
 /**
+ * @typedef {object} LotCellEditors~createSplitInfoArgs
+ * @property {AccountStateDataItem} [accountStateDataItem]
+ */
+
+/**
  * Creates the {@link LotCellEditors~SplitInfo} object used by the lot cell editors.
  * @param {TransactionDataItem} transactionDataItem 
  * @param {number} splitIndex 
  * @param {EngineAccessor} accessor 
  * @returns {LotCellEditors~SplitInfo}
  */
-export function createSplitInfo(transactionDataItem, splitIndex, accessor) {
+export function createSplitInfo(transactionDataItem, splitIndex, accessor, args) {
+    args = args || {};
+
     if (!transactionDataItem || !accessor) {
         return;
     }
@@ -349,6 +316,7 @@ export function createSplitInfo(transactionDataItem, splitIndex, accessor) {
         accessor: accessor,
         transactionDataItem: transactionDataItem,
         splitIndex: splitIndex,
+        accountStateDataItem: args.accountStateDataItem,
         currencyQuantityDefinition: currencyQuantityDefinition,
         sharesQuantityDefinition: sharesQuantityDefinition,
 
@@ -935,7 +903,8 @@ function updateTransactionDataItem(splitInfo, newTransactionDataItem,
         if (splitToPush) {
             const newSplit = Object.assign({}, split, splitToPush);
             const { lotChanges } = newSplit;
-            if (lotChanges && !actionType.hasLotChanges) {
+            if (lotChanges && !actionType.hasLotChanges
+             && (!actionType.hasModifyLotIds || !newTransactionDataItem.id)) {
                 lotChanges.forEach((lotChange) => {
                     delete lotChange.lotId;
                 });
@@ -1623,6 +1592,7 @@ export const renderTotalSharesDisplay = ACE.renderQuantityDisplay;
  * @returns {CellEditorsManager~ColumnInfo}
  */
 export function getTotalSharesColumnInfo(args) {
+    const columnInfoArgs = args;
     return Object.assign({ key: 'totalShares',
         header: {
             label: userMsg('LotCellEditors-totalShares'),
@@ -1632,7 +1602,119 @@ export function getTotalSharesColumnInfo(args) {
         inputClassExtras: 'shares-base shares-input',
         cellClassName: 'cell-base shares-base shares-cell',
 
+        getCellValue: (args) => 
+            getTotalSharesCellValue(args, columnInfoArgs),
         renderDisplayCell: renderTotalSharesDisplay,
     },
     args);
+}
+
+function getTotalSharesCellValue(args, columnInfoArgs) {
+    const splitInfo = getSplitInfo(args, columnInfoArgs);
+    if (splitInfo) {
+        const { accountStateDataItem } = splitInfo;
+        if (accountStateDataItem) {
+            return {
+                quantityBaseValue: accountStateDataItem.quantityBaseValue,
+                quantityDefinition: splitInfo.sharesQuantityDefinition,
+            };
+        }
+    }
+}
+
+
+
+/**
+ * Display renderer for total market value quantities.
+ * @param {CellQuantityDisplayArgs} args
+ */
+export const renderTotalMarketValueDisplay = ACE.renderQuantityDisplay;
+
+
+/**
+ * Retrieves a column info for market value totals cells.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getTotalMarketValueColumnInfo(args) {
+    const columnInfoArgs = args;
+    return Object.assign({ key: 'totalMarketValue',
+        header: {
+            label: userMsg('LotCellEditors-totalMarketValue'),
+            ariaLabel: 'Total Shares',
+            classExtras: 'header-base monetary-base monetary-header',
+        },
+        inputClassExtras: 'monetary-base monetary-input',
+        cellClassName: 'cell-base monetary-base monetary-cell',
+
+        getCellValue: (args) => 
+            getTotalMarketValueCellValue(args, columnInfoArgs),
+        renderDisplayCell: renderTotalSharesDisplay,
+    },
+    args);
+}
+
+function getTotalMarketValueCellValue(args, columnInfoArgs) {
+    const splitInfo = getSplitInfo(args, columnInfoArgs);
+    if (splitInfo) {
+        const { accountStateDataItem, editStates,
+            currencyQuantityDefinition, sharesQuantityDefinition,
+        } = splitInfo;
+        const priceBaseValue = editStates.price.editorBaseValue;
+        if (accountStateDataItem
+         && (typeof priceBaseValue === 'number')) {
+            const sharesValue = sharesQuantityDefinition.baseValueToNumber(
+                accountStateDataItem.quantityBaseValue);
+            const priceValue = currencyQuantityDefinition.baseValueToNumber(
+                priceBaseValue);
+            const marketValue = sharesValue * priceValue;
+            return {
+                quantityBaseValue: currencyQuantityDefinition.numberToBaseValue(
+                    marketValue),
+                quantityDefinition: currencyQuantityDefinition,
+            };
+        }
+    }
+}
+
+
+/**
+ * Retrieves a column info for cost basis totals cells.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getTotalCostBasisColumnInfo(args) {
+    const columnInfoArgs = args;
+    return Object.assign({ key: 'totalCostBasis',
+        header: {
+            label: userMsg('LotCellEditors-totalCostBasis'),
+            ariaLabel: 'Total Shares',
+            classExtras: 'header-base monetary-base monetary-header',
+        },
+        inputClassExtras: 'monetary-base monetary-input',
+        cellClassName: 'cell-base monetary-base monetary-cell',
+
+        getCellValue: (args) => 
+            getTotalCostBasisCellValue(args, columnInfoArgs),
+        renderDisplayCell: renderTotalSharesDisplay,
+    },
+    args);
+}
+
+function getTotalCostBasisCellValue(args, columnInfoArgs) {
+    const splitInfo = getSplitInfo(args, columnInfoArgs);
+    if (splitInfo) {
+        const { accountStateDataItem,
+        } = splitInfo;
+        if (accountStateDataItem && accountStateDataItem.lotStates) {
+            let costBasisBaseValue = 0;
+            accountStateDataItem.lotStates.forEach((lotState) => {
+                costBasisBaseValue += lotState.costBasisBaseValue;
+            });
+            return {
+                quantityBaseValue: costBasisBaseValue,
+                quantityDefinition: splitInfo.currencyQuantityDefinition,
+            };
+        }
+    }
 }

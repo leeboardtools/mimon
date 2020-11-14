@@ -572,13 +572,14 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
             // price
             columnInfoDefs.price = LCE.getPriceColumnInfo(lceArgs);
 
-            // market value
-            // columnInfoDefs.marketValue = LCE.getMarketValueColumnInfo(lceArgs);
-
             // total shares
-            columnInfoDefs.totalShares = LCE.getTotalSharesColumnInfo({
-                getCellValue: getAccountStateQuantityCellValue,
-            });
+            columnInfoDefs.totalShares = LCE.getTotalSharesColumnInfo(lceArgs);
+
+            // total market value
+            columnInfoDefs.totalMarketValue = LCE.getTotalMarketValueColumnInfo(lceArgs);
+
+            // total cost basis
+            columnInfoDefs.totalCostBasis = LCE.getTotalCostBasisColumnInfo(lceArgs);
         }
         else {
             columnInfoDefs.description = ACE.getDescriptionColumnInfo(
@@ -926,7 +927,9 @@ export class AccountRegister extends React.Component {
                 rowEntry.transactionDataItem || rowEntry.newTransactionDataItem,
                 rowEntry.splitIndex,
                 this.props.accessor,
-                rowEntry.caller,
+                {
+                    accountStateDataItem: rowEntry.accountStateDataItem,
+                }
             );
         }
     }

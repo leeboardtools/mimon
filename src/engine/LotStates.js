@@ -5,7 +5,7 @@ import { YMDDate, getYMDDate, getYMDDateString } from '../util/YMDDate';
  * @typedef {object}    LotStateDataItem
  * @property {number}   lotId   The id of the lot this state represents.
  * @property {number}   quantityBaseValue   The base value of the quantity 
- * of the lot state.
+ * of the lot state, such as number of shares.
  * @property {number}   costBasisBaseValue  The base value of the cost basis of the lot.
  * @property {string}   ymdDateCreated    The date the lot was created.
  * @property {number[][]}   previousBaseValues  Array containing two element 
@@ -19,7 +19,7 @@ import { YMDDate, getYMDDate, getYMDDateString } from '../util/YMDDate';
  * @typedef {object}    LotState
  * @property {number}   lotId   The id of the lot this state represents.
  * @property {number}   quantityBaseValue   The base value of the quantity of 
- * the lot state.
+ * of the lot state, such as number of shares.
  * @property {number}   costBasisBaseValue  The base value of the cost basis of the lot.
  * @property {YMDDate}  ymdDateCreated The date the lot was created.
  * @property {number[][]}   previousBaseValues  Array containing two element 
