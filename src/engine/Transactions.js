@@ -593,7 +593,10 @@ export function compareTransactionKeys(a, b) {
 
 /**
  * @typedef {object} AccountStateAndTransactionInfo
- * @property {AccountStateDataItem} accountStateDataItem
+ * @property {AccountStateDataItem} accountStateDataItem    The account state after
+ * the transaction.
+ * @property {AccountStateDataItem} preAccountStateDataItem    The account state before
+ * the transaction.
  * @property {TransactionDataItem}  transactionDataItem
  * @property {number}   splitIndex  The index of the {@link SplitDataItem} in the
  * {@link TransactionDataItem}'s split property.
@@ -1594,6 +1597,7 @@ export class TransactionManager extends EventEmitter {
                     }
                 }
                 result.push({
+                    preAccountStateDataItem: accountStateDataItems[i - 1],
                     accountStateDataItem: accountStateDataItems[i],
                     transactionDataItem: transactionDataItem,
                     splitIndex: splitIndex,

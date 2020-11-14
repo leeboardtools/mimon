@@ -1382,6 +1382,9 @@ test('Transactions-accountStateUpdates', async () => {
                 accountStateDataItem:
                     { ymdDate: settingsA.ymdDate, 
                         quantityBaseValue: checkingQuantityBaseValueA },
+                preAccountStateDataItem:
+                    { ymdDate: sys.initialYMDDate, 
+                        quantityBaseValue: sys.checkingOBQuantityBaseValue },
                 transactionDataItem: transA,
                 splitIndex: 0,
                 splitOccurrance: 0,
@@ -1390,6 +1393,9 @@ test('Transactions-accountStateUpdates', async () => {
                 accountStateDataItem:
                     { ymdDate: settingsB.ymdDate, 
                         quantityBaseValue: checkingQuantityBaseValueB },
+                preAccountStateDataItem:
+                    { ymdDate: settingsA.ymdDate, 
+                        quantityBaseValue: checkingQuantityBaseValueA },
                 transactionDataItem: transB,
                 splitIndex: 1,
                 splitOccurrance: 0,
@@ -1398,6 +1404,9 @@ test('Transactions-accountStateUpdates', async () => {
                 accountStateDataItem:
                     { ymdDate: settingsC.ymdDate, 
                         quantityBaseValue: checkingQuantityBaseValueC },
+                preAccountStateDataItem:
+                    { ymdDate: settingsB.ymdDate, 
+                        quantityBaseValue: checkingQuantityBaseValueB },
                 transactionDataItem: transC,
                 splitIndex: 0,
                 splitOccurrance: 0,
@@ -1411,6 +1420,9 @@ test('Transactions-accountStateUpdates', async () => {
                 accountStateDataItem:
                     { ymdDate: settingsB.ymdDate, 
                         quantityBaseValue: checkingQuantityBaseValueB },
+                preAccountStateDataItem:
+                    { ymdDate: settingsA.ymdDate, 
+                        quantityBaseValue: checkingQuantityBaseValueA },
                 transactionDataItem: transB,
                 splitIndex: 1,
                 splitOccurrance: 0,
@@ -1419,6 +1431,9 @@ test('Transactions-accountStateUpdates', async () => {
                 accountStateDataItem:
                     { ymdDate: settingsC.ymdDate, 
                         quantityBaseValue: checkingQuantityBaseValueC },
+                preAccountStateDataItem:
+                    { ymdDate: settingsB.ymdDate, 
+                        quantityBaseValue: checkingQuantityBaseValueB },
                 transactionDataItem: transC,
                 splitIndex: 0,
                 splitOccurrance: 0,
@@ -1510,6 +1525,9 @@ test('Transactions-accountStateUpdates', async () => {
                 accountStateDataItem:
                     { ymdDate: settingsA.ymdDate, 
                         quantityBaseValue: checkingQuantityBaseValueA },
+                preAccountStateDataItem:
+                    { ymdDate: sys.initialYMDDate, 
+                        quantityBaseValue: sys.checkingOBQuantityBaseValue },
                 transactionDataItem: transA,
                 splitIndex: 0,
                 splitOccurrance: 0,
@@ -1518,6 +1536,9 @@ test('Transactions-accountStateUpdates', async () => {
                 accountStateDataItem:
                     { ymdDate: ymdDateCb, 
                         quantityBaseValue: checkingQuantityBaseValueCb },
+                preAccountStateDataItem:
+                    { ymdDate: settingsA.ymdDate, 
+                        quantityBaseValue: checkingQuantityBaseValueA },
                 transactionDataItem: transCb,
                 splitIndex: 0,
                 splitOccurrance: 0,
@@ -1526,6 +1547,9 @@ test('Transactions-accountStateUpdates', async () => {
                 accountStateDataItem:
                     { ymdDate: settingsB.ymdDate, 
                         quantityBaseValue: checkingQuantityBaseValueBb },
+                preAccountStateDataItem:
+                    { ymdDate: ymdDateCb, 
+                        quantityBaseValue: checkingQuantityBaseValueCb },
                 transactionDataItem: transB,
                 splitIndex: 1,
                 splitOccurrance: 0,
