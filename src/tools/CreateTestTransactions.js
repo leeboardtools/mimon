@@ -738,9 +738,9 @@ export function createTestTransactions(newFileContents, options) {
 
         //
         // The following are pure test transactions with no grounding in reality...
-        if (!options.noReverseSplit) {
+        if (options.includeReverseSplit) {
             // Reverse split
-            // '2020-10-31'
+            // '2020-09-15'
             const aaplChangeReverseSplit2020_08_31_LotA = { 
                 lotId: lotA, 
                 quantityBaseValue: -3 * 6500000, 
@@ -754,7 +754,7 @@ export function createTestTransactions(newFileContents, options) {
                 quantityBaseValue: -3 * 71571, 
             };
             transactions.push({
-                ymdDate: '2020-10-31',
+                ymdDate: '2020-09-15',
                 description: '1 for 4 reverse split',
                 splits: [
                     {
@@ -769,29 +769,54 @@ export function createTestTransactions(newFileContents, options) {
                     }
                 ],
             });
+
+            // Put back the split...
+            transactions.push({
+                ymdDate: '2020-09-20',
+                description: '4 for 1 split',
+                splits: [
+                    {
+                        accountId: accountId,
+                        quantityBaseValue: 0,
+                        lotTransactionType: T.LotTransactionType.SPLIT,
+                        lotChanges: [ 
+                            aaplChangeSplit2020_08_31_LotA,
+                            aaplChangeSplit2020_08_31_LotC,
+                            aaplChangeSplit2020_08_31_LotE,
+                        ],
+                    }
+                ],
+            });
         }
 
-        // On 2020-10-31 have:
-        // A: 2005-02-18: 650.0000
-        // C: 2005-03-11: 1050.0000
-        // E: 2014-08-14: 7.1571
 
-        // Need a return of capital example...
-        // We have a total of 6888.6284 sh.
-        // If we return $5000.00 then the allocations to the cost bases will be:
-        // Lot A: 1930.72
-        // Lot C: 3048.50
-        // Lot E: 677.18 (from 5000.00 - 1930.72 - 3048.50)
-        //
-        // The cost bases coming in are:
-        // Lot A: 4127.70
-        // Lot C: 6051.71
-        // Lot E: 697.96
-        //
-        // And the final cost bases will be:
-        // Lot A: 2196.98
-        // Lot C: 3003.21
-        // Lot E: 677.18
+        if (options.includeROC) {
+            transactions.push({
+                ymdDate: '2020-10-01',
+                description: 'Return of Capital No Capital Gains',
+                splits: [
+                    {
+                        accountId: accountId,
+                        lotTransactionType: T.LotTransactionType.RETURN_OF_CAPITAL,
+                        lotChanges: [
+                            {
+                                lotId: lotA,
+                                costBasisBaseValue: -190375,
+                            },
+                            {
+                                lotId: lotC,
+                                costBasisBaseValue: -307529,
+                            },
+                            {
+                                lotId: lotE,
+                                costBasisBaseValue: -2096,
+                            },
+                        ],
+                        quantityBaseValue: 0,
+                    },
+                ],
+            });
+        }
     }
 
     const iraAccount = findAccountEntry(newFileContents,

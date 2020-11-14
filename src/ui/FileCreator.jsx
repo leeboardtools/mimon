@@ -499,7 +499,7 @@ export class FileCreator extends React.Component {
 
             if (this.state.addTestTransactions) {
                 createTestTransactions(newFileContents, {
-                    //noReverseSplit: true,
+                    includeReverseSplit: true,
                 });
             }
             

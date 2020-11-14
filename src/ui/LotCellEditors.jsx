@@ -15,7 +15,7 @@ import { LotsSelectionEditor } from './LotsSelectionEditor';
 
 //
 // TODO:
-// When the action type changes, we need to trigger an render, this implies
+// When the action type changes, we need to trigger a render, this implies
 // we have a callback for doing so.
 
 /**
@@ -56,6 +56,7 @@ import { LotsSelectionEditor } from './LotsSelectionEditor';
  * @property {LotActionTypeDef}   REMOVE_SHARES_FIFO
  * @property {LotActionTypeDef}   REMOVE_SHARES_LIFO
  * @property {LotActionTypeDef}   REMOVE_SHARES_BY_LOTS
+ * @property {LotActionTypeDef}   RETURN_OF_CAPITAL
  */
 export const LotActionType = {
     BUY: { name: 'BUY', 
@@ -119,13 +120,12 @@ export const LotActionType = {
         hasSelectedLots: true,
         hasLotChanges: true,
     },
-    /*
     RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', 
-        fromSharesInfo: asyncROCFromSplitInfo,
+        fromSplitInfo: asyncReturnOfCapitalFromSplitInfo,
         noShares: true, 
         noCostBasis: true,
+        monetaryAmountIsCostBasisChanges: true,
     },
-    */
 };
 
 /*
@@ -377,6 +377,7 @@ function setupSplitInfoEditStates(splitInfo) {
     const sharesSign = actionType.sharesNegative ? -1 : 1;
 
     let sharesBaseValue;
+    let totalCostBasisBaseValue;
     let sharesLotChanges;
     let monetaryAmountBaseValue;
     let feesBaseValue;
@@ -384,12 +385,20 @@ function setupSplitInfoEditStates(splitInfo) {
 
     const { lotChanges } = splitDataItem;
     if (lotChanges && lotChanges.length) {
-        sharesBaseValue = 0;
         for (let lotChange of lotChanges) {
-            sharesBaseValue += lotChange.quantityBaseValue;
+            if (lotChange.quantityBaseValue) {
+                sharesBaseValue = sharesBaseValue || 0;
+                sharesBaseValue += lotChange.quantityBaseValue;
+            }
+            if (lotChange.costBasisBaseValue) {
+                totalCostBasisBaseValue = totalCostBasisBaseValue || 0;
+                totalCostBasisBaseValue += lotChange.costBasisBaseValue;
+            }
         }
 
-        sharesBaseValue *= sharesSign;
+        if (sharesBaseValue) {
+            sharesBaseValue *= sharesSign;
+        }
     }
     else {
         if (actionType.autoLotType) {
@@ -398,7 +407,12 @@ function setupSplitInfoEditStates(splitInfo) {
     }
     sharesLotChanges = LS.getLotChangeDataItems(lotChanges, true);
 
-    if (!actionType.noCostBasis) {
+    if (actionType.monetaryAmountIsCostBasisChanges) {
+        if (typeof totalCostBasisBaseValue === 'number') {
+            monetaryAmountBaseValue = -totalCostBasisBaseValue;
+        }
+    }
+    else if (!actionType.noMonetaryAmount) {
         if (typeof splitDataItem.quantityBaseValue === 'number') {
             monetaryAmountBaseValue = splitDataItem.quantityBaseValue
                 * sharesSign;
@@ -416,7 +430,8 @@ function setupSplitInfoEditStates(splitInfo) {
         }
     }
 
-    if (sharesBaseValue && (typeof monetaryAmountBaseValue === 'number')) {
+    if (sharesBaseValue && (typeof monetaryAmountBaseValue === 'number')
+     && !actionType.noCostBasis) {
         let sharesValue = sharesQuantityDefinition.baseValueToNumber(
             sharesBaseValue);
 
@@ -1083,6 +1098,31 @@ function removeSharesFromSplitInfo(splitInfo, transactionDataItem) {
             fees: editStates.fees,
             price: editStates.price,
         });
+}
+
+
+//
+//---------------------------------------------------------
+//
+async function asyncReturnOfCapitalFromSplitInfo(splitInfo, transactionDataItem) {
+    const { accessor, splitIndex, editStates } = splitInfo;    
+    const splitDataItem = splitInfo.transactionDataItem.splits[splitIndex];
+    const args = {
+        accessor: accessor,
+        accountId: splitDataItem.accountId,
+        rocBaseValue: editStates.monetaryAmount.editorBaseValue,
+    };
+    if (transactionDataItem.id) {
+        args.transactionId = transactionDataItem.id;
+    }
+    else {
+        args.ymdDate = transactionDataItem.ymdDate;
+    }
+
+    Object.assign(transactionDataItem, 
+        await LTH.asyncCreateTransactionDataItemForRETURN_OF_CAPITAL(args));
+    // split[0] is always the ROC split...
+    return 0;
 }
 
 
