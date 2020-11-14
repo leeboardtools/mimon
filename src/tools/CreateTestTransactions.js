@@ -790,7 +790,7 @@ export function createTestTransactions(newFileContents, options) {
         }
 
 
-        if (options.includeROC) {
+        if (options.includeReturnOfCapital) {
             transactions.push({
                 ymdDate: '2020-10-01',
                 description: 'Return of Capital No Capital Gains',

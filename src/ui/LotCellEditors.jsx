@@ -38,6 +38,7 @@ import { LotsSelectionEditor } from './LotsSelectionEditor';
  * @property {boolean}  [hasSelectedLots]
  * @property {boolean}  [hasLotChanges]
  * @property {AutoLotType}  [autoLotType]
+ * @property {boolean}  [monetaryAmountIsCostBasisChanges]
  */
 
 
@@ -124,6 +125,7 @@ export const LotActionType = {
         fromSplitInfo: asyncReturnOfCapitalFromSplitInfo,
         noShares: true, 
         noCostBasis: true,
+        noFees: true,
         monetaryAmountIsCostBasisChanges: true,
     },
 };
@@ -389,7 +391,7 @@ function setupSplitInfoEditStates(splitInfo) {
             if (lotChange.quantityBaseValue) {
                 sharesBaseValue = sharesBaseValue || 0;
                 sharesBaseValue += lotChange.quantityBaseValue;
-            }
+            }   
             if (lotChange.costBasisBaseValue) {
                 totalCostBasisBaseValue = totalCostBasisBaseValue || 0;
                 totalCostBasisBaseValue += lotChange.costBasisBaseValue;
@@ -409,6 +411,16 @@ function setupSplitInfoEditStates(splitInfo) {
 
     if (actionType.monetaryAmountIsCostBasisChanges) {
         if (typeof totalCostBasisBaseValue === 'number') {
+            // Also need to add the quantities of the other splits, which
+            // are capital gains that were distributed due to ROC being > the 
+            // lot cost basis.
+            for (let i = 0; i < splitIndex; ++i) {
+                totalCostBasisBaseValue += splits[i].quantityBaseValue;
+            }
+            for (let i = splitIndex + 1; i < splits.length; ++i) {
+                totalCostBasisBaseValue += splits[i].quantityBaseValue;
+            }
+            
             monetaryAmountBaseValue = -totalCostBasisBaseValue;
         }
     }
@@ -1121,6 +1133,7 @@ async function asyncReturnOfCapitalFromSplitInfo(splitInfo, transactionDataItem)
 
     Object.assign(transactionDataItem, 
         await LTH.asyncCreateTransactionDataItemForRETURN_OF_CAPITAL(args));
+
     // split[0] is always the ROC split...
     return 0;
 }

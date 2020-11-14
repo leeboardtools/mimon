@@ -3211,8 +3211,9 @@ test('LotCellEditors-RETURN_OF_CAPITAL', async () => {
         const pathName = path.join(baseDir, 'RETURN_OF_CAPITAL');
         const { accessor, sys } = await EATH.asyncSetupWithTestTransactions(pathName,
             {
-                includeROC: true,
+                includeReturnOfCapital: true,
             });
+        const accountingActions = accessor.getAccountingActions();
 
         //const equityAccountId = sys['EQUITYAccountId'];
         const aaplAccountId = sys['ASSET-Investments-Brokerage Account-AAPLAccountId'];
@@ -3381,6 +3382,27 @@ test('LotCellEditors-RETURN_OF_CAPITAL', async () => {
                 }),
             ]),
         }));
+
+
+        //
+        // Test existing capital gains transaction
+        const actionA = await accountingActions.asyncCreateModifyTransactionAction(
+            newTransactionDataItem);
+        result = await accessor.asyncApplyAction(actionA);
+
+
+        splitInfo = LCE.createSplitInfo(newTransactionDataItem, 0, accessor);
+
+        expect(splitInfo.actionType).toEqual(LCE.LotActionType.RETURN_OF_CAPITAL);
+        expect(splitInfo.editStates.shares.editorBaseValue)
+            .toBeUndefined();
+        expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
+            .toEqual(1000000);
+        expect(splitInfo.editStates.fees.editorBaseValue)
+            .toBeUndefined();
+        expect(splitInfo.editStates.price.editorBaseValue)
+            .toBeUndefined();
+
 
 
         await accessor.asyncCloseAccountingFile();
