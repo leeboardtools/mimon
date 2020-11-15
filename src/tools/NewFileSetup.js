@@ -191,7 +191,19 @@ async function asyncLoadPrices(setupInfo) {
         return;
     }
 
-    // TODO:
+    const { priceManager, pricedItemNameMapping, warnings } = setupInfo;
+    for (let i = 0; i < prices.length; ++i) {
+        const item = prices[i];
+
+        const pricedItem = pricedItemNameMapping.get(item.pricedItemId);
+        if (!pricedItem) {
+            warnings.push('NewFileSetup-price_pricedItem_not_found', 
+                item.pricedItemId);
+            continue;
+        }
+
+        await priceManager.asyncAddPrices(pricedItem.id, item.prices);
+    }
 }
 
 
@@ -414,6 +426,7 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
         accountManager: accountingSystem.getAccountManager(),
         transactionManager: accountingSystem.getTransactionManager(),
         lotManager: accountingSystem.getLotManager(),
+        priceManager: accountingSystem.getPriceManager(),
 
         pricedItemMapping: new Map(),
         pricedItemNameMapping: new Map(),

@@ -923,14 +923,14 @@ export class AccountRegister extends React.Component {
 
     updateRowEntryForLotCellEditors(rowEntry) {
         if (this.hasLots()) {
-            rowEntry.lceSplitInfo = LCE.createSplitInfo(
-                rowEntry.transactionDataItem || rowEntry.newTransactionDataItem,
-                rowEntry.splitIndex,
-                this.props.accessor,
-                {
-                    accountStateDataItem: rowEntry.accountStateDataItem,
-                }
-            );
+            rowEntry.lceSplitInfo = LCE.createSplitInfo({
+                transactionDataItem: 
+                    rowEntry.transactionDataItem || rowEntry.newTransactionDataItem,
+                splitIndex: rowEntry.splitIndex,
+                accessor: this.props.accessor,
+                accountStateDataItem: rowEntry.accountStateDataItem,
+                referencePriceBaseValue: rowEntry.priceBaseValue,
+            });
         }
     }
 
@@ -1202,9 +1202,29 @@ export class AccountRegister extends React.Component {
                 return;
             }
             
+            const { transactionDataItem } = resultEntry;
             newRowEntry.accountStateDataItem = resultEntry.accountStateDataItem;
-            newRowEntry.transactionDataItem = resultEntry.transactionDataItem;
+            newRowEntry.transactionDataItem = transactionDataItem;
             newRowEntry.splitIndex = resultEntry.splitIndex;
+
+            if (!LCE.canCalcPrice({
+                transactionDataItem: transactionDataItem,
+                splitIndex: newRowEntry.splitIndex,
+                accessor: accessor,
+            })) {
+                const pricedItemDataItem 
+                    = AH.getPricedItemDataItemForAccountId(accessor, accountId);
+                const priceDataItem 
+                    = await accessor.asyncGetPriceDataItemOnOrClosestBefore(
+                        pricedItemDataItem.id,
+                        transactionDataItem.ymdDate);
+                if (priceDataItem) {
+                    const currency = getCurrency(pricedItemDataItem.currency);
+                    const priceBaseValue = currency.getQuantityDefinition()
+                        .numberToBaseValue(priceDataItem.close);
+                    newRowEntry.priceBaseValue = priceBaseValue;
+                }
+            }
 
             this.updateRowEntryForLotCellEditors(newRowEntry);
 

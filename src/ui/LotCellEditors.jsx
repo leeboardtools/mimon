@@ -258,18 +258,54 @@ function lotActionTypeFromTransactionInfo(transactionDataItem, splitIndex, acces
 
 /**
  * @typedef {object} LotCellEditors~createSplitInfoArgs
+ * @property {TransactionDataItem}  transactionDataItem
+ * @property {number}   splitIndex
+ * @property {EngineAccessor}   accessor
  * @property {AccountStateDataItem} [accountStateDataItem]
+ * @property {number} [referencePriceBaseValue]
  */
 
 /**
+ * Determines if the share price for a transaction can be calculated from the
+ * information passed to {@link createSplitInfo}.
+ * @param {LotCellEditors~createSplitInfoArgs} args 
+ * @returns {boolean}
+ */
+export function canCalcPrice(args) {
+    const { transactionDataItem, splitIndex } = args;
+    if (transactionDataItem) {
+        const { splits } = transactionDataItem;
+        const split = splits[splitIndex];
+        switch (split.lotTransactionType) {
+        case T.LotTransactionType.BUY_SELL.name :
+        case T.LotTransactionType.REINVESTED_DIVIDEND.name :
+            return true;
+        }
+    }
+}
+
+
+/**
  * Creates the {@link LotCellEditors~SplitInfo} object used by the lot cell editors.
- * @param {TransactionDataItem} transactionDataItem 
- * @param {number} splitIndex 
- * @param {EngineAccessor} accessor 
+ * @param {LotCellEditors~createSplitInfoArgs} args
  * @returns {LotCellEditors~SplitInfo}
  */
 export function createSplitInfo(transactionDataItem, splitIndex, accessor, args) {
-    args = args || {};
+    if (arguments.length === 1) {
+        args = transactionDataItem;
+
+        transactionDataItem = args.transactionDataItem;
+        splitIndex = args.splitIndex;
+        accessor = args.accessor;
+    }
+    else {
+        args = Object.assign({}, {
+            transactionDataItem: transactionDataItem,
+            splitIndex: splitIndex,
+            accessor: accessor,
+        },
+        args || {});
+    }
 
     if (!transactionDataItem || !accessor) {
         return;
@@ -312,18 +348,14 @@ export function createSplitInfo(transactionDataItem, splitIndex, accessor, args)
     }
     const currencyQuantityDefinition = currency.getQuantityDefinition();
 
-    const splitInfo = {
-        accessor: accessor,
-        transactionDataItem: transactionDataItem,
-        splitIndex: splitIndex,
-        accountStateDataItem: args.accountStateDataItem,
+    const splitInfo = Object.assign({}, args, {
         currencyQuantityDefinition: currencyQuantityDefinition,
         sharesQuantityDefinition: sharesQuantityDefinition,
 
         actionType: actionType,
 
         editStates: {},
-    };
+    });
 
     setupSplitInfoEditStates(splitInfo);
     return splitInfo;
@@ -1660,7 +1692,10 @@ function getTotalMarketValueCellValue(args, columnInfoArgs) {
         const { accountStateDataItem, editStates,
             currencyQuantityDefinition, sharesQuantityDefinition,
         } = splitInfo;
-        const priceBaseValue = editStates.price.editorBaseValue;
+        let priceBaseValue = editStates.price.editorBaseValue;
+        if (typeof priceBaseValue !== 'number') {
+            priceBaseValue = splitInfo.referencePriceBaseValue;
+        }
         if (accountStateDataItem
          && (typeof priceBaseValue === 'number')) {
             const sharesValue = sharesQuantityDefinition.baseValueToNumber(

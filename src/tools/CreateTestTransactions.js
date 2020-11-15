@@ -229,42 +229,42 @@ export function createTestTransactions(newFileContents, options) {
     prices.push({
         pricedItemId: 'AAPL',
         prices: [
-            { ymdDate: '2005-02-04', close: 1.41, },
-            { ymdDate: '2005-02-11', close: 1.45, },
-            { ymdDate: '2005-02-18', close: 1.55, },
-            { ymdDate: '2005-02-25', close: 1.59, },
+            { ymdDate: '2005-02-04', close: 1.41 * 2 * 7 * 4, },
+            { ymdDate: '2005-02-11', close: 1.45 * 2 * 7 * 4, },
+            { ymdDate: '2005-02-18', close: 1.55 * 2 * 7 * 4, },
+            { ymdDate: '2005-02-25', close: 1.59 * 2 * 7 * 4, },
             // 2 for 1 split...
-            { ymdDate: '2005-02-28', close: 1.60, },
-            { ymdDate: '2005-03-04', close: 1.53, },
-            { ymdDate: '2005-03-11', close: 1.44, },
+            { ymdDate: '2005-02-28', close: 1.60 * 7 * 4, },
+            { ymdDate: '2005-03-04', close: 1.53 * 7 * 4, },
+            { ymdDate: '2005-03-11', close: 1.44 * 7 * 4, },
 
             // Dividend paid $0.1175
-            { ymdDate: '2014-05-15', close: 21.03, },
-            { ymdDate: '2014-05-19', close: 21.59, },
+            { ymdDate: '2014-05-15', close: 21.03 * 7 * 4, },
+            { ymdDate: '2014-05-19', close: 21.59 * 7 * 4, },
 
-            { ymdDate: '2014-06-04', close: 23.03, },
-            { ymdDate: '2014-06-05', close: 23.12, },
-            { ymdDate: '2014-06-06', close: 23.06, },
+            { ymdDate: '2014-06-04', close: 23.03 * 7 * 4, },
+            { ymdDate: '2014-06-05', close: 23.12 * 7 * 4, },
+            { ymdDate: '2014-06-06', close: 23.06 * 7 * 4, },
             // 7 for 1 split...
-            { ymdDate: '2014-06-09', close: 23.42, },
-            { ymdDate: '2014-06-10', close: 23.56, },
-            { ymdDate: '2014-06-13', close: 22.82, },
-            { ymdDate: '2014-06-20', close: 22.73, },
+            { ymdDate: '2014-06-09', close: 23.42 * 4, },
+            { ymdDate: '2014-06-10', close: 23.56 * 4, },
+            { ymdDate: '2014-06-13', close: 22.82 * 4, },
+            { ymdDate: '2014-06-20', close: 22.73 * 4, },
 
             // Dividend paid $0.1175
-            { ymdDate: '2014-08-14', close: 24.38, },
-            { ymdDate: '2014-08-15', close: 24.50, },
-            { ymdDate: '2014-08-18', close: 24.79, },
+            { ymdDate: '2014-08-14', close: 24.38 * 4, },
+            { ymdDate: '2014-08-15', close: 24.50 * 4, },
+            { ymdDate: '2014-08-18', close: 24.79 * 4, },
 
-            { ymdDate: '2015-03-12', close: 30.92, },
+            { ymdDate: '2015-03-12', close: 30.92 * 4, },
 
-            { ymdDate: '2019-11-12', close: 65.49, },
-            { ymdDate: '2019-11-13', close: 66.12, },
-            { ymdDate: '2019-11-14', close: 65.66, },
+            { ymdDate: '2019-11-12', close: 65.49 * 4, },
+            { ymdDate: '2019-11-13', close: 66.12 * 4, },
+            { ymdDate: '2019-11-14', close: 65.66 * 4, },
 
-            { ymdDate: '2020-01-24', close: 79.58, },
-            { ymdDate: '2020-01-31', close: 77.38, },
-            { ymdDate: '2020-02-04', close: 79.71, },
+            { ymdDate: '2020-01-24', close: 79.58 * 4, },
+            { ymdDate: '2020-01-31', close: 77.38 * 4, },
+            { ymdDate: '2020-02-04', close: 79.71 * 4, },
 
             // 4 for 1 split...
             { ymdDate: '2020-08-31', close: 129.04, },

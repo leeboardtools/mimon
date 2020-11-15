@@ -36,6 +36,7 @@
     "NewFileSetup-addTransaction_failed": ["Could not create the transaction '", "'."],
     "NewFileSetup-addTransaction_invalid_accountId": ["An account identified by '", "' was not found."],
     "NewFileSetup-addTransaction_invalid_lotId": ["A lot with description '", "' was not found."],
+    "NewFileSetup-price_pricedItem_not_found": ["Could not add the prices for '", "', the priced item was not defined"],
     
 
     "App-mru_open_failed": ["Could not open '", "'. ", ""],
