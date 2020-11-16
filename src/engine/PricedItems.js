@@ -159,6 +159,9 @@ export function getPricedItemOnlineUpdateTypeName(type) {
  * item is a standard built-in currency and cannot be modified nor removed.
  * @property {string}   quantityDefinition  The name of the {@link QuantityDefinition} 
  * defining quantities of the priced item.
+ * @property {string}   [priceQuantityDefinition]   If specified the
+ * name of the {@link QuantityDefinition} defining the prices of the item, normally
+ * used for securities.
  * @property {string}   [name]  The user supplied name of the priced item.
  * @property {string}   [description]   The user supplied description of the 
  * priced item.
@@ -179,6 +182,8 @@ export function getPricedItemOnlineUpdateTypeName(type) {
  * item is a standard built-in currency and cannot be modified nor removed.
  * @property {QuantityDefinition}   quantityDefinition  The quantity definition 
  * defining the priced item's quantities.
+ * @property {QuantityDefinition}   [priceQuantityDefinition]   If specified the
+ * QuantityDefinition defining the prices of the item, normally used for securities.
  * @property {string}   [name]  The user supplied name of the priced item.
  * @property {string}   [description]   The user supplied description of the priced item.
  * @property {string}   [ticker]    The ticker symbol, only for priced item types
@@ -200,12 +205,15 @@ export function getPricedItem(pricedItemDataItem, alwaysCopy) {
         const currency = getCurrency(pricedItemDataItem.currency);
         const quantityDefinition = getQuantityDefinition(
             pricedItemDataItem.quantityDefinition);
+        const priceQuantityDefinition = getQuantityDefinition(
+            pricedItemDataItem.priceQuantityDefinition);
         const onlineUpdateType = getPricedItemOnlineUpdateType(
             pricedItemDataItem.onlineUpdateType);
         if (alwaysCopy
          || (type !== pricedItemDataItem.type)
          || (currency !== pricedItemDataItem.currency)
          || (quantityDefinition !== pricedItemDataItem.quantityDefinition)
+         || (priceQuantityDefinition !== pricedItemDataItem.priceQuantityDefinition)
          || (onlineUpdateType !== pricedItemDataItem.onlineUpdateType)) {
             // We're using Object.assign() to create a copy just in case 
             // there are other properties.
@@ -218,6 +226,9 @@ export function getPricedItem(pricedItemDataItem, alwaysCopy) {
             }
             if (quantityDefinition !== undefined) {
                 pricedItem.quantityDefinition = quantityDefinition;
+            }
+            if (priceQuantityDefinition !== undefined) {
+                pricedItem.priceQuantityDefinition = priceQuantityDefinition;
             }
             if (onlineUpdateType !== undefined) {
                 pricedItem.onlineUpdateType = onlineUpdateType;
@@ -242,12 +253,15 @@ export function getPricedItemDataItem(pricedItem, alwaysCopy) {
         const currencyCode = getCurrencyCode(pricedItem.currency);
         const quantityDefinitionName = getQuantityDefinitionName(
             pricedItem.quantityDefinition);
+        const priceQuantityDefinitionName = getQuantityDefinitionName(
+            pricedItem.priceQuantityDefinition);
         const onlineUpdateTypeName = getPricedItemOnlineUpdateTypeName(
             pricedItem.onlineUpdateType);
         if (alwaysCopy
          || (typeName !== pricedItem.type)
          || (currencyCode !== pricedItem.currency)
          || (quantityDefinitionName !== pricedItem.quantityDefinition)
+         || (priceQuantityDefinitionName !== pricedItem.priceQuantityDefinition)
          || (onlineUpdateTypeName !== pricedItem.onlineUpdateType)) {
             const pricedItemDataItem = Object.assign({}, pricedItem);
             if (typeName !== undefined) {
@@ -258,6 +272,9 @@ export function getPricedItemDataItem(pricedItem, alwaysCopy) {
             }
             if (quantityDefinitionName !== undefined) {
                 pricedItemDataItem.quantityDefinition = quantityDefinitionName;
+            }
+            if (priceQuantityDefinitionName !== undefined) {
+                pricedItemDataItem.priceQuantityDefinition = priceQuantityDefinitionName;
             }
             if (onlineUpdateTypeName !== undefined) {
                 pricedItemDataItem.onlineUpdateType = onlineUpdateTypeName;

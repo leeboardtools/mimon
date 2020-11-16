@@ -35,6 +35,7 @@ test('PricedItem-Data Items', () => {
         type: PI.PricedItemType.SECURITY,
         currency: Currencies['USD'],
         quantityDefinition: getDecimalDefinition(-3),
+        priceQuantityDefinition: getDecimalDefinition(4),
         name: 'Security A',
         description: 'The description of security A',
     };
