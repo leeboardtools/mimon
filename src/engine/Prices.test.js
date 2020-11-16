@@ -30,10 +30,11 @@ test('Prices-DataItems', () => {
 });
 
 
+
 //
 //---------------------------------------------------------
 //
-test('Prices-InMemoryPricesHandler', async () => {
+test('Prices-InMemoryPricesHandler Prices', async () => {
     const handler = new P.InMemoryPricesHandler();
 
     expect(await handler.asyncGetPriceDateRange(1)).toBeUndefined();
@@ -41,21 +42,21 @@ test('Prices-InMemoryPricesHandler', async () => {
 
     const refA = [{ ymdDate: '2018-03-04', close: 12.34, }];
     const pricesA = await handler.asyncAddPriceDataItems(1, refA);
-    expect(pricesA).toEqual(refA);
+    expect(pricesA.newPriceDataItems).toEqual(refA);
 
     const refB = [
         { ymdDate: '2018-10-11', close: 23.45, },
         { ymdDate: '2018-11-22', close: 98.76, },
     ];
     const pricesB = await handler.asyncAddPriceDataItems(1, refB);
-    expect(pricesB).toEqual(refB);
+    expect(pricesB.newPriceDataItems).toEqual(refB);
 
     const refC = [
         { ymdDate: '2018-03-04', close: 45.67, },
         { ymdDate: '2018-12-21', close: 11.11, },
     ];
     const pricesC = await handler.asyncAddPriceDataItems(1, refC);
-    expect(pricesC).toEqual(refC);
+    expect(pricesC.newPriceDataItems).toEqual(refC);
 
     expect(await handler.asyncGetPriceDateRange(1)).toEqual([
         new YMDDate('2018-03-04'),
@@ -68,7 +69,7 @@ test('Prices-InMemoryPricesHandler', async () => {
         { ymdDate: '2018-12-21', close: 65.43, },
     ];
     const pricesD2 = await handler.asyncAddPriceDataItems(2, refD2);
-    expect(pricesD2).toEqual(refD2);
+    expect(pricesD2.newPriceDataItems).toEqual(refD2);
 
 
     // PriceDataItem #1 prices are now:
@@ -118,16 +119,269 @@ test('Prices-InMemoryPricesHandler', async () => {
     ]);
 
 
-    expect(await handler.asyncRemovePricesInDateRange(1, 
-        new YMDDate('2018-11-22'), new YMDDate('2018-12-21'))).toEqual([
+    let result;
+    result = await handler.asyncRemovePricesInDateRange(1, 
+        new YMDDate('2018-11-22'), new YMDDate('2018-12-21'));
+    expect(result.removedPriceDataItems).toEqual([
         { ymdDate: '2018-11-22', close: 98.76, },
+        { ymdDate: '2018-12-21', close: 11.11, },
+    ]);
+    const removeResultA = result;
+
+    result = await handler.asyncGetPriceDataItemsInDateRange(1, 
+        new YMDDate('2018-03-04'), new YMDDate('2018-12-21'), true);
+    expect(result).toEqual([
+        { ymdDate: '2018-03-04', close: 45.67, },
+        { ymdDate: '2018-10-11', close: 23.45, },
+    ]);
+
+    // Undo above
+    await handler.asyncAddPriceDataItems(1,
+        removeResultA.removedPriceDataItems,
+        removeResultA.removedPriceMultiplierDataItems,
+    );
+    expect(await handler.asyncGetPriceDataItemsInDateRange(1, 
+        new YMDDate('2018-03-04'), new YMDDate('2018-12-21'), true)).toEqual([
+        { ymdDate: '2018-03-04', close: 45.67, },
+        { ymdDate: '2018-10-11', close: 23.45, },
+        { ymdDate: '2018-11-22', close: 98.76, },
+        { ymdDate: '2018-12-21', close: 11.11, },
+    ]);
+
+    result = await handler.asyncRemovePricesByDate(1,
+        ['2018=10-11', '2018-12-21', '2018-12-22']);
+    expect(result.removedPriceDataItems).toEqual([
+        { ymdDate: '2018-10-11', close: 23.45, },
         { ymdDate: '2018-12-21', close: 11.11, },
     ]);
     expect(await handler.asyncGetPriceDataItemsInDateRange(1, 
         new YMDDate('2018-03-04'), new YMDDate('2018-12-21'), true)).toEqual([
         { ymdDate: '2018-03-04', close: 45.67, },
-        { ymdDate: '2018-10-11', close: 23.45, },
+        //{ ymdDate: '2018-10-11', close: 23.45, },
+        { ymdDate: '2018-11-22', close: 98.76, },
+        //{ ymdDate: '2018-12-21', close: 11.11, },
     ]);
+});
+
+
+//
+//---------------------------------------------------------
+//
+test('Prices-InMemoryPricesHandler PriceMultipliers', async () => {
+    const handler = new P.InMemoryPricesHandler();
+
+    let result;
+
+    expect(await handler.asyncGetPriceMultiplierDateRange(1)).toBeUndefined();
+    expect(await handler.asyncGetPriceMultiplierDataItemsInDateRange(1)).toEqual([]);
+
+
+    const refA = [{ ymdDate: '2018-03-04', sharesIn: 1, sharesOut: 2, }];
+    const multipliersA = await handler.asyncAddPriceDataItems(1, [], refA);
+    expect(multipliersA.newPriceMultiplierDataItems).toEqual(refA);
+
+    expect(await handler.asyncGetPriceMultiplierDateRange(1)).toEqual([
+        new YMDDate('2018-03-04'),
+        new YMDDate('2018-03-04'),
+    ]);
+
+    result = await handler.asyncGetPriceMultiplierDataItemsInDateRange(1, 
+        new YMDDate('2018-03-02'), new YMDDate('2018-03-02'));
+    expect(result).toEqual([]);
+
+    result = await handler.asyncGetPriceMultiplierDataItemsInDateRange(1, 
+        new YMDDate('2018-03-05'), new YMDDate('2018-03-05'));
+    expect(result).toEqual([]);
+
+    result = await handler.asyncGetPriceMultiplierDataItemsInDateRange(1, 
+        new YMDDate('2018-03-02'), new YMDDate('2018-03-04'));
+    expect(result).toEqual(refA);
+
+    result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
+        new YMDDate('2018-03-03'));
+    expect(result).toBeUndefined();
+
+    result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
+        new YMDDate('2018-03-04'));
+    expect(result).toEqual(refA[0]);
+
+    result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
+        new YMDDate('2018-03-05'));
+    expect(result).toBeUndefined();
+
+    result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
+        new YMDDate('2018-03-04'));
+    expect(result).toEqual(refA[0]);
+
+
+
+    const refB = [
+        { ymdDate: '2018-10-11', sharesIn: 2, sharesOut: 3, },
+        { ymdDate: '2018-11-22', sharesIn: 3, sharesOut: 4, },
+    ];
+    const multipliersB = await handler.asyncAddPriceDataItems(1, [], refB);
+    expect(multipliersB.newPriceMultiplierDataItems).toEqual(refB);
+
+    const refC = [
+        { ymdDate: '2018-03-04', sharesIn: 4, sharesOut: 5, },
+        { ymdDate: '2018-12-21', sharesIn: 5, sharesOut: 6, },
+    ];
+    const multipliersC = await handler.asyncAddPriceDataItems(1, [], refC);
+    expect(multipliersC.newPriceDataItems).toEqual([]);
+    expect(multipliersC.newPriceMultiplierDataItems).toEqual(refC);
+
+
+    // Different priced item id...
+    const refD_2 = [
+        { ymdDate: '2018-10-11', sharesIn: 7, sharesOut: 8, },
+        { ymdDate: '2018-11-22', sharesIn: 9, sharesOut: 10, },
+    ];
+    const multipliersD_2 = await handler.asyncAddPriceDataItems(2, [], refD_2);
+    expect(multipliersD_2.newPriceDataItems).toEqual([]);
+    expect(multipliersD_2.newPriceMultiplierDataItems).toEqual(refD_2);
+
+    expect(await handler.asyncGetPriceMultiplierDateRange(1)).toEqual([
+        new YMDDate('2018-03-04'),
+        new YMDDate('2018-12-21'),
+    ]);
+
+    expect(await handler.asyncGetPriceMultiplierDateRange(2)).toEqual([
+        new YMDDate('2018-10-11'),
+        new YMDDate('2018-11-22'),
+    ]);
+
+    result = await handler.asyncGetPriceMultiplierDataItemsInDateRange(2,
+        new YMDDate('2018-03-04'),
+        new YMDDate('2018-12-21'));
+    expect(result.length).toEqual(2);
+    expect(result).toEqual(
+        expect.arrayContaining(refD_2)
+    );
+
+
+    // Now have:
+    // Priced Item Id #1
+    //  { ymdDate: '2018-03-04', sharesIn: 4, sharesOut: 5, }, refC[0]
+    //  { ymdDate: '2018-10-11', sharesIn: 2, sharesOut: 3, }, refB[0]
+    //  { ymdDate: '2018-11-22', sharesIn: 3, sharesOut: 4, }, refB[1]
+    //  { ymdDate: '2018-12-21', sharesIn: 5, sharesOut: 6, }, refC[1]
+    //
+    // Priced item id #2
+    //  { ymdDate: '2018-10-11', sharesIn: 7, sharesOut: 8, }, refD_2[0]
+    //  { ymdDate: '2018-11-22', sharesIn: 9, sharesOut: 10, }, refD_2[1]
+    expect(await handler.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        new YMDDate('2018-03-04'),
+        new YMDDate('2018-03-04'),
+    )).toEqual([ refC[0] ]);
+
+    result = await handler.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        new YMDDate('2018-03-05'),
+        new YMDDate('2018-12-20')
+    );
+    expect(result.length).toEqual(2);
+    expect(result).toEqual(expect.arrayContaining([
+        refB[0],
+        refB[1],
+    ]));
+
+    result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
+        new YMDDate('2018-03-03'));
+    expect(result).toBeUndefined();
+
+    result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
+        new YMDDate('2018-03-04'));
+    expect(result).toEqual(refC[0]);
+
+    result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
+        new YMDDate('2018-10-10'));
+    expect(result).toEqual(refC[0]);
+
+    result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
+        new YMDDate('2018-10-11'));
+    expect(result).toEqual(refB[0]);
+
+
+    result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
+        new YMDDate('2018-12-22'));
+    expect(result).toBeUndefined();
+
+    result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
+        new YMDDate('2018-12-21'));
+    expect(result).toEqual(refC[1]);
+
+    result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
+        new YMDDate('2018-12-20'));
+    expect(result).toEqual(refC[1]);
+
+    result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
+        new YMDDate('2018-11-23'));
+    expect(result).toEqual(refC[1]);
+
+    result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
+        new YMDDate('2018-11-22'));
+    expect(result).toEqual(refB[1]);
+
+
+    //  { ymdDate: '2018-03-04', sharesIn: 4, sharesOut: 5, }, refC[0]
+    //  { ymdDate: '2018-10-11', sharesIn: 2, sharesOut: 3, }, refB[0]
+    //  { ymdDate: '2018-11-22', sharesIn: 3, sharesOut: 4, }, refB[1]
+    //  { ymdDate: '2018-12-21', sharesIn: 5, sharesOut: 6, }, refC[1]
+    result = await handler.asyncRemovePriceMultipliersByDate(1, [
+        new YMDDate('2018-03-04'),
+        new YMDDate('2018-12-21'),
+    ]);
+    expect(result.removedPriceMultiplierDataItems).toEqual(
+        expect.arrayContaining([
+            refC[0],
+            refC[1]
+        ])
+    );
+
+    expect(await handler.asyncGetPriceMultiplierDateRange(1)).toEqual([
+        new YMDDate('2018-10-11'),
+        new YMDDate('2018-11-22'),
+    ]);
+    expect(await handler.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        new YMDDate('2018-03-04'),
+        new YMDDate('2018-03-04'),
+    )).toEqual([]);
+
+    expect(await handler.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        new YMDDate('2018-12-21'),
+        new YMDDate('2018-12-21'),
+    )).toEqual([]);
+
+    expect(await handler.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        new YMDDate('2018-03-04'),
+        new YMDDate('2018-12-21'),
+    )).toEqual([ refB[0], refB[1]]);
+
+
+    const json = handler.toJSON();
+    const handler2 = new P.InMemoryPricesHandler();
+    handler2.fromJSON(json);
+
+    expect(await handler2.asyncGetPriceMultiplierDateRange(1)).toEqual([
+        new YMDDate('2018-10-11'),
+        new YMDDate('2018-11-22'),
+    ]);
+    expect(await handler2.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        new YMDDate('2018-03-04'),
+        new YMDDate('2018-12-21'),
+    )).toEqual([ refB[0], refB[1]]);
+
+    expect(await handler2.asyncGetPriceMultiplierDateRange(2)).toEqual([
+        new YMDDate('2018-10-11'),
+        new YMDDate('2018-11-22'),
+    ]);
+
+    result = await handler2.asyncGetPriceMultiplierDataItemsInDateRange(2,
+        new YMDDate('2018-03-04'),
+        new YMDDate('2018-12-21'));
+    expect(result.length).toEqual(2);
+    expect(result).toEqual(
+        expect.arrayContaining(refD_2)
+    );
 });
 
 
@@ -179,8 +433,11 @@ test('PriceManager', async () => {
     expect(pricesB).toEqual(priceDataItemsB);
 
     // Test pricesAdd event
-    expect(addEventArg).toEqual({ newPriceDataItems: pricesB });
-    expect(addEventArg.newPriceDataItems).toEqual(pricesB);
+    expect(addEventArg).toEqual({ 
+        newPriceDataItems: pricesB, 
+        newPriceMultiplierDataItems: [],
+    });
+
 
     // Test undo add
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
@@ -343,8 +600,10 @@ test('PriceManager', async () => {
         '2018-01-24', '2018-01-22')).toEqual([]);
 
     // pricesRemove event test
-    expect(removeEventArg).toEqual({ removedPriceDataItems: removeResult });
-    expect(removeEventArg.removedPriceDataItems).toBe(removeResult);
+    expect(removeEventArg).toEqual({ 
+        removedPriceDataItems: removeResult,
+        removedPriceMultiplierDataItems: [],
+    });
 
     const oldRemoveResult = removeResult;
     removeResult = removeResult.map(
@@ -403,3 +662,327 @@ test('PriceManager', async () => {
 
     expect(itemsB).toEqual(itemsA);
 });
+
+
+//
+//---------------------------------------------------------
+//
+test('PriceManager-PriceMultipliers', async () => {
+    const accountingSystem = await ASTH.asyncCreateAccountingSystem();
+    const manager = accountingSystem.getPriceManager();
+
+    let result;
+    result = await manager.asyncGetPriceMultiplierDateRange(1);
+    expect(result).toBeUndefined();
+
+    const split_2_1_2005_02_28 = { ymdDate: '2005-02-28', newCount: 2, oldCount: 1, };
+    const pricesA = [
+        { ymdDate: '2005-02-04', close: 1.41 * 2 * 7 * 4, },
+        { ymdDate: '2005-02-11', close: 1.45 * 2 * 7 * 4, },
+        { ymdDate: '2005-02-18', close: 1.55 * 2 * 7 * 4, },
+        { ymdDate: '2005-02-25', close: 1.59 * 2 * 7 * 4, },
+        // 2 for 1 split...
+        split_2_1_2005_02_28,
+
+        { ymdDate: '2005-02-28', close: 1.60 * 7 * 4, },
+        { ymdDate: '2005-03-04', close: 1.53 * 7 * 4, },
+        { ymdDate: '2005-03-11', close: 1.44 * 7 * 4, },
+    ];
+
+    result = await manager.asyncAddPrices(1, pricesA);
+
+    expect(result.newPriceDataItems).toEqual(expect.arrayContaining([
+        { ymdDate: '2005-02-04', close: 1.41 * 2 * 7 * 4, },
+        { ymdDate: '2005-02-11', close: 1.45 * 2 * 7 * 4, },
+        { ymdDate: '2005-02-18', close: 1.55 * 2 * 7 * 4, },
+        { ymdDate: '2005-02-25', close: 1.59 * 2 * 7 * 4, },
+
+        { ymdDate: '2005-02-28', close: 1.60 * 7 * 4, },
+        { ymdDate: '2005-03-04', close: 1.53 * 7 * 4, },
+        { ymdDate: '2005-03-11', close: 1.44 * 7 * 4, },
+    ]));
+
+    expect(result.newPriceMultiplierDataItems).toEqual(expect.arrayContaining([
+        split_2_1_2005_02_28,
+    ]));
+
+    result = await manager.asyncGetPriceMultiplierDateRange(1);
+    expect(result).toEqual([
+        new YMDDate('2005-02-28'),
+        new YMDDate('2005-02-28'),
+    ]);
+
+    result = await manager.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        '2005-02-28');
+    expect(result).toEqual([
+        split_2_1_2005_02_28,
+    ]);
+
+    result = await manager.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
+        '2005-02-27');
+    expect(result).toBeUndefined();
+
+    result = await manager.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
+        '2005-02-28');
+    expect(result).toEqual(split_2_1_2005_02_28);
+
+    result = await manager.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
+        '2005-03-01');
+    expect(result).toEqual(split_2_1_2005_02_28);
+    
+
+
+    result = await manager.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
+        '2005-02-27');
+    expect(result).toEqual(split_2_1_2005_02_28);
+
+    result = await manager.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
+        '2005-02-28');
+    expect(result).toEqual(split_2_1_2005_02_28);
+
+    result = await manager.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
+        '2005-03-01');
+    expect(result).toBeUndefined();
+
+
+    const split_7_1_2014_06_09 = { ymdDate: '2014-06-09', newCount: 7, oldCount: 1};
+    const split_4_1_2020_08_31 = { ymdDate: '2020-08-31', newCount: 4, oldCount: 1};
+
+    const pricesB = [
+        { ymdDate: '2014-06-04', close: 23.03 * 7 * 4, },
+        { ymdDate: '2014-06-05', close: 23.12 * 7 * 4, },
+        { ymdDate: '2014-06-06', close: 23.06 * 7 * 4, },
+
+        // 7 for 1 split...
+        split_7_1_2014_06_09,
+
+        { ymdDate: '2014-06-09', close: 23.42 * 4, },
+        { ymdDate: '2014-06-10', close: 23.56 * 4, },
+        { ymdDate: '2014-06-13', close: 22.82 * 4, },
+        { ymdDate: '2014-06-20', close: 22.73 * 4, },
+
+        { ymdDate: '2020-01-24', close: 79.58 * 4, },
+        { ymdDate: '2020-01-31', close: 77.38 * 4, },
+        { ymdDate: '2020-02-04', close: 79.71 * 4, },
+
+        // 4 for 1 split...
+        split_4_1_2020_08_31,
+
+        { ymdDate: '2020-08-31', close: 129.04, },
+    ];
+
+    result = await manager.asyncAddPrices(1, pricesB);
+    expect(result.newPriceMultiplierDataItems).toEqual([
+        split_7_1_2014_06_09,
+        split_4_1_2020_08_31
+    ]);
+
+    expect(await manager.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        '2014-06-09', '2020-08-31')).toEqual([
+        split_7_1_2014_06_09,
+        split_4_1_2020_08_31
+    ]);
+
+    // Check add undo...
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+
+    expect(await manager.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        '2014-06-09', '2020-08-31')).toEqual([
+    ]);
+
+    // Repeat...
+    result = await manager.asyncAddPrices(1, pricesB);
+    expect(await manager.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        '2014-06-09', '2020-08-31')).toEqual([
+        split_7_1_2014_06_09,
+        split_4_1_2020_08_31
+    ]);
+
+
+    // Check remove
+    result = await manager.asyncRemovePricesInDateRange(1,
+        '2020-08-31', '2020-08-31', {
+            noPrices: true,
+        });
+    expect(result.removedPriceDataItems).toEqual([]);
+    expect(result.removedPriceMultiplierDataItems).toEqual([
+        split_4_1_2020_08_31
+    ]);
+    expect(await manager.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        '2020-08-31')).toEqual([]);
+    
+    // Check remove undo...
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+    expect(await manager.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        '2020-08-31')).toEqual([
+        split_4_1_2020_08_31
+    ]);
+
+    // Repeat...
+    result = await manager.asyncRemovePricesInDateRange(1,
+        '2020-08-31', '2020-08-31', {
+            noPrices: true,
+        });
+    expect(await manager.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        '2020-08-31')).toEqual([]);
+
+
+    // Add price multipliers separately from prices...
+    result = await manager.asyncAddPrices(1, [], [split_4_1_2020_08_31]);
+    expect(result.newPriceDataItems).toEqual([]);
+    expect(result.newPriceMultiplierDataItems).toEqual([split_4_1_2020_08_31]);
+
+    expect(await manager.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        '2020-08-31')).toEqual([split_4_1_2020_08_31]);
+
+    expect(await manager.asyncGetPriceMultiplierDataItemsInDateRange(1,
+        '2014-06-09', '2020-08-31')).toEqual([
+        split_7_1_2014_06_09,
+        split_4_1_2020_08_31,
+    ]);
+
+
+
+    //
+    // Test price adjustments...
+
+    // We now have:
+    /*
+        { ymdDate: '2005-02-04', close: 1.41 * 2 * 7 * 4, },
+        { ymdDate: '2005-02-11', close: 1.45 * 2 * 7 * 4, },
+        { ymdDate: '2005-02-18', close: 1.55 * 2 * 7 * 4, },
+        { ymdDate: '2005-02-25', close: 1.59 * 2 * 7 * 4, },
+        // 2 for 1 split...
+        split_2_1_2005_02_28,
+
+        { ymdDate: '2005-02-28', close: 1.60 * 7 * 4, },
+        { ymdDate: '2005-03-04', close: 1.53 * 7 * 4, },
+        { ymdDate: '2005-03-11', close: 1.44 * 7 * 4, },
+        { ymdDate: '2014-06-04', close: 23.03 * 7 * 4, },
+        { ymdDate: '2014-06-05', close: 23.12 * 7 * 4, },
+        { ymdDate: '2014-06-06', close: 23.06 * 7 * 4, },
+
+        // 7 for 1 split...
+        split_7_1_2014_06_09,
+
+        { ymdDate: '2014-06-09', close: 23.42 * 4, },
+        { ymdDate: '2014-06-10', close: 23.56 * 4, },
+        { ymdDate: '2014-06-13', close: 22.82 * 4, },
+        { ymdDate: '2014-06-20', close: 22.73 * 4, },
+
+        { ymdDate: '2020-01-24', close: 79.58 * 4, },
+        { ymdDate: '2020-01-31', close: 77.38 * 4, },
+        { ymdDate: '2020-02-04', close: 79.71 * 4, },
+
+        // 4 for 1 split...
+        split_4_1_2020_08_31,
+
+        { ymdDate: '2020-08-31', close: 129.04, },
+    */    
+    
+    result = await manager.asyncAdjustPriceDataItems(1,
+        [],
+        '2020-08-31');
+    expect(result).toEqual([]);
+
+    result = await manager.asyncAdjustPriceDataItems(1,
+        { ymdDate: '2020-08-31', close: 129.04, },
+        '2020-08-31');
+    expect(result).toEqual({ ymdDate: '2020-08-31', close: 129.04, });
+
+    result = await manager.asyncAdjustPriceDataItems(1,
+        { ymdDate: '2020-02-04', close: 79.71 * 4, },
+        '2020-08-31');
+    expect(result).toEqual( 
+        { ymdDate: '2020-02-04', close: 79.71, }
+    );
+
+
+    result = await manager.asyncAdjustPriceDataItems(1,
+        [
+            { ymdDate: '2020-08-31', close: 129.04, },
+            { ymdDate: '2014-06-09', close: 23.42 * 4, },
+            { ymdDate: '2014-06-06', close: 23.06 * 7 * 4, },
+            { ymdDate: '2005-02-25', close: 1.59 * 2 * 7 * 4, },
+            { ymdDate: '2005-02-28', close: 1.60 * 7 * 4, },
+        ],
+        '2020-08-31');
+    expect(result).toEqual([
+        { ymdDate: '2005-02-25', close: 1.59, },
+        { ymdDate: '2005-02-28', close: 1.60, },
+        { ymdDate: '2014-06-06', close: 23.06, },
+        { ymdDate: '2014-06-09', close: 23.42, },
+        { ymdDate: '2020-08-31', close: 129.04, },
+    ]);
+
+
+    // Check dates between splits
+    // The prices passed to asyncAdjustPriceDataItems() are the
+    // prices at the price date.
+    result = await manager.asyncAdjustPriceDataItems(1,
+        [
+            { ymdDate: '2005-02-25', close: 1.59 * 2 * 7 * 4, },
+            { ymdDate: '2005-02-28', close: 1.60 * 7 * 4, },
+            { ymdDate: '2014-06-06', close: 23.06 * 7 * 4, },
+            { ymdDate: '2014-06-09', close: 23.42 * 4, },
+            { ymdDate: '2020-08-31', close: 129.04, },
+        ],
+        '2020-08-30');
+
+    // The base prices are all relative to 2020-08-31...
+    expect(result).toEqual([
+        { ymdDate: '2005-02-25', close: round(1.59 * 4), },
+        { ymdDate: '2005-02-28', close: round(1.60 * 4), },
+        { ymdDate: '2014-06-06', close: round(23.06 * 4), },
+        { ymdDate: '2014-06-09', close: round(23.42 * 4), },
+        { ymdDate: '2020-08-31', close: round(129.04 * 4), },
+    ]);
+
+    //
+    // Before earliest split
+    result = await manager.asyncAdjustPriceDataItems(1,
+        [
+            { ymdDate: '2005-02-25', close: 1.59 * 2 * 7 * 4, },
+            { ymdDate: '2005-02-28', close: 1.60 * 7 * 4, },
+            { ymdDate: '2014-06-06', close: 23.06 * 7 * 4, },
+            { ymdDate: '2014-06-09', close: 23.42 * 4, },
+            { ymdDate: '2020-08-31', close: 129.04, },
+        ],
+        '2005-02-25');
+
+    // The base prices are all relative to 2020-08-31...
+    expect(result).toEqual([
+        { ymdDate: '2005-02-25', close: round(1.59 * 4 * 7 * 2), },
+        { ymdDate: '2005-02-28', close: round(1.60 * 4 * 7 * 2), },
+        { ymdDate: '2014-06-06', close: round(23.06 * 4 * 7 * 2), },
+        { ymdDate: '2014-06-09', close: round(23.42 * 4 * 7 * 2), },
+        { ymdDate: '2020-08-31', close: round(129.04 * 4 * 7 * 2), },
+    ]);
+
+
+    //
+    // Check reversing...
+    result = await manager.asyncAdjustPriceDataItems(1,
+        [
+            { ymdDate: '2005-02-25', close: round(1.59 * 4), },
+            { ymdDate: '2005-02-28', close: round(1.60 * 4), },
+            { ymdDate: '2014-06-06', close: round(23.06 * 4), },
+            { ymdDate: '2014-06-09', close: round(23.42 * 4), },
+            { ymdDate: '2020-08-31', close: round(129.04 * 4), },
+        ],
+        '2020-08-30',
+        true);
+
+    // The base prices are all relative to 2020-08-31...
+    expect(result).toEqual([
+        { ymdDate: '2005-02-25', close: round(1.59 * 2 * 7 * 4), },
+        { ymdDate: '2005-02-28', close: round(1.60 * 7 * 4), },
+        { ymdDate: '2014-06-06', close: round(23.06 * 7 * 4), },
+        { ymdDate: '2014-06-09', close: round(23.42 * 4), },
+        { ymdDate: '2020-08-31', close: round(129.04), },
+    ]);
+});
+
+function round(x) {
+    return Math.round(x * 10000) / 10000;
+}
