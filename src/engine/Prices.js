@@ -222,16 +222,47 @@ export class PriceManager extends EventEmitter {
     }
 
     /**
+     * @typedef {object} PriceManager~asyncGetPriceDataItemsInDateRangeArgs
+     * @property {number} pricedItemId
+     * @property {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
+     * @property {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
+     * range, inclusive.
+     * @property {YMDDate|string}   [refYMDDate] If specified, the date to which
+     * the prices are relative, otherwise the prices are raw prices.
+     */
+
+    /**
      * Retrieves the prices for a priced item within a date range.
-     * The price data is raw price data and has not been adjusted by any 
-     * price multipliers.
-     * @param {number} pricedItemId 
+     * <p>
+     * If the first argument is a 
+     * {@link PriceManager~asyncGetPriceDataItemsInDateRangeArgs} the remaining
+     * arguments are ignored.
+     * The prices returned are raw prices unless the first argument is a
+     * {@link PriceManager~asyncGetPriceDataItemsInDateRangeArgs} and has the
+     * refYMDDate property specified.
+     * @param {number|PriceManager~asyncGetPriceDataItemsInDateRangeArgs} pricedItemId 
      * @param {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
      * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
      * range, inclusive.
      * @returns {PriceDataItem[]}   Array containing the prices within the date range.
      */
     async asyncGetPriceDataItemsInDateRange(pricedItemId, ymdDateA, ymdDateB) {
+        if (typeof pricedItemId === 'object') {
+            const args = pricedItemId;
+            pricedItemId = args.pricedItemId;
+            ymdDateA = args.ymdDateA;
+            ymdDateB = args.ymdDateB;
+
+            const result = await this.asyncGetPriceDataItemsInDateRange(
+                pricedItemId, ymdDateA, ymdDateB);
+
+            const { refYMDDate } = args;
+            if (result && refYMDDate) {
+                await this.asyncAdjustPriceDataItems(pricedItemId, result, refYMDDate);
+            }
+            return result;
+        }
+
         [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
         const result = await this._handler.asyncGetPriceDataItemsInDateRange(
             pricedItemId, ymdDateA, ymdDateB);
@@ -240,21 +271,97 @@ export class PriceManager extends EventEmitter {
 
 
     /**
+     * @typedef {object} PriceManager~asyncGetPriceDataItemOnOrClosestArgs
+     * @property {number} pricedItemId 
+     * @property {YMDDate|string} ymdDate 
+     * @property {YMDDate|string} [refYMDDate] If specified, the date to which
+     * the prices are relative, otherwise the prices are raw prices.
+     */
+
+    /**
      * Retrieves the price data item for a priced item that is on or closest to 
      * but before a particular date.
-     * The price data is raw price data and has not been adjusted by any 
-     * price multipliers.
-     * @param {number} pricedItemId 
+     * <p>
+     * If the first argument is a 
+     * {@link PriceManager~asyncGetPriceDataItemOnOrClosestArgs} the remaining
+     * arguments are ignored.
+     * The prices returned are raw prices unless the first argument is a
+     * {@link PriceManager~asyncGetPriceDataItemOnOrClosestArgs} and has the
+     * refYMDDate property specified.
+     * @param {number|PriceManager~asyncGetPriceDataItemOnOrClosestArgs} pricedItemId 
      * @param {YMDDate|string} ymdDate 
      * @returns {PriceDataItem|undefined}
      */
     async asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
+        if (typeof pricedItemId === 'object') {
+            const args = pricedItemId;
+            pricedItemId = args.pricedItemId;
+            ymdDate = args.ymdDate;
+
+            const result = await this.asyncGetPriceDataItemOnOrClosestBefore(
+                pricedItemId, ymdDate);
+
+            const { refYMDDate } = args;
+            if (result && refYMDDate) {
+                await this.asyncAdjustPriceDataItems(pricedItemId, result, refYMDDate);
+            }
+            return result;
+        }
         ymdDate = getYMDDate(ymdDate);
         return this._handler.asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, 
             ymdDate);
     }
 
 
+    /**
+     * Retrieves the price data item for a priced item that is on or closest to 
+     * but after a particular date.
+     * <p>
+     * If the first argument is a 
+     * {@link PriceManager~asyncGetPriceDataItemOnOrClosestArgs} the remaining
+     * arguments are ignored.
+     * The prices returned are raw prices unless the first argument is a
+     * {@link PriceManager~asyncGetPriceDataItemOnOrClosestArgs} and has the
+     * refYMDDate property specified.
+     * @param {number|PriceManager~asyncGetPriceDataItemOnOrClosestArgs} pricedItemId 
+     * @param {YMDDate|string} ymdDate 
+     * @returns {PriceDataItem|undefined}
+     */
+    async asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
+        if (typeof pricedItemId === 'object') {
+            const args = pricedItemId;
+            pricedItemId = args.pricedItemId;
+            ymdDate = args.ymdDate;
+
+            const result = await this.asyncGetPriceDataItemOnOrClosestAfter(
+                pricedItemId, ymdDate);
+            
+            const { refYMDDate } = args;
+            if (result && refYMDDate) {
+                await this.asyncAdjustPriceDataItems(pricedItemId, result, refYMDDate);
+            }
+            return result;
+        }
+
+        ymdDate = getYMDDate(ymdDate);
+        return this._handler.asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, 
+            ymdDate);
+    }
+
+
+    /**
+     * Adjusts the closing price of one or more prices so they reflect the price
+     * on a given date.
+     * <p>
+     * If priceDataItems is an array, it will be sorted in place.
+     * @param {number} pricedItemId 
+     * @param {PriceDataItem|PriceDataItem[]} priceDataItems 
+     * @param {YMDDate|string} refYMDDate 
+     * @param {boolean} [isReverse=false] If <code>true</code>, the prices in 
+     * priceDataItems are in terms of the pricing on refYMDDate, and are converted to
+     * the price relative to the date of the individual prices.
+     * @returns {PriceDataItem|PriceDataItem[]}
+     */
     async asyncAdjustPriceDataItems(pricedItemId, priceDataItems, refYMDDate, isReverse) {
         if (!priceDataItems || !refYMDDate) {
             return priceDataItems;
@@ -325,6 +432,11 @@ export class PriceManager extends EventEmitter {
         let multiplierIndex = 0;
         let multiplierDateValue = allPriceMultipliers[0].ymdDate.valueOf();
         priceDataItems.forEach((priceDataItem) => {
+            if (typeof priceDataItem.close !== 'number') {
+                // Most likely a price multiplier, just skip it.
+                return;
+            }
+
             const ymdDateValue = priceDataItem.ymdDate.valueOf();
             while ((multiplierDateValue <= ymdDateValue)
              && (multiplierIndex < allPriceMultipliers.length)) {
@@ -379,22 +491,6 @@ export class PriceManager extends EventEmitter {
             return priceDataItems[0];
         }
         return priceDataItems;
-    }
-
-
-    /**
-     * Retrieves the price data item for a priced item that is on or closest to 
-     * but after a particular date.
-     * The price data is raw price data and has not been adjusted by any 
-     * price multipliers.
-     * @param {number} pricedItemId 
-     * @param {YMDDate|string} ymdDate 
-     * @returns {PriceDataItem|undefined}
-     */
-    async asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
-        ymdDate = getYMDDate(ymdDate);
-        return this._handler.asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, 
-            ymdDate);
     }
 
 
@@ -553,6 +649,9 @@ export class PriceManager extends EventEmitter {
 
     /**
      * Adds prices for a priced item. Existing prices with the same dates are replaced.
+     * The price values are raw prices, that is they are the price as they appeared on
+     * the date of the price, and have not been corrected for any splits or 
+     * reverse splits.
      * @param {number} pricedItemId 
      * @param {(Price|PriceDataItem|Price[]|PriceDataItem[])} prices This may contain
      * both prices and price multipliers.

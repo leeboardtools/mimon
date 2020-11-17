@@ -981,6 +981,53 @@ test('PriceManager-PriceMultipliers', async () => {
         { ymdDate: '2014-06-09', close: round(23.42 * 4), },
         { ymdDate: '2020-08-31', close: round(129.04), },
     ]);
+
+
+    //
+    // Test adjusted price versions of the get price methods
+    /*
+        { ymdDate: '2005-03-11', close: 1.44 * 7 * 4, },
+        { ymdDate: '2014-06-04', close: 23.03 * 7 * 4, },
+        { ymdDate: '2014-06-05', close: 23.12 * 7 * 4, },
+        { ymdDate: '2014-06-06', close: 23.06 * 7 * 4, },
+
+        // 7 for 1 split...
+        split_7_1_2014_06_09,
+
+        { ymdDate: '2014-06-09', close: 23.42 * 4, },
+        { ymdDate: '2014-06-10', close: 23.56 * 4, },
+    */
+    result = await manager.asyncGetPriceDataItemsInDateRange({
+        pricedItemId: 1,
+        ymdDateA: '2014-06-06',
+        ymdDateB: '2014-06-10',
+        refYMDDate: '2014-06-09',
+    });
+
+    // The base prices are all relative to 2020-08-31...
+    expect(result).toEqual([
+        { ymdDate: '2014-06-06', close: round(23.06 * 4), },
+        { ymdDate: '2014-06-09', close: round(23.42 * 4), },
+        { ymdDate: '2014-06-10', close: round(23.56 * 4), },
+    ]);
+
+
+    result = await manager.asyncGetPriceDataItemOnOrClosestBefore({
+        pricedItemId: 1,
+        ymdDate: '2014-06-06',
+        refYMDDate: '2020-08-31',
+    });
+
+    expect(result).toEqual({ ymdDate: '2014-06-06', close: round(23.06), });
+
+
+    result = await manager.asyncGetPriceDataItemOnOrClosestAfter({
+        pricedItemId: 1,
+        ymdDate: '2014-06-03',
+        refYMDDate: '2020-06-10',
+    });
+
+    expect(result).toEqual({ ymdDate: '2014-06-04', close: round(23.03 * 4), });
 });
 
 function round(x) {
