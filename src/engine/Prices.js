@@ -3,6 +3,7 @@ import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 import { SortedArray } from '../util/SortedArray';
 import { bSearch } from '../util/BinarySearch';
 import { getDecimalDefinition, getQuantityDefinition } from '../util/Quantities';
+import { userError } from '../util/UserMessages';
 
 /**
  * @typedef {object}    Price
@@ -393,6 +394,19 @@ export class PriceManager extends EventEmitter {
             return originalPriceDataItems;
         }
 
+        this._adjustPriceDataItems(pricedItemId, priceDataItems,
+            allPriceMultipliers, refYMDDate, isReverse);
+
+        if (!Array.isArray(originalPriceDataItems)) {
+            return priceDataItems[0];
+        }
+        return priceDataItems;
+    }
+
+
+    _adjustPriceDataItems(pricedItemId, priceDataItems, allPriceMultipliers, 
+        refYMDDate, isReverse) {
+
         allPriceMultipliers.forEach((priceMultiplier) => {
             priceMultiplier.ymdDate = getYMDDate(priceMultiplier.ymdDate);
         });
@@ -487,9 +501,6 @@ export class PriceManager extends EventEmitter {
             priceDataItem.ymdDate = priceDataItem.ymdDate.toString();
         });
 
-        if (!Array.isArray(originalPriceDataItems)) {
-            return priceDataItems[0];
-        }
         return priceDataItems;
     }
 
@@ -642,25 +653,48 @@ export class PriceManager extends EventEmitter {
      */
 
     /**
-     * @typedef {object}    PriceManager~AddPricesResult
+     * @typedef {object}    PriceManager~asyncAddPricesArgs
+     * @property {number} pricedItemId 
+     * @property {(Price|PriceDataItem|Price[]|PriceDataItem[])} prices This may contain
+     * both prices and price multipliers.
+     * @property {PriceMultiplier|PriceMultiplierDataItem|
+     *  PriceMultiplier[]|PriceMultiplierDataItem[]} [priceMultipliers]
+     * @property {YMDDate|string} [refYMDDate] If specified, the date to which
+     * the prices are relative, otherwise the prices are raw prices.
+     */
+
+    /**
+     * @typedef {object}    PriceManager~asyncAddPricesResult
+     * The prices returned are always raw prices.
      * @property {PriceDataItem[]}  newPriceDataItems
      * @property {PriceMultiplierDataItem[]} newPriceMultiplierDataItems
      */
 
     /**
      * Adds prices for a priced item. Existing prices with the same dates are replaced.
-     * The price values are raw prices, that is they are the price as they appeared on
-     * the date of the price, and have not been corrected for any splits or 
-     * reverse splits.
-     * @param {number} pricedItemId 
+     * If the first argument is a {@link PriceManager~asyncAddPricesArgs} the remaining
+     * arguments are ignored.
+     * The prices specified are raw prices unless the first argument is a
+     * {@link PriceManager~asyncAddPricesArgs} and has the
+     * refYMDDate property specified.
+     * @param {number|PriceManager~asyncAddPricesArgs} pricedItemId 
      * @param {(Price|PriceDataItem|Price[]|PriceDataItem[])} prices This may contain
      * both prices and price multipliers.
      * @param {PriceMultiplier|PriceMultiplierDataItem|
      *  PriceMultiplier[]|PriceMultiplierDataItem[]} [priceMultipliers]
-     * @returns {PriceManager~AddPricesResult}
+     * @returns {PriceManager~asyncAddPricesResult}
      * @fires {PriceManager~pricesAdd}
      */
     async asyncAddPrices(pricedItemId, prices, priceMultipliers) {
+        let refYMDDate;
+        if (typeof pricedItemId === 'object') {
+            const args = pricedItemId;
+            pricedItemId = args.pricedItemId;
+            prices = args.prices;
+            priceMultipliers = args.priceMultipliers;
+            refYMDDate = args.refYMDDate;
+        }
+
         if (!Array.isArray(prices)) {
             prices = [prices];
         }
@@ -682,13 +716,74 @@ export class PriceManager extends EventEmitter {
 
         const priceDataItems = [];
         prices.forEach((price) => {
-            if (typeof price.newCount === 'number') {
-                priceMultipliers.push(getPriceMultiplierDataItem(price, true));
-            }
-            else {
+            if (typeof price.close !== 'undefined') {
+                if (typeof price.close !== 'number') {
+                    throw userError('PriceManager-invalid_price_close');
+                }
+                if (!getYMDDate(price.ymdDate)) {
+                    throw userError('PriceManager-invalid_price_date');
+                }
                 priceDataItems.push(getPriceDataItem(price, true));
             }
+            else {
+                priceMultipliers.push(getPriceMultiplierDataItem(price, true));
+            }
         });
+
+        priceMultipliers.forEach((priceMultiplier) => {
+            if (!getYMDDate(priceMultiplier.ymdDate)) {
+                throw userError('PriceManager-invalid_multiplier_date');
+            }
+            if ((typeof priceMultiplier.newCount !== 'number')
+             || (typeof priceMultiplier.oldCount !== 'number')) {
+                throw userError('PriceManager-invalid_multiplier_counts');
+            }
+            if ((priceMultiplier.newCount <= 0) || (priceMultiplier.oldCount <= 0)) {
+                throw userError('PriceManager-invalid_multiplier_counts');
+            }
+        });
+
+
+        if (refYMDDate) {
+            const priceMultiplierDateRange = await this.asyncGetPriceMultiplierDateRange(
+                pricedItemId
+            );
+
+            let allPriceMultipliers;
+            if (!priceMultiplierDateRange) {
+                // No existing multipliers...
+                allPriceMultipliers = priceMultipliers;
+            }
+            else {
+                allPriceMultipliers 
+                    = await this.asyncGetPriceMultiplierDataItemsInDateRange(
+                        pricedItemId,
+                        priceMultiplierDateRange[0], priceMultiplierDateRange[1]);
+                if (priceMultipliers.length) {
+                    const uniquePriceMultipliers = new Map();
+                    allPriceMultipliers.forEach((priceMultiplier) => {
+                        const ymdDate = getYMDDate(priceMultiplier.ymdDate);
+                        uniquePriceMultipliers.set(
+                            ymdDate.valueOf(), priceMultiplier);
+                    });
+                    priceMultipliers.forEach((priceMultiplier) => {
+                        const ymdDate = getYMDDate(priceMultiplier.ymdDate);
+                        uniquePriceMultipliers.set(
+                            ymdDate.valueOf(), priceMultiplier);
+                    });
+
+                    allPriceMultipliers = Array.from(uniquePriceMultipliers.values());
+                    allPriceMultipliers.sort((a, b) => 
+                        YMDDate.compare(a.ymdDate, b.ymdDate));
+                }
+            }
+
+            if (allPriceMultipliers.length) {
+                // Adjusting to raw prices...
+                this._adjustPriceDataItems(pricedItemId, priceDataItems,
+                    allPriceMultipliers, refYMDDate, true);
+            }
+        }
 
 
         const priceUpdates = await this._asyncGenerateItemUpdates(
@@ -732,6 +827,7 @@ export class PriceManager extends EventEmitter {
             undoId: undoId, 
         };
     }
+
 
     async _asyncGenerateItemUpdates(dataItems, 
         asyncGetItemForDate, copyDataItem) {
@@ -946,7 +1042,7 @@ export class PricesHandler {
     /**
      * Removes prices by date.
      * @param {number} pricedItemId 
-     * @param {(YMDDate|string)[]} ymdDates
+     * @param {YMDDate[]|string[]} ymdDates
      * @returns {PriceManager~RemovePricesResult}
      */
     async asyncRemovePricesByDate(pricedItemId, ymdDates) {
@@ -956,7 +1052,7 @@ export class PricesHandler {
     /**
      * Removes price multipliers by date.
      * @param {number} pricedItemId 
-     * @param {(YMDDate|string)[]} ymdDates
+     * @param {YMDDate[]|string[]} ymdDates
      * @returns {PriceManager~RemovePricesResult}
      */
     async asyncRemovePriceMultipliersByDate(pricedItemId, ymdDates) {

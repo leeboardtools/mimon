@@ -1028,8 +1028,90 @@ test('PriceManager-PriceMultipliers', async () => {
     });
 
     expect(result).toEqual({ ymdDate: '2014-06-04', close: round(23.03 * 4), });
+
+
+    //
+    // Test adjusted date version of asyncAddPrices().
+    await manager.asyncRemovePricesInDateRange(1, '2000-01-01', '2020-10-31');
+    expect(await manager.asyncGetPriceDateRange(1)).toBeUndefined();
+
+    /*
+        { ymdDate: '2005-02-25', close: 1.59 * 2 * 7 * 4, },
+        // 2 for 1 split...
+        split_2_1_2005_02_28,
+
+        { ymdDate: '2005-02-28', close: 1.60 * 7 * 4, },
+        { ymdDate: '2014-06-06', close: 23.06 * 7 * 4, },
+
+        // 7 for 1 split...
+        split_7_1_2014_06_09,
+
+        { ymdDate: '2014-06-09', close: 23.42 * 4, },
+        { ymdDate: '2020-02-04', close: 79.71 * 4, },
+
+        // 4 for 1 split...
+        split_4_1_2020_08_31,
+
+        { ymdDate: '2020-08-31', close: 129.04, },
+    */    
+    result = await manager.asyncAddPrices({
+        pricedItemId: 1,
+        prices: [
+            { ymdDate: '2005-02-25', close: 1.59, },
+            // 2 for 1 split...
+            split_2_1_2005_02_28,
+
+            { ymdDate: '2005-02-28', close: 1.60, },
+            { ymdDate: '2014-06-06', close: 23.06, },
+
+            // 7 for 1 split...
+            split_7_1_2014_06_09,
+
+            { ymdDate: '2014-06-09', close: 23.42, },
+            { ymdDate: '2020-02-04', close: 79.71, },
+
+            // 4 for 1 split...
+            split_4_1_2020_08_31,
+
+            { ymdDate: '2020-08-31', close: 129.04, },
+        ],
+        refYMDDate: '2020-08-31',
+    });
+
+    expect(result.newPriceDataItems).toEqual([
+        { ymdDate: '2005-02-25', close: round(1.59 * 2 * 7 * 4), },
+
+        { ymdDate: '2005-02-28', close: round(1.60 * 7 * 4), },
+        { ymdDate: '2014-06-06', close: round(23.06 * 7 * 4), },
+
+        { ymdDate: '2014-06-09', close: round(23.42 * 4), },
+        { ymdDate: '2020-02-04', close: round(79.71 * 4), },
+
+        { ymdDate: '2020-08-31', close: 129.04, },
+    ]);
+    
+
+    result = await manager.asyncGetPriceDataItemsInDateRange(1,
+        '2005-02-25',
+        '2020-08-31',
+    );
+    expect(result).toEqual([
+        { ymdDate: '2005-02-25', close: round(1.59 * 2 * 7 * 4), },
+
+        { ymdDate: '2005-02-28', close: round(1.60 * 7 * 4), },
+        { ymdDate: '2014-06-06', close: round(23.06 * 7 * 4), },
+
+        { ymdDate: '2014-06-09', close: round(23.42 * 4), },
+        { ymdDate: '2020-02-04', close: round(79.71 * 4), },
+
+        { ymdDate: '2020-08-31', close: 129.04, },
+    ]);
 });
 
+
+//
+//---------------------------------------------------------
+//
 function round(x) {
     return Math.round(x * 10000) / 10000;
 }
