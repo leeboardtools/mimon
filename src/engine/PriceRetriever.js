@@ -118,28 +118,37 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
 
         const priceDataItem = {
             ymdDate: ymdDate,
-            close: quantityDefinition.cleanupNumber(result.close),
         };
 
-        if ((result.open !== result.close) 
-            || (result.high !== result.close) 
-            || (result.low !== result.close)) {
+        if (typeof result.close === 'number') {
+            priceDataItem.close = quantityDefinition.cleanupNumber(result.close);
 
-            if (result.open !== undefined) {
-                priceDataItem.open = quantityDefinition.cleanupNumber(result.open);
+            if ((result.open !== result.close) 
+                || (result.high !== result.close) 
+                || (result.low !== result.close)) {
+
+                if (result.open !== undefined) {
+                    priceDataItem.open = quantityDefinition.cleanupNumber(result.open);
+                }
+                if (result.high !== undefined) {
+                    priceDataItem.high = quantityDefinition.cleanupNumber(result.high);
+                }
+                if (result.low !== undefined) {
+                    priceDataItem.low = quantityDefinition.cleanupNumber(result.low);
+                }
             }
-            if (result.high !== undefined) {
-                priceDataItem.high = quantityDefinition.cleanupNumber(result.high);
+            if ((result.adjClose !== undefined) && (result.adjClose !== result.close)) {
+                priceDataItem.adjClose 
+                    = quantityDefinition.cleanupNumber(result.adjClose);
             }
-            if (result.low !== undefined) {
-                priceDataItem.low = quantityDefinition.cleanupNumber(result.low);
+            if (result.volume) {
+                priceDataItem.volume = result.volume;
             }
         }
-        if ((result.adjClose !== undefined) && (result.adjClose !== result.close)) {
-            priceDataItem.adjClose = quantityDefinition.cleanupNumber(result.adjClose);
-        }
-        if (result.volume) {
-            priceDataItem.volume = result.volume;
+        else if ((typeof result.numerator === 'number')
+         && (typeof result.denominator === 'number')) {
+            priceDataItem.newCount = result.numerator;
+            priceDataItem.oldCount = result.denominator;
         }
 
         priceDataItems[index] = priceDataItem;
