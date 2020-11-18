@@ -234,6 +234,7 @@ export function createTestTransactions(newFileContents, options) {
             { ymdDate: '2005-02-18', close: 1.55 * 2 * 7 * 4, },
             { ymdDate: '2005-02-25', close: 1.59 * 2 * 7 * 4, },
             // 2 for 1 split...
+            { ymdDate: '2005-02-28', newCount: 2, oldCount: 1, },
             { ymdDate: '2005-02-28', close: 1.60 * 7 * 4, },
             { ymdDate: '2005-03-04', close: 1.53 * 7 * 4, },
             { ymdDate: '2005-03-11', close: 1.44 * 7 * 4, },
@@ -246,6 +247,7 @@ export function createTestTransactions(newFileContents, options) {
             { ymdDate: '2014-06-05', close: 23.12 * 7 * 4, },
             { ymdDate: '2014-06-06', close: 23.06 * 7 * 4, },
             // 7 for 1 split...
+            { ymdDate: '2014-06-09', newCount: 7, oldCount: 1, },
             { ymdDate: '2014-06-09', close: 23.42 * 4, },
             { ymdDate: '2014-06-10', close: 23.56 * 4, },
             { ymdDate: '2014-06-13', close: 22.82 * 4, },
@@ -267,6 +269,7 @@ export function createTestTransactions(newFileContents, options) {
             { ymdDate: '2020-02-04', close: 79.71 * 4, },
 
             // 4 for 1 split...
+            { ymdDate: '2020-08-31', newCount: 4, oldCount: 1, },
             { ymdDate: '2020-08-31', close: 129.04, },
         ],
     });

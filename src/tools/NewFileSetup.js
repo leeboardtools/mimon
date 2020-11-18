@@ -197,12 +197,18 @@ async function asyncLoadPrices(setupInfo) {
 
         const pricedItem = pricedItemNameMapping.get(item.pricedItemId);
         if (!pricedItem) {
-            warnings.push('NewFileSetup-price_pricedItem_not_found', 
-                item.pricedItemId);
+            warnings.push(userMsg('NewFileSetup-price_pricedItem_not_found', 
+                item.pricedItemId));
             continue;
         }
 
-        await priceManager.asyncAddPrices(pricedItem.id, item.prices);
+        try {
+            await priceManager.asyncAddPrices(pricedItem.id, item.prices);
+        }
+        catch (e) {
+            warnings.push(userMsg('NewFileSetup-price_add_failed',
+                item.pricedItemId, e));
+        }
     }
 }
 
