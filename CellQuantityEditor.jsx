@@ -131,7 +131,7 @@ CellQuantityEditor.propTypes = {
  */
 export function CellQuantityDisplay(props) {
     const { ariaLabel, quantityBaseValue, 
-        inputClassExtras } = props;
+        inputClassExtras, tooltip } = props;
     if (!props.quantityDefinition) {
         return null;
     }
@@ -161,6 +161,7 @@ export function CellQuantityDisplay(props) {
         value = {value}
         inputClassExtras = {inputClassExtras}
         size = {size}
+        tooltip = {tooltip}
     />;
 }
 
@@ -188,4 +189,8 @@ CellQuantityDisplay.propTypes = {
     inputClassExtras: PropTypes.string,
     size: PropTypes.number,
     inputType: PropTypes.string,
+    tooltip: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.object,
+    ]),
 };
