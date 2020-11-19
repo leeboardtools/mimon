@@ -301,20 +301,13 @@ function renderSplitsListDisplay(args) {
             </div>;
         }
 
-        const component = <CellSelectDisplay
+        return <CellSelectDisplay
             selectedValue = {text}
             ariaLabel = {ariaLabel}
             classExtras = {classExtras}
             size = {inputSize}
+            tooltip = {tooltip}
         />;
-
-        if (tooltip) {
-            return <div className = "simple-tooltip w-100"> 
-                {component}
-                {tooltip}
-            </div>;
-        }
-        return component;
     }
 }
 
@@ -930,6 +923,7 @@ export class AccountRegister extends React.Component {
                 accessor: this.props.accessor,
                 accountStateDataItem: rowEntry.accountStateDataItem,
                 referencePriceBaseValue: rowEntry.priceBaseValue,
+                referenceYMDDate: rowEntry.priceYMDDate,
             });
         }
     }
@@ -1223,6 +1217,7 @@ export class AccountRegister extends React.Component {
                     const priceBaseValue = currency.getQuantityDefinition()
                         .numberToBaseValue(priceDataItem.close);
                     newRowEntry.priceBaseValue = priceBaseValue;
+                    newRowEntry.priceYMDDate = priceDataItem.ymdDate;
                 }
             }
 

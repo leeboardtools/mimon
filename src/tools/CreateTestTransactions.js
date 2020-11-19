@@ -923,7 +923,7 @@ function addLotTransaction(args, args2) {
             description = 'Buy ' + lotQuantity + 'sh ' + pricedItemId;
         }
         else {
-            description = 'Sell ' + lotQuantity + 'sh ' + pricedItemId;
+            description = 'Sell ' + -lotQuantity + 'sh ' + pricedItemId;
         }
         splits.push({
             accountId: otherAccountId,

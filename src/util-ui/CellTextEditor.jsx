@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Tooltip } from './Tooltip';
 
 /**
  * React component for editing text in a table cell.
@@ -81,7 +82,7 @@ CellTextEditor.propTypes = {
  * @param {*} props 
  */
 export function CellTextDisplay(props) {
-    const { ariaLabel, inputClassExtras, placeholder } = props;
+    const { ariaLabel, inputClassExtras, placeholder, tooltip } = props;
     const inputType = props.inputType || 'text';
 
     let { value, size } = props;
@@ -96,7 +97,7 @@ export function CellTextDisplay(props) {
     const className = 'form-control cellTextEditor-textInput cellTextEditor-textDisplay ' 
         + (inputClassExtras || '');
 
-    return <div className={divClassName}>
+    const component = <div className={divClassName}>
         <input type={inputType}
             className={className}
             aria-label={ariaLabel}
@@ -108,6 +109,10 @@ export function CellTextDisplay(props) {
             onChange={() => {}}
         />
     </div>;
+
+    return <Tooltip tooltip = {props.tooltip}>
+        {component}
+    </Tooltip>;
 }
 
 
@@ -117,6 +122,7 @@ export function CellTextDisplay(props) {
  * @property {string}   [value]
  * @property {string}   [inputClassExtras]  If specified additional CSS
  * classes to add to the &lt;input&gt; entity.
+ * @property {string}   [tooltip]
  */
 CellTextDisplay.propTypes = {
     ariaLabel: PropTypes.string,
@@ -125,4 +131,8 @@ CellTextDisplay.propTypes = {
     size: PropTypes.number,
     inputType: PropTypes.string,
     placeholder: PropTypes.string,
+    tooltip: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.object,
+    ]),
 };

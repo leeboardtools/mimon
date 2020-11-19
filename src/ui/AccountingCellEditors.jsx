@@ -6,6 +6,7 @@ import { CellSelectDisplay, CellSelectEditor,
 import { CellDateDisplay, CellDateEditor } from '../util-ui/CellDateEditor';
 import { CellQuantityDisplay, CellQuantityEditor,
     getValidQuantityBaseValue } from '../util-ui/CellQuantityEditor';
+import { Tooltip } from '../util-ui/Tooltip';
 import { getQuantityDefinition } from '../util/Quantities';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
@@ -178,14 +179,8 @@ export function renderTextDisplay(args) {
         placeholder = {placeholder}
         inputClassExtras = {inputClassExtras}
         size = {inputSize}
+        tooltip = {tooltip}
     />;
-
-    if (tooltip) {
-        return <div className = "simple-tooltip w-100">
-            {component}
-            <div className = "simple-tooltiptext">{tooltip}</div>
-        </div>;
-    }
 
     return component;
 }
@@ -839,6 +834,7 @@ export function getReconcileStateColumnInfo(args) {
  * @property {QuantityDefinition}   quantityDefinition
  * @property {number|string}   quantityBaseValue    This is normally a string after
  * something is typed in the editor.
+ * @property {string}   [tooltip]
  * @property {boolean}  [readOnly]
  */
 
@@ -930,10 +926,11 @@ export function renderQuantityEditor(args) {
 export function renderQuantityDisplay(args) {
     const { columnInfo, value } = args;
     if (value) {
-        const { quantityBaseValue, quantityDefinition } = value;
+        const { quantityBaseValue, quantityDefinition, tooltip } = value;
         return <CellQuantityDisplay
             quantityDefinition = {quantityDefinition}
             quantityBaseValue = {quantityBaseValue}
+            tooltip = {tooltip}
             ariaLabel = {columnInfo.ariaLabel}
             inputClassExtras = {columnInfo.inputClassExtras}
             size = {columnInfo.inputSize}
@@ -1342,15 +1339,9 @@ export function renderSplitQuantityDisplay(args) {
         }
     }
 
-    if (lotTooltipEntries.length) {
-        return <div className = "simple-tooltip w-100">
-            {displayComponent}
-            <div className = "simple-tooltiptext">
-                {lotTooltipEntries}
-            </div>
-        </div>;
-    }
-    return displayComponent;
+    return <Tooltip tooltip = {lotTooltipEntries}>
+        {displayComponent}
+    </Tooltip>;
 }
 
 /**

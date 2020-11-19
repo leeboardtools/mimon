@@ -666,23 +666,12 @@ Summary:
 Name | Quantity | Price | Price Change | Market Value | Day Change | Cost Basis | Gain/Loss | % of Account
 
 
-Lots Selection Test Scenario:
-    - Need transactions of:
-        - Buy shares
-        - Reinvested dividends
-        - FIFO lots sold
-        - LIFO lots sold
-        - Splits/Merge
-        - << The Sell By Lots Transaction >>
-        - Buy buy shares
-        - Other Sell By Lots Transaction
-        - Sell by FIFO
-        - Sell by LIFO
-    
-    List should contain state up to the sell by lots transaction.
-    Then exclude any future sell by lots lots.
-    Then reserve shares for sell by LIFO/FIFO.
 
+- Don't allow modification of price/monetary amount for lot based splits in non-lot accounts.
 
-Return of Capital:
-Add function for reducing lot cost bases to LotTransactionsHelper.js.
+- Add tooltip support to RowTable headers
+    - For notes like Price - (at time of transaction)
+        
+
+- Tooltip for market value that lists the date of the price and price.
+

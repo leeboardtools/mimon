@@ -6,6 +6,7 @@ import deepEqual from 'deep-equal';
 import { Reconciler } from './Reconciler';
 import { asyncSetupNewFile } from './NewFileSetup';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
+import { format } from 'date-fns';
 
 
 /**
@@ -211,6 +212,19 @@ export class EngineAccessor extends EventEmitter {
      */
     getLocale() {
         return this._locale;
+    }
+
+
+    /**
+     * Formats a YMD date.
+     * @param {string|YMDDate} ymdDate 
+     * @returns {string}
+     */
+    formatDate(ymdDate) {
+        ymdDate = getYMDDate(ymdDate);
+        if (ymdDate) {
+            return format(ymdDate.toLocalDate(), this._dateFormat);
+        }
     }
 
 

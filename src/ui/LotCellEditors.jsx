@@ -251,6 +251,7 @@ function lotActionTypeFromTransactionInfo(transactionDataItem, splitIndex, acces
  * @property {number}   splitIndex
  * @property {LotActionType}    actionType
  * @property {QuantityDefinition}   currencyQuantityDefinition
+ * @property {Currency} currency
  * @property {QuantityDefinition}   sharesQuantityDefinition
  * @property {LotCellEditors~EditStates} editStates
  * @property {number}   nextQuantityEditHit
@@ -262,7 +263,11 @@ function lotActionTypeFromTransactionInfo(transactionDataItem, splitIndex, acces
  * @property {number}   splitIndex
  * @property {EngineAccessor}   accessor
  * @property {AccountStateDataItem} [accountStateDataItem]
- * @property {number} [referencePriceBaseValue]
+ * @property {number} [referencePriceBaseValue] The price base value to use
+ * for calculating the market value if the split does not have a price,
+ * normally used for SPLIT and REVERSE_SPLIT.
+ * @property {string|YMDDate}   [referenceYMDDate] The date of 
+ * referencePriceBaseValue.
  */
 
 /**
@@ -351,6 +356,7 @@ export function createSplitInfo(transactionDataItem, splitIndex, accessor, args)
     const splitInfo = Object.assign({}, args, {
         currencyQuantityDefinition: currencyQuantityDefinition,
         sharesQuantityDefinition: sharesQuantityDefinition,
+        currency: currency,
 
         actionType: actionType,
 
@@ -1691,6 +1697,7 @@ function getTotalMarketValueCellValue(args, columnInfoArgs) {
     if (splitInfo) {
         const { accountStateDataItem, editStates,
             currencyQuantityDefinition, sharesQuantityDefinition,
+            currency,
         } = splitInfo;
         let priceBaseValue = editStates.price.editorBaseValue;
         if (typeof priceBaseValue !== 'number') {
@@ -1703,10 +1710,29 @@ function getTotalMarketValueCellValue(args, columnInfoArgs) {
             const priceValue = currencyQuantityDefinition.baseValueToNumber(
                 priceBaseValue);
             const marketValue = sharesValue * priceValue;
+
+            const sharesValueText = sharesQuantityDefinition.baseValueToValueText(
+                accountStateDataItem.quantityBaseValue);
+            const priceValueText = currency.baseValueToString(
+                priceBaseValue);
+
+            let tooltip;
+            const { referenceYMDDate, accessor } = splitInfo;
+            if (referenceYMDDate) {
+                tooltip = userMsg('LotCellEditors-shares_price_date',
+                    sharesValueText, priceValueText, 
+                    accessor.formatDate(referenceYMDDate));
+            }
+            else {
+                tooltip = userMsg('LotCellEditors-shares_price',
+                    sharesValueText, priceValueText);
+            }
+
             return {
                 quantityBaseValue: currencyQuantityDefinition.numberToBaseValue(
                     marketValue),
                 quantityDefinition: currencyQuantityDefinition,
+                tooltip: tooltip,
             };
         }
     }

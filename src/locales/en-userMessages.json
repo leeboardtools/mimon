@@ -217,6 +217,9 @@
 
     "LotCellEditors-selectShares": "Select Shares",
 
+    "LotCellEditors-shares_price_date": ["", " sh @ ", " on ", ""],
+    "LotCellEditors-shares_price": ["", " sh @ ", ""],
+
 
     "LotsSelectionEditor-term": "Term",
     "LotsSelectionEditor-LONG_TERM": "Long term",

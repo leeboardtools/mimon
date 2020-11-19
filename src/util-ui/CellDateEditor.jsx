@@ -4,6 +4,7 @@ import DatePicker from 'react-datepicker';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
 import 'react-datepicker/dist/react-datepicker.css';
 import { format } from 'date-fns';
+import { Tooltip } from './Tooltip';
 
 //
 // How do we want to do this?
@@ -194,17 +195,19 @@ export function CellDateDisplay(props) {
     const className = 'form-control cellTextEditor-textInput cellTextEditor-textDisplay ' 
         + (inputClassExtras || '');
 
-    return <div className={divClassName}>
-        <input type={inputType}
-            className={className}
-            aria-label={ariaLabel}
-            style={{backgroundColor: 'inherit'}}
-            size={size}
-            disabled
-            value={value}
-            onChange={() => {}}
-        />
-    </div>;
+    return <Tooltip tooltip={props.tooltip}>
+        <div className={divClassName}>
+            <input type={inputType}
+                className={className}
+                aria-label={ariaLabel}
+                style={{backgroundColor: 'inherit'}}
+                size={size}
+                disabled
+                value={value}
+                onChange={() => {}}
+            />
+        </div>
+    </Tooltip>;
 }
 
 
@@ -223,4 +226,8 @@ CellDateDisplay.propTypes = {
     inputType: PropTypes.string,
     dateFormat: PropTypes.string,
     locale: PropTypes.string,
+    tooltip: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.object,
+    ]),
 };

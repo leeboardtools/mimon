@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Tooltip } from './Tooltip';
 
 
 /**
@@ -101,17 +102,19 @@ export function CellSelectDisplay(props) {
     const className = 'form-control cellTextEditor-textInput cellTextEditor-textDisplay ' 
         + classExtras;
 
-    return <div className = {divClassName}>
-        <input type = "text"
-            className = {className}
-            aria-label = {ariaLabel}
-            style = {{backgroundColor: 'inherit'}}
-            size = {size}
-            disabled
-            value = {selectedValue || ''}
-            onChange = {() => {}}
-        />
-    </div>;
+    return <Tooltip tooltip = {props.tooltip}>
+        <div className = {divClassName}>
+            <input type = "text"
+                className = {className}
+                aria-label = {ariaLabel}
+                style = {{backgroundColor: 'inherit'}}
+                size = {size}
+                disabled
+                value = {selectedValue || ''}
+                onChange = {() => {}}
+            />
+        </div>
+    </Tooltip>;
 }
 
 /**
@@ -125,6 +128,10 @@ CellSelectDisplay.propTypes = {
     ariaLabel: PropTypes.string,
     classExtras: PropTypes.string,
     size: PropTypes.number,
+    tooltip: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.object,
+    ]),
 };
 
 
