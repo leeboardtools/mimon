@@ -2,6 +2,7 @@ import React from 'react';
 import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountRegister } from './AccountRegister';
+import { EventEmitter } from 'events';
 
 
 function getUndoRedoInfo(tabEntry) {
@@ -34,7 +35,12 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         this.onReconcileAccount = this.onReconcileAccount.bind(this);
 
         this.onSelectSplit = this.onSelectSplit.bind(this);
+        this.onOpenRegisterForTransactionSplit 
+            = this.onOpenRegisterForTransactionSplit.bind(this);
+
+        this._eventEmitter = new EventEmitter();
     }
+
 
     onReconcileAccount(tabId) {
         const { accountId} = this.getTabIdState(tabId);
@@ -180,14 +186,24 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     }
 
 
+    onOpenRegisterForTransactionSplit(transactionDataItem, splitIndex) {
+        const split = transactionDataItem.splits[splitIndex];
+        this.openTab('accountRegister', split.accountId, {
+            transactionDataItem: transactionDataItem,
+            splitIndex: splitIndex,
+        });
+    }
+
+
     /**
      * Called by {@link MainWindow} to create the {@link TabbedPages~TabEntry}
      * object for a account register page.
      * @param {string} tabId 
      * @param {number}  accountId
+     * @param {object}  [openArgs]
      * @returns {TabbedPages~TabEntry}
      */
-    createTabEntry(tabId, accountId) {
+    createTabEntry(tabId, accountId, openArgs) {
         const accountDataItem = this.props.accessor.getAccountDataItemWithId(
             accountId);
         return {
@@ -199,7 +215,18 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             onRenderTabPage: this.onRenderTabPage,
             accountRegisterRef: React.createRef(),
             getUndoRedoInfo: getUndoRedoInfo,
+            openArgs: openArgs,
         };
+    }
+
+
+    openTabEntry(tabId, accountId, openArgs) {
+        if (openArgs) {
+            this._eventEmitter.emit(
+                'editTransactionSplit',
+                accountId,
+                openArgs);
+        }
     }
 
 
@@ -224,8 +251,13 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             accountId = {accountId}
             onSelectSplit = {(splitInfo) =>
                 this.onSelectSplit(tabEntry.tabId, splitInfo)}
+            onOpenRegisterForTransactionSplit = {
+                this.onOpenRegisterForTransactionSplit
+            }
             contextMenuItems={contextMenuItems}
             refreshUndoMenu = {this.refreshUndoMenu}
+            eventEmitter = {this._eventEmitter}
+            openArgs = {tabEntry.openArgs}
             ref = {accountRegisterRef}
         />;
     }

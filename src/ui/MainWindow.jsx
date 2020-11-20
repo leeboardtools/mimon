@@ -364,15 +364,19 @@ export class MainWindow extends React.Component {
     }
 
 
-    openAccountRegister(accountId) {
+    openAccountRegister(accountId, openArgs) {
         let tabId = this._accountRegistersByAccountId.get(accountId);
         if (!tabId) {
             const tabType = 'accountRegister';
             tabId = tabType + '_' + accountId;
             this._accountRegistersByAccountId.set(accountId, tabId);
             const tabEntry = this._accountRegisterHandler.createTabEntry(
-                tabId, accountId);
+                tabId, accountId, openArgs);
             this.addTabEntry(tabEntry, tabType);
+        }
+        else {
+            this._accountRegisterHandler.openTabEntry(tabId, accountId, 
+                openArgs);
         }
 
         this.setState({

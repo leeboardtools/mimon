@@ -402,16 +402,14 @@ function renderSplitsListEditor(args) {
     // the split editor from here.
     for (let i = 0; i < splitIndex; ++i) {
         const split = splits[i];
-        const accountDataItem = accessor.getAccountDataItemWithId(split.accountId);
-        const accountType = A.getAccountType(accountDataItem.type);
+        const accountType = accessor.getTypeOfAccountId(split.accountId);
         if (accountType.hasLots) {
             return renderSplitsListDisplay(args);
         }
     }
     for (let i = splitIndex + 1; i < splits.length; ++i) {
         const split = splits[i];
-        const accountDataItem = accessor.getAccountDataItemWithId(split.accountId);
-        const accountType = A.getAccountType(accountDataItem.type);
+        const accountType = accessor.getTypeOfAccountId(split.accountId);
         if (accountType.hasLots) {
             return renderSplitsListDisplay(args);
         }
@@ -651,6 +649,8 @@ export class AccountRegister extends React.Component {
         this.onTransactionsModify = this.onTransactionsModify.bind(this);
         this.onTransactionsRemove = this.onTransactionsRemove.bind(this);
 
+        this.onEditTransactionSplit = this.onEditTransactionSplit.bind(this);
+
         this.getUndoRedoInfo = this.getUndoRedoInfo.bind(this);
 
         this.getRowKey = this.getRowKey.bind(this);
@@ -789,8 +789,7 @@ export class AccountRegister extends React.Component {
 
     hasLots() {
         const { accessor, accountId } = this.props;
-        const accountDataItem = accessor.getAccountDataItemWithId(accountId);
-        const accountType = A.getAccountType(accountDataItem.type);
+        const accountType = accessor.getTypeOfAccountId(accountId);
         return accountType.hasLots;
     }
     
@@ -851,16 +850,59 @@ export class AccountRegister extends React.Component {
     }
 
 
+    onEditTransactionSplit(accountId, args) {
+        if (accountId !== this.props.accountId) {
+            return;
+        }
+
+        const { transactionDataItem, splitIndex } = args;
+        if (transactionDataItem && this._rowTableRef.current) {
+            const { rowEntriesByTransactionId } = this.state;
+            const rowEntries = rowEntriesByTransactionId.get(
+                transactionDataItem.id
+            );
+            if (rowEntries) {
+                for (let i = 0; i < rowEntries.length; ++i) {
+                    if (rowEntries[i].splitIndex === splitIndex) {
+                        this._rowTableRef.current.activateRow(
+                            rowEntries[i].rowIndex, () => {
+                                this._rowTableRef.current.openActiveRow();
+                            });
+
+                        this.setState({
+                            openArgsProcessed: true,
+                        });
+
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+
     componentDidMount() {
-        this.props.accessor.on('transactionsAdd', this.onTransactionsAdd);
-        this.props.accessor.on('transactionsModify', this.onTransactionsModify);
-        this.props.accessor.on('transactionsRemove', this.onTransactionsRemove);
+        const { accessor, eventEmitter } = this.props;
+
+        accessor.on('transactionsAdd', this.onTransactionsAdd);
+        accessor.on('transactionsModify', this.onTransactionsModify);
+        accessor.on('transactionsRemove', this.onTransactionsRemove);
+
+        if (eventEmitter) {
+            eventEmitter.on('editTransactionSplit', this.onEditTransactionSplit);
+        }
     }
 
     componentWillUnmount() {
-        this.props.accessor.off('transactionsAdd', this.onTransactionsAdd);
-        this.props.accessor.off('transactionsModify', this.onTransactionsModify);
-        this.props.accessor.off('transactionsRemove', this.onTransactionsRemove);
+        const { accessor, eventEmitter } = this.props;
+
+        accessor.off('transactionsAdd', this.onTransactionsAdd);
+        accessor.off('transactionsModify', this.onTransactionsModify);
+        accessor.off('transactionsRemove', this.onTransactionsRemove);
+
+        if (eventEmitter) {
+            eventEmitter.off('editTransactionSplit', this.onEditTransactionSplit);
+        }
     }
 
 
@@ -890,6 +932,12 @@ export class AccountRegister extends React.Component {
                     onSelectSplit(activeRowInfo);
                 }
             }
+        }
+
+        const { openArgs } = this.props;
+        const { openArgsProcessed } = this.state;
+        if (openArgs && !openArgsProcessed) {
+            this.onEditTransactionSplit(this.props.accountId, openArgs);
         }
     }
 
@@ -1305,6 +1353,27 @@ export class AccountRegister extends React.Component {
         rowEditBuffer.newTransactionDataItem 
             = T.getTransactionDataItem(transactionDataItem, true);
         rowEditBuffer.splitIndex = rowEntry.splitIndex;
+
+        if (!this.hasLots()) {
+            // If there's a split with lots, we need to edit in the account for the
+            // lot.
+            const { accessor } = this.props;
+            const { splits } = transactionDataItem;
+            for (let i = splits.length - 1; i >= 0; --i) {
+                const split = splits[i];
+                const accountType = accessor.getTypeOfAccountId(split.accountId);
+                if (accountType.hasLots) {
+                    const { onOpenRegisterForTransactionSplit } = this.props;
+                    if (onOpenRegisterForTransactionSplit) {
+                        onOpenRegisterForTransactionSplit(
+                            transactionDataItem,
+                            i
+                        );
+                        return false;
+                    }
+                }
+            }
+        }
 
         this.updateRowEntryForLotCellEditors(rowEditBuffer);
 
@@ -1768,6 +1837,7 @@ AccountRegister.propTypes = {
     accessor: PropTypes.object.isRequired,
     accountId: PropTypes.number.isRequired,
     onSelectSplit: PropTypes.func,
+    onOpenRegisterForTransactionSplit: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
     refreshUndoMenu: PropTypes.func,
@@ -1776,4 +1846,6 @@ AccountRegister.propTypes = {
     showHiddenTransactions: PropTypes.bool,
     showTransactionIds: PropTypes.bool,
     children: PropTypes.any,
+    eventEmitter: PropTypes.object,
+    openArgs: PropTypes.object,
 };
