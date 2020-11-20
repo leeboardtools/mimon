@@ -464,6 +464,10 @@ export class RowTable extends React.Component {
     }
 
 
+    /**
+     * 'Opens' the active row.
+     * @param {number} [columnIndex]
+     */
     openActiveRow(columnIndex) {
         const { onOpenActiveRow, activeRowIndex, rowCount } = this.props;
         if (onOpenActiveRow 
