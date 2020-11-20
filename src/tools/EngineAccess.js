@@ -804,6 +804,16 @@ export class EngineAccessor extends EventEmitter {
         return this._accountManager.getAccountIdsWithTags(tags, topAccountId);
     }
 
+    
+    /**
+     * Retrieves the type of a given account id.
+     * @param {number} accountId 
+     * @returns {AccountType}
+     */
+    getTypeOfAccountId(accountId) {
+        return this._accountManager.getTypeOfAccountId(accountId);
+    }
+
 
     /**
      * Retrieves the category of a given account id.

@@ -707,6 +707,19 @@ export class AccountManager extends EventEmitter {
         return result;
     }
 
+    
+    /**
+     * Retrieves the type of a given account id.
+     * @param {number} accountId 
+     * @returns {AccountType}
+     */
+    getTypeOfAccountId(accountId) {
+        const accountDataItem = this.getAccountDataItemWithId(accountId);
+        if (accountDataItem) {
+            return getAccountType(accountDataItem.type);
+        }
+    }
+
 
     /**
      * Retrieves the category of a given account id.
@@ -714,12 +727,9 @@ export class AccountManager extends EventEmitter {
      * @returns {AccountCategory}
      */
     getCategoryOfAccountId(accountId) {
-        const accountDataItem = this.getAccountDataItemWithId(accountId);
-        if (accountDataItem) {
-            const accountType = getAccountType(accountDataItem.type);
-            if (accountType) {
-                return accountType.category;
-            }
+        const accountType = this.getTypeOfAccountId(accountId);
+        if (accountType) {
+            return accountType.category;
         }
     }
 
