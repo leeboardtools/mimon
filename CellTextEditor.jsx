@@ -110,7 +110,7 @@ export function CellTextDisplay(props) {
         />
     </div>;
 
-    return <Tooltip tooltip = {props.tooltip}>
+    return <Tooltip tooltip = {tooltip}>
         {component}
     </Tooltip>;
 }
@@ -134,5 +134,6 @@ CellTextDisplay.propTypes = {
     tooltip: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object,
+        PropTypes.array,
     ]),
 };
