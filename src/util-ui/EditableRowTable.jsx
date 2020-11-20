@@ -255,7 +255,11 @@ export function editableRowTable(WrappedTable) {
         }
 
 
-        activateRow(rowIndex) {
+        /**
+         * Requests a particular row be made the active row.
+         * @param {number} activeRowIndex 
+         */
+        activateRow(rowIndex, callback) {
             this.cancelRowEdit();
 
             const { onActiveRowChanged } = this.props;
@@ -265,7 +269,18 @@ export function editableRowTable(WrappedTable) {
 
             this.setState({
                 activeRowIndex: rowIndex,
-            });
+            },
+            callback);
+        }
+
+
+
+        /**
+         * 'Opens' the active row.
+         * @param {number} [columnIndex]
+         */
+        openActiveRow(columnIndex) {
+            this._rowTableRef.current.openActiveRow(columnIndex);
         }
 
 
