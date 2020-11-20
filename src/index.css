@@ -199,6 +199,11 @@ body {
 }
 
 
+.actionType-header {
+  flex-basis: 14rem;
+}
+
+
 .shares-base {
   text-align: right;
 }
@@ -225,6 +230,16 @@ body {
 .monetary-cell {
   flex-grow: 0;
   flex-basis: 10rem;
+}
+
+.fees-header {
+  flex-grow: 0;
+  flex-basis: 4rem;
+}
+
+.price-header {
+  flex-grow: 0;
+  flex-basis: 4rem;
 }
 
 

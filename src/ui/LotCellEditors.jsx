@@ -1431,19 +1431,36 @@ function renderQuantityEditor(editorName, args, columnInfoArgs, readOnlyFilter) 
 //
 //---------------------------------------------------------
 //
-function getQuantityEditorColumnInfo(editorName, args, className, readOnlyFilter) {
+function getQuantityEditorColumnInfo(editorName, args, className, readOnlyFilter, 
+    extras) {
+
     className = className || editorName;
     const columnInfoArgs = args;
     const label = userMsg('LotCellEditors-' + editorName);
+    let headerClassExtras = '';
+    let inputClassExtras = '';
+    let cellClassExtras = '';
+    if (extras) {
+        if (extras.headerClassExtras) {
+            headerClassExtras = ' ' + extras.headerClassExtras;
+        }
+        if (extras.inputClassExtras) {
+            inputClassExtras = ' ' + extras.inputClassExtras;
+        }
+        if (extras.cellClassExtras) {
+            cellClassExtras = ' ' + extras.cellClassExtras;
+        }
+    }
     return Object.assign({ key: editorName,
         header: {
             label: label,
             ariaLabel: label,
             classExtras: 'header-base ' + className + '-base '
-                + className + '-header',
+                + className + '-header' + headerClassExtras,
         },
-        inputClassExtras: className + '-base ' + className + '-input',
-        cellClassName: 'cell-base ' + className + '-base ' + className + '-cell',
+        inputClassExtras: className + '-base ' + className + '-input' + inputClassExtras,
+        cellClassName: 'cell-base ' + className + '-base ' + className + '-cell'
+            + cellClassExtras,
 
         getCellValue: (args) => 
             getQuantityEditorCellValue(editorName, args, columnInfoArgs),
@@ -1648,6 +1665,9 @@ export function getFeesColumnInfo(args) {
                     return true;
                 }
             }
+        },
+        {
+            headerClassExtras: 'fees-header',
         });
 }
 
@@ -1667,6 +1687,9 @@ export function getPriceColumnInfo(args) {
                     return true;
                 }
             }
+        },
+        {
+            headerClassExtras: 'price-header',
         });
 }
 

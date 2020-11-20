@@ -750,9 +750,9 @@ export class AccountRegister extends React.Component {
                         reconcileState: T.ReconcileState.NOT_RECONCILED,
                         accountId: nameId.id,
                         quantityBaseValue: 999999999,
-                        lotTransactionType: T.LotTransactionType.REINVESTED_DIVIDEND.name,
+                        lotTransactionType: T.LotTransactionType.BUY_SELL.name,
+                        sellAutoLotType: T.AutoLotType.FIFO,
                         lotChanges: [
-                            { quantityBaseValue: 999999999, },
                         ],
                     },
                     {
