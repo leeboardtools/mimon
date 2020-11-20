@@ -673,5 +673,3 @@ Name | Quantity | Price | Price Change | Market Value | Day Change | Cost Basis 
     - For notes like Price - (at time of transaction)
         
 
-- Tooltip for market value that lists the date of the price and price.
-

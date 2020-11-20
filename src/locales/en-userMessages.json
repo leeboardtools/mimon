@@ -219,6 +219,7 @@
 
     "LotCellEditors-shares_price_date": ["", " sh @ ", " on ", ""],
     "LotCellEditors-shares_price": ["", " sh @ ", ""],
+    "LotCellEditors-shares_date": ["", " sh on ", ""],
 
 
     "LotsSelectionEditor-term": "Term",

@@ -20,6 +20,7 @@ import { areSimilar } from '../util/AreSimilar';
  * (i.e. fully sold). These are used to assist in removing splits from the account 
  * state, as they hold a lot state that can be unwound from by 
  * {@link removeLotChangeFromLotStateDataItem}.
+ * The elements of the array are two element lot id/lot state pairs.
  */
 
 /**
@@ -36,6 +37,7 @@ import { areSimilar } from '../util/AreSimilar';
  * (i.e. fully sold). These are used to assist in removing splits from the account 
  * state, as they hold a lot state that can be unwound from by 
  * {@link removeLotChangeFromLotStateDataItem}.
+ * The elements of the array are two element lot id/lot state pairs.
  */
 
 /**

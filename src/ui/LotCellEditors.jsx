@@ -377,6 +377,8 @@ function setupSplitInfoEditStates(splitInfo) {
         currencyQuantityDefinition,
         editStates,
         actionType,
+        accountStateDataItem,
+        accessor,
     } = splitInfo;
 
     const { splits } = splitInfo.transactionDataItem;
@@ -391,13 +393,46 @@ function setupSplitInfoEditStates(splitInfo) {
     let feesBaseValue;
     let priceBaseValue;
 
+    let sharesTooltip;
+    let lotStatesByLotId;
+    if (accountStateDataItem && actionType.hasSelectedLots) {
+        lotStatesByLotId = new Map();
+        const { lotStates } = accountStateDataItem;
+        lotStates.forEach((lotState) =>
+            lotStatesByLotId.set(lotState.lotId, lotState));
+        const { removedLotStates } = accountStateDataItem;
+        if (removedLotStates) {
+            removedLotStates.forEach(([lotId, lotState]) =>
+                lotStatesByLotId.set(lotId, lotState));
+        }
+    }
+
     const { lotChanges } = splitDataItem;
     if (lotChanges && lotChanges.length) {
         for (let lotChange of lotChanges) {
             if (lotChange.quantityBaseValue) {
                 sharesBaseValue = sharesBaseValue || 0;
                 sharesBaseValue += lotChange.quantityBaseValue;
+
+                if (lotStatesByLotId) {
+                    const lotState = lotStatesByLotId.get(lotChange.lotId);
+                    if (lotState) {
+                        const msg = userMsg('LotCellEditors-shares_date',
+                            sharesQuantityDefinition.baseValueToValueText(
+                                lotChange.quantityBaseValue),
+                            accessor.formatDate(lotState.ymdDateCreated),
+                        );
+
+                        if (!sharesTooltip) {
+                            sharesTooltip = [];
+                        }
+                        sharesTooltip.push(
+                            <div key = {lotChange.lotId}>{msg}</div>
+                        );
+                    }
+                }
             }   
+
             if (lotChange.costBasisBaseValue) {
                 totalCostBasisBaseValue = totalCostBasisBaseValue || 0;
                 totalCostBasisBaseValue += lotChange.costBasisBaseValue;
@@ -414,6 +449,8 @@ function setupSplitInfoEditStates(splitInfo) {
         }
     }
     sharesLotChanges = LS.getLotChangeDataItems(lotChanges, true);
+
+    splitInfo.sharesTooltip = sharesTooltip;
 
     if (actionType.monetaryAmountIsCostBasisChanges) {
         if (typeof totalCostBasisBaseValue === 'number') {
@@ -1424,6 +1461,22 @@ function getQuantityEditorColumnInfo(editorName, args, className, readOnlyFilter
 //
 //---------------------------------------------------------
 //
+function getSharesCellValue(args, columnInfoArgs) {
+    const result = getQuantityEditorCellValue('shares', args, columnInfoArgs);
+
+    const splitInfo = getSplitInfo(args, columnInfoArgs);
+    if (splitInfo) {
+        const { sharesTooltip } = splitInfo;
+        if (sharesTooltip) {
+            result.tooltip = sharesTooltip;
+        }
+    }
+    return result;
+}
+
+//
+//---------------------------------------------------------
+//
 function renderSharesDisplay(args, columnInfoArgs) {
     return renderQuantityDisplay('shares', args, columnInfoArgs);
 }
@@ -1550,6 +1603,8 @@ function renderSharesEditor(args, columnInfoArgs) {
 export function getSharesColumnInfo(args) {
     const columnInfoArgs = args;
     return Object.assign(getQuantityEditorColumnInfo('shares', args), {
+        getCellValue: (args) =>
+            getSharesCellValue(args, columnInfoArgs),
         renderDisplayCell: (args) =>
             renderSharesDisplay(args, columnInfoArgs),
         renderEditCell: (args) =>
