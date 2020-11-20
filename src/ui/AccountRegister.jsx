@@ -289,16 +289,13 @@ function renderSplitsListDisplay(args) {
                 baseCreditSign *= -1;
             }
 
-            const tooltipEntries = [];
+            tooltip = [];
             for (let i = 0; i < splits.length; ++i) {
                 const aleCreditSign = (i === splitIndex)
                     ? -1 : baseCreditSign;
-                tooltipEntries.push(renderSplitItemTooltip(caller, splits, i,
+                tooltip.push(renderSplitItemTooltip(caller, splits, i,
                     aleCreditSign));
             }
-            tooltip = <div className = "simple-tooltiptext">
-                {tooltipEntries}
-            </div>;
         }
 
         return <CellSelectDisplay
