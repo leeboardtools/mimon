@@ -229,5 +229,6 @@ CellDateDisplay.propTypes = {
     tooltip: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object,
+        PropTypes.array,
     ]),
 };
