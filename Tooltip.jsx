@@ -8,15 +8,16 @@ import PropTypes from 'prop-types';
  */
 export function Tooltip(props) {
     let { tooltip, children } = props;
+    if (Array.isArray(tooltip) && !tooltip.length) {
+        tooltip = undefined;
+    }
+    
     if (tooltip) {
-        if (typeof tooltip === 'string') {
-            tooltip = <div className = "simple-tooltiptext">
-                {tooltip}
-            </div>;
-        }
         return <div className = "simple-tooltip w-100"> 
             {children}
-            {tooltip}
+            <div className = "simple-tooltiptext">
+                {tooltip}
+            </div>
         </div>;
     }
 
@@ -27,5 +28,6 @@ Tooltip.propTypes = {
     tooltip: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object,
+        PropTypes.array,
     ]),
 };
