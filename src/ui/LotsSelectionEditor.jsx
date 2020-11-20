@@ -328,6 +328,8 @@ export class LotsSelectionEditor extends React.Component {
         this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
 
         this.getRowEntry = this.getRowEntry.bind(this);
+        this.getRowKey = this.getRowKey.bind(this);
+        
         this.getSaveBuffer = this.getSaveBuffer.bind(this);
         this.asyncSaveBuffer = this.asyncSaveBuffer.bind(this);
 
@@ -518,6 +520,17 @@ export class LotsSelectionEditor extends React.Component {
         return (isSizeRender)
             ? this._sizingRowEntry
             : this.state.rowEntries[rowIndex];
+    }
+
+
+
+    getRowKey(rowIndex) {
+        const { rowEntries } = this.state;
+        const rowEntry = rowEntries[rowIndex];
+        if (rowEntry) {
+            return rowEntry.key;
+        }
+        return (-rowIndex).toString();
     }
 
 
@@ -717,7 +730,7 @@ export class LotsSelectionEditor extends React.Component {
                 columns = {state.columns}
 
                 rowCount = {state.rowEntries.length}
-                //getRowKey = {this.getRowKey}
+                getRowKey = {this.getRowKey}
 
                 //onLoadRows = {this.onLoadRows}
 
