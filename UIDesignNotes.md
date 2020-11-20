@@ -256,13 +256,19 @@ Common menus:
     - Newest transaction at the bottom.
     - Edit in place
     - Also support popup editing
-    - Each split has two rows
+    - x Each split has two rows 
     - Automatically open to newest transaction.
     - Auto complete for the transaction/split description when adding a new transaction.
         - Auto complete works on the description, matching it against descriptions from
         the other transactions in the account. When a auto-complete options is chosen, 
         the transaction data item from the auto-complete transaction is used as the template.
     - Can have more than one Account Register open, but only one register per account.
+
+#### Lot Based Account Register
+    - Transactions with lots are limited in what can be edited, nothing financial can be changed
+    outside of the account register for the lot based account.
+    - Attempting to edit lot based transaction opens transaction in account register for
+    lot based account.
 
 
 ### Account Editor
@@ -297,7 +303,7 @@ Common menus:
 
 ### Lot Viewer
     - TBD
-    - Lots are normally created when a security is purchased.
+    - Lots are created when a security is purchased.
 
 
 ### Reconcile Window
@@ -434,14 +440,6 @@ Common menus:
 
         - Auto-complete for description
             
-        - For account types with lots, add:
-            - Price
-            - Commission
-            - Fees
-            - Cost-basis
-            - Market value
-            - Long term/short term?
-        
         - Multi-row support?
 
 
@@ -465,85 +463,6 @@ Common menus:
 
 - PricedItemsEditor:
     - Double click needs to open priced item editor???
-
-
-- renderSplitQuantityEditor
-    - Lots
-        - Split has LotChangeDataItem array lotChanges
-
-        - Use cases:
-            - Brokerage account in account register
-                - Transaction with other account a lot account.
-                - Just open up the lot account and jump the editing to the transaction?
-            
-            - Lot account in account register
-                - Buy
-                    - Other account is brokerage/cash/etc.
-
-                - Reinvested Dividend
-                    - Other account is income account.
-
-                - Sell
-                    - Proceeds go to account P
-                    - Capital gain/loss recorded in account G
-
-                - Receive
-                    - Gift, starting, etc.
-                    - Value comes from account G
-                
-                - Donate
-                    - Value goes to account D
-                
-                - Merge/Split
-                    - Old shares
-                    - New shares
-                    - Cash in lieu shares
-
-                - Return of capital
-            
-            - When does lot editing come into play?
-                - Account Register for account with lots.
-
-        - Buy
-            - Auto-create lot
-            - Splits editor:
-                - Cash source (brokerage account) - Currency
-                - Fees - Currency
-                - Shares - #shares
-
-        - Reinvested Dividends
-            - Basically same as Buy, except cash source is income account.
-
-        - Sell
-            - Proceeds destination (brokerage account) - Currency
-            - Fees - Currency
-            - Lots
-            
-            - Need to choose lots, which may be parts of a lot.
-                - Also options for automatic LIFO, FIFO
-            - Lot picker:
-                - Shows available lots, with shares, cost basis, select how much of each lot is to be sold.
-                - Have price, commission & fees, so can show gain/loss.
-
-                - Have sell all button.
-
-            - Needs to be smart enough to detect if future transactions are affected
-            by the lots sold (i.e. do we run out of the lot?)
-        
-        - Return of Capital
-            - Shares: 0
-            - Price: 0
-            - Sell: amount
-            - Effect is to reduce the cost basis, # shares do not change.
-        
-        - 
-        - Split/Merge
-            - Number of shares added/removed, or new share quantity???
-            - Cash in lieu
-            - 
-        
-
-- MultiSplitsEditor:
     
 
 - Splits List:
@@ -562,114 +481,5 @@ Common menus:
         - Both HTML and text.
         - For HTML include the split drop down???
     
-    - Lot based account register:
-        - Columns:
-            - Date
-            - Description
-            - Account
-            - Reconciled
-            - Shares (+buy, -sell)
-            - Value
-            - Commission/fee
-            - Price
-            - Balance
 
-            - Schwab: Quantity | Unit Price | Total Amount
-
-- Commission in Stock register displays in drop down using shares QDef not currency QDef
-- Also splits editor - may need to replace that for stocks
-- Add (optional?) default income, commissions account to brokerage accounts?
-
-- Lot based transaction editing:
-    - Important information:
-        - Date
-        - Split info:
-            - Share lots
-            - Fees/commissions
-            - Interest/dividends
-            - Funds in/out
-    
-    - Editor fields:
-        - Date
-        - Action:
-            - Buy
-            - Sell
-            - Reinvested Dividend
-            - Return of Capital
-            - Split
-            - Merge
-            - Add Shares
-            - Remove Shares
-
-        - Shares
-            - Sell - lots - Similar to Splits Editor
-            - Split/Merge: shares added/removed? or total end shares?
-            - Editable for all but Return of Capital
-
-        - Amount/Cash in lieu
-            - Editable for all
-
-        - Fees/Commissions
-            - Editable for all
-
-        - Unit Price
-            - Editable for Buy, Sell, Reinvested Dividend
-
-        - Market Value
-            - Not editable
-
-        - Cost Basis
-            - Not editable
-
-        - Total Shares
-            - Not editable
-
-    - Details:
-        - Buy action:
-            - Shares
-            - Amount spent
-            - Fees/commissions
-
-        - Sell action:
-            - Sold lots
-            - Received amount
-            - Fees/commissions
-
-        - Reinvested Dividend Type:
-            - Shares
-            - Dividend amount
-            - Fees/commissions
-        
-        - Return of Capital Type:
-            - Return of capital amount
-            - Fees/commissions
-        
-        - Split/Merge Type:
-            - New shares
-            - Cash in lieu
-            - Fees/commissions
-
-        - Add Shares
-            - Shares
-            - Cost basis
-            - Only difference between this and Buy is amount spent comes from equity
-
-        - Remove Shares
-            - Lots
-            - Only difference between this and Sell is amount recieved goes to equity
-            
-
-Transaction:
-Date | Action | Details | Symbol | Description | Quantity | Price | Fees & Comm | Amount
-
-Summary:
-Name | Quantity | Price | Price Change | Market Value | Day Change | Cost Basis | Gain/Loss | % of Account
-
-
-
-- Don't allow modification of price/monetary amount for lot based splits in non-lot accounts.
-
-- Add tooltip support to RowTable headers
-    - For notes like Price - (at time of transaction)
-        
-
+- Set default interest, dividends, fees accounts in account editing.
