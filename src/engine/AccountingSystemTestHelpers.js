@@ -7,6 +7,7 @@ import { InMemoryLotsHandler } from './Lots';
 import * as A from './Accounts';
 import * as PI from './PricedItems';
 import * as T from './Transactions';
+import * as L from './Lots';
 import { getDecimalDefinition } from '../util/Quantities';
 import { InMemoryPricesHandler } from './Prices';
 import { InMemoryTransactionsHandler } from './Transactions';
@@ -829,7 +830,10 @@ export async function asyncAddBasicTransactions(sys) {
     const priceQuantityDefinition = pricedItemManager.getBaseCurrency().getQuantityDefinition();
     
     const lotManager = accountingSystem.getLotManager();
-    const aaplLot1 = (await lotManager.asyncAddLot({ pricedItemId: sys.aaplPricedItemId, description: 'Lot 2005-02-11'})).newLotDataItem;
+    const aaplLot1 = (await lotManager.asyncAddLot({ pricedItemId: sys.aaplPricedItemId, 
+        description: 'Lot 2005-02-11',
+        lotOriginType: L.LotOriginType.CASH_PURCHASE.name, 
+    })).newLotDataItem;
     sys.aaplLot1 = aaplLot1;
 
     const aaplPrice1 = await priceManager.asyncGetPriceDataItemOnOrClosestBefore(sys.aaplPricedItemId, '2005-02-11');
@@ -899,7 +903,10 @@ export async function asyncAddBasicTransactions(sys) {
     sys.transIId = aaplTrans2014_06_09.id;
 
 
-    const aaplLot2 = (await lotManager.asyncAddLot({ pricedItemId: sys.aaplPricedItemId, description: 'Lot 2015-03-12'})).newLotDataItem;
+    const aaplLot2 = (await lotManager.asyncAddLot({ pricedItemId: sys.aaplPricedItemId, 
+        description: 'Lot 2015-03-12',
+        lotOriginType: L.LotOriginType.CASH_PURCHASE.name, 
+    })).newLotDataItem;
     sys.applLot2 = aaplLot2;
 
     const aaplPrice2 = await priceManager.asyncGetPriceDataItemOnOrClosestBefore(sys.aaplPricedItemId, '2015-03-12');

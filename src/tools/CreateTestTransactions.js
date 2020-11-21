@@ -903,6 +903,7 @@ function addLotTransaction(args, args2) {
         lots.push({ 
             pricedItemId: pricedItemId, 
             description: lotId, 
+            lotOriginType: lotTransactionType.lotOriginType,
         });
 
         const lotChange = {

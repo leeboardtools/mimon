@@ -3,6 +3,7 @@ import * as A from './Accounts';
 import * as PI from './PricedItems';
 import * as RE from '../util/Repeats';
 import * as T from './Transactions';
+import * as L from './Lots';
 import * as Q from '../util/Quantities';
 
 
@@ -207,6 +208,7 @@ test('AccountingActions-Lots', async () => {
     const settingsA = {
         pricedItemId: sys.aaplPricedItemId,
         description: 'Lot A',
+        lotOriginType: L.LotOriginType.CASH_PURCHASE.name,
     };
 
     // New Lot

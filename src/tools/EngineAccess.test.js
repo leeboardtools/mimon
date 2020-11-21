@@ -3,6 +3,7 @@ import { EngineAccessor } from './EngineAccess';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
 import * as T from '../engine/Transactions';
+import * as L from '../engine/Lots';
 import * as RE from '../util/Repeats';
 import { getDecimalDefinition } from '../util/Quantities';
 import { getYMDDate } from '../util/YMDDate';
@@ -265,6 +266,7 @@ test('EngineAccessor-actions', async () => {
         const settingsE = {
             pricedItemId: aaplPricedItem.id,
             description: 'Lot 1',
+            lotOriginType: L.LotOriginType.REINVESTED_DIVIDEND.name,
         };
         const actionE = accountingActions.createAddLotAction(settingsE);
         result = await accessor.asyncApplyAction(actionE);

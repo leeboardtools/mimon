@@ -3,6 +3,7 @@ import { createDir, cleanupDir } from '../util/FileTestHelpers';
 import { JSONGzipAccountingFileFactory } from './JSONGzipAccountingFile';
 import * as A from './Accounts';
 import * as T from './Transactions';
+import * as L from './Lots';
 import * as PI from './PricedItems';
 import * as ASTH from './AccountingSystemTestHelpers';
 import * as RE from '../util/Repeats';
@@ -444,6 +445,7 @@ test('JSONGzipAccountingFile-history', async () => {
         const actionE1 = accountingActions1.createAddLotAction({
             pricedItemId: sys.aaplPricedItemId,
             description: 'lot actionE1',
+            lotOriginType: L.LotOriginType.CASH_PURCHASE,
         });
         await actionManager1.asyncApplyAction(actionE1);
         const aaplLotEId = lastResult.newLotDataItem.id;

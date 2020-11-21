@@ -3,11 +3,51 @@ import { userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
 
 
+/**
+ * @typedef {object} LotOriginTypeDef
+ * @property {string}   name
+ */
+
+/**
+ * Enumeration for the lot source types
+ * @readonly
+ * @enum {LotOriginType}
+ * @property {LotOriginTypeDef} CASH_PURCHASE
+ * @property {LotOriginTypeDef} REINVESTED_DIVIDEND
+ */
+export const LotOriginType = {
+    CASH_PURCHASE: { name: 'CASH_PURCHASE', },
+    REINVESTED_DIVIDEND: { name: 'REINVESTED_DIVIDEND', },
+};
+
+/**
+ * 
+ * @param {LotOriginType|string|undefined} ref 
+ * @returns {LotOriginType|undefined}
+ */
+export function getLotOriginType(ref) {
+    return (typeof ref === 'string')
+        ? LotOriginType[ref]
+        : ref;
+}
+
+/**
+ * 
+ * @param {LotOriginType|string|undefined} ref 
+ * @returns {string|undefined}
+ */
+export function getLotOriginTypeName(ref) {
+    return (typeof ref === 'object')
+        ? ref.name
+        : ref;
+}
+
 
 /**
  * @typedef {object} LotDataItem
  * @property {number}   id  The id of the lot in the lot manager.
  * @property {number}   pricedItemId    The id of the priced item the lot represents.
+ * @property {string}   lotOriginType   Why the lot was created.
  * @property {string}   [description]   The description of the lot.
  */
 
@@ -15,6 +55,7 @@ import { NumericIdGenerator } from '../util/NumericIds';
  * @typedef {object} Lot
  * @property {number}   id  The id of the lot in the lot manager.
  * @property {number}   pricedItemId    The id of the priced item the lot represents.
+ * @property {LotOriginTypeDef} lotOriginType   Why the lot was created.
  * @property {string}   [description]   The description of the lot.
  */
 
@@ -27,8 +68,14 @@ import { NumericIdGenerator } from '../util/NumericIds';
  */
 export function getLot(lotDataItem, alwaysCopy) {
     if (lotDataItem) {
-        if (alwaysCopy) {
-            return Object.assign({}, lotDataItem);
+        const lotOriginType = getLotOriginType(lotDataItem.lotOriginType);
+        if (alwaysCopy
+         || (lotOriginType !== lotDataItem.lotOriginType)) {
+            const lot = Object.assign({}, lotDataItem);
+            if (lotOriginType !== undefined) {
+                lot.lotOriginType = lotOriginType;
+            }
+            return lot;
         }
     }
     return lotDataItem;
@@ -42,7 +89,20 @@ export function getLot(lotDataItem, alwaysCopy) {
  * always be created.
  * @returns {LotDataItem}
  */
-export const getLotDataItem = getLot;
+export function getLotDataItem(lot, alwaysCopy) {
+    if (lot) {
+        const lotOriginTypeName = getLotOriginTypeName(lot.lotOriginType);
+        if (alwaysCopy
+         || (lotOriginTypeName !== lot.lotOriginType)) {
+            const lotDataItem = Object.assign({}, lot);
+            if (lotOriginTypeName !== undefined) {
+                lotDataItem.lotOriginType = lotOriginTypeName;
+            }
+            return lotDataItem;
+        }
+    }
+    return lot;
+}
 
 
 /**
@@ -156,6 +216,11 @@ export class LotManager extends EventEmitter {
         if (!pricedItemManager.getPricedItemDataItemWithId(lotDataItem.pricedItemId)) {
             return userError('LotManager-invalid_pricedItem_id', 
                 lotDataItem.pricedItemId);
+        }
+
+        const lotOriginType = getLotOriginType(lotDataItem.lotOriginType);
+        if (!lotOriginType) {
+            return userError('LotManager-lotOriginType_missing');
         }
     }
 

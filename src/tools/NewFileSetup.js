@@ -164,6 +164,7 @@ async function asyncLoadLots(setupInfo) {
             const settings = {
                 description: item.description,
                 pricedItemId: pricedItem.id,
+                lotOriginType: item.lotOriginType,
             };
             const lotDataItem = (await lotManager.asyncAddLot(
                 settings)).newLotDataItem;

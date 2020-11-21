@@ -134,6 +134,7 @@
     "Actions-modifyTransactions": "Modify Transactions",
 
     "LotManager-invalid_pricedItem_id": ["A priced item with id '", "' was not found."],
+    "LotManager-lotOriginType_missing": ["The lot is missing an origin type."],
     "LotManager-remove_no_id": ["The lot cannot be deleted. An item with id '", "' was not found."],
     "LotManager-modify_no_id": ["The lot could not be modified. An item with id '", "' was not found."],
 

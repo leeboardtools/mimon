@@ -1,5 +1,6 @@
 import * as T from './Transactions';
 import * as LS from './LotStates';
+import * as L from './Lots';
 import * as A from './Accounts';
 import * as ASTH from './AccountingSystemTestHelpers';
 import * as ACSTH from './AccountStateTestHelpers';
@@ -1698,7 +1699,10 @@ test('Transactions-lotTransactions', async () => {
     let result;
     
     const lot1 = (await lotManager.asyncAddLot(
-        { pricedItemId: aaplPricedItemId, description: 'Lot 1'})).newLotDataItem;
+        { pricedItemId: aaplPricedItemId, 
+            description: 'Lot 1',
+            lotOriginType: L.LotOriginType.CASH_PURCHASE.name,
+        })).newLotDataItem;
     const changeA = { lotId: lot1.id, 
         quantityBaseValue: 10000, 
         costBasisBaseValue: 200000, 
@@ -1757,9 +1761,13 @@ test('Transactions-lotTransactions', async () => {
     //
     // Multiple lots in single split.
     const lot2 = (await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, 
-        description: 'Lot 2'})).newLotDataItem;
+        description: 'Lot 2', 
+        lotOriginType: L.LotOriginType.CASH_PURCHASE.name, 
+    })).newLotDataItem;
     const lot3 = (await lotManager.asyncAddLot({ pricedItemId: aaplPricedItemId, 
-        description: 'Lot 3'})).newLotDataItem;
+        description: 'Lot 3',
+        lotOriginType: L.LotOriginType.CASH_PURCHASE.name, 
+    })).newLotDataItem;
     const changeB1 = { lotId: lot2.id, 
         quantityBaseValue: 20000, 
         costBasisBaseValue: 60 * 20000,
@@ -1807,7 +1815,10 @@ test('Transactions-lotTransactions', async () => {
 
 
     const lot4 = (await lotManager.asyncAddLot(
-        { pricedItemId: aaplPricedItemId, description: 'Lot 4'})).newLotDataItem;
+        { pricedItemId: aaplPricedItemId, 
+            description: 'Lot 4',
+            lotOriginType: L.LotOriginType.CASH_PURCHASE.name, 
+        })).newLotDataItem;
     const changeC = { lotId: lot4.id, 
         quantityBaseValue: 40000, 
         costBasisBaseValue: 40 * 40000,
@@ -1880,7 +1891,10 @@ test('Transactions-lotTransactions', async () => {
 
 
     const lot5 = (await lotManager.asyncAddLot(
-        { pricedItemId: aaplPricedItemId, description: 'Lot 4'})).newLotDataItem;
+        { pricedItemId: aaplPricedItemId, 
+            description: 'Lot 4',
+            lotOriginType: L.LotOriginType.CASH_PURCHASE.name, 
+        })).newLotDataItem;
     const changeD = { lotId: lot5.id, 
         quantityBaseValue: 50000, 
         costBasisBaseValue: 30 * 50000,
@@ -2282,7 +2296,10 @@ test('Transactions-lotValidation', async () => {
     await expect(transactionManager.asyncAddTransaction(settingsA)).rejects.toThrow();
 
     const lot1 = (await lotManager.asyncAddLot(
-        { pricedItemId: aaplPricedItemId, description: 'Lot 1'})).newLotDataItem;
+        { pricedItemId: aaplPricedItemId, 
+            description: 'Lot 1',
+            lotOriginType: L.LotOriginType.CASH_PURCHASE.name, 
+        })).newLotDataItem;
     changeA.lotId = lot1.id;
 
     // valid quantityBaseValue
@@ -2324,7 +2341,10 @@ test('Transactions-lotValidation', async () => {
 
 
     const lot2 = (await lotManager.asyncAddLot(
-        { pricedItemId: aaplPricedItemId, description: 'Lot 2'})).newLotDataItem;
+        { pricedItemId: aaplPricedItemId, 
+            description: 'Lot 2',
+            lotOriginType: L.LotOriginType.CASH_PURCHASE.name, 
+        })).newLotDataItem;
     changeB.lotId = lot2.id;
     const transB = (await transactionManager.asyncAddTransaction(settingsB))
         .newTransactionDataItem;
@@ -2399,7 +2419,10 @@ test('Transactions-lotValidation', async () => {
 
     // Can't change lot id if lot is still in use.
     const lot3 = (await lotManager.asyncAddLot(
-        { pricedItemId: aaplPricedItemId, description: 'Lot 3'})).newLotDataItem;
+        { pricedItemId: aaplPricedItemId, 
+            description: 'Lot 3',
+            lotOriginType: L.LotOriginType.CASH_PURCHASE.name, 
+        })).newLotDataItem;
     const changeE = Object.assign({}, changeD);
     changeE.lotId = lot3.id;
     const settingsE = {
@@ -2493,7 +2516,10 @@ async function asyncQuickBuy(sys, ymdDate, quantityBaseValue, costBasisBaseValue
     const { aaplPricedItemId } = sys;
 
     const lot = (await lotManager.asyncAddLot( 
-        { pricedItemId: aaplPricedItemId, description: description})).newLotDataItem;
+        { pricedItemId: aaplPricedItemId, 
+            description: description,
+            lotOriginType: L.LotOriginType.CASH_PURCHASE.name, 
+        })).newLotDataItem;
     const change = { lotId: lot.id, 
         quantityBaseValue: quantityBaseValue, 
         costBasisBaseValue: costBasisBaseValue, 

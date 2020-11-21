@@ -5,6 +5,7 @@ function testLotDataItems(lot) {
     const dataItem = L.getLotDataItem(lot);
 
     const string = JSON.stringify(dataItem);
+    
     const jsonDataItem = JSON.parse(string);
     expect(jsonDataItem).toEqual(dataItem);
 
@@ -25,6 +26,7 @@ test('Lot-Data Items', () => {
         id: 987,
         pricedItemId: 123,
         description: 'Abc',
+        lotOriginType: L.LotOriginType.REINVESTED_DIVIDEND,
     };
     testLotDataItems(lotA);
 
@@ -42,6 +44,7 @@ test('LotManager-other types', async () => {
     const settingsA = {
         pricedItemId: sys.aaplPricedItemId,
         description: 'Hello',
+        lotOriginType: L.LotOriginType.CASH_PURCHASE.name,
     };
     let result;
     result = await manager.asyncAddLot(settingsA);
@@ -52,6 +55,7 @@ test('LotManager-other types', async () => {
 
     const settingsB = {
         pricedItemId: sys.aaplPricedItemId,
+        lotOriginType: L.LotOriginType.REINVESTED_DIVIDEND.name,
     };
 
     // Validate only...
@@ -96,6 +100,7 @@ test('LotManager-other types', async () => {
     const settingsC = {
         pricedItemId: sys.msftPricedItemId,
         description: 'Some MSFT',
+        lotOriginType: L.LotOriginType.CASH_PURCHASE.name,
     };
     const lotC = (await manager.asyncAddLot(settingsC)).newLotDataItem;
     settingsC.id = lotC.id;
@@ -138,16 +143,19 @@ test('LotManager-other types', async () => {
         id: settingsC.id,
         pricedItemId: settingsC.pricedItemId,
         description: 'A new description',
+        lotOriginType: L.LotOriginType.REINVESTED_DIVIDEND.name,
     };
     await manager.asyncModifyLot({
         id: settingsC.id, 
         description: settingsCa.description, 
+        lotOriginType: settingsCa.lotOriginType,
     }, true);
     expect(manager.getLotDataItemWithId(settingsC.id)).toEqual(settingsC);
 
     const resultCa = await manager.asyncModifyLot({
         id: settingsC.id, 
         description: settingsCa.description, 
+        lotOriginType: settingsCa.lotOriginType,
     });
     const testCa = resultCa.newLotDataItem;
     const oldCa = resultCa.oldLotDataItem;
@@ -176,6 +184,7 @@ test('LotManager-other types', async () => {
     result = await manager.asyncModifyLot({
         id: settingsC.id, 
         description: settingsCa.description, 
+        lotOriginType: settingsCa.lotOriginType,
     });
     expect(result.newLotDataItem).toEqual(settingsCa);
     expect(result.oldLotDataItem).toEqual(settingsC);

@@ -7,6 +7,7 @@ import { doSetsHaveSameElements } from '../util/DoSetsHaveSameElements';
 import * as A from './Accounts';
 import * as AS from './AccountStates';
 import * as LS from './LotStates';
+import * as L from './Lots';
 import * as PI from './PricedItems';
 import { getCurrency } from '../util/Currency';
 import { getRatio, getRatioJSON } from '../util/Ratios';
@@ -59,6 +60,7 @@ export function getAutoLotTypeName(ref) {
  * @property {string}   description The user description of the lot transaction type.
  * @property {boolean}  [noShares=false]    If <code>true</code> the lot transaction
  * type does not change the number of shares.
+ * @property {LotOriginType} [lotOriginType=undefined]
  */
 
 /**
@@ -71,8 +73,12 @@ export function getAutoLotTypeName(ref) {
  * @property {LotTransactionTypeDef} SPLIT
 */
 export const LotTransactionType = {
-    BUY_SELL: { name: 'BUY_SELL', },
-    REINVESTED_DIVIDEND: { name: 'REINVESTED_DIVIDEND', },
+    BUY_SELL: { name: 'BUY_SELL', 
+        lotOriginType: L.LotOriginType.CASH_PURCHASE,
+    },
+    REINVESTED_DIVIDEND: { name: 'REINVESTED_DIVIDEND', 
+        lotOriginType: L.LotOriginType.REINVESTED_DIVIDEND,
+    },
     RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', 
         noShares: true, 
         validateLotSplits: validateSplitsRETURN_OF_CAPITAL,

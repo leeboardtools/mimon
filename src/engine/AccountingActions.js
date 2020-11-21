@@ -720,6 +720,17 @@ export class AccountingActions extends EventEmitter {
     }
 
 
+    _getLotOriginTypeFromSplit(split) {
+        const lotTransactionType = T.getLotTransactionType(split.lotTransactionType);
+        if (lotTransactionType) {
+            const { lotOriginType } = lotTransactionType;
+            if (lotOriginType) {
+                return lotOriginType.name;
+            }
+        }
+    }
+
+
     _createAddLotTransactionsAction(transactionDataItem, baseAction,
         postApplyCallback) {
 
@@ -739,9 +750,11 @@ export class AccountingActions extends EventEmitter {
             const { pricedItemId } = accountDataItem;
             for (let lotChange of lotChanges) {
                 if (!lotChange.lotId) {
+                    const lotOriginType = this._getLotOriginTypeFromSplit(split);
                     subActions.push(
                         this.createAddLotAction({
                             pricedItemId: pricedItemId,
+                            lotOriginType: lotOriginType,
                         },
                         (result) => {
                             lotChange.lotId = result.newLotDataItem.id;
@@ -1188,9 +1201,11 @@ export class AccountingActions extends EventEmitter {
                     for (let lotChange of lotChanges) {
                         const { lotId } = lotChange;
                         if (!lotId) {
+                            const lotOriginType = this._getLotOriginTypeFromSplit(split);
                             addLotEntries.push({
                                 pricedItemId: accountDataItem.pricedItemId,
                                 lotChange: lotChange,
+                                lotOriginType: lotOriginType,
                             });
                         }
                         else {
@@ -1214,6 +1229,7 @@ export class AccountingActions extends EventEmitter {
                         this.createAddLotAction(
                             {
                                 pricedItemId: entry.pricedItemId,
+                                lotOriginType: entry.lotOriginType,
                             },
                             (result) => {
                                 entry.lotChange.lotId = result.newLotDataItem.id;
