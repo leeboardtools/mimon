@@ -7,6 +7,7 @@ import * as LTH from '../tools/LotTransactionHelpers';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
 import * as LS from '../engine/LotStates';
+import * as L from '../engine/Lots';
 import { getCurrency } from '../util/Currency';
 import { getQuantityDefinition } from '../util/Quantities';
 import { CellButton } from '../util-ui/CellButton';
@@ -1879,6 +1880,13 @@ export function calcMarketValueBalanceValue(
 
 
 /**
+ * Display renderer for total market value quantities.
+ * @param {CellQuantityDisplayArgs} args
+ */
+export const renderTotalCostBasisDisplay = ACE.renderQuantityDisplay;
+
+
+/**
  * Retrieves a column info for cost basis totals cells.
  * @param {getColumnInfoArgs} args
  * @returns {CellEditorsManager~ColumnInfo}
@@ -1888,7 +1896,7 @@ export function getTotalCostBasisColumnInfo(args) {
     return Object.assign({ key: 'totalCostBasis',
         header: {
             label: userMsg('LotCellEditors-totalCostBasis'),
-            ariaLabel: 'Total Shares',
+            ariaLabel: 'Total Cost Basis',
             classExtras: 'header-base monetary-base monetary-header',
         },
         inputClassExtras: 'monetary-base monetary-input',
@@ -1896,7 +1904,7 @@ export function getTotalCostBasisColumnInfo(args) {
 
         getCellValue: (args) => 
             getTotalCostBasisCellValue(args, columnInfoArgs),
-        renderDisplayCell: renderTotalSharesDisplay,
+        renderDisplayCell: renderTotalCostBasisDisplay,
     },
     args);
 }
@@ -1917,4 +1925,178 @@ function getTotalCostBasisCellValue(args, columnInfoArgs) {
             };
         }
     }
+}
+
+/**
+ * Calculates a value representing the cost basis of the lots in an 
+ * {@link AccountState} for use with {@link renderTotalCostBasisDisplay}.
+ * @param {*} param0 
+ * @returns {CellBalanceValue}
+ */
+export function calcCostBasicBalanceValue(
+    { accessor, pricedItemId, accountStateDataItem }) {
+
+    const pricedItemDataItem = accessor.getPricedItemDataItemWithId(pricedItemId);
+    if (!pricedItemDataItem || !accountStateDataItem) {
+        return;
+    }
+
+    const sharesQuantityDefinition = getQuantityDefinition(
+        pricedItemDataItem.quantityDefinition
+    );
+    if (!sharesQuantityDefinition) {
+        return;
+    }
+
+    let currency = pricedItemDataItem.currency || accessor.getBaseCurrencyCode();
+    currency = getCurrency(currency);
+    if (!currency) {
+        return;
+    }
+
+    const { lotStates } = accountStateDataItem;
+    if (!lotStates) {
+        return;
+    }
+
+    let tooltip = [];
+    let costBasisBaseValue = 0;
+    lotStates.forEach((lotState) => {
+        costBasisBaseValue += lotState.costBasisBaseValue;
+
+        const sharesValueText = sharesQuantityDefinition.baseValueToValueText(
+            lotState.quantityBaseValue);
+        const costBasisValueText = currency.baseValueToString(
+            lotState.costBasisBaseValue);
+        tooltip.push(userMsg('LotCellEditors-shares_price',
+            sharesValueText, costBasisValueText));
+    });
+
+    return {
+        quantityBaseValue: costBasisBaseValue,
+        currency: currency,
+        tooltip: tooltip,
+    };
+}
+
+
+/**
+ * Display renderer for total market value quantities.
+ * @param {CellQuantityDisplayArgs} args
+ */
+export const renderTotalCashInDisplay = ACE.renderQuantityDisplay;
+
+
+/**
+ * Retrieves a column info for cost basis totals cells.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getTotalCashInColumnInfo(args) {
+    const columnInfoArgs = args;
+    return Object.assign({ key: 'totalCashIn',
+        header: {
+            label: userMsg('LotCellEditors-totalCashIn'),
+            ariaLabel: 'Total Cash-In',
+            classExtras: 'header-base monetary-base monetary-header',
+        },
+        inputClassExtras: 'monetary-base monetary-input',
+        cellClassName: 'cell-base monetary-base monetary-cell',
+
+        getCellValue: (args) => 
+            getTotalCashInCellValue(args, columnInfoArgs),
+        renderDisplayCell: renderTotalCashInDisplay,
+    },
+    args);
+}
+
+/**
+ * Determines if the lot underlying a lotState is a cash-in lot.
+ * @param {EngineAccessor} accessor 
+ * @param {LotStateDataItem} lotState 
+ * @retursn {boolean}
+ */
+export function isLotStateCashIn(accessor, lotState) {
+    if (lotState) {
+        const lotDataItem = accessor.getLotDataItemWithId(lotState.lotId);
+        if (lotDataItem) {
+            return lotDataItem.lotOriginType === L.LotOriginType.CASH_PURCHASE.name;
+        }
+    }
+}
+
+function getTotalCashInCellValue(args, columnInfoArgs) {
+    const splitInfo = getSplitInfo(args, columnInfoArgs);
+    if (splitInfo) {
+        const { accountStateDataItem, accessor,
+        } = splitInfo;
+        if (accountStateDataItem && accountStateDataItem.lotStates) {
+            let cashInBaseValue = 0;
+            accountStateDataItem.lotStates.forEach((lotState) => {
+                if (isLotStateCashIn(accessor, lotState)) {
+                    cashInBaseValue += lotState.costBasisBaseValue;
+                }
+            });
+            return {
+                quantityBaseValue: cashInBaseValue,
+                quantityDefinition: splitInfo.currencyQuantityDefinition,
+            };
+        }
+    }
+}
+
+/**
+ * Calculates a value representing the cost basis of the lots in an 
+ * {@link AccountState} for use with {@link renderTotalCashInDisplay}.
+ * @param {*} param0 
+ * @returns {CellBalanceValue}
+ */
+export function calcCashInBalanceValue(
+    { accessor, pricedItemId, accountStateDataItem }) {
+
+    const pricedItemDataItem = accessor.getPricedItemDataItemWithId(pricedItemId);
+    if (!pricedItemDataItem || !accountStateDataItem) {
+        return;
+    }
+
+    const sharesQuantityDefinition = getQuantityDefinition(
+        pricedItemDataItem.quantityDefinition
+    );
+    if (!sharesQuantityDefinition) {
+        return;
+    }
+
+    let currency = pricedItemDataItem.currency || accessor.getBaseCurrencyCode();
+    currency = getCurrency(currency);
+    if (!currency) {
+        return;
+    }
+
+    const { lotStates } = accountStateDataItem;
+    if (!lotStates) {
+        return;
+    }
+
+    let tooltip = [];
+    let cashInBaseValue = 0;
+    lotStates.forEach((lotState) => {
+        if (!isLotStateCashIn(accessor, lotState)) {
+            return;
+        }
+
+        cashInBaseValue += lotState.costBasisBaseValue;
+
+        const sharesValueText = sharesQuantityDefinition.baseValueToValueText(
+            lotState.quantityBaseValue);
+        const cashInValueText = currency.baseValueToString(
+            lotState.costBasisBaseValue);
+        tooltip.push(userMsg('LotCellEditors-shares_price',
+            sharesValueText, cashInValueText));
+    });
+
+    return {
+        quantityBaseValue: cashInBaseValue,
+        currency: currency,
+        tooltip: tooltip,
+    };
 }

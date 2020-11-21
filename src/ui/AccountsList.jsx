@@ -39,7 +39,8 @@ export function getAccountsListColumnInfoDefs() {
             type: ACE.getAccountTypeColumnInfo({}),
             balance: ACE.getBalanceColumnInfo({}),
             totalShares: LCE.getTotalSharesColumnInfo({}),
-            // costBasis: LCE.getCostBasisColumnInfo({}),
+            costBasis: LCE.getTotalCostBasisColumnInfo({}),
+            cashIn: LCE.getTotalCashInColumnInfo({}),
             // gainLoss
             // percentGainLoss
             // cashIn
@@ -498,6 +499,62 @@ export class AccountsList extends React.Component {
         }
     }
 
+
+    renderCostBasisDisplay(columnInfo, accountDataItem, accountState, 
+        quantityDefinition) {
+        const { accessor } = this.props;
+
+        const accountType = A.getAccountType(accountDataItem.type);
+        if (!accountType.hasLots) {
+            return;
+        }
+    
+        if (!accountState) {
+            accountState = accessor.getCurrentAccountStateDataItem(
+                accountDataItem.id
+            );
+        }
+        
+        const quantityValue = LCE.calcCostBasicBalanceValue({
+            accessor: accessor,
+            pricedItemId: accountDataItem.pricedItemId,
+            accountStateDataItem: accountState,
+        });
+
+        return ACE.renderBalanceDisplay({
+            columnInfo: columnInfo,
+            value: quantityValue,
+        });
+    }
+
+
+    renderCashInDisplay(columnInfo, accountDataItem, accountState, 
+        quantityDefinition) {
+        const { accessor } = this.props;
+
+        const accountType = A.getAccountType(accountDataItem.type);
+        if (!accountType.hasLots) {
+            return;
+        }
+    
+        if (!accountState) {
+            accountState = accessor.getCurrentAccountStateDataItem(
+                accountDataItem.id
+            );
+        }
+        
+        const quantityValue = LCE.calcCashInBalanceValue({
+            accessor: accessor,
+            pricedItemId: accountDataItem.pricedItemId,
+            accountStateDataItem: accountState,
+        });
+
+        return ACE.renderBalanceDisplay({
+            columnInfo: columnInfo,
+            value: quantityValue,
+        });
+    }
+
     
     onRenderCell({ rowInfo, columnIndex, isSizeRender, }) {
         let { accountDataItem } = rowInfo;
@@ -535,6 +592,14 @@ export class AccountsList extends React.Component {
         
         case 'totalShares' :
             return this.renderSharesDisplay(columnInfo, accountDataItem,
+                accountState, quantityDefinition);
+        
+        case 'totalCostBasis' :
+            return this.renderCostBasisDisplay(columnInfo, accountDataItem,
+                accountState, quantityDefinition);
+        
+        case 'totalCashIn' :
+            return this.renderCashInDisplay(columnInfo, accountDataItem,
                 accountState, quantityDefinition);
         }
     }
