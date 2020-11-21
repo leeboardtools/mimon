@@ -1818,6 +1818,67 @@ function getTotalMarketValueCellValue(args, columnInfoArgs) {
 
 
 /**
+ * @typedef {object} calcMarketValueBalanceValueArgs
+ * @property {EngineAccessor}   accessor
+ * @property {number}   pricedItemId
+ * @property {AccountState} accountState
+ * @property {PriceDataItem} priceDataItem
+ */
+
+/**
+ * Calculates a value representing the market value of the lots in an 
+ * {@link AccountState} for use with {@link renderBalanceDisplay}.
+ * @param {*} param0 
+ * @returns {CellBalanceValue}
+ */
+export function calcMarketValueBalanceValue(
+    { accessor, pricedItemId, accountStateDataItem, priceDataItem }) {
+
+    const pricedItemDataItem = accessor.getPricedItemDataItemWithId(pricedItemId);
+    if (!pricedItemDataItem || !accountStateDataItem) {
+        return;
+    }
+
+    const sharesQuantityDefinition = getQuantityDefinition(
+        pricedItemDataItem.quantityDefinition
+    );
+    if (!sharesQuantityDefinition) {
+        return;
+    }
+
+    let currency = pricedItemDataItem.currency || accessor.getBaseCurrencyCode();
+    currency = getCurrency(currency);
+    if (!currency) {
+        return;
+    }
+
+    const sharesValue = sharesQuantityDefinition.baseValueToNumber(
+        accountStateDataItem.quantityBaseValue
+    );
+    const marketValue = sharesValue * priceDataItem.close;
+
+    const currencyQuantityDefinition = currency.getQuantityDefinition();
+    const quantityBaseValue = currencyQuantityDefinition.numberToBaseValue(
+        marketValue
+    );
+
+
+    const sharesValueText = sharesQuantityDefinition.baseValueToValueText(
+        accountStateDataItem.quantityBaseValue);
+    const priceValueText = currency.decimalValueToString(
+        priceDataItem.close);
+    const tooltip = userMsg('LotCellEditors-shares_price',
+        sharesValueText, priceValueText);
+
+    return {
+        quantityBaseValue: quantityBaseValue,
+        currency: currency,
+        tooltip: tooltip,
+    };
+}
+
+
+/**
  * Retrieves a column info for cost basis totals cells.
  * @param {getColumnInfoArgs} args
  * @returns {CellEditorsManager~ColumnInfo}

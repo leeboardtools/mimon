@@ -11,6 +11,7 @@ import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';
 import { columnInfosToColumns,
     stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
+import { YMDDate } from '../util/YMDDate';
 
 
 let columnInfoDefs;
@@ -38,6 +39,12 @@ export function getAccountsListColumnInfoDefs() {
             type: ACE.getAccountTypeColumnInfo({}),
             balance: ACE.getBalanceColumnInfo({}),
             totalShares: LCE.getTotalSharesColumnInfo({}),
+            // costBasis: LCE.getCostBasisColumnInfo({}),
+            // gainLoss
+            // percentGainLoss
+            // cashIn
+            // cashInReturn
+            // CAGR?
         };
     }
 
@@ -94,6 +101,8 @@ export class AccountsList extends React.Component {
                 accessor.getRootEquityAccountId(),
             ],
             rowInfos: [],
+            pricesYMDDate: undefined,
+            pricesByPricedItemId: new Map(),
         };
 
         this._collapsedRowIds = new Set();
@@ -107,6 +116,7 @@ export class AccountsList extends React.Component {
         if (this.state.rowInfos.length) {
             this.state.activeRowKey = this.state.rowInfos[0].key;
         }
+
 
         this._sizingRowInfo = {
             accountDataItem: {
@@ -166,6 +176,8 @@ export class AccountsList extends React.Component {
         this.props.accessor.on('accountsModify', this.onAccountsModify);
         this.props.accessor.on('accountRemove', this.onAccountRemove);
 
+        this.updatePrices();
+
         const { activeRowKey } = this.state;
         const { onSelectAccount } = this.props;
         if (onSelectAccount) {
@@ -180,7 +192,7 @@ export class AccountsList extends React.Component {
     }
 
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps, prevState) {
         const { hiddenRootAccountTypes, hiddenAccountIds, 
             showHiddenAccounts } = this.props;
         let rowsNeedUpdating = false;
@@ -210,6 +222,10 @@ export class AccountsList extends React.Component {
                     onSelectAccount(result.activeRowKey);
                 }
             }
+        }
+
+        if (prevState.pricesYMDDate !== this.state.pricesYMDDate) {
+            this.updatePrices();
         }
     }
 
@@ -326,9 +342,37 @@ export class AccountsList extends React.Component {
 
 
     rebuildRowInfos() {
-        this.setState((state) => {
+        this.setState(() => {
             const result = this.buildRowInfos();
             return result;
+        });
+    }
+
+
+    updatePrices() {
+        process.nextTick(async () => {
+            const newPricesByPricedItemId = new Map();
+
+            const { accessor } = this.props;
+            let { pricesYMDDate: ymdDate } = this.state;
+            if (!ymdDate) {
+                ymdDate = new YMDDate();
+            }
+
+            const pricedItemIds = accessor.getPricedItemIds();
+            for (let i = 0; i < pricedItemIds.length; ++i) {
+                const pricedItemId = pricedItemIds[i];
+                const priceDataItem 
+                    = await accessor.asyncGetPriceDataItemOnOrClosestBefore(
+                        pricedItemId, ymdDate);
+                newPricesByPricedItemId.set(pricedItemId, priceDataItem);
+            }
+
+            if (!deepEqual(newPricesByPricedItemId, this.state.pricesByPricedItemId)) {
+                this.setState({
+                    pricesByPricedItemId: newPricesByPricedItemId,
+                });
+            }
         });
     }
 
@@ -351,7 +395,7 @@ export class AccountsList extends React.Component {
     }
 
 
-    onOpenActiveRow({ rowIndex }) {
+    onOpenActiveRow() {
         const { onChooseAccount } = this.props;
         const { activeRowKey } = this.state;
         if (onChooseAccount && activeRowKey) {
@@ -363,32 +407,66 @@ export class AccountsList extends React.Component {
     renderBalanceDisplay(columnInfo, accountDataItem, accountState) {
         const { accessor } = this.props;
 
-        let currency;
         if (!accountState) {
-            const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
-                accountDataItem.pricedItemId
+            accountState = accessor.getCurrentAccountStateDataItem(
+                accountDataItem.id
             );
-
-            if (pricedItemDataItem 
-            && (pricedItemDataItem.type === PI.PricedItemType.CURRENCY.name)) {
-                accountState = accessor.getCurrentAccountStateDataItem(
-                    accountDataItem.id);
-                currency = pricedItemDataItem.currency;
+        }
+        
+        let quantityValue;
+        
+        const accountType = A.getAccountType(accountDataItem.type);
+        if (accountType.hasLots) {
+            // Need the price...
+            const priceDataItem = this.state.pricesByPricedItemId.get(
+                accountDataItem.pricedItemId);
+            if (priceDataItem) {
+                quantityValue = LCE.calcMarketValueBalanceValue({
+                    accessor: accessor,
+                    pricedItemId: accountDataItem.pricedItemId,
+                    accountStateDataItem: accountState,
+                    priceDataItem: priceDataItem,
+                });
             }
         }
         else {
-            currency = accessor.getBaseCurrencyCode();
+            const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
+                accountDataItem.pricedItemId
+            );
+            const currency = pricedItemDataItem.currency
+                 || accessor.getBaseCurrencyCode();
+            if (!currency) {
+                return;
+            }
+
+            let quantityBaseValue;
+            
+            if (accountState) {
+                quantityBaseValue = accountState.quantityBaseValue;
+            }
+            else {
+                const { childAccountIds } = accountDataItem;
+                if (!childAccountIds || !childAccountIds.length) {
+                    return;
+                }
+
+                quantityBaseValue = 0;
+            }
+
+            quantityValue = {
+                quantityBaseValue: quantityBaseValue,
+                currency: currency,
+            };
         }
 
-        if (accountState && accountState.quantityBaseValue && currency) {
-            return ACE.renderBalanceDisplay({
-                columnInfo: columnInfo,
-                value: {
-                    quantityBaseValue: accountState.quantityBaseValue,
-                    currency: currency,
-                },
-            });
+        if (!quantityValue) {
+            return;
         }
+
+        return ACE.renderBalanceDisplay({
+            columnInfo: columnInfo,
+            value: quantityValue,
+        });
     }
 
 

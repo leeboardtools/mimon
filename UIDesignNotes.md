@@ -436,8 +436,6 @@ Common menus:
 
 
     - Account Register
-        - Tool tips:
-
         - Auto-complete for description
             
         - Multi-row support?
@@ -447,12 +445,6 @@ Common menus:
         - View Columns menus.
         - Add zoom in/out to main menu.
     
-
-    - NewFileSetup.js
-        - Finish adding support for Prices
-        - Add test prices to CreateTestTransactions.js
-
-
 
 - RowTable To Do:
     - Add column resizing support
