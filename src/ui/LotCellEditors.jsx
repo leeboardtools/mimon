@@ -7,7 +7,8 @@ import * as LTH from '../tools/LotTransactionHelpers';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
 import * as LS from '../engine/LotStates';
-import * as L from '../engine/Lots';
+import * as GH from '../tools/GainHelpers';
+import { isLotStateCashIn } from '../tools/GainHelpers';
 import { getCurrency } from '../util/Currency';
 import { getQuantityDefinition } from '../util/Quantities';
 import { CellButton } from '../util-ui/CellButton';
@@ -23,6 +24,10 @@ import { LotsSelectionEditor } from './LotsSelectionEditor';
  * The lot cell editors are a bit different from the Accounting Cell Editors,
  * this is necessary because the lot cell editors need to work in concert with each other
  * while the accounting cell editors are independent.
+ */
+
+/**
+ * @namespace LotCellEditors
  */
 
 /**
@@ -1819,75 +1824,14 @@ function getTotalMarketValueCellValue(args, columnInfoArgs) {
 
 
 /**
- * @typedef {object} calcMarketValueBalanceValueArgs
- * @property {EngineAccessor}   accessor
- * @property {number}   pricedItemId
- * @property {AccountState} accountState
- * @property {PriceDataItem} priceDataItem
- */
-
-/**
- * Calculates a value representing the market value of the lots in an 
- * {@link AccountState} for use with {@link renderBalanceDisplay}.
- * @param {*} param0 
- * @returns {CellBalanceValue}
- */
-export function calcMarketValueBalanceValue(
-    { accessor, pricedItemId, accountStateDataItem, priceDataItem }) {
-
-    const pricedItemDataItem = accessor.getPricedItemDataItemWithId(pricedItemId);
-    if (!pricedItemDataItem || !accountStateDataItem) {
-        return;
-    }
-
-    const sharesQuantityDefinition = getQuantityDefinition(
-        pricedItemDataItem.quantityDefinition
-    );
-    if (!sharesQuantityDefinition) {
-        return;
-    }
-
-    let currency = pricedItemDataItem.currency || accessor.getBaseCurrencyCode();
-    currency = getCurrency(currency);
-    if (!currency) {
-        return;
-    }
-
-    const sharesValue = sharesQuantityDefinition.baseValueToNumber(
-        accountStateDataItem.quantityBaseValue
-    );
-    const marketValue = sharesValue * priceDataItem.close;
-
-    const currencyQuantityDefinition = currency.getQuantityDefinition();
-    const quantityBaseValue = currencyQuantityDefinition.numberToBaseValue(
-        marketValue
-    );
-
-
-    const sharesValueText = sharesQuantityDefinition.baseValueToValueText(
-        accountStateDataItem.quantityBaseValue);
-    const priceValueText = currency.decimalValueToString(
-        priceDataItem.close);
-    const tooltip = userMsg('LotCellEditors-shares_price',
-        sharesValueText, priceValueText);
-
-    return {
-        quantityBaseValue: quantityBaseValue,
-        currency: currency,
-        tooltip: tooltip,
-    };
-}
-
-
-/**
- * Display renderer for total market value quantities.
+ * Display renderer for total cost basis value quantities.
  * @param {CellQuantityDisplayArgs} args
  */
 export const renderTotalCostBasisDisplay = ACE.renderQuantityDisplay;
 
 
 /**
- * Retrieves a column info for cost basis totals cells.
+ * Retrieves a column info for total cost basis cells.
  * @param {getColumnInfoArgs} args
  * @returns {CellEditorsManager~ColumnInfo}
  */
@@ -1927,68 +1871,16 @@ function getTotalCostBasisCellValue(args, columnInfoArgs) {
     }
 }
 
-/**
- * Calculates a value representing the cost basis of the lots in an 
- * {@link AccountState} for use with {@link renderTotalCostBasisDisplay}.
- * @param {*} param0 
- * @returns {CellBalanceValue}
- */
-export function calcCostBasicBalanceValue(
-    { accessor, pricedItemId, accountStateDataItem }) {
-
-    const pricedItemDataItem = accessor.getPricedItemDataItemWithId(pricedItemId);
-    if (!pricedItemDataItem || !accountStateDataItem) {
-        return;
-    }
-
-    const sharesQuantityDefinition = getQuantityDefinition(
-        pricedItemDataItem.quantityDefinition
-    );
-    if (!sharesQuantityDefinition) {
-        return;
-    }
-
-    let currency = pricedItemDataItem.currency || accessor.getBaseCurrencyCode();
-    currency = getCurrency(currency);
-    if (!currency) {
-        return;
-    }
-
-    const { lotStates } = accountStateDataItem;
-    if (!lotStates) {
-        return;
-    }
-
-    let tooltip = [];
-    let costBasisBaseValue = 0;
-    lotStates.forEach((lotState) => {
-        costBasisBaseValue += lotState.costBasisBaseValue;
-
-        const sharesValueText = sharesQuantityDefinition.baseValueToValueText(
-            lotState.quantityBaseValue);
-        const costBasisValueText = currency.baseValueToString(
-            lotState.costBasisBaseValue);
-        tooltip.push(userMsg('LotCellEditors-shares_price',
-            sharesValueText, costBasisValueText));
-    });
-
-    return {
-        quantityBaseValue: costBasisBaseValue,
-        currency: currency,
-        tooltip: tooltip,
-    };
-}
-
 
 /**
- * Display renderer for total market value quantities.
+ * Display renderer for total cash-in value quantities.
  * @param {CellQuantityDisplayArgs} args
  */
 export const renderTotalCashInDisplay = ACE.renderQuantityDisplay;
 
 
 /**
- * Retrieves a column info for cost basis totals cells.
+ * Retrieves a column info for total cash-in cells.
  * @param {getColumnInfoArgs} args
  * @returns {CellEditorsManager~ColumnInfo}
  */
@@ -2008,21 +1900,6 @@ export function getTotalCashInColumnInfo(args) {
         renderDisplayCell: renderTotalCashInDisplay,
     },
     args);
-}
-
-/**
- * Determines if the lot underlying a lotState is a cash-in lot.
- * @param {EngineAccessor} accessor 
- * @param {LotStateDataItem} lotState 
- * @retursn {boolean}
- */
-export function isLotStateCashIn(accessor, lotState) {
-    if (lotState) {
-        const lotDataItem = accessor.getLotDataItemWithId(lotState.lotId);
-        if (lotDataItem) {
-            return lotDataItem.lotOriginType === L.LotOriginType.CASH_PURCHASE.name;
-        }
-    }
 }
 
 function getTotalCashInCellValue(args, columnInfoArgs) {
@@ -2045,58 +1922,137 @@ function getTotalCashInCellValue(args, columnInfoArgs) {
     }
 }
 
+
+/**
+ * Retrieves a column info for total gain.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getTotalGainColumnInfo(args) {
+    return Object.assign({ key: 'totalGain',
+        header: {
+            label: userMsg('LotCellEditors-totalGain'),
+            ariaLabel: 'Total Gain',
+            classExtras: 'header-base monetary-base monetary-header',
+        },
+        inputClassExtras: 'monetary-base monetary-input',
+        cellClassName: 'cell-base monetary-base monetary-cell',
+    },
+    args);
+}
+
 /**
  * Calculates a value representing the cost basis of the lots in an 
- * {@link AccountState} for use with {@link renderTotalCashInDisplay}.
+ * {@link AccountState} for use with {@link renderTotalGainDisplay}.
  * @param {*} param0 
  * @returns {CellBalanceValue}
  */
-export function calcCashInBalanceValue(
-    { accessor, pricedItemId, accountStateDataItem }) {
-
-    const pricedItemDataItem = accessor.getPricedItemDataItemWithId(pricedItemId);
-    if (!pricedItemDataItem || !accountStateDataItem) {
-        return;
-    }
-
-    const sharesQuantityDefinition = getQuantityDefinition(
-        pricedItemDataItem.quantityDefinition
-    );
-    if (!sharesQuantityDefinition) {
-        return;
-    }
-
-    let currency = pricedItemDataItem.currency || accessor.getBaseCurrencyCode();
-    currency = getCurrency(currency);
-    if (!currency) {
-        return;
-    }
-
-    const { lotStates } = accountStateDataItem;
-    if (!lotStates) {
-        return;
-    }
-
-    let tooltip = [];
-    let cashInBaseValue = 0;
-    lotStates.forEach((lotState) => {
-        if (!isLotStateCashIn(accessor, lotState)) {
-            return;
-        }
-
-        cashInBaseValue += lotState.costBasisBaseValue;
-
-        const sharesValueText = sharesQuantityDefinition.baseValueToValueText(
-            lotState.quantityBaseValue);
-        const cashInValueText = currency.baseValueToString(
-            lotState.costBasisBaseValue);
-        tooltip.push(userMsg('LotCellEditors-shares_price',
-            sharesValueText, cashInValueText));
+export function calcGainBalanceValue(args) {
+    args = Object.assign({}, args, {
+        getGainParts: GH.getLotStateSimpleGainParts,
+        calcGainFromParts: GH.absoluteGain,
     });
 
-    return {
-        quantityBaseValue: cashInBaseValue,
-        currency: currency,
-        tooltip: tooltip,
+    const result = GH.calcLotStateGain(args);
+    const { accountStateInfo } = result;
+    const { currencyQuantityDefinition } = accountStateInfo;
+    const { accessor } = args;
+
+    const value = {
+        quantityBaseValue: currencyQuantityDefinition.numberToBaseValue(
+            result.gainValue
+        ),
+        quantityDefinition: currencyQuantityDefinition,
     };
+
+    if (value.quantityBaseValue !== undefined) {
+        // Add tooltips
+        const { currency } = accountStateInfo;
+
+        const tooltips = [];
+        tooltips.push(userMsg('LotCellEditors-marketValue_tooltip',
+            currency.baseValueToString(result.outputBaseValue)
+        ));
+        tooltips.push(userMsg('LotCellEditors-costBasis_tooltip',
+            currency.baseValueToString(result.inputBaseValue)
+        ));
+
+        const { priceDataItem } = accountStateInfo;
+        tooltips.push(userMsg('LotCellEditors-price_date_tooltip',
+            currency.decimalValueToString(priceDataItem.close),
+            accessor.formatDate(priceDataItem.ymdDate)
+        ));
+
+        value.tooltip = tooltips;
+    }
+
+    return value;
+}
+
+
+/**
+ * Retrieves a column info for total gain.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getTotalCashInGainColumnInfo(args) {
+    return Object.assign({ key: 'totalCashInGain',
+        header: {
+            label: userMsg('LotCellEditors-totalCashInGain'),
+            ariaLabel: 'Total Cash In Gain',
+            classExtras: 'header-base monetary-base monetary-header',
+        },
+        inputClassExtras: 'monetary-base monetary-input',
+        cellClassName: 'cell-base monetary-base monetary-cell',
+    },
+    args);
+}
+
+
+/**
+ * Calculates a value representing the cost basis of the lots in an 
+ * {@link AccountState} for use with {@link renderTotalGainDisplay}.
+ * @param {*} param0 
+ * @returns {CellBalanceValue}
+ */
+export function calcCashInGainBalanceValue(args) {
+    args = Object.assign({}, args, {
+        getGainParts: GH.getLotStateCashInGainParts,
+        calcGainFromParts: GH.absoluteGain,
+    });
+
+    const result = GH.calcLotStateGain(args);
+    const { accountStateInfo } = result;
+    const { currencyQuantityDefinition } = accountStateInfo;
+    const { accessor } = args;
+
+    const value = {
+        quantityBaseValue: currencyQuantityDefinition.numberToBaseValue(
+            result.gainValue
+        ),
+        quantityDefinition: currencyQuantityDefinition,
+    };
+
+    if (value.quantityBaseValue !== undefined) {
+        // Add tooltips
+        const { currency } = accountStateInfo;
+
+        const tooltips = [];
+        tooltips.push(userMsg('LotCellEditors-marketValue_tooltip',
+            currency.baseValueToString(result.outputBaseValue)
+        ));
+        tooltips.push(userMsg('LotCellEditors-cashIn_tooltip',
+            currency.baseValueToString(result.inputBaseValue)
+        ));
+
+        const { priceDataItem } = accountStateInfo;
+        tooltips.push(userMsg('LotCellEditors-price_date_tooltip',
+            currency.decimalValueToString(priceDataItem.close),
+            accessor.formatDate(priceDataItem.ymdDate)
+        ));
+
+        value.tooltip = tooltips;
+    }
+
+    return value;
 }

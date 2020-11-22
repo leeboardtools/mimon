@@ -9,6 +9,7 @@ import { CollapsibleRowTable, ExpandCollapseState,
 import { getDecimalDefinition, getQuantityDefinitionName } from '../util/Quantities';
 import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';
+import * as GH from '../tools/GainHelpers';
 import { columnInfosToColumns,
     stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
 import { YMDDate } from '../util/YMDDate';
@@ -41,6 +42,8 @@ export function getAccountsListColumnInfoDefs() {
             totalShares: LCE.getTotalSharesColumnInfo({}),
             costBasis: LCE.getTotalCostBasisColumnInfo({}),
             cashIn: LCE.getTotalCashInColumnInfo({}),
+            gain: LCE.getTotalGainColumnInfo({}),
+            cashInGain: LCE.getTotalCashInGainColumnInfo({}),
             // gainLoss
             // percentGainLoss
             // cashIn
@@ -422,7 +425,7 @@ export class AccountsList extends React.Component {
             const priceDataItem = this.state.pricesByPricedItemId.get(
                 accountDataItem.pricedItemId);
             if (priceDataItem) {
-                quantityValue = LCE.calcMarketValueBalanceValue({
+                quantityValue = GH.getTotalMarketValueBaseValue({
                     accessor: accessor,
                     pricedItemId: accountDataItem.pricedItemId,
                     accountStateDataItem: accountState,
@@ -515,7 +518,7 @@ export class AccountsList extends React.Component {
             );
         }
         
-        const quantityValue = LCE.calcCostBasicBalanceValue({
+        const quantityValue = GH.getTotalCostBasisBaseValue({
             accessor: accessor,
             pricedItemId: accountDataItem.pricedItemId,
             accountStateDataItem: accountState,
@@ -543,10 +546,44 @@ export class AccountsList extends React.Component {
             );
         }
         
-        const quantityValue = LCE.calcCashInBalanceValue({
+        const quantityValue = GH.getTotalCashInBaseValue({
             accessor: accessor,
             pricedItemId: accountDataItem.pricedItemId,
             accountStateDataItem: accountState,
+        });
+
+        return ACE.renderBalanceDisplay({
+            columnInfo: columnInfo,
+            value: quantityValue,
+        });
+    }
+
+
+    renderGainDisplay(columnInfo, accountDataItem, accountState, 
+        quantityDefinition, calcGainValueCallback) {
+        const { accessor } = this.props;
+
+        const accountType = A.getAccountType(accountDataItem.type);
+        if (!accountType.hasLots) {
+            return;
+        }
+    
+        if (!accountState) {
+            accountState = accessor.getCurrentAccountStateDataItem(
+                accountDataItem.id
+            );
+        }
+        
+        const priceDataItem = this.state.pricesByPricedItemId.get(
+            accountDataItem.pricedItemId);
+        if (!priceDataItem) {
+            return;
+        }
+        const quantityValue = calcGainValueCallback({
+            accessor: accessor,
+            pricedItemId: accountDataItem.pricedItemId,
+            accountStateDataItem: accountState,
+            priceDataItem: priceDataItem,
         });
 
         return ACE.renderBalanceDisplay({
@@ -601,6 +638,14 @@ export class AccountsList extends React.Component {
         case 'totalCashIn' :
             return this.renderCashInDisplay(columnInfo, accountDataItem,
                 accountState, quantityDefinition);
+        
+        case 'totalGain' :
+            return this.renderGainDisplay(columnInfo, accountDataItem,
+                accountState, quantityDefinition, LCE.calcGainBalanceValue);
+        
+        case 'totalCashInGain' :
+            return this.renderGainDisplay(columnInfo, accountDataItem,
+                accountState, quantityDefinition, LCE.calcCashInGainBalanceValue);
         }
     }
 

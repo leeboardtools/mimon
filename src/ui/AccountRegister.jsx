@@ -568,6 +568,9 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
 
             // total cost basis
             columnInfoDefs.totalCostBasis = LCE.getTotalCostBasisColumnInfo(lceArgs);
+
+            // total cash-in
+            columnInfoDefs.totalCashIn = LCE.getTotalCashInColumnInfo(lceArgs);
         }
         else {
             columnInfoDefs.description = ACE.getDescriptionColumnInfo(
