@@ -8,8 +8,20 @@ import PropTypes from 'prop-types';
  */
 export function Tooltip(props) {
     let { tooltip, children } = props;
-    if (Array.isArray(tooltip) && !tooltip.length) {
-        tooltip = undefined;
+    if (Array.isArray(tooltip)) {
+        if (!tooltip.length) {
+            tooltip = undefined;
+        }
+        else {
+            if (typeof tooltip[0] === 'string') {
+                // Want to format this as a list.
+                for (let i = 0; i < tooltip.length; ++i) {
+                    tooltip[i] = <div className = "row" key = {i}>
+                        <div className="col">{tooltip[i]}</div>
+                    </div>;
+                }
+            }
+        }
     }
     
     if (tooltip) {
