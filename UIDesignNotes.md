@@ -475,3 +475,9 @@ Common menus:
     
 
 - Set default interest, dividends, fees accounts in account editing.
+
+- Need means of formatting negative numbers:
+    - Red
+    - Enclose in parenthesis
+    - Italicized?
+    

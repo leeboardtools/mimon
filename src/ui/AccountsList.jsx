@@ -44,11 +44,8 @@ export function getAccountsListColumnInfoDefs() {
             cashIn: LCE.getTotalCashInColumnInfo({}),
             gain: LCE.getTotalGainColumnInfo({}),
             cashInGain: LCE.getTotalCashInGainColumnInfo({}),
-            // gainLoss
-            // percentGainLoss
-            // cashIn
-            // cashInReturn
-            // CAGR?
+            percentGain: LCE.getTotalSimplePercentGainColumnInfo({}),
+            cashInPercentGain: LCE.getTotalCashInPercentGainColumnInfo({}),
         };
     }
 
@@ -140,6 +137,8 @@ export class AccountsList extends React.Component {
                 getDecimalDefinition(4)
             ),
         };
+
+        this._percentSuffix = userMsg('AccountsList-percentSuffix');
     }
 
 
@@ -560,7 +559,7 @@ export class AccountsList extends React.Component {
 
 
     renderGainDisplay(columnInfo, accountDataItem, accountState, 
-        quantityDefinition, calcGainValueCallback) {
+        quantityDefinition, calcGainValueCallback, suffix) {
         const { accessor } = this.props;
 
         const accountType = A.getAccountType(accountDataItem.type);
@@ -589,6 +588,7 @@ export class AccountsList extends React.Component {
         return ACE.renderBalanceDisplay({
             columnInfo: columnInfo,
             value: quantityValue,
+            suffix: suffix,
         });
     }
 
@@ -641,11 +641,21 @@ export class AccountsList extends React.Component {
         
         case 'totalGain' :
             return this.renderGainDisplay(columnInfo, accountDataItem,
-                accountState, quantityDefinition, LCE.calcGainBalanceValue);
+                accountState, quantityDefinition, LCE.calcSimpleGainBalanceValue);
+        
+        case 'totalPercentGain' :
+            return this.renderGainDisplay(columnInfo, accountDataItem,
+                accountState, quantityDefinition, LCE.calcSimplePercentGainBalanceValue,
+                this._percentSuffix);
         
         case 'totalCashInGain' :
             return this.renderGainDisplay(columnInfo, accountDataItem,
                 accountState, quantityDefinition, LCE.calcCashInGainBalanceValue);
+        
+        case 'totalCashInPercentGain' :
+            return this.renderGainDisplay(columnInfo, accountDataItem,
+                accountState, quantityDefinition, LCE.calcCashInPercentGainBalanceValue,
+                this._percentSuffix);
         }
     }
 

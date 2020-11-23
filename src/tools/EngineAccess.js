@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { JSONGzipAccountingFileFactory } from '../engine/JSONGzipAccountingFile';
-import { getQuantityDefinition } from '../util/Quantities';
+import { getQuantityDefinition, getDecimalDefinition } from '../util/Quantities';
 import { userError } from '../util/UserMessages';
 import deepEqual from 'deep-equal';
 import { Reconciler } from './Reconciler';
@@ -84,6 +84,8 @@ export class EngineAccessor extends EventEmitter {
 
         this._dateFormat = 'MM/dd/yyyy';
         this._locale = 'en';
+
+        this._percentGainQuantityDefinition = getDecimalDefinition(1);
     }
 
 
@@ -225,6 +227,15 @@ export class EngineAccessor extends EventEmitter {
         if (ymdDate) {
             return format(ymdDate.toLocalDate(), this._dateFormat);
         }
+    }
+
+
+    /**
+     * @returns {QuantityDefinition} The default quantity definition for 
+     * percent gain.
+     */
+    getPercentGainQuantityDefinition() {
+        return this._percentGainQuantityDefinition;
     }
 
 

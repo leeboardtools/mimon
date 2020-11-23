@@ -98,6 +98,7 @@
 
     "AccountsList-name": "Name",
     "AccountsList-dummy_name": "Sample Account Name This is a much longer name",
+    "AccountsList-percentSuffix": "%",
 
     "AccountsListHandler-masterAccountList_title": "Accounts",
     "AccountsListHandler-reconcileAccount": "Reconcile Account",
@@ -229,7 +230,9 @@
     "LotCellEditors-marketValue_tooltip": ["Mkt Value: ", ""],
     "LotCellEditors-costBasis_tooltip": ["Cost Basis: ", ""],
     "LotCellEditors-cashIn_tooltip": ["Cash-In: ", ""],
-    "LotCellEditors-price_date_tooltip": ["@ ", " On ", ""],
+    "LotCellEditors-price_date_tooltip": ["Price: ", " On ", ""],
+    "LotCellEditors-percentGain_tooltip": ["", "%"],
+    "LotCellEditors-absoluteGain_tooltip": ["Absolute Gain: ", ""],
 
 
     "LotsSelectionEditor-term": "Term",

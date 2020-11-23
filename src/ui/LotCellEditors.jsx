@@ -1941,18 +1941,8 @@ export function getTotalGainColumnInfo(args) {
     args);
 }
 
-/**
- * Calculates a value representing the cost basis of the lots in an 
- * {@link AccountState} for use with {@link renderTotalGainDisplay}.
- * @param {*} param0 
- * @returns {CellBalanceValue}
- */
-export function calcGainBalanceValue(args) {
-    args = Object.assign({}, args, {
-        getGainParts: GH.getLotStateSimpleGainParts,
-        calcGainFromParts: GH.absoluteGain,
-    });
 
+function calcGainBalanceValue(args) {
     const result = GH.calcLotStateGain(args);
     const { accountStateInfo } = result;
     const { currencyQuantityDefinition } = accountStateInfo;
@@ -1969,11 +1959,30 @@ export function calcGainBalanceValue(args) {
         // Add tooltips
         const { currency } = accountStateInfo;
 
+        const { inputMsgId, } = args;
+
         const tooltips = [];
+
+        if (args.calcGainFromParts === GH.absoluteGain) {
+            const percentQuantityDefinition 
+                = accessor.getPercentGainQuantityDefinition();
+            const percentGainValue = GH.percentGain(result);
+            const percentGainBaseValue 
+                = percentQuantityDefinition.numberToBaseValue(percentGainValue);
+            tooltips.push(userMsg('LotCellEditors-percentGain_tooltip',
+                percentQuantityDefinition.baseValueToValueText(percentGainBaseValue)
+            ));
+        }
+        else {
+            tooltips.push(userMsg('LotCellEditors-absoluteGain_tooltip',
+                currency.baseValueToString(result.outputBaseValue - result.inputBaseValue)
+            ));
+        }
+
         tooltips.push(userMsg('LotCellEditors-marketValue_tooltip',
             currency.baseValueToString(result.outputBaseValue)
         ));
-        tooltips.push(userMsg('LotCellEditors-costBasis_tooltip',
+        tooltips.push(userMsg(inputMsgId,
             currency.baseValueToString(result.inputBaseValue)
         ));
 
@@ -1987,6 +1996,59 @@ export function calcGainBalanceValue(args) {
     }
 
     return value;
+}
+
+
+/**
+ * Calculates the simple gain for {@link LotState}s in the form of
+ * a {@link CellBalanceValue}.
+ * @param {GainHelpers~calcLotStateGainArgs} args
+ * @returns {CellBalanceValue}
+ */
+export function calcSimpleGainBalanceValue(args) {
+    args = Object.assign({}, args, {
+        getGainParts: GH.getLotStateSimpleGainParts,
+        calcGainFromParts: GH.absoluteGain,
+        inputMsgId: 'LotCellEditors-costBasis_tooltip',
+    });
+
+    return calcGainBalanceValue(args);
+}
+
+
+/**
+ * Retrieves a column info for simple percent gain.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getTotalSimplePercentGainColumnInfo(args) {
+    return Object.assign({ key: 'totalPercentGain',
+        header: {
+            label: userMsg('LotCellEditors-totalPercentGain'),
+            ariaLabel: 'Total Percent Gain',
+            classExtras: 'header-base percent-base percent-header',
+        },
+        inputClassExtras: 'percent-base percent-input',
+        cellClassName: 'cell-base percent-base percent-cell',
+    },
+    args);
+}
+
+
+/**
+ * Calculates the simple percent gain for {@link LotState}s in the form of
+ * a {@link CellBalanceValue}.
+ * @param {GainHelpers~calcLotStateGainArgs} args
+ * @returns {CellBalanceValue}
+ */
+export function calcSimplePercentGainBalanceValue(args) {
+    args = Object.assign({}, args, {
+        getGainParts: GH.getLotStateSimpleGainParts,
+        calcGainFromParts: GH.percentGain,
+        inputMsgId: 'LotCellEditors-costBasis_tooltip',
+    });
+
+    return calcGainBalanceValue(args);
 }
 
 
@@ -2010,49 +2072,53 @@ export function getTotalCashInGainColumnInfo(args) {
 
 
 /**
- * Calculates a value representing the cost basis of the lots in an 
- * {@link AccountState} for use with {@link renderTotalGainDisplay}.
- * @param {*} param0 
+ * Calculates the cash-in gain for {@link LotState}s in the form of
+ * a {@link CellBalanceValue}.
+ * @param {GainHelpers~calcLotStateGainArgs} args
  * @returns {CellBalanceValue}
  */
 export function calcCashInGainBalanceValue(args) {
     args = Object.assign({}, args, {
         getGainParts: GH.getLotStateCashInGainParts,
         calcGainFromParts: GH.absoluteGain,
+        inputMsgId: 'LotCellEditors-cashIn_tooltip',
     });
 
-    const result = GH.calcLotStateGain(args);
-    const { accountStateInfo } = result;
-    const { currencyQuantityDefinition } = accountStateInfo;
-    const { accessor } = args;
+    return calcGainBalanceValue(args);
+}
 
-    const value = {
-        quantityBaseValue: currencyQuantityDefinition.numberToBaseValue(
-            result.gainValue
-        ),
-        quantityDefinition: currencyQuantityDefinition,
-    };
 
-    if (value.quantityBaseValue !== undefined) {
-        // Add tooltips
-        const { currency } = accountStateInfo;
+/**
+ * Retrieves a column info for cash-in percent gain.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getTotalCashInPercentGainColumnInfo(args) {
+    return Object.assign({ key: 'totalCashInPercentGain',
+        header: {
+            label: userMsg('LotCellEditors-totalCashInPercentGain'),
+            ariaLabel: 'Total Cash In Percent Gain',
+            classExtras: 'header-base percent-base percent-header',
+        },
+        inputClassExtras: 'percent-base percent-input',
+        cellClassName: 'cell-base percent-base percent-cell',
+    },
+    args);
+}
 
-        const tooltips = [];
-        tooltips.push(userMsg('LotCellEditors-marketValue_tooltip',
-            currency.baseValueToString(result.outputBaseValue)
-        ));
-        tooltips.push(userMsg('LotCellEditors-cashIn_tooltip',
-            currency.baseValueToString(result.inputBaseValue)
-        ));
 
-        const { priceDataItem } = accountStateInfo;
-        tooltips.push(userMsg('LotCellEditors-price_date_tooltip',
-            currency.decimalValueToString(priceDataItem.close),
-            accessor.formatDate(priceDataItem.ymdDate)
-        ));
+/**
+ * Calculates the cash-in percent gain for {@link LotState}s in the form of
+ * a {@link CellBalanceValue}.
+ * @param {GainHelpers~calcLotStateGainArgs} args
+ * @returns {CellBalanceValue}
+ */
+export function calcCashInPercentGainBalanceValue(args) {
+    args = Object.assign({}, args, {
+        getGainParts: GH.getLotStateCashInGainParts,
+        calcGainFromParts: GH.percentGain,
+        inputMsgId: 'LotCellEditors-cashIn_tooltip',
+    });
 
-        value.tooltip = tooltips;
-    }
-
-    return value;
+    return calcGainBalanceValue(args);
 }

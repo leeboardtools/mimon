@@ -243,6 +243,21 @@ body {
 }
 
 
+.percent-base {
+  text-align: right;
+}
+
+.percent-header {
+  text-align: right;
+  flex-basis: 8rem;
+}
+
+.percent-cell {
+  flex-grow: 0;
+  flex-basis: 8rem;
+}
+
+
 .button-input {
   border-width: 1px;
   border-radius: 2px;

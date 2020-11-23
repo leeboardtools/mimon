@@ -924,12 +924,13 @@ export function renderQuantityEditor(args) {
  * @param {CellQuantityEditorArgs} args 
  */
 export function renderQuantityDisplay(args) {
-    const { columnInfo, value } = args;
+    const { columnInfo, value, suffix } = args;
     if (value) {
         const { quantityBaseValue, quantityDefinition, tooltip } = value;
         return <CellQuantityDisplay
             quantityDefinition = {quantityDefinition}
             quantityBaseValue = {quantityBaseValue}
+            suffix = {suffix}
             tooltip = {tooltip}
             ariaLabel = {columnInfo.ariaLabel}
             inputClassExtras = {columnInfo.inputClassExtras}
