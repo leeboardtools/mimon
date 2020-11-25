@@ -2,7 +2,7 @@ import { getQuantityDefinition } from '../util/Quantities';
 import { getCurrency } from '../util/Currency';
 import * as L from '../engine/Lots';
 import * as LS from '../engine/LotStates';
-import { YMDDate } from '../util/YMDDate';
+import { getYMDDate, YMDDate } from '../util/YMDDate';
 import { userError } from '../util/UserMessages';
 
 
@@ -44,6 +44,37 @@ export function percentGain({inputValue, outputValue}) {
         if (inputValue) {
             return (outputValue - inputValue) * 100 / inputValue;
         }
+    }
+}
+
+
+/**
+ * @typedef {object} GainHelpers~compoundAnnualGrowthRateArgs
+ * @property {number}   inputValue
+ * @property {number}   outputValue
+ * @property {YMDDate|string}   ymdDateInput
+ * @property {YMDDate|string}   ymdDateOutput
+ */
+
+/**
+ * Computes compound annual growth rate (CAGR)
+ * @param {GainHelpers~compoundAnnualGrowthRateArgs} args
+ * @returns {number|undefined} Returns <code>undefined</code> if inputValue
+ * is 0 or the dates are not valid.
+ */
+export function compoundAnnualGrowthRate(
+    {inputValue, ymdDateInput, outputValue, ymdDateOutput }) {
+
+    ymdDateInput = getYMDDate(ymdDateInput);
+    ymdDateOutput = getYMDDate(ymdDateOutput);
+
+    if ((typeof inputValue === 'number')
+     && (typeof outputValue === 'number')
+     && inputValue
+     && (ymdDateInput instanceof YMDDate)
+     && (ymdDateOutput instanceof YMDDate)) {
+        const years = ymdDateInput.fractionalYearsAfterMe(ymdDateOutput);
+        return Math.pow(outputValue / inputValue, 1 / years) - 1;
     }
 }
 
@@ -294,7 +325,8 @@ function resolveLotStatesFromArgs(args, lotStates) {
 /**
  * Calculates gain for the {@link LotStateDataItem}s in an {@link AccountStateDataItem}
  * using callbacks to define the actual computations.
- * @param {GainHelpers~calcLotStateGainArgs} args {
+ * @param {GainHelpers~calcLotStateGainArgs} args
+ * @param {LotStateDataItem[]|AccountStateDataItem}  [lotStates]
  * @returns {GainHelpers~LotStateGainResult}
  * @memberof GainHelpers
  */
@@ -354,22 +386,144 @@ export function calcLotStateGain(args, lotStates) {
 }
 
 
-//
-// Percent Annual Cash-In Gain:
-// Sort the lot states by date
-// Allocate non-cash-in lots to all prior lots
-// For each lot:
-//      Calculate CAGR
-//      Weigh by #shares
-// Have minimum lot age, or if lot less than a year old
-// then use percent gain as-is, not CAGR.
-//
-// Percent Annual Gain:
-// Non-cash-in shares are not distributed.
-//
-// function distributeNonCashInLots(lotStates)
-//  Sorts lotStates by date then distributes non-cash-in lots to all
-//  older lots.
+/**
+ * @typedef {object} GainHelpers~calcLotStatePercentAnnualGainArgs
+ * {@link GainHelpers~createAccountStateInfoArgs} plus the following:
+ * @property {YMDDate|string} [ymdDateRef] If specified the reference date for the
+ * annual gain, otherwise today will be used.
+ * @property {LotStateDataItem[]} [lotStates] Either lotStates or accuontStateDataItem
+ * may be specified, if lotStates is not then accountStateDataItem should be or
+ * passed as the second arg to {@link calcLotStatePercentAnnualGainArgs}.
+ * @property {AccountStateDataItem} [accountStateDataItem]
+ */
+
+/**
+ * @typedef {object} GainHelpers~LotPercentAnnualGainInfo
+ * @property {LotStateDataItem} lotState
+ * @property {number}   percentAnnualGain
+ * @property {boolean}  isStraightGain This is <code>true</code> if 
+ * percentAnnualGain is just the straight gain.
+ */
+
+/**
+ * @typedef {object} GainHelpers~LotStatePercentAnnualGainResult
+ * @property {GainHelpers~AccountStateInfo} accountStateInfo
+ * @property {GainHelpers~LotPercentAnnualGainInfo[]} lotPercentAnnualGains
+ * @property {number} percentAnnualGain
+ * @property {number} percentAnnualGainBaseValue
+ */
+
+
+/**
+ * Calculates the weighted percent annual gain for lot states.
+ * <p>
+ * Note that for any lots that are less than a year old the straight gain 
+ * is used to avoid having those unduly influencing the overall gain.
+ * @param {GainHelpers~LotPercentAnnualGainInfo} args 
+ * @param {LotStateDataItem[]|AccountStateDataItem}  [lotStates]
+ * @returns {GainHelpers~LotStatePercentAnnualGainResult}
+ */
+export function calcLotStatePercentAnnualGain(args, lotStates) {
+    const accountStateInfo = createAccountStateInfo(args);
+    if (!accountStateInfo) {
+        return;
+    }
+
+    lotStates = resolveLotStatesFromArgs(args, lotStates);
+    if (!lotStates) {
+        return;
+    }
+
+    let { ymdDateRef } = args;
+    if (!ymdDateRef) {
+        ymdDateRef = new YMDDate();
+    }
+    else {
+        ymdDateRef = getYMDDate(ymdDateRef);
+    }
+    const ymdDateYearOld = ymdDateRef.addYears(-1);
+
+    let totalSharesBaseValue = 0;
+    lotStates.forEach((lotState) => totalSharesBaseValue += lotState.quantityBaseValue);
+
+    const lotPercentAnnualGains = [];
+    let percentAnnualGain = 0;
+
+    const percentQuantityDefinition 
+        = accountStateInfo.accessor.getPercentGainQuantityDefinition();
+
+    for (let i = 0; i < lotStates.length; ++i) {
+        const lotState = lotStates[i];
+        const ymdDateCreated = getYMDDate(lotState.ymdDateCreated);
+
+        const marketValueBaseValue = calcLotStateMarketValueBaseValue(
+            accountStateInfo, lotState);
+
+        let percentGainValue;
+        let isStraightGain;
+        if (YMDDate.compare(ymdDateYearOld, ymdDateCreated) < 0) {
+            // Too soon, just do straight percentage
+            // OK to use base values...
+            percentGainValue = percentGain({
+                inputValue: lotState.costBasisBaseValue,
+                outputValue: marketValueBaseValue,
+            });
+            isStraightGain = true;
+        }
+        else {
+            // Do CAGR
+            percentGainValue = compoundAnnualGrowthRate({
+                inputValue: lotState.costBasisBaseValue,
+                outputValue: marketValueBaseValue,
+                ymdDateInput: lotState.ymdDateCreated,
+                ymdDateOutput: ymdDateRef,
+            }) * 100;
+        }
+
+        const baseValue = percentQuantityDefinition.numberToBaseValue(percentGainValue);
+        percentGainValue = percentQuantityDefinition.baseValueToNumber(baseValue);
+
+        lotPercentAnnualGains.push({
+            lotState: lotState,
+            percentAnnualGain: percentGainValue,
+            isStraightGain: isStraightGain,
+        });
+
+        percentAnnualGain += percentGainValue * lotState.quantityBaseValue
+            / totalSharesBaseValue;
+    }
+
+    const percentAnnualGainBaseValue 
+        = percentQuantityDefinition.numberToBaseValue(percentAnnualGain);
+    percentAnnualGain = percentQuantityDefinition.baseValueToNumber(
+        percentAnnualGainBaseValue
+    );
+
+    return {
+        accountStateInfo: accountStateInfo,
+        lotPercentAnnualGains: lotPercentAnnualGains,
+        percentAnnualGain: percentAnnualGain,
+        percentAnnualGainBaseValue: percentAnnualGainBaseValue,
+    };
+}
+
+
+/**
+ * Calculates the weighted percent annual cash-in gain for lot states. 
+ * Non-cash-in lots are distributed using 
+ * {@link distributeNonCashInLots}.
+ * <p>
+ * Note that for any lots that are less than a year old the straight gain 
+ * is used to avoid having those unduly influencing the overall gain.
+ * @param {GainHelpers~LotPercentAnnualGainInfo} args 
+ * @param {LotStateDataItem[]|AccountStateDataItem}  [lotStates]
+ * @returns {GainHelpers~LotStatePercentAnnualGainResult}
+ */
+export function calcLotStateCashInPercentAnnualGain(args, lotStates) {
+    lotStates = distributeNonCashInLots(args.accessor, lotStates);
+    return calcLotStatePercentAnnualGain(args, lotStates);
+}
+
 
 /**
  * Distributes any non-cash-in lot states among all older lot states 
