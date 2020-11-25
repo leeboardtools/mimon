@@ -370,8 +370,7 @@ export function calcLotStateGain(args, lotStates) {
         });
 
         if ((typeof gainValue === 'number') && gainQuantityDefinition) {
-            const gainBaseValue = gainQuantityDefinition.numberToBaseValue(gainValue);
-            gainValue = gainQuantityDefinition.baseValueToNumber(gainBaseValue);
+            gainValue = gainQuantityDefinition.cleanupNumber(gainValue);
         }
     }
 
@@ -480,8 +479,7 @@ export function calcLotStatePercentAnnualGain(args, lotStates) {
             }) * 100;
         }
 
-        const baseValue = percentQuantityDefinition.numberToBaseValue(percentGainValue);
-        percentGainValue = percentQuantityDefinition.baseValueToNumber(baseValue);
+        percentGainValue = percentQuantityDefinition.cleanupNumber(percentGainValue);
 
         lotPercentAnnualGains.push({
             lotState: lotState,
@@ -520,6 +518,11 @@ export function calcLotStatePercentAnnualGain(args, lotStates) {
  * @returns {GainHelpers~LotStatePercentAnnualGainResult}
  */
 export function calcLotStateCashInPercentAnnualGain(args, lotStates) {
+    lotStates = resolveLotStatesFromArgs(args, lotStates);
+    if (!lotStates) {
+        return;
+    }
+
     lotStates = distributeNonCashInLots(args.accessor, lotStates);
     return calcLotStatePercentAnnualGain(args, lotStates);
 }

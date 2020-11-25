@@ -494,9 +494,8 @@ export class PriceManager extends EventEmitter {
             else {
                 priceDataItem.close *= oldCount / newCount;
             }
-            priceDataItem.close = priceQuantityDefinition.baseValueToNumber(
-                priceQuantityDefinition.numberToBaseValue(priceDataItem.close)
-            );
+            priceDataItem.close = priceQuantityDefinition.cleanupNumber(
+                priceDataItem.close);
 
             priceDataItem.ymdDate = priceDataItem.ymdDate.toString();
         });
