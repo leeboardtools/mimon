@@ -375,11 +375,12 @@ export class YMDDate {
 
     /**
      * Determines the number of days ymdDate is after this date.
-     * @param {YMDDate} ymdDate
+     * @param {YMDDate|string} ymdDate
      * @return {number} The number of days ymdDate is after this date, if ymdDate is 
      * before this date then the value is negative.
      */
     daysAfterMe(ymdDate) {
+        ymdDate = getYMDDate(ymdDate);
         return Math.round((ymdDate.valueOf() - this.valueOf()) / millisecondsPerDay);
     }
 
@@ -387,11 +388,12 @@ export class YMDDate {
     /**
      * Determines the number of calendar months ymdDate is after this date. The day of
      * the months are ignored.
-     * @param {YMDDate} ymdDate 
+     * @param {YMDDate|string} ymdDate 
      * @returns {number}    The number of months ymdDate is after this date, if ymdDate
      * is before this date then the value is negative.
      */
     monthsAfterMe(ymdDate) {
+        ymdDate = getYMDDate(ymdDate);
         const compare = ymdDate.valueOf() - this.valueOf();
         if (compare < 0) {
             return -ymdDate.monthsAfterMe(this);
@@ -411,10 +413,11 @@ export class YMDDate {
      * <p>
      * Note that if ymdDate is before this date, this simply returns 
      * -ymdDate.fractionalYearsAfterMe(this).
-     * @param {YMDDate} ymdDate 
+     * @param {YMDDate|string} ymdDate 
      * @returns {number}
      */
     fractionalYearsAfterMe(ymdDate) {
+        ymdDate = getYMDDate(ymdDate);
         const compare = ymdDate.valueOf() - this.valueOf();
         if (compare < 0) {
             return -ymdDate.fractionalYearsAfterMe(this);
