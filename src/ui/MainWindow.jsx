@@ -281,12 +281,12 @@ export class MainWindow extends React.Component {
 
 
     onCheckReminders() {
-        this.setErrorMsg('onCheckReminders is not yet implemented.');
+        this.onSetErrorMsg('onCheckReminders is not yet implemented.');
     }
 
 
     onUpdatePrices() {
-        this.setErrorMsg('onUpdatePrices is not yet implemented.');
+        this.onSetErrorMsg('onUpdatePrices is not yet implemented.');
     }
 
 
