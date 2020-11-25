@@ -1,6 +1,9 @@
 import { getQuantityDefinition } from '../util/Quantities';
 import { getCurrency } from '../util/Currency';
 import * as L from '../engine/Lots';
+import * as LS from '../engine/LotStates';
+import { YMDDate } from '../util/YMDDate';
+import { userError } from '../util/UserMessages';
 
 
 /**
@@ -351,6 +354,131 @@ export function calcLotStateGain(args, lotStates) {
 }
 
 
+//
+// Percent Annual Cash-In Gain:
+// Sort the lot states by date
+// Allocate non-cash-in lots to all prior lots
+// For each lot:
+//      Calculate CAGR
+//      Weigh by #shares
+// Have minimum lot age, or if lot less than a year old
+// then use percent gain as-is, not CAGR.
+//
+// Percent Annual Gain:
+// Non-cash-in shares are not distributed.
+//
+// function distributeNonCashInLots(lotStates)
+//  Sorts lotStates by date then distributes non-cash-in lots to all
+//  older lots.
+
+/**
+ * Distributes any non-cash-in lot states among all older lot states 
+ * based on shares in the lot states.
+ * @param {EngineAccessor} accessor 
+ * @param {LotStateDataItem[]} lotStateDataItems This is not modified.
+ * @returns {LotStateDataItem[]}    Will return lotStates if lotStates
+ * does not have any non-cash-in lot states.
+ * @throws Error
+ */
+export function distributeNonCashInLots(accessor, lotStateDataItems) {
+    if (lotStateDataItems.length <= 1) {
+        return lotStateDataItems;
+    }
+
+    const workingLotStates = [];
+
+    let needsSorting;
+    let hasNonCashIn;
+    for (let i = 0; i < lotStateDataItems.length; ++i) {
+        const workingLotState = LS.getLotState(lotStateDataItems[i], true);
+        workingLotStates[i] = workingLotState;
+        if (isLotStateCashIn(accessor, lotStateDataItems[i])) {
+            workingLotState._isCashIn = true;
+        }
+        else {
+            workingLotState._isCashIn = false;
+            hasNonCashIn = true;
+        }
+
+        if (i > 0) {
+            if (YMDDate.compare(workingLotState.ymdDateCreated, 
+                workingLotStates[i - 1].ymdDateCreated) < 0) {
+                needsSorting = true;
+            }
+        }
+    }
+
+    if (!hasNonCashIn) {
+        return lotStateDataItems;
+    }
+
+    if (needsSorting) {
+        workingLotStates.sort((a, b) => 
+            YMDDate.compare(a.ymdDateCreated, b.ymdDateCreated));
+    }
+
+    let undistributedSharesBaseValue = 0;
+    let result = [];
+    for (let i = 0; i < workingLotStates.length; ++i) {
+        const workingLotState = workingLotStates[i];
+        if (!workingLotState._isCashIn) {
+            // Distribute the shares...
+            if (result.length) {
+                distributeSharesToLotStates(workingLotState.quantityBaseValue, result);
+            }
+            else {
+                // Nothing older to distribute to, distribute it to everyone later.
+                undistributedSharesBaseValue += workingLotState.quantityBaseValue;
+            }
+        }
+        else {
+            delete workingLotState._isCashIn;
+            result.push(LS.getLotStateDataItem(workingLotState));
+        }
+    }
+
+    if (undistributedSharesBaseValue) {
+        if (!result.length) {
+            throw userError('GainHelpers-no_cash_in_accounts');
+        }
+        distributeSharesToLotStates(undistributedSharesBaseValue, result);
+    }
+
+    return result;
+}
+
+
+/**
+ * Distributes shares among lot states based upon the number of shares in the
+ * individual lot states. Note that the signs of the shares and the quantities
+ * in the lot states are presumed to be the same, no check is made.
+ * @param {number} sharesBaseValue 
+ * @param {LotStateDataItem[]} lotStateDataItems The lot states are modified in place.
+ * @returns {LotStateDataItem[]} Returns lotStateDataItems
+ */
+export function distributeSharesToLotStates(sharesBaseValue, lotStateDataItems) {
+    let totalSharesBaseValue = 0;
+    lotStateDataItems.forEach((lotState) => 
+        totalSharesBaseValue += lotState.quantityBaseValue);
+
+    if (totalSharesBaseValue) {
+        let remianingSharesBaseValue = sharesBaseValue;
+        const last = lotStateDataItems.length - 1;
+        for (let i = 0; i < last; ++i) {
+            const lotState = lotStateDataItems[i];
+            const thisSharesBaseValue = Math.round(
+                sharesBaseValue * lotState.quantityBaseValue / totalSharesBaseValue);
+            lotState.quantityBaseValue += thisSharesBaseValue;
+            remianingSharesBaseValue -= thisSharesBaseValue;
+        }
+
+        lotStateDataItems[last].quantityBaseValue += remianingSharesBaseValue;
+    }
+
+    return lotStateDataItems;
+}
+
+
 /**
  * @callback GainHelpers~getLotStatePart
  * @param {GainHelpers~AccountStateInfo} accountStateInfo 
@@ -460,3 +588,4 @@ export function getTotalCashInBaseValue(args, lotStates) {
     }),
     lotStates);
 }
+

@@ -92,6 +92,14 @@ test('GainHelpers-AccountInfo', async () => {
         const lotD = result.newLotDataItem;
 
 
+        action = accountingActions.createAddLotAction({
+            lotOriginType: L.LotOriginType.CASH_PURCHASE,
+            pricedItemId: aaplPricedItemId,
+        });
+        result = await accessor.asyncApplyAction(action);
+        const lotE = result.newLotDataItem;
+
+
         const lotStatesA = [
             {
                 lotId: lotA.id, // CASH_PURCHASE
@@ -319,6 +327,138 @@ test('GainHelpers-AccountInfo', async () => {
         // getTotalCashInBaseValue
         result = GH.getTotalCashInBaseValue(argsA, lotStatesA);
         expect(result.quantityBaseValue).toEqual(totalCashInBaseValue);
+
+
+        // distributeSharesToLotStates
+        {
+            const lotStates = [
+                { quantityBaseValue: 100, ymdDateCreated: '2020-10-01', },
+                { quantityBaseValue: 200, ymdDateCreated: '2020-10-01', },
+                { quantityBaseValue: 300, ymdDateCreated: '2020-10-01', },
+            ];
+
+            result = GH.distributeSharesToLotStates(100, lotStates);
+            expect(result).toEqual(lotStates);
+
+            const delta_0 = Math.round(100 * 100 / 600);
+            const delta_1 = Math.round(100 * 200 / 600);
+            const delta_2 = 100 - delta_0 - delta_1;
+            expect(lotStates).toEqual([
+                { quantityBaseValue: 100 + delta_0, 
+                    ymdDateCreated: lotStates[0].ymdDateCreated, },
+                { quantityBaseValue: 200 + delta_1, 
+                    ymdDateCreated: lotStates[1].ymdDateCreated, },
+                { quantityBaseValue: 300 + delta_2, 
+                    ymdDateCreated: lotStates[2].ymdDateCreated, },
+            ]);
+        }
+
+
+        // distributeNonCashInLots
+        {
+            const sortedLotStates = [
+                { lotId: lotA.id, 
+                    ymdDateCreated: '2010-01-01',
+                    quantityBaseValue: 100, },
+                { lotId: lotC.id, 
+                    ymdDateCreated: '2010-01-02',
+                    quantityBaseValue: 200, },
+                { lotId: lotB.id,  // Non-cash-in
+                    ymdDateCreated: '2010-01-03',
+                    quantityBaseValue: 100, },
+                { lotId: lotE.id, 
+                    ymdDateCreated: '2010-01-04',
+                    quantityBaseValue: 100, },
+            ];
+
+            result = GH.distributeNonCashInLots(accessor, sortedLotStates);
+            expect(result).toEqual([
+                { lotId: lotA.id,
+                    ymdDateCreated: '2010-01-01',
+                    quantityBaseValue: 100 + 33, },
+                { lotId: lotC.id,
+                    ymdDateCreated: '2010-01-02',
+                    quantityBaseValue: 200 + 67, },
+                { lotId: lotE.id, 
+                    ymdDateCreated: '2010-01-04',
+                    quantityBaseValue: 100, },
+            ]);
+
+
+            const nonSortedLotStates = [
+                { lotId: lotB.id,  // Non-cash-in
+                    ymdDateCreated: '2010-01-03',
+                    quantityBaseValue: 100, },
+                { lotId: lotC.id, 
+                    ymdDateCreated: '2010-01-02',
+                    quantityBaseValue: 200, },
+                { lotId: lotA.id, 
+                    ymdDateCreated: '2010-01-01',
+                    quantityBaseValue: 100, },
+                { lotId: lotE.id, 
+                    ymdDateCreated: '2010-01-04',
+                    quantityBaseValue: 100, },
+            ];
+            result = GH.distributeNonCashInLots(accessor, nonSortedLotStates);
+            expect(result).toEqual([
+                { lotId: lotA.id,
+                    ymdDateCreated: '2010-01-01',
+                    quantityBaseValue: 100 + 33, },
+                { lotId: lotC.id,
+                    ymdDateCreated: '2010-01-02',
+                    quantityBaseValue: 200 + 67, },
+                { lotId: lotE.id, 
+                    ymdDateCreated: '2010-01-04',
+                    quantityBaseValue: 100, },
+            ]);
+
+
+            const earlyNonCashInLotStates = [
+                { lotId: lotA.id, 
+                    ymdDateCreated: '2010-01-01',
+                    quantityBaseValue: 100, },
+                { lotId: lotC.id, 
+                    ymdDateCreated: '2010-01-02',
+                    quantityBaseValue: 200, },
+                { lotId: lotB.id,  // Non-cash-in
+                    ymdDateCreated: '2010-01-03',
+                    quantityBaseValue: 100, },
+                { lotId: lotE.id, 
+                    ymdDateCreated: '2010-01-04',
+                    quantityBaseValue: 600, },
+                { lotId: lotD.id, 
+                    ymdDateCreated: '2009-12-31',
+                    quantityBaseValue: 10000, },
+            ];
+            // 133 + 267 = 400
+            result = GH.distributeNonCashInLots(accessor, earlyNonCashInLotStates);
+            expect(result).toEqual([
+                { lotId: lotA.id,
+                    ymdDateCreated: '2010-01-01',
+                    quantityBaseValue: 100 + 33 + 1330, },
+                { lotId: lotC.id,
+                    ymdDateCreated: '2010-01-02',
+                    quantityBaseValue: 200 + 67 + 2670, },
+                { lotId: lotE.id, 
+                    ymdDateCreated: '2010-01-04',
+                    quantityBaseValue: 600 + 6000, },
+            ]);
+
+
+            const allCashInLotStates = [
+                { lotId: lotA.id, 
+                    ymdDateCreated: '2010-01-01',
+                    quantityBaseValue: 100, },
+                { lotId: lotC.id, 
+                    ymdDateCreated: '2010-01-02',
+                    quantityBaseValue: 200, },
+                { lotId: lotE.id, 
+                    ymdDateCreated: '2010-01-04',
+                    quantityBaseValue: 100, },
+            ];
+            result = GH.distributeNonCashInLots(accessor, allCashInLotStates);
+            expect(result).toEqual(allCashInLotStates);
+        }
 
 
         //

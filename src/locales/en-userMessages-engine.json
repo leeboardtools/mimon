@@ -248,6 +248,9 @@
     "EngineAccess-reconcile_account_id_not_found": ["Could not obtain a reconciler, an account with id ", " was not found."],
 
 
+    "GainHelpers-no_cash_in_accounts": ["There are no cash-in accounts to distribute non-cash-in shares to."],
+
+
     "LotTransactionHelpers-invalid_account": ["The SPLIT/MERGE transaction could not be set up, an account with id ", " was not found."],
     "LotTransactionHelpers-invalid_date": ["The SPLIT/MERGE transaction requires either a date or a transaction id. ", " is not valid."],
     "LotTransactionHelpers-no_base_transaction": "The SPLIT/MERGE transaction cannot be the first transaction in the account.",
