@@ -164,3 +164,87 @@ test('YMDDate-orderYMDDatePair', () => {
     expect(YMDDate.orderYMDDatePair(dateA)).toEqual([dateA, dateA]);
 
 });
+
+
+//
+//-----------------------------------------------
+//
+test('YMDDate-isYearLeapYear', () => {
+    expect(YMDDate.isYearLeapYear(2016)).toBeTruthy();
+    expect(YMDDate.isYearLeapYear(2017)).toBeFalsy();
+    expect(YMDDate.isYearLeapYear(2018)).toBeFalsy();
+    expect(YMDDate.isYearLeapYear(2019)).toBeFalsy();
+    expect(YMDDate.isYearLeapYear(2020)).toBeTruthy();
+
+    // eslint-disable-next-line max-len
+    // Per https://docs.microsoft.com/en-us/office/troubleshoot/excel/determine-a-leap-year
+    expect(YMDDate.isYearLeapYear(1700)).toBeFalsy();
+    expect(YMDDate.isYearLeapYear(1800)).toBeFalsy();
+    expect(YMDDate.isYearLeapYear(1900)).toBeFalsy();
+    expect(YMDDate.isYearLeapYear(2100)).toBeFalsy();
+    expect(YMDDate.isYearLeapYear(2200)).toBeFalsy();
+    expect(YMDDate.isYearLeapYear(2300)).toBeFalsy();
+    expect(YMDDate.isYearLeapYear(2500)).toBeFalsy();
+    expect(YMDDate.isYearLeapYear(2600)).toBeFalsy();
+
+    expect(YMDDate.isYearLeapYear(1600)).toBeTruthy();
+    expect(YMDDate.isYearLeapYear(2000)).toBeTruthy();
+    expect(YMDDate.isYearLeapYear(2400)).toBeTruthy();
+
+
+    // isAfterFebruary28()...
+    expect(new YMDDate('2020-01-01').isAfterFebruary28()).toBeFalsy();
+    expect(new YMDDate('2020-02-28').isAfterFebruary28()).toBeFalsy();
+    expect(new YMDDate('2020-02-29').isAfterFebruary28()).toBeTruthy();
+    expect(new YMDDate('2020-03-01').isAfterFebruary28()).toBeTruthy();
+    expect(new YMDDate('2020-12-31').isAfterFebruary28()).toBeTruthy();
+});
+
+
+//
+//-----------------------------------------------
+//
+test('YMDDate-fractionalYearsAfterMe', () => {
+    let ymdDateA;
+    let ymdDateB;
+
+    ymdDateA = new YMDDate('2020-01-01');
+    ymdDateB = new YMDDate('2020-01-02');
+    expect(ymdDateA.fractionalYearsAfterMe(ymdDateB)).toEqual(1 / 366);
+    expect(ymdDateB.fractionalYearsAfterMe(ymdDateA)).toEqual(-1 / 366);
+
+    ymdDateA = new YMDDate('2019-01-01');
+    ymdDateB = new YMDDate('2019-01-02');
+    expect(ymdDateA.fractionalYearsAfterMe(ymdDateB)).toEqual(1 / 365);
+    expect(ymdDateB.fractionalYearsAfterMe(ymdDateA)).toEqual(-(1 / 365));
+
+    ymdDateA = new YMDDate('2019-03-01');
+    ymdDateB = new YMDDate('2020-03-01');
+    expect(ymdDateA.fractionalYearsAfterMe(ymdDateB)).toEqual(1);
+    expect(ymdDateB.fractionalYearsAfterMe(ymdDateA)).toEqual(-1);
+
+    // From 2020-03-01 to 2021-03-01 is 365 days
+    ymdDateA = new YMDDate('2019-03-01');
+    ymdDateB = new YMDDate('2020-03-02');
+    expect(ymdDateA.fractionalYearsAfterMe(ymdDateB)).toEqual(1 + 1 / 365);
+    expect(ymdDateB.fractionalYearsAfterMe(ymdDateA)).toEqual(-(1 + 1 / 365));
+
+    // From 2019-03-01 to 2020-03-01 is 366 days
+    ymdDateA = new YMDDate('2019-03-01');
+    ymdDateB = new YMDDate('2020-02-29');
+    expect(ymdDateA.fractionalYearsAfterMe(ymdDateB)).toEqual(1 - 1 / 366);
+    expect(ymdDateB.fractionalYearsAfterMe(ymdDateA)).toEqual(-(1 - 1 / 366));
+
+    // From 2020-02-29 to 2020-03-01 is 366 days
+    ymdDateA = new YMDDate('2020-02-29');
+    ymdDateB = new YMDDate('2020-03-01');
+    expect(ymdDateA.fractionalYearsAfterMe(ymdDateB)).toEqual(1 / 365);
+    expect(ymdDateB.fractionalYearsAfterMe(ymdDateA)).toEqual(-(1 / 365));
+
+    // From 2020-02-29 to 2020-03-01 is 366 days
+    ymdDateA = new YMDDate('2020-02-29');
+    ymdDateB = new YMDDate('2021-03-01');
+    expect(ymdDateA.fractionalYearsAfterMe(ymdDateB)).toEqual(1 + 1 / 365);
+    expect(ymdDateB.fractionalYearsAfterMe(ymdDateA)).toEqual(-(1 + 1 / 365));
+
+});

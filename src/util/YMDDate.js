@@ -268,6 +268,46 @@ export class YMDDate {
 
 
     /**
+     * Determines if a year is a leap year.
+     * @param {number} year 
+     * @return {boolean}
+     */
+    static isYearLeapYear(year) {
+        if (!(year % 4)) {
+            if (!(year % 100)) {
+                if (!(year % 400)) {
+                    return true;
+                }
+            }
+            else {
+                return true;
+            }
+        }
+    }
+
+    /**
+     * Determines if the year is a leap year.
+     * @return {boolean}
+     */
+    isLeapYear() {
+        return YMDDate.isYearLeapYear(this.getFullYear());
+    }
+
+    /**
+     * Determines if the date is after February 28.
+     */
+    isAfterFebruary28() {
+        const month = this.getMonth();
+        if (month >= 2) {
+            return true;
+        }
+        else if (month === 1) {
+            return this.getDate() > 28;
+        }
+    }
+
+
+    /**
      * Creates a new date only object a given number of days away from this date.
      * Will return <code>this</code> if days is zero.
      * @param {number} days The number of days to add.
@@ -362,6 +402,56 @@ export class YMDDate {
 
         return ymdDate.getMonth() - this.getMonth()
             + 12 * (ymdDate.getFullYear() - this.getFullYear());
+    }
+
+
+    /**
+     * Returns the number of years, including fractional portions, ymdDate is after 
+     * this date. Years are based on the month and day of month.
+     * <p>
+     * Note that if ymdDate is before this date, this simply returns 
+     * -ymdDate.fractionalYearsAfterMe(this).
+     * @param {YMDDate} ymdDate 
+     * @returns {number}
+     */
+    fractionalYearsAfterMe(ymdDate) {
+        const compare = ymdDate.valueOf() - this.valueOf();
+        if (compare < 0) {
+            return -ymdDate.fractionalYearsAfterMe(this);
+        }
+        else if (!compare) {
+            return 0;
+        }
+
+        // At this point ymdDate is after this...
+        const myFullYear = this.getFullYear();
+        const theirFullYear = ymdDate.getFullYear();
+        let years = theirFullYear - myFullYear;
+
+        let theirYearYMDDate;
+        if (years) {
+            theirYearYMDDate = this.addYears(years);
+        }
+        else {
+            theirYearYMDDate = this;
+        }
+
+        let deltaDays = theirYearYMDDate.daysAfterMe(ymdDate);
+        if (deltaDays < 0) {
+            theirYearYMDDate = theirYearYMDDate.addYears(-1);
+            --years;
+            deltaDays = theirYearYMDDate.daysAfterMe(ymdDate);
+        }
+
+        if (deltaDays) {
+            // Need to adjust for leap years...
+            const nextYear = theirYearYMDDate.addYears(1);
+            const daysInYear = theirYearYMDDate.daysAfterMe(nextYear);
+
+            years += deltaDays / daysInYear;
+        }
+
+        return years;
     }
 
 
