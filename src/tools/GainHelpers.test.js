@@ -3,7 +3,7 @@ import * as EATH from './EngineAccessTestHelpers';
 import * as GH from './GainHelpers';
 import * as L from '../engine/Lots';
 import { getDecimalDefinition } from '../util/Quantities';
-import { getYMDDate } from '../util/YMDDate'
+import { getYMDDate } from '../util/YMDDate';
 
 const path = require('path');
 

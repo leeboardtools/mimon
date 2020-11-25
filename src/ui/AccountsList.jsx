@@ -46,6 +46,8 @@ export function getAccountsListColumnInfoDefs() {
             cashInGain: LCE.getTotalCashInGainColumnInfo({}),
             percentGain: LCE.getTotalSimplePercentGainColumnInfo({}),
             cashInPercentGain: LCE.getTotalCashInPercentGainColumnInfo({}),
+            annualPercentGain: LCE.getTotalAnnualPercentGainColumnInfo({}),
+            annualCashInPercentGain: LCE.getTotalAnnualCashInPercentGainColumnInfo({}),
         };
     }
 
@@ -655,6 +657,17 @@ export class AccountsList extends React.Component {
         case 'totalCashInPercentGain' :
             return this.renderGainDisplay(columnInfo, accountDataItem,
                 accountState, quantityDefinition, LCE.calcCashInPercentGainBalanceValue,
+                this._percentSuffix);
+        
+        case 'totalAnnualPercentGain' :
+            return this.renderGainDisplay(columnInfo, accountDataItem,
+                accountState, quantityDefinition, LCE.calcAnnualPercentGainBalanceValue,
+                this._percentSuffix);
+        
+        case 'totalAnnualCashInPercentGain' :
+            return this.renderGainDisplay(columnInfo, accountDataItem,
+                accountState, quantityDefinition, 
+                LCE.calcAnnualCashInPercentGainBalanceValue,
                 this._percentSuffix);
         }
     }

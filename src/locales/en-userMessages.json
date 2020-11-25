@@ -200,6 +200,8 @@
     "LotCellEditors-totalPercentGain": "% Gain",
     "LotCellEditors-totalCashInGain": "Cash-In Gain",
     "LotCellEditors-totalCashInPercentGain": "% Cash-In Gain",
+    "LotCellEditors-totalAnnualPercentGain": "% Annual Gain",
+    "LotCellEditors-totalAnnualCashInPercentGain": "% Annual Cash-In Gain",
 
     "LotCellEditors-actionType-BUY": "Buy",
     "LotCellEditors-actionType-SELL_FIFO": "Sell First In First Out",
@@ -226,6 +228,7 @@
     "LotCellEditors-shares_price_date": ["", " sh @ ", " on ", ""],
     "LotCellEditors-shares_price": ["", " sh @ ", ""],
     "LotCellEditors-shares_date": ["", " sh from ", ""],
+    "LotCellEditors-percent_shares_date": ["", "% ", " sh ", ""],
 
     "LotCellEditors-marketValue_tooltip": ["Mkt Value: ", ""],
     "LotCellEditors-costBasis_tooltip": ["Cost Basis: ", ""],

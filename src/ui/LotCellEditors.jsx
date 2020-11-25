@@ -2122,3 +2122,104 @@ export function calcCashInPercentGainBalanceValue(args) {
 
     return calcGainBalanceValue(args);
 }
+
+
+/**
+ * Retrieves a column info for annual percent gain.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getTotalAnnualPercentGainColumnInfo(args) {
+    return Object.assign({ key: 'totalAnnualPercentGain',
+        header: {
+            label: userMsg('LotCellEditors-totalAnnualPercentGain'),
+            ariaLabel: 'Total Annual Percent Gain',
+            classExtras: 'header-base percent-base percent-header',
+        },
+        inputClassExtras: 'percent-base percent-input',
+        cellClassName: 'cell-base percent-base percent-cell',
+    },
+    args);
+}
+
+
+/**
+ * Calculates the annual percent gain for {@link LotState}s in the form of
+ * a {@link CellBalanceValue}.
+ * @param {GainHelpers~calcLotStateGainArgs} args
+ * @returns {CellBalanceValue}
+ */
+export function calcAnnualPercentGainBalanceValue(args) {
+    const result = GH.calcLotStatePercentAnnualGain(args);
+    return annualGainResultToBalanceValue(args, result);
+}
+
+
+//
+//---------------------------------------------------------
+//
+function annualGainResultToBalanceValue(args, result) {
+    const { accessor, priceDataItem } = args;
+
+    const { percentAnnualGainBaseValue, lotPercentAnnualGains } = result;
+    if ((typeof percentAnnualGainBaseValue !== 'number')
+     || Number.isNaN(percentAnnualGainBaseValue)) {
+        return;
+    }
+
+    const percentQuantityDefinition = accessor.getPercentGainQuantityDefinition();
+    const { sharesQuantityDefinition } = result.accountStateInfo;
+
+    // Tooltips:
+    let tooltips;
+    if (lotPercentAnnualGains && lotPercentAnnualGains.length
+     && priceDataItem) {
+        tooltips = lotPercentAnnualGains.map((entry) => {
+            // Want:CAGR, shares, date
+            const { lotState } = entry;
+            const sharesValue = sharesQuantityDefinition.baseValueToNumber(
+                lotState.quantityBaseValue);
+            return userMsg('LotCellEditors-percent_shares_date',
+                entry.percentAnnualGain,
+                sharesValue,
+                accessor.formatDate(lotState.ymdDateCreated));
+        });
+    }
+
+    return {
+        quantityBaseValue: percentAnnualGainBaseValue,
+        quantityDefinition: percentQuantityDefinition,
+        tooltip: tooltips,
+    };
+}
+
+
+/**
+ * Retrieves a column info for annual cash-in percent gain.
+ * @param {getColumnInfoArgs} args
+ * @returns {CellEditorsManager~ColumnInfo}
+ */
+export function getTotalAnnualCashInPercentGainColumnInfo(args) {
+    return Object.assign({ key: 'totalAnnualCashInPercentGain',
+        header: {
+            label: userMsg('LotCellEditors-totalAnnualCashInPercentGain'),
+            ariaLabel: 'Total Annual Cash-In Percent Gain',
+            classExtras: 'header-base percent-base percent-header',
+        },
+        inputClassExtras: 'percent-base percent-input',
+        cellClassName: 'cell-base percent-base percent-cell',
+    },
+    args);
+}
+
+
+/**
+ * Calculates the annual cash-in percent gain for {@link LotState}s in the form of
+ * a {@link CellBalanceValue}.
+ * @param {GainHelpers~calcLotStateGainArgs} args
+ * @returns {CellBalanceValue}
+ */
+export function calcAnnualCashInPercentGainBalanceValue(args) {
+    const result = GH.calcLotStateCashInPercentAnnualGain(args);
+    return annualGainResultToBalanceValue(args, result);
+}

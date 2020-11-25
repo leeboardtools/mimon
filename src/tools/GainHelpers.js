@@ -502,6 +502,7 @@ export function calcLotStatePercentAnnualGain(args, lotStates) {
         lotPercentAnnualGains: lotPercentAnnualGains,
         percentAnnualGain: percentAnnualGain,
         percentAnnualGainBaseValue: percentAnnualGainBaseValue,
+        ymdDateRef: ymdDateRef.toString(),
     };
 }
 
