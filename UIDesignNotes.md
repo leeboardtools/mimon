@@ -409,7 +409,6 @@ Common menus:
     - Account Editor
 
     - Accounts List
-        - Want quantity, market value, cost basis, cash-in columns
         - Ability to show/hide columns, reorder them.
         - Custom Account Lists
 
@@ -421,6 +420,7 @@ Common menus:
     - Securites/Mutual Fund List
         - Want quantity, market value, cost basis, cash-in columns
         - Ability to show/hide columns, reorder them.
+        - Collapsible with accounts for each security as sub entries
 
 
     - Prices List
@@ -437,6 +437,7 @@ Common menus:
 
     - Account Register
         - Auto-complete for description
+        - Copy, Paste, Duplicate transaction actions
             
         - Multi-row support?
 
@@ -466,6 +467,8 @@ Common menus:
     - Additional imbalance accounts as needed for other currencies.
 
 - Should we be able to disable lots?
+    - By this mean if you turn off lots, then buying and selling securities
+    does not use lots.
 
 - AccountRegister
     - Auto-complete

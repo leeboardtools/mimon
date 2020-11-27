@@ -12,6 +12,7 @@ import { PricedItemsListHandler } from './PricedItemsListHandler';
 import { PricedItemEditorHandler } from './PricedItemEditorHandler';
 import * as PI from '../engine/PricedItems';
 import { ErrorBoundary } from '../util-ui/ErrorBoundary';
+import { PricesListHandler } from './PricesListHandler';
 
 
 
@@ -76,6 +77,8 @@ export class MainWindow extends React.Component {
         this._pricedItemsListHandler = new PricedItemsListHandler(handlerArgs);
 
         this._pricedItemEditorHandler = new PricedItemEditorHandler(handlerArgs);
+
+        this._pricesListHandler = new PricesListHandler(handlerArgs);
         
         
         this.state = {
@@ -89,6 +92,7 @@ export class MainWindow extends React.Component {
         for (const name in PI.PricedItemType) {
             this._pricedItemEditorsByPricedItemId[name] = new Map();
         }
+        this._pricesListsByPricedItemId = new Map();
 
         const masterAccountsList = this._accountsListHandler.createTabEntry(
             'masterAccountsList'
@@ -175,6 +179,9 @@ export class MainWindow extends React.Component {
             else if (tabId.startsWith('pricedItemEditor_')) {
                 this._pricedItemEditorsByPricedItemId[tabEntry.pricedItemTypeName].delete(
                     tabEntry.pricedItemId);
+            }
+            else if (tabId.startsWith('pricesList_')) {
+                this._pricesListsByPricedItemId.delete(tabEntry.pricedItemId);
             }
 
             this._tabItemsById.delete(tabId);
@@ -436,6 +443,27 @@ export class MainWindow extends React.Component {
     }
 
 
+    openPricesList(pricedItemId, openArgs) {
+        let tabId = this._pricesListsByPricedItemId.get(pricedItemId);
+        if (!tabId) {
+            const tabType = 'pricesList';
+            tabId = tabType + '_' + pricedItemId;
+            this._pricesListsByPricedItemId.set(pricedItemId, tabId);
+            const tabEntry = this._pricesListHandler.createTabEntry(
+                tabId, pricedItemId, openArgs);
+            this.addTabEntry(tabEntry, tabType);
+        }
+        else {
+            this._pricesListHandler.openTabEntry(tabId, pricedItemId, 
+                openArgs);
+        }
+
+        this.setState({
+            activeTabId: tabId,
+        });
+    }
+
+
     onOpenTab(type, ...args) {
         switch (type) {
         case 'reconcileAccount' :
@@ -472,6 +500,10 @@ export class MainWindow extends React.Component {
         
         case 'pricedItemEditor' :
             this.openPricedItemEditor(...args);
+            break;
+        
+        case 'pricesList' :
+            this.openPricesList(...args);
             break;
     
         default :
@@ -577,11 +609,13 @@ export class MainWindow extends React.Component {
                 label: userMsg('MainWindow-updatePrices'),
                 onChooseItem: this.onUpdatePrices,
             },
+            /*
             { id: 'viewPricesList', 
                 label: userMsg('MainWindow-viewPricesList'),
                 disabled: !this._tabItemsById.get('pricesList'),
                 onChooseItem: () => this.onOpenTab('pricesList'),
             },
+            */
             {},
             { id: 'viewAccountsList', 
                 label: userMsg('MainWindow-viewAccountsList'),

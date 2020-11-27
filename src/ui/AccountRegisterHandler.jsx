@@ -50,6 +50,15 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     }
 
 
+    onOpenPricesList(tabId) {
+        const { accountId} = this.getTabIdState(tabId);
+        if (accountId) {
+            const { accessor } = this.props;
+            const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+            this.openTab('pricesList', accountDataItem.pricedItemId);
+        }
+    }
+
     onRemoveTransaction(tabId) {
         const { activeSplitInfo } = this.getTabIdState(tabId);
         if (activeSplitInfo) {
@@ -127,9 +136,12 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
 
     getTabDropdownInfo(tabId) {
         let activeSplitInfo;
+        let accountType = {};
         const state = this.getTabIdState(tabId);
         if (state) {
             activeSplitInfo = state.activeSplitInfo;
+            const { accessor } = this.props;
+            accountType = accessor.getTypeOfAccountId(state.accountId);
         }
         const menuItems = [
             { id: 'removeTransaction',
@@ -157,6 +169,11 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             { id: 'reconcileAccount',
                 label: userMsg('AccountsListHandler-reconcileAccount'),
                 onChooseItem: () => this.onReconcileAccount(tabId),
+            },
+            { id: 'openPricesList',
+                label: userMsg('AccountsListHandler-openPricesList'),
+                disabled: !accountType.hasLots,
+                onChooseItem: () => this.onOpenPricesList(tabId),
             },
 
             // TODO:
@@ -220,6 +237,12 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     }
 
 
+    /**
+     * Opens an existing tab.
+     * @param {number} tabId 
+     * @param {number} accountId 
+     * @param {object} openArgs 
+     */
     openTabEntry(tabId, accountId, openArgs) {
         if (openArgs) {
             this._eventEmitter.emit(

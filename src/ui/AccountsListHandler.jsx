@@ -53,6 +53,18 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onOpenPricesList(tabId) {
+        const { activeAccountId} = this.getTabIdState(tabId);
+        if (activeAccountId) {
+            const { accessor } = this.props;
+            const accountDataItem = accessor.getAccountDataItemWithId(activeAccountId);
+            if (accountDataItem) {
+                this.openTab('pricesList', accountDataItem.pricedItemId);
+            }
+        }
+    }
+
+
     onNewAccount(tabId) {
         let parentAccountId;
         let childListIndex = 0;
@@ -225,6 +237,10 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const showAccountLabelId = (hiddenAccountIds.indexOf(activeAccountId) >= 0)
             ? 'AccountsListHandler-showAccount'
             : 'AccountsListHandler-hideAccount';
+        
+        const { accessor } = this.props;
+
+        const accountType = accessor.getTypeOfAccountId(activeAccountId) || {};
 
         const menuItems = [
             { id: 'reconcileAccount',
@@ -236,6 +252,11 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 label: userMsg('AccountsListHandler-openAccountRegister'),
                 disabled: !activeAccountId,
                 onChooseItem: () => this.onOpenAccountRegister(tabId),
+            },
+            { id: 'openPricesList',
+                label: userMsg('AccountsListHandler-openPricesList'),
+                disabled: !accountType.hasLots,
+                onChooseItem: () => this.onOpenPricesList(tabId),
             },
             {},
             { id: 'newAccount',
@@ -337,8 +358,14 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     onSelectAccount(tabId, accountId) {
         const state = this.getTabIdState(tabId);
         const prevActiveAccountId = state.activeAccountId;
+
+        const { accessor } = this.props;
+        const accountType = accessor.getTypeOfAccountId(accountId);
+        const prevAccountType = accessor.getTypeOfAccountId(prevActiveAccountId);
+
         if ((!prevActiveAccountId && accountId)
-         || (prevActiveAccountId && !accountId)) {
+         || (prevActiveAccountId && !accountId)
+         || (accountType !== prevAccountType)) {
             this.setTabIdState(tabId,
                 {
                     activeAccountId: accountId,

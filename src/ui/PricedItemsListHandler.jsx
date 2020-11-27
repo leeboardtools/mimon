@@ -106,6 +106,11 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onOpenPricesList(tabId, pricedItemId, pricedItemTypeName) {
+        this.openTab('pricesList', pricedItemId);
+    }
+
+
     onTogglePricedItemVisible(tabId, pricedItemId, pricedItemTypeName) {
         const state = this.getTabIdState(tabId);
         const hiddenPricedItemIds = Array.from(state.hiddenPricedItemIds);
@@ -159,15 +164,13 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
         const typeDescription = PI.getPricedItemType(pricedItemTypeName).description;
         const menuItems = [
-            /*
-            { id: 'openPricedItemRegister',
-                label: userMsg('PricedItemsListHandler-openPricedItemRegister', 
+            { id: 'openPricesList',
+                label: userMsg('PricedItemsListHandler-openPricesList', 
                     typeDescription),
-                disabled: !activePricedItemId,
-                onChooseItem: () => this.onOpenPricedItemRegister(tabId),
+                onChooseItem: () => this.onOpenPricesList(tabId, 
+                    activePricedItemId, pricedItemTypeName),
             },
             {},
-            */
             { id: 'newPricedItem',
                 label: userMsg('PricedItemsListHandler-newPricedItem', 
                     typeDescription),
@@ -230,7 +233,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
     
     onChoosePricedItem(tabId, pricedItemId) {
-        //this.openPricedItemRegister(pricedItemId);
+        if (pricedItemId) {
+            this.openTab('pricesList', pricedItemId);
+        }
     }
 
 
