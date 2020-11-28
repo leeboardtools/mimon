@@ -137,6 +137,65 @@ export function getPriceMultiplierDataItem(priceMultiplier, alwaysCopy) {
     return priceMultiplier;
 }
 
+/**
+ * Cleans up a price, makes sure that {@link isPrice} will return <code>true</code>
+ * for the price if it is currently a valid price.
+ * @param {PriceDataItem|Price|undefined} priceDataItem 
+ * @returns {PriceDataItem|Price|undefined} priceDataItem
+ */
+export function cleanPriceDataItem(priceDataItem) {
+    if (priceDataItem) {
+        delete priceDataItem.newCount;
+        delete priceDataItem.oldCount;
+    }
+    return priceDataItem;
+}
+
+/**
+ * Cleans up a price multiplier, makes sure that {@link isMultiplier} will return 
+ * <code>true</code> for the multiplier if it is currently a valid multiplier.
+ * @param {PriceDataItem|Price|undefined} priceDataItem 
+ * @returns {PriceDataItem|Price|undefined} priceDataItem
+ */
+export function cleanPriceMultiplierDataItem(priceMultiplierDataItem) {
+    if (priceMultiplierDataItem) {
+        delete priceMultiplierDataItem.close;
+        delete priceMultiplierDataItem.open;
+        delete priceMultiplierDataItem.low;
+        delete priceMultiplierDataItem.high;
+        delete priceMultiplierDataItem.volume;
+    }
+    return priceMultiplierDataItem;
+}
+
+
+/**
+ * Determines if an item is a {@link Price}/{@link PriceDataItem} as opposed
+ * to a {@link PriceMultiplier}/{@link PriceMultiplierDataItem}.
+ * @param {Price|PriceItemDataItem|PriceMultiplier|PriceMultiplierDataItem} item 
+ * @returns {boolean}
+ */
+export function isPrice(item) {
+    if (!item) {
+        return false;
+    }
+    return typeof item.close === 'number';
+}
+
+
+/**
+ * Determines if an item is a {@link PriceMultiplier}/{@link PriceMultiplierDataItem}
+ * as opposed to a {@link Price}/{@link PriceDataItem}.
+ * @param {Price|PriceItemDataItem|PriceMultiplier|PriceMultiplierDataItem} item 
+ * @returns {boolean}
+ */
+export function isMultiplier(item) {
+    if (!item) {
+        return false;
+    }
+    return typeof item.newCount === 'number';
+}
+
 
 /**
  * Manages {@link Price}s.
@@ -446,7 +505,7 @@ export class PriceManager extends EventEmitter {
         let multiplierIndex = 0;
         let multiplierDateValue = allPriceMultipliers[0].ymdDate.valueOf();
         priceDataItems.forEach((priceDataItem) => {
-            if (typeof priceDataItem.close !== 'number') {
+            if (!isPrice(priceDataItem)) {
                 // Most likely a price multiplier, just skip it.
                 return;
             }
@@ -524,6 +583,13 @@ export class PriceManager extends EventEmitter {
      * the date range.
      */
     async asyncGetPriceMultiplierDataItemsInDateRange(pricedItemId, ymdDateA, ymdDateB) {
+        if (typeof pricedItemId === 'object') {
+            const args = pricedItemId;
+            pricedItemId = args.pricedItemId;
+            ymdDateA = args.ymdDateA;
+            ymdDateB = args.ymdDateB;
+        }
+
         [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
         const result = await this._handler.asyncGetPriceMultiplierDataItemsInDateRange(
             pricedItemId, ymdDateA, ymdDateB);
@@ -558,6 +624,72 @@ export class PriceManager extends EventEmitter {
         return this._handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(
             pricedItemId, 
             ymdDate);
+    }
+
+    /**
+     * Retrieves both the prices and price multipliers for a priced item within a 
+     * date range.
+     * <p>
+     * If the first argument is a 
+     * {@link PriceManager~asyncGetPriceDataItemsInDateRangeArgs} the remaining
+     * arguments are ignored.
+     * The prices returned are raw prices unless the first argument is a
+     * {@link PriceManager~asyncGetPriceDataItemsInDateRangeArgs} and has the
+     * refYMDDate property specified.
+     * @param {number|PriceManager~asyncGetPriceDataItemsInDateRangeArgs} pricedItemId 
+     * @param {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
+     * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
+     * range, inclusive.
+     * @returns {PriceDataItem[]}   Array containing both the prices and the 
+     * multipliers within the date range, sorted from oldest to newest date.
+     */
+    async asyncGetPriceAndMultiplierDataItemsInDateRange(
+        pricedItemId, ymdDateA, ymdDateB) {
+        const prices = await this.asyncGetPriceDataItemsInDateRange(
+            pricedItemId, ymdDateA, ymdDateB);
+        const multipliers = await this.asyncGetPriceMultiplierDataItemsInDateRange(
+            pricedItemId, ymdDateA, ymdDateB);
+
+        if (!multipliers.length) {
+            return prices;
+        }
+        if (!prices.length) {
+            return multipliers;
+        }
+
+
+        const result = [];
+        let multiplierYMDDate = getYMDDate(multipliers[0].ymdDate);
+        let priceYMDDate = getYMDDate(prices[0].ymdDate);
+
+        let multiplierIndex = 0;
+        let priceIndex = 0;
+
+        while (priceYMDDate || multiplierYMDDate) {
+            const compare = YMDDate.compare(multiplierYMDDate, priceYMDDate);
+            if (((compare <= 0) || !priceYMDDate) && multiplierYMDDate) {
+                result.push(multipliers[multiplierIndex]);
+                ++multiplierIndex;
+                if (multiplierIndex < multipliers.length) {
+                    multiplierYMDDate = getYMDDate(multipliers[multiplierIndex].ymdDate);
+                }
+                else {
+                    multiplierYMDDate = undefined;
+                }
+            }
+            if (((compare >= 0) || !multiplierYMDDate) && priceYMDDate) {
+                result.push(prices[priceIndex]);
+                ++priceIndex;
+                if (priceIndex < prices.length) {
+                    priceYMDDate = getYMDDate(prices[priceIndex].ymdDate);
+                }
+                else {
+                    priceYMDDate = undefined;
+                }
+            }
+        }
+
+        return result;
     }
 
 
@@ -860,7 +992,7 @@ export class PriceManager extends EventEmitter {
     /**
      * @typedef {object} PriceManager~RemovePricesOptions
      * @property {boolean}  [noPrices=false]
-     * @property {boolean}  [noPriceMultipliers=false]
+     * @property {boolean}  [noMultipliers=false]
      */
 
     /**
@@ -1265,7 +1397,7 @@ export class InMemoryPricesHandler extends PricesHandler {
                     (dataItem) => getPriceDataItem(dataItem, true));
         }
 
-        if (!options.noPriceMultipliers) {
+        if (!options.noMultipliers) {
             removedPriceMultiplierDataItems
                 = this._removeItemsInRange(pricedItemId, ymdDateA, ymdDateB, 
                     this._sortedPriceMultipliersByPricedItemId, 
