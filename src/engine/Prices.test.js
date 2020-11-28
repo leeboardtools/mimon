@@ -434,6 +434,7 @@ test('PriceManager', async () => {
 
     // Test pricesAdd event
     expect(addEventArg).toEqual({ 
+        pricedItemId: 1,
         newPriceDataItems: pricesB, 
         newPriceMultiplierDataItems: [],
     });
@@ -601,6 +602,7 @@ test('PriceManager', async () => {
 
     // pricesRemove event test
     expect(removeEventArg).toEqual({ 
+        pricedItemId: 2,
         removedPriceDataItems: removeResult,
         removedPriceMultiplierDataItems: [],
     });

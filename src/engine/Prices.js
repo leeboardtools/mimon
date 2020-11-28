@@ -745,12 +745,14 @@ export class PriceManager extends EventEmitter {
 
         if (addedPrices.length || addedPriceMultipliers.length) {
             this.emit('pricesAdd', { 
+                pricedItemId: pricedItemId,
                 newPriceDataItems: addedPrices,
                 newPriceMultiplierDataItems: addedPriceMultipliers,
             });
         }
         if (removedPrices.length || removedPriceMultipliers.length) {
             this.emit('pricesRemove', { 
+                pricedItemId: pricedItemId,
                 removedPriceDataItems: removedPrices,
                 removedPriceMultiplierDataItems: removedPriceMultipliers,
             });
@@ -766,6 +768,7 @@ export class PriceManager extends EventEmitter {
                 removedPriceMultipliers);
 
             this.emit('pricesAdd', { 
+                pricedItemId: pricedItemId,
                 newPriceDataItems: removedPrices,
                 newPriceMulitplierDataItems: removedPriceMultipliers,
             });
@@ -777,6 +780,7 @@ export class PriceManager extends EventEmitter {
      * Fired by {@link PriceManager#asyncAddPrices} after the prices have been added.
      * @event PriceManager~pricesAdd
      * @type {object}
+     * @property {number} pricedItemId
      * @property {PriceDataItem[]}  newPriceDataItems   Array of the newly added 
      * price data items being returned
      * by the call to {@link PriceManager#asyncAddPrices}.
@@ -950,7 +954,9 @@ export class PriceManager extends EventEmitter {
                     priceMultiplierUpdates: priceMultiplierUpdates,
                 });
 
-        this.emit('pricesAdd', { newPriceDataItems: newPriceDataItems,
+        this.emit('pricesAdd', { 
+            pricedItemId: pricedItemId,
+            newPriceDataItems: newPriceDataItems,
             newPriceMultiplierDataItems: newPriceMultiplierDataItems,
         });
         return { newPriceDataItems: newPriceDataItems, 
@@ -984,6 +990,7 @@ export class PriceManager extends EventEmitter {
      * Fired by {@link PriceManager#asyncRemovePrices} after the prices have been removed.
      * @event PriceManager~pricesRemove
      * @type {object}
+     * @property {number} pricedItemId
      * @property {PriceDataItem[]}  removedPriceDataItems   Array of the removed price 
      * data items being returned by the call to {@link PriceManager#asyncRemovePrices}.
      * @property {PriceMultiplierDataItem[]} removedPriceMultiplierDataItems
@@ -1031,6 +1038,7 @@ export class PriceManager extends EventEmitter {
 
 
         this.emit('pricesRemove', { 
+            pricedItemId: pricedItemId,
             removedPriceDataItems: removedPriceDataItems,
             removedPriceMultiplierDataItems: removedPriceMultiplierDataItems,
         });
