@@ -651,9 +651,10 @@ export class AccountingActions extends EventEmitter {
      * @param {number} pricedItemId 
      * @param {YMDDate|string|undefined} ymdDateA 
      * @param {YMDDate|string|undefined} ymdDateB 
+     * @param {PriceManager~RemovePricesOptions} [options=undefined]
      * @returns {ActionDataItem}
      */
-    createRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB) {
+    createRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB, options) {
         if (!ymdDateA && !ymdDateB) {
             ymdDateA = new YMDDate();
         }
@@ -666,6 +667,7 @@ export class AccountingActions extends EventEmitter {
             pricedItemId: pricedItemId, 
             ymdDateA: ymdDateA, 
             ymdDateB: ymdDateB, 
+            options: Object.assign({}, options),
             name: userMsg('Actions-removePrices'), 
         };
     }
@@ -673,7 +675,7 @@ export class AccountingActions extends EventEmitter {
     async _asyncRemovePricesInDateRangeApplier(isValidateOnly, action) {
         const result 
             = await this._accountingSystem.getPriceManager().asyncRemovePricesInDateRange(
-                action.pricedItemId, action.ymdDateA, action.ymdDateB, isValidateOnly);
+                action.pricedItemId, action.ymdDateA, action.ymdDateB, action.options);
         this._emitActionEvent(isValidateOnly, action, result);        
     }
 

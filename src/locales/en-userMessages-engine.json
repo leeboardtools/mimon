@@ -129,6 +129,8 @@
     "Actions-modifyLot": "Modify Lot",
     "Actions-addPrices": "Update Prices",
     "Actions-removePrices": "Remove Prices",
+    "Actions-addPriceMultipliers": "Update Price Splits",
+    "Actions-removePriceMultipliers": "Remove Price Splits",
     "Actions-addTransactions": "New Transaction",
     "Actions-removeTransactions": "Delete Transaction",
     "Actions-modifyTransactions": "Modify Transactions",

@@ -310,6 +310,97 @@ test('AccountingActions-Prices', async () => {
         '2019-01-02', '2019-01-06')).toEqual([
         pricesA[0], pricesA[4],
     ]);
+
+    await actionManager.asyncUndoLastAppliedActions();
+    await actionManager.asyncUndoLastAppliedActions();
+    await actionManager.asyncUndoLastAppliedActions();
+
+
+    let result;
+    const pricesC = [
+        { ymdDate: '2019-01-01', close: 123.45, },
+        { ymdDate: '2019-01-15', newCount: 4, oldCount: 1, },
+        { ymdDate: '2019-02-01', close: 23.45, },
+        { ymdDate: '2019-02-01', newCount: 2, oldCount: 1, },
+        { ymdDate: '2019-02-15', close: 34.56, },
+    ];
+    priceManager.isDebug = true;
+    const actionC = actions.createAddPricesAction(sys.aaplPricedItemId, pricesC);
+    await actionManager.asyncApplyAction(actionC);
+
+    result = await priceManager.asyncGetPriceAndMultiplierDataItemsInDateRange(
+        sys.aaplPricedItemId, 
+        '2019-01-01', '2020-01-06');
+    expect(result.length).toEqual(pricesC.length);
+    expect(result).toEqual(expect.arrayContaining(pricesC));
+
+    await actionManager.asyncUndoLastAppliedActions();
+    expect(await priceManager.asyncGetPriceDataItemsInDateRange(sys.aaplPricedItemId, 
+        '2019-01-01', '2020-01-06')).toEqual([]);
+
+
+    await actionManager.asyncReapplyLastUndoneActions();
+    result = await priceManager.asyncGetPriceAndMultiplierDataItemsInDateRange(
+        sys.aaplPricedItemId, 
+        '2019-01-01', '2020-01-06');
+    expect(result.length).toEqual(pricesC.length);
+    expect(result).toEqual(expect.arrayContaining(pricesC));
+
+
+    // Remove multiplier only...
+    const pricesC1 = [
+        { ymdDate: '2019-01-01', close: 123.45, },
+        { ymdDate: '2019-01-15', newCount: 4, oldCount: 1, },
+        { ymdDate: '2019-02-01', close: 23.45, },
+        //{ ymdDate: '2019-02-01', newCount: 2, oldCount: 1, },
+        { ymdDate: '2019-02-15', close: 34.56, },
+    ];
+    const actionC1 = actions.createRemovePricesInDateRange(sys.aaplPricedItemId,
+        '2019-02-01', '2019-02-01', { noPrices: true, });
+    await actionManager.asyncApplyAction(actionC1);
+
+    result = await priceManager.asyncGetPriceAndMultiplierDataItemsInDateRange(
+        sys.aaplPricedItemId, 
+        '2019-01-01', '2020-01-06');
+    expect(result.length).toEqual(pricesC1.length);
+    expect(result).toEqual(expect.arrayContaining(pricesC1));
+
+
+    await actionManager.asyncUndoLastAppliedActions();
+    result = await priceManager.asyncGetPriceAndMultiplierDataItemsInDateRange(
+        sys.aaplPricedItemId, 
+        '2019-01-01', '2020-01-06');
+    expect(result.length).toEqual(pricesC.length);
+    expect(result).toEqual(expect.arrayContaining(pricesC));
+
+
+    // Remove price only...
+    const pricesC2 = [
+        { ymdDate: '2019-01-01', close: 123.45, },
+        { ymdDate: '2019-01-15', newCount: 4, oldCount: 1, },
+        //{ ymdDate: '2019-02-01', close: 23.45, },
+        { ymdDate: '2019-02-01', newCount: 2, oldCount: 1, },
+        { ymdDate: '2019-02-15', close: 34.56, },
+    ];
+    const actionC2 = actions.createRemovePricesInDateRange(sys.aaplPricedItemId,
+        '2019-02-01', '2019-02-01', { noMultipliers: true, });
+    await actionManager.asyncApplyAction(actionC2);
+
+    result = await priceManager.asyncGetPriceAndMultiplierDataItemsInDateRange(
+        sys.aaplPricedItemId, 
+        '2019-01-01', '2020-01-06');
+    expect(result.length).toEqual(pricesC2.length);
+    expect(result).toEqual(expect.arrayContaining(pricesC2));
+
+
+    await actionManager.asyncUndoLastAppliedActions();
+    result = await priceManager.asyncGetPriceAndMultiplierDataItemsInDateRange(
+        sys.aaplPricedItemId, 
+        '2019-01-01', '2020-01-06');
+    expect(result.length).toEqual(pricesC.length);
+    expect(result).toEqual(expect.arrayContaining(pricesC));
+
+
 });
 
 
