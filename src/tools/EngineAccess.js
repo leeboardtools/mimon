@@ -45,6 +45,11 @@ export class EngineAccessor extends EventEmitter {
         this._handlePricedItemAdd = this._handlePricedItemAdd.bind(this);
         this._handlePricedItemModify = this._handlePricedItemModify.bind(this);
         this._handlePricedItemRemove = this._handlePricedItemRemove.bind(this);
+        this._handlePricesAdd = this._handlePricesAdd.bind(this);
+        this._handlePricesRemove = this._handlePricesRemove.bind(this);
+        this._handleLotAdd = this._handleLotAdd.bind(this);
+        this._handleLotModify = this._handleLotModify.bind(this);
+        this._handleLotRemove = this._handleLotRemove.bind(this);
         this._handleAccountAdd = this._handleAccountAdd.bind(this);
         this._handleAccountsModify = this._handleAccountsModify.bind(this);
         this._handleAccountRemove = this._handleAccountRemove.bind(this);
@@ -132,7 +137,13 @@ export class EngineAccessor extends EventEmitter {
                 this._handlePricedItemRemove);
 
             this._priceManager = _accountingSystem.getPriceManager();
+            this._priceManager.on('pricesAdd', this._handlePricesAdd);
+            this._priceManager.on('pricesRemove', this._handlePricesRemove);
+
             this._lotManager = _accountingSystem.getLotManager();
+            this._lotManager.on('lotAdd', this._handleLotAdd);
+            this._lotManager.on('lotModify', this._handleLotModify);
+            this._lotManager.on('lotRemove', this._handleLotRemove);
 
             this._transactionManager = _accountingSystem.getTransactionManager();
             this._transactionManager.on('transactionsAdd', 
@@ -168,6 +179,17 @@ export class EngineAccessor extends EventEmitter {
                     this._handlePricedItemModify);
                 this._pricedItemManager.off('pricedItemRemove', 
                     this._handlePricedItemRemove);    
+            }
+
+            if (this._priceManager) {
+                this._priceManager.off('pricesAdd', this._handlePricesAdd);
+                this._priceManager.off('pricesRemove', this._handlePricesRemove);
+            }
+
+            if (this._lotManager) {
+                this._lotManager.off('lotAdd', this._handleLotAdd);
+                this._lotManager.off('lotModify', this._handleLotModify);
+                this._lotManager.off('lotRemove', this._handleLotRemove);
             }
 
             if (this._transactionManager) {
@@ -1523,6 +1545,28 @@ export class EngineAccessor extends EventEmitter {
 
     _handlePricedItemRemove(result) {
         this.emit('pricedItemRemove', result);
+    }
+
+
+    _handlePricesAdd(result) {
+        this.emit('pricesAdd', result);
+    }
+
+    _handlePricesRemove(result) {
+        this.emit('pricesRemove', result);
+    }
+
+
+    _handleLotAdd(result) {
+        this.emit('lotAdd', result);
+    }
+
+    _handleLotModify(result) {
+        this.emit('lotModify', result);
+    }
+
+    _handleLotRemove(result) {
+        this.emit('lotRemove', result);
     }
 
 
