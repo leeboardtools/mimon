@@ -999,6 +999,35 @@ export class EngineAccessor extends EventEmitter {
 
 
     /**
+     * @returns {QuantityDefinition} The quantity definition used for prices
+     * if the priced item for a price does not have a priceQuantityDefinition property.
+     */
+    getDefaultPriceQuantityDefinition() {
+        return this._priceManager.getDefaultPriceQuantityDefinition();
+    }
+
+    /**
+     * Sets the quantity definition to use for prices if the priced item for a price
+     * does not have a priceQuantityDefinition property.
+     * @param {QuantityDefinition} defaultPriceQuantityDefinition 
+     */
+    setDefaultPriceQuantityDefinition(defaultPriceQuantityDefinition) {
+        this._priceManager.setDefaultPriceQuantityDefinition(
+            defaultPriceQuantityDefinition);
+    }
+
+    /**
+     * Retrieves the quantity definition to be used for prices for a given 
+     * priced item.
+     * @param {number} pricedItemId 
+     * @returns {QuantityDefinition}
+     */
+    getPriceQuantityDefinitionForPricedItem(pricedItemId) {
+        return this._priceManager.getPriceQuantityDefinitionForPricedItem(pricedItemId);
+    }
+
+
+    /**
      * Retrieves the date range of prices available for a priced item.
      * @param {number} pricedItemId 
      * @returns {YMDDate[]|undefined}   An array containing the oldest and newest 
@@ -1046,6 +1075,119 @@ export class EngineAccessor extends EventEmitter {
         return this._priceManager.asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, 
             ymdDate);
     }
+
+
+    /**
+     * Retrieves the date range of price multipliers available for a priced item.
+     * @param {number} pricedItemId 
+     * @returns {YMDDate[]|undefined}   An array containing the oldest and newest 
+     * price multiplier dates, or <code>undefined</code> if there are no prices.
+     */
+    async asyncGetPriceMultiplierDateRange(pricedItemId) {
+        return this._priceManager.asyncGetPriceMultiplierDateRange(pricedItemId);
+    }
+
+
+    /**
+     * Retrieves the price multipliers for a priced item within a date range.
+     * @param {number} pricedItemId 
+     * @param {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
+     * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
+     * range, inclusive.
+     * @returns {PriceMultiplierDataItem[]}   Array containing the prices within 
+     * the date range.
+     */
+    async asyncGetPriceMultiplierDataItemsInDateRange(pricedItemId, ymdDateA, ymdDateB) {
+        return this._priceManager.asyncGetPriceMultiplierDataItemsInDateRange(
+            pricedItemId, ymdDateA, ymdDateB);
+    }
+
+
+    /**
+     * Retrieves the price multiplier data item for a priced item that is on or 
+     * closest to but before a particular date.
+     * @param {number} pricedItemId 
+     * @param {YMDDate|string} ymdDate 
+     * @returns {PriceMultiplierDataItem|undefined}
+     */
+    async asyncGetPriceMultiplierDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
+        return this._priceManager.asyncGetPriceMultiplierDataItemOnOrClosestBefore(
+            pricedItemId, ymdDate);
+    }
+
+
+    /**
+     * Retrieves the price multiplier data item for a priced item that is on or 
+     * closest to but after a particular date.
+     * @param {number} pricedItemId 
+     * @param {YMDDate|string} ymdDate 
+     * @returns {PriceMultiplierDataItem|undefined}
+     */
+    async asyncGetPriceMultiplierDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
+        return this._priceManager.asyncGetPriceMultiplierDataItemOnOrClosestAfter(
+            pricedItemId, ymdDate);
+    }
+
+
+    /**
+     * Retrieves both the prices and price multipliers for a priced item within a 
+     * date range.
+     * <p>
+     * If the first argument is a 
+     * {@link PriceManager~asyncGetPriceDataItemsInDateRangeArgs} the remaining
+     * arguments are ignored.
+     * The prices returned are raw prices unless the first argument is a
+     * {@link PriceManager~asyncGetPriceDataItemsInDateRangeArgs} and has the
+     * refYMDDate property specified.
+     * @param {number|PriceManager~asyncGetPriceDataItemsInDateRangeArgs} pricedItemId 
+     * @param {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
+     * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
+     * range, inclusive.
+     * @returns {PriceDataItem[]}   Array containing both the prices and the 
+     * multipliers within the date range, sorted from oldest to newest date.
+     */
+    async asyncGetPriceAndMultiplierDataItemsInDateRange(
+        pricedItemId, ymdDateA, ymdDateB) {
+        return this._priceManager.asyncGetPriceAndMultiplierDataItemsInDateRange(
+            pricedItemId, ymdDateA, ymdDateB);
+    }
+
+
+    /**
+     * Adds prices for a priced item. Existing prices with the same dates are replaced.
+     * If the first argument is a {@link PriceManager~asyncAddPricesArgs} the remaining
+     * arguments are ignored.
+     * The prices specified are raw prices unless the first argument is a
+     * {@link PriceManager~asyncAddPricesArgs} and has the
+     * refYMDDate property specified.
+     * @param {number|PriceManager~asyncAddPricesArgs} pricedItemId 
+     * @param {(Price|PriceDataItem|Price[]|PriceDataItem[])} prices This may contain
+     * both prices and price multipliers.
+     * @param {PriceMultiplier|PriceMultiplierDataItem|
+     *  PriceMultiplier[]|PriceMultiplierDataItem[]} [priceMultipliers]
+     * @returns {PriceManager~asyncAddPricesResult}
+     * @fires {PriceManager~pricesAdd}
+     */
+    async asyncAddPrices(pricedItemId, prices, priceMultipliers) {
+        return this._priceManager.asyncAddPrices(pricedItemId, prices, priceMultipliers);
+    }
+
+
+    /**
+     * Removes prices and/or price multipliers for a priced item that are 
+     * within a date range.
+     * @param {number} pricedItemId 
+     * @param {(YMDDate|string)} ymdDateA 
+     * @param {(YMDDate|string)} [ymdDateB=ymdDateA]
+     * @param {PriceManager~RemovePricesOptions} [options=undefined]
+     * @returns {PriceManager~RemovePricesResult}
+     * @fires {PriceManager~pricesRemove}
+     */
+    async asyncRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB, options) {
+        return this._priceManager.asyncRemovePricesInDateRange(
+            pricedItemId, ymdDateA, ymdDateB, options);
+    }
+
 
 
     /**
