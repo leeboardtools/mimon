@@ -258,6 +258,7 @@ function lotActionTypeFromTransactionInfo(transactionDataItem, splitIndex, acces
  * @property {LotActionType}    actionType
  * @property {QuantityDefinition}   currencyQuantityDefinition
  * @property {Currency} currency
+ * @property {QuantityDefinition}   priceQuantityDefinition
  * @property {QuantityDefinition}   sharesQuantityDefinition
  * @property {LotCellEditors~EditStates} editStates
  * @property {number}   nextQuantityEditHit
@@ -359,9 +360,12 @@ export function createSplitInfo(transactionDataItem, splitIndex, accessor, args)
     }
     const currencyQuantityDefinition = currency.getQuantityDefinition();
 
+    const priceQuantityDefinition = accessor.getPriceQuantityDefinitionForPricedItem();
+
     const splitInfo = Object.assign({}, args, {
         currencyQuantityDefinition: currencyQuantityDefinition,
         sharesQuantityDefinition: sharesQuantityDefinition,
+        priceQuantityDefinition: priceQuantityDefinition,
         currency: currency,
 
         actionType: actionType,
@@ -381,6 +385,7 @@ function setupSplitInfoEditStates(splitInfo) {
     const { splitIndex, 
         sharesQuantityDefinition,
         currencyQuantityDefinition,
+        priceQuantityDefinition,
         editStates,
         actionType,
         accountStateDataItem,
@@ -504,8 +509,7 @@ function setupSplitInfoEditStates(splitInfo) {
             : 0;
 
         let priceValue = (monetaryAmountValue - sharesSign * feesValue) / sharesValue;
-        priceBaseValue = currencyQuantityDefinition.quantityFromNumber(priceValue)
-            .getBaseValue();
+        priceBaseValue = priceQuantityDefinition.numberToBaseValue(priceValue);
     }
 
 
@@ -527,7 +531,7 @@ function setupSplitInfoEditStates(splitInfo) {
     };
     editStates.price = { editHit: -1, 
         editorBaseValue: priceBaseValue, 
-        quantityDefinition: currencyQuantityDefinition,
+        quantityDefinition: priceQuantityDefinition,
         name: 'price',
     };
 
@@ -547,6 +551,7 @@ export function updateSplitInfoValues(splitInfo) {
         actionType,
         sharesQuantityDefinition,
         currencyQuantityDefinition,
+        priceQuantityDefinition,
         editStates,
     } = splitInfo;
 
@@ -601,7 +606,7 @@ export function updateSplitInfoValues(splitInfo) {
     let priceValue;
     if (!actionType.noCostBasis) {
         if (typeof priceState.editorBaseValue === 'number') {
-            priceValue = currencyQuantityDefinition.baseValueToNumber(
+            priceValue = priceQuantityDefinition.baseValueToNumber(
                 priceState.editorBaseValue);
         }
     }
@@ -761,7 +766,7 @@ export function updateSplitInfoValues(splitInfo) {
             && (monetaryAmountValue !== undefined)
             && (feesValue !== undefined)) {
                 priceValue = (monetaryAmountValue - feesValue) / sharesValue;
-                priceState.editorBaseValue = currencyQuantityDefinition.numberToBaseValue(
+                priceState.editorBaseValue = priceQuantityDefinition.numberToBaseValue(
                     priceValue);
             }
             break;
@@ -1771,7 +1776,7 @@ export function getTotalMarketValueColumnInfo(args) {
 
         getCellValue: (args) => 
             getTotalMarketValueCellValue(args, columnInfoArgs),
-        renderDisplayCell: renderTotalSharesDisplay,
+        renderDisplayCell: renderTotalMarketValueDisplay,
     },
     args);
 }
@@ -1780,8 +1785,9 @@ function getTotalMarketValueCellValue(args, columnInfoArgs) {
     const splitInfo = getSplitInfo(args, columnInfoArgs);
     if (splitInfo) {
         const { accountStateDataItem, editStates,
-            currencyQuantityDefinition, sharesQuantityDefinition,
-            currency,
+            currencyQuantityDefinition, 
+            sharesQuantityDefinition,
+            priceQuantityDefinition,
         } = splitInfo;
         let priceBaseValue = editStates.price.editorBaseValue;
         if (typeof priceBaseValue !== 'number') {
@@ -1791,13 +1797,13 @@ function getTotalMarketValueCellValue(args, columnInfoArgs) {
          && (typeof priceBaseValue === 'number')) {
             const sharesValue = sharesQuantityDefinition.baseValueToNumber(
                 accountStateDataItem.quantityBaseValue);
-            const priceValue = currencyQuantityDefinition.baseValueToNumber(
+            const priceValue = priceQuantityDefinition.baseValueToNumber(
                 priceBaseValue);
             const marketValue = sharesValue * priceValue;
 
             const sharesValueText = sharesQuantityDefinition.baseValueToValueText(
                 accountStateDataItem.quantityBaseValue);
-            const priceValueText = currency.baseValueToString(
+            const priceValueText = priceQuantityDefinition.baseValueToValueText(
                 priceBaseValue);
 
             let tooltip;

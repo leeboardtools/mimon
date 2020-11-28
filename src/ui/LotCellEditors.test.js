@@ -137,7 +137,7 @@ test('LotCellEditors-Basic', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toEqual(495);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(4032);
+            .toEqual(403200);
         
 
         // On 2014-03-11 have
@@ -251,7 +251,7 @@ test('LotCellEditors-Basic', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(9424);
+            .toEqual(942400);
 
         
         // On 2014-06-10 have
@@ -615,7 +615,7 @@ test('LotCellEditors-Basic', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(30952);
+            .toEqual(3095200);
 
 
         // On 2020-01-31 have
@@ -901,7 +901,7 @@ test('LotCellEditors-BUY', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toEqual(495);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(8680);
+            .toEqual(868000);
 
 
         const originalSplitInfo = LCE.copySplitInfo(splitInfo);
@@ -1040,7 +1040,7 @@ test('LotCellEditors-SELL_FIFO', async () => {
 
         splitInfo.actionType = LCE.LotActionType.SELL_FIFO;
         splitInfo.editStates.fees.editorBaseValue = 495;
-        splitInfo.editStates.price.editorBaseValue = 12300;
+        splitInfo.editStates.price.editorBaseValue = 1230000;
         splitInfo.editStates.shares.editorBaseValue = 1000000;
 
         LCE.updateSplitInfoValues(splitInfo);
@@ -1051,7 +1051,7 @@ test('LotCellEditors-SELL_FIFO', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toEqual(495);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(12300);
+            .toEqual(1230000);
         
 
         //
@@ -1109,7 +1109,7 @@ test('LotCellEditors-SELL_FIFO', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(9092);
+            .toEqual(909200);
 
 
         const originalSplitInfo = LCE.copySplitInfo(splitInfo);
@@ -1130,7 +1130,7 @@ test('LotCellEditors-SELL_FIFO', async () => {
 
         splitInfo = LCE.copySplitInfo(originalSplitInfo);
         splitInfo.editStates.shares.editorBaseValue = 1000000;
-        splitInfo.editStates.price.editorBaseValue = 123000;
+        splitInfo.editStates.price.editorBaseValue = 12300000;
         splitInfo.editStates.fees.editorBaseValue = 495;
 
         // Quick tests of updateSplitInfoValues()
@@ -1141,7 +1141,7 @@ test('LotCellEditors-SELL_FIFO', async () => {
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
             .toEqual(12300000 - 495);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(123000);
+            .toEqual(12300000);
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toEqual(495);
         
@@ -1152,7 +1152,7 @@ test('LotCellEditors-SELL_FIFO', async () => {
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
             .toEqual(12300000 - 495);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(123000);
+            .toEqual(12300000);
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toEqual(495);
         
@@ -1163,7 +1163,7 @@ test('LotCellEditors-SELL_FIFO', async () => {
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
             .toEqual(12300000 - 495);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(123000);
+            .toEqual(12300000);
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toEqual(495);
         
@@ -1174,7 +1174,7 @@ test('LotCellEditors-SELL_FIFO', async () => {
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
             .toEqual(12300000 - 495);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(123000);
+            .toEqual(12300000);
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toEqual(495);
 
@@ -1215,7 +1215,7 @@ test('LotCellEditors-SELL_FIFO', async () => {
         // Tests of updateSplitInfoValues(), no fees
         splitInfo = LCE.copySplitInfo(originalSplitInfo);
         splitInfo.editStates.shares.editorBaseValue = 1000000;
-        splitInfo.editStates.price.editorBaseValue = 123000;
+        splitInfo.editStates.price.editorBaseValue = 12300000;
         splitInfo.editStates.fees.editorBaseValue = undefined;
 
 
@@ -1226,7 +1226,7 @@ test('LotCellEditors-SELL_FIFO', async () => {
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
             .toEqual(12300000);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(123000);
+            .toEqual(12300000);
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         
@@ -1237,7 +1237,7 @@ test('LotCellEditors-SELL_FIFO', async () => {
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
             .toEqual(12300000);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(123000);
+            .toEqual(12300000);
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         
@@ -1248,7 +1248,7 @@ test('LotCellEditors-SELL_FIFO', async () => {
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
             .toEqual(12300000);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(123000);
+            .toEqual(12300000);
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         
@@ -1323,7 +1323,7 @@ test('LotCellEditors-SELL_LIFO', async () => {
 
         splitInfo.actionType = LCE.LotActionType.SELL_LIFO;
         //splitInfo.editStates.fees.editorBaseValue = 495;
-        splitInfo.editStates.price.editorBaseValue = 12300;
+        splitInfo.editStates.price.editorBaseValue = 1230000;
         splitInfo.editStates.shares.editorBaseValue = 1000000;
 
         LCE.updateSplitInfoValues(splitInfo);
@@ -1334,7 +1334,7 @@ test('LotCellEditors-SELL_LIFO', async () => {
         //expect(splitInfo.editStates.fees.editorBaseValue)
         //    .toEqual(495);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(12300);
+            .toEqual(1230000);
         
 
         //
@@ -1387,7 +1387,7 @@ test('LotCellEditors-SELL_LIFO', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toEqual(495);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(60452);
+            .toEqual(6045200);
 
 
         const originalSplitInfo = LCE.copySplitInfo(splitInfo);
@@ -1408,7 +1408,7 @@ test('LotCellEditors-SELL_LIFO', async () => {
 
         splitInfo = LCE.copySplitInfo(originalSplitInfo);
         splitInfo.editStates.shares.editorBaseValue = 1000000;
-        splitInfo.editStates.price.editorBaseValue = 123000;
+        splitInfo.editStates.price.editorBaseValue = 12300000;
         splitInfo.editStates.fees.editorBaseValue = 495;
         splitInfo.editStates.monetaryAmount.editorBaseValue = '';
         LCE.updateSplitInfoValues(splitInfo);
@@ -1516,7 +1516,7 @@ test('LotCellEditors-SELL_BY_LOTS', async () => {
 
         splitInfo.actionType = LCE.LotActionType.SELL_BY_LOTS;
         splitInfo.editStates.fees.editorBaseValue = 495;
-        splitInfo.editStates.price.editorBaseValue = 12300;
+        splitInfo.editStates.price.editorBaseValue = 1230000;
         //splitInfo.editStates.shares.editorBaseValue = 1000000;
         splitInfo.editStates.shares.lotChanges = [
             {
@@ -1537,7 +1537,7 @@ test('LotCellEditors-SELL_BY_LOTS', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toEqual(495);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(12300);
+            .toEqual(1230000);
         
         //
         // Test asyncTransactionDataItemFromSplitInfo()
@@ -1612,7 +1612,7 @@ test('LotCellEditors-SELL_BY_LOTS', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(31832);
+            .toEqual(3183200);
 
 
         const originalSplitInfo = LCE.copySplitInfo(splitInfo);
@@ -1635,7 +1635,7 @@ test('LotCellEditors-SELL_BY_LOTS', async () => {
         splitInfo.editStates.shares.lotChanges[0].quantityBaseValue = -1500000;
         splitInfo.editStates.shares.lotChanges[1].lotId = lotBId;
         splitInfo.editStates.shares.lotChanges[1].quantityBaseValue = -500000;
-        splitInfo.editStates.price.editorBaseValue = 123000;
+        splitInfo.editStates.price.editorBaseValue = 12300000;
         splitInfo.editStates.fees.editorBaseValue = 0;
         splitInfo.editStates.monetaryAmount.editorBaseValue = '';
 
@@ -1764,7 +1764,7 @@ test('LotCellEditors-REINVESTED_DIVIDEND', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toEqual(0);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(2000);
+            .toEqual(200000);
 
         
         newTransactionDataItem = {};
@@ -1813,7 +1813,7 @@ test('LotCellEditors-REINVESTED_DIVIDEND', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(9752);
+            .toEqual(975199);
 
 
         const originalSplitInfo = LCE.copySplitInfo(splitInfo);
@@ -1992,7 +1992,7 @@ test('LotCellEditors-ADD_SHARES', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(9916);
+            .toEqual(991600);
 
 
         const originalSplitInfo = LCE.copySplitInfo(splitInfo);
@@ -2122,7 +2122,7 @@ test('LotCellEditors-REMOVE_SHARES_FIFO', async () => {
 
         splitInfo.actionType = LCE.LotActionType.REMOVE_SHARES_FIFO;
         //splitInfo.editStates.fees.editorBaseValue = undefined;
-        splitInfo.editStates.price.editorBaseValue = 12300;
+        splitInfo.editStates.price.editorBaseValue = 1230000;
         splitInfo.editStates.shares.editorBaseValue = 1000000;
 
         LCE.updateSplitInfoValues(splitInfo);
@@ -2133,7 +2133,7 @@ test('LotCellEditors-REMOVE_SHARES_FIFO', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(12300);
+            .toEqual(1230000);
         
 
         //
@@ -2187,7 +2187,7 @@ test('LotCellEditors-REMOVE_SHARES_FIFO', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(31884);
+            .toEqual(3188400);
 
         
         const originalSplitInfo = LCE.copySplitInfo(splitInfo);
@@ -2208,7 +2208,7 @@ test('LotCellEditors-REMOVE_SHARES_FIFO', async () => {
 
         splitInfo = LCE.copySplitInfo(originalSplitInfo);
         splitInfo.editStates.shares.editorBaseValue = 1000000;
-        splitInfo.editStates.price.editorBaseValue = 123000;
+        splitInfo.editStates.price.editorBaseValue = 12300000;
         splitInfo.editStates.fees.editorBaseValue = 0;
 
         LCE.updateSplitInfoValues(splitInfo);
@@ -2244,7 +2244,7 @@ test('LotCellEditors-REMOVE_SHARES_FIFO', async () => {
         // Tests of updateSplitInfoValues(), no fees
         splitInfo = LCE.copySplitInfo(originalSplitInfo);
         splitInfo.editStates.shares.editorBaseValue = 1000000;
-        splitInfo.editStates.price.editorBaseValue = 123000;
+        splitInfo.editStates.price.editorBaseValue = 12300000;
         splitInfo.editStates.fees.editorBaseValue = undefined;
 
 
@@ -2255,7 +2255,7 @@ test('LotCellEditors-REMOVE_SHARES_FIFO', async () => {
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
             .toEqual(12300000);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(123000);
+            .toEqual(12300000);
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         
@@ -2266,7 +2266,7 @@ test('LotCellEditors-REMOVE_SHARES_FIFO', async () => {
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
             .toEqual(12300000);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(123000);
+            .toEqual(12300000);
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         
@@ -2277,7 +2277,7 @@ test('LotCellEditors-REMOVE_SHARES_FIFO', async () => {
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
             .toEqual(12300000);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(123000);
+            .toEqual(12300000);
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
 
@@ -2354,7 +2354,7 @@ test('LotCellEditors-REMOVE_SHARES_LIFO', async () => {
 
         splitInfo.actionType = LCE.LotActionType.REMOVE_SHARES_LIFO;
         //splitInfo.editStates.fees.editorBaseValue = 495;
-        splitInfo.editStates.price.editorBaseValue = 12300;
+        splitInfo.editStates.price.editorBaseValue = 1230000;
         splitInfo.editStates.shares.editorBaseValue = 1000000;
 
         LCE.updateSplitInfoValues(splitInfo);
@@ -2365,7 +2365,7 @@ test('LotCellEditors-REMOVE_SHARES_LIFO', async () => {
         //expect(splitInfo.editStates.fees.editorBaseValue)
         expect(splitInfo.editStates.price.editorBaseValue)
         //    .toEqual(495);
-            .toEqual(12300);
+            .toEqual(1230000);
         
         
         //
@@ -2424,7 +2424,7 @@ test('LotCellEditors-REMOVE_SHARES_LIFO', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(6549 * 4);
+            .toEqual(6549 * 4 * 100);
 
         
         const originalSplitInfo = LCE.copySplitInfo(splitInfo);
@@ -2445,7 +2445,7 @@ test('LotCellEditors-REMOVE_SHARES_LIFO', async () => {
         
         splitInfo = LCE.copySplitInfo(originalSplitInfo);
         splitInfo.editStates.shares.editorBaseValue = 1000000;
-        splitInfo.editStates.price.editorBaseValue = 123000;
+        splitInfo.editStates.price.editorBaseValue = 12300000;
         splitInfo.editStates.fees.editorBaseValue = 0;
         splitInfo.editStates.monetaryAmount.editorBaseValue = '';
         LCE.updateSplitInfoValues(splitInfo);
@@ -2549,7 +2549,7 @@ test('LotCellEditors-REMOVE_SHARES_BY_LOTS', async () => {
 
         splitInfo.actionType = LCE.LotActionType.REMOVE_SHARES_BY_LOTS;
         //splitInfo.editStates.fees.editorBaseValue = 495;
-        splitInfo.editStates.price.editorBaseValue = 12300;
+        splitInfo.editStates.price.editorBaseValue = 1230000;
         //splitInfo.editStates.shares.editorBaseValue = 1000000;
         splitInfo.editStates.shares.lotChanges = [
             {
@@ -2566,7 +2566,7 @@ test('LotCellEditors-REMOVE_SHARES_BY_LOTS', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(12300);
+            .toEqual(1230000);
         
         //
         // Test asyncTransactionDataItemFromSplitInfo()
@@ -2631,7 +2631,7 @@ test('LotCellEditors-REMOVE_SHARES_BY_LOTS', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(3092 * 4);
+            .toEqual(3092 * 4 * 100);
 
 
         const originalSplitInfo = LCE.copySplitInfo(splitInfo);
@@ -2655,7 +2655,7 @@ test('LotCellEditors-REMOVE_SHARES_BY_LOTS', async () => {
         splitInfo.editStates.shares.lotChanges[1] = {};
         splitInfo.editStates.shares.lotChanges[1].lotId = lotBId;
         splitInfo.editStates.shares.lotChanges[1].quantityBaseValue = -500000;
-        splitInfo.editStates.price.editorBaseValue = 123000;
+        splitInfo.editStates.price.editorBaseValue = 12300000;
         splitInfo.editStates.fees.editorBaseValue = 0;
         splitInfo.editStates.monetaryAmount.editorBaseValue = '';
 
@@ -2769,7 +2769,7 @@ test('LotCellEditors-SPLIT', async () => {
 
         splitInfo.actionType = LCE.LotActionType.SPLIT;
         splitInfo.editStates.fees.editorBaseValue = 495;
-        splitInfo.editStates.price.editorBaseValue = 12300;
+        splitInfo.editStates.price.editorBaseValue = 1230000;
         splitInfo.editStates.monetaryAmount.editorBaseValue = 1230000;
         splitInfo.editStates.shares.editorBaseValue = 1000000;
 
@@ -2782,7 +2782,7 @@ test('LotCellEditors-SPLIT', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toEqual(495);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(12300);
+            .toEqual(1230000);
         
         
         //
@@ -3009,7 +3009,7 @@ test('LotCellEditors-REVERSE_SPLIT', async () => {
 
         splitInfo.actionType = LCE.LotActionType.REVERSE_SPLIT;
         splitInfo.editStates.fees.editorBaseValue = 495;
-        splitInfo.editStates.price.editorBaseValue = 12300;
+        splitInfo.editStates.price.editorBaseValue = 1230000;
         splitInfo.editStates.monetaryAmount.editorBaseValue = 1230000;
         splitInfo.editStates.shares.editorBaseValue = 1000000;
 
@@ -3022,7 +3022,7 @@ test('LotCellEditors-REVERSE_SPLIT', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toEqual(495);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(12300);
+            .toEqual(1230000);
         
 
         //
@@ -3265,7 +3265,7 @@ test('LotCellEditors-RETURN_OF_CAPITAL', async () => {
 
         splitInfo.actionType = LCE.LotActionType.RETURN_OF_CAPITAL;
         splitInfo.editStates.fees.editorBaseValue = 495;
-        splitInfo.editStates.price.editorBaseValue = 12300;
+        splitInfo.editStates.price.editorBaseValue = 1230000;
         splitInfo.editStates.monetaryAmount.editorBaseValue = 1230000;
         splitInfo.editStates.shares.editorBaseValue = 1000000;
 
@@ -3279,7 +3279,7 @@ test('LotCellEditors-RETURN_OF_CAPITAL', async () => {
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toEqual(495);
         expect(splitInfo.editStates.price.editorBaseValue)
-            .toEqual(12300);
+            .toEqual(1230000);
 
 
         //
