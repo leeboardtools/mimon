@@ -993,7 +993,12 @@ export class AccountRegister extends React.Component {
                     accountId, true);
             
             
-            let { activeRowIndex } = this.state;
+            let { activeRowIndex, rowEntries } = this.state;
+            if ((activeRowIndex + 1) === rowEntries.length) {
+                // If the active row is the last row, it's the 'new transaction' row
+                // and we want to advance to the next new transaction in that case.
+                activeRowIndex = undefined;
+            }
 
             let visibleRowRange;
             if (this._rowTableRef.current) {
@@ -1144,6 +1149,7 @@ export class AccountRegister extends React.Component {
                 activeRowIndex = activeRowEntry.rowIndex;
             }
 
+            const openNewRow = (activeRowIndex === undefined);
             if ((activeRowIndex === undefined) 
              || (activeRowIndex >= newRowEntries.length)) {
                 activeRowIndex = newRowEntries.length - 1;
@@ -1151,6 +1157,7 @@ export class AccountRegister extends React.Component {
             
             this.setState({
                 activeRowIndex: activeRowIndex,
+                openNewRow: openNewRow,
                 rowEntries: newRowEntries,
                 rowEntriesByTransactionId: newRowEntriesByTransactionIds,
                 minLoadedRowIndex: newRowEntries.length,
@@ -1380,6 +1387,10 @@ export class AccountRegister extends React.Component {
 
         this.updateRowEntryForLotCellEditors(rowEditBuffer);
 
+        this.setState({
+            openNewRow: false,
+        });
+
         return true;
     }
 
@@ -1478,7 +1489,13 @@ export class AccountRegister extends React.Component {
 
     async asyncSaveBuffer(args) {
         try {
-            const { rowIndex, cellEditBuffers, saveBuffer } = args;
+            const { rowIndex, cellEditBuffers, saveBuffer, reason } = args;
+
+            if ((reason === 'activateRow') 
+             && (rowIndex === this.state.rowEntries.length - 1)) {
+                // Don't save the new row if we're activating a different row.
+                return true;
+            }
 
             // Need to catch known errors...
             if (this._cellEditorsManager.areAnyErrors()) {
@@ -1814,6 +1831,8 @@ export class AccountRegister extends React.Component {
 
                 requestedActiveRowIndex = {state.activeRowIndex}
                 onActiveRowChanged = {this.onActiveRowChanged}
+
+                requestOpenActiveRow = {state.openNewRow}
 
                 onStartRowEdit = {this._cellEditorsManager.onStartRowEdit}
                 asyncOnSaveRowEdit = {this._cellEditorsManager.asyncOnSaveRowEdit}

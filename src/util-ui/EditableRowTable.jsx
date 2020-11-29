@@ -26,12 +26,25 @@ export function editableRowTable(WrappedTable) {
 
 
         componentDidUpdate(prevProps, prevState) {
-            const { props } = this;
+            const { props, state } = this;
             if (props.requestedActiveRowIndex !== undefined) {
                 if (props.requestedActiveRowIndex !== this.state.activeRowIndex) {
+                    console.log('activating row: ' + props.requestedActiveRowIndex);
+
                     this.setState({
                         activeRowIndex: props.requestedActiveRowIndex,
                     });
+                    return;
+                }
+            }
+
+            if (props.requestOpenActiveRow) {
+                const { activeEditInfo } = state;
+                if (!activeEditInfo && this._rowTableRef.current) {
+                    console.log('opening active row: ' + this.state.activeRowIndex);
+                    
+                    this._rowTableRef.current.openActiveRow();
+                    return;
                 }
             }
         }
@@ -41,7 +54,9 @@ export function editableRowTable(WrappedTable) {
             if (this._isSaving) {
                 return;
             }
-            if (await this.asyncSaveRowEdit()) {
+            if (await this.asyncSaveRowEdit({
+                reason: 'endRowEdit',
+            })) {
                 this.cancelRowEdit();
                 return true;
             }
@@ -191,7 +206,7 @@ export function editableRowTable(WrappedTable) {
         }
 
 
-        async asyncSaveRowEdit() {
+        async asyncSaveRowEdit(args) {
             if (this._isSaving) {
                 return;
             }
@@ -202,7 +217,8 @@ export function editableRowTable(WrappedTable) {
                 if (asyncOnSaveRowEdit) {
                     this._isSaving = true;
                     try {
-                        if (!await asyncOnSaveRowEdit(activeEditInfo)) {
+                        if (!await asyncOnSaveRowEdit(Object.assign({},
+                            activeEditInfo, args))) {
                             return false;
                         }
                     }
@@ -223,7 +239,9 @@ export function editableRowTable(WrappedTable) {
 
             const { activeEditInfo } = this.state;
             if (activeEditInfo) {
-                this.asyncSaveRowEdit().then((result) => {
+                this.asyncSaveRowEdit({
+                    reason: 'startRowEdit',
+                }).then((result) => {
                     if (result) {
                         this.startRealRowEdit(args);
                     }
@@ -292,7 +310,9 @@ export function editableRowTable(WrappedTable) {
             const { activeEditInfo } = this.state;
             if (activeEditInfo
              && (activeEditInfo.rowIndex !== rowIndex)) {
-                this.asyncSaveRowEdit().then((result) => {
+                this.asyncSaveRowEdit({
+                    reason: 'activateRow',
+                }).then((result) => {
                     if (result) {
                         this.activateRow(rowIndex);
                     }
@@ -410,7 +430,9 @@ export function editableRowTable(WrappedTable) {
                     else {
                         let newFocus = this.getNextCellFocus();
                         if (!newFocus) {
-                            this.asyncSaveRowEdit().then((result) => {
+                            this.asyncSaveRowEdit({
+                                reason: 'Enter',
+                            }).then((result) => {
                                 if (result) {
                                     this.cancelRowEdit();
                                     this._rowTableRef.current.activateRow(
@@ -622,6 +644,12 @@ export function editableRowTable(WrappedTable) {
      * @property {number}   rowIndex
      * @property {object}   rowEditBuffer
      * @property {object[]} cellEditBuffers
+     * @property {string}   reason Possible reasons for asyncOnSaveRowEdit being
+     * called are:
+     * <li>endRowEdit
+     * <li>startRowEdit
+     * <li>activateRow
+     * <li>Enter
      */
 
     /**
@@ -651,6 +679,8 @@ export function editableRowTable(WrappedTable) {
      * ought to be made the active row.
      * @property {EditableRowTable~onActiveRowChanged}  [onActiveRowChanged]    Callback
      * for whenever the active row is changed.
+     * @property {boolean}  [requestOpenActiveRow]  If specified the active row ought
+     * to be opened.
      * @property {EditableRowTable~onStartRowEdit}  onStartRowEdit  Callback for
      * when editing is about to start on a row.
      * @property {EditableRowTable~asyncOnSaveRowEdit}  asyncOnSaveRowEdit  Callback
@@ -669,6 +699,8 @@ export function editableRowTable(WrappedTable) {
 
         requestedActiveRowIndex: PropTypes.number,
         onActiveRowChanged: PropTypes.func,
+
+        requestOpenActiveRow: PropTypes.bool,
 
         onStartRowEdit: PropTypes.func,
         asyncOnSaveRowEdit: PropTypes.func,
