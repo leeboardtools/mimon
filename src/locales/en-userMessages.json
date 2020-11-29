@@ -305,5 +305,19 @@
     "PricedItemSelector-ticker_label": ["", " ", "" ],
 
 
+    "PricesList-PRICE": "Price",
+    "PricesList-MULTIPLIER": "Split",
+
+    "PricesList-label_type": "Type",
+    "PricesList-label_close": "Close",
+    "PricesList-label_open": "Open",
+    "PricesList-label_high": "High",
+    "PricesList-label_low": "Low",
+    "PricesList-label_volume": "Volume",
+
+    "PricesList-newCount_suffix": " new shares",
+    "PricesList-oldCount_suffix": " old shares",
+
+
     "": ""
 }

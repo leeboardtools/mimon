@@ -175,7 +175,7 @@
     "PricedItemManager-modify_type_change": "The priced item could not be modified. The type cannot be changed.",
     "PricedItemManager-modify_no_change_currency_currency": "The currency of a currency priced item cannot be changed.",
 
-    "invalid_multiplier_counts": "The price multiplier is invalid. Price multipliers must have new and old counts both > 0.",
+    "PriceManager-invalid_multiplier_counts": "The price multiplier is invalid. Price multipliers must have new and old counts both > 0.",
     "PriceManager-invalid_multiplier_date": "The price multiplier is invalid, it must have a valid date.",
     "PriceManager-invalid_price_date": "The price is invalid, it must have a valid date.",
     "PriceManager-invalid_price_close": "The price is invalid, it must have a valid closing price.",

@@ -8,9 +8,287 @@ import { columnInfosToColumns,
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import * as PI from '../engine/PricedItems';
 import * as ACE from './AccountingCellEditors';
+import * as P from '../engine/Prices';
+import { YMDDate } from '../util/YMDDate';
+import { getDecimalDefinition } from '../util/Quantities';
+import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor';
+import deepEqual from 'deep-equal';
+import { createCompositeAction } from '../util/Actions';
 
 const allColumnInfoDefs = {};
 
+
+const PriceItemType = {
+    PRICE: { name: 'PRICE', },
+    MULTIPLIER: { name: 'MULTIPLIER', },
+};
+
+
+/**
+ * @typedef {object} PricesList~PriceInfo
+ * @private
+ * @property {PriceDataItem|PriceMultiplierDataItem} priceDataItem
+ * @property {PriceItemType} priceItemType
+ * @property {EngineAccessor} accessor
+ */
+
+
+function getPriceInfo(args) {
+    const { rowEditBuffer, rowEntry } = args;
+    return (rowEditBuffer) 
+        ? rowEditBuffer 
+        : rowEntry;
+}
+
+
+//
+//---------------------------------------------------------
+//
+function getDateCellValue(args) {
+    const { priceDataItem, caller } = getPriceInfo(args);
+    if (priceDataItem) {
+        return {
+            ymdDate: priceDataItem.ymdDate,
+            accessor: caller.props.accessor,
+        };
+    }
+}
+
+
+function saveDateCellValue(args) {
+    const { cellEditBuffer, saveBuffer } = args;
+    if (saveBuffer) {
+        const { newPriceDataItem } = saveBuffer;
+        const { value } = cellEditBuffer;
+        newPriceDataItem.ymdDate = value.ymdDate;
+    }
+}
+
+
+//
+//---------------------------------------------------------
+// PriceItemType
+function getPriceItemTypeCellValue(args) {
+    const { priceItemType } = getPriceInfo(args);
+    return priceItemType;
+}
+
+function savePriceItemTypeCellValue(args) {
+    const { priceItemType } = getPriceInfo(args);
+    const { saveBuffer } = args;
+    if (saveBuffer) {
+        saveBuffer.newPriceItemType = priceItemType;
+    }
+}
+
+function renderPriceItemTypeDisplay(args) {
+    const { priceItemType } = getPriceInfo(args);
+    if (priceItemType) {
+        const { columnInfo } = args;
+        const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+        return <CellSelectDisplay
+            ariaLabel = {ariaLabel}
+            selectedValue = {priceItemType.description}
+            classExtras = {inputClassExtras}
+            size = {inputSize}
+        />;
+    }
+}
+
+function onPriceItemTypeChange(e, args) {
+    const value = e.target.value;
+    const { rowEditBuffer, setRowEditBuffer, } = args;
+    const priceItemType = PriceItemType[value];
+    if (priceItemType && rowEditBuffer) {
+        let { priceDataItem } = rowEditBuffer;
+        switch (priceItemType) {
+        case PriceItemType.PRICE :
+            break;
+        
+        case PriceItemType.MULTIPLIER :
+            if ((typeof priceDataItem.newCount !== 'number')
+             || (typeof priceDataItem.oldCount !== 'number')) {
+                priceDataItem = P.getPriceMultiplierDataItem(priceDataItem, true);
+                priceDataItem.newCount = 2;
+                priceDataItem.oldCount = 1;
+            }
+            break;
+        }
+
+        setRowEditBuffer({
+            priceItemType: priceItemType,
+            priceDataItem: priceDataItem,
+        });
+    }
+}
+
+
+//
+//---------------------------------------------------------
+//
+function renderPriceItemTypeEditor(args) {
+    const { columnInfo, rowEditBuffer, errorMsg, refForFocus } = args;
+    if (rowEditBuffer) {
+        const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+        const items = [];
+        for (let name in PriceItemType) {
+            items.push([name, PriceItemType[name].description]);
+        }
+
+        const { priceItemType } = rowEditBuffer;
+        return <CellSelectEditor
+            selectedValue = {priceItemType.name}
+            items = {items}
+            errorMsg = {errorMsg}
+            ariaLabel = {ariaLabel}
+            classExtras = {inputClassExtras}
+            size = {inputSize}
+            onChange = {(e) => onPriceItemTypeChange(e, args)}
+            ref = {refForFocus}
+        />;
+    }
+}
+
+//
+//---------------------------------------------------------
+//
+function getPriceItemTypeColumnInfo() {
+    return { key: 'priceItemType',
+        header: {
+            label: userMsg('PricesList-label_type'),
+            classExtras: 'header-base priceItemType-base priceItemType-header',
+        },
+        inputClassExtras: 'priceItemType-base priceItemType-input',
+        cellClassName: 'cell-base priceItemType-base priceItemType-cell',
+
+        getCellValue: getPriceItemTypeCellValue,
+        saveCellValue: savePriceItemTypeCellValue,
+        renderDisplayCell: renderPriceItemTypeDisplay,
+        renderEditCell: renderPriceItemTypeEditor,
+    };
+}
+
+//
+//---------------------------------------------------------
+//
+function getPriceValueCellValue(args, priceName, multiplierName) {
+    const { priceDataItem, priceItemType, caller } = getPriceInfo(args);
+    if (priceDataItem) {
+        if (priceItemType === PriceItemType.PRICE) {
+            if (priceName) {
+                const value = priceDataItem[priceName];
+                const { priceQuantityDefinition } = caller.state;
+                let quantityBaseValue = '';
+                if (typeof value === 'number') {
+                    quantityBaseValue = priceQuantityDefinition
+                        .numberToBaseValue(value);
+                }
+                return {
+                    quantityBaseValue: quantityBaseValue,
+                    quantityDefinition: priceQuantityDefinition,
+                };
+            }
+        }
+        else if (priceItemType === PriceItemType.MULTIPLIER) {
+            if (multiplierName) {
+                const value = priceDataItem[multiplierName];
+                const { countQuantityDefinition } = caller.state;
+                let quantityBaseValue = '';
+                if (typeof value === 'number') {
+                    quantityBaseValue = countQuantityDefinition
+                        .numberToBaseValue(value);
+                }
+                return {
+                    quantityBaseValue: quantityBaseValue,
+                    quantityDefinition: countQuantityDefinition,
+                };
+            }
+        }
+    }
+}
+
+function savePriceValueCellValue(args, priceName, multiplierName) {
+    const { priceItemType } = getPriceInfo(args);
+    const { saveBuffer, cellEditBuffer } = args;
+    if (saveBuffer) {
+        let name;
+        switch (priceItemType) {
+        case PriceItemType.PRICE :
+            name = priceName;
+            break;
+        
+        case PriceItemType.MULTIPLIER :
+            name = multiplierName;
+            break;
+        }
+        if (!name) {
+            return;
+        }
+
+        const { value } = cellEditBuffer;
+        const { quantityBaseValue, quantityDefinition } = value;
+        if (typeof quantityBaseValue === 'number') {
+            const { newPriceDataItem } = saveBuffer;
+            newPriceDataItem[name] = quantityDefinition.baseValueToNumber(
+                quantityBaseValue
+            );
+        }
+    }
+}
+
+
+//
+//---------------------------------------------------------
+//
+function renderPriceValueCellDisplay(args, priceName, multiplierName, countSuffix) {
+    const { priceItemType } = getPriceInfo(args);
+    if (priceItemType === PriceItemType.MULTIPLIER) {
+        if (countSuffix) {
+            countSuffix = userMsg(countSuffix);
+            args = Object.assign({}, args, { suffix: countSuffix });
+        }
+    }
+
+
+    return ACE.renderQuantityDisplay(args);
+}
+
+function renderPriceValueCellEditor(args, priceName, multiplierName, countSuffix) {
+    const { priceItemType } = getPriceInfo(args);
+    if (priceItemType === PriceItemType.MULTIPLIER) {
+        if (countSuffix) {
+            countSuffix = userMsg(countSuffix);
+            args = Object.assign({}, args, { suffix: countSuffix });
+        }
+    }
+
+    return ACE.renderQuantityEditor(args);
+}
+
+
+//
+//---------------------------------------------------------
+//
+function getPriceValueColumnInfo(name, multiplierName, countSuffix) {
+    return { key: name,
+        header: {
+            label: userMsg('PricesList-label_' + name),
+            ariaLabel: name,
+            classExtras: 'header-base monetary-base monetary-header',
+        },
+        inputClassExtras: 'monetary-base monetary-input',
+        cellClassName: 'cell-base monetary-base monetary-cell',
+
+        getCellValue: (args) => 
+            getPriceValueCellValue(args, name, multiplierName, countSuffix),
+        saveCellValue: (args) =>
+            savePriceValueCellValue(args, name, multiplierName, countSuffix),
+        renderDisplayCell: (args) =>
+            renderPriceValueCellDisplay(args, name, multiplierName, countSuffix),
+        renderEditCell: (args) =>
+            renderPriceValueCellEditor(args, name, multiplierName, countSuffix),
+    };
+}
 
 
 /**
@@ -20,15 +298,26 @@ export function getPricesListColumnInfoDefs(pricedItemType) {
 
     let columnInfoDefs = allColumnInfoDefs[pricedItemType.name];
     if (!columnInfoDefs) {
+
+        if (!PriceItemType.PRICE.description) {
+            for (let name in PriceItemType) {
+                PriceItemType[name].description = userMsg('PricesList-' + name);
+            }
+        }
+
         columnInfoDefs = {
             date: ACE.getDateColumnInfo({
-                //getCellValue: getDateCellValue,
-                //saveCellValue: saveDateCellValue,
+                getCellValue: getDateCellValue,
+                saveCellValue: saveDateCellValue,
             }),
-            refNum: ACE.getRefNumColumnInfo({
-                //getCellValue: (args) => getSplitCellValue(args, 'refNum', 'value'),
-                //saveCellValue: (args) => saveSplitCellValue(args, 'refNum', 'value'),
-            }),
+            priceItemType: getPriceItemTypeColumnInfo(),
+            close: getPriceValueColumnInfo('close', 'newCount', 
+                'PricesList-newCount_suffix'),
+            open: getPriceValueColumnInfo('open', 'oldCount', 
+                'PricesList-oldCount_suffix'),
+            high: getPriceValueColumnInfo('high'),
+            low: getPriceValueColumnInfo('low'),
+            //volume: getPriceColumnInfo('volume'),
         };
 
         for (let name in columnInfoDefs) {
@@ -53,8 +342,13 @@ export class PricesList extends React.Component {
     constructor(props) {
         super(props);
 
+        this.onPricesAdd = this.onPricesAdd.bind(this);
+        this.onPricesRemove = this.onPricesRemove.bind(this);
+
         this.getRowKey = this.getRowKey.bind(this);
         this.onLoadRows = this.onLoadRows.bind(this);
+
+        this.onActiveRowChanged = this.onActiveRowChanged.bind(this);
 
         this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
 
@@ -74,6 +368,9 @@ export class PricesList extends React.Component {
             getSaveBuffer: this.getSaveBuffer,
             asyncSaveBuffer: this.asyncSaveBuffer,
         });
+
+
+        this._lastYMDDate = new YMDDate().toString();
 
         this._rowTableRef = React.createRef();
         this._modalRef = React.createRef();
@@ -110,14 +407,184 @@ export class PricesList extends React.Component {
         this.state = {
             rowEntries: [],
             columnInfos: columnInfos,
+            priceQuantityDefinition: accessor.getPriceQuantityDefinitionForPricedItem(
+                pricedItemId),
+            countQuantityDefinition: getDecimalDefinition(0),
         };
 
         this._sizingRowEntry = {
-
+            priceDataItem: {
+                ymdDate: '2020-12-31',
+                close: 999999.9999,
+                open: 999999.9999,
+                low: 999999.9999,
+                high: 999999.9999,
+                volume: 99999999999,
+            },
+            priceItemType: PriceItemType.PRICE,
+            caller: this,
         };
 
 
         this.state.columns = columnInfosToColumns(this.state);
+
+        this.updateRowEntries();
+    }
+
+
+    componentDidMount() {
+        const { accessor } = this.props;
+        accessor.on('pricesAdd', this.onPricesAdd);
+        accessor.on('pricesRemove', this.onPricesRemove);
+    }
+
+
+    componentWillUnmount() {
+        const { accessor } = this.props;
+        accessor.off('pricesAdd', this.onPricesAdd);
+        accessor.off('pricesRemove', this.onPricesRemove);
+    }
+
+    
+    componentDidUpdate(prevProps, prevState) {
+
+    }
+
+
+    onPricesAdd(result) {
+        if (result.pricedItemId !== this.props.pricedItemId) {
+            return;
+        }
+
+        this.updateRowEntries(result.newPriceDataItems, 
+            result.newPriceMultiplierDataItems);
+    }
+
+
+    onPricesRemove(result) {
+        if (result.pricedItemId !== this.props.pricedItemId) {
+            return;
+        }
+
+        this.updateRowEntries(undefined, undefined,
+            result.removedPriceDataItems, 
+            result.removedPriceMultiplierDataItems);
+    }
+
+
+    updateRowEntries(newPriceDataItems, newPriceMultiplierDataItems,
+        removedPriceDataItems, removedPriceMultiplierDataItems) {
+
+        if (this._rowTableRef.current) {
+            this._rowTableRef.current.cancelRowEdit();
+        }
+
+        process.nextTick(async () => {
+            const newRowEntries = [];
+            const { accessor, pricedItemId } = this.props;
+
+            let { activeRowIndex } = this.state;
+
+            let activeRowEntry;
+            if ((activeRowIndex >= 0)
+             && (activeRowIndex < this.state.rowEntries.length)) {
+                activeRowEntry = this.state.rowEntries[activeRowIndex];
+            }
+            
+            const priceDateRange = await accessor.asyncGetPriceDateRange(pricedItemId);
+            const multiplierDateRange = await accessor.asyncGetPriceMultiplierDateRange(
+                pricedItemId);
+            
+            let ymdDateA;
+            let ymdDateB;
+            if (priceDateRange) {
+                if (multiplierDateRange) {
+                    ymdDateA = YMDDate.orderYMDDatePair(
+                        priceDateRange[0], multiplierDateRange[0])[0];
+                    ymdDateB = YMDDate.orderYMDDatePair(
+                        priceDateRange[1], multiplierDateRange[1])[1];
+                }
+                else {
+                    ymdDateA = priceDateRange[0];
+                    ymdDateB = priceDateRange[1];
+                }
+            }
+            else if (multiplierDateRange) {
+                ymdDateA = multiplierDateRange[0];
+                ymdDateB = multiplierDateRange[1];
+            }
+
+            if (ymdDateA && ymdDateB) {
+                const getArgs = {
+                    pricedItemId: pricedItemId,
+                    ymdDateA: ymdDateA,
+                    ymdDateB: ymdDateB,
+
+                    // TODO: add ymdDateRef if want current prices...
+                };
+                const dataItems 
+                    = await accessor.asyncGetPriceAndMultiplierDataItemsInDateRange(
+                        getArgs);
+                
+                dataItems.forEach((dataItem) => {
+                    const rowEntry = {
+                        key: dataItem.ymdDate,
+                        priceDataItem: dataItem,
+                        caller: this,
+                    };
+                    if (P.isMultiplier(dataItem)) {
+                        rowEntry.key += 'M';
+                        rowEntry.priceItemType = PriceItemType.MULTIPLIER;
+                    }
+                    else {
+                        rowEntry.priceItemType = PriceItemType.PRICE;
+                    }
+                    newRowEntries.push(rowEntry);
+
+                    if (activeRowEntry && (activeRowEntry.key === rowEntry.key)) {
+                        activeRowEntry = rowEntry;
+                    }
+                });
+            }
+
+
+            const newItemRowEntry = {
+                key: '',
+                priceDataItem: {
+                    ymdDate: this._lastYMDDate,
+                    close: '',
+                },
+                priceItemType: PriceItemType.PRICE,
+                caller: this,
+            };
+            newRowEntries.push(newItemRowEntry);
+
+
+            // Update the row entry indices.
+            for (let i = 0; i < newRowEntries.length; ++i) {
+                newRowEntries[i].rowIndex = i;
+            }
+
+            if (activeRowEntry) {
+                activeRowIndex = activeRowEntry.rowIndex;
+            }
+
+            if ((activeRowIndex === undefined) 
+             || (activeRowIndex >= newRowEntries.length)) {
+                activeRowIndex = newRowEntries.length - 1;
+            }
+            
+            this.setState({
+                activeRowIndex: activeRowIndex,
+                rowEntries: newRowEntries,
+                minLoadedRowIndex: 0,
+                maxLoadedRowIndex: newRowEntries.length - 1,
+            });
+
+            this._rowTableRef.current.makeRowRangeVisible(
+                activeRowIndex, activeRowIndex
+            );
+        });
     }
 
 
@@ -135,6 +602,18 @@ export class PricesList extends React.Component {
     }
 
 
+    onSetColumnWidth(args) {
+        this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
+    }
+
+
+    onActiveRowChanged(rowIndex) {
+        this.setState({
+            activeRowIndex: rowIndex,
+        });
+    }
+
+
     getRowEntry(args) {
         const { rowIndex, isSizeRender } = args;
         return (isSizeRender)
@@ -144,19 +623,140 @@ export class PricesList extends React.Component {
 
 
     startRowEdit(args) {
+        const { rowIndex, rowEditBuffer } = args;
+        const rowEntry = this.state.rowEntries[rowIndex];
+        rowEditBuffer.priceDataItem = Object.assign({}, rowEntry.priceDataItem);
+        rowEditBuffer.priceItemType = rowEntry.priceItemType;
+        rowEditBuffer.accessor = this.props.accessor;
+        rowEditBuffer.caller = this;
+
+        return true;
     }
 
 
     getSaveBuffer(args) {
+        const { rowEditBuffer } = args;
+        return {
+            newPriceDataItem: Object.assign({}, rowEditBuffer.priceDataItem),
+            newPriceItemType: rowEditBuffer.priceItemType,
+        };
     }
 
 
     async asyncSaveBuffer(args) {
+        try {
+            const { rowIndex, cellEditBuffers, saveBuffer } = args;
+
+            // Need to catch known errors...
+            if (this._cellEditorsManager.areAnyErrors()) {
+                return;
+            }
+            if (cellEditBuffers) {
+                for (let buffer of cellEditBuffers) {
+                    if (buffer.errorMsg
+                     || (buffer.value && buffer.value.errorMsg)) {
+                        // The check for buffer.value.errorMsg is a hack to support
+                        // the local error message handling of 
+                        // ACE.renderQuantityEditor()...
+                        return;
+                    }
+                }
+            }
+
+            const rowEntry = this.state.rowEntries[rowIndex];
+            const { priceDataItem, priceItemType } = rowEntry;
+
+            const isNewItem = (rowIndex + 1) >= this.state.rowEntries.length;
+
+            const { newPriceDataItem, newPriceItemType } = saveBuffer;
+            if (isNewItem || (priceItemType !== newPriceItemType)
+             || !deepEqual(priceDataItem, newPriceDataItem)) {
+                const { accessor, pricedItemId } = this.props;
+                const accountingActions = accessor.getAccountingActions();
+
+                let deleteAction;
+                if (!isNewItem) {
+                    if ((priceItemType !== newPriceItemType)
+                    || (priceDataItem.ymdDate !== newPriceDataItem.ymdDate)) {
+                        // If either the type or the date changed we need to delete
+                        // the old price item.
+                        const options = {};
+                        switch (priceItemType) {
+                        case PriceItemType.PRICE :
+                            options.noMultipliers = true;
+                            break;
+                        case PriceItemType.MULTIPLIER :
+                            options.noPrices = true;
+                            break;
+                        }
+
+                        deleteAction = accountingActions.createRemovePricesInDateRange(
+                            pricedItemId,
+                            priceDataItem.ymdDate,
+                            priceDataItem.ymdDate,
+                            options
+                        );
+                    }
+                }
+
+                switch (priceItemType) {
+                case PriceItemType.PRICE :
+                    P.cleanPriceDataItem(priceDataItem);
+                    break;
+                
+                case PriceItemType.MULTIPLIER :
+                    P.cleanPriceMultiplierDataItem(priceDataItem);
+                    break;
+                }
+
+                let newAction = accountingActions.createAddPricesAction(
+                    pricedItemId,
+                    newPriceDataItem
+                );
+
+                if (deleteAction) {
+                    newAction = createCompositeAction({
+                        name: newAction.name,
+                    },
+                    [deleteAction, newAction]);
+                }
+
+                if (newAction) {
+                    await this.asyncApplyAction(args, newAction, isNewItem);
+
+                    if (isNewItem) {
+                        // Advance the active row to the next new price entry...
+                        this.setState({
+                            activeRowIndex: rowIndex + 1,
+                        });
+                    }
+                }
+            }
+        }
+        catch (e) {
+            this.setErrorMsg('priceItemType', e.toString());
+            return;
+        }
+
+        return true;
     }
 
 
-    onSetColumnWidth(args) {
-        this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
+    async asyncApplyAction(args, action, isNewItem) {
+        const { saveBuffer } = args;
+        const { newPriceDataItem } = saveBuffer;
+        const { accessor } = this.props;
+
+        await accessor.asyncApplyAction(action);
+
+        if (isNewItem) {
+            this._lastYMDDate = newPriceDataItem.ymdDate;
+        }
+    }
+
+
+    setErrorMsg(columnInfoKey, msg) {
+        this._cellEditorsManager.setErrorMsg(columnInfoKey, msg);
     }
 
 

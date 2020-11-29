@@ -258,6 +258,16 @@ body {
 }
 
 
+.priceItemType-base {
+  text-align: left;
+}
+
+.priceItemType-cell {
+  flex-grow: 0;
+}
+
+
+
 .button-input {
   border-width: 1px;
   border-radius: 2px;
