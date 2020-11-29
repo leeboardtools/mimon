@@ -9,7 +9,7 @@ import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import * as PI from '../engine/PricedItems';
 import * as ACE from './AccountingCellEditors';
 import * as P from '../engine/Prices';
-import { YMDDate } from '../util/YMDDate';
+import { YMDDate, getYMDDate } from '../util/YMDDate';
 import { getDecimalDefinition } from '../util/Quantities';
 import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor';
 import deepEqual from 'deep-equal';
@@ -483,12 +483,17 @@ export class PricesList extends React.Component {
             const newRowEntries = [];
             const { accessor, pricedItemId } = this.props;
 
-            let { activeRowIndex } = this.state;
+            let { activeRowIndex, rowEntries } = this.state;
+            if ((activeRowIndex + 1) === rowEntries.length) {
+                // If the active row is the last row, it's the 'new transaction' row
+                // and we want to advance to the next new transaction in that case.
+                activeRowIndex = undefined;
+            }
 
             let activeRowEntry;
             if ((activeRowIndex >= 0)
-             && (activeRowIndex < this.state.rowEntries.length)) {
-                activeRowEntry = this.state.rowEntries[activeRowIndex];
+             && (activeRowIndex < rowEntries.length)) {
+                activeRowEntry = rowEntries[activeRowIndex];
             }
             
             const priceDateRange = await accessor.asyncGetPriceDateRange(pricedItemId);
@@ -569,13 +574,15 @@ export class PricesList extends React.Component {
                 activeRowIndex = activeRowEntry.rowIndex;
             }
 
+            const openNewRow = (activeRowIndex === undefined);
             if ((activeRowIndex === undefined) 
              || (activeRowIndex >= newRowEntries.length)) {
                 activeRowIndex = newRowEntries.length - 1;
             }
-            
+
             this.setState({
                 activeRowIndex: activeRowIndex,
+                openNewRow: openNewRow,
                 rowEntries: newRowEntries,
                 minLoadedRowIndex: 0,
                 maxLoadedRowIndex: newRowEntries.length - 1,
@@ -610,6 +617,20 @@ export class PricesList extends React.Component {
     onActiveRowChanged(rowIndex) {
         this.setState({
             activeRowIndex: rowIndex,
+        },
+        () => {
+            const { onSelectPrice } = this.props;
+            if (onSelectPrice) {
+                let selectedPriceDataItem;
+                const { rowEntries } = this.state;
+                if ((rowIndex >= 0) && ((rowIndex + 1) < rowEntries.length)) {
+                    selectedPriceDataItem = rowEntries[rowIndex].priceDataItem;
+                }
+
+                onSelectPrice(selectedPriceDataItem);
+            }
+
+            console.log('activeRowChanged: ' + rowIndex);
         });
     }
 
@@ -630,6 +651,10 @@ export class PricesList extends React.Component {
         rowEditBuffer.accessor = this.props.accessor;
         rowEditBuffer.caller = this;
 
+        this.setState({
+            openNewRow: false,
+        });
+
         return true;
     }
 
@@ -645,7 +670,13 @@ export class PricesList extends React.Component {
 
     async asyncSaveBuffer(args) {
         try {
-            const { rowIndex, cellEditBuffers, saveBuffer } = args;
+            const { rowIndex, cellEditBuffers, saveBuffer, reason } = args;
+
+            if ((reason === 'activateRow') 
+             && (rowIndex === this.state.rowEntries.length - 1)) {
+                // Don't save the new row if we're activating a different row.
+                return true;
+            }
 
             // Need to catch known errors...
             if (this._cellEditorsManager.areAnyErrors()) {
@@ -722,14 +753,15 @@ export class PricesList extends React.Component {
                 }
 
                 if (newAction) {
-                    await this.asyncApplyAction(args, newAction, isNewItem);
 
                     if (isNewItem) {
-                        // Advance the active row to the next new price entry...
+                        // This should force the active row to be the new item...
                         this.setState({
-                            activeRowIndex: rowIndex + 1,
+                            activeRowIndex: -1,
                         });
                     }
+
+                    await this.asyncApplyAction(args, newAction, isNewItem);
                 }
             }
         }
@@ -750,7 +782,8 @@ export class PricesList extends React.Component {
         await accessor.asyncApplyAction(action);
 
         if (isNewItem) {
-            this._lastYMDDate = newPriceDataItem.ymdDate;
+            this._lastYMDDate = getYMDDate(newPriceDataItem.ymdDate).addDays(1)
+                .toString();
         }
     }
 
@@ -796,6 +829,8 @@ export class PricesList extends React.Component {
                 requestedActiveRowIndex = {state.activeRowIndex}
                 onActiveRowChanged = {this.onActiveRowChanged}
 
+                requestOpenActiveRow = {state.openNewRow}
+
                 onStartRowEdit = {this._cellEditorsManager.onStartRowEdit}
                 asyncOnSaveRowEdit = {this._cellEditorsManager.asyncOnSaveRowEdit}
                 onCancelRowEdit = {this._cellEditorsManager.onCancelRowEdit}
@@ -816,6 +851,7 @@ PricesList.propTypes = {
     accessor: PropTypes.object.isRequired,
     pricedItemId: PropTypes.number.isRequired,
     contextMenuItems: PropTypes.array,
+    onSelectPrice: PropTypes.func,
     onChooseContextMenuItem: PropTypes.func,
     columns: PropTypes.arrayOf(PropTypes.string),
     children: PropTypes.any,

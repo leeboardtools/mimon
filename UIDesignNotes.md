@@ -483,4 +483,13 @@ Common menus:
     - Red
     - Enclose in parenthesis
     - Italicized?
+
+- Add test for PriceManager.asyncGetPriceAndMultiplierDataItemsInDateRange()
+
+- PricesList
+    - Menu commands
+        - Delete price
+        - Get Latest Price
+        - Get Historical Prices
     
+    - Changing type not enabling/disabling the proper editors.

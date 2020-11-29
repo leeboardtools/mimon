@@ -318,6 +318,9 @@
     "PricesList-newCount_suffix": " new shares",
     "PricesList-oldCount_suffix": " old shares",
 
+    "PricesListHandler-removePrice": "Delete Price",
+    "PricesListHandler-updatePrices": "Retrieve Current Prices",
+    "PricesListHandler-getHistoricalPrices": "Retrieve Historical Prices",
 
     "": ""
 }

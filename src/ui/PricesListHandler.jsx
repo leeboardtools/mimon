@@ -2,6 +2,7 @@ import React from 'react';
 import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { PricesList } from './PricesList';
+import * as P from '../engine/Prices';
 
 
 function getUndoRedoInfo(tabEntry) {
@@ -23,49 +24,96 @@ export class PricesListHandler extends MainWindowHandlerBase {
     constructor(props) {
         super(props);
 
+        this.onSetActivePrice = this.onSetActivePrice.bind(this);
+        this.onRemovePrice = this.onRemovePrice.bind(this);
+        this.onUpdatePrices = this.onUpdatePrices.bind(this);
+        this.onGetHistoricalPrices = this.onGetHistoricalPrices.bind(this);
+
         this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
+    }
+
+
+    onSetActivePrice(tabId, priceDataItem) {
+        this.setTabIdState(tabId, {
+            activePriceDataItem: priceDataItem,
+        },
+        () => {
+            this.setTabIdState(tabId, {
+                dropdownInfo: this.getTabDropdownInfo(tabId),
+            });
+        });
+    }
+
+
+    onRemovePrice(tabId) {
+        const state = this.getTabIdState(tabId);
+        if (state) {
+            const { pricedItemId, activePriceDataItem } = state;
+            if (activePriceDataItem) {
+                process.nextTick(async () => {
+                    const { accessor } = this.props;
+                    const accountingActions = accessor.getAccountingActions();
+
+                    const options = {};
+                    if (P.isPrice(activePriceDataItem)) {
+                        options.noMultipliers = true;
+                    }
+                    else if (P.isMultiplier(activePriceDataItem)) {
+                        options.noPrices = true;
+                    }
+                    else {
+                        return;
+                    }
+
+                    const action = accountingActions.createRemovePricesInDateRange(
+                        pricedItemId, 
+                        activePriceDataItem.ymdDate, 
+                        activePriceDataItem.ymdDate, 
+                        options);
+                    accessor.asyncApplyAction(action)
+                        .catch((e) => {
+                            this.setErrorMsg(e);
+                        });
+                });
+            }
+        }
+    }
+
+    
+    onUpdatePrices(tabId) {
+
+    }
+
+
+    onGetHistoricalPrices(tabId) {
+
     }
     
 
     getTabDropdownInfo(tabId) {
-        //let activeSplitInfo;
+        let activePriceDataItem;
         const state = this.getTabIdState(tabId);
         if (state) {
-            //activeSplitInfo = state.activeSplitInfo;
+            activePriceDataItem = state.activePriceDataItem;
         }
         const menuItems = [
-            /*
-            { id: 'removeTransaction',
-                label: userMsg('AccountRegisterHandler-removeTransaction'),
-                disabled: !activeSplitInfo,
-                onChooseItem: () => this.onRemoveTransaction(tabId),
+            { id: 'removePrice',
+                label: userMsg('PricesListHandler-removePrice'),
+                disabled: !activePriceDataItem,
+                onChooseItem: () => this.onRemovePrice(tabId),
             },
             {},
-            { id: 'duplicateTransaction',
-                label: userMsg('AccountRegisterHandler-duplicateTransaction'),
-                disabled: !activeSplitInfo,
-                onChooseItem: () => this.onDuplicateTransaction(tabId),
+            { id: 'updatePrices',
+                label: userMsg('PricesListHandler-updatePrices'),
+                disabled: !activePriceDataItem,
+                onChooseItem: () => this.onUpdatePrices(tabId),
             },
-            { id: 'copyTransaction',
-                label: userMsg('AccountRegisterHandler-copyTransaction'),
-                disabled: !activeSplitInfo,
-                onChooseItem: () => this.onCopyTransaction(tabId),
+            { id: 'getHistoricalPrices',
+                label: userMsg('PricesListHandler-getHistoricalPrices'),
+                disabled: !activePriceDataItem,
+                onChooseItem: () => this.onGetHistoricalPrices(tabId),
             },
-            { id: 'pasteTransaction',
-                label: userMsg('AccountRegisterHandler-pasteTransaction'),
-                disabled: !this.canPaste(tabId),
-                onChooseItem: () => this.onPasteTransaction(tabId),
-            },
-            {},
-            { id: 'reconcileAccount',
-                label: userMsg('AccountsListHandler-reconcileAccount'),
-                onChooseItem: () => this.onReconcileAccount(tabId),
-            },
-            */
-
-            // TODO:
-            // 'clearNewTransaction - resets the new transaction...
         ];
         return {
             items: menuItems,
@@ -118,14 +166,10 @@ export class PricesListHandler extends MainWindowHandlerBase {
         return <PricesList
             accessor = {accessor}
             pricedItemId = {pricedItemId}
-            //onSelectSplit = {(splitInfo) =>
-            //    this.onSelectSplit(tabEntry.tabId, splitInfo)}
-            //onOpenRegisterForTransactionSplit = {
-            //    this.onOpenRegisterForTransactionSplit
-            //}
+            onSelectPrice = {(priceDataItem) =>
+                this.onSetActivePrice(tabEntry.tabId, priceDataItem)}
             contextMenuItems={contextMenuItems}
             refreshUndoMenu = {this.refreshUndoMenu}
-            //eventEmitter = {this._eventEmitter}
             openArgs = {tabEntry.openArgs}
             ref = {pricesListRef}
         />;
