@@ -83,7 +83,7 @@ export function cleanSpaces(string) {
         if (isNewString) {
             return String.fromCodePoint(...newStringCodePoints);
         }
-
-        return string;
     }
+
+    return string;
 }

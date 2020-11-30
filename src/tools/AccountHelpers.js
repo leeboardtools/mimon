@@ -305,11 +305,11 @@ export function getDefaultSplitAccountId(accessor, accountDataItem,
     const rootAccountId = accessor.getCategoryRootAccountId(category);
     const accountIds = accessor.getAccountIdsWithTags(tags, rootAccountId);
     if (accountIds && accountIds.length) {
-        const name = cleanSpaces(accountDataItem.name).toUpperCase();
+        const name = cleanSpaces(accountDataItem.name || '').toUpperCase();
 
         for (let searchAccountId of accountIds) {
             if (crawlAccountTree(accessor, searchAccountId, (accountDataItem) => {
-                if (cleanSpaces(accountDataItem.name).toUpperCase() === name) {
+                if (cleanSpaces(accountDataItem.name || '').toUpperCase() === name) {
                     accountId = accountDataItem.id;
                     return true;
                 }
