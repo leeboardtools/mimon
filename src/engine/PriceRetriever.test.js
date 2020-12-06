@@ -33,78 +33,79 @@ function cleanupPrices(prices) {
     });
 }
 
+const AAPL_Split = 1 / 4;
 const AAPL = [
     {
         ymdDate: new YMDDate('2019-10-02T04:00:00.000Z'),
-        open: 223.059998,
-        high: 223.580002,
-        low: 217.929993,
-        close: 218.960007,
-        // adjClose: 218.960007,
-        volume: 34612300,
+        open: 223.059998 * AAPL_Split,
+        high: 223.580002 * AAPL_Split,
+        low: 217.929993 * AAPL_Split,
+        close: 218.960007 * AAPL_Split,
+        // adjClose: 218.960007 * AAPL_Split,
+        volume: 34612300 / AAPL_Split,
     },
     {
         ymdDate: new YMDDate('2019-10-01T04:00:00.000Z'),
-        open: 225.070007,
-        high: 228.220001,
-        low: 224.199997,
-        close: 224.589996,
-        // adjClose: 224.589996,
-        volume: 34805800,
+        open: 225.070007 * AAPL_Split,
+        high: 228.220001 * AAPL_Split,
+        low: 224.199997 * AAPL_Split,
+        close: 224.589996 * AAPL_Split,
+        // adjClose: 224.589996 * AAPL_Split,
+        volume: 34805800 / AAPL_Split,
     },
     {
         ymdDate: new YMDDate('2019-09-30T04:00:00.000Z'),
-        open: 220.899994,
-        high: 224.580002,
-        low: 220.789993,
-        close: 223.970001,
-        // adjClose: 223.970001,
-        volume: 25977400,
+        open: 220.899994 * AAPL_Split,
+        high: 224.580002 * AAPL_Split,
+        low: 220.789993 * AAPL_Split,
+        close: 223.970001 * AAPL_Split,
+        // adjClose: 223.970001 * AAPL_Split,
+        volume: 25977400 / AAPL_Split,
     },
     {
         ymdDate: new YMDDate('2019-09-27T04:00:00.000Z'),
-        open: 220.539993,
-        high: 220.960007,
-        low: 217.279999,
-        close: 218.820007,
-        // adjClose: 218.820007,
-        volume: 25352000,
+        open: 220.539993 * AAPL_Split,
+        high: 220.960007 * AAPL_Split,
+        low: 217.279999 * AAPL_Split,
+        close: 218.820007 * AAPL_Split,
+        // adjClose: 218.820007 * AAPL_Split,
+        volume: 25352000 / AAPL_Split,
     },
     {
         ymdDate: new YMDDate('2019-09-26T04:00:00.000Z'),
-        open: 220,
-        high: 220.940002,
-        low: 218.830002,
-        close: 219.889999,
-        // adjClose: 219.889999,
-        volume: 18833500,
+        open: 220 * AAPL_Split,
+        high: 220.940002 * AAPL_Split,
+        low: 218.830002 * AAPL_Split,
+        close: 219.889999 * AAPL_Split,
+        // adjClose: 219.889999 * AAPL_Split,
+        volume: 18833500 / AAPL_Split,
     },
     {
         ymdDate: new YMDDate('2019-09-25T04:00:00.000Z'),
-        open: 218.550003,
-        high: 221.5,
-        low: 217.139999,
-        close: 221.029999,
-        // adjClose: 221.029999,
-        volume: 21903400,
+        open: 218.550003 * AAPL_Split,
+        high: 221.5 * AAPL_Split,
+        low: 217.139999 * AAPL_Split,
+        close: 221.029999 * AAPL_Split,
+        // adjClose: 221.029999 * AAPL_Split,
+        volume: 21903400 / AAPL_Split,
     },
     {
         ymdDate: new YMDDate('2019-09-24T04:00:00.000Z'),
-        open: 221.029999,
-        high: 222.490005,
-        low: 217.190002,
-        close: 217.679993,
-        // adjClose: 217.679993,
-        volume: 31190800,
+        open: 221.029999 * AAPL_Split,
+        high: 222.490005 * AAPL_Split,
+        low: 217.190002 * AAPL_Split,
+        close: 217.679993 * AAPL_Split,
+        // adjClose: 217.679993 * AAPL_Split,
+        volume: 31190800 / AAPL_Split,
     },
     {
         ymdDate: new YMDDate('2019-09-23T04:00:00.000Z'),
-        open: 218.949997,
-        high: 219.839996,
-        low: 217.649994,
-        close: 218.720001,
-        // adjClose: 218.720001,
-        volume: 19165500,
+        open: 218.949997 * AAPL_Split,
+        high: 219.839996 * AAPL_Split,
+        low: 217.649994 * AAPL_Split,
+        close: 218.720001 * AAPL_Split,
+        // adjClose: 218.720001 * AAPL_Split,
+        volume: 19165500 / AAPL_Split,
     }
 ];
 AAPL.sort((a, b) => YMDDate.compare(a.ymdDate, b.ymdDate));
@@ -288,7 +289,7 @@ function cleanPricesResult(prices) {
 
 
 let isTestEnabled;
-//isTestEnabled = true;
+isTestEnabled = true;
 
 
 //
@@ -317,6 +318,7 @@ test('asyncGetPricesForTicker', async () => {
     let ref;
 
     result = await asyncGetPricesForTicker('AAPL', '2019-10-01');
+    const ymdDate = getYMDDate('2019-10-01');
     cleanPricesResult(result);
     ref = getItemsInRange(AAPL, '2019-10-01');
     expect(result).toEqual(ref);
@@ -373,7 +375,6 @@ test('asyncUpdatePricedItemPrices', async () => {
         ticker: 'AAPL',
         onlineUpdateType: 'YAHOO_FINANCE',
     };
-    pricedItemManager.isDebug = true;
     const pricedItemAAPL = (await pricedItemManager.asyncAddPricedItem(optionsAAPL))
         .newPricedItemDataItem;
     const localIdAAPL = pricedItemAAPL.id;

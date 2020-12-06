@@ -411,6 +411,7 @@ Common menus:
     - Accounts List
         - Ability to show/hide columns, reorder them.
         - Custom Account Lists
+        - Listen on prices for market value updates.
 
     - Priced Item List
         - Custom Priced Item Lists
@@ -424,11 +425,18 @@ Common menus:
 
 
     - Prices List
-        - Lists latest prices for each security/mutual fund
+        - Lists prices for each security/mutual fund
+        - Menu commands
+            - Get Latest Price
+            - Get Historical Prices
+        
+        - Changing type not enabling/disabling the proper editors.
 
-    - Historical Prices List
-        - Select a security/mutual-fund
-        - Lists historical prices for security/mutual-fund
+    - Price Retrieval Window
+        - Update current prices
+        - Retrieve historical prices
+            - Choose tickers
+            - Enter date range
 
     - Lots List
         - Hierarchy, by security (priced items)
@@ -438,6 +446,9 @@ Common menus:
     - Account Register
         - Auto-complete for description
         - Copy, Paste, Duplicate transaction actions
+        - Actually add row to the clipboard when Copy Transaction is chosen.
+            - Both HTML and text.
+            - For HTML include the split drop down???
             
         - Multi-row support?
 
@@ -445,6 +456,9 @@ Common menus:
     - Get Sub-menus working in MenuList, etc.
         - View Columns menus.
         - Add zoom in/out to main menu.
+    
+
+    - Reconciler
     
 
 - RowTable To Do:
@@ -470,12 +484,6 @@ Common menus:
     - By this mean if you turn off lots, then buying and selling securities
     does not use lots.
 
-- AccountRegister
-    - Auto-complete
-    - Actually add row to the clipboard when Copy Transaction is chosen.
-        - Both HTML and text.
-        - For HTML include the split drop down???
-    
 
 - Set default interest, dividends, fees accounts in account editing.
 
@@ -483,13 +491,7 @@ Common menus:
     - Red
     - Enclose in parenthesis
     - Italicized?
+    - Which one is user option, should be able to use CSS classes.
 
-- Add test for PriceManager.asyncGetPriceAndMultiplierDataItemsInDateRange()
-
-- PricesList
-    - Menu commands
-        - Delete price
-        - Get Latest Price
-        - Get Historical Prices
-    
-    - Changing type not enabling/disabling the proper editors.
+- TickerSelector:
+    - Need multi-column selector/list box.

@@ -13,6 +13,7 @@ import { PricedItemEditorHandler } from './PricedItemEditorHandler';
 import * as PI from '../engine/PricedItems';
 import { ErrorBoundary } from '../util-ui/ErrorBoundary';
 import { PricesListHandler } from './PricesListHandler';
+import { PriceRetrieverWindowHandler } from './PriceRetrieverWindowHandler';
 
 
 
@@ -70,29 +71,35 @@ export class MainWindow extends React.Component {
         this._accountsListHandler = new AccountsListHandler(handlerArgs);
 
         this._accountRegisterHandler = new AccountRegisterHandler(handlerArgs);
+        this._accountRegistersByAccountId = new Map();
 
         this._accountEditorHandler = new AccountEditorHandler(handlerArgs);
+        this._accountEditorsByAccountId = new Map();
 
 
         this._pricedItemsListHandler = new PricedItemsListHandler(handlerArgs);
 
+
         this._pricedItemEditorHandler = new PricedItemEditorHandler(handlerArgs);
+        this._pricedItemEditorsByPricedItemId = {};
+        for (const name in PI.PricedItemType) {
+            this._pricedItemEditorsByPricedItemId[name] = new Map();
+        }
+
 
         this._pricesListHandler = new PricesListHandler(handlerArgs);
-        
+        this._pricesListsByPricedItemId = new Map();
+
+
+        this._priceRetrieverWindowHandler = new PriceRetrieverWindowHandler(handlerArgs);
+
         
         this.state = {
             tabEntries: [],
             sharedState: {},
         };
         this._tabItemsById = new Map();
-        this._accountRegistersByAccountId = new Map();
-        this._accountEditorsByAccountId = new Map();
-        this._pricedItemEditorsByPricedItemId = {};
-        for (const name in PI.PricedItemType) {
-            this._pricedItemEditorsByPricedItemId[name] = new Map();
-        }
-        this._pricesListsByPricedItemId = new Map();
+
 
         const masterAccountsList = this._accountsListHandler.createTabEntry(
             'masterAccountsList'
@@ -293,7 +300,7 @@ export class MainWindow extends React.Component {
 
 
     onUpdatePrices() {
-        this.onSetErrorMsg('onUpdatePrices is not yet implemented.');
+        this.openPriceRetrieverWindow();
     }
 
 
@@ -464,6 +471,20 @@ export class MainWindow extends React.Component {
     }
 
 
+    openPriceRetrieverWindow() {
+        const tabId = 'pricedRetrieverWindow';
+        if (!this._tabItemsById.has(tabId)) {
+            const tabEntry = this._priceRetrieverWindowHandler.createTabEntry(
+                tabId);
+            this.addTabEntry(tabEntry, tabId);
+        }
+
+        this.setState({
+            activeTabId: tabId,
+        });
+    }
+
+
     onOpenTab(type, ...args) {
         switch (type) {
         case 'reconcileAccount' :
@@ -504,6 +525,10 @@ export class MainWindow extends React.Component {
         
         case 'pricesList' :
             this.openPricesList(...args);
+            break;
+        
+        case 'priceRetrieverWindow' :
+            this.openPriceRetrieverWindow(...args);
             break;
     
         default :
@@ -609,13 +634,6 @@ export class MainWindow extends React.Component {
                 label: userMsg('MainWindow-updatePrices'),
                 onChooseItem: this.onUpdatePrices,
             },
-            /*
-            { id: 'viewPricesList', 
-                label: userMsg('MainWindow-viewPricesList'),
-                disabled: !this._tabItemsById.get('pricesList'),
-                onChooseItem: () => this.onOpenTab('pricesList'),
-            },
-            */
             {},
             { id: 'viewAccountsList', 
                 label: userMsg('MainWindow-viewAccountsList'),

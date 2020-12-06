@@ -305,6 +305,20 @@
     "PricedItemSelector-ticker_label": ["", " ", "" ],
 
 
+    "PriceRetrieverWindow-title": "Retrieve Online Prices",
+    "PriceRetrieverWindow-retrieve_button": "Retrieve Prices",
+    "PriceRetrieverWindow-cancel_button": "Cancel",
+    "PriceRetrieverWindow-select_all": "Select All",
+    "PriceRetrieverWindow-select_none": "Select None",
+    "PriceRetrieverWindow-select_defaults": "Use Defaults",
+    "PriceRetrieverWindow-from_date": "From Date:",
+    "PriceRetrieverWindow-to_date": "To Date:",
+    "PriceRetrieverWindow-tickers_label": "Tickers to Retrieve",
+
+
+    "PriceRetrieverWindowHandler-title": "Online Prices",
+
+
     "PricesList-PRICE": "Price",
     "PricesList-MULTIPLIER": "Split",
 
@@ -319,8 +333,8 @@
     "PricesList-oldCount_suffix": " old shares",
 
     "PricesListHandler-removePrice": "Delete Price",
-    "PricesListHandler-updatePrices": "Retrieve Current Prices",
-    "PricesListHandler-getHistoricalPrices": "Retrieve Historical Prices",
+    "PricesListHandler-updatePrices": "Retrieve Prices",
+
 
     "": ""
 }

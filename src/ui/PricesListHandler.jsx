@@ -27,7 +27,6 @@ export class PricesListHandler extends MainWindowHandlerBase {
         this.onSetActivePrice = this.onSetActivePrice.bind(this);
         this.onRemovePrice = this.onRemovePrice.bind(this);
         this.onUpdatePrices = this.onUpdatePrices.bind(this);
-        this.onGetHistoricalPrices = this.onGetHistoricalPrices.bind(this);
 
         this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
@@ -82,14 +81,9 @@ export class PricesListHandler extends MainWindowHandlerBase {
 
     
     onUpdatePrices(tabId) {
-
+        this.openTab('priceRetrieverWindow');
     }
 
-
-    onGetHistoricalPrices(tabId) {
-
-    }
-    
 
     getTabDropdownInfo(tabId) {
         let activePriceDataItem;
@@ -108,11 +102,6 @@ export class PricesListHandler extends MainWindowHandlerBase {
                 label: userMsg('PricesListHandler-updatePrices'),
                 disabled: !activePriceDataItem,
                 onChooseItem: () => this.onUpdatePrices(tabId),
-            },
-            { id: 'getHistoricalPrices',
-                label: userMsg('PricesListHandler-getHistoricalPrices'),
-                disabled: !activePriceDataItem,
-                onChooseItem: () => this.onGetHistoricalPrices(tabId),
             },
         ];
         return {

@@ -280,3 +280,23 @@ body {
 }
 
 
+.PriceRetrieverWindow-ticker-select-button {
+  margin: 1rem;
+  width: 10rem;
+  vertical-align: middle;
+  justify-items: center;
+}
+
+
+.ticker-base {
+  text-align: left;
+}
+
+
+.failed_msg {
+  color: darkred;
+}
+
+.success_msg {
+  color: darkgreen;
+}

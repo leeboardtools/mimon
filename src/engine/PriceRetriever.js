@@ -86,7 +86,8 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
         fromYMDDate = toYMDDate.addDays(-4);
     }
 
-    const to = new Date(toYMDDate.valueOf() + 1000 * 60 * 60 * 12);
+    // Adding 20 hours to make sure the market is closed...
+    const to = new Date(toYMDDate.valueOf() + 1000 * 60 * 60 * 20);
     const from = fromYMDDate.toDate();
 
     const retrieveArgs = {
@@ -103,14 +104,13 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
     // The results from historical() are from newest to oldest, but our default
     // price handler works best if the prices are from oldest to newest, so we reverse
     // their insertion.
-    let priceDataItemCount = 0;
     let index = results.length - 1;
     const priceDataItems = [];
     for (let i = 0; i < results.length; ++i) {
         const result = results[i];
     
         const ymdDate = new YMDDate(result.date);
-        if ((priceDataItemCount > 0) && (YMDDate.compare(ymdDate, ymdDateA) < 0)) {
+        if ((i > 0) && (YMDDate.compare(ymdDate, ymdDateA) < 0)) {
             // This test is for the case where we stuffed in extra days before to work
             // around weekends and holidays.
             break;
@@ -150,10 +150,12 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
             priceDataItem.newCount = result.numerator;
             priceDataItem.oldCount = result.denominator;
         }
+        else {
+            continue;
+        }
 
         priceDataItems[index] = priceDataItem;
         --index;
-        ++priceDataItemCount;
     }
 
     if (index >= 0) {
@@ -165,16 +167,32 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
 
 /**
  * @typedef {object} PriceRetrieverSuccessfulEntry
- * @property {number}   pricedItemId
+ * @property {number}   [pricedItemId] Only used if 
+ * {@link asyncGetUpdatedPricedItemPrices} was called.
  * @property {string}   ticker
  * @property {PriceDataItem[]}  prices
  */
 
 /**
  * @typedef {object} PriceRetrieverFailedEntry
- * @property {number}   pricedItemId
+ * @property {number}   [pricedItemId] Only used if 
+ * {@link asyncGetUpdatedPricedItemPrices} was called.
  * @property {string}   ticker
  * @property {Error}    err
+ */
+
+
+/**
+ * @typedef {object} PriceRetrieverCallbackArgs
+ * @property {number} index
+ * @property {number} processedPricedItemsCount
+ * @property {number}   [pricedItemId] Only used if 
+ * {@link asyncGetUpdatedPricedItemPrices} was called.
+ * @property {string} ticker
+ * @property {Price[]} prices
+ * @property {Error} [err]
+ * @property {boolean} isCancel    Set this to <code>true</code> if further processing 
+ * should be aborted.
  */
 
 
@@ -200,8 +218,8 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
 
 
 /**
- * @typedef {object}    PriceRetrieverOptions
- * @property {PriceManager} priceManager    The price manager, required.
+ * @typedef {object}    PriceRetrieverPricedItemOptions
+ * @property {PricedItemManager} pricedItemManager    The price item manager, required.
  * @property {number[]} pricedItemIds    Array of ids of the priced items whose 
  * prices are to be retrieved,
  * @property {YMDDate}    [ymdDateA]    One date of the date range.
@@ -211,8 +229,6 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
  * after prices are retrieved for a priced item.
  * @property {number}   [msecDelay] Optional number of milliseconds to delay between 
  * calls to the price retriever.
- * @property {boolean}  [isElectron=false]  Set to <code>true</code> if this is 
- * called from Electron.
  */
 
 /**
@@ -225,19 +241,19 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
  */
 
 /**
- * The main price retrieval function.
- * @param {PriceRetrieverOptions} options
+ * The main price retrieval function for priced item based retrieval.
+ * @param {PriceRetrieverPricedItemOptions} options
  * @returns {PriceRetrieverResult}
  */
 export async function asyncGetUpdatedPricedItemPrices(options) {
-    let { pricedItemManager, pricedItemIds, ymdDateA, 
-        ymdDateB, callback, msecDelay } = options;
+    let { pricedItemManager, pricedItemIds, } = options;
 
     if (!Array.isArray(pricedItemIds)) {
         pricedItemIds = [pricedItemIds];
     }
 
     const pricedItems = [];
+    const tickers = [];
     pricedItemIds.forEach((pricedItemId) => {
         const pricedItemDataItem 
             = pricedItemManager.getPricedItemDataItemWithId(pricedItemId);
@@ -260,44 +276,101 @@ export async function asyncGetUpdatedPricedItemPrices(options) {
         }
 
         pricedItems.push(pricedItem);
+        tickers.push(symbol);
     });
+
+    let { callback } = options;
+    if (callback) {
+        callback = (callbackArgs) => {
+            const myCallbackArgs = Object.assign({}, callbackArgs, {
+                pricedItemId: pricedItems[callbackArgs.index].id,
+            });
+            options.callback(myCallbackArgs);
+            callbackArgs.isCancel = myCallbackArgs.isCancel;
+        };
+    }
+
+    const tickerOptions = Object.assign({}, options, {
+        tickers: tickers,
+        entryCallback: (i, entry) => {
+            entry.pricedItemId = pricedItems[i].id;
+        },
+        callback: callback,
+    });
+
+    return asyncGetUpdatedTickerPrices(tickerOptions);
+}
+
+
+/**
+ * @typedef {object}    PriceRetrieverTickerOptions
+ * @property {string[]} tickers    The tickers to be retrieved.
+ * @property {YMDDate}    [ymdDateA]    One date of the date range.
+ * @property {YMDDate}    [ymdDateB=ymdDateA] The other date of the date range. If 
+ * both ymdDateA and ymdDateB are left out then the current date is used.
+ * @property {PriceRetrieverCallback}   [callback]  Optional callback function called 
+ * after prices are retrieved for a priced item.
+ * @property {number}   [msecDelay] Optional number of milliseconds to delay between 
+ * calls to the price retriever.
+ */
+
+/**
+ * The main price retrieval function for arrays of ticker retrieval.
+ * @param {PriceRetrieverTickerOptions} options
+ * @returns {PriceRetrieverResult}
+ */
+export async function asyncGetUpdatedTickerPrices(options) {
+    let { tickers, ymdDateA, ymdDateB, entryCallback,
+        callback, msecDelay } = options;
+
+    if (!Array.isArray(tickers)) {
+        tickers = [tickers];
+    }
 
     const successfulEntries = [];
     const failedEntries = [];
     const callbackArgs = {
-        totalPricedItemsCount: pricedItems.length,
+        totalPricedItemsCount: tickers.length,
         successfulEntries: successfulEntries,
         failedEntries: failedEntries,
     };
 
     let isCancelled = false;
 
-    for (let i = 0; i < pricedItems.length; ++i) {
-        const pricedItem = pricedItems[i];
-        const { ticker } = pricedItem;
+    for (let i = 0; i < tickers.length; ++i) {
+        const ticker = tickers[i];
 
         let prices;
         let err;
         try {
-            prices = await asyncGetPricesForTicker(pricedItem.ticker, ymdDateA, ymdDateB, 
+            prices = await asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, 
                 options);
-            if (msecDelay && (msecDelay > 0) && (i + 1 < pricedItems.length)) {
+            if (msecDelay && (msecDelay > 0) && (i + 1 < tickers.length)) {
                 await new Promise((resolve, reject) => {
                     setTimeout(() => resolve(), msecDelay);
                 });
             }
 
-            successfulEntries.push(
-                { pricedItemId: pricedItem.id, ticker: ticker, prices: prices, });
+            const entry = { ticker: ticker, prices: prices, };
+            if (entryCallback) {
+                entryCallback(i, entry);
+            }
+
+            successfulEntries.push(entry);
         }
         catch (e) {
-            failedEntries.push({ pricedItemId: pricedItem.id, ticker: ticker, err: e, });
+            const entry = { ticker: ticker, prices: prices, };
+            if (entryCallback) {
+                entryCallback(i, entry);
+            }
+            failedEntries.push(entry);
             err = e;
         }
 
         if (callback) {
+            callbackArgs.index = i;
             callbackArgs.processedPricedItemsCount = i + 1;
-            callbackArgs.pricedItemId = pricedItem.id;
+            callbackArgs.ticker = ticker;
             callbackArgs.prices = prices;
             callbackArgs.err = err;
             callbackArgs.isCancel = false;
