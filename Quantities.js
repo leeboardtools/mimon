@@ -488,14 +488,26 @@ class QuantityDefinition {
     }
 
     /**
-     * Returns a text representation of the numerical value of a quantity. The 
-     * text represntation can be parsed back via 
+     * Returns a text representation of a base value. The text represntation can 
+     * be parsed back via 
      * {@link QuantityDefinition#fromValueText} into an equivalent quantity.
      * @param {number} baseValue
      * @returns {string}
      */
     baseValueToValueText(baseValue) {
         throw Error('QuantityDefinition.baseValueToValueText() - Abstract method!');
+    }
+
+
+    /**
+     * Returns a text representation of a number. The text represntation can 
+     * be parsed back via 
+     * {@link QuantityDefinition#fromValueText} into an equivalent quantity.
+     * @param {number} number
+     * @returns {string}
+     */
+    numberToValueText(number) {
+        return this.baseValueToValueText(this.numberToBaseValue(number));
     }
 
     /**
