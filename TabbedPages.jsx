@@ -33,6 +33,10 @@ export class TabbedPages extends React.Component {
              || (tabsHeight !== this.state.tabsHeight)) {
                 let bodyHeight = clientHeight - tabsHeight;
 
+                // FIX ME! This is a definite hack, 7 is what makes the page + tabs
+                // line up with the boundaries of the parent.
+                bodyHeight -= 7;
+
                 this.setState({
                     clientWidth: clientWidth,
                     clientHeight: clientHeight,
@@ -174,7 +178,7 @@ export class TabbedPages extends React.Component {
             ));
         });
 
-        let className = 'container-fluid pl-0 pr-0';
+        let className = 'container-fluid p-0';
         const { bodyClassExtras } = this.props;
         if (bodyClassExtras) {
             className += ' ' + bodyClassExtras;
@@ -204,7 +208,7 @@ export class TabbedPages extends React.Component {
             tabs = onPostRenderTabs(tabs);
         }
 
-        let className = 'container-fluid pl-1 pr-1'
+        let className = 'container-fluid p-1'
             + ' d-flex flex-column h-100 overflow-hidden';
         if (classExtras) {
             className += ' ' + classExtras;
