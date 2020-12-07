@@ -288,8 +288,25 @@ body {
 }
 
 
+.TickerSelector {
+  max-height: inherit;
+  height: inherit;
+  overflow: scroll;
+}
+
 .ticker-base {
   text-align: left;
+  left: 1rem;
+}
+.ticker-checked::before {
+    position: absolute;
+    left: -.4rem;
+    content: '✓';
+    font-weight: 600;
+}
+
+.h-inherit {
+  height: inherit;
 }
 
 

@@ -63,6 +63,12 @@ export class PriceRetrieverWindow extends React.Component {
     constructor(props) {
         super(props);
 
+        this.checkLayout = this.checkLayout.bind(this);
+        this._mainRef = React.createRef();
+        this._headerRef = React.createRef();
+        this._controlsRef = React.createRef();
+        this._tickerSelectorRef = React.createRef();
+
         this.onRetrievePrices = this.onRetrievePrices.bind(this);
         this.onCancel = this.onCancel.bind(this);
 
@@ -138,6 +144,42 @@ export class PriceRetrieverWindow extends React.Component {
             ymdDateFrom: new YMDDate().toString(),
             ymdDateTo: new YMDDate().toString(),
         };
+    }
+
+
+    componentDidMount() {
+        window.requestAnimationFrame(this.checkLayout);
+    }
+
+
+    componentWillUnmount() {
+        this._willUnmount = true;
+    }
+
+
+    checkLayout() {
+        if (this._mainRef.current && this._tickerSelectorRef.current
+         && this._headerRef.current && this._controlsRef.current) {
+            const mainHeight = this._mainRef.current.clientHeight;
+            const headerHeight = this._headerRef.current.clientHeight;
+            const controlsHeight = this._controlsRef.current.clientHeight;
+            const { state } = this;
+            if ((mainHeight !== state.mainHeight)
+             || (headerHeight !== state.headerHeight)
+             || (controlsHeight !== state.controlsHeight)) {
+                const tickersHeight = mainHeight - headerHeight - controlsHeight;
+                this.setState({
+                    mainHeight: mainHeight,
+                    headerHeight: headerHeight,
+                    controlsHeight: controlsHeight,
+                    tickersHeight: tickersHeight,
+                });
+            }
+        }
+
+        if (!this._willUnmount) {
+            window.requestAnimationFrame(this.checkLayout);
+        }
     }
 
 
@@ -381,9 +423,17 @@ export class PriceRetrieverWindow extends React.Component {
         const { tickerEntriesByTicker, isRetrieving } = this.state;
         const tickerEntries = Array.from(tickerEntriesByTicker.values());
 
-        return <div className = "row h-100 align-items-center ">
-            <div className = "d-flex flex-row w-100">
-                <div className = "flex-row flex-grow-1 ml-4 mt-1 mb-1">
+        let style;
+        const { tickersHeight } = this.state;
+        if ((tickersHeight !== undefined) && (tickersHeight > 0)) {
+            style = {
+                height: tickersHeight,
+            };
+        }
+
+        return <div className = "row align-items-center" style = {style}>
+            <div className = "d-flex flex-row w-100 h-inherit">
+                <div className = "flex-row flex-grow-1 ml-4 mb-1 h-inherit">
                     <TickerSelector
                         accessor = { this.props.accessor }
                         tickerEntries = {tickerEntries}
@@ -484,8 +534,8 @@ export class PriceRetrieverWindow extends React.Component {
 
         const className = 'container-fluid d-flex w-100 h-100 flex-column '
             + 'PriceRetrieverWindow';
-        return <div className = {className}>
-            <div className = "row">
+        return <div className = {className} ref = {this._mainRef}>
+            <div className = "row" ref = {this._headerRef}>
                 <div className = "col">
                     <h4 className = "pageTitle pb-3 border-bottom"
                     >
@@ -493,7 +543,7 @@ export class PriceRetrieverWindow extends React.Component {
                     </h4>
                 </div>
             </div>
-            <div className = "row pt-2 pb-2">
+            <div className = "row pt-2 pb-2" ref = {this._controlsRef}>
                 <div className = "col"></div>
                 <div className = "col">
                     {button}
@@ -506,7 +556,7 @@ export class PriceRetrieverWindow extends React.Component {
                 </div>
                 <div className = "col"></div>
             </div>
-            <div className = "row flex-grow-1">
+            <div className = "row flex-grow-1" ref = {this._tickerSelectorRef}>
                 <div className = "col">
                     {tickersComponent}
                 </div>
