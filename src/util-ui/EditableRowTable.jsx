@@ -29,8 +29,6 @@ export function editableRowTable(WrappedTable) {
             const { props, state } = this;
             if (props.requestedActiveRowIndex !== undefined) {
                 if (props.requestedActiveRowIndex !== this.state.activeRowIndex) {
-                    console.log('activating row: ' + props.requestedActiveRowIndex);
-
                     this.setState({
                         activeRowIndex: props.requestedActiveRowIndex,
                     });
@@ -41,8 +39,6 @@ export function editableRowTable(WrappedTable) {
             if (props.requestOpenActiveRow) {
                 const { activeEditInfo } = state;
                 if (!activeEditInfo && this._rowTableRef.current) {
-                    console.log('opening active row: ' + this.state.activeRowIndex);
-                    
                     this._rowTableRef.current.openActiveRow();
                     return;
                 }
