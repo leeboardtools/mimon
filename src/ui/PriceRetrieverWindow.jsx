@@ -7,6 +7,7 @@ import { CellDateEditor } from '../util-ui/CellDateEditor';
 import { TickerSelector } from './TickerSelector';
 import { asyncGetUpdatedPricedItemPrices } from '../engine/PriceRetriever';
 import deepEqual from 'deep-equal';
+import { setFocus } from '../util/ElementUtils';
 
 
 function equalBool(a, b) {
@@ -67,6 +68,7 @@ export class PriceRetrieverWindow extends React.Component {
         this._mainRef = React.createRef();
         this._headerRef = React.createRef();
         this._controlsRef = React.createRef();
+        this._retrieveRef = React.createRef();
         this._tickerSelectorRef = React.createRef();
 
         this.onRetrievePrices = this.onRetrievePrices.bind(this);
@@ -80,8 +82,8 @@ export class PriceRetrieverWindow extends React.Component {
 
         const { tickerEntriesByTicker, defaultTickers } = this.getTickers();
 
-
         // TEST!!
+        /*
         const addTestEntry = (ticker) => {
             tickerEntriesByTicker.set(ticker, { ticker: ticker });
         };
@@ -111,6 +113,7 @@ export class PriceRetrieverWindow extends React.Component {
         addTestEntry('X');
         addTestEntry('Y');
         addTestEntry('Z');
+        */
 
 
         // Load all the allTickerEntries...
@@ -151,8 +154,11 @@ export class PriceRetrieverWindow extends React.Component {
         window.requestAnimationFrame(this.checkLayout);        
 
         process.nextTick(() => {
-            if (this._tickerSelectorRef.current) {
-                this._tickerSelectorRef.current.focus();
+            if (this._retrieveRef.current && !this._retrieveRef.current.disabled) {
+                setFocus(this._retrieveRef.current);
+            }
+            else if (this._tickerSelectorRef.current) {
+                setFocus(this._tickerSelectorRef.current);
             }
         });
     }
@@ -446,6 +452,7 @@ export class PriceRetrieverWindow extends React.Component {
                         onTickerSelect = {
                             (ticker, isSelect) => this.onTickerSelect(ticker, isSelect)}
                         disabled = {isRetrieving}
+                        ref = {this._tickerSelectorRef}
                     />
                 </div>
                 <div className = "flex-row m-4">
@@ -524,6 +531,7 @@ export class PriceRetrieverWindow extends React.Component {
                 aria-label = "Retrieve Prices"
                 onClick = {() => this.onRetrievePrices()}
                 disabled = {!anyTickerSelected}
+                ref = {this._retrieveRef}
             >
                 {userMsg('PriceRetrieverWindow-retrieve_button')}
             </button>;
@@ -564,7 +572,7 @@ export class PriceRetrieverWindow extends React.Component {
                     {toDate}
                 </div>
             </div>
-            <div className = "row flex-grow-1" ref = {this._tickerSelectorRef}>
+            <div className = "row flex-grow-1">
                 <div className = "col">
                     {tickersComponent}
                 </div>

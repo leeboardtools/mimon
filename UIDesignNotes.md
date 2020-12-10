@@ -493,5 +493,6 @@ Common menus:
     - Italicized?
     - Which one is user option, should be able to use CSS classes.
 
-- TickerSelector:
-    - Need multi-column selector/list box.
+- PricesList
+    - Not properly updating from price updates.
+    
