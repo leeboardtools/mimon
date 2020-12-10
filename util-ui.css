@@ -122,6 +122,21 @@
 }
 
 
+/** For util-ui/MultiColumnList.jsx */
+.MultiColumnList {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    height: 100%;
+    border-style: solid;
+    border-width: 1px;
+    border-color: darkgrey;
+}
+/** End util-ui/MultiColumnList.jsx */
+
+
 /** For util-ui/RowTable.jsx */
 .RowTable {
     width: 100%;
