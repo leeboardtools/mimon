@@ -148,7 +148,13 @@ export class PriceRetrieverWindow extends React.Component {
 
 
     componentDidMount() {
-        window.requestAnimationFrame(this.checkLayout);
+        window.requestAnimationFrame(this.checkLayout);        
+
+        process.nextTick(() => {
+            if (this._tickerSelectorRef.current) {
+                this._tickerSelectorRef.current.focus();
+            }
+        });
     }
 
 
@@ -534,6 +540,8 @@ export class PriceRetrieverWindow extends React.Component {
 
         const className = 'container-fluid d-flex w-100 h-100 flex-column '
             + 'PriceRetrieverWindow';
+        const controlsClassName = 'row pt-2 pb-2 justify-content-center '
+            + ' PriceRetrieverWindow-controls';
         return <div className = {className} ref = {this._mainRef}>
             <div className = "row" ref = {this._headerRef}>
                 <div className = "col">
@@ -543,18 +551,18 @@ export class PriceRetrieverWindow extends React.Component {
                     </h4>
                 </div>
             </div>
-            <div className = "row pt-2 pb-2" ref = {this._controlsRef}>
-                <div className = "col"></div>
-                <div className = "col">
+            <div className = {controlsClassName} 
+                ref = {this._controlsRef}
+            >
+                <div className = "col PriceRetrieverWindow-retrieveButton">
                     {button}
                 </div>
-                <div className = "col">
+                <div className = "col PriceRetrieverWindow-dateControl">
                     {fromDate}
                 </div>
-                <div className = "col">
+                <div className = "col PriceRetrieverWindow-dateControl">
                     {toDate}
                 </div>
-                <div className = "col"></div>
             </div>
             <div className = "row flex-grow-1" ref = {this._tickerSelectorRef}>
                 <div className = "col">

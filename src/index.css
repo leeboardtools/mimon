@@ -279,6 +279,18 @@ body {
   flex-basis: 5rem;
 }
 
+/*
+.PriceRetrieverWindow-controls {
+}
+*/
+
+.PriceRetrieverWindow-retrieveButton {
+  max-width: 12rem;
+}
+
+.PriceRetrieverWindow-dateControl {
+  max-width: 18rem;
+}
 
 .PriceRetrieverWindow-ticker-select-button {
   margin: 1rem;
@@ -292,6 +304,39 @@ body {
   max-height: inherit;
   height: inherit;
   overflow: scroll;
+}
+
+.TickerSelector-item {
+  position: relative;
+  display: block;
+  padding: .75rem 1.25rem;
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, .125);
+  width: 16rem;
+  height: 3rem;
+}
+
+.TickerSelector-item:first-child {
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+}
+
+.TickerSelector-item:last-child {
+  border-bottom-left-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.TickerSelector-item.active {
+  z-index: 2;
+  /*color: #fff;*/
+  background-color: rgba(0,0,0, 0.075);
+  /*border-color: #007bff77;*/
+}
+
+.TickerSelector-item.disabled {
+  color: #6c757d;
+  pointer-events: none;
+  background-color: #fff;
 }
 
 .ticker-base {

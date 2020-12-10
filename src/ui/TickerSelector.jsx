@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { getQuantityDefinition } from '../util/Quantities';
 import { Tooltip } from '../util-ui/Tooltip';
+import { MultiColumnList } from '../util-ui/MultiColumnList';
 
 
 /**
@@ -23,30 +24,84 @@ import { Tooltip } from '../util-ui/Tooltip';
 export class TickerSelector extends React.Component {
     constructor(props) {
         super(props);
+
+        this._multiColumnRef = React.createRef();
+
+        this.onActivateItem = this.onActivateItem.bind(this);
+        this.onItemClick = this.onItemClick.bind(this);
+        this.onItemKeyDown = this.onItemKeyDown.bind(this);
+
+        this.getItemKey = this.getItemKey.bind(this);
+        this.renderTicker = this.renderTicker.bind(this);
+
+        this.state = {
+            activeItemIndex: 0,
+        };
     }
 
-    render() {
-        let { tickerEntries, onTickerSelect, disabled, accessor,
-            noTickerTooltips } = this.props;
 
-        onTickerSelect = onTickerSelect || (() => {});
+    focus() {
+        if (this._multiColumnRef.current) {
+            this._multiColumnRef.current.focus();
+        }
+    }
 
-        const defaultPriceQuantityDefinition 
-            = accessor.getDefaultPriceQuantityDefinition();
 
-        const tickerItems = [];
-        tickerEntries.forEach((tickerEntry) => {
+    onActivateItem(index) {
+        this.setState({
+            activeItemIndex: index,
+        });
+    }
+
+
+    onItemClick(e, index, ticker, isSelected) {
+        this.onActivateItem(index);
+
+        const { onTickerSelect } = this.props;
+        if (onTickerSelect) {
+            onTickerSelect(ticker, !isSelected);
+        }
+    }
+
+
+    onItemKeyDown(e, index, ticker, isSelected) {
+        if (e.key === ' ') {
+            this.onItemClick(e, index, ticker, isSelected);
+            e.preventDefault();
+        }
+    }
+
+
+    getItemKey(index) {
+        const tickerEntry = this.props.tickerEntries[index];
+        if (tickerEntry) {
+            return tickerEntry.ticker;
+        }
+        return index;
+    }
+
+
+    renderTicker(index, isActive, ref) {
+        const tickerEntry = this.props.tickerEntries[index];
+        if (tickerEntry) {
+            let { disabled, accessor,
+                noTickerTooltips } = this.props;
+
+            const defaultPriceQuantityDefinition 
+                = accessor.getDefaultPriceQuantityDefinition();
+
             const { ticker, isSelected, retrievedPrice, errorMsg,
                 pricedItemDataItem } = tickerEntry;
-            let className = 'list-group-item';
+            let className = 'TickerSelector-item';
+            //className = 'list-group-item';
             if (disabled) {
                 className += ' disabled';
             }
+            if (isActive) {
+                className += ' active';
+            }
 
             let tickerClassName = 'col ticker-base';
-            if (isSelected) {
-                tickerClassName += ' ticker-checked';
-            }
 
             let tickerComponent = ticker;
             if (!noTickerTooltips && pricedItemDataItem && pricedItemDataItem.name) {
@@ -54,6 +109,15 @@ export class TickerSelector extends React.Component {
                     {ticker}
                 </Tooltip>;
             }
+
+            tickerComponent = <label className = "">
+                <input className = "form-check-input" type="checkbox"
+                    checked = {isSelected}
+                    tabIndex = {-1}
+                />
+                {tickerComponent}
+            </label>;
+
 
             let statusClassName = 'col monetary-base';
             let statusMsg;
@@ -79,10 +143,13 @@ export class TickerSelector extends React.Component {
                 statusClassName += ' success_msg';
             }
             
-            const item = <div key = {ticker}
+            return <li key = {ticker}
                 className = {className}
-                onClick = {(e) => onTickerSelect(ticker, !isSelected)}
+                onClick = {(e) => this.onItemClick(e, index, ticker, isSelected)}
+                onKeyDown = {(e) => this.onItemKeyDown(e, index, ticker, isSelected)}
                 disabled = {disabled}
+                tabIndex = {-1} // We don't want each item tab-able...
+                ref = {ref}
             >
                 <div className = "row">
                     <div className = {tickerClassName}>
@@ -92,14 +159,27 @@ export class TickerSelector extends React.Component {
                         {statusMsg}
                     </div>
                 </div>
-            </div>;
-            tickerItems.push(item);
-        });
+            </li>;
+        }
+    }
 
-        // TODO: We need a multi-column selector...
-        return <div className = "TickerSelector">
-            {tickerItems}
-        </div>;
+
+    render() {
+        const { tickerEntries } = this.props;
+        const { activeItemIndex, } = this.state;
+
+        return <MultiColumnList
+            itemCount = {tickerEntries.length}
+            getItemKey = {this.getItemKey}
+            onRenderItem = {this.renderTicker}
+
+            activeItemIndex = {activeItemIndex}
+            onActivateItem = {this.onActivateItem}
+
+            classExtras = "TickerSelector"
+
+            ref = {this._multiColumnRef}
+        />;
     }
 }
 
