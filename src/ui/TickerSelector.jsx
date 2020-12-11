@@ -113,6 +113,7 @@ export class TickerSelector extends React.Component {
             tickerComponent = <label className = "">
                 <input className = "form-check-input" type="checkbox"
                     checked = {isSelected}
+                    readOnly
                     tabIndex = {-1}
                 />
                 {tickerComponent}
