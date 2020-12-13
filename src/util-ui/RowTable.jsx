@@ -184,8 +184,12 @@ export class RowTable extends React.Component {
 
     watcher() {
         if (!this._isUnmounted) {
-            this.updateLayout();
-            window.requestAnimationFrame(this.watcher);
+            process.nextTick(() => {
+                // Using nextTick() so we don't take too long in 
+                // requestAnimationFrame()...
+                this.updateLayout();
+                window.requestAnimationFrame(this.watcher);
+            });
         }
     }
 
@@ -236,6 +240,15 @@ export class RowTable extends React.Component {
          || (this.state.bottomVisibleRow !== prevState.bottomVisibleRow)) {
             this.loadRows();
             return;
+        }
+
+        if (!this.state.isOnScroll && this._bodyRef.current) {
+            const { current } = this._bodyRef;
+            const { scrollTop } = this.state;
+            if ((current.scrollTop !== scrollTop)
+             && (scrollTop !== undefined)) {
+                current.scrollTop = scrollTop;
+            }
         }
 
         if (this.state.wantFocusAfterRender) {
