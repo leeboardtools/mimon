@@ -430,7 +430,6 @@ Common menus:
 
 
     - Prices List
-        - Changing type not enabling/disabling the proper editors.
 
 
     - Price Retrieval Window

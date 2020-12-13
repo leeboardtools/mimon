@@ -103,7 +103,7 @@ function renderPriceItemTypeDisplay(args) {
 
 function onPriceItemTypeChange(e, args) {
     const value = e.target.value;
-    const { rowEditBuffer, setRowEditBuffer, } = args;
+    const { rowEditBuffer, rowEntry, } = args;
     const priceItemType = PriceItemType[value];
     if (priceItemType && rowEditBuffer) {
         let { priceDataItem } = rowEditBuffer;
@@ -121,10 +121,11 @@ function onPriceItemTypeChange(e, args) {
             break;
         }
 
-        setRowEditBuffer({
-            priceItemType: priceItemType,
-            priceDataItem: priceDataItem,
-        });
+        rowEntry.caller.updateRowEditBuffer(args,
+            {
+                priceItemType: priceItemType,
+                priceDataItem: priceDataItem,
+            });
     }
 }
 
@@ -452,6 +453,25 @@ export class PricesList extends React.Component {
 
     
     componentDidUpdate(prevProps, prevState) {
+    }
+
+
+    updateRowEditBuffer(args, rowEditBufferChanges) {
+        const { rowEditBuffer, setRowEditBuffer } = args;
+        const newRowEditBuffer = Object.assign({}, rowEditBuffer, rowEditBufferChanges);
+        if (deepEqual(rowEditBuffer, newRowEditBuffer)) {
+            return;
+        }
+
+        setRowEditBuffer(
+            rowEditBufferChanges,
+            (rowEditBuffer) => {
+                args = Object.assign({}, args, {
+                    rowEditBuffer: rowEditBuffer,
+                });
+                this._cellEditorsManager.reloadCellEditBuffers(args);
+            }
+        );
     }
 
 
