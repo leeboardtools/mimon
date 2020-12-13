@@ -257,7 +257,7 @@
 
 
     "MultiSplitsEditor-title": "Splits Editor",
-    "MultiSplitsEditor-new_description_placeholder": "New Split",
+    "MultiSplitsEditor-new_description_placeholder": "New split",
     "MultiSplitsEditor-delete": "Delete",
     "MultiSplitsEditor-delete_all": "Delete All",
 
@@ -331,6 +331,8 @@
 
     "PricesList-newCount_suffix": " new shares",
     "PricesList-oldCount_suffix": " old shares",
+
+    "PricesList-newPrice": "New price",
 
     "PricesListHandler-removePrice": "Delete Price",
     "PricesListHandler-updatePrices": "Retrieve Prices",

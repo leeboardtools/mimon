@@ -406,18 +406,23 @@ Common menus:
     - NewFileConfigurator.jsx
         - Change opening balance renderer to use a CellQuantityEditor/Display.
     
+
     - Account Editor
+
 
     - Accounts List
         - Ability to show/hide columns, reorder them.
         - Custom Account Lists
         - Listen on prices for market value updates.
 
+
     - Priced Item List
         - Custom Priced Item Lists
 
+
     - Priced Item Editor
-    
+
+
     - Securites/Mutual Fund List
         - Want quantity, market value, cost basis, cash-in columns
         - Ability to show/hide columns, reorder them.
@@ -425,18 +430,12 @@ Common menus:
 
 
     - Prices List
-        - Lists prices for each security/mutual fund
-        - Menu commands
-            - Get Latest Price
-            - Get Historical Prices
-        
         - Changing type not enabling/disabling the proper editors.
 
+
     - Price Retrieval Window
-        - Update current prices
-        - Retrieve historical prices
-            - Choose tickers
-            - Enter date range
+        - Add a new security?
+
 
     - Lots List
         - Hierarchy, by security (priced items)
@@ -459,10 +458,31 @@ Common menus:
     
 
     - Reconciler
+        - Statement balance:
+            - Opening date
+            - Closing date
+            - Opening balance
+            - Closing balance
+                - Initialize based on Closing date, transactions.
+
+        - List of credits, debits, appropriately named.
+        - Opening balance
+        - Reconciled balance
+        - Difference
+
+
+    - Reminders Editor
+
+
+    - Active Reminders
+
+
+    - File import
     
 
 - RowTable To Do:
     - Add column resizing support
+
 
 - CollapsibleRowTable
     - Need to tweak the expand/collapse indenting.
@@ -487,12 +507,13 @@ Common menus:
 
 - Set default interest, dividends, fees accounts in account editing.
 
+
 - Need means of formatting negative numbers:
     - Red
     - Enclose in parenthesis
     - Italicized?
     - Which one is user option, should be able to use CSS classes.
 
+
 - PricesList
     - Not properly updating from price updates.
-    

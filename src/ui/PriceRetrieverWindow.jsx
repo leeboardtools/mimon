@@ -336,7 +336,7 @@ export class PriceRetrieverWindow extends React.Component {
                 }
             }
 
-            if (failedEntries) {
+            if (failedEntries && failedEntries.length) {
                 console.log(failedEntries);
             }
 

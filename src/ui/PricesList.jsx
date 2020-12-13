@@ -86,9 +86,15 @@ function renderPriceItemTypeDisplay(args) {
     if (priceItemType) {
         const { columnInfo } = args;
         const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+
+        const { rowEntry } = args;
+        const value = (rowEntry && !rowEntry.key)
+            ? userMsg('PricesList-newPrice')
+            : priceItemType.description;
+
         return <CellSelectDisplay
             ariaLabel = {ariaLabel}
-            selectedValue = {priceItemType.description}
+            selectedValue = {value}
             classExtras = {inputClassExtras}
             size = {inputSize}
         />;
@@ -248,7 +254,6 @@ function renderPriceValueCellDisplay(args, priceName, multiplierName, countSuffi
             args = Object.assign({}, args, { suffix: countSuffix });
         }
     }
-
 
     return ACE.renderQuantityDisplay(args);
 }
@@ -447,7 +452,6 @@ export class PricesList extends React.Component {
 
     
     componentDidUpdate(prevProps, prevState) {
-
     }
 
 
@@ -587,10 +591,6 @@ export class PricesList extends React.Component {
                 minLoadedRowIndex: 0,
                 maxLoadedRowIndex: newRowEntries.length - 1,
             });
-
-            this._rowTableRef.current.makeRowRangeVisible(
-                activeRowIndex, activeRowIndex
-            );
         });
     }
 
@@ -629,8 +629,6 @@ export class PricesList extends React.Component {
 
                 onSelectPrice(selectedPriceDataItem);
             }
-
-            console.log('activeRowChanged: ' + rowIndex);
         });
     }
 
