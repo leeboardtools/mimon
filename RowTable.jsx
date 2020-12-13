@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import deepEqual from 'deep-equal';
 import { ContextMenu } from './ContextMenu';
+import { setFocus } from '../util/ElementUtils';
 
 
 export const HEADER_ROW_INDEX = -1;
@@ -31,6 +32,73 @@ export const FOOTER_ROW_INDEX = -2;
  */
 
 
+//
+// The component structure:
+//
+//  <div containerStyle: {width: 100%  height: 100%  overflow: hidden}
+//      >>> ref = _mainRef <<<
+//      <div>
+//          <div "table RowTable">
+//              <div "RowTableHeader">
+//                  ...header...
+//              </div>  // RowTableHeader
+//
+//              <div "RowTableBody" {
+//                      overflow-y: scroll, overflow-x: hidden, 
+//                      vertical-align: middle
+//                  }
+//                  bodyStyle: { height: bodyHeight width: bodyWidth }
+//                  onScroll
+//                  tabIndex: 0 
+//                  onKeyDown
+//                  >>> ref = _bodyRef <<<
+//
+//                  // The main body, this has the scroll bar and handles non-editing
+//                  // focus/keyboard control.
+//              >
+//
+//                  <div rowsContainerStyle: {
+//                          height: rowCount * bodyRowHeight, 
+//                          position: relative
+//                      }
+//                      // The rowsContainerStyle represents the full scrollable range,
+//                      // rowCount * bodyRowHeight.
+//                  >
+//                      <div rowsInnerStyle: {
+//                              transform: translateY(state.offsetY)
+//                          }
+//                          // The rowsInnerStyle is necessary so we can render virtual
+//                          // rows and not have to render rows from the first row. 
+//                      >
+//                          <div "RowTableRow" { display: flex; flex-wrap: nowrap }
+//                              style: { height: 36.5625px }
+//                          >
+//                              ...
+//                          </div>  // RowTableRow
+//
+//                          <div "RowTableRow" { display: flex; flex-wrap: nowrap}
+//                              style: { height: 36.5625px }
+//                          >
+//                              ...
+//                          </div>  // RowTableRow
+//
+//                      </div>  // rowsInnerStyle
+//
+//                  </div>  // rowsContainerStyle
+//
+//              </div>  // RowTableBody
+//
+//              <div "RowTableFooter">   
+//                  ...footer...
+//              </div>  // RowTableFoooter
+//          </div>  // RowTabl
+//      </div>
+//
+//      <div hidden Render>
+//      </div>
+//  </div>
+//
+
 
 /**
  * React component for row based tables.
@@ -41,6 +109,8 @@ export class RowTable extends React.Component {
 
         this.watcher = this.watcher.bind(this);
         this.onKeyDown = this.onKeyDown.bind(this);
+        this.onBodyFocus = this.onBodyFocus.bind(this);
+        this.onBodyBlur = this.onBodyBlur.bind(this);
 
         this.onRowClick = this.onRowClick.bind(this);
         this.onRowDoubleClick = this.onRowDoubleClick.bind(this);
@@ -114,22 +184,6 @@ export class RowTable extends React.Component {
 
     watcher() {
         if (!this._isUnmounted) {
-            if (this.state.activeRowUpdated) {
-                const { activeRowIndex } = this.props;
-                const { topVisibleRow, bottomVisibleRow } = this.state;
-                if ((this._activeRowRef && this._activeRowRef.current)
-                 && (activeRowIndex >= topVisibleRow)
-                 && (activeRowIndex <= bottomVisibleRow)) {
-                    this._activeRowRef.current.focus();
-                }
-                else {
-                    this._bodyRef.current.focus();
-                }
-                this.setState({
-                    activeRowUpdated: false,
-                });
-            }
-
             this.updateLayout();
             window.requestAnimationFrame(this.watcher);
         }
@@ -164,27 +218,42 @@ export class RowTable extends React.Component {
         let visibleRowIndex = (this.state.visibleRowIndex === undefined)
             ? prevState.visibleRowIndex : this.state.visibleRowIndex;
 
+        if (this.props.activeRowIndex !== prevProps.activeRowIndex) {
+            if (this.makeRowRangeVisible(this.props.activeRowIndex)) {
+                // updateVisibleRows() would have been called...
+                return;
+            }
+        }
+
         if ((this.state.bodyHeight !== prevState.bodyHeight)
          || (this.state.bodyRowHeight !== prevState.bodyRowHeight)
          || (this.props.rowCount !== prevProps.rowCount)
          || (visibleRowIndex !== prevState.visibleRowIndex)) {
             this.updateVisibleRows();
+            return;
         }
-        // else if because no use loading the rows if the visible rows are 
-        // going to trigger a visible row change.
-        else if ((this.state.topVisibleRow !== prevState.topVisibleRow)
+        if ((this.state.topVisibleRow !== prevState.topVisibleRow)
          || (this.state.bottomVisibleRow !== prevState.bottomVisibleRow)) {
             this.loadRows();
+            return;
+        }
+
+        if (this.state.wantFocusAfterRender) {
+            this.setState({
+                wantFocusAfterRender: undefined,
+            });
+            setFocus(this._bodyRef.current);
         }
     }
 
 
     getRefClientSize(ref, definedHeight) {
         if (ref.current) {
+            const rect = ref.current.getBoundingClientRect();
             return { 
-                width: ref.current.clientWidth, 
+                width: rect.width, 
                 height: (definedHeight !== undefined)
-                    ? definedHeight : ref.current.clientHeight,
+                    ? definedHeight : rect.height,
             };
         }
         else {
@@ -198,7 +267,9 @@ export class RowTable extends React.Component {
 
 
     getAdjustedMainRefSize() {
-        let { clientWidth, clientHeight } = this._mainRef.current;
+        const rect = this._mainRef.current.getBoundingClientRect();
+        let clientWidth = rect.width;
+        let clientHeight = rect.height;
         if (Math.abs(clientWidth - this.state.clientWidth) <= 2) {
             clientWidth = this.state.clientWidth;
         }
@@ -210,6 +281,7 @@ export class RowTable extends React.Component {
             clientHeight: clientHeight,
         };
     }
+
 
     updateFromClientSize() {
         const { clientWidth, clientHeight } = this.getAdjustedMainRefSize();
@@ -243,13 +315,15 @@ export class RowTable extends React.Component {
                 const { headerCellRef, bodyCellRef, footerCellRef } = columnRefs[i];
                 let width = 0;
                 if (headerCellRef.current) {
-                    width = headerCellRef.current.clientWidth;
+                    width = headerCellRef.current.getBoundingClientRect().width;
                 }
                 if (bodyCellRef.current) {
-                    width = Math.max(width, bodyCellRef.current.clientWidth);
+                    width = Math.max(width, 
+                        bodyCellRef.current.getBoundingClientRect().width);
                 }
                 if (footerCellRef.current) {
-                    width = Math.max(width, footerCellRef.current.clientWidth);
+                    width = Math.max(width, 
+                        footerCellRef.current.getBoundingClientRect().width);
                 }
                 columnWidths[i] = width;
             }
@@ -327,9 +401,9 @@ export class RowTable extends React.Component {
 
         if (this._rowsContainerRef.current
          && !this.state.sizeRenderRefs) {
-            const element = this._rowsContainerRef.current;
-            const rowContainerWidth = element.clientWidth;
-            const rowContainerHeight = element.clientHeight;
+            const rect = this._rowsContainerRef.current.getBoundingClientRect();
+            const rowContainerWidth = rect.width;
+            const rowContainerHeight = rect.height;
             if ((rowContainerWidth !== this.state.rowContainerWidth)
              || (rowContainerHeight !== this.state.rowContainerHeight)) {
                 this.setState({
@@ -343,98 +417,111 @@ export class RowTable extends React.Component {
     }
 
 
+    _calcVisibleRowsFromScrollTop(scrollTop) {
+        scrollTop = Math.round(scrollTop);
+
+        const { bodyRowHeight, bodyHeight } = this.state;
+        const lastRow = this.props.rowCount - 1;
+
+        let topVisibleRow = scrollTop / bodyRowHeight;
+        topVisibleRow = Math.max(
+            0,
+            Math.min(topVisibleRow, lastRow));
+        
+        let bottomVisibleRow = (scrollTop + bodyHeight) / bodyRowHeight;
+        bottomVisibleRow = Math.max(
+            topVisibleRow,
+            Math.min(bottomVisibleRow, lastRow));
+        
+        let topFullyVisibleRow = Math.ceil(topVisibleRow);
+        topFullyVisibleRow = Math.max(
+            topVisibleRow,
+            Math.min(topFullyVisibleRow, lastRow));
+        
+        let bottomFullyVisibleRow = Math.floor(bottomVisibleRow);
+        if (((bottomFullyVisibleRow + 1) * bodyRowHeight - bodyHeight) >= 0.5) {
+            --bottomFullyVisibleRow;
+        }
+        bottomFullyVisibleRow = Math.max(
+            topFullyVisibleRow,
+            Math.min(bottomFullyVisibleRow, lastRow));
+        
+        let offsetY = Math.floor(topVisibleRow) * bodyRowHeight;
+        offsetY = Math.max(
+            0,
+            offsetY);
+
+        return {
+            scrollTop: scrollTop,
+            topVisibleRow: topVisibleRow,
+            bottomVisibleRow: bottomVisibleRow,
+            topFullyVisibleRow: topFullyVisibleRow,
+            bottomFullyVisibleRow: bottomFullyVisibleRow,
+            offsetY: offsetY,
+        };
+    }
+
+
     updateVisibleRows(scrollTop) {
         this.setState((state) => {
             const { bodyHeight, bodyRowHeight, } = state;
             if ((bodyRowHeight !== undefined) && (bodyRowHeight > 0)
              && this._rowsContainerRef.current) {
-                const { rowCount, activeRowIndex } = this.props;
+                const { rowCount } = this.props;
                 const lastRow = rowCount - 1;
 
+                const isOnScroll = scrollTop !== undefined;
+                let originalScrollTop = scrollTop;
+
                 if (scrollTop === undefined) {
-                    scrollTop = state.scrollTop || 0;
+                    scrollTop = (state.scrollTop !== undefined)
+                        ? state.scrollTop
+                        : this.state.topVisibleRow * bodyRowHeight;
                 }
 
-                let { topVisibleRow, bottomVisibleRow } = state;
-                let wasActiveRowVisible;
-                if (activeRowIndex !== undefined) {
-                    wasActiveRowVisible = (activeRowIndex >= topVisibleRow)
-                         && (activeRowIndex <= bottomVisibleRow);
+
+                // At the maximum scroll position, we want the last row to be at the
+                // bottom edge of the body.
+                const scrollTopMax = rowCount * bodyRowHeight - bodyHeight;
+                scrollTop = Math.round(Math.min(scrollTop, scrollTopMax));
+                if (scrollTop >= scrollTopMax) {
+                    // We need to enforce our scrollTopMax, otherwise the body div, which
+                    // has the scroll bar, thinks the scroll range is twice as large 
+                    // because of the offsetY we use for rendering the rows virtually.
+                    originalScrollTop = undefined;
                 }
 
-                let visibleRowCount = Math.trunc(bodyHeight / bodyRowHeight);
-                const fullyVisibleRowCount = Math.max(visibleRowCount, 
-                    Math.min(1, rowCount));
-
-                if (visibleRowCount * bodyRowHeight < bodyHeight) {
-                    ++visibleRowCount;
-                }
-
-                // We have scrollTop and scrollTopMax...
-                // When scrollTop === scrollTopMax we have:
-                //      topVisibleRow = rowCount - fullyVisibleRowCount
-                // When scrollTop === 0 we have:
-                //      topVisibleRow = 0
-                const maxTopVisibleRow = rowCount - fullyVisibleRowCount;
-                let { scrollTopMax } = this._rowsContainerRef.current;
-                if (scrollTopMax === undefined) {
-                    scrollTopMax = this._rowsContainerRef.current.clientHeight
-                        - bodyHeight;
-                }
-                topVisibleRow = Math.round(scrollTop 
-                    * maxTopVisibleRow / scrollTopMax);
-
-                topVisibleRow = Math.max(0, topVisibleRow);
-                topVisibleRow = Math.min(topVisibleRow, lastRow);
-
-
-                bottomVisibleRow = Math.min(topVisibleRow + visibleRowCount - 1, 
-                    lastRow);
-                let bottomFullyVisibleRow = Math.min(
-                    topVisibleRow + fullyVisibleRowCount - 1,
-                    lastRow);
+                let visibleRows = this._calcVisibleRowsFromScrollTop(scrollTop);
 
                 let { visibleRowIndex } = state;
                 if (visibleRowIndex !== undefined) {
-                    let delta = 0;
-                    visibleRowIndex = Math.min(Math.max(0, visibleRowIndex), lastRow);
-                    if (visibleRowIndex < topVisibleRow) {
-                        delta = visibleRowIndex - topVisibleRow;
+                    
+                    visibleRowIndex = Math.max(0, Math.min(visibleRowIndex, lastRow));
+                    const { topVisibleRow,
+                        topFullyVisibleRow, bottomFullyVisibleRow } = visibleRows;
+                    let delta;
+                    if (visibleRowIndex < topFullyVisibleRow) {
+                        delta = visibleRowIndex - topFullyVisibleRow;
                     }
                     else if (visibleRowIndex > bottomFullyVisibleRow) {
                         delta = visibleRowIndex - bottomFullyVisibleRow;
                     }
-                    topVisibleRow += delta;
-                    bottomVisibleRow += delta;
-                    bottomFullyVisibleRow += delta;
-                    scrollTop += delta * bodyRowHeight;
 
-                    if (this._bodyRef.current) {
-                        this._bodyRef.current.scrollTop = scrollTop;
-                        visibleRowIndex = undefined;
-                    }
-
-                    bottomVisibleRow = Math.min(bottomVisibleRow, lastRow);
-                    bottomFullyVisibleRow = Math.min(bottomFullyVisibleRow, lastRow);
-                }
-
-                let { activeRowUpdated } = state;
-                if (activeRowIndex !== undefined) {
-                    const isActiveRowVisible = (activeRowIndex >= topVisibleRow)
-                        && (activeRowIndex <= bottomVisibleRow);
-                    if (!isActiveRowVisible && wasActiveRowVisible) {
-                        activeRowUpdated = true;
+                    if (delta) {
+                        scrollTop = Math.round((topVisibleRow + delta) * bodyRowHeight);
+                        visibleRows = this._calcVisibleRowsFromScrollTop(scrollTop);
                     }
                 }
 
-                return {
-                    activeRowUpdated: activeRowUpdated,
-                    scrollTop: scrollTop,
-                    topVisibleRow: topVisibleRow,
-                    bottomVisibleRow: bottomVisibleRow,
-                    bottomFullyVisibleRow: bottomFullyVisibleRow,
-                    visibleRowIndex: visibleRowIndex,
-                };
+                if (this._bodyRef.current
+                 && (originalScrollTop === undefined)) {
+                    this._bodyRef.current.scrollTop = visibleRows.scrollTop;
+                }
+
+                visibleRows.visibleRowIndex = undefined;
+                visibleRows.isOnScroll = isOnScroll;
+
+                return visibleRows;
             }
         });
     }
@@ -442,9 +529,11 @@ export class RowTable extends React.Component {
 
     loadRows() {
         const { onLoadRows, rowCount } = this.props;
-        const { topVisibleRow, bottomVisibleRow } = this.state;
+        let { topVisibleRow, bottomVisibleRow } = this.state;
         if (onLoadRows) {
-            const visibleRowCount = bottomVisibleRow - topVisibleRow + 1;
+            topVisibleRow = Math.max(Math.floor(topVisibleRow), 0);
+            bottomVisibleRow = Math.min(Math.ceil(bottomVisibleRow), rowCount - 1);
+            const visibleRowCount = bottomVisibleRow - topVisibleRow;
 
             const loadArgs = {
                 firstRowIndex: Math.max(topVisibleRow - visibleRowCount, 0),
@@ -460,7 +549,17 @@ export class RowTable extends React.Component {
     onScroll(e) {
         const scrollTop = e.target.scrollTop;
         window.requestAnimationFrame(
-            () => this.updateVisibleRows(scrollTop));
+            () => {
+                this.updateVisibleRows(scrollTop);
+            });
+    }
+
+
+    /**
+     * Sets focus to the row table.
+     */
+    focus() {
+        setFocus(this._bodyRef.current);
     }
 
 
@@ -493,10 +592,6 @@ export class RowTable extends React.Component {
             const { onActivateRow } = this.props;
             if (onActivateRow) {
                 onActivateRow(activeRowIndex);
-
-                this.setState({
-                    activeRowUpdated: true,
-                });
             }
         }
     }
@@ -513,29 +608,44 @@ export class RowTable extends React.Component {
 
         let { activeRowIndex } = this.props;
         if (activeRowIndex !== undefined) {
-            let pageIncrement = 0;
-            if (this.state.bottomFullyVisibleRow !== undefined) {
-                pageIncrement = this.state.bottomFullyVisibleRow 
-                    - this.state.topVisibleRow;
-            }
             switch (e.key) {
             case 'ArrowUp' :
-                this.activateRow(--activeRowIndex);
+                --activeRowIndex;
                 e.preventDefault();
                 break;
 
             case 'ArrowDown' :
-                this.activateRow(++activeRowIndex);
+                ++activeRowIndex;
                 e.preventDefault();
                 break;
             
             case 'PageUp' :
-                this.activateRow(activeRowIndex - pageIncrement);
+                if (this.state.topFullyVisibleRow !== undefined) {
+                    if (activeRowIndex >= this.state.bottomFullyVisibleRow) {
+                        activeRowIndex = this.state.topFullyVisibleRow;
+                    }
+                    else {
+                        const pageIncrement = Math.max(1,
+                            Math.floor(this.state.bottomFullyVisibleRow)
+                                - this.state.topFullyVisibleRow);
+                        activeRowIndex -= pageIncrement;
+                    }
+                }
                 e.preventDefault();
                 break;
             
             case 'PageDown' :
-                this.activateRow(activeRowIndex + pageIncrement);
+                if (this.state.bottomFullyVisibleRow !== undefined) {
+                    if (activeRowIndex <= this.state.topFullyVisibleRow) {
+                        activeRowIndex = this.state.bottomFullyVisibleRow;
+                    }
+                    else {
+                        const pageIncrement = Math.max(1,
+                            this.state.bottomFullyVisibleRow 
+                                - Math.ceil(this.state.topFullyVisibleRow));
+                        activeRowIndex += pageIncrement;
+                    }
+                }
                 e.preventDefault();
                 break;
 
@@ -544,7 +654,39 @@ export class RowTable extends React.Component {
                 break;
             }
 
+            if (activeRowIndex !== this.props.activeRowIndex) {
+                this.activateRow(activeRowIndex);
+                if (document.activeElement !== this._bodyRef.current) {
+                    this.setState({
+                        wantFocusAfterRender: true,
+                    });
+                }
+            }
+
         }
+    }
+
+
+    _dumpElement(e) {
+        if (e) {
+            if (e.id) {
+                return e.id;
+            }
+            else if (e.classList && e.classList.length) {
+                return e.classList;
+            }
+            else {
+                return e.tagName;
+            }
+        }
+    }
+
+    onBodyFocus(e) {
+        //console.log('onBodyFocus: ' + this._dumpElement(e.relatedTarget));
+    }
+
+    onBodyBlur(e) {
+        //console.log('onBodyBlur: ' + this._dumpElement(e.relatedTarget));
     }
 
 
@@ -780,17 +922,104 @@ export class RowTable extends React.Component {
     }
 
 
-    renderBody(sizeRenderRefs) {
+    renderRow(sizeRenderRefs, rowIndex) {
         const {
-            bodyClassExtras,
             rowClassExtras,
             onRenderCell,
             columns,
             activeRowIndex,
-            rowCount,
         } = this.props;
 
+        const { 
+            bodyRowHeight,
+        } = this.state;
+
+        const columnWidths = (sizeRenderRefs)
+            ? this.state.defColumnWidths
+            : this.state.columnWidths;
+
         const getRowKey = this.props.getRowKey || ((i) => i);
+        const cells = [];
+        for (let colIndex = 0; colIndex < columns.length; ++colIndex) {
+            const column = columns[colIndex];
+            const cell = onRenderCell({
+                rowIndex: rowIndex, 
+                columnIndex: colIndex, 
+                column: column,
+                isSizeRender: sizeRenderRefs,
+            });
+
+            let cellClassName = 'RowTableCell RowTableRowCell';
+
+            if (column.cellClassExtras) {
+                cellClassName += ' ' + column.cellClassExtras;
+            }
+
+            let style;
+            const width = columnWidths[colIndex];
+            if (width !== undefined) {
+                style = {
+                    flexBasis: width,
+                };
+            }
+
+            let ref;
+            if (sizeRenderRefs) {
+                ref = sizeRenderRefs.columnRefs[colIndex].bodyCellRef;
+            }
+
+            cells.push(<div className = {cellClassName}
+                style = {style}
+                key = {colIndex}
+                ref = {ref}
+                onClick = {(e) => 
+                    this.onRowClick(e, rowIndex, colIndex)}
+                onDoubleClick = {(e) => 
+                    this.onRowDoubleClick(e, rowIndex, colIndex)}
+            >
+                {cell}
+            </div>);
+        }
+
+        let rowClassName = 'RowTableRow';
+        if (rowIndex === activeRowIndex) {
+            rowClassName += ' table-active';
+        }
+        if (rowClassExtras) {
+            rowClassName += ' ' + rowClassExtras;
+        }
+
+        let style;
+        let ref;
+        if (sizeRenderRefs) {
+            ref = sizeRenderRefs.bodyRowRef;
+        }
+        else {
+            if (bodyRowHeight !== undefined) {
+                style = {
+                    height: bodyRowHeight,
+                };
+            }
+        }
+
+        return <div className = {rowClassName}
+            key = {getRowKey(rowIndex)}
+            style = {style}
+            ref = {ref}
+        >
+            <div // TEST!!!
+            >{rowIndex}</div>
+
+            {cells}
+        </div>;
+    }
+
+
+    renderBody(sizeRenderRefs) {
+        const {
+            bodyClassExtras,
+            rowCount,
+        } = this.props;
 
         const { topVisibleRow, bottomVisibleRow } = this.state;
         const { 
@@ -799,103 +1028,16 @@ export class RowTable extends React.Component {
             bodyRowHeight,
         } = this.state;
         
-        const columnWidths = (sizeRenderRefs)
-            ? this.state.defColumnWidths
-            : this.state.columnWidths;
-
-        const firstRow = topVisibleRow || 0;
+        const firstRow = Math.max(Math.floor(topVisibleRow), 0);
         const lastRow = (sizeRenderRefs) 
             ? firstRow 
-            : Math.min(bottomVisibleRow, rowCount - 1);
-
-        if (!sizeRenderRefs) {
-            this._activeRowRef = undefined;
-        }
+            : Math.min(Math.ceil(bottomVisibleRow), rowCount - 1);
 
         const rows = [];
         if (sizeRenderRefs || (topVisibleRow >= 0)) {
-            for (let i = firstRow; i <= lastRow; ++i) {
-                const cells = [];
-                for (let c = 0; c < columns.length; ++c) {
-                    const column = columns[c];
-                    const cell = onRenderCell({
-                        rowIndex: i, 
-                        columnIndex: c, 
-                        column: column,
-                        isSizeRender: sizeRenderRefs,
-                    });
-
-                    let cellClassName = 'RowTableCell RowTableRowCell';
-
-                    if (column.cellClassExtras) {
-                        cellClassName += ' ' + column.cellClassExtras;
-                    }
-
-                    let style;
-                    const width = columnWidths[c];
-                    if (width !== undefined) {
-                        style = {
-                            flexBasis: width,
-                        };
-                    }
-
-                    let ref;
-                    if (sizeRenderRefs) {
-                        ref = sizeRenderRefs.columnRefs[c].bodyCellRef;
-                    }
-
-                    cells.push(<div className = {cellClassName}
-                        style = {style}
-                        key = {c}
-                        ref = {ref}
-                        onClick = {(e) => this.onRowClick(e, i, c)}
-                        onDoubleClick = {(e) => this.onRowDoubleClick(e, i, c)}
-                    >
-                        {cell}
-                    </div>);
-                }
-
-                let rowClassName = 'RowTableRow';
-                if (i === activeRowIndex) {
-                    rowClassName += ' table-active';
-                }
-                if (rowClassExtras) {
-                    rowClassName += ' ' + rowClassExtras;
-                }
-
-                let tabIndex = -1;
-                let style;
-                let ref;
-                if (sizeRenderRefs) {
-                    ref = sizeRenderRefs.bodyRowRef;
-                }
-                else {
-                    if (bodyRowHeight !== undefined) {
-                        style = {
-                            height: bodyRowHeight,
-                        };
-                    }
-                    if (i === activeRowIndex) {
-                        tabIndex = 0;
-                        this._activeRowRef = React.createRef();
-                        ref = this._activeRowRef;
-                    }
-                }
-
-                rows.push(<div className = {rowClassName}
-                    key = {getRowKey(i)}
-                    style = {style}
-                    ref = {ref}
-                    tabIndex = {tabIndex}
-                    onKeyDown = {this.onKeyDown}
-                >
-                    {cells}
-                </div>);
-
-                if (sizeRenderRefs) {
-                    // If we're fixed height rows only render a single row.
-                    break;
-                }
+            for (let rowIndex = firstRow; rowIndex <= lastRow; ++rowIndex) {
+                const row = this.renderRow(sizeRenderRefs, rowIndex);
+                rows.push(row);
             }
         }
 
@@ -905,8 +1047,6 @@ export class RowTable extends React.Component {
         }
 
         let bodyStyle;
-        let bodyTabIndex = -1;
-        let bodyOnKeyDown;
         let bodyRef;
         let rowsContainerStyle;
         let rowsInnerStyle;
@@ -921,24 +1061,15 @@ export class RowTable extends React.Component {
                 if (bodyWidth !== undefined) {
                     bodyStyle.width = bodyWidth;
                 }
-    
-                if (!this._activeRowRef) {
-                    bodyTabIndex = 0;
-                    bodyOnKeyDown = this.onKeyDown;
-                }
             }
 
             if (bodyRowHeight !== undefined) {
-                //const offsetY = topVisibleRow * bodyRowHeight;
-                const offsetY = this.state.scrollTop;
+                const { offsetY } = this.state;
                 rowsContainerStyle = {
                     height: bodyRowHeight * rowCount,
-                    willChange: 'transform',
                     position: 'relative',
                 };
-    
                 rowsInnerStyle = {
-                    willChange: 'transform',
                     transform: `translateY(${offsetY}px)`
                 };
     
@@ -946,20 +1077,30 @@ export class RowTable extends React.Component {
             }
 
             bodyRef = this._bodyRef;
-        } 
+        }
 
         return <div className = {bodyClassName}
             style = {bodyStyle}
             onScroll = {this.onScroll}
-            tabIndex = {bodyTabIndex}
-            onKeyDown = {bodyOnKeyDown}
+            tabIndex = {0}
+            onKeyDown = {this.onKeyDown}
+            onFocus = {this.onBodyFocus}
+            onBlur = {this.onBodyBlur}
             ref = {bodyRef}
         >
-            <div
+            <div 
+                // This container sets the overall size of the table so the body 
+                // container can scroll it.
                 style = {rowsContainerStyle}
                 ref = {rowsContainerRef}
             >
-                <div style = {rowsInnerStyle}>
+                <div 
+                    // This container is where the rows are placed. Since we're
+                    // generating virtual rows, we need to translateY the container
+                    // where the rows go so the first row rendered lines up properly
+                    // with the scrolled position.
+                    style = {rowsInnerStyle}
+                >
                     {rows}
                 </div>
             </div>
@@ -1042,14 +1183,11 @@ export class RowTable extends React.Component {
             return;
         }
 
-        const { topVisibleRow, bottomFullyVisibleRow } = this.state;
-        if ((activeRowIndex < topVisibleRow)
+        const { topFullyVisibleRow, bottomFullyVisibleRow } = this.state;
+        if ((activeRowIndex < topFullyVisibleRow)
          || (activeRowIndex > bottomFullyVisibleRow)) {
             this.makeRowRangeVisible(activeRowIndex);
         }
-        this.setState({
-            activeRowUpdated: true,
-        });
     }
 
 
@@ -1057,6 +1195,7 @@ export class RowTable extends React.Component {
      * @typedef {object} RowTable~VisibleRowRange
      * @property {number}   topVisibleRow
      * @property {number}   bottomVisibleRow
+     * @property {number}   topFullyVisibleRow
      * @property {number}   bottomFullyVisibleRow
      */
 
@@ -1068,6 +1207,7 @@ export class RowTable extends React.Component {
         return {
             topVisibleRow: state.topVisibleRow,
             bottomVisibleRow: state.bottomVisibleRow,
+            topFullyVisibleRow: state.topFullyVisibleRow,
             bottomFullyVisibleRow: state.bottomFullyVisibleRow,
         };
     }
@@ -1077,6 +1217,7 @@ export class RowTable extends React.Component {
      * the smaller row index is made visible.
      * @param {number} rowIndexA 
      * @param {number} [rowIndexB =rowIndexA]
+     * @returns {boolean} <code>true</code> if the visible row range needed updating.
      */
     makeRowRangeVisible(rowIndexA, rowIndexB) {
         if (rowIndexB === undefined) {
@@ -1102,28 +1243,35 @@ export class RowTable extends React.Component {
             return;
         }
 
-        const { bodyRowHeight, topVisibleRow, bottomFullyVisibleRow, } = this.state;
+        const { bodyRowHeight, topFullyVisibleRow, bottomFullyVisibleRow, } = this.state;
         if (!bodyRowHeight) {
             return;
         }
 
-        let newTopVisibleRow = topVisibleRow;
-        if (rowIndexA < topVisibleRow) {
-            newTopVisibleRow = rowIndexA;
+        let newVisibleRow;
+        if (rowIndexA < topFullyVisibleRow) {
+            newVisibleRow = rowIndexA;
         }
         else if (rowIndexB > bottomFullyVisibleRow) {
-            newTopVisibleRow = rowIndexB - (bottomFullyVisibleRow - topVisibleRow);
-            newTopVisibleRow = Math.min(rowIndexA, newTopVisibleRow);
+            const fullyVisibleRows = bottomFullyVisibleRow - topFullyVisibleRow;
+            let newTopRow = rowIndexB - fullyVisibleRows;
+            if (rowIndexA < newTopRow) {
+                // Always want rowIndexA visible...
+                newVisibleRow = rowIndexA + fullyVisibleRows - 1;
+            }
+            else {
+                newVisibleRow = rowIndexB;
+            }
         }
 
-        if (newTopVisibleRow !== topVisibleRow) {
+        if (newVisibleRow !== undefined) {
             this.setState({
-                visibleRowIndex: newTopVisibleRow
+                visibleRowIndex: newVisibleRow
+            },
+            () => {
+                this.updateVisibleRows();
             });
-            this.updateVisibleRows(newTopVisibleRow * bodyRowHeight);
-            this.setState({
-                activeRowUpdated: true,
-            });
+            return true;
         }
     }
 }

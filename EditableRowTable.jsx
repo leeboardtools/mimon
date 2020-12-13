@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { RowTable } from './RowTable';
+import { setFocus } from '../util/ElementUtils';
 
 export function editableRowTable(WrappedTable) {
     class _EditableRowTable extends React.Component {
@@ -412,6 +413,7 @@ export function editableRowTable(WrappedTable) {
                 switch (e.key) {
                 case 'Escape' :
                     this.cancelRowEdit();
+                    setFocus(this._rowTableRef.current);
                     e.preventDefault();
                     break;
 
