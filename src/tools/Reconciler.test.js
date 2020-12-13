@@ -39,6 +39,30 @@ test('Reconciler', async () => {
         });
 
 
+        //
+        // asyncEstimateNextClosingInfo()...
+        result = await reconcilerA.asyncEstimateNextClosingInfo();
+        expect(result).toEqual({
+            closingYMDDate: getYMDDate(
+                sys.checkingLastReconcileInfo.lastReconcileYMDDate).addMonths(1),
+            closingBalanceBaseValue:
+                -5000       // 2000-01-25 Pending
+                + 60000     // 2000-01-26 Not Reconciled
+            ,
+        });
+
+        result = await reconcilerA.asyncEstimateNextClosingInfo('2011-12-10');
+        expect(result).toEqual({
+            closingYMDDate: getYMDDate('2011-12-10'),
+            closingBalanceBaseValue:
+                -5000       // 2000-01-25 Pending
+                + 60000     // 2000-01-26 Not Reconciled
+                - 15000     // 2011-12-10 Not Reconciled
+            ,
+        });
+        
+
+
         await reconcilerA.asyncStartReconcile('2011-12-09', 133000);
         expect(reconcilerA.isReconcileStarted()).toBeTruthy();
 

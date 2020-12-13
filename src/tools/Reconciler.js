@@ -73,7 +73,65 @@ export class Reconciler {
      * being reconciled.
      */
     getLastClosingInfo() {
-        return this._lastClosingInfo;
+        return Object.assign({}, this._lastClosingInfo);
+    }
+
+
+    /**
+     * Retrieves an estimate of what the next reconciliation will involve.
+     * @param {YMDDate} [newClosingYMDDate] If <code>undefined</code> then this
+     * will be estimated from the date from {@link Reconciler#getLastClosingInfo},
+     * and if there wasn't a previous closing it will be set to today.
+     * @returns {Recnociler~ClosingInfo}
+     */
+    async asyncEstimateNextClosingInfo(newClosingYMDDate) {
+        newClosingYMDDate = getYMDDate(newClosingYMDDate);
+
+        let oldClosingYMDDate = this._lastClosingInfo.closingYMDDate;
+        if (!oldClosingYMDDate) {
+            // Use the date of the first transaction.
+            const range = await this._accessor.asyncGetTransactionDateRange(
+                this._accountId);
+            oldClosingYMDDate = range[0];
+
+            if (!newClosingYMDDate) {
+                newClosingYMDDate = new YMDDate();
+            }
+        }
+        else if (!newClosingYMDDate) {
+            newClosingYMDDate = oldClosingYMDDate.addMonths(1);
+        }
+
+        const transactionIds = await this._accessor
+            .asyncGetNonReconciledTransactionIdsForAccountId(
+                this._accountId);
+        
+        let closingBalanceBaseValue = 0;
+        if (transactionIds.length) {
+            const transactionDataItems = await this._accessor
+                .asyncGetTransactionDataItemsWithIds(transactionIds);
+
+            const endValueOf = newClosingYMDDate.valueOf();
+            for (let i = 0; i < transactionDataItems.length; ++i) {
+                const transactionDataItem = transactionDataItems[i];
+
+                if (getYMDDate(transactionDataItem.ymdDate).valueOf() > endValueOf) {
+                    continue;
+                }
+
+                const { splits } = transactionDataItem;
+                splits.forEach((split) => {
+                    if (split.accountId === this._accountId) {
+                        closingBalanceBaseValue += split.quantityBaseValue;
+                    }
+                });
+            }
+        }
+
+        return {
+            closingYMDDate: newClosingYMDDate,
+            closingBalanceBaseValue: closingBalanceBaseValue,
+        };
     }
 
 
@@ -269,9 +327,10 @@ export class Reconciler {
         });
 
         const accountingActions = this._accessor.getAccountingActions();
-        const transactionModifyAction = await accountingActions.asyncCreateModifyTransactionAction(
-            transactionDataItemsToChange
-        );
+        const transactionModifyAction 
+            = await accountingActions.asyncCreateModifyTransactionAction(
+                transactionDataItemsToChange
+            );
 
         const accountDataItem = this._accessor.getAccountDataItemWithId(this._accountId);
         accountDataItem.lastReconcileBalanceBaseValue 
