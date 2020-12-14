@@ -75,6 +75,7 @@ export function Field(props) {
 
 /**
  * @typedef {object} Field~propTypes
+ * @property {string}   [id]
  * @property {string}   [label]
  * @property {string}   [errorMsg]  If specified an error message to be displayed
  * below the input box.
@@ -83,6 +84,9 @@ export function Field(props) {
  * @property {Field~onRenderEditor} onRenderEditor  Callback for rendering the
  * editor component. We use a callback so we can pass in a modified editorClassName
  * if there's an error message.
+ * @property {object} [prependComponent] Optional component to appear before
+ * the editor.
+ * @property {object} [appendComponent] Optional component to appear after the editor.
  */
 Field.propTypes = {
     id: PropTypes.string,
