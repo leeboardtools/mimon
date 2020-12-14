@@ -1020,9 +1020,6 @@ export class RowTable extends React.Component {
             style = {style}
             ref = {ref}
         >
-            <div // TEST!!!
-            >{rowIndex}</div>
-
             {cells}
         </div>;
     }
