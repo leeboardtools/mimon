@@ -7,6 +7,7 @@ import { Reconciler } from './Reconciler';
 import { asyncSetupNewFile } from './NewFileSetup';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
 import { format } from 'date-fns';
+import { bSearch } from '../util/BinarySearch';
 
 
 /**
@@ -1431,6 +1432,42 @@ export class EngineAccessor extends EventEmitter {
         transactionIdA, transactionIdB) {
         return this._transactionManager.asyncGetAccountStateAndTransactionDataItems(
             accountId, transactionIdA, transactionIdB);
+    }
+
+
+    /**
+     * Retrieves the account state for a given date. The account state is the account
+     * state after the last transaction of the date has been applied.
+     * @param {number} accountId 
+     * @param {string|YMDDate} ymdDate 
+     * @returns {AccountStateDataItem|undefined}    <code>undefined</code> is returned
+     * if the account has no transactions on or before ymdDate.
+     */
+    async asyncGetAccountStateForDate(accountId, ymdDate) {
+        const transactionKeys 
+            = await this.asyncGetSortedTransactionKeysForAccount(accountId);
+        if (!transactionKeys || !transactionKeys.length) {
+            return;
+        }
+
+        ymdDate = getYMDDate(ymdDate);
+        let index = bSearch(transactionKeys, ymdDate, (value, arrayValue) => 
+            YMDDate.compare(ymdDate, arrayValue.ymdDate));
+        if (index < 0) {
+            return;
+        }
+        for (; index < transactionKeys.length; ++index) {
+            if (YMDDate.compare(ymdDate, transactionKeys[index].ymdDate) < 0) {
+                break;
+            }
+        }
+        --index;
+
+        const result = await this.asyncGetAccountStateDataItemsAfterTransaction(
+            accountId, transactionKeys[index].id);
+        if (result) {
+            return result[result.length - 1];
+        }
     }
 
 

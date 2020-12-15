@@ -432,6 +432,19 @@ test('EngineAccessor-actions', async () => {
             quantityBaseValue: checkingBalance,
         });
 
+        
+        result = await accessor.asyncGetAccountStateForDate(checkingId, '2019-02-03');
+        expect(result).toEqual({ ymdDate: '2019-02-03', 
+            quantityBaseValue: checkingBalance,
+        });
+        
+        result = await accessor.asyncGetAccountStateForDate(checkingId, '2019-02-04');
+        expect(result).toEqual({ ymdDate: '2019-02-03', 
+            quantityBaseValue: checkingBalance,
+        });
+        
+
+
         result = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
             checkingId, transF.id);
         expect(result).toEqual([
@@ -444,6 +457,14 @@ test('EngineAccessor-actions', async () => {
             { ymdDate: '2018-01-23', quantityBaseValue: checkingOpeningBalance, },
             { ymdDate: '2019-02-03', quantityBaseValue: checkingBalanceG1, }
         ]);
+
+
+        result = await accessor.asyncGetAccountStateForDate(checkingId, '2019-02-01');
+        expect(result).toEqual({ ymdDate: '2018-01-23', 
+            quantityBaseValue: checkingOpeningBalance,
+        });
+        
+
 
         result = await accessor.asyncGetNonReconciledTransactionIdsForAccountId(
             checkingId);
