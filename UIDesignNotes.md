@@ -481,6 +481,7 @@ Common menus:
 
 - RowTable To Do:
     - Add column resizing support
+    - Change focus rectangle from table body to active row.
 
 
 - CollapsibleRowTable
@@ -514,5 +515,3 @@ Common menus:
     - Which one is user option, should be able to use CSS classes.
 
 
-- PricesList
-    - Not properly updating from price updates.

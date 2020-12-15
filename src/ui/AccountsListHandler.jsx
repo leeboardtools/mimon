@@ -33,7 +33,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     onReconcileAccount(tabId) {
         const { activeAccountId} = this.getTabIdState(tabId);
         if (activeAccountId) {
-            this.openTab('reconcileAccount', activeAccountId);
+            this.openTab('reconciler', activeAccountId);
         }
     }
 
@@ -243,7 +243,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const accountType = accessor.getTypeOfAccountId(activeAccountId) || {};
 
         const menuItems = [
-            { id: 'reconcileAccount',
+            { id: 'reconciler',
                 label: userMsg('AccountsListHandler-reconcileAccount'),
                 disabled: !activeAccountId,
                 onChooseItem: () => this.onReconcileAccount(tabId),

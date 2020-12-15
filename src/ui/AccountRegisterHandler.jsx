@@ -45,7 +45,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     onReconcileAccount(tabId) {
         const { accountId} = this.getTabIdState(tabId);
         if (accountId) {
-            this.openTab('reconcileAccount', accountId);
+            this.openTab('reconciler', accountId);
         }
     }
 
@@ -166,7 +166,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
                 onChooseItem: () => this.onPasteTransaction(tabId),
             },
             {},
-            { id: 'reconcileAccount',
+            { id: 'reconciler',
                 label: userMsg('AccountsListHandler-reconcileAccount'),
                 onChooseItem: () => this.onReconcileAccount(tabId),
             },

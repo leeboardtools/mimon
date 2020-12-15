@@ -14,6 +14,7 @@ import * as PI from '../engine/PricedItems';
 import { ErrorBoundary } from '../util-ui/ErrorBoundary';
 import { PricesListHandler } from './PricesListHandler';
 import { PriceRetrieverWindowHandler } from './PriceRetrieverWindowHandler';
+import { ReconcilerWindowHandler } from './ReconcilerWindowHandler';
 
 
 
@@ -92,6 +93,10 @@ export class MainWindow extends React.Component {
 
 
         this._priceRetrieverWindowHandler = new PriceRetrieverWindowHandler(handlerArgs);
+
+
+        this._reconcilerWindowHandler = new ReconcilerWindowHandler(handlerArgs);
+        this._reconcilersByAccountId = new Map();
 
         
         this.state = {
@@ -174,7 +179,7 @@ export class MainWindow extends React.Component {
         if (tabEntry) {
             const { onCloseTab } = tabEntry;
             if (onCloseTab) {
-                onCloseTab(tabId);
+                onCloseTab(tabId, tabEntry);
             }
 
             if (tabId.startsWith('accountRegister_')) {
@@ -189,6 +194,9 @@ export class MainWindow extends React.Component {
             }
             else if (tabId.startsWith('pricesList_')) {
                 this._pricesListsByPricedItemId.delete(tabEntry.pricedItemId);
+            }
+            else if (tabId.startsWith('reconciler_')) {
+                this._reconcilersByAccountId.delete(tabEntry.accountId);
             }
 
             this._tabItemsById.delete(tabId);
@@ -485,10 +493,31 @@ export class MainWindow extends React.Component {
     }
 
 
+    openReconciler(accountId, openArgs) {
+        let tabId = this._reconcilersByAccountId.get(accountId);
+        if (!tabId) {
+            const tabType = 'reconciler';
+            tabId = tabType + '_' + accountId;
+            this._reconcilersByAccountId.set(accountId, tabId);
+            const tabEntry = this._reconcilerWindowHandler.createTabEntry(
+                tabId, accountId, openArgs);
+            this.addTabEntry(tabEntry, tabType);
+        }
+        else {
+            this._reconcilerWindowHandler.openTabEntry(tabId, accountId, 
+                openArgs);
+        }
+
+        this.setState({
+            activeTabId: tabId,
+        });
+    }
+
+
     onOpenTab(type, ...args) {
         switch (type) {
-        case 'reconcileAccount' :
-            this.onSetErrorMsg('Sorry, Reconcile Account is not yet implemented...');
+        case 'reconciler' :
+            this.openReconciler(...args);
             break;
         
         case 'accountRegister' :

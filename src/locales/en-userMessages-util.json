@@ -5,6 +5,8 @@
     "no": "No",
     "done": "Done",
     "save": "Save",
+    "continue": "Continue",
+    "abort": "Abort",
 
     "CellQuantityEditor-invalid_value": ["Enter a numeric value of the form ", "."],
 

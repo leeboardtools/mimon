@@ -350,6 +350,26 @@ body {
     font-weight: 600;
 }
 
+
+.ReconcilerWindow-setup_date_editor {
+  text-align: center;
+  width: 12rem;
+}
+
+.ReconcilerWindow-setup_balance_editor {
+  text-align: right;
+  max-width: 12rem;
+}
+
+
+.ModalPage-inner_rows_container {
+  text-align: left;
+  margin: auto;
+  width: 100%;
+  padding: 15px;
+}
+
+
 .h-inherit {
   height: inherit;
 }
