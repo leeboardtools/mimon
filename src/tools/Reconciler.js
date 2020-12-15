@@ -82,7 +82,10 @@ export class Reconciler {
      * @param {YMDDate} [newClosingYMDDate] If <code>undefined</code> then this
      * will be estimated from the date from {@link Reconciler#getLastClosingInfo},
      * and if there wasn't a previous closing it will be set to today.
-     * @returns {Recnociler~ClosingInfo}
+     * @returns {Reconciler~ClosingInfo} If there are no transactions at all the
+     * closingYMDDate property will be <code>undefined</code>. The 
+     * closingBalanceBaseValue property is set to the account balance at the end
+     * of the new closing date.
      */
     async asyncEstimateNextClosingInfo(newClosingYMDDate) {
         newClosingYMDDate = getYMDDate(newClosingYMDDate);
@@ -92,6 +95,12 @@ export class Reconciler {
             // Use the date of the first transaction.
             const range = await this._accessor.asyncGetTransactionDateRange(
                 this._accountId);
+            if (!range) {
+                return {
+                    closingYMDDate: undefined,
+                };
+            }
+
             oldClosingYMDDate = range[0];
 
             if (!newClosingYMDDate) {
@@ -102,35 +111,15 @@ export class Reconciler {
             newClosingYMDDate = oldClosingYMDDate.addMonths(1);
         }
 
-        const transactionIds = await this._accessor
-            .asyncGetNonReconciledTransactionIdsForAccountId(
-                this._accountId);
-        
-        let closingBalanceBaseValue = 0;
-        if (transactionIds.length) {
-            const transactionDataItems = await this._accessor
-                .asyncGetTransactionDataItemsWithIds(transactionIds);
-
-            const endValueOf = newClosingYMDDate.valueOf();
-            for (let i = 0; i < transactionDataItems.length; ++i) {
-                const transactionDataItem = transactionDataItems[i];
-
-                if (getYMDDate(transactionDataItem.ymdDate).valueOf() > endValueOf) {
-                    continue;
-                }
-
-                const { splits } = transactionDataItem;
-                splits.forEach((split) => {
-                    if (split.accountId === this._accountId) {
-                        closingBalanceBaseValue += split.quantityBaseValue;
-                    }
-                });
-            }
+        const accountState = await this._accessor.asyncGetAccountStateForDate(
+            this._accountId, newClosingYMDDate);
+        if (!accountState) {
+            return;
         }
 
         return {
             closingYMDDate: newClosingYMDDate,
-            closingBalanceBaseValue: closingBalanceBaseValue,
+            closingBalanceBaseValue: accountState.quantityBaseValue,
         };
     }
 

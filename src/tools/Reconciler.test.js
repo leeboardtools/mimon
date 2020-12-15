@@ -46,8 +46,12 @@ test('Reconciler', async () => {
             closingYMDDate: getYMDDate(
                 sys.checkingLastReconcileInfo.lastReconcileYMDDate).addMonths(1),
             closingBalanceBaseValue:
-                -5000       // 2000-01-25 Pending
-                + 60000     // 2000-01-26 Not Reconciled
+                100000      // Opening balance
+                - 10000     // 2000-01-24
+                - 5000      // 2000-01-25
+                - 7000      // 2000-01-25
+                + 60000     // 2000-01-26
+                - 5000      // 2010-12-01
             ,
         });
 
@@ -55,9 +59,13 @@ test('Reconciler', async () => {
         expect(result).toEqual({
             closingYMDDate: getYMDDate('2011-12-10'),
             closingBalanceBaseValue:
-                -5000       // 2000-01-25 Pending
-                + 60000     // 2000-01-26 Not Reconciled
-                - 15000     // 2011-12-10 Not Reconciled
+                100000      // Opening balance
+                - 10000     // 2000-01-24
+                - 5000      // 2000-01-25
+                - 7000      // 2000-01-25
+                + 60000     // 2000-01-26
+                - 5000      // 2010-12-01
+                - 15000     // 2011-12-10
             ,
         });
         
