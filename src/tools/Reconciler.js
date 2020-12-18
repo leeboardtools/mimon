@@ -3,11 +3,12 @@ import { getYMDDate, YMDDate } from '../util/YMDDate';
 import * as T from '../engine/Transactions';
 import * as AS from '../engine/AccountStates';
 import { createCompositeAction } from '../util/Actions';
+import { EventEmitter } from 'events';
 
 /**
  * Manages reconciling an individual account.
  */
-export class Reconciler {
+export class Reconciler extends EventEmitter {
     /**
      * Constructor. Reconcilers are normally only created by {@link EngineAccessors}.
      * @param {EngineAccessor} accessor 
@@ -15,12 +16,18 @@ export class Reconciler {
      * @param {function} shutDownCallback
      */
     constructor(accessor, accountDataItem, shutDownCallback) {
+        super();
+
         this._accessor = accessor;
 
         this._accountId = accountDataItem.id;
         this._lastClosingInfo = {
             closingYMDDate: getYMDDate(accountDataItem.lastReconcileYMDDate),
             closingBalanceBaseValue: accountDataItem.lastReconcileBalanceBaseValue,
+        };
+        this._pendingClosingInfo = {
+            closingYMDDate: getYMDDate(accountDataItem.pendingReconcileYMDDate),
+            closingBalanceBaseValue: accountDataItem.pendingReconcileBalanceBaseValue,
         };
 
         this._shutDownCallback = shutDownCallback;
@@ -36,7 +43,17 @@ export class Reconciler {
         this._accessor.on('transactionsRemove', this._handleTransactionsRemove);
 
         this._transactionEntriesByTransactionId = new Map();
+
+        this._splitInfosUpdated = false;
     }
+
+
+    /**
+     * Fired whenever any transactions affect the reconciler's account.
+     * @event Reconciler~splitInfosUpdate
+     * @type {object}
+     * @property {Reconciler} reconciler
+     */
 
 
     /**
@@ -78,6 +95,15 @@ export class Reconciler {
 
 
     /**
+     * @returns {Reconciler~ClosingInfo}    The pending closing info for the account
+     * being reconciled.
+     */
+    getPendingClosingInfo() {
+        return Object.assign({}, this._pendingClosingInfo);
+    }
+
+
+    /**
      * Retrieves an estimate of what the next reconciliation will involve.
      * @param {YMDDate} [newClosingYMDDate] If <code>undefined</code> then this
      * will be estimated from the date from {@link Reconciler#getLastClosingInfo},
@@ -88,6 +114,12 @@ export class Reconciler {
      * of the new closing date.
      */
     async asyncEstimateNextClosingInfo(newClosingYMDDate) {
+        if (!newClosingYMDDate) {
+            if (this._pendingClosingInfo.closingYMDDate) {
+                return Object.assign({}, this._pendingClosingInfo);
+            }
+        }
+
         newClosingYMDDate = getYMDDate(newClosingYMDDate);
 
         let oldClosingYMDDate = this._lastClosingInfo.closingYMDDate;
@@ -196,6 +228,7 @@ export class Reconciler {
         }
 
         this._addSplitEntry(transactionDataItem.id, splitIndex, split.reconcileState);
+        this._splitInfosUpdated = true;
     }
 
     _addSplitEntry(transactionId, splitIndex, reconcileState) {
@@ -222,6 +255,7 @@ export class Reconciler {
             for (let s = 0; s < splitEntries.length; ++s) {
                 if (splitEntries[s].splitIndex === splitIndex) {
                     splitEntries.splice(s, 1);
+                    this._splitInfosUpdated = true;
                     break;
                 }
             }
@@ -272,15 +306,17 @@ export class Reconciler {
      * and this {@link Reconciler} should no longer be used.
      * <p>
      * If {@link Reconciler#asyncCanApplyReconcile} returns false this throws an Error.
+     * @param {boolean} [applyPending=false]    If true the transaction splits are marked 
+     * as pending instead of reconciled.
      */
-    async asyncApplyReconcile() {
-        if (!await this.asyncCanApplyReconcile()) {
+    async asyncApplyReconcile(applyPending) {
+        if (!applyPending && !await this.asyncCanApplyReconcile()) {
             const currentBalance = this._accessor.accountQuantityBaseValueToText(
                 this._accountId,
                 await this.asyncGetMarkedReconciledBalanceBaseValue());
             const closingBalance = this._accessor.accountQuantityBaseValueToText(
                 this._accountId,
-                this._closingBalanceInfo.closingBalanceBaseValue);
+                this._closingInfo.closingBalanceBaseValue);
             throw userError('Reconciler-account_not_balanced', 
                 currentBalance, closingBalance);
         }
@@ -295,6 +331,10 @@ export class Reconciler {
         allTransactionDataItems.forEach((dataItem) => {
             allTransactionDataItemsById.set(dataItem.id, dataItem);
         });
+
+        const reconcileState = (applyPending)
+            ? T.ReconcileState.PENDING
+            : T.ReconcileState.RECONCILED;
 
         const transactionDataItemsToChange = [];
         this._transactionEntriesByTransactionId.forEach((transactionEntry, id) => {
@@ -311,7 +351,7 @@ export class Reconciler {
                 }
 
                 transactionDataItem.splits[splitEntry.splitIndex].reconcileState
-                    = T.ReconcileState.RECONCILED;
+                    = reconcileState;
             });
         });
 
@@ -322,9 +362,19 @@ export class Reconciler {
             );
 
         const accountDataItem = this._accessor.getAccountDataItemWithId(this._accountId);
-        accountDataItem.lastReconcileBalanceBaseValue 
-            = this._closingInfo.closingBalanceBaseValue;
-        accountDataItem.lastReconcileYMDDate = this._closingInfo.closingYMDDate;
+        if (applyPending) {
+            accountDataItem.pendingReconcileBalanceBaseValue 
+                = this._closingInfo.closingBalanceBaseValue;
+            accountDataItem.pendingReconcileYMDDate = this._closingInfo.closingYMDDate;
+        }
+        else {
+            accountDataItem.lastReconcileBalanceBaseValue 
+                = this._closingInfo.closingBalanceBaseValue;
+            accountDataItem.lastReconcileYMDDate = this._closingInfo.closingYMDDate;
+            
+            accountDataItem.pendingReconcileBalanceBaseValue = undefined;
+            accountDataItem.pendingReconcileYMDDate = undefined;
+        }
 
         const accountModifyAction = accountingActions.createModifyAccountAction(
             accountDataItem
@@ -368,6 +418,7 @@ export class Reconciler {
         this._transactionEntriesByTransactionId.clear();
         this._closingInfo = undefined;
         this._lastClosingInfo = undefined;
+        this._pendingClosingInfo = undefined;
         this._accountId = undefined;
     }
 
@@ -485,6 +536,9 @@ export class Reconciler {
                 this._ignoreTransactionsModified = true;
                 await this._accessor.asyncFireTransactionsModified(
                     Array.from(transactionIdsToModify.values()));
+
+                this._splitInfosUpdated = false;
+                this.emit('splitInfosUpdate', { reconciler: this });
             }
             finally {
                 this._ignoreTransactionsModified = savedIgnoreTransactionsModified;
@@ -546,6 +600,7 @@ export class Reconciler {
 
     _handleTransactionsAdd(result) {
         this._doTransactionsAdd(result.newTransactionDataItems);
+        this._fireUpdateEventIfNeeded();
     }
 
     _doTransactionsAdd(newTransactionDataItems) {
@@ -567,11 +622,13 @@ export class Reconciler {
         const { oldTransactionDataItems, newTransactionDataItems } = result;
         this._doTransactionsRemove(oldTransactionDataItems);
         this._doTransactionsAdd(newTransactionDataItems);
+        this._fireUpdateEventIfNeeded();
     }
 
 
     _handleTransactionsRemove(result) {
         this._doTransactionsRemove(result.removedTransactionDataItems);
+        this._fireUpdateEventIfNeeded();
     }
      
     _doTransactionsRemove(removedTransactionDataItems) {
@@ -588,5 +645,12 @@ export class Reconciler {
                 }
             }
         });
+    }
+
+    _fireUpdateEventIfNeeded() {
+        if (this._splitInfosUpdated) {
+            this._splitInfosUpdated = false;
+            this.emit('splitInfosUpdate', { reconciler: this });
+        }
     }
 }

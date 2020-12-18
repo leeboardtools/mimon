@@ -289,6 +289,10 @@ export function loadAccountsUserMessages() {
  * account reconciliation.
  * @property {number}   [lastReconcileBalanceBaseValue]  The closing balance quantity
  * of the last account reconciliation.
+ * @property {string}   [pendingReconcileYMDDate] The closing date of the last
+ * account pending reconciliation.
+ * @property {number}   [pendingReconcileBalanceBaseValue]  The closing balance quantity
+ * of the last account pending reconciliation.
  * @property {DefaultSplitAccountIds}   [defaultSplitAccountIds]    Optional object
  * containing account ids for default accounts for different splits.
  */
@@ -309,6 +313,10 @@ export function loadAccountsUserMessages() {
  * account reconciliation.
  * @property {number}   [lastReconcileBalanceBaseValue]  The closing balance quantity
  * of the last account reconciliation.
+ * @property {YMDDate}  [pendingReconcileYMDDate] The closing date of the last
+ * account pending reconciliation.
+ * @property {number}   [pendingReconcileBalanceBaseValue]  The closing balance quantity
+ * of the last account pending reconciliation.
  * @property {DefaultSplitAccountIds}   [defaultSplitAccountIds]    Optional object
  * containing account ids for default accounts for different splits.
  */
