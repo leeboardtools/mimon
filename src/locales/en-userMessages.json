@@ -350,6 +350,7 @@
     "ReconcilerWindow-noTransactions": "The account does not contain any transactions.",
 
     "ReconcilerWindow-finish_button": "Finish",
+    "ReconcilerWindow-finish_later_button": "Finish Later",
     "ReconcilerWindow-setup_button": "Set Balances",
 
     "ReconcilerWindowHandler-title": ["Reconcile ", ""],

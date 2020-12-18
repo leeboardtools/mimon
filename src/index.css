@@ -368,20 +368,31 @@ body {
   justify-content: space-between;
 }
 
-/*
-.ReconcilingWindow-splitInfosContainer {
-  
-}
 
+.ReconcilingWindow-splitInfosContainer {
+  height: 100%;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+/*
 .ReconcilingWindow-summaryContainer {
 
 }
 */
 
-.ReconcilingWindow-splitInfos-table {
-  max-height: 10rem;
+.ReconcileSplitInfosSelector {
+  /*margin-left: 1rem;
+  margin-right: 1rem;*/
+  border-style: solid;
+  border-width: 1px;
 }
 
+.ReconcilingWindow-splitInfos-title {
+  padding-top: 1rem;
+  padding-bottom: 0.25rem;
+  font-size: larger;
+  font-weight: bold;
+}
 
 .ReconcilingWindow-splitInfos {
   height: 100%;
@@ -394,8 +405,16 @@ body {
   max-width: 10rem;
 }
 
+.ReconcilingWindow-splitInfos-total {
+  padding-top: 0.5rem;
+  /*padding-right: 1.5rem;*/
+  padding-right: 0rem;
+  padding-bottom: 0.5rem;
+}
+
 .ReconcilingWindow-summary_row {
   max-height: 1.5rem;
+  padding-right: 1.5rem;
 }
 
 .ReconcilingWindow-summary_label {

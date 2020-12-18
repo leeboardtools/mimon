@@ -12,6 +12,7 @@ import { CellTextDisplay } from '../util-ui/CellTextEditor';
 import { getQuantityDefinitionForAccountId, getCurrencyForAccountId } 
     from '../tools/AccountHelpers';
 import { RowTable } from '../util-ui/RowTable';
+import { ContentFramer } from '../util-ui/ContentFramer';
 import * as ACE from './AccountingCellEditors';
 import deepEqual from 'deep-equal';
 
@@ -234,7 +235,7 @@ class ReconcileSplitInfosSelector extends React.Component {
 
     render() {
         const { state } = this;
-        return <div className = "RowTableContainer h-100">
+        return <div className = "RowTableContainer h-100 ReconcileSplitInfosSelector">
             <RowTable 
                 columns = {this.columns}
                 rowCount = {state.rowEntries.length}
@@ -264,10 +265,7 @@ export class ReconcilingWindow extends React.Component {
     constructor(props) {
         super(props);
 
-        this.onTransactionsAdd = this.onTransactionsAdd.bind(this);
-        this.onTransactionsModify = this.onTransactionsModify.bind(this);
-        this.onTransactionsRemove = this.onTransactionsRemove.bind(this);
-
+        this.onSplitInfosUpdate = this.onSplitInfosUpdate.bind(this);
 
         this.state = {
             inflowSplitInfos: [],
@@ -279,65 +277,24 @@ export class ReconcilingWindow extends React.Component {
 
 
     componentDidMount() {
-        const { accessor } = this.props;
-        accessor.on('transactionsAdd', this.onTransactionsAdd);
-        accessor.on('transactionsModify', this.onTransactionsModify);
-        accessor.on('transactionsRemove', this.onTransactionsRemove);
+        const { reconciler } = this.props;
+        reconciler.on('splitInfosUpdate', this.onSplitInfosUpdate);
 
-        this.loadTransactions();
+        this.loadSplitInfos();
     }
 
     componentWillUnmount() {
-        const { accessor } = this.props;
-        accessor.off('transactionsAdd', this.onTransactionsAdd);
-        accessor.off('transactionsModify', this.onTransactionsModify);
-        accessor.off('transactionsRemove', this.onTransactionsRemove);
+        const { reconciler } = this.props;
+        reconciler.off('splitInfosUpdate', this.onSplitInfosUpdate);
     }
 
 
-    handleIfTransactionForMe(transactionDataItem) {
-        const accountId = this.props.reconciler.getAccountId();
-        const { splits } = transactionDataItem;
-        for (let i = 0; i < splits.length; ++i) {
-            if (splits[i].accountId === accountId) {
-                this.loadTransactions();
-                return true;
-            }
-        }
-    }
-
-    
-    onTransactionsAdd(result) {
-        const { newTransactionDataItems } = result;
-        for (let i = 0; i < newTransactionDataItems.length; ++i) {
-            if (this.handleIfTransactionForMe(newTransactionDataItems[i])) {
-                return;
-            }
-        }
-    }
-
-    
-    onTransactionsModify(result) {
-        const { newTransactionDataItems } = result;
-        for (let i = 0; i < newTransactionDataItems.length; ++i) {
-            if (this.handleIfTransactionForMe(newTransactionDataItems[i])) {
-                return;
-            }
-        }
+    onSplitInfosUpdate() {
+        this.loadSplitInfos();
     }
 
 
-    onTransactionsRemove(result) {
-        const { removedTransactionDataItems } = result;
-        for (let i = 0; i < removedTransactionDataItems.length; ++i) {
-            if (this.handleIfTransactionForMe(removedTransactionDataItems[i])) {
-                return;
-            }
-        }
-    }
-
-
-    loadTransactions() {
+    loadSplitInfos() {
         process.nextTick(async () => {
             const { accessor, reconciler } = this.props;
             const newState = {
@@ -393,12 +350,9 @@ export class ReconcilingWindow extends React.Component {
     renderSplitInfos(titleId, splitInfos, signMultiplier) {
         const { accessor, reconciler } = this.props;
 
-        const title = userMsg(titleId);
-
-        const quantityDefinition = getQuantityDefinitionForAccountId(
-            accessor,
-            reconciler.getAccountId());
-        quantityDefinition;
+        const title = <div className = "ReconcilingWindow-splitInfos-title">
+            {userMsg(titleId)}
+        </div>;
 
         const splitInfosSelector = <ReconcileSplitInfosSelector
             accessor = {accessor}
@@ -431,18 +385,16 @@ export class ReconcilingWindow extends React.Component {
                 value = {currency.baseValueToString(reconciledBaseValue)}
                 inputClassExtras = "ReconcilingWindow-splitInfoTotal_value"
             />);
-
-        return <div className = "d-flex flex-column h-100 ReconcilingWindow-splitInfos">
-            <div className = "ReconcilingWindow-splitInfos-title">
-                {title}
-            </div>
-            <div className = "flex-grow-1 ReconcilingWindow-splitInfos-table">
-                {splitInfosSelector}
-            </div>
-            <div className = "ReconcilingWnidow-splitInfos-total">
-                {total}
-            </div>
+        const totalRow = <div className = "ReconcilingWindow-splitInfos-total">
+            {total}
         </div>;
+
+        return <ContentFramer 
+            classExtras = "RowTableContainer ReconcilingWindow-splitInfos"
+            onRenderHeader = {() => title}
+            onRenderContent = {() => splitInfosSelector}
+            onRenderFooter = {() => totalRow}
+        />;
     }
 
 
@@ -519,7 +471,8 @@ export class ReconcilingWindow extends React.Component {
     
 
     render() {
-        const { onCancel, onSetup, onReconcile, title, classExtras } = this.props;
+        const { onCancel, onSetup, onFinishLater, onReconcile, title, 
+            classExtras } = this.props;
 
         const doneDisabled = !this.state.canApplyReconcile;
 
@@ -530,8 +483,14 @@ export class ReconcilingWindow extends React.Component {
                 onClick: onSetup,
                 classExtras: 'btn-secondary',
             });
+        }
 
-            // TODO: Add a finish later?
+        if (onFinishLater) {
+            buttons.push({
+                label: userMsg('ReconcilerWindow-finish_later_button'),
+                onClick: onFinishLater,
+                classExtras: 'btn-secondary',
+            });
         }
 
 
@@ -539,13 +498,30 @@ export class ReconcilingWindow extends React.Component {
         const outflows = this.renderOutflows();
         const summary = this.renderSummary();
 
-        const containerClassName = 'd-flex flex-column h-100 '
-            + 'ReconcilingWindow-mainContainer';
-
         let className = 'ReconcilerWindow ReconcilerWindow-reconciling';
         if (classExtras) {
             className += ' ' + classExtras;
         }
+
+        const splitInfosContainer = <div 
+            className = "ReconcilingWindow-splitInfosContainer"
+        >
+            <div className = "row h-100">
+                <div className = "col w-50">
+                    {inflows}
+                </div>
+                <div className = "col w-50">
+                    {outflows}
+                </div>
+            </div>
+        </div>;
+
+
+        const summaryContainer = <div className = "ReconcilingWindow-summaryContainer">
+            {summary}
+        </div>;
+
+
         return <ModalPage
             onDone = {onReconcile}
             doneLabel = {userMsg('ReconcilerWindow-finish_button')}
@@ -555,23 +531,10 @@ export class ReconcilingWindow extends React.Component {
             title = {title}
             classExtras = {className}
         >
-            <div className = "h-100 ModalPage-inner_rows_container">
-                <div className = {containerClassName}>
-                    <div className = "flex-grow-1 ReconcilingWindow-splitInfosContainer">
-                        <div className = "row h-100">
-                            <div className = "col">
-                                {inflows}
-                            </div>
-                            <div className = "col">
-                                {outflows}
-                            </div>
-                        </div>
-                    </div>
-                    <div className = "ReconcilingWindow-summaryContainer">
-                        {summary}
-                    </div>
-                </div>
-            </div>
+            <ContentFramer
+                onRenderContent = {() => splitInfosContainer}
+                onRenderFooter = {() => summaryContainer}
+            />
         </ModalPage>;
     }
 }
@@ -582,6 +545,7 @@ ReconcilingWindow.propTypes = {
     lastClosingInfo: PropTypes.object.isRequired,
     closingInfo: PropTypes.object.isRequired,
     onReconcile: PropTypes.func.isRequired,
+    onFinishLater: PropTypes.func.isRequired,
     onSetup: PropTypes.func,
     onCancel: PropTypes.func.isRequired,
     title: PropTypes.string,
@@ -686,15 +650,18 @@ export class ReconcilerSetupWindow extends React.Component {
             errorMsg = e.toString();
         }
 
-        const closingInfo = {
-            closingBalanceBaseValue: quantityBaseValue,
-            isEdited: isEdited,
-            errorMsg: errorMsg,
-        };
-        const changes = {};
-        changes[closingInfoName] = closingInfo;
-
-        this.setState(changes);
+        this.setState((state) => {
+            const closingInfo = Object.assign({},
+                state[closingInfoName],
+                {
+                    closingBalanceBaseValue: quantityBaseValue,
+                    isEdited: isEdited,
+                    errorMsg: errorMsg,
+                });
+            const changes = {};
+            changes[closingInfoName] = closingInfo;
+            return changes;
+        });
     }
 
     renderBalanceEditor(className, closingInfoName, ariaLabel) {
@@ -943,11 +910,11 @@ export class ReconcilerWindow extends React.Component {
     }
 
 
-    onApplyReconcile() {
+    onApplyReconcile(applyPending) {
         process.nextTick(async () => {
             const { reconciler } = this.state;
             try {
-                await reconciler.asyncApplyReconcile();
+                await reconciler.asyncApplyReconcile(applyPending);
                 this.props.onClose();
             }
             catch (e) {
@@ -958,6 +925,7 @@ export class ReconcilerWindow extends React.Component {
             }
         });
     }
+
 
     onCancelReconcile() {
         this.props.onClose();
@@ -1001,6 +969,7 @@ export class ReconcilerWindow extends React.Component {
             lastClosingInfo = {lastClosingInfo}
             closingInfo = {closingInfo}
             onReconcile = {this.onApplyReconcile}
+            onFinishLater = {() => this.onApplyReconcile(true)}
             onSetup = {this.onSetup}
             onCancel = {this.onCancelReconcile}
             title = {this.getTitle('ReconcilerWindow-reconciling_title')}
