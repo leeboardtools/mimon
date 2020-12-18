@@ -342,10 +342,10 @@
     "ReconcilerWindow-setup_title": ["Reconcile Balances for ", ""],
     "ReconcilerWindow-reconciling_title": ["Reconciling ", ""],
 
-    "ReconcilerWindow-lastReconcileDate_label": "Last reconcile date",
-    "ReconcilerWindow-statementEndDate_label": "Statement end date",
-    "ReconcilerWindow-openingBalance_label": "Beginning balance",
-    "ReconcilerWindow-closingBalance_label": "Ending balance",
+    "ReconcilerWindow-lastReconcileDate_label": "Last reconcile date:",
+    "ReconcilerWindow-statementEndDate_label": "Statement end date:",
+    "ReconcilerWindow-openingBalance_label": "Beginning balance:",
+    "ReconcilerWindow-closingBalance_label": "Ending balance:",
 
     "ReconcilerWindow-noTransactions": "The account does not contain any transactions.",
 
@@ -353,6 +353,15 @@
     "ReconcilerWindow-setup_button": "Set Balances",
 
     "ReconcilerWindowHandler-title": ["Reconcile ", ""],
+
+    "ReconcilingWindow-inflow_title": "Inflows",
+    "ReconcilingWindow-outflow_title": "Outflows",
+    "ReconcilingWindow-total_label": "Total:",
+    "ReconcilingWindow-reconciledBalance_label": "Reconciled balance:",
+    "ReconcilingWindow-difference_label": "Difference:",
+
+    "ReconcilingWindow-reconcile_heading": "R",
+    "ReconcilingWindow-amount_heading": "Amount",
 
     "": ""
 }

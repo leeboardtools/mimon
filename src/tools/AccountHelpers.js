@@ -2,6 +2,7 @@ import * as A from '../engine/Accounts';
 import { cleanSpaces } from '../util/StringUtils';
 import { StandardAccountTag } from '../engine/StandardTags';
 import { getQuantityDefinition } from '../util/Quantities';
+import { getCurrency } from '../util/Currency';
 
 /**
  * Builds an array containing the {@link AccountDataItem}s of an account and
@@ -346,11 +347,28 @@ export function getPricedItemDataItemForAccountId(accessor, accountId) {
  * of an account given the account id.
  * @param {EngineAccessor} accessor 
  * @param {number} accountId 
- * @returns {QuantityDefinition|undefined}
+ * @returns {QuantityDefinition|undefined} <code>undefined</code> is returned 
+ * if the account is not valid.
  */
 export function getQuantityDefinitionForAccountId(accessor, accountId) {
     const pricedItemDataItem = getPricedItemDataItemForAccountId(accessor, accountId);
     if (pricedItemDataItem) {
         return getQuantityDefinition(pricedItemDataItem.quantityDefinition);
+    }
+}
+
+
+/**
+ * Retrieves the {@link Currency} of the {@link PricedItemDataItem}
+ * of an account given the account id.
+ * @param {EngineAccessor} accessor 
+ * @param {number} accountId 
+ * @returns {Currency|undefined} <code>undefined</code> is returned if the account 
+ * is not valid.
+ */
+export function getCurrencyForAccountId(accessor, accountId) {
+    const pricedItemDataItem = getPricedItemDataItemForAccountId(accessor, accountId);
+    if (pricedItemDataItem) {
+        return getCurrency(pricedItemDataItem.currency || accessor.getBaseCurrencyCode());
     }
 }

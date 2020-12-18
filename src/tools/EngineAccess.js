@@ -903,7 +903,7 @@ export class EngineAccessor extends EventEmitter {
 
 
     /**
-     * @returns {Currency}  The base currency.
+     * @returns {string}  The base currency code.
      */
     getBaseCurrencyCode() { 
         return this._pricedItemManager.getBaseCurrencyCode();

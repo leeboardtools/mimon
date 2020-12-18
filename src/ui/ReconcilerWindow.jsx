@@ -6,9 +6,255 @@ import { getYMDDateString, YMDDate } from '../util/YMDDate';
 import { CellDateDisplay, CellDateEditor } from '../util-ui/CellDateEditor';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { Field } from '../util-ui/Field';
-import { CellQuantityEditor, getValidQuantityBaseValue } 
+import { CellQuantityEditor, getValidQuantityBaseValue, } 
     from '../util-ui/CellQuantityEditor';
-import { getQuantityDefinitionForAccountId } from '../tools/AccountHelpers';
+import { CellTextDisplay } from '../util-ui/CellTextEditor';
+import { getQuantityDefinitionForAccountId, getCurrencyForAccountId } 
+    from '../tools/AccountHelpers';
+import { RowTable } from '../util-ui/RowTable';
+import * as ACE from './AccountingCellEditors';
+import deepEqual from 'deep-equal';
+
+
+function getDateCellValue(args) {
+    const { caller, rowEntry } = args;
+    if (rowEntry) {
+        return {
+            ymdDate: rowEntry.ymdDate,
+            accessor: caller.accessor,
+        };
+    }
+}
+
+function getRefNumCellValue(args) {
+    const { rowEntry } = args;
+    if (rowEntry) {
+        return rowEntry.refNum;
+    }
+}
+
+function getDescriptionCellValue(args) {
+    const { rowEntry } = args;
+    if (rowEntry) {
+        return rowEntry.description;
+    }
+}
+
+function getAmountCellValue(args) {
+    const { caller, rowEntry } = args;
+    if (rowEntry) {
+        const { props } = caller;
+
+        const quantityDefinition = getQuantityDefinitionForAccountId(
+            props.accessor,
+            props.reconciler.getAccountId());
+
+        return {
+            quantityBaseValue: rowEntry.amountBaseValue * props.signMultiplier,
+            quantityDefinition: quantityDefinition,
+        };
+    }
+}
+
+function getReconcileCellValue(args) {
+    const { rowEntry } = args;
+    if (rowEntry) {
+        return rowEntry.markReconciled;
+    }
+}
+
+
+function renderReconcileCell(args) {
+    const { caller, rowEntry, value } = args;
+    let className = 'checkbox text-center';
+    if (value) {
+        className += ' checkbox-checked';
+    }
+
+    return <div className = {className}
+        onClick = {(e) => caller.toggleSplitInfoReconcile(rowEntry.splitInfo)}
+    />;
+}
+
+
+class ReconcileSplitInfosSelector extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.getRowKey = this.getRowKey.bind(this);
+        this.onRenderCell = this.onRenderCell.bind(this);
+        this.onActivateRow = this.onActivateRow.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
+        this.onRowDoubleClick = this.onRowDoubleClick.bind(this);
+
+        const balanceColumnInfo = ACE.getBalanceColumnInfo({
+            getCellValue: getAmountCellValue,
+        });
+        balanceColumnInfo.header.label = userMsg('ReconcilingWindow-amount_heading');
+        balanceColumnInfo.header.ariaLabel = 'Amount';
+
+        this.columns = [
+            ACE.getDateColumnInfo({
+                getCellValue: getDateCellValue,
+            }),
+            ACE.getRefNumColumnInfo({
+                getCellValue: getRefNumCellValue,
+            }),
+            ACE.getDescriptionColumnInfo({
+                getCellValue: getDescriptionCellValue,
+            }),
+            {
+                key: 'reconcile',
+                header: {
+                    label: userMsg('ReconcilingWindow-reconcile_heading'),
+                },
+                getCellValue: getReconcileCellValue,
+                renderDisplayCell: renderReconcileCell,
+            },
+            balanceColumnInfo,
+        ];
+
+
+        this._sizeRowEntry = {
+            ymdDate: '2020-12-31',
+            refNum: 1234567,
+            description: 'This is a long description',
+            markReconciled: true,
+            amountBaseValue: 9999999999999,
+        };
+
+        this.state = {
+            rowEntries: [],
+            activeRowIndex: 0,
+        };
+    }
+
+
+    componentDidMount() {
+        this.updateRowEntries();
+    }
+
+
+    componentDidUpdate(prevProps, prevState) {
+        if (!deepEqual(this.props.splitInfos, prevProps.splitInfos)) {
+            this.updateRowEntries();
+        }
+    }
+
+
+    updateRowEntries() {
+        const newRowEntries = [];
+
+        const { splitInfos } = this.props;
+        splitInfos.forEach((splitInfo) => {
+            const { transactionDataItem, splitIndex, markReconciled } = splitInfo;
+            const split = transactionDataItem.splits[splitIndex];
+            const rowEntry = {
+                splitInfo: splitInfo,
+                ymdDate: transactionDataItem.ymdDate,
+                refNum: split.refNum,
+                description: split.description || transactionDataItem.description,
+                markReconciled: markReconciled,
+                amountBaseValue: split.quantityBaseValue,
+            };
+            newRowEntries.push(rowEntry);
+        });
+
+        this.setState({
+            rowEntries: newRowEntries,
+        });
+    }
+
+
+    toggleSplitInfoReconcile(splitInfo) {
+        process.nextTick(async () => {
+            const { reconciler } = this.props;
+            await reconciler.asyncSetTransactionSplitMarkedReconciled(
+                splitInfo, 
+                !splitInfo.markReconciled);
+        });
+    }
+
+
+    getRowKey(rowIndex) {
+        return rowIndex;
+    }
+
+    onRenderCell(args) {
+        let rowEntry = (args.isSizeRender)
+            ? this._sizeRowEntry
+            : this.state.rowEntries[args.rowIndex];
+        args = Object.assign({}, args, {
+            caller: this,
+            rowEntry: rowEntry,
+            isActive: args.rowIndex === this.state.activeRowIndex,
+        });
+
+        const { column } = args;
+        const { renderDisplayCell } = column;
+        if (renderDisplayCell) {
+            const value = args.column.getCellValue(args);
+            return renderDisplayCell({
+                caller: this,
+                rowEntry: rowEntry,
+                columnInfo: column,
+                value: value,
+            });
+        }
+    }
+
+    onActivateRow(rowIndex) {
+        this.setState({
+            activeRowIndex: rowIndex,
+        });
+    }
+
+    toggleActiveRowReconcile() {
+        const { activeRowIndex, rowEntries } = this.state;
+        if ((activeRowIndex >= 0) && (activeRowIndex < rowEntries.length)) {
+            this.toggleSplitInfoReconcile(rowEntries[activeRowIndex].splitInfo);
+            return true;
+        }
+    }
+
+    onKeyDown(e) {
+        switch (e.key) {
+        case ' ' :
+            if (this.toggleActiveRowReconcile()) {
+                e.preventDefault();
+            }
+            break;
+        }
+    }
+
+    onRowDoubleClick(e) {
+        this.toggleActiveRowReconcile();
+    }
+
+
+    render() {
+        const { state } = this;
+        return <div className = "RowTableContainer h-100">
+            <RowTable 
+                columns = {this.columns}
+                rowCount = {state.rowEntries.length}
+                getRowKey = {this.getRowKey}
+                onRenderCell = {this.onRenderCell}
+                activeRowIndex = {state.activeRowIndex}
+                onActivateRow = {this.onActivateRow}
+                onKeyDown = {this.onKeyDown}
+                onRowDoubleClick = {this.onRowDoubleClick}
+            />
+        </div>;
+    }
+}
+
+ReconcileSplitInfosSelector.propTypes = {
+    accessor: PropTypes.object.isRequired,
+    reconciler: PropTypes.object.isRequired,
+    splitInfos: PropTypes.arrayOf(PropTypes.object).isRequired,
+    signMultiplier: PropTypes.number.isRequired,
+};
 
 
 /**
@@ -24,7 +270,10 @@ export class ReconcilingWindow extends React.Component {
 
 
         this.state = {
-
+            inflowSplitInfos: [],
+            inflowsSign: 1,
+            outflowSplitInfos: [],
+            outflowsSign: -1,
         };
     }
 
@@ -90,14 +339,47 @@ export class ReconcilingWindow extends React.Component {
 
     loadTransactions() {
         process.nextTick(async () => {
-            const { reconciler } = this.props;
-            const newState = {};
+            const { accessor, reconciler } = this.props;
+            const newState = {
+                inflowSplitInfos: [],
+                outflowSplitInfos: [],
+            };
 
             newState.canApplyReconcile = await reconciler.asyncCanApplyReconcile();
+
+            const accountId = reconciler.getAccountId();
+            const category = accessor.getCategoryOfAccountId(accountId);
+            const outflowsSign = category.creditSign;
+            newState.outflowsSign = outflowsSign;
+            newState.inflowsSign = -outflowsSign;
             
             const splitInfos = await reconciler.asyncGetNonReconciledSplitInfos();
+            const transactionDataItemsById = new Map();
             splitInfos.forEach((splitInfo) => {
+                transactionDataItemsById.set(splitInfo.transactionId, undefined);
+            });
 
+            const transactionIds = Array.from(transactionDataItemsById.keys());
+            const transactionDataItems 
+                = await accessor.asyncGetTransactionDataItemsWithIds(
+                    transactionIds);
+            transactionDataItems.forEach((transactionDataItem) => {
+                transactionDataItemsById.set(transactionDataItem.id, transactionDataItem);
+            });
+
+            splitInfos.forEach((splitInfo) => {
+                const transactionDataItem 
+                    = transactionDataItemsById.get(splitInfo.transactionId);
+                const split = transactionDataItem.splits[splitInfo.splitIndex];
+
+                splitInfo = Object.assign({}, splitInfo);
+                splitInfo.transactionDataItem = transactionDataItem;
+                if (split.quantityBaseValue * outflowsSign > 0) {
+                    newState.outflowSplitInfos.push(splitInfo);
+                }
+                else {
+                    newState.inflowSplitInfos.push(splitInfo);
+                }
             });
 
             newState.reconciledBalanceBaseValue 
@@ -107,6 +389,134 @@ export class ReconcilingWindow extends React.Component {
         });
     }
 
+
+    renderSplitInfos(titleId, splitInfos, signMultiplier) {
+        const { accessor, reconciler } = this.props;
+
+        const title = userMsg(titleId);
+
+        const quantityDefinition = getQuantityDefinitionForAccountId(
+            accessor,
+            reconciler.getAccountId());
+        quantityDefinition;
+
+        const splitInfosSelector = <ReconcileSplitInfosSelector
+            accessor = {accessor}
+            reconciler = {reconciler}
+            splitInfos = {splitInfos}
+            signMultiplier = {signMultiplier}
+        />;
+
+        let reconciledBaseValue = 0;
+        splitInfos.forEach((splitInfo) => {
+            if (splitInfo.markReconciled) {
+                const { transactionDataItem, splitIndex } = splitInfo;
+                reconciledBaseValue 
+                    += transactionDataItem.splits[splitIndex].quantityBaseValue;
+            }
+        });
+        reconciledBaseValue *= signMultiplier;
+
+
+        // TODO: Add Select All/Select None buttons
+
+        const currency = getCurrencyForAccountId(
+            accessor,
+            reconciler.getAccountId());
+
+        const label = userMsg('ReconcilingWindow-total_label');
+        const total = this.renderSummaryRow('ReconcilingWindow-total_label',
+            <CellTextDisplay
+                ariaLabel = {label}
+                value = {currency.baseValueToString(reconciledBaseValue)}
+                inputClassExtras = "ReconcilingWindow-splitInfoTotal_value"
+            />);
+
+        return <div className = "d-flex flex-column h-100 ReconcilingWindow-splitInfos">
+            <div className = "ReconcilingWindow-splitInfos-title">
+                {title}
+            </div>
+            <div className = "flex-grow-1 ReconcilingWindow-splitInfos-table">
+                {splitInfosSelector}
+            </div>
+            <div className = "ReconcilingWnidow-splitInfos-total">
+                {total}
+            </div>
+        </div>;
+    }
+
+
+    renderInflows() {
+        return this.renderSplitInfos('ReconcilingWindow-inflow_title',
+            this.state.inflowSplitInfos,
+            this.state.inflowsSign,
+        );
+    }
+
+
+    renderOutflows() {
+        return this.renderSplitInfos('ReconcilingWindow-outflow_title',
+            this.state.outflowSplitInfos,
+            this.state.outflowsSign,
+        );
+    }
+
+
+    renderSummaryRow(labelId, valueComponent) {
+        return <div className = "row ReconcilingWindow-summary_row">
+            <div className = "col ReconcilingWindow-summary_label">
+                {userMsg(labelId)}
+            </div>
+            <div className = "col ReconcilingWindow-summary_value">
+                {valueComponent}
+            </div>
+        </div>;
+    }
+
+    renderSummaryValueRow(labelId, valueBaseValue) {
+        const { accessor, reconciler } = this.props;
+        
+        const currency = getCurrencyForAccountId(
+            accessor,
+            reconciler.getAccountId());
+
+        const label = userMsg(labelId);
+        const component = <CellTextDisplay
+            ariaLabel = {label}
+            value = {currency.baseValueToString(valueBaseValue)}
+            inputClassExtras = "ReconcilingWindow-summary_value"
+        />;
+        return this.renderSummaryRow(labelId, component);
+    }
+
+    renderSummary() {
+        const { reconciledBalanceBaseValue } = this.state;
+        if (reconciledBalanceBaseValue === undefined) {
+            return;
+        }
+
+        const { accessor, lastClosingInfo, closingInfo, } = this.props;
+        const dateFormat = accessor.getDateFormat();
+        const dateComponent = <CellDateDisplay
+            value = {getYMDDateString(closingInfo.closingYMDDate)}
+            dateFormat = {dateFormat}
+            inputClassExtras = "ReconcilingWindow-summary_date"
+        />;
+
+        return <div className = "container-fluid ReconcilingWindow-summary">
+            {this.renderSummaryRow('ReconcilerWindow-statementEndDate_label', 
+                dateComponent)}
+            {this.renderSummaryValueRow('ReconcilerWindow-openingBalance_label',
+                lastClosingInfo.closingBalanceBaseValue)}
+            {this.renderSummaryValueRow('ReconcilerWindow-closingBalance_label',
+                closingInfo.closingBalanceBaseValue)}
+            {this.renderSummaryValueRow('ReconcilingWindow-reconciledBalance_label',
+                reconciledBalanceBaseValue)}
+            {this.renderSummaryValueRow('ReconcilingWindow-difference_label',
+                reconciledBalanceBaseValue - closingInfo.closingBalanceBaseValue)}
+        </div>;
+    }
+    
 
     render() {
         const { onCancel, onSetup, onReconcile, title, classExtras } = this.props;
@@ -120,7 +530,17 @@ export class ReconcilingWindow extends React.Component {
                 onClick: onSetup,
                 classExtras: 'btn-secondary',
             });
+
+            // TODO: Add a finish later?
         }
+
+
+        const inflows = this.renderInflows();
+        const outflows = this.renderOutflows();
+        const summary = this.renderSummary();
+
+        const containerClassName = 'd-flex flex-column h-100 '
+            + 'ReconcilingWindow-mainContainer';
 
         let className = 'ReconcilerWindow ReconcilerWindow-reconciling';
         if (classExtras) {
@@ -135,6 +555,23 @@ export class ReconcilingWindow extends React.Component {
             title = {title}
             classExtras = {className}
         >
+            <div className = "h-100 ModalPage-inner_rows_container">
+                <div className = {containerClassName}>
+                    <div className = "flex-grow-1 ReconcilingWindow-splitInfosContainer">
+                        <div className = "row h-100">
+                            <div className = "col">
+                                {inflows}
+                            </div>
+                            <div className = "col">
+                                {outflows}
+                            </div>
+                        </div>
+                    </div>
+                    <div className = "ReconcilingWindow-summaryContainer">
+                        {summary}
+                    </div>
+                </div>
+            </div>
         </ModalPage>;
     }
 }

@@ -362,6 +362,57 @@ body {
 }
 
 
+.ReconcilingWindow-mainContainer {
+  height: 100%;
+  align-content: stretch;
+  justify-content: space-between;
+}
+
+/*
+.ReconcilingWindow-splitInfosContainer {
+  
+}
+
+.ReconcilingWindow-summaryContainer {
+
+}
+*/
+
+.ReconcilingWindow-splitInfos-table {
+  max-height: 10rem;
+}
+
+
+.ReconcilingWindow-splitInfos {
+  height: 100%;
+  align-content: stretch;
+  justify-content: space-between;
+}
+
+.ReconcilingWindow-splitInfoTotal_value {
+  text-align: right;
+  max-width: 10rem;
+}
+
+.ReconcilingWindow-summary_row {
+  max-height: 1.5rem;
+}
+
+.ReconcilingWindow-summary_label {
+  text-align: right;
+}
+
+.ReconcilingWindow-summary_value {
+  text-align: right;
+  max-width: 10rem;
+}
+
+.ReconcilingWindow-summary_date {
+  text-align: right;
+  max-width: 10rem;
+}
+
+
 .ModalPage-inner_rows_container {
   text-align: left;
   margin: auto;

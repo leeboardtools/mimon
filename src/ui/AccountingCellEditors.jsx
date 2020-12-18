@@ -411,7 +411,7 @@ export function renderDateEditor(args) {
 /**
  * @typedef {object}    CellDateDisplayArgs
  * @property {ColumnInfo} columnInfo
- * @property {string}   value
+ * @property {CellDateValue} value
  */
 
 /**
