@@ -90,6 +90,7 @@ export class ReconcilerWindowHandler extends MainWindowHandlerBase {
             contextMenuItems = {contextMenuItems}
             openArgs = {tabEntry.openArgs}
             onClose={() => this.closeTab(tabEntry.tabId)}
+            onOpenRegisterForTransactionSplit = {this.onOpenRegisterForTransactionSplit}
             ref = {reconcilerWindowRef}
         />;
     }

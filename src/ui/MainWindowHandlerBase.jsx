@@ -16,8 +16,21 @@ export class MainWindowHandlerBase {
         this.openTab = props.onOpenTab;
         this.closeTab = props.onCloseTab;
         this.refreshUndoMenu = props.onRefreshUndoMenu;
+
+        this.onOpenRegisterForTransactionSplit 
+            = this.onOpenRegisterForTransactionSplit.bind(this);
     }
     
+
+    onOpenRegisterForTransactionSplit(transactionDataItem, splitIndex) {
+        const split = transactionDataItem.splits[splitIndex];
+        this.openTab('accountRegister', split.accountId, {
+            transactionDataItem: transactionDataItem,
+            splitIndex: splitIndex,
+        });
+    }
+
+
 }
 
 /**

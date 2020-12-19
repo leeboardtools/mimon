@@ -35,8 +35,6 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         this.onReconcileAccount = this.onReconcileAccount.bind(this);
 
         this.onSelectSplit = this.onSelectSplit.bind(this);
-        this.onOpenRegisterForTransactionSplit 
-            = this.onOpenRegisterForTransactionSplit.bind(this);
 
         this._eventEmitter = new EventEmitter();
     }
@@ -199,15 +197,6 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             this.setTabIdState(tabId, {
                 dropdownInfo: this.getTabDropdownInfo(tabId),
             });
-        });
-    }
-
-
-    onOpenRegisterForTransactionSplit(transactionDataItem, splitIndex) {
-        const split = transactionDataItem.splits[splitIndex];
-        this.openTab('accountRegister', split.accountId, {
-            transactionDataItem: transactionDataItem,
-            splitIndex: splitIndex,
         });
     }
 

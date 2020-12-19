@@ -229,7 +229,15 @@ class ReconcileSplitInfosSelector extends React.Component {
     }
 
     onRowDoubleClick(e) {
-        this.toggleActiveRowReconcile();
+        const { onOpenRegisterForTransactionSplit } = this.props;
+        if (onOpenRegisterForTransactionSplit) {
+            const { activeRowIndex, rowEntries } = this.state;
+            if ((activeRowIndex >= 0) && (activeRowIndex < rowEntries.length)) {
+                const { splitInfo } = rowEntries[activeRowIndex];
+                const { transactionDataItem, splitIndex, } = splitInfo;
+                onOpenRegisterForTransactionSplit(transactionDataItem, splitIndex);
+            }
+        }
     }
 
 
@@ -255,6 +263,7 @@ ReconcileSplitInfosSelector.propTypes = {
     reconciler: PropTypes.object.isRequired,
     splitInfos: PropTypes.arrayOf(PropTypes.object).isRequired,
     signMultiplier: PropTypes.number.isRequired,
+    onOpenRegisterForTransactionSplit: PropTypes.func,
 };
 
 
@@ -368,6 +377,8 @@ export class ReconcilingWindow extends React.Component {
             reconciler = {reconciler}
             splitInfos = {splitInfos}
             signMultiplier = {signMultiplier}
+            onOpenRegisterForTransactionSplit 
+                = {this.props.onOpenRegisterForTransactionSplit}
         />;
 
         let reconciledBaseValue = 0;
@@ -576,6 +587,7 @@ ReconcilingWindow.propTypes = {
     onFinishLater: PropTypes.func.isRequired,
     onSetup: PropTypes.func,
     onCancel: PropTypes.func.isRequired,
+    onOpenRegisterForTransactionSplit: PropTypes.func,
     title: PropTypes.string,
     classExtras: PropTypes.string,
 };
@@ -1000,6 +1012,8 @@ export class ReconcilerWindow extends React.Component {
             onFinishLater = {() => this.onApplyReconcile(true)}
             onSetup = {this.onSetup}
             onCancel = {this.onCancelReconcile}
+            onOpenRegisterForTransactionSplit 
+                = {this.props.onOpenRegisterForTransactionSplit}
             title = {this.getTitle('ReconcilerWindow-reconciling_title')}
         />;
     }
@@ -1059,4 +1073,5 @@ ReconcilerWindow.propTypes = {
     accessor: PropTypes.object.isRequired,
     accountId: PropTypes.number.isRequired,
     onClose: PropTypes.func.isRequired,    
+    onOpenRegisterForTransactionSplit: PropTypes.func,
 };

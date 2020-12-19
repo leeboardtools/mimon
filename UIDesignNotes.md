@@ -457,26 +457,8 @@ Common menus:
     
 
     - Reconciler
-        - Statement balance:
-            - Opening date
-            - Closing date
-            - Opening balance
-            - Closing balance
-                - Initialize based on Closing date, transactions.
 
-        - List of credits, debits, appropriately named.
-            Funds In/Increase
-            Funds Out/Decrease
 
-            - Double click on transaction jumps to account register with transaction selected.
-
-        - Opening balance
-        - Reconciled balance
-        - Difference
-
-        - Is there support for finish later?
-            - Difference between that and cancel is that cancel does not
-            save pending transactions, but finish later does.
 
     - Reminders Editor
 
