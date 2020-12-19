@@ -235,7 +235,7 @@ class ReconcileSplitInfosSelector extends React.Component {
 
     render() {
         const { state } = this;
-        return <div className = "RowTableContainer h-100 ReconcileSplitInfosSelector">
+        return <div className = "RowTableContainer h-inherit ReconcileSplitInfosSelector">
             <RowTable 
                 columns = {this.columns}
                 rowCount = {state.rowEntries.length}
@@ -506,11 +506,11 @@ export class ReconcilingWindow extends React.Component {
         const splitInfosContainer = <div 
             className = "ReconcilingWindow-splitInfosContainer"
         >
-            <div className = "row h-100">
-                <div className = "col w-50">
+            <div className = "row h-inherit">
+                <div className = "col h-inherit w-50 pr-1">
                     {inflows}
                 </div>
-                <div className = "col w-50">
+                <div className = "col h-inherit w-50 pl-1">
                     {outflows}
                 </div>
             </div>

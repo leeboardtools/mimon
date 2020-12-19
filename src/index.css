@@ -376,8 +376,8 @@ body {
 
 .ReconcilingWindow-splitInfosContainer {
   height: 100%;
-  padding-left: 2rem;
-  padding-right: 2rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
 }
 /*
 .ReconcilingWindow-summaryContainer {
@@ -386,10 +386,7 @@ body {
 */
 
 .ReconcileSplitInfosSelector {
-  /*margin-left: 1rem;
-  margin-right: 1rem;*/
-  border-style: solid;
-  border-width: 1px;
+  border: 1px solid #dee2e6;
 }
 
 .ReconcilingWindow-splitInfos-title {
