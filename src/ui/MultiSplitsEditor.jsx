@@ -634,7 +634,7 @@ export class MultiSplitsEditor extends React.Component {
     renderSplitsTable() {
         const { state } = this;
 
-        return <div className = "RowTableContainer mt-2">
+        return <div className = "RowTableContainer MultiSplitsEditor-table">
             <EditableRowTable
                 columns = {state.columns}
 

@@ -279,6 +279,11 @@ body {
   flex-basis: 5rem;
 }
 
+
+.MultiSplitsEditor-table {
+  padding-top: 0.5rem;
+}
+
 /*
 .PriceRetrieverWindow-controls {
 }
