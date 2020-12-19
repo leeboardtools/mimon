@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { Dropdown } from './Dropdown';
+import { ContentFramer } from './ContentFramer';
 
 
 
@@ -14,54 +15,9 @@ export class TabbedPages extends React.Component {
 
         this.handleTabClick = this.handleTabClick.bind(this);
 
-        this.checkLayout = this.checkLayout.bind(this);
-        this._mainRef = React.createRef();
-        this._tabsRef = React.createRef();
-
         this.state = {
             activeTabId: this.props.activeTabId || this.props.tabEntries[0].tabId,
         };
-    }
-
-
-    checkLayout() {
-        if (this._mainRef.current && this._tabsRef.current) {
-            const { clientWidth, clientHeight } = this._mainRef.current;
-            const tabsHeight = this._tabsRef.current.clientHeight;
-            if ((clientWidth !== this.state.clientWidth)
-             || (clientHeight !== this.state.clientHeight)
-             || (tabsHeight !== this.state.tabsHeight)) {
-                let bodyHeight = clientHeight - tabsHeight;
-
-                const mainStyle = window.getComputedStyle(this._mainRef.current);
-                const paddingTop = parseFloat(
-                    mainStyle.getPropertyValue('padding-top'));
-                const paddingBottom = parseFloat(
-                    mainStyle.getPropertyValue('padding-bottom'));
-                bodyHeight -= (paddingTop + paddingBottom);
-
-                this.setState({
-                    clientWidth: clientWidth,
-                    clientHeight: clientHeight,
-                    tabsHeight: tabsHeight,
-                    bodyHeight: bodyHeight,
-                });
-            }
-        }
-        
-        if (!this._willUnmount) {
-            window.requestAnimationFrame(this.checkLayout);
-        }
-    }
-
-
-    componentDidMount() {
-        window.requestAnimationFrame(this.checkLayout);
-    }
-
-    
-    componentWillUnmount() {
-        this._willUnmount = true;
     }
 
 
@@ -181,25 +137,9 @@ export class TabbedPages extends React.Component {
             ));
         });
 
-        let className = 'container-fluid p-0';
-        const { bodyClassExtras } = this.props;
-        if (bodyClassExtras) {
-            className += ' ' + bodyClassExtras;
-        }
-
-        let style;
-        const { bodyHeight } = this.state;
-        if ((bodyHeight !== undefined) && (bodyHeight > 0)) {
-            style = {
-                height: bodyHeight,
-            };
-        }
-
-        return <div className={className}
-            style={style}
-        >
+        return <Fragment>
             {pages}
-        </div>;
+        </Fragment>;
     }
 
 
@@ -211,22 +151,18 @@ export class TabbedPages extends React.Component {
             tabs = onPostRenderTabs(tabs);
         }
 
-        let className = 'container-fluid p-1'
-            + ' d-flex flex-column h-100 overflow-hidden';
+        let className = '';
         if (classExtras) {
             className += ' ' + classExtras;
         }
 
         const body = this.renderBody();
 
-        return <div className={className}
-            ref={this._mainRef}
-        >
-            <div ref={this._tabsRef}>
-                {tabs}
-            </div>
-            {body}
-        </div>;
+        return <ContentFramer
+            classExtras = {className}
+            onRenderHeader = {() => tabs}
+            onRenderContent = {() => body}
+        />;
     }
 }
 
