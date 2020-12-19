@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
+import { ContentFramer } from './ContentFramer';
 
 
 
@@ -8,181 +9,104 @@ import { userMsg } from '../util/UserMessages';
  * A component that displays a modal style page, with a cancel/OK button
  * bar at the bottom and an optional title at the top.
  */
-export class ModalPage extends React.Component {
-    constructor(props) {
-        super(props);
+export function ModalPage(props) {
+    const body = <div className = "h-inherit ModalPage-body"
+    >
+        {props.children}
+    </div>;
 
-        this.watcher = this.watcher.bind(this);
+    const { title, onCancel, onDone, doneDisabled,
+        actionButtons, classExtras } = props;
 
-        this._mainRef = React.createRef();
-        this._titleRef = React.createRef();
-        this._buttonBarRef = React.createRef();
-
-        this.state = {
-        };
+    let cancelBtn;
+    if (onCancel) {
+        const cancelLabel = props.cancelLabel || userMsg('cancel');
+        cancelBtn = <button className = "btn btn-secondary m-2 mr-4"
+            onClick = {onCancel}>
+            {cancelLabel}
+        </button>;
     }
 
-
-    watcher() {
-        if (!this._isUnmounted) {
-            if (this._buttonBarRef.current) {
-                this.updateLayout();
-                window.requestAnimationFrame(this.watcher);
-            }
-        }
-    }
-
-
-    componentDidMount() {
-        if (!this._isUnmounted) {
-            this.updateLayout();
-        }
-
-        window.requestAnimationFrame(this.watcher);
-    }
-
-    componentWillUnmount() {
-        this._isUnmounted = true;
-    }
-
-
-    updateLayout() {
-        if (this._mainRef.current && this._buttonBarRef.current) {
-            const mainHeight = this._mainRef.current.clientHeight;
-            const titleBarHeight = (this._titleRef.current)
-                ? this._titleRef.current.offsetHeight : 0;
-            const buttonBarHeight = this._buttonBarRef.current.clientHeight;
-            let bodyHeight = mainHeight - titleBarHeight - buttonBarHeight;
-            if (Math.abs(bodyHeight - this.state.bodyHeight) <= 2) {
-                return;
-            }
-
-            if ((bodyHeight > 0) && (bodyHeight !== this.state.bodyHeight)) {
-                this.setState({
-                    bodyHeight: bodyHeight,
-                });
-            }
-        }
-    }
-
-
-    renderBody() {
-        let style;
-        const { bodyHeight } = this.state;
-        if (bodyHeight !== undefined) {
-            style = {
-                height: bodyHeight,
-            };
-        }
-
-        return <div className = "container-fluid pl-0 pr-0 ModalPage-body"
-            style = {style}
-        >
-            {this.props.children}
-        </div>;
-    }
-
-
-    render() {
-        const body = this.renderBody();
-
-        const { title, onCancel, onDone, doneDisabled,
-            actionButtons, classExtras } = this.props;
-
-        let cancelBtn;
-        if (onCancel) {
-            const cancelLabel = this.props.cancelLabel || userMsg('cancel');
-            cancelBtn = <button className = "btn btn-secondary m-2 mr-4"
-                onClick = {onCancel}>
-                {cancelLabel}
+    let titleComponent;
+    if (title) {
+        let titleCloseBtn;
+        if (cancelBtn) {
+            titleCloseBtn = <button type = "button" 
+                className = "close" 
+                aria-label = "Close"
+                onClick = {onCancel}
+            >
+                <span aria-hidden = "true">&times;</span>
             </button>;
         }
 
-        let titleComponent;
-        if (title) {
-            let titleCloseBtn;
-            if (cancelBtn) {
-                titleCloseBtn = <button type = "button" 
-                    className = "close" 
-                    aria-label = "Close"
-                    onClick = {onCancel}
-                >
-                    <span aria-hidden = "true">&times;</span>
-                </button>;
-            }
-
-            titleComponent = <div className = "border-bottom p-2 ModalPage-title"
-                ref = {this._titleRef}
-            >
-                <div className = "row justify-content-between">
-                    <div className = "col-11 text-center">
-                        <h4 className = "">{title}</h4>
-                    </div>
-                    <div className = "col">
-                        {titleCloseBtn}
-                    </div>
-                </div>
-            </div>;
-        }
-        else {
-            this._titleRef.current = undefined;
-        }
-
-        let buttons = [];
-        const btnClassName = 'btn btn-primary m-2';
-        if (actionButtons) {
-            buttons = [];
-            for (let i = 0; i < actionButtons.length; ++i) {
-                const actionButton = actionButtons[i];
-                buttons.push(<button 
-                    className = {btnClassName + ' ' + actionButton.classExtras}
-                    key = {i}
-                    onClick = {actionButton.onClick}
-                    disabled = {actionButton.disabled}
-                >
-                    {actionButton.label}
-                </button>);
-            }
-        }
-
-        if (onDone) {
-            const doneLabel = this.props.doneLabel || userMsg('done');
-            buttons.push(<button
-                className = {btnClassName}
-                key = {-1}
-                onClick = {onDone}
-                disabled = {doneDisabled}
-            >
-                {doneLabel}
-            </button>
-            );
-        }
-
-        let className = 'd-flex w-100 h-100 mx-auto flex-column ModalPage';
-        if (classExtras) {
-            className += ' ' + classExtras;
-        }
-
-        return <div 
-            className = {className}
-            ref = {this._mainRef}
+        titleComponent = <div className = "border-bottom p-2 ModalPage-title"
         >
-            {titleComponent}
-            {body}
-            <div className = "mt-auto ModalPage-buttonBar"
-                ref = {this._buttonBarRef}
-            >
-                <div className = "row border-top m-2">
-                    <div className = "col text-left mt-2">
-                        {cancelBtn}
-                    </div>
-                    <div className = "col text-right mt-2">
-                        {buttons}
-                    </div>
+            <div className = "row justify-content-between">
+                <div className = "col-11 text-center">
+                    <h4 className = "">{title}</h4>
+                </div>
+                <div className = "col">
+                    {titleCloseBtn}
                 </div>
             </div>
         </div>;
     }
+
+
+    let buttons = [];
+    const btnClassName = 'btn btn-primary m-2';
+    if (actionButtons) {
+        buttons = [];
+        for (let i = 0; i < actionButtons.length; ++i) {
+            const actionButton = actionButtons[i];
+            buttons.push(<button 
+                className = {btnClassName + ' ' + actionButton.classExtras}
+                key = {i}
+                onClick = {actionButton.onClick}
+                disabled = {actionButton.disabled}
+            >
+                {actionButton.label}
+            </button>);
+        }
+    }
+
+    if (onDone) {
+        const doneLabel = props.doneLabel || userMsg('done');
+        buttons.push(<button
+            className = {btnClassName}
+            key = {-1}
+            onClick = {onDone}
+            disabled = {doneDisabled}
+        >
+            {doneLabel}
+        </button>
+        );
+    }
+
+    const buttonBar = <div className = "mt-auto ModalPage-buttonBar">
+        <div className = "row border-top m-2">
+            <div className = "col text-left mt-2">
+                {cancelBtn}
+            </div>
+            <div className = "col text-right mt-2">
+                {buttons}
+            </div>
+        </div>
+    </div>;
+
+
+    let className = 'ModalPage';
+    if (classExtras) {
+        className += ' ' + classExtras;
+    }
+
+    return <ContentFramer
+        classExtras = {className}
+        onRenderHeader = {() => titleComponent}
+        onRenderContent = {() => body}
+        onRenderFooter = {() => buttonBar}
+    />;
 }
 
 /**
