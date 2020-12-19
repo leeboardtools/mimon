@@ -5,6 +5,7 @@ import * as PI from '../engine/PricedItems';
 import { YMDDate } from '../util/YMDDate';
 import { CellDateEditor } from '../util-ui/CellDateEditor';
 import { TickerSelector } from './TickerSelector';
+import { ContentFramer } from '../util-ui/ContentFramer';
 import { asyncGetUpdatedPricedItemPrices } from '../engine/PriceRetriever';
 import deepEqual from 'deep-equal';
 import { setFocus } from '../util/ElementUtils';
@@ -64,10 +65,6 @@ export class PriceRetrieverWindow extends React.Component {
     constructor(props) {
         super(props);
 
-        this.checkLayout = this.checkLayout.bind(this);
-        this._mainRef = React.createRef();
-        this._headerRef = React.createRef();
-        this._controlsRef = React.createRef();
         this._retrieveRef = React.createRef();
         this._tickerSelectorRef = React.createRef();
 
@@ -151,8 +148,6 @@ export class PriceRetrieverWindow extends React.Component {
 
 
     componentDidMount() {
-        window.requestAnimationFrame(this.checkLayout);        
-
         process.nextTick(() => {
             if (this._retrieveRef.current && !this._retrieveRef.current.disabled) {
                 setFocus(this._retrieveRef.current);
@@ -165,33 +160,6 @@ export class PriceRetrieverWindow extends React.Component {
 
 
     componentWillUnmount() {
-        this._willUnmount = true;
-    }
-
-
-    checkLayout() {
-        if (this._mainRef.current && this._tickerSelectorRef.current
-         && this._headerRef.current && this._controlsRef.current) {
-            const mainHeight = this._mainRef.current.clientHeight;
-            const headerHeight = this._headerRef.current.clientHeight;
-            const controlsHeight = this._controlsRef.current.clientHeight;
-            const { state } = this;
-            if ((mainHeight !== state.mainHeight)
-             || (headerHeight !== state.headerHeight)
-             || (controlsHeight !== state.controlsHeight)) {
-                const tickersHeight = mainHeight - headerHeight - controlsHeight;
-                this.setState({
-                    mainHeight: mainHeight,
-                    headerHeight: headerHeight,
-                    controlsHeight: controlsHeight,
-                    tickersHeight: tickersHeight,
-                });
-            }
-        }
-
-        if (!this._willUnmount) {
-            window.requestAnimationFrame(this.checkLayout);
-        }
     }
 
 
@@ -443,9 +411,9 @@ export class PriceRetrieverWindow extends React.Component {
             };
         }
 
-        return <div className = "row align-items-center" style = {style}>
-            <div className = "d-flex flex-row w-100 h-inherit">
-                <div className = "flex-row flex-grow-1 ml-4 mb-1 h-inherit">
+        return <div className = "row align-items-center w-100 h-100" style = {style}>
+            <div className = "d-flex flex-row w-inherit h-inherit m-1">
+                <div className = "flex-row flex-grow-1 pl-3 pb-2 h-inherit">
                     <TickerSelector
                         accessor = { this.props.accessor }
                         tickerEntries = {tickerEntries}
@@ -546,12 +514,10 @@ export class PriceRetrieverWindow extends React.Component {
             'PriceRetrieverWindow-from_date',
             'ymdDateTo');
 
-        const className = 'container-fluid d-flex w-100 h-100 flex-column '
-            + 'PriceRetrieverWindow';
         const controlsClassName = 'row pt-2 pb-2 justify-content-center '
             + ' PriceRetrieverWindow-controls';
-        return <div className = {className} ref = {this._mainRef}>
-            <div className = "row" ref = {this._headerRef}>
+        const header = <div>
+            <div className = "row">
                 <div className = "col">
                     <h4 className = "pageTitle pb-3 border-bottom"
                     >
@@ -560,7 +526,6 @@ export class PriceRetrieverWindow extends React.Component {
                 </div>
             </div>
             <div className = {controlsClassName} 
-                ref = {this._controlsRef}
             >
                 <div className = "col PriceRetrieverWindow-retrieveButton">
                     {button}
@@ -572,12 +537,12 @@ export class PriceRetrieverWindow extends React.Component {
                     {toDate}
                 </div>
             </div>
-            <div className = "row flex-grow-1">
-                <div className = "col">
-                    {tickersComponent}
-                </div>
-            </div>
         </div>;
+        return <ContentFramer
+            onRenderHeader = {() => header}
+            onRenderContent = {() => tickersComponent}
+            classExtras = "PriceRetrieverWindow"
+        />;
     }
 }
 

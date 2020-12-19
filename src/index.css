@@ -444,6 +444,10 @@ body {
   height: inherit;
 }
 
+.w-inherit {
+  width: inherit;
+}
+
 
 .failed_msg {
   color: darkred;
