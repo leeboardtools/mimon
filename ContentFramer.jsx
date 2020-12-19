@@ -70,11 +70,16 @@ export class ContentFramer extends React.Component {
         const { onRenderHeader } = this.props;
         if (onRenderHeader) {
             const header = onRenderHeader();
-            return <div className = "ContentFramer-header"
-                ref = {this._headerRef}
-            >
-                {header}
-            </div>;
+            if (header) {
+                return <div className = "ContentFramer-header"
+                    ref = {this._headerRef}
+                >
+                    {header}
+                </div>;
+            }
+            else {
+                this._headerRef.current = undefined;
+            }
         }
     }
 
@@ -82,11 +87,16 @@ export class ContentFramer extends React.Component {
         const { onRenderFooter } = this.props;
         if (onRenderFooter) {
             const footer = onRenderFooter();
-            return <div className = "ContentFramer-footer"
-                ref = {this._footerRef}
-            >
-                {footer}
-            </div>;
+            if (footer) {
+                return <div className = "ContentFramer-footer"
+                    ref = {this._footerRef}
+                >
+                    {footer}
+                </div>;
+            }
+            else {
+                this._footerRef.current = undefined;
+            }
         }
     }
 
@@ -105,13 +115,11 @@ export class ContentFramer extends React.Component {
                 height: contentHeight
             });
 
-            return <div className = "ContentFramer-content"
+            return <div className = "container-fluid pl-0 pr-0 ContentFramer-content"
                 style = {style}
                 ref = {this._contentRef}
             >
-                <div className = "h-100 overflow-hidden">
-                    {content}
-                </div>
+                {content}
             </div>;
         }
     }
