@@ -414,6 +414,10 @@ body {
   padding-bottom: 0.5rem;
 }
 
+.ReconcilingWindow-summary {
+  padding-right: 0.5rem;
+}
+
 .ReconcilingWindow-summary_row {
   max-height: 1.5rem;
   padding-right: 1.5rem;

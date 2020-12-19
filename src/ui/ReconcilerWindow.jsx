@@ -347,6 +347,15 @@ export class ReconcilingWindow extends React.Component {
     }
 
 
+    onSelectAllNone(splitInfos, markReconciled) {
+        process.nextTick(async () => {
+            const { reconciler } = this.props;
+            await reconciler.asyncSetTransactionSplitMarkedReconciled(
+                splitInfos, markReconciled);
+        });
+    }
+
+
     renderSplitInfos(titleId, splitInfos, signMultiplier) {
         const { accessor, reconciler } = this.props;
 
@@ -372,7 +381,18 @@ export class ReconcilingWindow extends React.Component {
         reconciledBaseValue *= signMultiplier;
 
 
-        // TODO: Add Select All/Select None buttons
+        const selectAll = <button type = "button"
+            className = "btn btn-outline-secondary btn-sm mr-1"
+            onClick = {() => this.onSelectAllNone(splitInfos, true)}
+        >
+            {userMsg('ReconcilingWindow-selectAll_button')}
+        </button>;
+        const clearAll = <button type = "button"
+            className = "btn btn-outline-secondary btn-sm ml-1"
+            onClick = {() => this.onSelectAllNone(splitInfos, false)}
+        >
+            {userMsg('ReconcilingWindow-clearAll_button')}
+        </button>;
 
         const currency = getCurrencyForAccountId(
             accessor,
@@ -386,7 +406,15 @@ export class ReconcilingWindow extends React.Component {
                 inputClassExtras = "ReconcilingWindow-splitInfoTotal_value"
             />);
         const totalRow = <div className = "ReconcilingWindow-splitInfos-total">
-            {total}
+            <div className = "row justify-content-between">
+                <div className = "col">
+                    {selectAll}
+                    {clearAll}
+                </div>
+                <div className = "col">
+                    {total}
+                </div>
+            </div>
         </div>;
 
         return <ContentFramer 
@@ -455,7 +483,7 @@ export class ReconcilingWindow extends React.Component {
             inputClassExtras = "ReconcilingWindow-summary_date"
         />;
 
-        return <div className = "container-fluid ReconcilingWindow-summary">
+        return <div className = "ReconcilingWindow-summary">
             {this.renderSummaryRow('ReconcilerWindow-statementEndDate_label', 
                 dateComponent)}
             {this.renderSummaryValueRow('ReconcilerWindow-openingBalance_label',

@@ -361,6 +361,9 @@
     "ReconcilingWindow-reconciledBalance_label": "Reconciled balance:",
     "ReconcilingWindow-difference_label": "Difference:",
 
+    "ReconcilingWindow-selectAll_button": "Select All",
+    "ReconcilingWindow-clearAll_button": "Clear All",
+
     "ReconcilingWindow-reconcile_heading": "R",
     "ReconcilingWindow-amount_heading": "Amount",
 
