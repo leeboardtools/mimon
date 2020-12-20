@@ -302,7 +302,7 @@ A reminder represents a transaction that is repeated at defined periods of time.
 - [RepeatDefinition](#repeatdefinition)
 - [Transaction](#transaction) template.
 - isEnabled
-- lastAppliedDate
+- lastAppliedYMDDate
 
 ### ReminderManager
 Manages all the [Reminder](#reminder)s in an accounting system.

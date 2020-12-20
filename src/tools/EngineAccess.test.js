@@ -538,7 +538,7 @@ test('EngineAccessor-actions', async () => {
                 ]
             },
             isEnabled: true,
-            lastAppliedDate: '2010-06-01',
+            lastAppliedYMDDate: '2010-06-01',
         };
     
         // New Reminder

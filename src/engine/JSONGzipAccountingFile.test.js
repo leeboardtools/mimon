@@ -97,7 +97,7 @@ test('JSONGzipAccountingFile-simple', async () => {
                 ]
             },
             isEnabled: true,
-            lastAppliedDate: '2010-06-01',    
+            lastAppliedYMDDate: '2010-06-01',    
         };
         result = await reminderManager1.asyncAddReminder(reminderA);
         reminderA.id = result.newReminderDataItem.id;
@@ -120,7 +120,7 @@ test('JSONGzipAccountingFile-simple', async () => {
                 ]
             },
             isEnabled: true,
-            lastAppliedDate: '2015-01-21',    
+            lastAppliedYMDDate: '2015-01-21',    
         };
         result = await reminderManager1.asyncAddReminder(reminderB);
         reminderB.id = result.newReminderDataItem.id;

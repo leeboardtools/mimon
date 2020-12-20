@@ -38,7 +38,7 @@ test('Reminders-DataItems', () => {
             ]
         },
         isEnabled: true,
-        lastAppliedDate: getYMDDate('2010-06-01'),
+        lastAppliedYMDDate: getYMDDate('2010-06-01'),
     };
     testReminderDataItem(reminderA);
 });
@@ -70,7 +70,7 @@ test('Reminders-add_modify', async () => {
             ]
         },
         isEnabled: true,
-        lastAppliedDate: '2010-06-01',
+        lastAppliedYMDDate: '2010-06-01',
     };
 
     result = await manager.asyncAddReminder(settingsA);
@@ -170,7 +170,7 @@ test('Reminders-add_modify', async () => {
     const changesB1 = {
         id: settingsB.id,
         isEnabled: true,
-        lastAppliedDate: '2020-05-04',
+        lastAppliedYMDDate: '2020-05-04',
     };
     const settingsB1 = Object.assign({}, settingsB, changesB1);
 
@@ -267,7 +267,7 @@ test('Reminders-getDueReminderDataItems', async () => {
             ]
         },
         isEnabled: false,
-        lastAppliedDate: '2019-10-01',
+        lastAppliedYMDDate: '2019-10-01',
     };
     result = await manager.asyncAddReminder(settingsA);
     const reminderA = result.newReminderDataItem;
@@ -289,14 +289,14 @@ test('Reminders-getDueReminderDataItems', async () => {
             ]
         },
         isEnabled: true,
-        lastAppliedDate: '2019-10-01',
+        lastAppliedYMDDate: '2019-10-01',
     };
     result = await manager.asyncAddReminder(settingsB);
     const reminderB = result.newReminderDataItem;
     settingsB.id = reminderB.id;
 
 
-    // No lastAppliedDate, so next due date is 2019-06-15.
+    // No lastAppliedYMDDate, so next due date is 2019-06-15.
     const settingsC = {
         repeatDefinition:  {
             type: RE.RepeatType.MONTHLY.name,

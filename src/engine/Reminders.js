@@ -8,7 +8,7 @@ import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 
 
 /**
- * @typedef {object} ReminderDataItem
+ * @typedef {object} Reminder
  * @property {number}   id  The id of the reminder in the reminder manager.
  * @property {RepeatDefinition} repeatDefinition    Defines how the reminder
  * repeats.
@@ -16,12 +16,12 @@ import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
  * @property {Transaction} transactionTemplate  The template for
  * the transaction being reminded of.
  * @property {boolean}  isEnabled
- * @property {YMDDate}  lastAppliedDate The date the last time the reminder
+ * @property {YMDDate}  lastAppliedYMDDate The date the last time the reminder
  * was applied, used to determine the next time the reminder is to go off.
  */
 
 /**
- * @typedef {object} Reminder
+ * @typedef {object} ReminderDataItem
  * @property {number}   id  The id of the reminder in the reminder manager.
  * @property {RepeatDefinitionDataItem} repeatDefinition Defines how the 
  * reminder repeats.
@@ -29,7 +29,7 @@ import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
  * @property {TransactionDataItem} transactionTemplate  The template for
  * the transaction being reminded of.
  * @property {boolean}  isEnabled
- * @property {string}  lastAppliedDate The date the last time the reminder
+ * @property {string}  lastAppliedYMDDate The date the last time the reminder
  * was applied, used to determine the next time the reminder is to go off.
  */
 
@@ -46,11 +46,11 @@ export function getReminder(reminderDataItem, alwaysCopy) {
             = R.getRepeatDefinition(reminderDataItem.repeatDefinition, alwaysCopy);
         const transactionTemplate 
             = getTransaction(reminderDataItem.transactionTemplate, alwaysCopy);
-        const lastAppliedDate = getYMDDate(reminderDataItem.lastAppliedDate);
+        const lastAppliedYMDDate = getYMDDate(reminderDataItem.lastAppliedYMDDate);
         if (alwaysCopy
          || (repeatDefinition !== reminderDataItem.repeatDefinition)
          || (transactionTemplate !== reminderDataItem.transactionTemplate)
-         || (lastAppliedDate !== reminderDataItem.lastAppliedDate)) {
+         || (lastAppliedYMDDate !== reminderDataItem.lastAppliedYMDDate)) {
             const reminder = Object.assign({}, reminderDataItem);
             if (repeatDefinition) {
                 reminder.repeatDefinition = repeatDefinition;
@@ -58,8 +58,8 @@ export function getReminder(reminderDataItem, alwaysCopy) {
             if (transactionTemplate) {
                 reminder.transactionTemplate = transactionTemplate;
             }
-            if (lastAppliedDate) {
-                reminder.lastAppliedDate = lastAppliedDate;
+            if (lastAppliedYMDDate) {
+                reminder.lastAppliedYMDDate = lastAppliedYMDDate;
             }
             return reminder;
         }
@@ -81,12 +81,12 @@ export function getReminderDataItem(reminder, alwaysCopy) {
             = R.getRepeatDefinitionDataItem(reminder.repeatDefinition, alwaysCopy);
         const transactionTemplate 
             = getTransactionDataItem(reminder.transactionTemplate, alwaysCopy);
-        const lastAppliedDate 
-            = getYMDDateString(reminder.lastAppliedDate);
+        const lastAppliedYMDDate 
+            = getYMDDateString(reminder.lastAppliedYMDDate);
         if (alwaysCopy
          || (repeatDefinition !== reminder.repeatDefinition)
          || (transactionTemplate !== reminder.transactionTemplate)
-         || (lastAppliedDate !== reminder.lastAppliedDate)) {
+         || (lastAppliedYMDDate !== reminder.lastAppliedYMDDate)) {
             const reminderDataItem = Object.assign({}, reminder);
             if (repeatDefinition) {
                 reminderDataItem.repeatDefinition = repeatDefinition;
@@ -94,8 +94,8 @@ export function getReminderDataItem(reminder, alwaysCopy) {
             if (transactionTemplate) {
                 reminderDataItem.transactionTemplate = transactionTemplate;
             }
-            if (lastAppliedDate) {
-                reminderDataItem.lastAppliedDate = lastAppliedDate;
+            if (lastAppliedYMDDate) {
+                reminderDataItem.lastAppliedYMDDate = lastAppliedYMDDate;
             }
             return reminderDataItem;
         }
@@ -211,7 +211,7 @@ export class ReminderManager extends EventEmitter {
             }
 
             const nextYMDDate = R.getNextRepeatYMDDate(reminderDataItem.repeatDefinition,
-                reminderDataItem.lastAppliedDate);
+                reminderDataItem.lastAppliedYMDDate);
             if (!nextYMDDate) {
                 return;
             }
