@@ -425,7 +425,7 @@ export class PricesList extends React.Component {
                 open: 999999.9999,
                 low: 999999.9999,
                 high: 999999.9999,
-                volume: 99999999999,
+                volume: ACE.BalanceSizingBaseValue,
             },
             priceItemType: PriceItemType.PRICE,
             caller: this,

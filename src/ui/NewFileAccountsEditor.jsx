@@ -9,7 +9,7 @@ import { collapsibleRowTable, ExpandCollapseState,
 import { EditableRowTable } from '../util-ui/EditableRowTable';
 import * as C from '../util/Currency';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
-import * as CE from './AccountingCellEditors';
+import * as ACE from './AccountingCellEditors';
 import { columnInfosToColumns,
     stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
 
@@ -177,24 +177,24 @@ export class NewFileAccountsEditor extends React.Component {
                 // TODO:
                 // Scan through the account type names to find the longest one...
                 type: A.AccountType.REAL_ESTATE.name,
-                openingBalance: 999999999,
+                openingBalance: ACE.BalanceSizingBaseValue,
             },
         };
 
         this.state.columnInfos = [
-            CE.getNameColumnInfo({
+            ACE.getNameColumnInfo({
                 getCellValue: (args) => getAccountCellValue(args, 'name'),
                 saveCellValue: (args) => saveAccountCellValue(args, 'name'),
             }),
-            CE.getAccountTypeColumnInfo({
+            ACE.getAccountTypeColumnInfo({
                 getCellValue: getAccountTypeCellValue,
                 saveCellValue: saveAccountTypeCellValue,
             }),
-            CE.getDescriptionColumnInfo({
+            ACE.getDescriptionColumnInfo({
                 getCellValue: (args) => getAccountCellValue(args, 'description'),
                 saveCellValue: (args) => saveAccountCellValue(args, 'description'),
             }),
-            CE.getBalanceColumnInfo({
+            ACE.getBalanceColumnInfo({
                 getCellValue: getOpeningBalanceCellValue,
                 saveCellValue: saveOpeningBalanceCellValue,
             }),

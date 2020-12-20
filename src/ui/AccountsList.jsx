@@ -133,7 +133,7 @@ export class AccountsList extends React.Component {
 
             },
             accountState: {
-                quantityBaseValue: 999999999,
+                quantityBaseValue: ACE.BalanceSizingBaseValue,
             },
             quantityDefinition: getQuantityDefinitionName(
                 getDecimalDefinition(4)

@@ -364,8 +364,8 @@ export class LotsSelectionEditor extends React.Component {
         this._sizingRowEntry = {
             ymdDatePurchased: '2020-12-3112',
             term: userMsg('LotsSelectionEditor-SHORT_TERM'),
-            availableSharesBaseValue: 999999999,
-            selectedSharesBaseValue: 999999999,
+            availableSharesBaseValue: ACE.BalanceSizingBaseValue,
+            selectedSharesBaseValue: ACE.BalanceSizingBaseValue,
         };
 
         this.state.columns = columnInfosToColumns(this.state);

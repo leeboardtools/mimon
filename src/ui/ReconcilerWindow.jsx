@@ -121,7 +121,7 @@ class ReconcileSplitInfosSelector extends React.Component {
             refNum: 1234567,
             description: 'This is a long description',
             markReconciled: true,
-            amountBaseValue: 9999999999999,
+            amountBaseValue: ACE.BalanceSizingBaseValue,
         };
 
         this.state = {

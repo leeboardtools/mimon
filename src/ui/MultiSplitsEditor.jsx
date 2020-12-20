@@ -6,7 +6,7 @@ import { columnInfosToColumns,
     stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
 import { EditableRowTable } from '../util-ui/EditableRowTable';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
-import * as CE from './AccountingCellEditors';
+import * as ACE from './AccountingCellEditors';
 import * as AH from '../tools/AccountHelpers';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
@@ -130,7 +130,7 @@ function saveSplitQuantityCellValue(args) {
 
         const { accountId } = saveBuffer.newSplit;
         Object.assign(saveBuffer.newSplit, 
-            CE.resolveSplitQuantityEditValueToSplitDataItem(args));
+            ACE.resolveSplitQuantityEditValueToSplitDataItem(args));
         saveBuffer.newSplit.accountId = accountId;
     }
 }
@@ -140,17 +140,17 @@ function getMultiSplitsEditorColumnInfos(accountType) {
     accountType = A.getAccountType(accountType);
 
     const columnInfos = {
-        description: CE.getDescriptionColumnInfo({
+        description: ACE.getDescriptionColumnInfo({
             getCellValue: (args) => getSplitCellValue(args, 'description'),
             saveCellValue: (args) => saveSplitCellValue(args, 'description'),
         }),
 
-        accountId: CE.getAccountIdColumnInfo({
+        accountId: ACE.getAccountIdColumnInfo({
             getCellValue: (args) => getAccountIdCellValue(args),
             saveCellValue: (args) => saveAccountIdCellValue(args),
         }),
 
-        debit: CE.getSplitQuantityColumnInfo(
+        debit: ACE.getSplitQuantityColumnInfo(
             {
                 getCellValue: (args) => getSplitQuantityCellValue(args, 'debit'),
                 saveCellValue: saveSplitQuantityCellValue,
@@ -158,7 +158,7 @@ function getMultiSplitsEditorColumnInfos(accountType) {
             'debit',
             accountType.debitLabel
         ),
-        credit: CE.getSplitQuantityColumnInfo(
+        credit: ACE.getSplitQuantityColumnInfo(
             {
                 getCellValue: (args) => getSplitQuantityCellValue(args, 'credit'),
                 saveCellValue: saveSplitQuantityCellValue,
@@ -248,7 +248,7 @@ export class MultiSplitsEditor extends React.Component {
             split: {
                 accountId: nameId.id,
                 description: userMsg('AccountRegister-dummy_description'),
-                quantityBaseValue: 999999999,
+                quantityBaseValue: ACE.BalanceSizingBaseValue,
             },
             accountType: this.state.accountType,
             quantityDefinition: this.state.quantityDefinition,

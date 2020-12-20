@@ -1068,6 +1068,12 @@ export function getBalanceColumnInfo(args) {
 }
 
 
+/**
+ * Quantity base value useful for sizing balance and other currency values.
+ */
+export const BalanceSizingBaseValue = 9999999999999;
+
+
 
 /**
  * @typedef {object}    CellSplitValue

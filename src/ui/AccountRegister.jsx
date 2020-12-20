@@ -752,7 +752,7 @@ export class AccountRegister extends React.Component {
                     {
                         reconcileState: T.ReconcileState.NOT_RECONCILED,
                         accountId: nameId.id,
-                        quantityBaseValue: 999999999,
+                        quantityBaseValue: ACE.BalanceSizingBaseValue,
                         lotTransactionType: T.LotTransactionType.BUY_SELL.name,
                         sellAutoLotType: T.AutoLotType.FIFO,
                         lotChanges: [
@@ -761,19 +761,19 @@ export class AccountRegister extends React.Component {
                     {
                         reconcileState: T.ReconcileState.NOT_RECONCILED,
                         accountId: nameId.id,
-                        quantityBaseValue: 999999999,
+                        quantityBaseValue: ACE.BalanceSizingBaseValue,
                         lotTransactionType: T.LotTransactionType.REINVESTED_DIVIDEND.name,
                         lotChanges: [
-                            { quantityBaseValue: 999999999, },
+                            { quantityBaseValue: ACE.BalanceSizingBaseValue, },
                         ],
                     },
                 ],
             },
             accountStateDataItem: {
                 ymdDate: '2020-12-3112',
-                quantityBaseValue: 999999999,
+                quantityBaseValue: ACE.BalanceSizingBaseValue,
                 lotStates: [
-                    { quantityBaseValue: 999999999, },
+                    { quantityBaseValue: ACE.BalanceSizingBaseValue, },
                 ],
             },
             splitIndex: 0,
