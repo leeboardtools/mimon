@@ -57,6 +57,9 @@ export class EngineAccessor extends EventEmitter {
         this._handleTransactionsAdd = this._handleTransactionsAdd.bind(this);
         this._handleTransactionsModify = this._handleTransactionsModify.bind(this);
         this._handleTransactionsRemove = this._handleTransactionsRemove.bind(this);
+        this._handleReminderAdd = this._handleReminderAdd.bind(this);
+        this._handleReminderModify = this._handleReminderModify.bind(this);
+        this._handleReminderRemove = this._handleReminderRemove.bind(this);
 
         // Some synonyms.
         this.asyncUndoLastAppliedAction = this.asyncUndoLastAppliedActions;
@@ -155,6 +158,10 @@ export class EngineAccessor extends EventEmitter {
                 this._handleTransactionsRemove);
 
             this._reminderManager = _accountingSystem.getReminderManager();
+            this._reminderManager.on('reminderAdd', this._handleReminderAdd);
+            this._reminderManager.on('reminderModify', this._handleReminderModify);
+            this._reminderManager.on('reminderRemove', this._handleReminderRemove);
+
             this._autoCompleteSplitsManager 
                 = _accountingSystem.getAutoCompleteSplitsManager();
 
@@ -201,6 +208,13 @@ export class EngineAccessor extends EventEmitter {
                 this._transactionManager.off('transactionsRemove', 
                     this._handleTransactionsRemove);
                 this._transactionManager = undefined;
+            }
+
+            if (this._reminderManager) {
+                this._reminderManager.off('reminderAdd', this._handleReminderAdd);
+                this._reminderManager.off('reminderModify', this._handleReminderModify);
+                this._reminderManager.off('reminderRemove', this._handleReminderRemove);
+                this._reminderManager = undefined;
             }
 
             this._accountingSystem = undefined;
@@ -1528,6 +1542,16 @@ export class EngineAccessor extends EventEmitter {
 
 
     /**
+     * Retrieves an array containing the {@link ReminderDataItem}s of all the
+     * reminders that are enabled and due based on ymdDate.
+     * @param {YMDDate|string} ymdDate 
+     * @returns {ReminderDataItem[]}
+     */
+    getDueReminderDataItems(ymdDate) {
+        return this._reminderManager.getDueReminderDataItems(ymdDate);
+    }
+
+    /**
      * Retrieves an array containing {@link AutoCompleteSplitsInfo}s
      * for transactions with splits with the given account id and a description
      * containing the partial description. Descriptions are cleaned up.
@@ -1639,6 +1663,19 @@ export class EngineAccessor extends EventEmitter {
     _handleTransactionsRemove(result) {
         // TODO: Apply filtering.
         this.emit('transactionsRemove', result);
+    }
+
+
+    _handleReminderAdd(result) {
+        this.emit('reminderAdd', result);
+    }
+
+    _handleReminderModify(result) {
+        this.emit('reminderModify', result);
+    }
+
+    _handleReminderRemove(result) {
+        this.emit('reminderRemove', result);
     }
 
 
