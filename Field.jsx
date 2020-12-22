@@ -97,3 +97,25 @@ Field.propTypes = {
     prependComponent: PropTypes.object,
     appendComponent: PropTypes.object,
 };
+
+
+export function FieldPrefix(props) {
+    return <div className = "col-form-label pr-2">
+        {props.children}
+    </div>;
+}
+
+FieldPrefix.propTypes = {
+    children: PropTypes.any,
+};
+
+
+export function FieldSuffix(props) {
+    return <div className = "col-form-label pl-2">
+        {props.children}
+    </div>;
+}
+
+FieldSuffix.propTypes = {
+    children: PropTypes.any,
+};
