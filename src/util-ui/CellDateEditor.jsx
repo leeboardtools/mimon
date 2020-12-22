@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import DatePicker from 'react-datepicker';
-import { getYMDDate, YMDDate } from '../util/YMDDate';
+import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 import 'react-datepicker/dist/react-datepicker.css';
 import { format } from 'date-fns';
 import { Tooltip } from './Tooltip';
@@ -179,6 +179,7 @@ export function CellDateDisplay(props) {
     const { ariaLabel, inputClassExtras, dateFormat, locale } = props;
     const inputType = props.inputType || 'text';
     let { value, size } = props;
+    value = getYMDDateString(value);
     value = value || '';
     if (size) {
         if (size < 0) {
@@ -226,7 +227,10 @@ export function CellDateDisplay(props) {
  */
 CellDateDisplay.propTypes = {
     ariaLabel: PropTypes.string,
-    value: PropTypes.string,
+    value: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.object,
+    ]),
     inputClassExtras: PropTypes.string,
     size: PropTypes.number,
     inputType: PropTypes.string,
