@@ -9,17 +9,16 @@ import { Field } from './Field';
  */
 export const TextField = React.forwardRef(
     function TextFieldImpl(props, ref) {
-        const { label, id, ariaLabel, value, inputClassExtras, errorMsg, 
-            onChange, onFocus, onBlur, disabled } = props;
+        const { ariaLabel, value, inputClassExtras, 
+            onChange, onFocus, onBlur, onKeyDown, disabled, 
+            ...passThroughProps } = props;
 
         return <Field
-            id={id}
-            label={label}
-            errorMsg={errorMsg}
+            {...passThroughProps}
             editorClassExtras={inputClassExtras}
             onRenderEditor={(inputClassName) =>
                 <input type="text"
-                    id={id}
+                    id={props.id}
                     className={inputClassName}
                     aria-label={ariaLabel}
                     value={value || ''}
@@ -27,6 +26,7 @@ export const TextField = React.forwardRef(
                     onChange={onChange}
                     onFocus={onFocus}
                     onBlur={onBlur}
+                    onKeyDown={onKeyDown}
                     ref={ref}
                 />
             }
@@ -50,6 +50,8 @@ export const TextField = React.forwardRef(
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onfocus}.
  * @property {function} [onBlur]    onBlur event handler
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onblur}.
+ * @property {function} [onKeyDown]    onBlur event handler
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onkeydown}.
  * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
  * @property {boolean} [disabled]
  */
@@ -63,5 +65,8 @@ TextField.propTypes = {
     onChange: PropTypes.func,
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
+    onKeyDown: PropTypes.func,
     disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
+    prependComponent: PropTypes.object,
+    appendComponent: PropTypes.object,
 };
