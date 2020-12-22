@@ -22,24 +22,12 @@ function checkDataItemConversion(definition) {
 //
 //---------------------------------------------------------
 //
-test('Repeats-NONE', () => {
-    const none = {
-        type: R.RepeatType.NONE,
-    };
-    checkDataItemConversion(none);
-    expect(R.validateRepeatDefinition(none)).toBeUndefined();
-    expect(R.getNextRepeatYMDDate(none, '2000-01-01')).toBeUndefined();
-});
-
-
-//
-//---------------------------------------------------------
-//
 test('Repeats-DAILY', () => {
     const simple = {
         type: R.RepeatType.DAILY,
         period: 10,
         startYMDDate: getYMDDate('2020-01-15'),
+        repeatCount: 5,
     };
     checkDataItemConversion(simple);
 

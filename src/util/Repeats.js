@@ -27,7 +27,7 @@ function nextDailyOffsetYMDDate(afterYMDDate, dayCount, startYMDDate) {
 
 /**
  * @typedef {object} WeeklyOffset
- * @pproperty {number}  dayOfWeek   The day of the week, 0 is Sunday.
+ * @property {number}  dayOfWeek   The day of the week, 0 is Sunday.
  */
 
 /**
@@ -77,7 +77,7 @@ function nextWeeklyOffsetYMDDate(weeklyOffset, afterYMDDate, weekCount, startYMD
 /**
  * The types of month offsets.
  * @readonly
- * @enum {MonthOffsetTypeDef}
+ * @enum {MonthOffsetType}
  * @property {MonthOffsetTypeDef}   NTH_DAY If the offset is > 0 then the
  * n'th day of the month (1 is the first day of the month), otherwise the
  * n'th day from the last day of the month (0 is the last day of the month).
@@ -662,7 +662,6 @@ function nextYearlyOffsetYMDDate(yearlyOffset, afterYMDDate, monthCount, startYM
  * The types of repeating.
  * @readonly
  * @enum {RepeatTypeDef}
- * @property {RepeatTypeDef} NONE   Does not repeat.
  * @property {RepeatTypeDef} DAILY  Repeats on a daily or number of days basis.
  * The period property is the number of days until the next repeat, a value of 1 
  * indicates repeat daily. The offset property is not used.
@@ -674,12 +673,6 @@ function nextYearlyOffsetYMDDate(yearlyOffset, afterYMDDate, monthCount, startYM
  * The offset property is a {@link YearlyOffset}.
  */
 export const RepeatType = {
-    NONE: { name: 'NONE', 
-        validate: validateNone, 
-        nextRepeatYMDDate: nextNoneRepeatYMDDate, 
-        getOffset: getNoneOffset,
-        getOffsetDataItem: getNoneOffsetDataItem,
-    },
     DAILY: { name: 'DAILY', 
         validate: validateDaily, 
         nextRepeatYMDDate: nextDailyRepeatYMDDate, 
@@ -705,31 +698,6 @@ export const RepeatType = {
         getOffsetDataItem: getYearlyOffsetDataItem,
     },
 };
-
-
-//
-//---------------------------------------------------------
-function validateNone(definition) {
-}
-
-//
-//---------------------------------------------------------
-function nextNoneRepeatYMDDate(definition, afterYMDDate) {
-}
-
-//
-//---------------------------------------------------------
-function getNoneOffset(offsetDataItem, alwaysCopy) {
-    return (alwaysCopy && (typeof offsetDataItem === 'object')) 
-        ? Object.assign({}, offsetDataItem) : offsetDataItem;
-}
-
-//
-//---------------------------------------------------------
-function getNoneOffsetDataItem(offset, alwaysCopy) {
-    return (alwaysCopy && (typeof offset === 'object')) 
-        ? Object.assign({}, offset) : offset;
-}
 
 
 
@@ -848,6 +816,7 @@ export function getRepeatTypeName(type) {
  * this serves as the reference poit.
  * @property {YMDDate}  [lastYMDDate]   Optional last date, repetitions are not
  * performed after this date.
+ * @property {number}   [repeatCount]   Optional number of times to repeat.
  */
 
 
@@ -897,10 +866,11 @@ export function getRepeatDefinition(definitionDataItem, alwaysCopy) {
  * @property {number}   period  The period between repetitions, defined by the type.
  * @property {number|WeeklyOffset|MonthlyOffset|YearlyOffset}   offset
  * Defines when in the repeat type the repetition occurs.
- * @property {string}  startDate   The starting date for the repetition,
+ * @property {string}  startYMDDate   The starting date for the repetition,
  * this serves as the reference point.
- * @property {string}  [lastDate]   Optional last date, repetitions are not
+ * @property {string}  [lastYMDDate]   Optional last date, repetitions are not
  * performed after this date.
+ * @property {number}   [repeatCount]   Optional number of times to repeat.
  */
 
 
@@ -962,17 +932,18 @@ export function validateRepeatDefinition(definition) {
     if (!definition.type) {
         return userError('Repeats-validate_type_missing');
     }
-    if (definition.type === RepeatType.NONE) {
-        return;
-    }
 
-    if (!definition.period || (Math.floor(definition.period) <= 0)) {
+    if (!definition.period || (Math.floor(definition.period) <= 0)
+     || (typeof definition.period !== 'number')) {
         return userError('Repeats-period_invalid');
     }
 
     if (!YMDDate.isValidDate(definition.startYMDDate)) {
         return userError('Repeats-start_date_invalid');
     }
+
+    // Since we don't actually do anything with the repeat count
+    // we're not going to validate it.
 
     return definition.type.validate(definition);
 }
@@ -991,10 +962,6 @@ export function validateRepeatDefinition(definition) {
  */
 export function getNextRepeatYMDDate(definition, afterYMDDate) {
     definition = getRepeatDefinition(definition);
-    if (definition.type === RepeatType.NONE) {
-        return;
-    }
-
     if (afterYMDDate === undefined) {
         afterYMDDate = definition.startYMDDate.addDays(-1);
     }
