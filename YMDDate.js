@@ -543,3 +543,22 @@ export function getYMDDate(date) {
 export function getYMDDateString(date) {
     return (date instanceof YMDDate) ? date.toString() : date;
 }
+
+
+/**
+ * Returns the days of the week as text in a locale. Sunday is at index 0.
+ * @param {string} [locale]
+ * @param {string} [weekdayOption='long']
+ * @returns {string[]}
+ */
+export function getDaysOfTheWeekText(locale, weekdayOption = 'long') {
+    const daysOfTheWeek = [];
+    const toLocaleOptions = { timeZone: 'UTC', weekday: weekdayOption};
+    for (let i = 0; i < 7; ++i) {
+        const date = new Date(Date.UTC(2020, 11, 20 + i, 12, 0, 0));
+        daysOfTheWeek.push(date.toLocaleString(
+            locale, toLocaleOptions));
+    }
+
+    return daysOfTheWeek;
+}
