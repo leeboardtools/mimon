@@ -99,6 +99,10 @@
     content: '✓';
 }
 
+.checkbox-label {
+    padding-left: 1rem;
+}
+
 
 /** For util-ui/CurrencyDisplay.jsx */
 .currencyDisplay {
@@ -278,6 +282,23 @@
     text-align: right;
 }
 /** End util-ui/QuantityDisplay.jsx */
+
+
+/** For util-ui/RepeatDefinitionEditor.jsx */
+.RepeatDefinitionEditor-type {
+    width: 10rem;
+}
+.RepeatDefinitionEditor-period {
+    width: 10rem;
+}
+/** End util-ui/RepeatDefinitionEditor.jsx */
+
+
+.separatorBar {
+    border-bottom: 1px solid #dee2e6;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
 
 
 /** Used by util-ui/TabbedPages.jsx */
