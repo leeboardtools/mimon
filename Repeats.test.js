@@ -49,7 +49,7 @@ test('Repeats-DAILY', () => {
         type: R.RepeatType.DAILY,
         period: 10,
         startYMDDate: '2020-03-01',
-        lastYMDDate: '2020-03-30',
+        finalYMDDate: '2020-03-30',
     };
     expect(R.getNextRepeatYMDDate(withLastDate, '2020-03-10')).toEqual(
         getYMDDate('2020-03-11'));
@@ -57,7 +57,7 @@ test('Repeats-DAILY', () => {
         getYMDDate('2020-03-21'));
     expect(R.getNextRepeatYMDDate(withLastDate, '2020-03-21')).toBeUndefined();
 
-    withLastDate.lastYMDDate = '2020-03-31';
+    withLastDate.finalYMDDate = '2020-03-31';
     expect(R.getNextRepeatYMDDate(withLastDate, '2020-03-21')).toEqual(
         getYMDDate('2020-03-31'));
 });
@@ -147,7 +147,7 @@ test('Repeats-WEEKLY', () => {
 
     //
     // Check with end date.
-    definition.lastYMDDate = getYMDDate('2020-03-04');
+    definition.finalYMDDate = getYMDDate('2020-03-04');
     expect(R.getNextRepeatYMDDate(definition, '2020-02-18')).toEqual(
         getYMDDate('2020-02-19')
     );

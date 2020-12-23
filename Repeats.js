@@ -814,7 +814,7 @@ export function getRepeatTypeName(type) {
  * Defines when in the repeat type the repetition occurs.
  * @property {YMDDate}  startYMDDate   The starting date for the repetition,
  * this serves as the reference poit.
- * @property {YMDDate}  [lastYMDDate]   Optional last date, repetitions are not
+ * @property {YMDDate}  [finalYMDDate]   Optional final date, repetitions are not
  * performed after this date.
  * @property {number}   [repeatCount]   Optional number of times to repeat.
  */
@@ -837,11 +837,11 @@ export function getRepeatDefinition(definitionDataItem, alwaysCopy) {
             offset = type.getOffset(definitionDataItem.offset, alwaysCopy);
         }
         const startYMDDate = getYMDDate(definitionDataItem.startYMDDate);
-        const lastYMDDate = getYMDDate(definitionDataItem.lastYMDDate);
+        const finalYMDDate = getYMDDate(definitionDataItem.finalYMDDate);
         if (alwaysCopy || (type !== definitionDataItem.type)
          || (offset !== definitionDataItem.offset)
          || (startYMDDate !== definitionDataItem.startYMDDate)
-         || (lastYMDDate !== definitionDataItem.lastYMDDate)) {
+         || (finalYMDDate !== definitionDataItem.finalYMDDate)) {
             definitionDataItem = Object.assign({}, definitionDataItem);
             definitionDataItem.type = type;
             if (offset !== undefined) {
@@ -850,8 +850,8 @@ export function getRepeatDefinition(definitionDataItem, alwaysCopy) {
             if (startYMDDate) {
                 definitionDataItem.startYMDDate = startYMDDate;
             }
-            if (lastYMDDate) {
-                definitionDataItem.lastYMDDate = lastYMDDate;
+            if (finalYMDDate) {
+                definitionDataItem.finalYMDDate = finalYMDDate;
             }
             return definitionDataItem;
         }
@@ -868,7 +868,7 @@ export function getRepeatDefinition(definitionDataItem, alwaysCopy) {
  * Defines when in the repeat type the repetition occurs.
  * @property {string}  startYMDDate   The starting date for the repetition,
  * this serves as the reference point.
- * @property {string}  [lastYMDDate]   Optional last date, repetitions are not
+ * @property {string}  [finalYMDDate]   Optional final date, repetitions are not
  * performed after this date.
  * @property {number}   [repeatCount]   Optional number of times to repeat.
  */
@@ -896,13 +896,13 @@ export function getRepeatDefinitionDataItem(definition, alwaysCopy) {
         const startYMDDate = (definition.startYMDDate)
             ? getYMDDateString(definition.startYMDDate)
             : undefined;
-        const lastYMDDate = (definition.lastYMDDate)
-            ? getYMDDateString(definition.lastYMDDate)
+        const finalYMDDate = (definition.finalYMDDate)
+            ? getYMDDateString(definition.finalYMDDate)
             : undefined;
         if (alwaysCopy || (type !== definition.type)
          || (offset !== definition.offset)
          || (startYMDDate !== definition.startYMDDate)
-         || (lastYMDDate !== definition.lastYMDDate)) {
+         || (finalYMDDate !== definition.finalYMDDate)) {
             definition = Object.assign({}, definition);
             definition.type = type;
             if (offset !== undefined) {
@@ -911,8 +911,8 @@ export function getRepeatDefinitionDataItem(definition, alwaysCopy) {
             if (startYMDDate) {
                 definition.startYMDDate = startYMDDate;
             }
-            if (lastYMDDate) {
-                definition.lastYMDDate = lastYMDDate;
+            if (finalYMDDate) {
+                definition.finalYMDDate = finalYMDDate;
             }
             return definition;
         }
@@ -967,18 +967,18 @@ export function getNextRepeatYMDDate(definition, afterYMDDate) {
     }
     
     afterYMDDate = getYMDDate(afterYMDDate);
-    if (definition.lastYMDDate) {
+    if (definition.finalYMDDate) {
         // We want the date after afterYMDDate, so if afterYMDDate is the last date
         // then there isn't another one.
-        if (YMDDate.compare(afterYMDDate, definition.lastYMDDate) >= 0) {
+        if (YMDDate.compare(afterYMDDate, definition.finalYMDDate) >= 0) {
             return;
         }
     }
 
     const nextYMDDate = definition.type.nextRepeatYMDDate(definition, afterYMDDate);
     if (nextYMDDate) {
-        if (definition.lastYMDDate) {
-            if (YMDDate.compare(nextYMDDate, definition.lastYMDDate) > 0) {
+        if (definition.finalYMDDate) {
+            if (YMDDate.compare(nextYMDDate, definition.finalYMDDate) > 0) {
                 return;
             }
         }
