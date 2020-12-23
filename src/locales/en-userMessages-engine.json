@@ -282,6 +282,8 @@
     "Repeats-validate_type_missing": "The repeat type is missing or invalid.",
     "Repeats-period_invalid": "The repetition period must be >= 1.",
     "Repeats-start_date_invalid": "The start date is is missing or invalid.",
+    "Repeats-repeatCount_invalid": "The repeat count, if present, must be a number.",
+    
 
     "": ""
 }
