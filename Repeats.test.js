@@ -48,6 +48,7 @@ test('Repeats-DAILY', () => {
     const withLastDate = {
         type: R.RepeatType.DAILY,
         period: 10,
+        repeatCount: 4,
         startYMDDate: '2020-03-01',
         finalYMDDate: '2020-03-30',
     };
@@ -58,6 +59,14 @@ test('Repeats-DAILY', () => {
     expect(R.getNextRepeatYMDDate(withLastDate, '2020-03-21')).toBeUndefined();
 
     withLastDate.finalYMDDate = '2020-03-31';
+    expect(R.getNextRepeatYMDDate(withLastDate, '2020-03-21')).toEqual(
+        getYMDDate('2020-03-31'));
+
+    // Test repeatCount.
+    expect(R.getNextRepeatYMDDate(withLastDate, '2020-03-21', 4)).toBeUndefined();
+
+    // Test no repeatCount.
+    delete withLastDate.repeatCount;
     expect(R.getNextRepeatYMDDate(withLastDate, '2020-03-21')).toEqual(
         getYMDDate('2020-03-31'));
 });

@@ -942,8 +942,14 @@ export function validateRepeatDefinition(definition) {
         return userError('Repeats-start_date_invalid');
     }
 
-    // Since we don't actually do anything with the repeat count
-    // we're not going to validate it.
+    switch (typeof definition.repeatCount) {
+    case 'undefined':
+    case 'number':
+        break;
+
+    default :
+        return userError('Repeats-repeatCount_invalid');
+    }
 
     return definition.type.validate(definition);
 }
@@ -957,13 +963,23 @@ export function validateRepeatDefinition(definition) {
  * immediately following this date, if any, is returned. If this date is
  * before the startYMDDate, then the first valid repeat date on or
  * after startYMDDate is returned.
+ * @param {boolean} [appliedCount] If specified, this is checked against the
+ * definition's repeatCount property, if present, and if >= to the repeat
+ * count <code>undefined</code> is returned.
  * @returns {YMDDate|undefined} The next repeat date, <code>undefined</code>
  * if there is no repeat date following afterYMDDate.
  */
-export function getNextRepeatYMDDate(definition, afterYMDDate) {
+export function getNextRepeatYMDDate(definition, afterYMDDate, appliedCount) {
     definition = getRepeatDefinition(definition);
     if (afterYMDDate === undefined) {
         afterYMDDate = definition.startYMDDate.addDays(-1);
+    }
+
+    if ((typeof appliedCount === 'number')
+     && (typeof definition.repeatCount === 'number')) {
+        if (appliedCount >= definition.repeatCount) {
+            return;
+        }
     }
     
     afterYMDDate = getYMDDate(afterYMDDate);
