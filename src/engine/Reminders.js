@@ -18,6 +18,8 @@ import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
  * @property {boolean}  isEnabled
  * @property {YMDDate}  lastAppliedYMDDate The date the last time the reminder
  * was applied, used to determine the next time the reminder is to go off.
+ * @property {number} appliedCount The number of times the reminder has been
+ * applied, checked against the repeat definition's repeatCount property.
  */
 
 /**
@@ -31,6 +33,8 @@ import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
  * @property {boolean}  isEnabled
  * @property {string}  lastAppliedYMDDate The date the last time the reminder
  * was applied, used to determine the next time the reminder is to go off.
+ * @property {number} appliedCount The number of times the reminder has been
+ * applied, checked against the repeat definition's repeatCount property.
  */
 
 /**
@@ -211,7 +215,8 @@ export class ReminderManager extends EventEmitter {
             }
 
             const nextYMDDate = R.getNextRepeatYMDDate(reminderDataItem.repeatDefinition,
-                reminderDataItem.lastAppliedYMDDate);
+                reminderDataItem.lastAppliedYMDDate,
+                reminderDataItem.appliedCount);
             if (!nextYMDDate) {
                 return;
             }
@@ -270,13 +275,28 @@ export class ReminderManager extends EventEmitter {
 
 
     _validate(reminderDataItem) {
-        const { repeatDefinition } = reminderDataItem;
+        const { repeatDefinition, lastAppliedYMDDate, appliedCount } = reminderDataItem;
         if (!repeatDefinition) {
             return userError('ReminderManager-repeat_definition_required');
         }
         let error = R.validateRepeatDefinition(repeatDefinition);
         if (error) {
             return error;
+        }
+
+        if (lastAppliedYMDDate) {
+            if (!YMDDate.isValidDate(getYMDDate(lastAppliedYMDDate))) {
+                return userError('ReminderManager-lastAppliedYMDDate_invalid');
+            }
+        }
+
+        switch (typeof appliedCount) {
+        case 'undefined' :
+        case 'number' :
+            break;
+        
+        default :
+            return userError('ReminderManager-appliedCount_invalid');
         }
     }
 

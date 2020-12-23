@@ -281,6 +281,7 @@ test('Reminders-getDueReminderDataItems', async () => {
             period: 2,
             offset: { dayOfWeek: 5, },
             startYMDDate: '2019-06-01',
+            repeatCount: 3,
         },
         transactionTemplate: {
             splits: [
@@ -290,6 +291,7 @@ test('Reminders-getDueReminderDataItems', async () => {
         },
         isEnabled: true,
         lastAppliedYMDDate: '2019-10-01',
+        appliedCount: 2,
     };
     result = await manager.asyncAddReminder(settingsB);
     const reminderB = result.newReminderDataItem;
@@ -328,6 +330,17 @@ test('Reminders-getDueReminderDataItems', async () => {
         .toEqual([settingsC]);
     expect(manager.getDueReminderDataItems('2019-10-11'))
         .toEqual([settingsB, settingsC]);
+
+
+    // Check applied count disabling at repeatCount.
+    const settingsB1 = Object.assign({}, settingsB, {
+        appliedCount: 3,
+    });
+    result = await manager.asyncModifyReminder(settingsB1);
+    expect(manager.getDueReminderDataItems('2019-10-11'))
+        .toEqual([settingsC]);
+    
+
     
     // Make sure copies are returned.
     manager.getDueReminderDataItems('2019-10-10')[0].repeatDefinition = 'abc';
