@@ -267,6 +267,9 @@
 
     "Reconciler-reconcile_action_name": ["Reconcile ", ""],
 
+    "ReminderManager-lastAppliedYMDDate_invalid": "The last applied date is invalid.",
+    "ReminderManager-appliedCount_invalid": "The applied count must be a number.",
+
 
     "Repeats-weekly_offset_dayOfWeek_invalid": "The weekly offset must have a valid day of week.",
     "Repeats-month_NTH_DAY_offset_invalid": "The offset for monthly repeats with day offset must be a number between -31 and 31.",
@@ -283,7 +286,7 @@
     "Repeats-period_invalid": "The repetition period must be >= 1.",
     "Repeats-start_date_invalid": "The start date is is missing or invalid.",
     "Repeats-repeatCount_invalid": "The repeat count, if present, must be a number.",
-    
+
 
     "": ""
 }
