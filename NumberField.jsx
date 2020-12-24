@@ -24,7 +24,7 @@ function valueToNumber(value, isFloat) {
 }
 
 
-export function numberFieldOnKeyDown(e, value, isFloat, increment, onChange) {
+function numberFieldOnKeyDown(e, value, isFloat, increment, onChange) {
     increment = increment || 1;
     switch (e.key) {
     case 'UpArrow' :
@@ -49,7 +49,7 @@ export function numberFieldOnKeyDown(e, value, isFloat, increment, onChange) {
     }
 }
 
-export function numberFieldOnChange(e, value, isFloat, increment, onChange) {
+function numberFieldOnChange(e, value, isFloat, increment, onChange) {
     // TODO:
     // Resolve any simple math operations.
     let newValue = valueToNumber(e.target.value, isFloat);
@@ -59,7 +59,10 @@ export function numberFieldOnChange(e, value, isFloat, increment, onChange) {
     onChange(e, newValue);
 }
 
-
+/**
+ * React component for basic number editing in a field.
+ * @class
+ */
 export const NumberField = React.forwardRef(
     function NumberFieldImpl(props, ref) {
         const { isFloat, increment, onChange, value,
@@ -76,6 +79,42 @@ export const NumberField = React.forwardRef(
     }
 );
 
+/**
+ * @callback NumberField~onChange
+ * @param {Event} e The change event. e.target.value is the entered text if the
+ * text is not a valid number.
+ * @param {number} newValue The number entered, if the text entered was not a valid
+ * number this is NaN.
+ */
+
+
+/**
+ * @typedef {object} NumberField~propTypes
+ * @property {string}   [id]
+ * @property {string}   [ariaLabel]
+ * @property {string}   [label]
+ * @property {string}   [value]
+ * @property {string}   [fieldClassExtras] If specified additional CSS
+ * classes to add to the outer field container.
+ * @property {string}   [inputClassExtras]  If specified additional CSS
+ * classes to add to the &lt;input&gt; entity.
+ * @property {string}   [errorMsg]  If specified an error message to be displayed
+ * below the input box.
+ * @property {NumberField~onChange} [onChange]  onChange event handler.
+ * @property {function} [onFocus]   onFocus event handler
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onfocus}.
+ * @property {function} [onBlur]    onBlur event handler
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onblur}.
+ * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
+ * @property {boolean} [disabled]
+ * @property {boolean} [isFloat]    If <code>true</code> the values are restricted to
+ * integers.
+ * @property {number} [increment]   The amount to increment/decrement the value when
+ * the up or down arrow keys are pressed. (not yet working...)
+ * @property {object} [prependComponent] Optional component to appear before
+ * the editor.
+ * @property {object} [appendComponent] Optional component to appear after the editor.
+ */
 NumberField.propTypes = {
     id: PropTypes.string,
     ariaLabel: PropTypes.string,

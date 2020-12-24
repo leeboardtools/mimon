@@ -37,9 +37,12 @@ export const TextField = React.forwardRef(
 
 /**
  * @typedef {object} TextField~propTypes
+ * @property {string}   [id]
  * @property {string}   [ariaLabel]
  * @property {string}   [label]
  * @property {string}   [value]
+ * @property {string}   [fieldClassExtras] If specified additional CSS
+ * classes to add to the outer field container.
  * @property {string}   [inputClassExtras]  If specified additional CSS
  * classes to add to the &lt;input&gt; entity.
  * @property {string}   [errorMsg]  If specified an error message to be displayed
@@ -54,6 +57,9 @@ export const TextField = React.forwardRef(
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onkeydown}.
  * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
  * @property {boolean} [disabled]
+ * @property {object} [prependComponent] Optional component to appear before
+ * the editor.
+ * @property {object} [appendComponent] Optional component to appear after the editor.
  */
 TextField.propTypes = {
     id: PropTypes.string,

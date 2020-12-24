@@ -9,9 +9,13 @@ import PropTypes from 'prop-types';
  * @class
  */
 export function Field(props) {
-    const { label, id, errorMsg, editorClassExtras, onRenderEditor } = props;
+    const { label, id, errorMsg, fieldClassExtras,
+        editorClassExtras, onRenderEditor } = props;
 
-    const divClassName = 'form-group';
+    let divClassName = 'form-group';
+    if (fieldClassExtras) {
+        divClassName = divClassName + ' ' + fieldClassExtras;
+    }
     
     let labelComponent;
     if (label) {
@@ -79,6 +83,8 @@ export function Field(props) {
  * @property {string}   [label]
  * @property {string}   [errorMsg]  If specified an error message to be displayed
  * below the input box.
+ * @property {string}   [fieldClassExtras] If specified additional CSS
+ * classes to add to the outer field container.
  * @property {string}   [editorClassExtras]  If specified additional CSS
  * classes to add to the editor entity.
  * @property {Field~onRenderEditor} onRenderEditor  Callback for rendering the
@@ -92,6 +98,7 @@ Field.propTypes = {
     id: PropTypes.string,
     label: PropTypes.string,
     errorMsg: PropTypes.string,
+    fieldClassExtras: PropTypes.string,
     editorClassExtras: PropTypes.string,
     onRenderEditor: PropTypes.func.isRequired,
     prependComponent: PropTypes.object,
@@ -100,6 +107,9 @@ Field.propTypes = {
 
 
 export function FieldPrefix(props) {
+    if (!props.children) {
+        return null;
+    }
     return <div className = "col-form-label pr-2">
         {props.children}
     </div>;
@@ -111,6 +121,9 @@ FieldPrefix.propTypes = {
 
 
 export function FieldSuffix(props) {
+    if (!props.children) {
+        return null;
+    }
     return <div className = "col-form-label pl-2">
         {props.children}
     </div>;
