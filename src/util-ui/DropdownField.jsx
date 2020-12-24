@@ -9,7 +9,7 @@ import { Field } from './Field';
  */
 export const DropdownField = React.forwardRef(
     function DropdownFieldImpl(props, ref) {
-        const { label, id, ariaLabel, inputClassExtras, errorMsg, 
+        const { label, id, ariaLabel, fieldClassExtras, inputClassExtras, errorMsg, 
             onChange, onFocus, onBlur, disabled, items } = props;
 
         const itemComponents = [];
@@ -80,6 +80,7 @@ export const DropdownField = React.forwardRef(
             id={id}
             label={label}
             errorMsg={errorMsg}
+            fieldClassExtras = {fieldClassExtras}
             editorClassExtras={inputClassExtras}
             onRenderEditor={(inputClassName) =>
                 <div
@@ -123,6 +124,7 @@ export const DropdownField = React.forwardRef(
  * @property {string}   [label]
  * @property {DropdownField~Item[]} items
  * @property {string}   [value]
+ * @property {string}   [fieldClassExtras]
  * @property {string}   [inputClassExtras]  If specified additional CSS
  * classes to add to the &lt;select&gt; entity.
  * @property {string}   [errorMsg]  If specified an error message to be displayed
@@ -142,6 +144,7 @@ DropdownField.propTypes = {
     label: PropTypes.string,
     items: PropTypes.array.isRequired,
     value: PropTypes.any,
+    fieldClassExtras: PropTypes.string,
     inputClassExtras: PropTypes.string,
     errorMsg: PropTypes.string,
     onChange: PropTypes.func,
