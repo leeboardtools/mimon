@@ -73,7 +73,7 @@ export const CellDateEditor = React.forwardRef(
             tabIndex,
             dateFormat, locale } = props;
 
-        const divClassName = 'input-group mb-0 ';
+        const divClassName = '';
         let className = 'form-control cellDateEditor-textInput ' 
             + (inputClassExtras || '');
 
@@ -198,7 +198,7 @@ export function CellDateDisplay(props) {
         value = format(localDate, dateFormat, localeArg);
     }
 
-    const divClassName = 'input-group mb-0 ';
+    const divClassName = '';
     const className = 'form-control cellTextEditor-textInput cellTextEditor-textDisplay ' 
         + (inputClassExtras || '');
 
