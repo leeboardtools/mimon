@@ -148,6 +148,17 @@
     width: 100%;
 }
 
+/** For indenting a Field component from the previous component 
+that's on the same line */
+.Field-indent {
+    padding-left: 2rem;
+}
+
+/** For a container of Field components on the same line **/
+.FieldContainer-inline {
+    display: flex !important;
+}
+
 
 /** For util-ui/MultiColumnList.jsx */
 .MultiColumnList {
@@ -282,16 +293,6 @@
     text-align: right;
 }
 /** End util-ui/QuantityDisplay.jsx */
-
-
-/** For util-ui/RepeatDefinitionEditor.jsx */
-.RepeatDefinitionEditor-type {
-    width: 10rem;
-}
-.RepeatDefinitionEditor-period {
-    width: 10rem;
-}
-/** End util-ui/RepeatDefinitionEditor.jsx */
 
 
 .separatorBar {
