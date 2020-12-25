@@ -562,3 +562,52 @@ export function getDaysOfTheWeekText(locale, weekdayOption = 'long') {
 
     return daysOfTheWeek;
 }
+
+
+/**
+ * Retrieves a date that is the nth occurrence of a day of the week relative to the
+ * start or end of the month.
+ * @param {YMDDate|string} refYMDDate The reference date, the occurrence will be relative
+ * to the first/last day of the month/year of this date.
+ * @param {number} n The occurrance of the day of the week. If less than 0 then the
+ * occurrence is from the last day of the month.
+ * @param {number} dow The day of the week, 0 = Sunday
+ * @returns {YMDDate|string} The date returned will be the same type of object as
+ * ymdDate.
+ */
+export function getMonthNthDayOfWeek(refYMDDate, n, dow) {
+    let ymdDate = getYMDDate(refYMDDate);
+    if (!ymdDate) {
+        return;
+    }
+
+    if ((dow < 0) || (dow > 6)) {
+        throw Error('dow must be >= 0 and < 7');
+    }
+
+    let dom = ymdDate.getDOM();
+    if (n > 0) {
+        ymdDate = ymdDate.addDays(1 - dom);
+        const refDOW = ymdDate.getDayOfWeek();
+        if (refDOW > dow) {
+            ++n;
+        }
+        dom = 1 + dow - refDOW + (n - 1) * 7;
+        ymdDate = ymdDate.addDays(dom - 1);
+    }
+    else if (n < 0) {
+        const lastDOM = ymdDate.getLastDateOfMonth();
+        ymdDate = ymdDate.addDays(lastDOM - dom);
+        const refDOW = ymdDate.getDayOfWeek();
+        if (refDOW < dow) {
+            --n;
+        }
+        dom = lastDOM + dow - refDOW + (n + 1) * 7;
+        ymdDate = ymdDate.addDays(dom - lastDOM);
+    }
+    else {
+        throw Error('n must either be > 0 or < 0.');
+    }
+
+    return (typeof refYMDDate === 'string') ? ymdDate.toString() : ymdDate;
+}

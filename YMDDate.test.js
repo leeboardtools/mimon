@@ -1,4 +1,4 @@
-import { YMDDate, getYMDDate } from './YMDDate';
+import { YMDDate, getYMDDate, getMonthNthDayOfWeek } from './YMDDate';
 
 function expectYMDDate(oDate, year, month, dom) {
     expect(oDate.getFullYear()).toEqual(year);
@@ -246,5 +246,141 @@ test('YMDDate-fractionalYearsAfterMe', () => {
     ymdDateB = new YMDDate('2021-03-01');
     expect(ymdDateA.fractionalYearsAfterMe(ymdDateB)).toEqual(1 + 1 / 365);
     expect(ymdDateB.fractionalYearsAfterMe(ymdDateA)).toEqual(-(1 + 1 / 365));
+
+});
+
+
+//
+//-----------------------------------------------
+//
+test('YMDDate-getMonthNthDayOfWeek', () => {
+    //
+    // From Start of Month...
+    // 2020-12-01 is Tuesday...
+    //
+    // DOW before the first day
+    expect(getMonthNthDayOfWeek(
+        '2020-12-24',   // Thursday
+        1,
+        2,
+    )).toEqual('2020-12-01');
+
+    expect(getMonthNthDayOfWeek(
+        getYMDDate('2020-12-24'),   // Thursday
+        5,
+        2,
+    )).toEqual(getYMDDate('2020-12-29'));
+
+    // Past end of month
+    expect(getMonthNthDayOfWeek(
+        '2020-12-24',   // Thursday
+        6,
+        2,
+    )).toEqual('2021-01-05');
+
+
+    // DOW on the first day
+    expect(getMonthNthDayOfWeek(
+        '2020-12-24',   // Thursday
+        1,
+        3,
+    )).toEqual('2020-12-02');
+
+    expect(getMonthNthDayOfWeek(
+        '2020-12-24',   // Thursday
+        5,
+        3,
+    )).toEqual('2020-12-30');
+
+    // Past end of month
+    expect(getMonthNthDayOfWeek(
+        '2020-12-24',   // Thursday
+        6,
+        3,
+    )).toEqual('2021-01-06');
+
+
+    // DOW before the after day
+    expect(getMonthNthDayOfWeek(
+        '2020-12-24',   // Thursday
+        1,
+        4,
+    )).toEqual('2020-12-03');
+
+    expect(getMonthNthDayOfWeek(
+        '2020-12-24',   // Thursday
+        5,
+        4,
+    )).toEqual('2020-12-31');
+
+    // Past end of month
+    expect(getMonthNthDayOfWeek(
+        '2020-12-24',   // Thursday
+        6,
+        4,
+    )).toEqual('2021-01-07');
+
+    //
+    // From end of month...
+    // 2020-12-31 is Thursday...
+    expect(getMonthNthDayOfWeek(
+        getYMDDate('2020-12-24'),
+        -1,
+        5,
+    )).toEqual(getYMDDate('2020-12-25'));
+    expect(getMonthNthDayOfWeek(
+        getYMDDate('2020-12-24'),
+        -3,
+        5,
+    )).toEqual(getYMDDate('2020-12-11'));
+    expect(getMonthNthDayOfWeek(
+        getYMDDate('2020-12-24'),
+        -5,
+        5,
+    )).toEqual(getYMDDate('2020-11-27'));
+
+    // Same DOW as end of month
+    expect(getMonthNthDayOfWeek(
+        getYMDDate('2020-12-24'),
+        -1,
+        4,
+    )).toEqual(getYMDDate('2020-12-31'));
+    expect(getMonthNthDayOfWeek(
+        getYMDDate('2020-12-24'),
+        -3,
+        4,
+    )).toEqual(getYMDDate('2020-12-17'));
+    expect(getMonthNthDayOfWeek(
+        getYMDDate('2020-12-24'),
+        -5,
+        4,
+    )).toEqual(getYMDDate('2020-12-03'));
+    expect(getMonthNthDayOfWeek(
+        getYMDDate('2020-12-24'),
+        -6,
+        4,
+    )).toEqual(getYMDDate('2020-11-26'));
+
+    // DOW before end of month
+    expect(getMonthNthDayOfWeek(
+        getYMDDate('2020-12-24'),
+        -1,
+        3,
+    )).toEqual(getYMDDate('2020-12-30'));
+    expect(getMonthNthDayOfWeek(
+        getYMDDate('2020-12-24'),
+        -3,
+        3,
+    )).toEqual(getYMDDate('2020-12-16'));
+    expect(getMonthNthDayOfWeek(
+        getYMDDate('2020-12-24'),
+        -5,
+        3,
+    )).toEqual(getYMDDate('2020-12-02'));
+    expect(getMonthNthDayOfWeek(
+        getYMDDate('2020-12-24'),
+        -6,
+        3,
+    )).toEqual(getYMDDate('2020-11-25'));
 
 });
