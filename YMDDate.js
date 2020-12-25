@@ -573,7 +573,7 @@ export function getDaysOfTheWeekText(locale, weekdayOption = 'long') {
  * occurrence is from the last day of the month.
  * @param {number} dow The day of the week, 0 = Sunday
  * @returns {YMDDate|string} The date returned will be the same type of object as
- * ymdDate.
+ * refYMDDate.
  */
 export function getMonthNthDayOfWeek(refYMDDate, n, dow) {
     let ymdDate = getYMDDate(refYMDDate);
@@ -608,6 +608,24 @@ export function getMonthNthDayOfWeek(refYMDDate, n, dow) {
     else {
         throw Error('n must either be > 0 or < 0.');
     }
+
+    return (typeof refYMDDate === 'string') ? ymdDate.toString() : ymdDate;
+}
+
+
+/**
+ * Returns a {@link YMDDate} adjusted with a desired day of the month. The day of the
+ * month is adjusted so the month and year do not change.
+ * @param {YMDDate|string} refYMDDate 
+ * @param {number} dom The desired 1 based day of the month
+ * @returns {YMDDate|string} The date returned will be the same type of object as
+ * refYMDDate.
+ */
+export function getYMDDateWithDOM(refYMDDate, dom) {
+    let ymdDate = getYMDDate(refYMDDate);
+    const lastDOM = ymdDate.getLastDateOfMonth();
+    dom = Math.max(Math.min(dom, lastDOM), 1);
+    ymdDate = new YMDDate(ymdDate.getFullYear(), ymdDate.getMonth(), dom);
 
     return (typeof refYMDDate === 'string') ? ymdDate.toString() : ymdDate;
 }
