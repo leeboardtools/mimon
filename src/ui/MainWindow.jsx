@@ -15,6 +15,8 @@ import { ErrorBoundary } from '../util-ui/ErrorBoundary';
 import { PricesListHandler } from './PricesListHandler';
 import { PriceRetrieverWindowHandler } from './PriceRetrieverWindowHandler';
 import { ReconcilerWindowHandler } from './ReconcilerWindowHandler';
+import { ReminderEditorHandler } from './ReminderEditorHandler';
+import { RemindersListHandler } from './RemindersListHandler';
 
 
 
@@ -97,6 +99,13 @@ export class MainWindow extends React.Component {
 
         this._reconcilerWindowHandler = new ReconcilerWindowHandler(handlerArgs);
         this._reconcilersByAccountId = new Map();
+
+
+        this._remindersListHandler = new RemindersListHandler(handlerArgs);
+
+
+        this._reminderEditorHandler = new ReminderEditorHandler(handlerArgs);
+        this._reminderEditorsByReminderId = new Map();
 
         
         this.state = {
@@ -197,6 +206,12 @@ export class MainWindow extends React.Component {
             }
             else if (tabId.startsWith('reconciler_')) {
                 this._reconcilersByAccountId.delete(tabEntry.accountId);
+            }
+            else if (tabId === 'remindersList') {
+                this._remindersListTabEntry = undefined;
+            }
+            else if (tabId.startsWith('reminderEditor_')) {
+                this._reminderEditorsByReminderId.delete(tabEntry.reminderId);
             }
 
             this._tabItemsById.delete(tabId);
@@ -513,6 +528,38 @@ export class MainWindow extends React.Component {
         });
     }
 
+    
+    openRemindersList(openArgs) {
+        const tabId = 'remindersList';
+        if (!this._remindersListTabEntry) {
+            const tabEntry = this._remindersListHandler.createTabEntry(
+                tabId, openArgs);
+            this.addTabEntry(tabEntry, tabId);
+            this._remindersListTabEntry = tabEntry;
+        }
+
+        this.setState({
+            activeTabId: tabId,
+        });
+    }
+
+
+    openReminderEditor(reminderId) {
+        let tabId = this._reminderEditorsByReminderId.get(reminderId);
+        if (!tabId) {
+            const tabType = 'reminderEditor';
+            tabId = tabType + '_' + (reminderId || '_new');
+            this._reminderEditorsByReminderId.set(reminderId, tabId);
+            const tabEntry = this._reminderEditorHandler.createTabEntry(
+                tabId, reminderId);
+            this.addTabEntry(tabEntry, tabType);
+        }
+
+        this.setState({
+            activeTabId: tabId,
+        });
+    }
+
 
     onOpenTab(type, ...args) {
         switch (type) {
@@ -558,6 +605,14 @@ export class MainWindow extends React.Component {
         
         case 'priceRetrieverWindow' :
             this.openPriceRetrieverWindow(...args);
+            break;
+        
+        case 'reminderEditor' :
+            this.openReminderEditor(...args);
+            break;
+        
+        case 'remindersList' :
+            this.openRemindersList(...args);
             break;
     
         default :
@@ -670,7 +725,6 @@ export class MainWindow extends React.Component {
             },
             { id: 'viewRemindersList', 
                 label: userMsg('MainWindow-viewRemindersList'),
-                disabled: !this._tabItemsById.get('remindersList'),
                 onChooseItem: () => this.onOpenTab('remindersList'),
             },
             {},

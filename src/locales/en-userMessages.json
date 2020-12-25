@@ -367,5 +367,29 @@
     "ReconcilingWindow-reconcile_heading": "R",
     "ReconcilingWindow-amount_heading": "Amount",
 
+    
+    "ReminderEditor-description_label": "Description",
+    "ReminderEditor-enabled_label": "Enabled",
+
+    "ReminderEditor-prompt_cancel_title": "Confirm Cancel",
+    "ReminderEditor-prompt_cancel_msg": "Are you sure you want to cancel?\nAny changes will be lost.",
+
+    "ReminderEditorHandler-newReminder_title": ["New Reminder"],
+    "ReminderEditorHandler-modifyReminder_title": ["Edit Reminder"],
+
+    "RemindersList-enabled_heading": "Enabled",
+    "RemindersList-accountName_heading": "Account",
+    "RemindersList-amount_heading": "Amount",
+    "RemindersList-lastDate_heading": "Last Paid",
+    "RemindersList-nextDate_heading": "Next Due",
+
+    "RemindersListHandler-masterReminderList_title": "Reminders",
+    "RemindersListHandler-newReminder": "New Reminder...",
+    "RemindersListHandler-modifyReminder": "Modify Reminder...",
+    "RemindersListHandler-removeReminder": "Delete Reminder",
+    "RemindersListHandler-showReminder": "Show Reminder",
+    "RemindersListHandler-hideReminder": "Hide Reminder",
+    "RemindersListHandler-showHiddenReminders": "Show Hidden Reminders",
+
     "": ""
 }

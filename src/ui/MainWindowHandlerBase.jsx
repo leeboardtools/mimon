@@ -22,6 +22,12 @@ export class MainWindowHandlerBase {
     }
     
 
+    /**
+     * Opens the account register for the account of a given transaction
+     * split and sets the active split to that split.
+     * @param {TransactionDataItem} transactionDataItem 
+     * @param {number} splitIndex 
+     */
     onOpenRegisterForTransactionSplit(transactionDataItem, splitIndex) {
         const split = transactionDataItem.splits[splitIndex];
         this.openTab('accountRegister', split.accountId, {

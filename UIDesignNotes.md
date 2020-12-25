@@ -457,10 +457,14 @@ Common menus:
     
 
     - Reconciler
-
+        - Last reconciled date not updated after reconcile
 
 
     - Reminders Editor
+        - List of reminders
+        - Sortable by name, date, account
+        - Editor window
+        - Paradigm somewhat similar to account list/account editor
 
 
     - Active Reminders
@@ -505,3 +509,23 @@ Common menus:
     - Which one is user option, should be able to use CSS classes.
 
 
+- Redo Repeats?
+    - OccuranceDefinition - Specifies how to select the date.
+        - Day offset (from current date)
+        - [Day of week]
+        - n Date of month
+        - n Days from end of month
+        - Nth day of week from start of month
+        - Nth day of week from end of month
+        - Day of year
+        - Days from end of year
+        - Nth day of week of year
+        - Nth day of week from end of year
+    - RepetitionDefinition - Defines how often to repeat
+        - No repeat
+        - n Days
+        - n Weeks
+        - n Months
+        - n Years
+        - repeatCount
+        - finalYMDDate
