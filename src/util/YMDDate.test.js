@@ -1,4 +1,4 @@
-import { YMDDate, getYMDDate, getMonthNthDayOfWeek } from './YMDDate';
+import { YMDDate, getYMDDate, getMonthNthDayOfWeek, getYMDDateWithDOM } from './YMDDate';
 
 function expectYMDDate(oDate, year, month, dom) {
     expect(oDate.getFullYear()).toEqual(year);
@@ -383,4 +383,15 @@ test('YMDDate-getMonthNthDayOfWeek', () => {
         3,
     )).toEqual(getYMDDate('2020-11-25'));
 
+});
+
+
+//
+//-----------------------------------------------
+//
+test('YMDDate-getYMDDateWithDOM', () => {
+    expect(getYMDDateWithDOM('2020-02-20', 29))
+        .toEqual('2020-02-29');
+    expect(getYMDDateWithDOM('2021-02-20', 29))
+        .toEqual('2021-02-28');
 });
