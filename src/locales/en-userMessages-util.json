@@ -10,6 +10,23 @@
 
     "CellQuantityEditor-invalid_value": ["Enter a numeric value of the form ", "."],
 
+
+    "DateOccurrences-repeatType_invalid": "The repeat type is not valid.",
+    "DateOccurrences-repeatDefinition_period_required": "The type of repeat requires a period that is a number >= 0.",
+    "DateOccurrences-repeatDefinition_finalYMDDate_invalid": "The final date is not a valid date.",
+    "DateOccurrences-repeatDefinition_maxRepeats_invalid": "The maximum number of times to repeat must be a number >= 0.",
+
+    "DateOccurrences-weekType_invalidRepeatType": "Weekly occurrences can only be repeated on a weekly basis.",
+    "DateOccurrences-monthType_invalidRepeatType": "Monthly occurrences can only be repeated on a monthly or yearly basis.",
+    "DateOccurrences-specificMonthType_invalidRepeatType": "Specific month occurrences can only be repeated on a yearly basis.",
+    "DateOccurrences-yearType_invalidRepeatType": "Yearly occurrences can only be repeated on a yearly basis.",
+
+    "DateOccurrences-occurrenceType_invalid": "The occurrence type is not valid.",
+    "DateOccurrences-definition_offset_invalid": ["The occurrence type requires a numerical offset >= ", "."],
+    "DateOccurrences-definition_dayOfWeek_invalid": "The occurrence type requires a valid day of the week.",
+    "DateOccurrences-definition_month_invalid": "The occurrence type requires a valid month.",
+
+
     "FileSelector-readdir_failed": ["Could not read the folder '", "'. ", ""],
     "FileSelector-open": "Open",
     "FileSelector-create": "Create",
@@ -30,39 +47,6 @@
     "Repeats-period_invalid": "The repetition period must be >= 1.",
     "Repeats-start_date_invalid": "The start date is is missing or invalid.",
     "Repeats-repeatCount_invalid": "The repeat count, if present, must be a number.",
-
-
-    "RepeatDefinitionEditor-RepeatType_NONE": "Does not repeat",
-    "RepeatDefinitionEditor-RepeatType_DAILY": "Daily",
-    "RepeatDefinitionEditor-RepeatType_WEEKLY": "Weekly",
-    "RepeatDefinitionEditor-RepeatType_MONTHLY": "Monthly",
-    "RepeatDefinitionEditor-RepeatType_YEARLY": "Yearly",
-
-    "RepeatDefinitionEditor-weeklyDayOfWeek_prefix": "On ",
-    "RepeatDefinitionEditor-weeklyDayOfWeek_suffix": "",
-
-    "RepeatDefinitionEditor-monthlyType_dateStart": "Day of the month",
-    "RepeatDefinitionEditor-monthlyType_dateEnd": "Days from the end of the month",
-    "RepeatDefinitionEditor-monthlyType_weekStart": "Day of the week in the month",
-    "RepeatDefinitionEditor-monthlyType_weekEnd": "Day of the week from the end of the month",
-
-    "RepeatDefinitionEditor-monthlyType_prefix": "",
-    "RepeatDefinitionEditor-monthlyType_suffix": "",
-    "RepeatDefinitionEditor-monthlyOffset_prefix": "",
-    "RepeatDefinitionEditor-monthlyOffset_suffix": "",
-    "RepeatDefinitionEditor-monthlyDayOfWeek_prefix": "",
-    "RepeatDefinitionEditor-monthlyDayOfWeek_suffix": "",
-
-
-    "RepeatDefinitionEditor-type_label": "Type",
-    "RepeatDefinitionEditor-dailyPeriod_prefix": "Repeat every ",
-    "RepeatDefinitionEditor-dailyPeriod_suffix": " days",
-    "RepeatDefinitionEditor-weeklyPeriod_prefix": "Repeat every ",
-    "RepeatDefinitionEditor-weeklyPeriod_suffix": " weeks",
-    "RepeatDefinitionEditor-monthlyPeriod_prefix": "Repeat every ",
-    "RepeatDefinitionEditor-monthlyPeriod_suffix": " months",
-    "RepeatDefinitionEditor-yearlyPeriod_prefix": "Repeat every ",
-    "RepeatDefinitionEditor-yearlyPeriod_suffix": " years",
 
 
     "SequentialPages-next_btn": "Next",
