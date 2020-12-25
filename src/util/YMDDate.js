@@ -614,6 +614,51 @@ export function getMonthNthDayOfWeek(refYMDDate, n, dow) {
 
 
 /**
+ * Retrieves a date that is the nth occurrence of a day of the week relative to the
+ * start or end of the year.
+ * @param {YMDDate|string} refYMDDate The reference date, the occurrence will be relative
+ * to the first/last day of the year of this date.
+ * @param {number} n The occurrance of the day of the week. If less than 0 then the
+ * occurrence is from the last day of the year.
+ * @param {number} dow The day of the week, 0 = Sunday
+ * @returns {YMDDate|string} The date returned will be the same type of object as
+ * refYMDDate.
+ */
+export function getYearNthDayOfWeek(refYMDDate, n, dow) {
+    let ymdDate = getYMDDate(refYMDDate);
+    if (!ymdDate) {
+        return;
+    }
+
+    if ((dow < 0) || (dow > 6)) {
+        throw Error('dow must be >= 0 and < 7');
+    }
+
+    if (n > 0) {
+        ymdDate = new YMDDate(ymdDate.getFullYear(), 0, 1);
+        const refDOW = ymdDate.getDayOfWeek();
+        if (refDOW > dow) {
+            ++n;
+        }
+        ymdDate = ymdDate.addDays(dow - refDOW + (n - 1) * 7);
+    }
+    else if (n < 0) {
+        ymdDate = new YMDDate(ymdDate.getFullYear(), 11, 31);
+        const refDOW = ymdDate.getDayOfWeek();
+        if (refDOW < dow) {
+            --n;
+        }
+        ymdDate = ymdDate.addDays(dow - refDOW + (n + 1) * 7);
+    }
+    else {
+        throw Error('n must either be > 0 or < 0.');
+    }
+
+    return (typeof refYMDDate === 'string') ? ymdDate.toString() : ymdDate;
+}
+
+
+/**
  * Returns a {@link YMDDate} adjusted with a desired day of the month. The day of the
  * month is adjusted so the month and year do not change.
  * @param {YMDDate|string} refYMDDate 
