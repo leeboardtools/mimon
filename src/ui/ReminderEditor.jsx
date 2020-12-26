@@ -9,8 +9,6 @@ import { TextField } from '../util-ui/TextField';
 import deepEqual from 'deep-equal';
 import * as R from '../engine/Reminders';
 import * as T from '../engine/Transactions';
-import * as RP from '../util/Repeats';
-import { getYMDDate, YMDDate } from '../util/YMDDate';
 import { SeparatorBar } from '../util-ui/SeparatorBar';
 
 

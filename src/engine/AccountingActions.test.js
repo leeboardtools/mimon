@@ -2,7 +2,6 @@ import * as ASTH from './AccountingSystemTestHelpers';
 import * as A from './Accounts';
 import * as PI from './PricedItems';
 import * as DO from '../util/DateOccurrences';
-import * as RE from '../util/Repeats';
 import * as T from './Transactions';
 import * as L from './Lots';
 import * as Q from '../util/Quantities';

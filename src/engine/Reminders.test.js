@@ -1,6 +1,5 @@
 import * as RI from './Reminders';
 import * as DO from '../util/DateOccurrences';
-import * as RE from '../util/Repeats';
 import * as ASTH from './AccountingSystemTestHelpers';
 import { getYMDDate } from '../util/YMDDate';
 
