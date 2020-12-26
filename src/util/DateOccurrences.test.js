@@ -388,7 +388,7 @@ test('DateOccurrences-DAY_OF_WEEK', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-21'),    // the next Monday...
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(A, {
@@ -398,7 +398,7 @@ test('DateOccurrences-DAY_OF_WEEK', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-21'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(A, {
@@ -408,14 +408,14 @@ test('DateOccurrences-DAY_OF_WEEK', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-28'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(A, result);
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-28'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
 
@@ -436,21 +436,21 @@ test('DateOccurrences-DAY_OF_WEEK', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-14'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, result);
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-21'),
         occurrenceCount: 3,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, result);
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-21'),
         occurrenceCount: 3,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
     // Check repeating until finalYMDDate
@@ -470,21 +470,21 @@ test('DateOccurrences-DAY_OF_WEEK', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-14'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(C, result);
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-21'),
         occurrenceCount: 3,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(C, result);
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-21'),
         occurrenceCount: 3,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
 });
@@ -583,7 +583,7 @@ test('DateOccurrences-DAY_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-11-06'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(A, {
@@ -593,7 +593,7 @@ test('DateOccurrences-DAY_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-11-06'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(A, {
@@ -603,7 +603,7 @@ test('DateOccurrences-DAY_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-11-07'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
     // With repeat definition
@@ -622,7 +622,7 @@ test('DateOccurrences-DAY_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-04-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
     result = DO.getNextDateOccurrenceState(B, {
         lastOccurrenceYMDDate: '2020-04-05',
@@ -631,14 +631,14 @@ test('DateOccurrences-DAY_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-07-29'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, result);
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-10-29'),
         occurrenceCount: 3,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -648,7 +648,7 @@ test('DateOccurrences-DAY_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Don't go beyond last day of month...
@@ -659,7 +659,7 @@ test('DateOccurrences-DAY_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-02-28'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 });
 
@@ -749,7 +749,7 @@ test('DateOccurrences-DAY_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-11-01'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(A, {
@@ -759,7 +759,7 @@ test('DateOccurrences-DAY_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-11-01'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(A, {
@@ -769,7 +769,7 @@ test('DateOccurrences-DAY_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-01'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     const A1 = {
@@ -783,14 +783,14 @@ test('DateOccurrences-DAY_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-31'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
     
     result = DO.getNextDateOccurrenceState(A1, result);
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-31'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
     result = DO.getNextDateOccurrenceState(A1, {
@@ -800,7 +800,7 @@ test('DateOccurrences-DAY_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-31'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
 
@@ -823,7 +823,7 @@ test('DateOccurrences-DAY_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-02-01'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -833,7 +833,7 @@ test('DateOccurrences-DAY_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-11-01'),
         occurrenceCount: 2,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
     // Make sure 30 day month (April) ends up on the 1st.
@@ -844,7 +844,7 @@ test('DateOccurrences-DAY_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-04-01'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Make sure 30 day month (April) ends up on the 1st.
@@ -855,7 +855,7 @@ test('DateOccurrences-DAY_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-04-01'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
 });
@@ -970,7 +970,7 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-11-02'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // On first dow
@@ -981,7 +981,7 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-11-02'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // After first dow
@@ -992,7 +992,7 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-07'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
 
@@ -1015,7 +1015,7 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-10-14'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -1025,7 +1025,7 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-09'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // All done
@@ -1036,7 +1036,7 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-10-07'),
         occurrenceCount: 3,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 });
 
@@ -1153,7 +1153,7 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // On last dow
@@ -1164,7 +1164,7 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-11-24'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Before last dow
@@ -1175,7 +1175,7 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-11-24'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
 
@@ -1197,7 +1197,7 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-11-18'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -1207,7 +1207,7 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-12-23'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -1217,7 +1217,7 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-11-18'),
         occurrenceCount: 2,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
 
@@ -1327,7 +1327,7 @@ test('DateOccurrences-DAY_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-04-15'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day of...
@@ -1338,7 +1338,7 @@ test('DateOccurrences-DAY_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-04-15'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // occurrenceCount 1
@@ -1349,7 +1349,7 @@ test('DateOccurrences-DAY_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-04-15'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
     // Day after...
@@ -1360,7 +1360,7 @@ test('DateOccurrences-DAY_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-04-15'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Leap year
@@ -1378,7 +1378,7 @@ test('DateOccurrences-DAY_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(A1, {
@@ -1388,7 +1388,7 @@ test('DateOccurrences-DAY_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(A1, {
@@ -1398,7 +1398,7 @@ test('DateOccurrences-DAY_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-02-28'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
 
@@ -1420,7 +1420,7 @@ test('DateOccurrences-DAY_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Occurrence count 1, advances to next year.
@@ -1431,7 +1431,7 @@ test('DateOccurrences-DAY_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -1441,7 +1441,7 @@ test('DateOccurrences-DAY_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-02-28'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -1451,7 +1451,7 @@ test('DateOccurrences-DAY_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2024-02-29'),
         occurrenceCount: 3,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -1461,7 +1461,7 @@ test('DateOccurrences-DAY_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-02-28'),
         occurrenceCount: 3,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
 });
@@ -1571,7 +1571,7 @@ test('DateOccurrences-DAY_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day of
@@ -1582,7 +1582,7 @@ test('DateOccurrences-DAY_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day after
@@ -1593,7 +1593,7 @@ test('DateOccurrences-DAY_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-02-28'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // All done
@@ -1604,7 +1604,7 @@ test('DateOccurrences-DAY_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-03-01'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
     const A1 = {
@@ -1619,7 +1619,7 @@ test('DateOccurrences-DAY_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-01'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(A1, {
@@ -1629,7 +1629,7 @@ test('DateOccurrences-DAY_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-02-01'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
 
@@ -1652,7 +1652,7 @@ test('DateOccurrences-DAY_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -1662,7 +1662,7 @@ test('DateOccurrences-DAY_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-02-28'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -1672,7 +1672,7 @@ test('DateOccurrences-DAY_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2024-02-29'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // All done
@@ -1683,7 +1683,7 @@ test('DateOccurrences-DAY_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-02-28'),
         occurrenceCount: 3,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 });
 
@@ -1807,7 +1807,7 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-12'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day of
@@ -1817,7 +1817,7 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-12'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day after
@@ -1828,7 +1828,7 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-02-10'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // All done with no repeats
@@ -1839,7 +1839,7 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-11'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
 
@@ -1863,7 +1863,7 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -1873,7 +1873,7 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-03-05'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -1883,7 +1883,7 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 3,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
 });
@@ -2008,7 +2008,7 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-19'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day of
@@ -2018,7 +2018,7 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-19'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day after
@@ -2029,7 +2029,7 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-02-17'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Done no repeats
@@ -2040,7 +2040,7 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-20'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
 
@@ -2064,7 +2064,7 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-09'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -2074,7 +2074,7 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-02-13'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // All done
@@ -2085,7 +2085,7 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-08'),
         occurrenceCount: 2,
-        occurrencesAllDone: true,
+        isDone: true,
     });
     
 });
@@ -2174,7 +2174,7 @@ test('DateOccurrences-DAY_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day of
@@ -2184,7 +2184,7 @@ test('DateOccurrences-DAY_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day after
@@ -2194,7 +2194,7 @@ test('DateOccurrences-DAY_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-03-01'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // All done no repeat
@@ -2205,7 +2205,7 @@ test('DateOccurrences-DAY_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-01-17'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
 
@@ -2229,7 +2229,7 @@ test('DateOccurrences-DAY_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-01-16'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Repeating...
@@ -2240,7 +2240,7 @@ test('DateOccurrences-DAY_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2024-01-16'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Not past finalYMDDate
@@ -2251,7 +2251,7 @@ test('DateOccurrences-DAY_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-01-01'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 });
 
@@ -2339,7 +2339,7 @@ test('DateOccurrences-DAY_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day of
@@ -2349,7 +2349,7 @@ test('DateOccurrences-DAY_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day after
@@ -2360,7 +2360,7 @@ test('DateOccurrences-DAY_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-02-28'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // All done no repeat
@@ -2371,7 +2371,7 @@ test('DateOccurrences-DAY_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-03-01'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
 
@@ -2393,7 +2393,7 @@ test('DateOccurrences-DAY_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Second occurrence
@@ -2404,7 +2404,7 @@ test('DateOccurrences-DAY_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-02-28'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // All done, last occurrence
@@ -2415,7 +2415,7 @@ test('DateOccurrences-DAY_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
         occurrenceCount: 3,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
 });
@@ -2524,7 +2524,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-01-21'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day of
@@ -2534,7 +2534,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-01-21'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day after
@@ -2545,7 +2545,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-01-20'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // All done no repeat
@@ -2556,7 +2556,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-01-22'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
     //
@@ -2578,7 +2578,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-01-09'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -2588,7 +2588,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-01-09'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // All done after finalYMDDate
@@ -2599,7 +2599,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-01-01'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
 });
@@ -2738,7 +2738,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-12-11'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day of
@@ -2748,7 +2748,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-12-11'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // Day after
@@ -2758,7 +2758,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-12-17'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // All done no repeat
@@ -2769,7 +2769,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2021-12-12'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
     });
 
 
@@ -2792,7 +2792,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-12-11'),
         occurrenceCount: 1,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -2802,7 +2802,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2022-12-11'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     result = DO.getNextDateOccurrenceState(B, {
@@ -2812,7 +2812,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2023-12-17'),
         occurrenceCount: 2,
-        occurrencesAllDone: false,
+        isDone: false,
     });
 
     // All done after finalYMDDate
@@ -2823,6 +2823,166 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
     expect(result).toEqual({
         lastOccurrenceYMDDate: getYMDDate('2023-12-11'),
         occurrenceCount: 1,
-        occurrencesAllDone: true,
+        isDone: true,
+    });
+});
+
+//
+//---------------------------------------------------------
+//
+test('DateOccurrences-ON_DATE', () => {
+    expectOccurrenceConversion({
+        occurrenceType: DO.OccurrenceType.ON_DATE,
+        startYMDDate: getYMDDate('2020-12-26'),
+    },
+    {
+        occurrenceType: DO.OccurrenceType.ON_DATE.name,
+        startYMDDate: '2020-12-26',
+    });
+
+    //
+    // Validation
+    expect(DO.validateDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.ON_DATE,
+        startYMDDate: '2020-12-26',
+    })).toBeUndefined();
+    
+    expect(DO.validateDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.ON_DATE,
+        startYMDDate: 'abc2020-12-26',
+    })).toBeInstanceOf(Error);
+    
+    expect(DO.validateDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.ON_DATE,
+    })).toBeInstanceOf(Error);
+
+    //
+    // Validate repeat type
+    expect(DO.validateDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.ON_DATE.name,
+        startYMDDate: '2020-12-26',
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT.name,
+            period: 123,
+        },
+    })).toBeUndefined();
+
+    expect(DO.validateDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.ON_DATE.name,
+        startYMDDate: '2020-12-26',
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.WEEKLY.name,
+            period: -123,
+        },
+    })).toBeInstanceOf(Error);
+
+    //
+    // Next Date
+    let result;
+    const A = {
+        occurrenceType: DO.OccurrenceType.ON_DATE,
+        startYMDDate: '2020-12-15',
+    };
+
+    // Day before
+    result = DO.getNextDateOccurrenceState(A, {
+        lastOccurrenceYMDDate: '2020-12-14',
+    });
+    expect(result).toEqual({
+        lastOccurrenceYMDDate: getYMDDate('2020-12-15'),
+        occurrenceCount: 1,
+        isDone: false,
+    });
+
+    // Day of
+    result = DO.getNextDateOccurrenceState(A, {
+        lastOccurrenceYMDDate: '2020-12-15',
+    });
+    expect(result).toEqual({
+        lastOccurrenceYMDDate: getYMDDate('2020-12-15'),
+        occurrenceCount: 1,
+        isDone: false,
+    });
+
+    // Day after
+    result = DO.getNextDateOccurrenceState(A, {
+        lastOccurrenceYMDDate: '2020-12-16',
+    });
+    expect(result).toEqual({
+        lastOccurrenceYMDDate: getYMDDate('2020-12-16'),
+        occurrenceCount: 1,
+        isDone: true,
+    });
+
+    //
+    // With repeat definition
+    const B = {
+        occurrenceType: DO.OccurrenceType.ON_DATE.name,
+        startYMDDate: '2020-01-29',
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY,
+            period: 1,
+            finalYMDDate: '2021-03-29',
+        }
+    };
+    result = DO.getNextDateOccurrenceState(B, {
+        lastOccurrenceYMDDate: '2020-01-28',
+        occurrenceCount: 0,
+    });
+    expect(result).toEqual({
+        lastOccurrenceYMDDate: getYMDDate('2020-01-29'),
+        occurrenceCount: 1,
+        isDone: false,
+    });
+
+    result = DO.getNextDateOccurrenceState(B, {
+        lastOccurrenceYMDDate: '2020-01-28',
+        occurrenceCount: 1,
+    });
+    expect(result).toEqual({
+        lastOccurrenceYMDDate: getYMDDate('2020-02-29'),
+        occurrenceCount: 2,
+        isDone: false,
+    });
+
+    result = DO.getNextDateOccurrenceState(B, {
+        lastOccurrenceYMDDate: '2020-12-29',
+        occurrenceCount: 12,
+    });
+    expect(result).toEqual({
+        lastOccurrenceYMDDate: getYMDDate('2021-01-29'),
+        occurrenceCount: 13,
+        isDone: false,
+    });
+
+    result = DO.getNextDateOccurrenceState(B, {
+        lastOccurrenceYMDDate: '2020-12-29',
+        occurrenceCount: 13,
+    });
+    expect(result).toEqual({
+        lastOccurrenceYMDDate: getYMDDate('2021-02-28'),
+        occurrenceCount: 14,
+        isDone: false,
+    });
+
+    result = DO.getNextDateOccurrenceState(B, {
+        lastOccurrenceYMDDate: '2020-12-29',
+        occurrenceCount: 14,
+    });
+    expect(result).toEqual({
+        lastOccurrenceYMDDate: getYMDDate('2021-03-29'),
+        occurrenceCount: 15,
+        isDone: false,
+    });
+
+    // All done finalYMDDate
+    result = DO.getNextDateOccurrenceState(B, {
+        lastOccurrenceYMDDate: '2020-12-29',
+        occurrenceCount: 15,
+    });
+    expect(result).toEqual({
+        lastOccurrenceYMDDate: getYMDDate('2020-12-29'),
+        occurrenceCount: 15,
+        isDone: true,
     });
 });

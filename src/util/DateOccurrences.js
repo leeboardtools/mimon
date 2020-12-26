@@ -81,6 +81,9 @@ import { userError } from './UserMessages';
  * day of the week it falls on. The offset and dayOfWeek properties of
  * {@link DateOccurrenceDefinition} are used.
  * Only the NO_REPEAT and YEARLY repeat types are supported.
+ * @property {OccurrenceTypeDef} ON_DATE Date is specified explicitly. The startYMDDate
+ * property of {@link DateOccurrenceDefinition} is used.
+ * All the repeat types are supported.
  */
 export const OccurrenceType = {
     DAY_OF_WEEK: { name: 'DAY_OF_WEEK',
@@ -243,6 +246,17 @@ export const OccurrenceType = {
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DOW_END_OF_YEAR,
     },
+    ON_DATE: { name: 'ON_DATE',
+        allowedRepeatTypes: [
+            'NO_REPEAT',
+            'DAILY',
+            'WEEKLY',
+            'MONTHLY',
+            'YEARLY',
+        ],
+        validate: validateOccurrenceType_ON_DATE,
+        getNextYMDDate: getNextYMDDate_ON_DATE,
+    },
 };
 
 /**
@@ -267,6 +281,10 @@ export function getOccurrenceTypeString(type) {
         : type;
 }
 
+
+//
+//---------------------------------------------------------
+//
 function validateGeneralOccurrenceType(definition, occurrenceType) {
     if (occurrenceType.hasOffset) {
         const { offset } = definition;
@@ -308,6 +326,23 @@ function validateGeneralOccurrenceType(definition, occurrenceType) {
             return userError(definition.invalidRepeatTypesId);
         }
     }
+
+    const { startYMDDate } = definition;
+    if (startYMDDate) {
+        if (!YMDDate.isValidDate(getYMDDate(startYMDDate))) {
+            return userError('DateOccurrences-definition_startYMDDate_invalid');
+        }
+    }
+}
+
+//
+//---------------------------------------------------------
+//
+function validateOccurrenceType_ON_DATE(definition, occurrenceType) {
+    const { startYMDDate } = definition;
+    if (!YMDDate.isValidDate(getYMDDate(startYMDDate))) {
+        return userError('DateOccurrences-definition_startYMDDate_required');
+    }
 }
 
 
@@ -333,23 +368,23 @@ export const OccurrenceRepeatType = {
     },
     DAILY: { name: 'DAILY', 
         validate: validateRepeatType_hasPeriod,
-        getNextRepeatYMDDate: (repeatDefinition, refYMDDate) => 
-            refYMDDate.addDays(repeatDefinition.period),
+        getNextRepeatYMDDate: (repeatDefinition, refYMDDate, count) => 
+            refYMDDate.addDays(repeatDefinition.period * count),
     },
     WEEKLY: { name: 'WEEKLY', 
         validate: validateRepeatType_hasPeriod,
-        getNextRepeatYMDDate: (repeatDefinition, refYMDDate) => 
-            refYMDDate.addDays(repeatDefinition.period * 7),
+        getNextRepeatYMDDate: (repeatDefinition, refYMDDate, count) => 
+            refYMDDate.addDays(repeatDefinition.period * 7 * count),
     },
     MONTHLY: { name: 'MONTHLY', 
         validate: validateRepeatType_hasPeriod,
-        getNextRepeatYMDDate: (repeatDefinition, refYMDDate) => 
-            refYMDDate.addMonths(repeatDefinition.period),
+        getNextRepeatYMDDate: (repeatDefinition, refYMDDate, count) => 
+            refYMDDate.addMonths(repeatDefinition.period * count),
     },
     YEARLY: { name: 'YEARLY', 
         validate: validateRepeatType_hasPeriod,
-        getNextRepeatYMDDate: (repeatDefinition, refYMDDate) => 
-            refYMDDate.addYears(repeatDefinition.period),
+        getNextRepeatYMDDate: (repeatDefinition, refYMDDate, count) => 
+            refYMDDate.addYears(repeatDefinition.period * count),
     },
 };
 
@@ -506,7 +541,7 @@ export function validateOccurrenceRepeatDefinition(repeatDefinition) {
  * occurrenceCount is greater than the maxRepeats in the definition.
  */
 export function getNextRepeatDefinitionYMDDate(repeatDefinition, refYMDDate, 
-    occurrenceCount) {
+    occurrenceCount, periodCount = 1) {
 
     refYMDDate = getYMDDate(refYMDDate);
 
@@ -533,7 +568,8 @@ export function getNextRepeatDefinitionYMDDate(repeatDefinition, refYMDDate,
         }
     }
 
-    let ymdDate = repeatType.getNextRepeatYMDDate(repeatDefinition, refYMDDate);
+    let ymdDate = repeatType.getNextRepeatYMDDate(repeatDefinition, 
+        refYMDDate, periodCount);
     if (ymdDate) {
         const { finalYMDDate } = repeatDefinition;
         if (finalYMDDate) {
@@ -972,6 +1008,25 @@ function getNextYMDDate_DOW_END_OF_YEAR(definition, occurrenceType,
     return refYMDDate;
 }
 
+//
+//---------------------------------------------------------
+//
+function getNextYMDDate_ON_DATE(definition, occurrenceType, 
+    refYMDDate, occurrenceCount) {
+    const { startYMDDate, repeatDefinition } = definition;
+
+    const isRepeat = isRepeatDefinitionRepeat(repeatDefinition);
+    if (!isRepeat) {
+        if (YMDDate.compare(refYMDDate, startYMDDate) <= 0) {
+            return startYMDDate;
+        }
+        return;
+    }
+
+    // Repeats are relative to startYMDDate, not refYMDDate.
+    return getNextRepeatDefinitionYMDDate(repeatDefinition, 
+        startYMDDate, occurrenceCount, occurrenceCount);
+}
 
 /**
  * @typedef {object} DateOccurrenceDefinition
@@ -979,6 +1034,8 @@ function getNextYMDDate_DOW_END_OF_YEAR(definition, occurrenceType,
  * @property {number} offset
  * @property {number} [dayOfWeek] 0 - Sunday, 1 - Monday...
  * @property {number} [month] 0 based month
+ * @property {YMDDate} [startYMDDate] Required for ON_DATE, for all else
+ * optional.
  * @property {OccurrenceRepeatDefinition} [repeatDefinition]
  */
 
@@ -988,6 +1045,8 @@ function getNextYMDDate_DOW_END_OF_YEAR(definition, occurrenceType,
  * @property {number} offset
  * @property {number} [dayOfWeek] 0 - Sunday, 1 - Monday...
  * @property {number} [month] 0 based month
+ * @property {YMDDate} [string] Required for ON_DATE, for all else
+ * optional.
  * @property {OccurrenceRepeatDefinitionDataItem} [repeatDefinition]
  */
 
@@ -1000,14 +1059,19 @@ function getNextYMDDate_DOW_END_OF_YEAR(definition, occurrenceType,
 export function getDateOccurrenceDefinition(definition, alwaysCopy) {
     if (definition) {
         const occurrenceType = getOccurrenceType(definition.occurrenceType);
+        const startYMDDate = getYMDDate(definition.startYMDDate);
         const repeatDefinition = getOccurrenceRepeatDefinition(
             definition.repeatDefinition);
         if (alwaysCopy
          || (occurrenceType !== definition.occurrenceType)
+         || (startYMDDate !== definition.startYMDDate)
          || (repeatDefinition !== definition.repeatDefinition)) {
             definition = Object.assign({}, definition);
             if (occurrenceType !== undefined) {
                 definition.occurrenceType = occurrenceType;
+            }
+            if (startYMDDate !== undefined) {
+                definition.startYMDDate = startYMDDate;
             }
             if (repeatDefinition !== undefined) {
                 definition.repeatDefinition = repeatDefinition;
@@ -1026,14 +1090,19 @@ export function getDateOccurrenceDefinition(definition, alwaysCopy) {
 export function getDateOccurrenceDefinitionDataItem(definition, alwaysCopy) {
     if (definition) {
         const occurrenceType = getOccurrenceTypeString(definition.occurrenceType);
+        const startYMDDate = getYMDDateString(definition.startYMDDate);
         const repeatDefinition = getOccurrenceRepeatDefinitionDataItem(
             definition.repeatDefinition);
         if (alwaysCopy
          || (occurrenceType !== definition.occurrenceType)
+         || (startYMDDate !== definition.startYMDDate)
          || (repeatDefinition !== definition.repeatDefinition)) {
             definition = Object.assign({}, definition);
             if (occurrenceType !== undefined) {
                 definition.occurrenceType = occurrenceType;
+            }
+            if (startYMDDate !== undefined) {
+                definition.startYMDDate = startYMDDate;
             }
             if (repeatDefinition !== undefined) {
                 definition.repeatDefinition = repeatDefinition;
@@ -1075,8 +1144,7 @@ export function validateDateOccurrenceDefinition(definition) {
  * This is used to keep track of when and how often an occurrence definition has occurred.
  * @property {YMDDate} [lastOccurrenceYMDDate]
  * @property {number} [occurrenceCount = 0]
- * @property {boolean} [occurrencesAllDone] This is <code>true</code> by
- * {@link getNextDateOccurrenceState} if all the occurrences have been used up.
+ * @property {boolean} [isDone = false]
  */
 
 
@@ -1085,8 +1153,7 @@ export function validateDateOccurrenceDefinition(definition) {
  * This is used to keep track of when and how often an occurrence definition has occurred.
  * @property {string} [lastOccurrenceYMDDate]
  * @property {number} [occurrenceCount = 0]
- * @property {boolean} [occurrencesAllDone] This is <code>true</code> by
- * {@link getNextDateOccurrenceState} if all the occurrences have been used up.
+ * @property {boolean} [isDone = false]
  */
 
 /**
@@ -1098,9 +1165,10 @@ export function validateDateOccurrenceDefinition(definition) {
 export function getDateOccurrenceState(state, alwaysCopy) {
     if (state) {
         const lastOccurrenceYMDDate = getYMDDate(state.lastOccurrenceYMDDate);
-        if (alwaysCopy || (lastOccurrenceYMDDate !== state.lastOccurrenceYMDDate)) {
+        if (alwaysCopy
+         || (lastOccurrenceYMDDate !== state.lastOccurrenceYMDDate)) {
             state = Object.assign({}, state);
-            if (lastOccurrenceYMDDate !== undefined) {
+            if (lastOccurrenceYMDDate) {
                 state.lastOccurrenceYMDDate = lastOccurrenceYMDDate;
             }
         }
@@ -1117,9 +1185,10 @@ export function getDateOccurrenceState(state, alwaysCopy) {
 export function getDateOccurrenceStateDataItem(state, alwaysCopy) {
     if (state) {
         const lastOccurrenceYMDDate = getYMDDateString(state.lastOccurrenceYMDDate);
-        if (alwaysCopy || (lastOccurrenceYMDDate !== state.lastOccurrenceYMDDate)) {
+        if (alwaysCopy
+         || (lastOccurrenceYMDDate !== state.lastOccurrenceYMDDate)) {
             state = Object.assign({}, state);
-            if (lastOccurrenceYMDDate !== undefined) {
+            if (lastOccurrenceYMDDate) {
                 state.lastOccurrenceYMDDate = lastOccurrenceYMDDate;
             }
         }
@@ -1152,48 +1221,49 @@ export function getDateOccurrenceStateDataItem(state, alwaysCopy) {
  * definition.
  * <p>
  * Note that if it is not set to repeat and state.occurrenceCount is > 0 then all
- * occurrences are done and the occurrencesAllDone property is set on the returned state.
+ * occurrences are done and the state.isDone is set to <code>true</code>.
  * <p>
- * If lastState is not defined or does not have a lastOccurrenceYMDDate property,
- * today's date is used.
  * @param {DateOccurrenceDefinition|DateOccurrenceDefinitionDataItem} definition 
  * @param {DateOccurrenceState|DateOccurrenceStateDataItem} lastState 
- * @returns {DateOccurrenceState} The occurrencesAllDone property is set to
- * <code>true</code> if all occurrences have been performed.
+ * @returns {DateOccurrenceState} 
  */
 export function getNextDateOccurrenceState(definition, lastState) {
     definition = getDateOccurrenceDefinition(definition);
 
-    let refYMDDate;
-    let refOccurrenceCount = 0;
     if (lastState) {
         // Check lastState to make sure we're not already done...
         lastState = getDateOccurrenceState(lastState, true);
-        if (lastState.occurrencesAllDone) {
+        if (lastState.isDone) {
             return lastState;
         }
 
-        const { lastOccurrenceYMDDate, occurrenceCount } = lastState;
-        refYMDDate = lastOccurrenceYMDDate;
-        if (occurrenceCount !== undefined) {
-            refOccurrenceCount = occurrenceCount;
-        }
+    }
+    else {
+        lastState = {
+            lastOccurrenceYMDDate: new YMDDate(),
+            occurrenceCount: 0,
+            isDone: false,
+        };
     }
 
-    refYMDDate = getYMDDate(refYMDDate) || new YMDDate();
+    let refYMDDate = lastState.lastOccurrenceYMDDate;
+    const { occurrenceCount } = lastState;
+    let refOccurrenceCount = occurrenceCount || 0;
 
     const { occurrenceType } = definition;
     const nextYMDDate = occurrenceType.getNextYMDDate(definition, occurrenceType, 
         refYMDDate, refOccurrenceCount);
+
     if (!nextYMDDate) {
         // All done...
-        lastState.occurrencesAllDone = true;
+        lastState.occurrenceCount = lastState.occurrenceCount || 1;
+        lastState.isDone = true;
         return lastState;
     }
 
     return {
         lastOccurrenceYMDDate: nextYMDDate,
         occurrenceCount: refOccurrenceCount + 1,
-        occurrencesAllDone: false,
+        isDone: false,
     };
 }

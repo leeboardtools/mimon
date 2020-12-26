@@ -215,7 +215,7 @@ export class ReminderManager extends EventEmitter {
             const nextOccurrenceState = DO.getNextDateOccurrenceState(
                 reminderDataItem.occurrenceDefinition,
                 reminderDataItem.lastOccurrenceState);
-            if (nextOccurrenceState.occurrencesAllDone) {
+            if (nextOccurrenceState.isDone) {
                 return;
             }
 
