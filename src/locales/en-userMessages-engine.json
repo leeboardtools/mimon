@@ -185,7 +185,7 @@
     "Reconciler-account_not_balanced": ["The reconciled balance, ", ", does not match the closing balance, ", "."],
 
 
-    "ReminderManager-repeat_definition_required": "A repeat definition must be defined.",
+    "ReminderManager-occurrence_definition_required": "An occurrence definition must be defined.",
     "ReminderManager-remove_no_id": ["The reminder cannot be deleted. An item with id '", "' was not found."],
     "ReminderManager-modify_no_id": ["The reminder could not be modified. An item with id '", "' was not found."],
 
@@ -267,8 +267,8 @@
 
     "Reconciler-reconcile_action_name": ["Reconcile ", ""],
 
-    "ReminderManager-lastAppliedYMDDate_invalid": "The last applied date is invalid.",
-    "ReminderManager-appliedCount_invalid": "The applied count must be a number.",
+    "ReminderManager-lastOccurrenceYMDDate_invalid": "The last occurrence date is invalid.",
+    "ReminderManager-occurrenceCount_invalid": "The occurrence count must be a number.",
 
 
     "": ""

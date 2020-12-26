@@ -10,8 +10,7 @@ import { getCurrencyForAccountId }
     from '../tools/AccountHelpers';
 import { getCurrency } from '../util/Currency';
 import { Checkbox } from '../util-ui/Checkbox';
-import * as RP from '../util/Repeats';
-import { YMDDate } from '../util/YMDDate';
+import * as DO from '../util/DateOccurrences';
 
 
 function getReminderDataItem(args) {
@@ -112,10 +111,13 @@ function getAmountCellValue(args) {
 function getLastAppliedDateCellValue(args) {
     const reminderDataItem = getReminderDataItem(args);
     if (reminderDataItem) {
-        return {
-            accessor: getAccessor(args),
-            ymdDate: reminderDataItem.lastAppliedYMDDate,
-        };
+        const { lastOccurrenceState } = reminderDataItem;
+        if (lastOccurrenceState) {
+            return {
+                accessor: getAccessor(args),
+                ymdDate: lastOccurrenceState.lastOccurrenceYMDDate,
+            };
+        }
     }
 }
 
@@ -123,14 +125,16 @@ function getLastAppliedDateCellValue(args) {
 function getNextDateCellValue(args) {
     const reminderDataItem = getReminderDataItem(args);
     if (reminderDataItem) {
-        const { repeatDefinition } = reminderDataItem;
-        if (repeatDefinition) {
-            const lastAppliedYMDDate 
-                = reminderDataItem.lastAppliedYMDDate || new YMDDate();
-            return {
-                accessor: getAccessor(args),
-                ymdDate: RP.getNextRepeatYMDDate(repeatDefinition, lastAppliedYMDDate),
-            };
+        const { occurrenceDefinition, lastOccurrenceState } = reminderDataItem;
+        if (occurrenceDefinition) {
+            const nextOccurrenceState = DO.getNextDateOccurrenceState(
+                occurrenceDefinition, lastOccurrenceState);
+            if (!nextOccurrenceState.occurrencesAllDone) {
+                return {
+                    accessor: getAccessor(args),
+                    ymdDate: nextOccurrenceState.lastOccurrenceYMDDate,
+                };
+            }
         }
     }
 }
@@ -247,7 +251,6 @@ export class RemindersList extends React.Component {
                 description: userMsg('AccountRegister-dummy_description'),
                 transactionTemplate: undefined,
                 isEnabled: true,
-                lastAppliedYMDDate: '2020-12-31',
             }
         };
 

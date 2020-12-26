@@ -4,7 +4,7 @@ import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
 import * as T from '../engine/Transactions';
 import * as L from '../engine/Lots';
-import * as RE from '../util/Repeats';
+import * as DO from '../util/DateOccurrences';
 import { getDecimalDefinition } from '../util/Quantities';
 import { getYMDDate } from '../util/YMDDate';
 import * as EATH from './EngineAccessTestHelpers';
@@ -520,15 +520,17 @@ test('EngineAccessor-actions', async () => {
         // Reminders
         //
         const reminderSettingsA = {
-            repeatDefinition: {
-                type: RE.RepeatType.YEARLY.name,
-                period: 12,
-                offset: {
-                    type: RE.YearOffsetType.NTH_WEEK.name,
-                    offset: 2,
-                    dayOfWeek: 1,
+            occurrenceDefinition: {
+                occurrenceType: DO.OccurrenceType.DAY_OF_MONTH.name,
+                offset: 2,
+                repeatDefinition: {
+                    repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+                    period: 3,
                 },
-                startYMDDate: '2010-01-01',
+            },
+            lastOccurrenceState: {
+                lastOccurrenceYMDDate: '2010-06-01',
+                occurrenceCount: 3,
             },
             description: 'Hello',
             transactionTemplate: {
@@ -538,7 +540,6 @@ test('EngineAccessor-actions', async () => {
                 ]
             },
             isEnabled: true,
-            lastAppliedYMDDate: '2010-06-01',
         };
     
         // New Reminder

@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
+import * as DO from '../util/DateOccurrences';
 import * as R from '../util/Repeats';
 import { getTransaction, getTransactionDataItem } from './Transactions';
 import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
@@ -10,31 +11,27 @@ import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 /**
  * @typedef {object} Reminder
  * @property {number}   id  The id of the reminder in the reminder manager.
- * @property {RepeatDefinition} repeatDefinition    Defines how the reminder
- * repeats.
+ * @property {DateOccurrenceDefinition} occurrenceDefinition Defines when the 
+ * reminder is to occur and optionally repeat.
+ * @property {DateOccurrenceState} lastOccurrenceState The state representing
+ * the last occurrence.
  * @property {string}   [description]   The description of the reminder.
  * @property {Transaction} transactionTemplate  The template for
  * the transaction being reminded of.
  * @property {boolean}  isEnabled
- * @property {YMDDate}  lastAppliedYMDDate The date the last time the reminder
- * was applied, used to determine the next time the reminder is to go off.
- * @property {number} appliedCount The number of times the reminder has been
- * applied, checked against the repeat definition's repeatCount property.
  */
 
 /**
  * @typedef {object} ReminderDataItem
  * @property {number}   id  The id of the reminder in the reminder manager.
- * @property {RepeatDefinitionDataItem} repeatDefinition Defines how the 
- * reminder repeats.
+ * @property {DateOccurrenceDefinitionDataItem} occurrenceDefinition Defines when 
+ * the reminder is to occur and optionally repeat.
+ * @property {DateOccurrenceStateDataItem} lastOccurrenceState The state representing
+ * the last occurrence.
  * @property {string}   [description]   The description of the reminder.
  * @property {TransactionDataItem} transactionTemplate  The template for
  * the transaction being reminded of.
  * @property {boolean}  isEnabled
- * @property {string}  lastAppliedYMDDate The date the last time the reminder
- * was applied, used to determine the next time the reminder is to go off.
- * @property {number} appliedCount The number of times the reminder has been
- * applied, checked against the repeat definition's repeatCount property.
  */
 
 /**
@@ -46,24 +43,26 @@ import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
  */
 export function getReminder(reminderDataItem, alwaysCopy) {
     if (reminderDataItem) {
-        const repeatDefinition 
-            = R.getRepeatDefinition(reminderDataItem.repeatDefinition, alwaysCopy);
+        const occurrenceDefinition = DO.getDateOccurrenceDefinition(
+            reminderDataItem.occurrenceDefinition, alwaysCopy);
+        const lastOccurrenceState = DO.getDateOccurrenceState(
+            reminderDataItem.lastOccurrenceState, alwaysCopy);
         const transactionTemplate 
             = getTransaction(reminderDataItem.transactionTemplate, alwaysCopy);
-        const lastAppliedYMDDate = getYMDDate(reminderDataItem.lastAppliedYMDDate);
+
         if (alwaysCopy
-         || (repeatDefinition !== reminderDataItem.repeatDefinition)
-         || (transactionTemplate !== reminderDataItem.transactionTemplate)
-         || (lastAppliedYMDDate !== reminderDataItem.lastAppliedYMDDate)) {
+         || (occurrenceDefinition !== reminderDataItem.occurrenceDefinition)
+         || (lastOccurrenceState !== reminderDataItem.lastOccurrenceState)
+         || (transactionTemplate !== reminderDataItem.transactionTemplate)) {
             const reminder = Object.assign({}, reminderDataItem);
-            if (repeatDefinition) {
-                reminder.repeatDefinition = repeatDefinition;
+            if (occurrenceDefinition) {
+                reminder.occurrenceDefinition = occurrenceDefinition;
+            }
+            if (lastOccurrenceState) {
+                reminder.lastOccurrenceState = lastOccurrenceState;
             }
             if (transactionTemplate) {
                 reminder.transactionTemplate = transactionTemplate;
-            }
-            if (lastAppliedYMDDate) {
-                reminder.lastAppliedYMDDate = lastAppliedYMDDate;
             }
             return reminder;
         }
@@ -81,25 +80,25 @@ export function getReminder(reminderDataItem, alwaysCopy) {
  */
 export function getReminderDataItem(reminder, alwaysCopy) {
     if (reminder) {
-        const repeatDefinition 
-            = R.getRepeatDefinitionDataItem(reminder.repeatDefinition, alwaysCopy);
+        const occurrenceDefinition = DO.getDateOccurrenceDefinitionDataItem(
+            reminder.occurrenceDefinition, alwaysCopy);
+        const lastOccurrenceState = DO.getDateOccurrenceStateDataItem(
+            reminder.lastOccurrenceState, alwaysCopy);
         const transactionTemplate 
             = getTransactionDataItem(reminder.transactionTemplate, alwaysCopy);
-        const lastAppliedYMDDate 
-            = getYMDDateString(reminder.lastAppliedYMDDate);
         if (alwaysCopy
-         || (repeatDefinition !== reminder.repeatDefinition)
-         || (transactionTemplate !== reminder.transactionTemplate)
-         || (lastAppliedYMDDate !== reminder.lastAppliedYMDDate)) {
+         || (occurrenceDefinition !== reminder.occurrenceDefinition)
+         || (lastOccurrenceState !== reminder.lastOccurrenceState)
+         || (transactionTemplate !== reminder.transactionTemplate)) {
             const reminderDataItem = Object.assign({}, reminder);
-            if (repeatDefinition) {
-                reminderDataItem.repeatDefinition = repeatDefinition;
+            if (occurrenceDefinition) {
+                reminderDataItem.occurrenceDefinition = occurrenceDefinition;
+            }
+            if (lastOccurrenceState) {
+                reminderDataItem.lastOccurrenceState = lastOccurrenceState;
             }
             if (transactionTemplate) {
                 reminderDataItem.transactionTemplate = transactionTemplate;
-            }
-            if (lastAppliedYMDDate) {
-                reminderDataItem.lastAppliedYMDDate = lastAppliedYMDDate;
             }
             return reminderDataItem;
         }
@@ -214,13 +213,14 @@ export class ReminderManager extends EventEmitter {
                 return;
             }
 
-            const nextYMDDate = R.getNextRepeatYMDDate(reminderDataItem.repeatDefinition,
-                reminderDataItem.lastAppliedYMDDate,
-                reminderDataItem.appliedCount);
-            if (!nextYMDDate) {
+            const nextOccurrenceState = DO.getNextDateOccurrenceState(
+                reminderDataItem.occurrenceDefinition,
+                reminderDataItem.lastOccurrenceState);
+            if (nextOccurrenceState.occurrencesAllDone) {
                 return;
             }
 
+            const nextYMDDate = nextOccurrenceState.lastOccurrenceYMDDate;
             if (YMDDate.compare(ymdDate, nextYMDDate) >= 0) {
                 reminderDataItems.push(getReminderDataItem(reminderDataItem, true));
             }
@@ -275,28 +275,33 @@ export class ReminderManager extends EventEmitter {
 
 
     _validate(reminderDataItem) {
-        const { repeatDefinition, lastAppliedYMDDate, appliedCount } = reminderDataItem;
-        if (!repeatDefinition) {
-            return userError('ReminderManager-repeat_definition_required');
+        const { occurrenceDefinition, lastOccurrenceState } 
+            = reminderDataItem;
+        if (!occurrenceDefinition) {
+            return userError('ReminderManager-occurrence_definition_required');
         }
-        let error = R.validateRepeatDefinition(repeatDefinition);
+        let error = DO.validateDateOccurrenceDefinition(occurrenceDefinition);
         if (error) {
             return error;
         }
 
-        if (lastAppliedYMDDate) {
-            if (!YMDDate.isValidDate(getYMDDate(lastAppliedYMDDate))) {
-                return userError('ReminderManager-lastAppliedYMDDate_invalid');
-            }
-        }
+        if (lastOccurrenceState) {
+            const { lastOccurrenceYMDDate, occurrenceCount } = lastOccurrenceState;
 
-        switch (typeof appliedCount) {
-        case 'undefined' :
-        case 'number' :
-            break;
-        
-        default :
-            return userError('ReminderManager-appliedCount_invalid');
+            if (lastOccurrenceYMDDate) {
+                if (!YMDDate.isValidDate(getYMDDate(lastOccurrenceYMDDate))) {
+                    return userError('ReminderManager-lastOccurrenceYMDDate_invalid');
+                }
+            }
+
+            switch (typeof occurrenceCount) {
+            case 'undefined' :
+            case 'number' :
+                break;
+            
+            default :
+                return userError('ReminderManager-occurrenceCount_invalid');
+            }
         }
     }
 

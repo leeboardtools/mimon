@@ -1,6 +1,7 @@
 import * as ASTH from './AccountingSystemTestHelpers';
 import * as A from './Accounts';
 import * as PI from './PricedItems';
+import * as DO from '../util/DateOccurrences';
 import * as RE from '../util/Repeats';
 import * as T from './Transactions';
 import * as L from './Lots';
@@ -1583,15 +1584,17 @@ test('AccountingActions-Reminders', async () => {
     });
 
     const settingsA = {
-        repeatDefinition: {
-            type: RE.RepeatType.YEARLY.name,
-            period: 12,
-            offset: {
-                type: RE.YearOffsetType.NTH_WEEK.name,
-                offset: 2,
-                dayOfWeek: 1,
+        occurrenceDefinition: {
+            occurrenceType: DO.OccurrenceType.DAY_OF_YEAR.name,
+            offset: 123,
+            repeatDefinition: {
+                repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+                period: 1,
             },
-            startYMDDate: '2010-01-01',
+        },
+        lastOccurrenceState: {
+            lastOccurrenceYMDDate: '2010-06-01',
+            occurrenceCount: 0,
         },
         description: 'Hello',
         transactionTemplate: {
@@ -1601,7 +1604,6 @@ test('AccountingActions-Reminders', async () => {
             ]
         },
         isEnabled: true,
-        lastAppliedYMDDate: '2010-06-01',
     };
 
     // New Reminder
@@ -1633,14 +1635,14 @@ test('AccountingActions-Reminders', async () => {
     // Modify Reminder.
     const settingsA1 = {
         id: settingsA.id,
-        repeatDefinition: {
-            type: RE.RepeatType.MONTHLY.name,
-            period: 4,
-            offset: {
-                type: RE.MonthOffsetType.NTH_DAY.name,
-                offset: 3,
+        occurrenceDefinition: {
+            occurrenceType: DO.OccurrenceType.DAY_OF_WEEK.name,
+            offset: 4,
+            dayOfWeek: 1,
+            repeatDefinition: {
+                repeatType: DO.OccurrenceRepeatType.WEEKLY.name,
+                period: 5,
             },
-            startYMDDate: '2015-12-31',
         },
     };
     const modifyReminderAction = actions.createModifyReminderAction(settingsA1);
@@ -1660,7 +1662,7 @@ test('AccountingActions-Reminders', async () => {
     // Invalid modify.
     const invalidA1 = {
         id: settingsA.id,
-        repeatDefinition: undefined,
+        occurrenceDefinition: undefined,
     };
     const invalidModifyAction = actions.createModifyReminderAction(invalidA1);
     await expect(actionManager.asyncApplyAction(invalidModifyAction)).rejects.toThrow();

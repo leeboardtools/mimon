@@ -299,10 +299,10 @@ Prices are managed on a per [PricedItem](#priceditem) basis. That is, the price 
 
 ### Reminder
 A reminder represents a transaction that is repeated at defined periods of time. A reminder has the following properties:
-- [RepeatDefinition](#repeatdefinition)
+- [DateOccurrences](#dateOccurrences)
 - [Transaction](#transaction) template.
 - isEnabled
-- lastAppliedYMDDate
+
 
 ### ReminderManager
 Manages all the [Reminder](#reminder)s in an accounting system.
@@ -332,13 +332,13 @@ The manager employs a handler to provide the underlying storage system. This all
 
 ### Currency
 
+### DateOccurrences
+
 ### QuantityDefinition
 
 ### Ratio
 
 ### NumericIdGenerator
-
-### Repeats
 
 ### UndoManager
 Utility class for managing undo. Things that support undo register an applier with the manager, then when something they can undo occurs, they register an undo data item with the manager.

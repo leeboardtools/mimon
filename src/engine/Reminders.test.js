@@ -1,4 +1,5 @@
 import * as RI from './Reminders';
+import * as DO from '../util/DateOccurrences';
 import * as RE from '../util/Repeats';
 import * as ASTH from './AccountingSystemTestHelpers';
 import { getYMDDate } from '../util/YMDDate';
@@ -24,11 +25,18 @@ function testReminderDataItem(reminder) {
 //
 test('Reminders-DataItems', () => {
     const reminderA = {
-        repeatDefinition: {
-            type: RE.RepeatType.DAILY,
-            period: 12,
-            offset: 10,
-            startYMDDate: getYMDDate('2010-01-01'),
+        occurrenceDefinition: {
+            occurrenceType: DO.OccurrenceType.DOW_OF_MONTH,
+            offset: 2,
+            dayOfWeek: 3,
+            repeatDefinition: {
+                repeatType: DO.OccurrenceRepeatType.YEARLY,
+                period: 4,
+            },
+        },
+        lastOccurrenceState: {
+            lastOccurrenceYMDDate: getYMDDate('2010-06-01'),
+            occurrenceCount: 3,
         },
         description: 'Hello',
         transactionTemplate: {
@@ -38,7 +46,6 @@ test('Reminders-DataItems', () => {
             ]
         },
         isEnabled: true,
-        lastAppliedYMDDate: getYMDDate('2010-06-01'),
     };
     testReminderDataItem(reminderA);
 });
@@ -56,11 +63,16 @@ test('Reminders-add_modify', async () => {
     let result;
 
     const settingsA = {
-        repeatDefinition: {
-            type: RE.RepeatType.DAILY.name,
-            period: 12,
+        occurrenceDefinition: {
+            occurrenceType: DO.OccurrenceType.DAY_OF_MONTH.name,
             offset: 10,
-            startYMDDate: '2010-01-01',
+            repeatDefinition: {
+                repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
+                period: 1,
+            },
+        },
+        lastOccurrenceState: {
+            lastOccurrenceYMDDate: '2010-06-01',
         },
         description: 'Hello',
         transactionTemplate: {
@@ -70,7 +82,6 @@ test('Reminders-add_modify', async () => {
             ]
         },
         isEnabled: true,
-        lastAppliedYMDDate: '2010-06-01',
     };
 
     result = await manager.asyncAddReminder(settingsA);
@@ -86,11 +97,13 @@ test('Reminders-add_modify', async () => {
     manager.on('reminderRemove', (result) => { removeResult = result; });
 
     const settingsB = {
-        repeatDefinition: {
-            type: RE.RepeatType.WEEKLY.name,
-            period: 3,
-            offset: { dayOfWeek: 3, },
-            startYMDDate: '2010-01-01',
+        occurrenceDefinition: {
+            occurrenceType: DO.OccurrenceType.DAY_OF_MONTH.name,
+            offset: 10,
+            repeatDefinition: {
+                repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
+                period: 1,
+            },
         },
         transactionTemplate: {
             splits: [
@@ -119,10 +132,10 @@ test('Reminders-add_modify', async () => {
     
 
     // Make sure copies are returned.
-    result.newReminderDataItem.repeatDefinition = 'abc';
+    result.newReminderDataItem.occurrenceDefinition.occurrenceType = 'abc';
     expect(manager.getReminderDataItemWithId(reminderB.id))
         .toEqual(settingsB);
-    manager.getReminderDataItemWithId(reminderB.id).repeatDefinition = 1234;
+    manager.getReminderDataItemWithId(reminderB.id).occurrenceDefinition = 1234;
     expect(manager.getReminderDataItemWithId(reminderB.id))
         .toEqual(settingsB);
 
@@ -142,11 +155,9 @@ test('Reminders-add_modify', async () => {
 
     // Test validation
     const invalidSettings = {
-        repeatDefinition: {
-            type: RE.RepeatType.WEEKLY.name,
-            period: 3,
-            offset: { dayOfWeek: 13, },
-            startYMDDate: '2010-01-01',
+        occurrenceDefinition: {
+            occurrenceType: DO.OccurrenceType.DAY_OF_MONTH.name,
+            offset: -3,
         },
         transactionTemplate: {
             splits: [
@@ -158,7 +169,7 @@ test('Reminders-add_modify', async () => {
     };
     await expect(manager.asyncAddReminder(invalidSettings)).rejects.toThrow(Error);
 
-    invalidSettings.repeatDefinition = undefined;
+    invalidSettings.occurrenceDefinition = undefined;
     await expect(manager.asyncAddReminder(invalidSettings)).rejects.toThrow(Error);
 
 
@@ -170,7 +181,6 @@ test('Reminders-add_modify', async () => {
     const changesB1 = {
         id: settingsB.id,
         isEnabled: true,
-        lastAppliedYMDDate: '2020-05-04',
     };
     const settingsB1 = Object.assign({}, settingsB, changesB1);
 
@@ -188,8 +198,8 @@ test('Reminders-add_modify', async () => {
 
     //
     // Make sure data items were returned.
-    result.newReminderDataItem.repeatDefinition = 1234;
-    result.oldReminderDataItem.repeatDefinition = 'abc';
+    result.newReminderDataItem.occurrenceDefinition = 1234;
+    result.oldReminderDataItem.occurrenceDefinition = 'abc';
 
 
     //
@@ -206,15 +216,18 @@ test('Reminders-add_modify', async () => {
     // Test validation.
     const invalidChanges = {
         id: settingsB.id,
-        repeatDefinition: undefined,
+        occurrenceDefinition: undefined,
     };
     await expect(manager.asyncModifyReminder(invalidChanges)).rejects.toThrow(Error);
 
-    invalidChanges.repeatDefinition = {
-        type: RE.RepeatType.WEEKLY.name,
-        period: 3,
-        offset: { dayOfWeek: 13, },
-        startYMDDate: '2010-01-01',
+    invalidChanges.occurrenceDefinition = {
+        occurrenceType: DO.OccurrenceType.DOW_OF_MONTH,
+        offset: 3,
+        dayOfMonth: 2,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY,
+            period: 1,
+        },
     };
     await expect(manager.asyncModifyReminder(invalidChanges)).rejects.toThrow(Error);
 
@@ -235,7 +248,7 @@ test('Reminders-add_modify', async () => {
     expect(manager.getReminderIds()).toEqual([reminderB.id]);
 
     // Make sure a copy was returned.
-    result.removedReminderDataItem.repeatDefinition = 'abc';
+    result.removedReminderDataItem.occurrenceDefinition = 'abc';
 
     await undoManager.asyncUndoToId(result.undoId);
     expect(addResult.newReminderDataItem).toEqual(reminderA);
@@ -254,11 +267,20 @@ test('Reminders-getDueReminderDataItems', async () => {
 
     let result;
 
+    // Disabled setting...
     const settingsA = {
-        repeatDefinition: {
-            type: RE.RepeatType.DAILY,
-            period: 30,
-            startYMDDate: '2015-06-01',
+        occurrenceDefinition: {
+            occurrenceType: DO.OccurrenceType.DOW_OF_MONTH.name,
+            offset: 3,
+            dayOfWeek: 6,
+            repeatDefinition: {
+                repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
+                period: 1,
+            },
+        },
+        lastOccurrenceState: {
+            lastOccurrenceYMDDate: '2019-06-01',
+            occurrenceCount: 0,
         },
         transactionTemplate: {
             splits: [
@@ -267,21 +289,25 @@ test('Reminders-getDueReminderDataItems', async () => {
             ]
         },
         isEnabled: false,
-        lastAppliedYMDDate: '2019-10-01',
     };
     result = await manager.asyncAddReminder(settingsA);
     const reminderA = result.newReminderDataItem;
     settingsA.id = reminderA.id;
 
-
     // Next due date is 2019-10-11
     const settingsB = {
-        repeatDefinition:  {
-            type: RE.RepeatType.WEEKLY.name,
-            period: 2,
-            offset: { dayOfWeek: 5, },
-            startYMDDate: '2019-06-01',
-            repeatCount: 3,
+        occurrenceDefinition: {
+            occurrenceType: DO.OccurrenceType.DAY_OF_WEEK.name,
+            dayOfWeek: 5,
+            repeatDefinition: {
+                repeatType: DO.OccurrenceRepeatType.WEEKLY.name,
+                period: 2,
+                maxRepeats: 3,
+            },
+        },
+        lastOccurrenceState: {
+            lastOccurrenceYMDDate: '2019-10-04',
+            occurrenceCount: 2,
         },
         transactionTemplate: {
             splits: [
@@ -290,25 +316,26 @@ test('Reminders-getDueReminderDataItems', async () => {
             ]
         },
         isEnabled: true,
-        lastAppliedYMDDate: '2019-10-01',
-        appliedCount: 2,
     };
     result = await manager.asyncAddReminder(settingsB);
     const reminderB = result.newReminderDataItem;
     settingsB.id = reminderB.id;
 
 
-    // No lastAppliedYMDDate, so next due date is 2019-06-15.
+    // Next due date is 2019-06-15.
     const settingsC = {
-        repeatDefinition:  {
-            type: RE.RepeatType.MONTHLY.name,
-            period: 1,
-            offset: {
-                type: RE.MonthOffsetType.NTH_DAY.name,
-                offset: 15,
-            },
+        occurrenceDefinition: {
+            occurrenceType: DO.OccurrenceType.DOW_OF_MONTH.name,
+            offset: 3,
             dayOfWeek: 6,
-            startYMDDate: '2019-06-01',
+            repeatDefinition: {
+                repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
+                period: 1,
+            },
+        },
+        lastOccurrenceState: {
+            lastOccurrenceYMDDate: '2019-06-01',
+            occurrenceCount: 0,
         },
         transactionTemplate: {
             splits: [
@@ -326,24 +353,26 @@ test('Reminders-getDueReminderDataItems', async () => {
     expect(manager.getDueReminderDataItems('2019-06-14')).toEqual([]);
     expect(manager.getDueReminderDataItems('2019-06-15'))
         .toEqual([settingsC]);
-    expect(manager.getDueReminderDataItems('2019-10-10'))
+    expect(manager.getDueReminderDataItems('2019-10-17'))
         .toEqual([settingsC]);
-    expect(manager.getDueReminderDataItems('2019-10-11'))
+    expect(manager.getDueReminderDataItems('2019-10-18'))
         .toEqual([settingsB, settingsC]);
 
 
     // Check applied count disabling at repeatCount.
     const settingsB1 = Object.assign({}, settingsB, {
-        appliedCount: 3,
+        lastOccurrenceState: Object.assign({}, settingsB.lastOccurrenceState, {
+            occurrenceCount: 3,
+        }),
     });
     result = await manager.asyncModifyReminder(settingsB1);
-    expect(manager.getDueReminderDataItems('2019-10-11'))
+    expect(manager.getDueReminderDataItems('2019-10-17'))
         .toEqual([settingsC]);
     
 
     
     // Make sure copies are returned.
-    manager.getDueReminderDataItems('2019-10-10')[0].repeatDefinition = 'abc';
+    manager.getDueReminderDataItems('2019-10-10')[0].occurrenceDefinition = 'abc';
     expect(manager.getDueReminderDataItems('2019-10-10'))
         .toEqual([settingsC]);
 });

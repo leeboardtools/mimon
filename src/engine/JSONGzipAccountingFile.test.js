@@ -6,7 +6,7 @@ import * as T from './Transactions';
 import * as L from './Lots';
 import * as PI from './PricedItems';
 import * as ASTH from './AccountingSystemTestHelpers';
-import * as RE from '../util/Repeats';
+import * as DO from '../util/DateOccurrences';
 import { getQuantityDefinition, getDecimalDefinition } from '../util/Quantities';
 
 const path = require('path');
@@ -83,11 +83,18 @@ test('JSONGzipAccountingFile-simple', async () => {
         // Reminders
         const reminderManager1 = accountingSystem1.getReminderManager();
         const reminderA = {
-            repeatDefinition: {
-                type: RE.RepeatType.DAILY.name,
-                period: 12,
-                offset: 10,
-                startYMDDate: '2010-01-01',
+            occurrenceDefinition: {
+                occurrenceType: DO.OccurrenceType.DOW_OF_MONTH.name,
+                offset: 2,
+                dayOfWeek: 3,
+                repeatDefinition: {
+                    repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
+                    period: 1,
+                },
+            },
+            lastOccurrenceState: {
+                lastOccurrenceYMDDate: '2010-06-01',
+                occurrenceCount: 1,
             },
             description: 'Hello',
             transactionTemplate: {
@@ -97,20 +104,22 @@ test('JSONGzipAccountingFile-simple', async () => {
                 ]
             },
             isEnabled: true,
-            lastAppliedYMDDate: '2010-06-01',    
         };
         result = await reminderManager1.asyncAddReminder(reminderA);
         reminderA.id = result.newReminderDataItem.id;
 
         const reminderB = {
-            repeatDefinition: {
-                type: RE.RepeatType.MONTHLY.name,
-                period: 12,
-                offset: { 
-                    type: RE.MonthOffsetType.NTH_DAY.name,
-                    offset: 1,
+            occurrenceDefinition: {
+                occurrenceType: DO.OccurrenceType.DAY_OF_WEEK.name,
+                dayOfWeek: 5,
+                repeatDefinition: {
+                    repeatType: DO.OccurrenceRepeatType.WEEKLY.name,
+                    period: 2,
                 },
-                startYMDDate: '2010-01-10',
+            },
+            lastOccurrenceState: {
+                lastOccurrenceYMDDate: '2015-01-21',
+                occurrenceCount: 0,
             },
             description: 'Good-bye',
             transactionTemplate: {
@@ -120,7 +129,6 @@ test('JSONGzipAccountingFile-simple', async () => {
                 ]
             },
             isEnabled: true,
-            lastAppliedYMDDate: '2015-01-21',    
         };
         result = await reminderManager1.asyncAddReminder(reminderB);
         reminderB.id = result.newReminderDataItem.id;
