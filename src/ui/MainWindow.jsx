@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { TabbedPages } from '../util-ui/TabbedPages';
-import { Dropdown } from '../util-ui/Dropdown';
+import { DropdownMenu } from '../util-ui/DropdownMenu';
 import deepEqual from 'deep-equal';
 import { AccountsListHandler } from './AccountsListHandler';
 import { AccountRegisterHandler } from './AccountRegisterHandler';
@@ -775,7 +775,7 @@ export class MainWindow extends React.Component {
             });
         }
 
-        const mainMenu = <Dropdown
+        const mainMenu = <DropdownMenu
             title={mainMenuTitle}
             items={mainMenuItems}
             topClassExtras="mt-2 ml-2"

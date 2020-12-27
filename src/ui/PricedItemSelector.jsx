@@ -6,7 +6,7 @@ import * as PI from '../engine/PricedItems';
 import { getCurrency } from '../util/Currency';
 
 /**
- * Dropdown component for selecting a priced item.
+ * DropdownMenu component for selecting a priced item.
  * @class
  */
 export function PricedItemSelector(props) {

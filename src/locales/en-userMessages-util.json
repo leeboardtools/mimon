@@ -11,6 +11,22 @@
     "CellQuantityEditor-invalid_value": ["Enter a numeric value of the form ", "."],
 
 
+    "DateOccurrenceEditor-typeSelector_DAY_OF_WEEK": "Day of the week",
+    "DateOccurrenceEditor-typeSelector_DAY_OF_MONTH": "Day of the month",
+    "DateOccurrenceEditor-typeSelector_DAY_END_OF_MONTH": "Days from the end of the month",
+    "DateOccurrenceEditor-typeSelector_DOW_OF_MONTH": "Day of the week of the month",
+    "DateOccurrenceEditor-typeSelector_DOW_END_OF_MONTH": "Day of the week from the end of the month",
+    "DateOccurrenceEditor-typeSelector_DAY_OF_SPECIFIC_MONTH": "Day of a specific month",
+    "DateOccurrenceEditor-typeSelector_DAY_END_OF_SPECIFIC_MONTH": "Days from the end of a specific month",
+    "DateOccurrenceEditor-typeSelector_DOW_OF_SPECIFIC_MONTH": "Day of the week of a specific month",
+    "DateOccurrenceEditor-typeSelector_DOW_END_OF_SPECIFIC_MONTH": "Day of the week from the end of a specific month",
+    "DateOccurrenceEditor-typeSelector_DAY_OF_YEAR": "Day of the year",
+    "DateOccurrenceEditor-typeSelector_DAY_END_OF_YEAR": "Days from the end of the year",
+    "DateOccurrenceEditor-typeSelector_DOW_OF_YEAR": "Day of the week of the year",
+    "DateOccurrenceEditor-typeSelector_DOW_END_OF_YEAR": "Day of the week from the end of the year",
+    "DateOccurrenceEditor-typeSelector_ON_DATE": "On this date",
+    
+
     "DateOccurrences-repeatType_invalid": "The repeat type is not valid.",
     "DateOccurrences-repeatDefinition_period_required": "The type of repeat requires a period that is a number >= 0.",
     "DateOccurrences-repeatDefinition_finalYMDDate_invalid": "The final date is not a valid date.",

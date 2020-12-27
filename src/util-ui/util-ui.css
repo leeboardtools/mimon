@@ -111,14 +111,15 @@
 /** End util-ui/CurrencyyDisplay.jsx */
 
 
-/** For util-ui/Dropdown.jsx */
+
+/** For util-ui/DropdownMenu.jsx */
 .dropdown-item-checked::before {
     position: absolute;
     left: .4rem;
     content: '✓';
     font-weight: 600;
 }
-/** End util-ui/Dropdown.jsx */
+/** End util-ui/DropdownMenu.jsx */
 
 
 /** For util-ui/MenuList.jsx */
@@ -284,6 +285,7 @@ that's on the same line */
     height: auto;
     max-height: 90vh;
     overflow-x: hidden;
+    overflow-y: auto;
 }
 /** End util-ui/DropdownField.jsx */
   

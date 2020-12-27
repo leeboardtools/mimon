@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 
 /**
- * Component for a menu list. This is used by {@link Dropdown} for its drop down
+ * Component for a menu list. This is used by {@link DropdownMenu} for its drop down
  * menu and by {@link ContextMenu} for the menu.
  * @class
  */
@@ -134,7 +134,7 @@ export class MenuList extends React.Component {
  * @property {MenuList~Item[]}  items
  * @property {string} [menuClassExtras] Extra classes to add to the menu item container
  * @property {string} [itemClassExtras] Extra classes to add to the individual items.
- * @property {Dropdown~onChooseItem}    [onChooseItem] Callback called when an item
+ * @property {DropdownMenu~onChooseItem}    [onChooseItem] Callback called when an item
  * is chosen if the item does not have an onChooseItem property.
  */
 MenuList.propTypes = {

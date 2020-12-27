@@ -9,10 +9,10 @@ import Popper from 'popper.js';
 Popper.Defaults.modifiers.computeStyle.gpuAcceleration = false;
 
 /**
- * Component for a dropdown.
+ * Component for a dropdown menu.
  * @class
  */
-export function Dropdown(props) {
+export function DropdownMenu(props) {
     let topClassName = 'dropdown';
     const { topClassExtras } = props;
     if (topClassExtras) {
@@ -49,7 +49,7 @@ export function Dropdown(props) {
 
 
 /**
- * @typedef {object} Dropdown~PropTypes
+ * @typedef {object} DropdownMenu~PropTypes
  * @property {string|object}    title   The title of the dropdown, if an object then
  * it must be a react component.
  * @property {string}   [id]
@@ -64,7 +64,7 @@ export function Dropdown(props) {
  * @property {MenuList~onChooseItem}    [onChooseItem] Callback called when an item
  * is chosen if the item does not have an onChooseItem property.
  */
-Dropdown.propTypes = {
+DropdownMenu.propTypes = {
     title: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object,

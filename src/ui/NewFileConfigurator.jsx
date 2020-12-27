@@ -5,7 +5,7 @@ import { TabbedPages } from '../util-ui/TabbedPages';
 import * as A from '../engine/Accounts';
 import { NewFileAccountsEditor,
     cloneAccountDataItems, findAccountDataItemWithId, } from './NewFileAccountsEditor';
-import { Dropdown } from '../util-ui/Dropdown';
+import { DropdownMenu } from '../util-ui/DropdownMenu';
 import { ContentFramer } from '../util-ui/ContentFramer';
 
 
@@ -262,7 +262,7 @@ export class NewFileConfigurator extends React.Component {
 
         const mainMenuTitle = <i className = "material-icons">menu</i>;
 
-        const mainMenu = <Dropdown
+        const mainMenu = <DropdownMenu
             title = {mainMenuTitle}
             items = {mainMenuItems}
             topClassExtras = "mt-2 ml-2"
