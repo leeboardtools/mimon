@@ -1,5 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Popup } from './Popup';
+import * as EU from '../util/ElementUtils';
+import deepEqual from 'deep-equal';
 
 
 /**
@@ -12,22 +15,169 @@ export class DropdownSelector extends React.Component {
     constructor(props) {
         super(props);
 
-        this._dropdownRef = React.createRef();
+        this.closeDropdown = this.closeDropdown.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
+        this.onItemClick = this.onItemClick.bind(this);
+
+        this._outerRef = React.createRef();
+        this._buttonRef = React.createRef();
+        this._dropdownListRef = React.createRef();
+
+        this.state = {
+            isDropdownListShown: false,
+        };
     }
 
+
     focus() {
-        if (this._dropdownRef.current) {
-            this._dropdownRef.current.focus();
+        if (this.state.isDropdownListShown) {
+            if (EU.setFocus(this._dropdownListRef.current)) {
+                return;
+            }
+        }
+
+        EU.setFocus(this._buttonRef.current);
+    }
+
+
+    componentDidMount() {
+        this.updateActiveValue();
+    }
+
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.isDropdownListShown !== this.state.isDropdownListShown) {
+            // If we have focus we need to update who actually has focus...
+            if (EU.isElementAncestor(this._outerRef.current, document.activeElement)) {
+                this.focus();
+            }
+        }
+        
+        if ((this.props.value !== prevProps.value)
+         || (!deepEqual(this.props.items, prevProps.items))) {
+            this.updateActiveValue();
         }
     }
 
-    render() {
-        const { props } = this;
-        const { id, ariaLabel, classExtras, 
-            onChange, onFocus, onBlur, disabled, items } = props;
+
+    updateActiveValue() {
+        const { items } = this.props;
+        const activeValue = this.props.value;
+        const itemValues = [];
+
+        let activeIndex = -1;
+        for (let i = 0; i < items.length; ++i) {
+            const { value } = items[i];
+            itemValues.push(value);
+            if (activeIndex < 0) {
+                if (value === activeValue) {
+                    activeIndex = i;
+                }
+            }
+        }
+
+        this.setState({
+            itemValues: itemValues,
+            activeIndex: activeIndex,
+            originalActiveIndex: activeIndex,
+        });
+    }
+
+
+    closeDropdown() {
+        this.setState({
+            isDropdownListShown: false,
+        });
+    }
+
+
+    activateItemAtIndex(index) {
+        this.setState((state) => {
+            const { itemValues } = state;
+            if (index < 0) {
+                index = itemValues.length;
+            }
+            else if (index >= itemValues.length) {
+                index = 0;
+            }
+            return {
+                activeIndex: index,
+            };
+        });
+    }
+
+
+    onKeyDown(e) {
+        if (!this.state.isDropdownListShown) {
+            return;
+        }
+
+        let { activeIndex } = this.state;
+
+        switch (e.key) {
+        case 'Enter' :
+            if (typeof activeIndex !== 'number') {
+                this.onItemClick(e, this.props.value);
+            }
+            else {
+                this.onItemClick(e, this.state.itemValues[activeIndex]);
+            }
+            e.preventDefault();
+            break;
+
+        case 'Escape' :
+            this.setState({
+                activeIndex: this.state.originalActiveIndex,
+            });
+            this.closeDropdown();
+            e.preventDefault();
+            break;
+        
+        case 'ArrowUp' :
+            if (typeof activeIndex !== 'number') {
+                activeIndex = 1;
+            }
+            this.activateItemAtIndex(activeIndex - 1);
+            e.preventDefault();
+            break;
+
+        case 'ArrowDown' :
+            if (typeof activeIndex !== 'number') {
+                activeIndex = 1;
+            }
+            this.activateItemAtIndex(activeIndex + 1);
+            e.preventDefault();
+            break;
+        
+        case 'Home' :
+            this.activateItemAtIndex(0);
+            break;
+
+        case 'End' :
+            this.activateItemAtIndex(this.state.itemValues.length - 1);
+            break;
+        }
+    }
+
+
+    onItemClick(e, value) {
+        e.target.value = value;
+        this.props.onChange(e);
+        this.closeDropdown();
+    }
+
+
+    renderItems() {
+        const { items } = this.props;
 
         const itemComponents = [];
         let valueText = '';
+
+        let activeIndexValue = this.props.value;
+        const { activeIndex, itemValues } = this.state;
+        if (activeIndex >= 0) {
+            activeIndexValue = itemValues[activeIndex];
+        }
 
         items.forEach((item) => {
             const { value, text, classExtras, onRenderItem, indent } = item;
@@ -47,7 +197,7 @@ export class DropdownSelector extends React.Component {
             }
 
             let className = 'dropdown-item ';
-            if (props.value === value) {
+            if (activeIndexValue === value) {
                 className += 'active ';
                 valueText = text;
             }
@@ -61,29 +211,52 @@ export class DropdownSelector extends React.Component {
                     key = {value} 
                     className = {className}
                     style = {style}
-                    onClick = {(e) => {
-                        e.target.value = value;
-                        onChange(e);
-                    }}
+                    onClick = {(e) => this.onItemClick(e, value)}
                 >
                     {component}
                 </a>
             );
         });
 
-        const menu = <div className = "dropdown-menu scrollable-menu"
+        return {
+            itemComponents: itemComponents,
+            valueText: valueText,
+        };
+    }
+
+
+    render() {
+        const { props } = this;
+        const { id, ariaLabel, classExtras, 
+            onFocus, onBlur, disabled, } = props;
+
+        const { itemComponents, valueText } = this.renderItems();
+
+        const dropdownList = <div 
+            className = "scrollable-menu DropdownSelector-dropdownList"
             aria-labelledby = {id}
+            onKeyDown = {this.onKeyDown}
+            tabIndex = {0}
+            onFocus = {() => console.log('dropdownList-focus')}
+            onBlur = {() => console.log('dropdownList-blur')}
+            ref = {this._dropdownListRef}
         >
             {itemComponents}
         </div>;
 
-        let buttonClassName = 'btn btn-block border ';
+
+        const { isDropdownListShown } = this.state;
+
+        let buttonClassName = 'btn btn-block border DropdownSelector-button';
         const button = <button className = {buttonClassName} 
             type = "button"
-            data-toggle = "dropdown"
             aria-haspopup = "true"
             aria-expanded = "false"
+            onClick = {() => this.setState({ isDropdownListShown: !isDropdownListShown })}
+            onFocus = {() => console.log('button-focus')}
+            onBlur = {() => console.log('button-blur')}
             disabled={disabled}
+            ref = {this._buttonRef}
         >
             <div className = "d-flex justify-content-between">
                 <span>{valueText}</span>
@@ -92,7 +265,7 @@ export class DropdownSelector extends React.Component {
         </button>;
 
 
-        let className = 'dropdown DropdownSelector';
+        let className = 'DropdownSelector';
         if (classExtras) {
             className += ' ' + classExtras;
         }
@@ -103,11 +276,17 @@ export class DropdownSelector extends React.Component {
             aria-label = {ariaLabel}
             onFocus = {onFocus}
             onBlur = {onBlur}
-            ref = {this._dropdownRef}
+            ref = {this._outerRef}
         >
             {button}
-            {menu}
+            <Popup
+                show = {isDropdownListShown}
+                onClose = {this.closeDropdown}
+            >
+                {dropdownList}
+            </Popup>
         </div>;
+
     }
 }
 
@@ -149,7 +328,7 @@ DropdownSelector.propTypes = {
     items: PropTypes.array.isRequired,
     value: PropTypes.any,
     classExtras: PropTypes.string,
-    onChange: PropTypes.func,
+    onChange: PropTypes.func.isRequired,
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
     disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
