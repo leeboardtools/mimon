@@ -31,3 +31,24 @@ export function setFocus(element) {
         }
     }
 }
+
+
+/**
+ * Retrieves the first ancestor of an element that is positioned, whose 
+ * position style is not 'static'.
+ * @param {Element} element 
+ * @returns {Element}
+ */
+export function getPositionedAncestor(element) {
+    const { parentElement } = element;
+    if (!parentElement) {
+        return element;
+    }
+
+    const style = window.getComputedStyle(parentElement);
+    if (style.getPropertyValue('position') !== 'static') {
+        return parentElement;
+    }
+
+    return getPositionedAncestor(parentElement);
+}
