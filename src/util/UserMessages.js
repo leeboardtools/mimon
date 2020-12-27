@@ -2,6 +2,7 @@ const fsPromises = require('fs').promises;
 const path = require('path');
 
 let msgs = {};
+let ordinalPluralRules = new Intl.PluralRules(undefined, {type: 'ordinal'});
 
 async function tryLocalePathName(prefix, parts) {
     const myParts = Object.assign({}, parts);
@@ -95,6 +96,8 @@ export async function loadLocaleMsgsFile(locale, pathNames) {
             setMsgs(defMessages, true);
         }
     }
+
+    ordinalPluralRules = new Intl.PluralRules(locale, {type: 'ordinal'});
 }
 
 
@@ -221,4 +224,36 @@ export function userDateString(date) {
         }
         return date.toString();
     }
+}
+
+
+/**
+ * Returns the ordinal (1st, 2nd. 3rd, ...) representation of a number.
+ * @param {number} number 
+ * @returns {string}
+ */
+export function numberToOrdinalString(number) {
+    let suffixId;
+    switch (ordinalPluralRules.select(number)) {
+    case 'one' :
+        suffixId = 'UserMessages-Ordinal_one_suffix';
+        break;
+    
+    case 'two' :
+        suffixId = 'UserMessages-Ordinal_two_suffix';
+        break;
+    
+    case 'few' :
+        suffixId = 'UserMessages-Ordinal_few_suffix';
+        break;
+    
+    case 'other' :
+        suffixId = 'UserMessages-Ordinal_other_suffix';
+        break;
+    }
+
+    if (isUserMsg(suffixId)) {
+        return number.toString() + userMsg(suffixId);
+    }
+    return number.toString();
 }

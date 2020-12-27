@@ -76,5 +76,12 @@
     "UndoManager-undo_id_invalid": ["The undo data for undo id '", "' is not available."],
     "UndoManager-applier_not_found": ["The undo applier '", "' is not available."],
 
+
+    "UserMessages-Ordinal_one_suffix": "st",
+    "UserMessages-Ordinal_two_suffix": "nd",
+    "UserMessages-Ordinal_few_suffix": "rd",
+    "UserMessages-Ordinal_other_suffix": "th",
+
+
     "": ""
 }
