@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
-import { Dropdown } from './Dropdown';
+import { DropdownMenu } from './DropdownMenu';
 import { ContentFramer } from './ContentFramer';
 
 
@@ -74,12 +74,12 @@ export class TabbedPages extends React.Component {
                 // We only want the menu enabled if we're the active tab, so when
                 // you click on an inactive tab the menu doesn't drop down.
                 if (isActive) {
-                    tabComponent = <Dropdown
+                    tabComponent = <DropdownMenu
                         title={tabEntry.title}
                         aria-label={ariaLabel}
                         items={dropdownInfo.items}>
                         {closeButton}
-                    </Dropdown>;
+                    </DropdownMenu>;
                     closeButton = undefined;
                 }
                 else {
@@ -210,8 +210,8 @@ export class TabbedPages extends React.Component {
 
 /**
  * @typedef {object} TabbedPages~TabDropdownInfo
- * @property {Dropdown~Item[]}  items
- * @property {Dropdown~onChooseItem}    onChooseItem
+ * @property {DropdownMenu~Item[]}  items
+ * @property {DropdownMenu~onChooseItem}    onChooseItem
  */
 
 /**
