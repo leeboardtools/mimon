@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Field } from './Field';
+import { DropdownSelector } from './DropdownSelector';
 
 
 /**
@@ -9,72 +10,13 @@ import { Field } from './Field';
  */
 export const DropdownField = React.forwardRef(
     function DropdownFieldImpl(props, ref) {
-        const { label, id, ariaLabel, fieldClassExtras, inputClassExtras, errorMsg, 
-            onChange, onFocus, onBlur, disabled, items } = props;
-
-        const itemComponents = [];
-        let valueText = '';
-
-        items.forEach((item) => {
-            const { value, text, classExtras, onRenderItem, indent } = item;
-            let component;
-            if (onRenderItem) {
-                component = onRenderItem(item);
-            }
-            else {
-                component = text;
-            }
-
-            let style;
-            if (indent !== undefined) {
-                style = {
-                    paddingLeft: indent + 0.5 + 'rem',
-                };
-            }
-
-            let className = 'dropdown-item ';
-            if (props.value === value) {
-                className += 'active ';
-                valueText = text;
-            }
-            if (classExtras) {
-                className += classExtras;
-            }
-
-            itemComponents.push(
-                <a 
-                    value={value} 
-                    key={value} 
-                    className={className}
-                    style={style}
-                    onClick={(e) => {
-                        e.target.value = value;
-                        onChange(e);
-                    }}
-                >
-                    {component}
-                </a>
-            );
-        });
-
-        const menu = <div className="dropdown-menu scrollable-menu"
-            aria-labelledby={id}
-        >
-            {itemComponents}
-        </div>;
-
-        let buttonClassName = 'btn btn-block border ';
-        const button = <button className={buttonClassName} 
-            type="button"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="false"
-            disabled={disabled}
-        >
-            <div className="d-flex justify-content-between">
-                <span>{valueText}</span><span className="text-right">&#x25BE;</span>
-            </div>
-        </button>;
+        const { label, id, fieldClassExtras, inputClassExtras, errorMsg, 
+            ...selectorProps } = props;
+        const selector = <DropdownSelector
+            classExtras = {inputClassExtras}
+            {...selectorProps}
+            ref = {ref}
+        />;
 
         return <Field
             id={id}
@@ -82,19 +24,7 @@ export const DropdownField = React.forwardRef(
             errorMsg={errorMsg}
             fieldClassExtras = {fieldClassExtras}
             editorClassExtras={inputClassExtras}
-            onRenderEditor={(inputClassName) =>
-                <div
-                    id={id}
-                    className={'dropdown' + inputClassName}
-                    aria-label={ariaLabel}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
-                    ref={ref}
-                >
-                    {button}
-                    {menu}
-                </div>
-            }
+            onRenderEditor={() => selector}
             prependComponent={props.prependComponent}
             appendComponent={props.appendComponent}
         />;
@@ -103,30 +33,14 @@ export const DropdownField = React.forwardRef(
 
 
 /**
- * @callback {DropdownField~onRenderItem}
- * @param {DropdownField~Item}  item
- * @returns {object|undefined}  The React component representing the item.
- */
-
-/**
- * @typedef {object} DropdownField~Item
- * @property {string}   value
- * @property {string}   [text]
- * @property {string}   [classExtras]   Class names to add to the item's class list.
- * @property {DropdownField~onRenderItem}   [onRenderItem]
- * @property {number}   [indent]
- */
-
-
-/**
  * @typedef {object} DropdownField~propTypes
  * @property {string}   [ariaLabel]
  * @property {string}   [label]
- * @property {DropdownField~Item[]} items
+ * @property {DropdownSelector~Item[]} items
  * @property {string}   [value]
  * @property {string}   [fieldClassExtras]
  * @property {string}   [inputClassExtras]  If specified additional CSS
- * classes to add to the &lt;select&gt; entity.
+ * classes to add to the {@link DropdownSelector}.
  * @property {string}   [errorMsg]  If specified an error message to be displayed
  * below the input box.
  * @property {function} [onChange]  onChange event handler 
@@ -136,7 +50,6 @@ export const DropdownField = React.forwardRef(
  * @property {function} [onBlur]    onBlur event handler
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onblur}.
  * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
- * @property {boolean} [disabled]
  */
 DropdownField.propTypes = {
     id: PropTypes.string,

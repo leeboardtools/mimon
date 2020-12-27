@@ -9,7 +9,9 @@ import Popper from 'popper.js';
 Popper.Defaults.modifiers.computeStyle.gpuAcceleration = false;
 
 /**
- * Component for a dropdown menu.
+ * React component for a dropdown menu. A DropdownMenu differs from a 
+ * {@link DropdownSelector} in that the menu normally performs an action 
+ * when an item is chosen, and the items are {@link MenuList~Item}s.
  * @class
  */
 export function DropdownMenu(props) {
