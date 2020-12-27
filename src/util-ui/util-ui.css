@@ -144,6 +144,24 @@
 /** End util-ui/MenuList.jsx */
 
 
+.DropdownSelector-dropdownList {
+    left: 0;
+    z-index: 1000;
+    float: left;
+    min-width: 10rem;
+    padding: .5rem 0;
+    margin: .125rem 0 0;
+    font-size: 1rem;
+    color: #212529;
+    text-align: left;
+    list-style: none;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: .25rem;
+}
+
+
 .field-input-form-control {
     flex: 1 1 0%;
     width: 100%;
@@ -176,6 +194,27 @@ that's on the same line */
     border-color: darkgrey;
 }
 /** End util-ui/MultiColumnList.jsx */
+
+
+.Popup {
+    display: none;
+    height: auto;
+}
+
+.Popup.show {
+    display: block;
+}
+
+.Popup-container {
+    position: absolute;
+    /*top: 100%;*/
+    left: 0;
+    z-index: 1000;
+    float: left;
+    min-width: 10rem;
+    padding: .5rem 0;
+    margin: .125rem 0 0;
+}
 
 
 /** For util-ui/RowTable.jsx */
