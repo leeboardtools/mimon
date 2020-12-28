@@ -19,7 +19,8 @@ export const TextField = React.forwardRef(
             onRenderEditor={(inputClassName) =>
                 <input type="text"
                     id={props.id}
-                    className={inputClassName}
+                    className={'Field-editor TextField-editor' 
+                        + (inputClassName || '')}
                     aria-label={ariaLabel}
                     value={value || ''}
                     disabled={disabled}
@@ -73,6 +74,12 @@ TextField.propTypes = {
     onBlur: PropTypes.func,
     onKeyDown: PropTypes.func,
     disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
-    prependComponent: PropTypes.object,
-    appendComponent: PropTypes.object,
+    prependComponent: PropTypes.oneOfType([
+        PropTypes.object,
+        PropTypes.string,
+    ]),
+    appendComponent: PropTypes.oneOfType([
+        PropTypes.object,
+        PropTypes.string,
+    ]),
 };

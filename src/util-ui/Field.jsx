@@ -33,16 +33,24 @@ export function Field(props) {
     }
 
     let prepend;
-    if (props.prependComponent) {
+    let { prependComponent } = props;
+    if (prependComponent) {
+        if (typeof prependComponent === 'string') {
+            prependComponent = <FieldPrefix>{prependComponent}</FieldPrefix>;
+        }
         prepend = <div className="input-group-prepend">
-            {props.prependComponent}
+            {prependComponent}
         </div>;
     }
 
     let append;
-    if (props.appendComponent) {
+    let { appendComponent } = props;
+    if (appendComponent) {
+        if (typeof appendComponent === 'string') {
+            appendComponent = <FieldSuffix>{appendComponent}</FieldSuffix>;
+        }
         append = <div className="input-group-append">
-            {props.appendComponent}
+            {appendComponent}
         </div>;
     }
 
@@ -101,8 +109,14 @@ Field.propTypes = {
     fieldClassExtras: PropTypes.string,
     editorClassExtras: PropTypes.string,
     onRenderEditor: PropTypes.func.isRequired,
-    prependComponent: PropTypes.object,
-    appendComponent: PropTypes.object,
+    prependComponent: PropTypes.oneOfType([
+        PropTypes.object,
+        PropTypes.string,
+    ]),
+    appendComponent: PropTypes.oneOfType([
+        PropTypes.object,
+        PropTypes.string,
+    ]),
 };
 
 
