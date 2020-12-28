@@ -100,7 +100,13 @@
 }
 
 .checkbox-label {
-    padding-left: 1rem;
+    padding-left: 0.5rem;
+}
+
+
+.CheckboxField-editor {
+    padding-top: 0.5rem;
+    border: none;
 }
 
 
