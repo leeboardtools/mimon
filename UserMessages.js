@@ -2,6 +2,7 @@ const fsPromises = require('fs').promises;
 const path = require('path');
 
 let msgs = {};
+let userMsgsLocale;
 let ordinalPluralRules = new Intl.PluralRules(undefined, {type: 'ordinal'});
 
 async function tryLocalePathName(prefix, parts) {
@@ -97,6 +98,7 @@ export async function loadLocaleMsgsFile(locale, pathNames) {
         }
     }
 
+    userMsgsLocale = locale;
     ordinalPluralRules = new Intl.PluralRules(locale, {type: 'ordinal'});
 }
 
@@ -114,6 +116,14 @@ export function setMsgs(msgsToSet, append) {
     else {
         msgs = msgsToSet;
     }
+}
+
+
+/**
+ * The locale of the user messages.
+ */
+export function getUserMsgLocale() {
+    return userMsgsLocale;
 }
 
 

@@ -556,11 +556,30 @@ export function getDaysOfTheWeekText(locale, weekdayOption = 'long') {
     const toLocaleOptions = { timeZone: 'UTC', weekday: weekdayOption};
     for (let i = 0; i < 7; ++i) {
         const date = new Date(Date.UTC(2020, 11, 20 + i, 12, 0, 0));
-        daysOfTheWeek.push(date.toLocaleString(
+        daysOfTheWeek.push(date.toLocaleDateString(
             locale, toLocaleOptions));
     }
 
     return daysOfTheWeek;
+}
+
+
+/**
+ * Returns the months as text in a locale. January is at index 0.
+ * @param {string} [locale]
+ * @param {string} [monthOption='long']
+ * @returns {string[]}
+ */
+export function getMonthsText(locale, monthOption = 'long') {
+    const months = [];
+    const toLocaleOptions = { timeZone: 'UTC', month: monthOption};
+    for (let i = 0; i < 12; ++i) {
+        const date = new Date(Date.UTC(2020, i, 1, 12, 0, 0));
+        months.push(date.toLocaleDateString(
+            locale, toLocaleOptions));
+    }
+
+    return months;
 }
 
 
