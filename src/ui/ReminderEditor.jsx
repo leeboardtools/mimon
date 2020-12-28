@@ -256,6 +256,7 @@ export class ReminderEditor extends React.Component {
             label = {userMsg('ReminderEditor-description_label')}
             value = {this.state.reminderDataItem.description}
             onChange = {this.onDescriptionChange}
+            inputClassExtras = "ReminderEditor-description"
         />;
     }
 

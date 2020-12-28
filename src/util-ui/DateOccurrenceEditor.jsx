@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import * as DO from '../util/DateOccurrences';
 import { userMsg, numberToOrdinalString, getUserMsgLocale } from '../util/UserMessages';
@@ -6,10 +6,419 @@ import { DropdownField } from './DropdownField';
 import { NumberField } from './NumberField';
 import { parseExactInt } from '../util/NumberUtils';
 import { DateField } from './DateField';
-import { FieldPrefix, FieldSuffix } from './Field';
-import { getDaysOfTheWeekText, getMonthsText, getYMDDateString } from '../util/YMDDate';
+import { CheckboxField } from './CheckboxField';
+import { getDaysOfTheWeekText, getMonthsText, getYMDDateString, YMDDate, } 
+    from '../util/YMDDate';
 
 
+/**
+ * React component for editing {@link OccurrenceRepeatDefinition}
+ */
+export class OccurrenceRepeatDefinitionEditor extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.onTypeChange = this.onTypeChange.bind(this);
+        this.onPeriodChange = this.onPeriodChange.bind(this);
+
+        this.onFinalDateCheckboxChange = this.onFinalDateCheckboxChange.bind(this);
+        this.onFinalDateSelected = this.onFinalDateSelected.bind(this);
+
+        this.onMaxRepeatsCheckboxChange = this.onMaxRepeatsCheckboxChange.bind(this);
+        this.onMaxRepeatsChange = this.onMaxRepeatsChange.bind(this);
+
+        const { repeatDefinition } = this.props;
+        const { finalYMDDate, maxRepeats } = repeatDefinition;
+
+        this.state = {
+            editedFinalYMDDate: 
+                getYMDDateString(finalYMDDate || new YMDDate().addYears(1)),
+            editedMaxRepeats: maxRepeats || '1',
+        };
+    }
+
+    componentDidMount() {
+        this.updateLimits();
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        const { repeatDefinition } = this.props;
+        const prevRepeatDefinition = prevProps.repeatDefinition;
+        if ((repeatDefinition.finalYMDDate !== prevRepeatDefinition.finalYMDDate)
+         || (repeatDefinition.maxRepeats !== prevRepeatDefinition.maxRepeats)) {
+            this.updateLimits();
+        }
+    }
+
+    updateLimits() {
+        const { repeatDefinition } = this.props;
+        const { finalYMDDate, maxRepeats } 
+            = DO.getOccurrenceRepeatDefinition(repeatDefinition);
+
+        this.setState({
+            isFinalYMDDate: (finalYMDDate !== undefined),
+            isMaxRepeats: (maxRepeats !== undefined),
+        });
+    }
+
+
+    makeId(id) {
+        const idBase = this.props.id || 'OccurrenceRepeatDefinitionEditor';
+        return idBase + '_' + id;
+    }
+
+    updateDefinition(changes) {
+        const { onChange } = this.props;
+        if (onChange) {
+            onChange(changes);
+        }
+    }
+
+
+    onTypeChange(e) {
+        this.updateDefinition({
+            repeatType: e.target.value,
+        });
+    }
+
+    renderTypeSelector(repeatDefinitionDataItem) {
+        let { allowedRepeatTypes } = this.props;
+        if (!allowedRepeatTypes) {
+            allowedRepeatTypes = [];
+            for (let typeName in DO.OccurrenceRepeatType) {
+                allowedRepeatTypes.push(typeName);
+            }
+        }
+
+        const items = [];
+        for (let type of allowedRepeatTypes) {
+            const typeName = DO.getOccurrenceRepeatTypeString(type);
+            items.push({
+                value: typeName,
+                text: userMsg('OccurrenceRepeatDefinitionEditor-typeSelector_' 
+                    + typeName),
+            });
+        }
+        if (!items || !items.length
+         || ((items.length === 1)
+          && (items[0].value === DO.OccurrenceRepeatType.NO_REPEAT.name))) {
+            return;
+        }
+
+        return <DropdownField
+            id = {this.makeId('TypeSelector')}
+            ariaLabel = "Type Selector"
+            items = {items}
+            value = {repeatDefinitionDataItem.repeatType}
+            onChange = {this.onTypeChange}
+            fieldClassExtras = "Field-postSpace"
+        />;
+    }
+
+
+    onPeriodChange(e, value) {
+        if (isNaN(value)) {
+            value = e.target.value;
+        }
+        this.updateDefinition({
+            period: value,
+        });
+    }
+
+    renderPeriodEditor({ id, value, prefix, suffix, }) {
+        const key = this.makeId('PeriodEditor_' + (id || ''));
+
+        let errorMsg;
+        if (typeof value === 'string') {
+            const numericValue = parseExactInt(value);
+            if (!isNaN(numericValue)) {
+                value = numericValue;
+            }
+        }
+
+        if ((typeof value !== 'number')
+         || (value <= 0)) {
+            errorMsg = userMsg('OccurrenceRepeatEditor-periodEditor_period_invalid');
+        }
+
+        return <NumberField 
+            key = {key}
+            id = {key}
+            ariaLabel = "Period"
+            value = {value}
+            errorMsg = {errorMsg}
+            onChange = {this.onPeriodChange}
+            prependComponent = {prefix}
+            appendComponent = {suffix}
+            inputClassExtras = "DateOccurrenceEditor-NumberField"
+        />;
+    }
+
+
+    onFinalDateCheckboxChange(isCheck) {
+        this.setState({
+            isFinalYMDDate: isCheck,
+        });
+        this.updateDefinition({
+            finalYMDDate: (isCheck) ? this.state.editedFinalYMDDate : undefined,
+        });
+    }
+
+    onFinalDateSelected(ymdDate) {
+        this.setState({
+            editedFinalYMDDate: ymdDate,
+            isFinalYMDDate: true,
+        });
+        this.updateDefinition({
+            finalYMDDate: ymdDate,
+        });
+    }
+
+    renderFinalDateEditor(repeatDefinitionDataItem) {
+        const checkboxId = this.makeId('FinalDateCheckbox');
+        const dateCheckbox = <CheckboxField 
+            key = {checkboxId}
+            id = {checkboxId}
+            ariaLabel = "Final Date Checkbox"
+            value = {this.state.isFinalYMDDate}
+            checkboxText = {
+                userMsg('OccurrenceRepeatDefinitionEditor-finalDateEditorCheckbox_text')}
+            inputClassExtras = "Field-indent"
+            onChange = {this.onFinalDateCheckboxChange}
+        />;
+
+        const selectorId = this.makeId('FinalDateSelector');
+        const dateSelector = <DateField 
+            key = {selectorId}
+            id = {selectorId}
+            value = {this.state.editedFinalYMDDate}
+            onChange = {this.onFinalDateSelected}
+            inputClassExtras = "OccurrenceRepeatDefinitionEditor-FinalDateSelector"
+            tabIndex = {0}
+        />;
+
+        return [
+            dateCheckbox,
+            dateSelector,
+        ];
+    }
+
+
+
+    onMaxRepeatsCheckboxChange(isCheck) {
+        this.setState({
+            isMaxRepeats: isCheck,
+        });
+        this.updateDefinition({
+            maxRepeats: (isCheck) ? this.state.editedMaxRepeats : undefined,
+        });
+    }
+
+    onMaxRepeatsChange(e, value) {
+        if (isNaN(value)) {
+            value = e.target.value;
+        }
+
+        this.setState({
+            editedMaxRepeats: value,
+            isMaxRepeats: true,
+        });
+        this.updateDefinition({
+            maxRepeats: value,
+        });
+    }
+
+    renderMaxRepeatsEditor(repeatDefinitionDataItem) {
+        const checkboxId = this.makeId('MaxRepeatsCheckbox');
+        const checkbox = <CheckboxField 
+            key = {checkboxId}
+            id = {checkboxId}
+            ariaLabel = "Max Repeats Checkbox"
+            value = {this.state.isMaxRepeats}
+            checkboxText = {
+                userMsg('OccurrenceRepeatDefinitionEditor-maxRepeatsEditorCheckbox_text')}
+            inputClassExtras = "Field-indent"
+            onChange = {this.onMaxRepeatsCheckboxChange}
+        />;
+
+
+        const countId = this.makeId('MaxRepeatsEditor');
+        let value = this.state.editedMaxRepeats;
+
+        let errorMsg;
+        if (typeof value === 'string') {
+            const numericValue = parseExactInt(value);
+            if (!isNaN(numericValue)) {
+                value = numericValue;
+            }
+        }
+
+        if ((typeof value !== 'number')
+         || (value <= 0)) {
+            errorMsg = userMsg('OccurrenceRepeatEditor-maxRepeatsEditor_count_invalid');
+        }
+
+        const countEditor = <NumberField 
+            key = {countId}
+            id = {countId}
+            ariaLabel = "Max Repeat Count"
+            value = {value}
+            errorMsg = {errorMsg}
+            onChange = {this.onMaxRepeatsChange}
+            prependComponent = {userMsg(
+                'OccurrenceRepeatDefinitionEditor-maxRepeatsEditor_prefix')}
+            appendComponent = {userMsg(
+                'OccurrenceRepeatDefinitionEditor-maxRepeatsEditor_suffix')}
+            inputClassExtras = "DateOccurrenceEditor-NumberField"
+        />;
+
+        return [
+            checkbox,
+            countEditor,
+        ];
+    }
+
+
+    addEditorsToFields(fields, editors) {
+        if (editors) {
+            if (Array.isArray(editors)) {
+                editors.forEach((editor) => {
+                    if (editor) { fields.push(editor); }
+                });
+            }
+            else {
+                fields.push(editors);
+            }
+        }
+        return fields;
+    }
+
+
+    renderLimitEditors(repeatDefinitionDataItem) {
+        const editors = [];
+        const finalDateEditor = this.renderFinalDateEditor(repeatDefinitionDataItem);
+        this.addEditorsToFields(editors, finalDateEditor);
+
+        const maxRepeatsEditor = this.renderMaxRepeatsEditor(repeatDefinitionDataItem);
+        this.addEditorsToFields(editors, maxRepeatsEditor);
+
+        return editors;
+    }
+
+
+    addLimitEditors(fields, repeatDefinitionDataItem) {
+        const limitEditors = this.renderLimitEditors(repeatDefinitionDataItem);
+        fields = this.addEditorsToFields(fields, limitEditors);
+
+        return fields;
+    }
+
+    renderDAILY(repeatDefinitionDataItem) {
+        const periodEditor = this.renderPeriodEditor({
+            id: 'DAILY',
+            value: repeatDefinitionDataItem.period,
+            prefix: userMsg(
+                'OccurrenceRepeatDefinitionEditor-DAILY_periodEditor_prefix'),
+            suffix: userMsg(
+                'OccurrenceRepeatDefinitionEditor-DAILY_periodEditor_suffix'),
+        });
+
+        return this.addLimitEditors([periodEditor], repeatDefinitionDataItem);
+    }
+
+    renderWEEKLY(repeatDefinitionDataItem) {
+        const periodEditor = this.renderPeriodEditor({
+            id: 'WEEKLY',
+            value: repeatDefinitionDataItem.period,
+            prefix: userMsg(
+                'OccurrenceRepeatDefinitionEditor-WEEKLY_periodEditor_prefix'),
+            suffix: userMsg(
+                'OccurrenceRepeatDefinitionEditor-WEEKLY_periodEditor_suffix'),
+        });
+
+        return this.addLimitEditors([periodEditor], repeatDefinitionDataItem);
+    }
+
+    renderMONTHLY(repeatDefinitionDataItem) {
+        const periodEditor = this.renderPeriodEditor({
+            id: 'MONTHLY',
+            value: repeatDefinitionDataItem.period,
+            prefix: userMsg(
+                'OccurrenceRepeatDefinitionEditor-MONTHLY_periodEditor_prefix'),
+            suffix: userMsg(
+                'OccurrenceRepeatDefinitionEditor-MONTHLY_periodEditor_suffix'),
+        });
+
+        return this.addLimitEditors([periodEditor], repeatDefinitionDataItem);
+    }
+
+    renderYEARLY(repeatDefinitionDataItem) {
+        const periodEditor = this.renderPeriodEditor({
+            id: 'YEARLY',
+            value: repeatDefinitionDataItem.period,
+            prefix: userMsg(
+                'OccurrenceRepeatDefinitionEditor-YEARLY_periodEditor_prefix'),
+            suffix: userMsg(
+                'OccurrenceRepeatDefinitionEditor-YEARLY_periodEditor_suffix'),
+        });
+
+        return this.addLimitEditors([periodEditor], repeatDefinitionDataItem);
+    }
+
+
+    render() {
+        const repeatDefinitionDataItem = DO.getOccurrenceRepeatDefinitionDataItem(
+            this.props.repeatDefinition);
+
+        const typeSelector = this.renderTypeSelector(repeatDefinitionDataItem);
+        if (!typeSelector) {
+            return null;
+        }
+
+        let fields = [];
+        switch (repeatDefinitionDataItem.repeatType) {
+        case DO.OccurrenceRepeatType.NO_REPEAT.name :
+            break;
+
+        case DO.OccurrenceRepeatType.DAILY.name :
+            fields = this.renderDAILY(repeatDefinitionDataItem);
+            break;
+
+        case DO.OccurrenceRepeatType.WEEKLY.name :
+            fields = this.renderWEEKLY(repeatDefinitionDataItem);
+            break;
+
+        case DO.OccurrenceRepeatType.MONTHLY.name :
+            fields = this.renderMONTHLY(repeatDefinitionDataItem);
+            break;
+
+        case DO.OccurrenceRepeatType.YEARLY.name :
+            fields = this.renderYEARLY(repeatDefinitionDataItem);
+            break;
+        }
+
+        return <div className = "FieldContainer-inline">
+            {typeSelector}
+            {fields}
+        </div>;
+    }
+}
+
+OccurrenceRepeatDefinitionEditor.propTypes = {
+    id: PropTypes.string,
+    repeatDefinition: PropTypes.object.isRequired,
+    allowedRepeatTypes: PropTypes.arrayOf(
+        PropTypes.oneOfType([
+            PropTypes.string,
+            PropTypes.object,
+        ])),
+    onChange: PropTypes.func.isRequired,
+};
+
+
+/**
+ * React component for editing a {@link DateOccurrenceDefinition}
+ */
 export class DateOccurrenceEditor extends React.Component {
     constructor(props) {
         super(props);
@@ -26,6 +435,8 @@ export class DateOccurrenceEditor extends React.Component {
         this.onDOWYearOffsetChange = this.onDOWYearOffsetChange.bind(this);
         this.onDOWEndYearOffsetChange = this.onDOWEndYearOffsetChange.bind(this);
         this.onDateSelected = this.onDateSelected.bind(this);
+
+        this.onRepeatDefinitionChange = this.onRepeatDefinitionChange.bind(this);
 
         this.state = {
 
@@ -83,16 +494,6 @@ export class DateOccurrenceEditor extends React.Component {
 
 
     renderDropDownSelector({ id, items, value, onChange, prefix, suffix}) {
-        let prependComponent;
-        if (prefix) {
-            prependComponent = <FieldPrefix>{prefix}</FieldPrefix>;
-        }
-        
-        let appendComponent;
-        if (suffix) {
-            appendComponent = <FieldSuffix>{suffix}</FieldSuffix>;
-        }
-
         const key = this.makeId('DayOfMonthSelector_' + (id || ''));
 
         return <DropdownField 
@@ -101,8 +502,8 @@ export class DateOccurrenceEditor extends React.Component {
             items = {items}
             value = {value}
             onChange = {(e, value) => onChange(value)}
-            prependComponent = {prependComponent}
-            appendComponent = {appendComponent}
+            prependComponent = {prefix}
+            appendComponent = {suffix}
         />;
     }
 
@@ -484,16 +885,6 @@ export class DateOccurrenceEditor extends React.Component {
 
 
     renderDayOfYearEditor({ id, ariaLabel, value, onChange, prefix, suffix, }) {
-        let prependComponent;
-        if (prefix) {
-            prependComponent = <FieldPrefix>{prefix}</FieldPrefix>;
-        }
-        
-        let appendComponent;
-        if (suffix) {
-            appendComponent = <FieldSuffix>{suffix}</FieldSuffix>;
-        }
-
         const key = this.makeId('DayOfYearEditor_' + (id || ''));
 
         let errorMsg;
@@ -519,9 +910,9 @@ export class DateOccurrenceEditor extends React.Component {
             value = {value}
             errorMsg = {errorMsg}
             onChange = {onChange}
-            prependComponent = {prependComponent}
-            appendComponent = {appendComponent}
-            inputClassExtras = "DateOccurrenceEditor-DayOfYearEditor"
+            prependComponent = {prefix}
+            appendComponent = {suffix}
+            inputClassExtras = "DateOccurrenceEditor-NumberField"
         />;
     }
 
@@ -557,16 +948,6 @@ export class DateOccurrenceEditor extends React.Component {
 
 
     renderDayEndOfYearEditor({ id, ariaLabel, value, onChange, prefix, suffix, }) {
-        let prependComponent;
-        if (prefix) {
-            prependComponent = <FieldPrefix>{prefix}</FieldPrefix>;
-        }
-        
-        let appendComponent;
-        if (suffix) {
-            appendComponent = <FieldSuffix>{suffix}</FieldSuffix>;
-        }
-
         const key = this.makeId('DayEndOfYearEditor_' + (id || ''));
 
         let errorMsg;
@@ -590,9 +971,9 @@ export class DateOccurrenceEditor extends React.Component {
             value = {value}
             errorMsg = {errorMsg}
             onChange = {onChange}
-            prependComponent = {prependComponent}
-            appendComponent = {appendComponent}
-            inputClassExtras = "DateOccurrenceEditor-DayEndOfYearEditor"
+            prependComponent = {prefix}
+            appendComponent = {suffix}
+            inputClassExtras = "DateOccurrenceEditor-NumberField"
         />;
     }
 
@@ -625,16 +1006,6 @@ export class DateOccurrenceEditor extends React.Component {
 
 
     renderDOWYearOffsetEditor({ id, ariaLabel, value, onChange, prefix, suffix, }) {
-        let prependComponent;
-        if (prefix) {
-            prependComponent = <FieldPrefix>{prefix}</FieldPrefix>;
-        }
-        
-        let appendComponent;
-        if (suffix) {
-            appendComponent = <FieldSuffix>{suffix}</FieldSuffix>;
-        }
-
         const key = this.makeId('DOWYearOffsetEditor_' + (id || ''));
 
         let errorMsg;
@@ -661,9 +1032,9 @@ export class DateOccurrenceEditor extends React.Component {
             value = {value}
             errorMsg = {errorMsg}
             onChange = {onChange}
-            prependComponent = {prependComponent}
-            appendComponent = {appendComponent}
-            inputClassExtras = "DateOccurrenceEditor-DOWYearOffsetEditor"
+            prependComponent = {prefix}
+            appendComponent = {suffix}
+            inputClassExtras = "DateOccurrenceEditor-NumberField"
         />;
     }
 
@@ -709,16 +1080,6 @@ export class DateOccurrenceEditor extends React.Component {
 
 
     renderDOWEndYearOffsetEditor({ id, ariaLabel, value, onChange, prefix, suffix, }) {
-        let prependComponent;
-        if (prefix) {
-            prependComponent = <FieldPrefix>{prefix}</FieldPrefix>;
-        }
-        
-        let appendComponent;
-        if (suffix) {
-            appendComponent = <FieldSuffix>{suffix}</FieldSuffix>;
-        }
-
         const key = this.makeId('DOWEndYearOffsetEditor_' + (id || ''));
 
         let errorMsg;
@@ -742,9 +1103,9 @@ export class DateOccurrenceEditor extends React.Component {
             value = {value}
             errorMsg = {errorMsg}
             onChange = {onChange}
-            prependComponent = {prependComponent}
-            appendComponent = {appendComponent}
-            inputClassExtras = "DateOccurrenceEditor-DOWEndYearOffsetEditor"
+            prependComponent = {prefix}
+            appendComponent = {suffix}
+            inputClassExtras = "DateOccurrenceEditor-NumberField"
         />;
     }
 
@@ -789,16 +1150,6 @@ export class DateOccurrenceEditor extends React.Component {
     renderDateSelector({id, value, onChange, prefix, suffix}) {
         value = getYMDDateString(value);
 
-        let prependComponent;
-        if (prefix) {
-            prependComponent = <FieldPrefix>{prefix}</FieldPrefix>;
-        }
-        
-        let appendComponent;
-        if (suffix) {
-            appendComponent = <FieldSuffix>{suffix}</FieldSuffix>;
-        }
-
         const key = this.makeId('DateSelector_' + (id || ''));
 
         return <DateField 
@@ -808,8 +1159,8 @@ export class DateOccurrenceEditor extends React.Component {
             onChange = {onChange}
             inputClassExtras = "DateOccurrenceEditor-DateSelector"
             tabIndex = {0}
-            prependComponent = {prependComponent}
-            appendComponent = {appendComponent}
+            prependComponent = {prefix}
+            appendComponent = {suffix}
         />;
     }
 
@@ -833,6 +1184,18 @@ export class DateOccurrenceEditor extends React.Component {
         });
 
         return dateSelector;
+    }
+
+
+    onRepeatDefinitionChange(changes) {
+        const repeatDefinition = Object.assign({}, 
+            this.props.occurrenceDefinition.repeatDefinition,
+            changes);
+        this.updateDefinition({
+            occurrenceDefinition: {
+                repeatDefinition: repeatDefinition,
+            }
+        });
     }
 
 
@@ -903,10 +1266,20 @@ export class DateOccurrenceEditor extends React.Component {
             break;
         }
 
-        return <div className = "FieldContainer-inline">
-            {typeSelector}
-            {fields}
-        </div>;
+        const repeatDefinitionEditor = <OccurrenceRepeatDefinitionEditor
+            id = {this.makeId('OccurrenceRepeatDefinitionEditor')}
+            allowedRepeatTypes = {occurrenceDefinition.occurrenceType.allowedRepeatTypes}
+            repeatDefinition = {occurrenceDefinition.repeatDefinition}
+            onChange = {this.onRepeatDefinitionChange}
+        />;
+
+        return <Fragment>
+            <div className = "FieldContainer-inline">
+                {typeSelector}
+                {fields}
+            </div>
+            {repeatDefinitionEditor}
+        </Fragment>;
     }
 }
 

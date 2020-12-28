@@ -438,6 +438,11 @@ body {
 }
 
 
+.ReminderEditor-description {
+  width: 100%;
+}
+
+
 .ModalPage-inner_rows_container {
   text-align: left;
   margin: auto;

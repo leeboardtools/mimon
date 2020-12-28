@@ -23,7 +23,8 @@ export const DropdownField = React.forwardRef(
             label={label}
             errorMsg={errorMsg}
             fieldClassExtras = {fieldClassExtras}
-            editorClassExtras={inputClassExtras}
+            editorClassExtras={'Field-editor DropdownField-editor' 
+                + (inputClassExtras || '')}
             onRenderEditor={() => selector}
             prependComponent={props.prependComponent}
             appendComponent={props.appendComponent}
@@ -64,6 +65,12 @@ DropdownField.propTypes = {
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
     disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
-    prependComponent: PropTypes.object,
-    appendComponent: PropTypes.object,
+    prependComponent: PropTypes.oneOfType([
+        PropTypes.object,
+        PropTypes.string,
+    ]),
+    appendComponent: PropTypes.oneOfType([
+        PropTypes.object,
+        PropTypes.string,
+    ]),
 };

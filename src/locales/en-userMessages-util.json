@@ -98,7 +98,31 @@
     "DateOccurrenceEditor-DayEndOfYearEditor_dayOfYear_invalid": "Value must be >= 0 and < 366",
     "DateOccurrenceEditor-DOWYearOffsetEditor_dowYearOffset_invalid": "Value must be >= 1 and <= 52",
     "DateOccurrenceEditor-DOWEndYearOffsetEditor_dowEndYearOffset_invalid": "Value must be >= 0 and < 52",
-    
+
+
+    "OccurrenceRepeatDefinitionEditor-typeSelector_NO_REPEAT": "Does not repeat.",
+    "OccurrenceRepeatDefinitionEditor-typeSelector_DAILY": "Repeat daily",
+    "OccurrenceRepeatDefinitionEditor-typeSelector_WEEKLY": "Repeat weekly",
+    "OccurrenceRepeatDefinitionEditor-typeSelector_MONTHLY": "Repeat monthly",
+    "OccurrenceRepeatDefinitionEditor-typeSelector_YEARLY": "Repeat yearly",
+
+    "OccurrenceRepeatEditor-periodEditor_period_invalid": "Value must be >= 1",
+
+    "OccurrenceRepeatDefinitionEditor-finalDateEditorCheckbox_text": "Repeat until and including ",
+    "OccurrenceRepeatDefinitionEditor-maxRepeatsEditorCheckbox_text": "Repeat a maximum of ",
+    "OccurrenceRepeatDefinitionEditor-maxRepeatsEditor_prefix": "",
+    "OccurrenceRepeatDefinitionEditor-maxRepeatsEditor_suffix": " times.",
+    "OccurrenceRepeatEditor-maxRepeatsEditor_count_invalid": "Value must be >= 1",
+
+    "OccurrenceRepeatDefinitionEditor-DAILY_periodEditor_prefix": " every ",
+    "OccurrenceRepeatDefinitionEditor-DAILY_periodEditor_suffix": " days.",
+    "OccurrenceRepeatDefinitionEditor-WEEKLY_periodEditor_prefix": " every ",
+    "OccurrenceRepeatDefinitionEditor-WEEKLY_periodEditor_suffix": " weeks.",
+    "OccurrenceRepeatDefinitionEditor-MONTHLY_periodEditor_prefix": " every ",
+    "OccurrenceRepeatDefinitionEditor-MONTHLY_periodEditor_suffix": " months.",
+    "OccurrenceRepeatDefinitionEditor-YEARLY_periodEditor_prefix": " every ",
+    "OccurrenceRepeatDefinitionEditor-YEARLY_periodEditor_suffix": " years.",
+
 
     "DateOccurrences-repeatType_invalid": "The repeat type is not valid.",
     "DateOccurrences-repeatDefinition_period_required": "The type of repeat requires a period that is a number >= 0.",
