@@ -1,23 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { TextField } from './TextField';
-
-
-function parseExactInt(value) {
-    if (typeof value === 'number') {
-        return Math.round(value);
-    }
-
-    // eslint-disable-next-line max-len
-    // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseInt
-    if (/^[-+]?(\d+|Infinity)$/.test(value)) {
-        return Number(value);
-    } 
-    else {
-        return NaN;
-    }
-
-}
+import { parseExactInt } from '../util/NumberUtils';
 
 function valueToNumber(value, isFloat) {
     return (isFloat) ? parseFloat(value) : parseExactInt(value);
