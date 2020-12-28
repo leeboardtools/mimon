@@ -26,7 +26,7 @@ test('Reminders-DataItems', () => {
     const reminderA = {
         occurrenceDefinition: {
             occurrenceType: DO.OccurrenceType.DOW_OF_MONTH,
-            offset: 2,
+            offset: 1,
             dayOfWeek: 3,
             repeatDefinition: {
                 repeatType: DO.OccurrenceRepeatType.YEARLY,
@@ -221,7 +221,7 @@ test('Reminders-add_modify', async () => {
 
     invalidChanges.occurrenceDefinition = {
         occurrenceType: DO.OccurrenceType.DOW_OF_MONTH,
-        offset: 3,
+        offset: 2,
         dayOfMonth: 2,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.YEARLY,
@@ -270,7 +270,7 @@ test('Reminders-getDueReminderDataItems', async () => {
     const settingsA = {
         occurrenceDefinition: {
             occurrenceType: DO.OccurrenceType.DOW_OF_MONTH.name,
-            offset: 3,
+            offset: 2,
             dayOfWeek: 6,
             repeatDefinition: {
                 repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
@@ -325,7 +325,7 @@ test('Reminders-getDueReminderDataItems', async () => {
     const settingsC = {
         occurrenceDefinition: {
             occurrenceType: DO.OccurrenceType.DOW_OF_MONTH.name,
-            offset: 3,
+            offset: 2,
             dayOfWeek: 6,
             repeatDefinition: {
                 repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
