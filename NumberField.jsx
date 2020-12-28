@@ -50,11 +50,18 @@ function numberFieldOnChange(e, value, isFloat, increment, onChange) {
 export const NumberField = React.forwardRef(
     function NumberFieldImpl(props, ref) {
         const { isFloat, increment, onChange, value,
+            inputClassExtras,
             ...passThroughProps } = props;
+
+        let inputClassName = 'NumberField-editor';
+        if (inputClassExtras) {
+            inputClassName += ' ' + inputClassExtras;
+        }
 
         return <TextField
             {...passThroughProps}
             value = {value.toString()}
+            inputClassExtras = {inputClassName}
             onChange = {(e) => numberFieldOnChange(e, value,
                 isFloat, increment, onChange)}
             onKeyDown = {(e) => numberFieldOnKeyDown(e, value,
@@ -116,6 +123,12 @@ NumberField.propTypes = {
 
     isFloat: PropTypes.bool,
     increment: PropTypes.number,
-    prependComponent: PropTypes.object,
-    appendComponent: PropTypes.object,
+    prependComponent: PropTypes.oneOfType([
+        PropTypes.object,
+        PropTypes.string,
+    ]),
+    appendComponent: PropTypes.oneOfType([
+        PropTypes.object,
+        PropTypes.string,
+    ]),
 };

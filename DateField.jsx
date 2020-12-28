@@ -5,7 +5,7 @@ import { CellDateEditor } from './CellDateEditor';
 
 
 /**
- * React component for basic number editing in a field.
+ * React component for date editing in a field.
  * @class
  */
 export const DateField = React.forwardRef(
@@ -17,22 +17,23 @@ export const DateField = React.forwardRef(
 
         return <Field
             {...passThroughProps}
-            editorClassExtras={inputClassExtras}
-            onRenderEditor={(inputClassName) =>
+            editorClassExtras = {inputClassExtras}
+            onRenderEditor = {(inputClassName) =>
                 <CellDateEditor
-                    id={props.id}
-                    className={inputClassName}
-                    aria-label={ariaLabel}
-                    value={value || ''}
-                    errorMsg={errorMsg}
-                    onChange={onChange}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
-                    disabled={disabled}
+                    id = {props.id}
+                    inputClassExtras = {'Field-editor DateField-editor ' 
+                        + (inputClassName || '')}
+                    aria-label = {ariaLabel}
+                    value = {value || ''}
+                    errorMsg = {errorMsg}
+                    onChange = {onChange}
+                    onFocus = {onFocus}
+                    onBlur = {onBlur}
+                    disabled = {disabled}
                     dateFormat = {dateFormat}
                     locale = {locale}
                     tabIndex = {tabIndex}
-                    ref={ref}
+                    ref = {ref}
                 />
             }
         />;
@@ -79,6 +80,12 @@ DateField.propTypes = {
     dateFormat: PropTypes.string,
     locale: PropTypes.string,
     tabIndex: PropTypes.number,
-    prependComponent: PropTypes.object,
-    appendComponent: PropTypes.object,
+    prependComponent: PropTypes.oneOfType([
+        PropTypes.object,
+        PropTypes.string,
+    ]),
+    appendComponent: PropTypes.oneOfType([
+        PropTypes.object,
+        PropTypes.string,
+    ]),
 };
