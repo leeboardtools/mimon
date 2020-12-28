@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 
 /**
- * A simple checkbox Reach component, supports a built-in label to the right
+ * A simple checkbox React component, supports a built-in label to the right
  * of the check box.
  * @class
  */
@@ -34,7 +34,7 @@ export function Checkbox(props) {
         return button;
     }
 
-    let containerClassName = 'row';
+    let containerClassName = 'input-group';
     if (classExtras) {
         containerClassName += ' ' + classExtras;
     }
