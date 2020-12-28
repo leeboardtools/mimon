@@ -17,6 +17,7 @@ export class DropdownSelector extends React.Component {
 
         this.closeDropdown = this.closeDropdown.bind(this);
         this.onKeyDown = this.onKeyDown.bind(this);
+        this.onDropdownListBlur = this.onDropdownListBlur.bind(this);
         this.onItemClick = this.onItemClick.bind(this);
 
         this._outerRef = React.createRef();
@@ -160,9 +161,16 @@ export class DropdownSelector extends React.Component {
     }
 
 
+    onDropdownListBlur() {
+        if (this.state.isDropdownListShown) {
+            this.closeDropdown();
+        }
+    }
+
+
     onItemClick(e, value) {
         e.target.value = value;
-        this.props.onChange(e);
+        this.props.onChange(e, value);
         this.closeDropdown();
     }
 
@@ -236,9 +244,8 @@ export class DropdownSelector extends React.Component {
             className = "scrollable-menu DropdownSelector-dropdownList"
             aria-labelledby = {id}
             onKeyDown = {this.onKeyDown}
+            onBlur = {this.onDropdownListBlur}
             tabIndex = {0}
-            onFocus = {() => console.log('dropdownList-focus')}
-            onBlur = {() => console.log('dropdownList-blur')}
             ref = {this._dropdownListRef}
         >
             {itemComponents}
@@ -253,8 +260,6 @@ export class DropdownSelector extends React.Component {
             aria-haspopup = "true"
             aria-expanded = "false"
             onClick = {() => this.setState({ isDropdownListShown: !isDropdownListShown })}
-            onFocus = {() => console.log('button-focus')}
-            onBlur = {() => console.log('button-blur')}
             disabled={disabled}
             ref = {this._buttonRef}
         >
