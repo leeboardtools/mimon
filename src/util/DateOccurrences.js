@@ -82,7 +82,9 @@ import { userError } from './UserMessages';
  * {@link DateOccurrenceDefinition} are used.
  * Only the NO_REPEAT and YEARLY repeat types are supported.
  * @property {OccurrenceTypeDef} ON_DATE Date is specified explicitly. The startYMDDate
- * property of {@link DateOccurrenceDefinition} is used.
+ * property of {@link DateOccurrenceDefinition} is used. Unlike the other types,
+ * ON_DATE repeat dates are driven by the occurrenceCount property of 
+ * {@link DateOccurrenceState} and not by lastOccurrenceYMDDate.
  * All the repeat types are supported.
  */
 export const OccurrenceType = {
@@ -124,7 +126,7 @@ export const OccurrenceType = {
     },
     DOW_OF_MONTH: { name: 'DOW_OF_MONTH',
         hasOffset: true,
-        offsetMin: 1,
+        offsetMin: 0,
         hasDayOfWeek: true,
         allowedRepeatTypes: [
             'NO_REPEAT',
@@ -137,7 +139,7 @@ export const OccurrenceType = {
     },
     DOW_END_OF_MONTH: { name: 'DOW_END_OF_MONTH',
         hasOffset: true,
-        offsetMin: 1,
+        offsetMin: 0,
         hasDayOfWeek: true,
         isFromEnd: true,
         allowedRepeatTypes: [
@@ -176,7 +178,7 @@ export const OccurrenceType = {
     },
     DOW_OF_SPECIFIC_MONTH: { name: 'DOW_OF_SPECIFIC_MONTH',
         hasOffset: true,
-        offsetMin: 1,
+        offsetMin: 0,
         hasDayOfWeek: true,
         hasSpecificMonth: true,
         allowedRepeatTypes: [
@@ -189,7 +191,7 @@ export const OccurrenceType = {
     },
     DOW_END_OF_SPECIFIC_MONTH: { name: 'DOW_END_OF_SPECIFIC_MONTH',
         hasOffset: true,
-        offsetMin: 1,
+        offsetMin: 0,
         hasDayOfWeek: true,
         isFromEnd: true,
         hasSpecificMonth: true,
@@ -225,7 +227,7 @@ export const OccurrenceType = {
     },
     DOW_OF_YEAR: { name: 'DOW_OF_YEAR',
         hasOffset: true,
-        offsetMin: 1,
+        offsetMin: 0,
         hasDayOfWeek: true,
         allowedRepeatTypes: [
             'NO_REPEAT',
@@ -236,7 +238,7 @@ export const OccurrenceType = {
     },
     DOW_END_OF_YEAR: { name: 'DOW_END_OF_YEAR',
         hasOffset: true,
-        offsetMin: 1,
+        offsetMin: 0,
         hasDayOfWeek: true,
         isFromEnd: true,
         allowedRepeatTypes: [
@@ -711,12 +713,12 @@ function getNextYMDDate_DOW_OF_MONTH(definition, occurrenceType,
 
     if (refYMDDate) {
         const originalYMDDate = refYMDDate;
-        refYMDDate = getMonthNthDayOfWeek(refYMDDate, offset, dayOfWeek);
+        refYMDDate = getMonthNthDayOfWeek(refYMDDate, offset + 1, dayOfWeek);
         if (!isRepeat) {
             // If the new date is before the original one we need to advance a month.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addMonths(1);
-                refYMDDate = getMonthNthDayOfWeek(refYMDDate, offset, dayOfWeek);
+                refYMDDate = getMonthNthDayOfWeek(refYMDDate, offset + 1, dayOfWeek);
             }
         }        
     }
@@ -742,12 +744,12 @@ function getNextYMDDate_DOW_END_OF_MONTH(definition, occurrenceType,
 
     if (refYMDDate) {
         const originalYMDDate = refYMDDate;
-        refYMDDate = getMonthNthDayOfWeek(refYMDDate, -offset, dayOfWeek);
+        refYMDDate = getMonthNthDayOfWeek(refYMDDate, -offset - 1, dayOfWeek);
         if (!isRepeat) {
             // If the new date is before the original one we need to advance a month.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addMonths(1);
-                refYMDDate = getMonthNthDayOfWeek(refYMDDate, -offset, dayOfWeek);
+                refYMDDate = getMonthNthDayOfWeek(refYMDDate, -offset - 1, dayOfWeek);
             }
         }        
     }
@@ -837,12 +839,12 @@ function getNextYMDDate_DOW_OF_SPECIFIC_MONTH(definition, occurrenceType,
     if (refYMDDate) {
         const originalYMDDate = refYMDDate;
         refYMDDate = new YMDDate(refYMDDate.getFullYear(), month, 1);
-        refYMDDate = getMonthNthDayOfWeek(refYMDDate, offset, dayOfWeek);
+        refYMDDate = getMonthNthDayOfWeek(refYMDDate, offset + 1, dayOfWeek);
         if (!isRepeat) {
             // If the new date is before the original one we need to advance a year.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addYears(1);
-                refYMDDate = getMonthNthDayOfWeek(refYMDDate, offset, dayOfWeek);
+                refYMDDate = getMonthNthDayOfWeek(refYMDDate, offset + 1, dayOfWeek);
             }
         }        
     }
@@ -869,12 +871,12 @@ function getNextYMDDate_DOW_END_OF_SPECIFIC_MONTH(definition, occurrenceType,
     if (refYMDDate) {
         const originalYMDDate = refYMDDate;
         refYMDDate = new YMDDate(refYMDDate.getFullYear(), month, 1);
-        refYMDDate = getMonthNthDayOfWeek(refYMDDate, -offset, dayOfWeek);
+        refYMDDate = getMonthNthDayOfWeek(refYMDDate, -offset - 1, dayOfWeek);
         if (!isRepeat) {
             // If the new date is before the original one we need to advance a year.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addYears(1);
-                refYMDDate = getMonthNthDayOfWeek(refYMDDate, -offset, dayOfWeek);
+                refYMDDate = getMonthNthDayOfWeek(refYMDDate, -offset - 1, dayOfWeek);
             }
         }        
     }
@@ -964,12 +966,12 @@ function getNextYMDDate_DOW_OF_YEAR(definition, occurrenceType,
 
     if (refYMDDate) {
         const originalYMDDate = refYMDDate;
-        refYMDDate = getYearNthDayOfWeek(refYMDDate, offset, dayOfWeek);
+        refYMDDate = getYearNthDayOfWeek(refYMDDate, offset + 1, dayOfWeek);
         if (!isRepeat) {
             // If the new date is before the original one we need to advance a year.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addYears(1);
-                refYMDDate = getYearNthDayOfWeek(refYMDDate, offset, dayOfWeek);
+                refYMDDate = getYearNthDayOfWeek(refYMDDate, offset + 1, dayOfWeek);
             }
         }        
     }
@@ -995,12 +997,12 @@ function getNextYMDDate_DOW_END_OF_YEAR(definition, occurrenceType,
 
     if (refYMDDate) {
         const originalYMDDate = refYMDDate;
-        refYMDDate = getYearNthDayOfWeek(refYMDDate, -offset, dayOfWeek);
+        refYMDDate = getYearNthDayOfWeek(refYMDDate, -offset - 1, dayOfWeek);
         if (!isRepeat) {
             // If the new date is before the original one we need to advance a year.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addYears(1);
-                refYMDDate = getYearNthDayOfWeek(refYMDDate, -offset, dayOfWeek);
+                refYMDDate = getYearNthDayOfWeek(refYMDDate, -offset - 1, dayOfWeek);
             }
         }        
     }
