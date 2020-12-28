@@ -90,19 +90,20 @@ import { userError } from './UserMessages';
 export const OccurrenceType = {
     DAY_OF_WEEK: { name: 'DAY_OF_WEEK',
         hasDayOfWeek: true,
-        offsetMin: 0,
-        allowedRepeatTypes: [
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'WEEKLY',
         ],
         invalidRepeatTypesId: 'DateOccurrences-weekType_invalidRepeatType',
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DAY_OF_WEEK,
+        makeValidOccurrence: makeValid_DAY_OF_WEEK,
     },
     DAY_OF_MONTH: { name: 'DAY_OF_MONTH',
         hasOffset: true,
         offsetMin: 0,
-        allowedRepeatTypes: [
+        offsetMax: 30,
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'MONTHLY',
             'YEARLY',
@@ -110,12 +111,14 @@ export const OccurrenceType = {
         invalidRepeatTypesId: 'DateOccurrences-monthType_invalidRepeatType',
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DAY_OF_MONTH,
+        makeValidOccurrence: makeValid_DAY_OF_MONTH,
     },
     DAY_END_OF_MONTH: { name: 'DAY_END_OF_MONTH',
         hasOffset: true,
         offsetMin: 0,
+        offsetMax: 30,
         isFromEnd: true,
-        allowedRepeatTypes: [
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'MONTHLY',
             'YEARLY',
@@ -123,12 +126,14 @@ export const OccurrenceType = {
         invalidRepeatTypesId: 'DateOccurrences-monthType_invalidRepeatType',
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DAY_END_OF_MONTH,
+        makeValidOccurrence: makeValid_DAY_END_OF_MONTH,
     },
     DOW_OF_MONTH: { name: 'DOW_OF_MONTH',
         hasOffset: true,
         offsetMin: 0,
+        offsetMax: 4,
         hasDayOfWeek: true,
-        allowedRepeatTypes: [
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'MONTHLY',
             'YEARLY',
@@ -136,13 +141,15 @@ export const OccurrenceType = {
         invalidRepeatTypesId: 'DateOccurrences-monthType_invalidRepeatType',
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DOW_OF_MONTH,
+        makeValidOccurrence: makeValid_DOW_OF_MONTH,
     },
     DOW_END_OF_MONTH: { name: 'DOW_END_OF_MONTH',
         hasOffset: true,
         offsetMin: 0,
+        offsetMax: 4,
         hasDayOfWeek: true,
         isFromEnd: true,
-        allowedRepeatTypes: [
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'MONTHLY',
             'YEARLY',
@@ -150,109 +157,126 @@ export const OccurrenceType = {
         invalidRepeatTypesId: 'DateOccurrences-monthType_invalidRepeatType',
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DOW_END_OF_MONTH,
+        makeValidOccurrence: makeValid_DOW_END_OF_MONTH,
     },
     DAY_OF_SPECIFIC_MONTH: { name: 'DAY_OF_SPECIFIC_MONTH',
         hasOffset: true,
         offsetMin: 0,
+        offsetMax: 30,
         hasSpecificMonth: true,
-        allowedRepeatTypes: [
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'YEARLY',
         ],
         invalidRepeatTypesId: 'DateOccurrences-specificMonthType_invalidRepeatType',
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DAY_OF_SPECIFIC_MONTH,
+        makeValidOccurrence: makeValid_DAY_OF_SPECIFIC_MONTH,
     },
     DAY_END_OF_SPECIFIC_MONTH: { name: 'DAY_END_OF_SPECIFIC_MONTH',
         hasOffset: true,
         offsetMin: 0,
+        offsetMax: 30,
         isFromEnd: true,
         hasSpecificMonth: true,
-        allowedRepeatTypes: [
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'YEARLY',
         ],
         invalidRepeatTypesId: 'DateOccurrences-specificMonthType_invalidRepeatType',
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DAY_END_OF_SPECIFIC_MONTH,
+        makeValidOccurrence: makeValid_DAY_END_OF_SPECIFIC_MONTH,
     },
     DOW_OF_SPECIFIC_MONTH: { name: 'DOW_OF_SPECIFIC_MONTH',
         hasOffset: true,
         offsetMin: 0,
+        offsetMax: 4,
         hasDayOfWeek: true,
         hasSpecificMonth: true,
-        allowedRepeatTypes: [
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'YEARLY',
         ],
         invalidRepeatTypesId: 'DateOccurrences-specificMonthType_invalidRepeatType',
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DOW_OF_SPECIFIC_MONTH,
+        makeValidOccurrence: makeValid_DOW_OF_SPECIFIC_MONTH,
     },
     DOW_END_OF_SPECIFIC_MONTH: { name: 'DOW_END_OF_SPECIFIC_MONTH',
         hasOffset: true,
         offsetMin: 0,
+        offsetMax: 4,
         hasDayOfWeek: true,
         isFromEnd: true,
         hasSpecificMonth: true,
-        allowedRepeatTypes: [
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'YEARLY',
         ],
         invalidRepeatTypesId: 'DateOccurrences-specificMonthType_invalidRepeatType',
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DOW_END_OF_SPECIFIC_MONTH,
+        makeValidOccurrence: makeValid_DOW_END_OF_SPECIFIC_MONTH,
     },
     DAY_OF_YEAR: { name: 'DAY_OF_YEAR',
         hasOffset: true,
         offsetMin: 0,
-        allowedRepeatTypes: [
+        offsetMax: 365,
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'YEARLY',
         ],
         invalidRepeatTypesId: 'DateOccurrences-yearType_invalidRepeatType',
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DAY_OF_YEAR,
+        makeValidOccurrence: makeValid_DAY_OF_YEAR,
     },
     DAY_END_OF_YEAR: { name: 'DAY_END_OF_YEAR',
         hasOffset: true,
         offsetMin: 0,
+        offsetMax: 365,
         isFromEnd: true,
-        allowedRepeatTypes: [
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'YEARLY',
         ],
         invalidRepeatTypesId: 'DateOccurrences-yearType_invalidRepeatType',
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DAY_END_OF_YEAR,
+        makeValidOccurrence: makeValid_DAY_END_OF_YEAR,
     },
     DOW_OF_YEAR: { name: 'DOW_OF_YEAR',
         hasOffset: true,
         offsetMin: 0,
+        offsetMax: 52,
         hasDayOfWeek: true,
-        allowedRepeatTypes: [
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'YEARLY',
         ],
         invalidRepeatTypesId: 'DateOccurrences-yearType_invalidRepeatType',
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DOW_OF_YEAR,
+        makeValidOccurrence: makeValid_DOW_OF_YEAR,
     },
     DOW_END_OF_YEAR: { name: 'DOW_END_OF_YEAR',
         hasOffset: true,
         offsetMin: 0,
+        offsetMax: 52,
         hasDayOfWeek: true,
         isFromEnd: true,
-        allowedRepeatTypes: [
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'YEARLY',
         ],
         invalidRepeatTypesId: 'DateOccurrences-yearType_invalidRepeatType',
         validate: validateGeneralOccurrenceType,
         getNextYMDDate: getNextYMDDate_DOW_END_OF_YEAR,
+        makeValidOccurrence: makeValid_DOW_END_OF_YEAR,
     },
     ON_DATE: { name: 'ON_DATE',
-        allowedRepeatTypes: [
+        allowedRepeatTypeNames: [
             'NO_REPEAT',
             'DAILY',
             'WEEKLY',
@@ -261,6 +285,7 @@ export const OccurrenceType = {
         ],
         validate: validateOccurrenceType_ON_DATE,
         getNextYMDDate: getNextYMDDate_ON_DATE,
+        makeValidOccurrence: makeValid_ON_DATE,
     },
 };
 
@@ -294,9 +319,16 @@ function validateGeneralOccurrenceType(definition, occurrenceType) {
     if (occurrenceType.hasOffset) {
         const { offset } = definition;
         const offsetMin = occurrenceType.offsetMin || 0;
+        const offsetMax = (occurrenceType.offsetMax === undefined)
+            ? Number.MAX_SAFE_INTEGER : occurrenceType.offsetMax;
         if ((typeof offset !== 'number')
-         || (offset < offsetMin)) {
-            return userError('DateOccurrences-definition_offset_invalid', offsetMin);
+         || (offset < offsetMin) || (offset > offsetMax)) {
+            if (offsetMax === Number.MAX_SAFE_INTEGER) {
+                return userError('DateOccurrences-definition_offset_invalid_min', 
+                    offsetMin);
+            }
+            return userError('DateOccurrences-definition_offset_invalid_min_max', 
+                offsetMin, offsetMax);
         }
     }
 
@@ -317,12 +349,12 @@ function validateGeneralOccurrenceType(definition, occurrenceType) {
     }
 
     const { repeatDefinition } = definition;
-    const { allowedRepeatTypes } = occurrenceType;
-    if (allowedRepeatTypes && repeatDefinition) {
+    const { allowedRepeatTypeNames } = occurrenceType;
+    if (allowedRepeatTypeNames && repeatDefinition) {
         const { repeatType } = repeatDefinition;
         let isFound;
-        for (let i = 0; i < allowedRepeatTypes.length; ++i) {
-            if (allowedRepeatTypes[i] === repeatType.name) {
+        for (let i = 0; i < allowedRepeatTypeNames.length; ++i) {
+            if (allowedRepeatTypeNames[i] === repeatType.name) {
                 isFound = true;
             }
         }
@@ -348,6 +380,75 @@ function validateOccurrenceType_ON_DATE(definition, occurrenceType) {
     if (!YMDDate.isValidDate(getYMDDate(startYMDDate))) {
         return userError('DateOccurrences-definition_startYMDDate_required');
     }
+}
+
+
+//
+//---------------------------------------------------------
+//
+
+function makeValidDayOfWeek(definition, refYMDDate) {
+    const { dayOfWeek } = definition;
+    if ((typeof dayOfWeek !== 'number')
+     || (dayOfWeek < 0) || (dayOfWeek >= 7)) {
+        definition.dayOfWeek = refYMDDate.getDayOfWeek();
+    }
+}
+
+function makeValidMonth(definition, refYMDDate) {
+    const { month } = definition;
+    if ((typeof month !== 'number')
+     || (month < 0) || (month >= 12)) {
+        definition.month = refYMDDate.getMonth();
+    }
+}
+
+function isOffsetInRange(definition) {
+    const { occurrenceType } = definition;
+    let { offsetMin, offsetMax } = occurrenceType;
+    if (offsetMin === undefined) {
+        offsetMin = -Number.MAX_SAFE_INTEGER;
+    }
+    if (offsetMax === undefined) {
+        offsetMax = Number.MAX_SAFE_INTEGER;
+    }
+
+    const { offset } = definition;
+    return (typeof offset === 'number')
+     && (offset >= offsetMin) && (offset <= offsetMax);
+}
+
+function makeValidGeneralRepeatDefinition(repeatDefinition, allowedRepeatTypeNames) {
+    if (!repeatDefinition) {
+        return {
+            repeatType: OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        };
+    }
+
+    let isTypeValid;
+    const { repeatType } = repeatDefinition;
+    if (repeatType) {
+        const repeatTypeName = repeatType.name;
+        for (let i = 0; i < allowedRepeatTypeNames.length; ++i) {
+            if (repeatTypeName === allowedRepeatTypeNames[i]) {
+                isTypeValid = true;
+                break;
+            }
+        }
+    }
+
+    if (!isTypeValid) {
+        repeatDefinition.repeatType = OccurrenceRepeatType[
+            allowedRepeatTypeNames[0]];
+    }
+
+    const { period } = repeatDefinition;
+    if (!period || period < 0) {
+        repeatDefinition.period = 1;
+    }
+
+    return repeatDefinition;
 }
 
 
@@ -625,6 +726,10 @@ function getNextYMDDate_DAY_OF_WEEK(definition, occurrenceType,
     return getNextRepeatDefinitionYMDDate(repeatDefinition, refYMDDate, occurrenceCount);
 }
 
+function makeValid_DAY_OF_WEEK(definition, refYMDDate) {
+    makeValidDayOfWeek(definition, refYMDDate);
+}
+
 
 //
 //---------------------------------------------------------
@@ -665,6 +770,12 @@ function getNextYMDDate_DAY_OF_MONTH(definition, occurrenceType,
     return refYMDDate;
 }
 
+function makeValid_DAY_OF_MONTH(definition, refYMDDate) {
+    if (!isOffsetInRange(definition)) {
+        definition.offset = refYMDDate.getDOM() - 1;
+    }
+}
+
 
 //
 //---------------------------------------------------------
@@ -698,6 +809,12 @@ function getNextYMDDate_DAY_END_OF_MONTH(definition, occurrenceType,
     return refYMDDate;
 }
 
+function makeValid_DAY_END_OF_MONTH(definition, refYMDDate) {
+    if (!isOffsetInRange(definition)) {
+        definition.offset = refYMDDate.getLastDateOfMonth() - refYMDDate.getDOM();
+    }
+}
+
 
 //
 //---------------------------------------------------------
@@ -727,6 +844,13 @@ function getNextYMDDate_DOW_OF_MONTH(definition, occurrenceType,
     }
 
     return refYMDDate;
+}
+
+function makeValid_DOW_OF_MONTH(definition, refYMDDate) {
+    makeValidDayOfWeek(definition, refYMDDate);
+    if (!isOffsetInRange(definition)) {
+        definition.offset = Math.round((refYMDDate.getDOM() - 1) / 7);
+    }
 }
 
 
@@ -760,6 +884,14 @@ function getNextYMDDate_DOW_END_OF_MONTH(definition, occurrenceType,
     return refYMDDate;
 }
 
+function makeValid_DOW_END_OF_MONTH(definition, refYMDDate) {
+    makeValidDayOfWeek(definition, refYMDDate);
+    if (!isOffsetInRange(definition)) {
+        definition.offset = Math.round(
+            (refYMDDate.getLastDateOfMonth() - refYMDDate.getDOM()) / 7);
+    }
+}
+
 
 //
 //---------------------------------------------------------
@@ -789,6 +921,14 @@ function getNextYMDDate_DAY_OF_SPECIFIC_MONTH(definition, occurrenceType,
     }
 
     return refYMDDate;
+}
+
+function makeValid_DAY_OF_SPECIFIC_MONTH(definition, refYMDDate) {
+    if (!isOffsetInRange(definition)) {
+        definition.offset = refYMDDate.getDOM() - 1;
+    }
+
+    makeValidMonth(definition, refYMDDate);
 }
 
 
@@ -823,6 +963,14 @@ function getNextYMDDate_DAY_END_OF_SPECIFIC_MONTH(definition, occurrenceType,
     return refYMDDate;
 }
 
+function makeValid_DAY_END_OF_SPECIFIC_MONTH(definition, refYMDDate) {
+    if (!isOffsetInRange(definition)) {
+        definition.offset = refYMDDate.getLastDateOfMonth() - refYMDDate.getDOM();
+    }
+
+    makeValidMonth(definition, refYMDDate);
+}
+
 
 //
 //---------------------------------------------------------
@@ -853,6 +1001,15 @@ function getNextYMDDate_DOW_OF_SPECIFIC_MONTH(definition, occurrenceType,
     }
 
     return refYMDDate;
+}
+
+function makeValid_DOW_OF_SPECIFIC_MONTH(definition, refYMDDate) {
+    makeValidDayOfWeek(definition, refYMDDate);
+    if (!isOffsetInRange(definition)) {
+        definition.offset = Math.round((refYMDDate.getDOM() - 1) / 7);
+    }
+
+    makeValidMonth(definition, refYMDDate);
 }
 
 
@@ -887,6 +1044,16 @@ function getNextYMDDate_DOW_END_OF_SPECIFIC_MONTH(definition, occurrenceType,
     return refYMDDate;
 }
 
+function makeValid_DOW_END_OF_SPECIFIC_MONTH(definition, refYMDDate) {
+    makeValidDayOfWeek(definition, refYMDDate);
+    if (!isOffsetInRange(definition)) {
+        definition.offset = Math.round(
+            (refYMDDate.getLastDateOfMonth() - refYMDDate.getDOM()) / 7);
+    }
+
+    makeValidMonth(definition, refYMDDate);
+}
+
 
 //
 //---------------------------------------------------------
@@ -917,6 +1084,13 @@ function getNextYMDDate_DAY_OF_YEAR(definition, occurrenceType,
     }
 
     return refYMDDate;
+}
+
+function makeValid_DAY_OF_YEAR(definition, refYMDDate) {
+    if (!isOffsetInRange(definition)) {
+        definition.offset = new YMDDate(refYMDDate.getFullYear(), 0, 1)
+            .daysAfterMe(refYMDDate);
+    }
 }
 
 
@@ -951,6 +1125,13 @@ function getNextYMDDate_DAY_END_OF_YEAR(definition, occurrenceType,
     return refYMDDate;
 }
 
+function makeValid_DAY_END_OF_YEAR(definition, refYMDDate) {
+    if (!isOffsetInRange(definition)) {
+        definition.offset = refYMDDate
+            .daysAfterMe(new YMDDate(refYMDDate.getFullYear(), 11, 31));
+    }
+}
+
 
 //
 //---------------------------------------------------------
@@ -980,6 +1161,15 @@ function getNextYMDDate_DOW_OF_YEAR(definition, occurrenceType,
     }
 
     return refYMDDate;
+}
+
+function makeValid_DOW_OF_YEAR(definition, refYMDDate) {
+    makeValidDayOfWeek(definition, refYMDDate);
+    if (!isOffsetInRange(definition)) {
+        definition.offset = Math.round(
+            new YMDDate(refYMDDate.getFullYear(), 0, 1)
+                .daysAfterMe(refYMDDate) / 7);
+    }
 }
 
 
@@ -1013,6 +1203,15 @@ function getNextYMDDate_DOW_END_OF_YEAR(definition, occurrenceType,
     return refYMDDate;
 }
 
+function makeValid_DOW_END_OF_YEAR(definition, refYMDDate) {
+    makeValidDayOfWeek(definition, refYMDDate);
+    if (!isOffsetInRange(definition)) {
+        definition.offset = Math.round(refYMDDate
+            .daysAfterMe(new YMDDate(refYMDDate.getFullYear(), 11, 31)) / 7);
+    }
+}
+
+
 //
 //---------------------------------------------------------
 //
@@ -1032,6 +1231,14 @@ function getNextYMDDate_ON_DATE(definition, occurrenceType,
     return getNextRepeatDefinitionYMDDate(repeatDefinition, 
         startYMDDate, occurrenceCount, occurrenceCount);
 }
+
+function makeValid_ON_DATE(definition, refYMDDate) {
+    const { startYMDDate } = definition;
+    if (!YMDDate.isValidDate(getYMDDate(startYMDDate))) {
+        definition.startYMDDate = refYMDDate;
+    }
+}
+
 
 /**
  * @typedef {object} DateOccurrenceDefinition
@@ -1141,6 +1348,52 @@ export function validateDateOccurrenceDefinition(definition) {
     }
 
     return result;
+}
+
+
+/**
+ * Adjusts an occurrence definition as necessary so it is valid based on
+ * the occurrence type. If the occurrence type is not valid it is set
+ * to DAY_OF_MONTH.
+ * @param {DateOccurrenceDefinition|DateOccurrenceDefinitionDataItem} definition 
+ * @param {YMDDate|string} [refYMDDate] Date used to obtain default values.
+ * @returns {DateOccurrenceDefinition|DateOccurrenceDefinitionDataItem}
+ */
+export function makeValidDateOccurrenceDefinition(definition, refYMDDate) {
+    if (!definition) {
+        definition = {
+            occurrenceType: OccurrenceType.DAY_OF_MONTH,
+        };
+    }
+    else {
+        if (!validateDateOccurrenceDefinition(definition)) {
+            return definition;
+        }
+    }
+
+    const originalDefinition = definition;
+    definition = getDateOccurrenceDefinition(definition);
+
+    let occurrenceType = getOccurrenceType(definition.occurrenceType);
+    if (!occurrenceType) {
+        occurrenceType = definition.occurrenceType = OccurrenceType.DAY_OF_MONTH;
+    }
+
+    refYMDDate = getYMDDate(refYMDDate);
+    if (!YMDDate.isValidDate(refYMDDate)) {
+        refYMDDate = new YMDDate();
+    }
+
+    occurrenceType.makeValidOccurrence(definition, refYMDDate);
+    
+    definition.repeatDefinition = makeValidGeneralRepeatDefinition(
+        definition.repeatDefinition, 
+        occurrenceType.allowedRepeatTypeNames);
+
+    // Return the same object type as the original definition.
+    return (originalDefinition === definition) 
+        ? definition
+        : getDateOccurrenceDefinitionDataItem(definition);
 }
 
 

@@ -135,7 +135,8 @@
     "DateOccurrences-yearType_invalidRepeatType": "Yearly occurrences can only be repeated on a yearly basis.",
 
     "DateOccurrences-occurrenceType_invalid": "The occurrence type is not valid.",
-    "DateOccurrences-definition_offset_invalid": ["The occurrence type requires a numerical offset >= ", "."],
+    "DateOccurrences-definition_offset_invalid_min": ["The occurrence type requires a numerical offset >= ", "."],
+    "DateOccurrences-definition_offset_invalid_min_max": ["The occurrence type requires a numerical offset >= ", " and <= ", "."],
     "DateOccurrences-definition_dayOfWeek_invalid": "The occurrence type requires a valid day of the week.",
     "DateOccurrences-definition_month_invalid": "The occurrence type requires a valid month.",
     "DateOccurrences-definition_startYMDDate_invalid": "The start date is not a valid date.",

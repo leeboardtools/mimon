@@ -375,6 +375,66 @@ test('DateOccurrences-DAY_OF_WEEK', () => {
 
 
     //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_WEEK,
+        dayOfWeek: 2,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.WEEKLY,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_WEEK,
+        dayOfWeek: 2,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.WEEKLY,
+            period: 5,
+        },
+    });
+
+    // Invalid settings...
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_WEEK,
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_WEEK,
+        dayOfWeek: 4,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        }
+    });
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_WEEK,
+        dayOfWeek: 7,
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_WEEK,
+        dayOfWeek: 4,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        }
+    });
+
+    // Invalid repeat definition
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_WEEK,
+        dayOfWeek: 6,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY,
+        }
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_WEEK,
+        dayOfWeek: 6,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        }
+    });
+
+
+    //
     // Next Date
     let result;
     const A = {
@@ -569,6 +629,55 @@ test('DateOccurrences-DAY_OF_MONTH', () => {
     })).toBeUndefined();
 
 
+    //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_MONTH.name,
+        offset: 5,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_MONTH.name,
+        offset: 5,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
+            period: 5,
+        },
+    });
+
+    // All defaults
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_MONTH,
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_MONTH,
+        offset: 9,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid offset, repeat type
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_MONTH,
+        offset: 31,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.WEEKLY,
+            period: 2,
+        }
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_MONTH,
+        offset: 9,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 2,
+        },
+    });
+
 
     //
     // Next Date
@@ -732,6 +841,56 @@ test('DateOccurrences-DAY_END_OF_MONTH', () => {
             period: 123,
         },
     })).toBeUndefined();
+
+
+    //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_MONTH.name,
+        offset: 30,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_MONTH.name,
+        offset: 30,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
+            period: 5,
+        },
+    });
+
+    // All defaults
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_MONTH,
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_MONTH,
+        offset: 21,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid offset, period
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_MONTH,
+        offset: 31,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY,
+            period: 0,
+        }
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_MONTH,
+        offset: 21,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY,
+            period: 1,
+        },
+    });
 
 
 
@@ -946,6 +1105,59 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
     })).toBeUndefined();
 
 
+    //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_OF_MONTH.name,
+        offset: 4,
+        dayOfWeek: 2,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_OF_MONTH.name,
+        offset: 4,
+        dayOfWeek: 2,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
+            period: 5,
+        },
+    });
+
+    // All defaults
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_OF_MONTH,
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_OF_MONTH,
+        offset: 1,
+        dayOfWeek: 4,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid offset
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_OF_MONTH,
+        offset: 5,
+        dayOfWeek: 2,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.WEEKLY,
+        }
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_OF_MONTH,
+        offset: 1,
+        dayOfWeek: 2,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
 
     //
     // Next Date
@@ -1125,6 +1337,78 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
 
 
     //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH.name,
+        offset: 4,
+        dayOfWeek: 2,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH.name,
+        offset: 4,
+        dayOfWeek: 2,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
+            period: 5,
+        },
+    });
+
+    // All defaults
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH,
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH,
+        offset: 3,
+        dayOfWeek: 4,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid offset
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH,
+        offset: 5,
+        dayOfWeek: 6,
+        repeatDefinition: {
+            period: 8,
+        }
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH,
+        offset: 3,
+        dayOfWeek: 6,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 8,
+        },
+    });
+
+    // Invalid dow
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH,
+        offset: 2,
+        dayOfWeek: 7,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY,
+            period: 8,
+        }
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH,
+        offset: 2,
+        dayOfWeek: 4,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY,
+            period: 8,
+        },
+    });
+
+    //
     // Next Date
     let result;
     const A = {
@@ -1297,6 +1581,76 @@ test('DateOccurrences-DAY_OF_SPECIFIC_MONTH', () => {
             period: 123,
         },
     })).toBeUndefined();
+
+
+    //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_SPECIFIC_MONTH.name,
+        offset: 4,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_SPECIFIC_MONTH.name,
+        offset: 4,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    });
+
+    // All defaults
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_SPECIFIC_MONTH,
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_SPECIFIC_MONTH,
+        offset: 9,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid offset
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_SPECIFIC_MONTH,
+        offset: 31,
+        month: 10,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_SPECIFIC_MONTH,
+        offset: 9,
+        month: 10,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 5,
+        },
+    });
+
+    // Invalid month
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_SPECIFIC_MONTH,
+        offset: 5,
+        month: 12,
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_SPECIFIC_MONTH,
+        offset: 5,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
 
 
     //
@@ -1544,6 +1898,80 @@ test('DateOccurrences-DAY_END_OF_SPECIFIC_MONTH', () => {
 
 
     //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_SPECIFIC_MONTH.name,
+        offset: 4,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_SPECIFIC_MONTH.name,
+        offset: 4,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    });
+
+    // All defaults
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_SPECIFIC_MONTH,
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_SPECIFIC_MONTH,
+        offset: 21,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid offset.
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_SPECIFIC_MONTH,
+        offset: 31,
+        month: 10,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY,
+            period: 3,
+        }
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_SPECIFIC_MONTH,
+        offset: 21,
+        month: 10,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 3,
+        },
+    });
+
+    // Invalid month.
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_SPECIFIC_MONTH,
+        offset: 21,
+        month: 12,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY,
+            period: 3,
+        }
+    }, '2020-10-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_SPECIFIC_MONTH,
+        offset: 21,
+        month: 9,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 3,
+        },
+    });
+
+
+    //
     // Next Date
     let result;
     const A = {
@@ -1778,6 +2206,85 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
 
 
     //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH.name,
+        offset: 4,
+        dayOfWeek: 6,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH.name,
+        offset: 4,
+        dayOfWeek: 6,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    });
+
+    // All defaults
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH,
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH,
+        offset: 1,
+        dayOfWeek: 4,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid dow
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH,
+        offset: 3,
+        dayOfWeek: 7,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.WEEKLY,
+        }
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH,
+        offset: 3,
+        dayOfWeek: 4,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid month
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH,
+        offset: 5,
+        dayOfWeek: 7,
+        month: 12,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.WEEKLY,
+        }
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH,
+        offset: 1,
+        dayOfWeek: 4,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+
+    //
     // Next Date
     let result;
     const A = {
@@ -1979,6 +2486,87 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
 
 
     //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH.name,
+        offset: 4,
+        dayOfWeek: 6,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH.name,
+        offset: 4,
+        dayOfWeek: 6,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    });
+
+    // All defaults
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH,
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH,
+        offset: 3,
+        dayOfWeek: 4,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid dow
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH,
+        offset: 4,
+        dayOfWeek: 7,
+        month: 10,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY,
+            period: 5,
+        }
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH,
+        offset: 4,
+        dayOfWeek: 4,
+        month: 10,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 5,
+        },
+    });
+
+    // Invalid offset, month
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH,
+        offset: 5,
+        dayOfWeek: 2,
+        month: 12,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY,
+            period: 5,
+        }
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH,
+        offset: 3,
+        dayOfWeek: 2,
+        month: 11,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 5,
+        },
+    });
+
+
+    //
     // Next Date
     let result;
     const A = {
@@ -2147,6 +2735,56 @@ test('DateOccurrences-DAY_OF_YEAR', () => {
 
 
     //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_YEAR.name,
+        offset: 365,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_YEAR.name,
+        offset: 365,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    });
+
+    // All defaults
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_YEAR,
+    }, '2020-03-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_YEAR,
+        offset: 69,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid offset.
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_OF_YEAR,
+        offset: 366,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY,
+            period: 10,
+        }
+    }, '2020-03-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_OF_YEAR,
+        offset: 69,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 10,
+        },
+    });
+
+
+    //
     // Next Date
     let result;
     const A = {
@@ -2309,6 +2947,56 @@ test('DateOccurrences-DAY_END_OF_YEAR', () => {
             period: 123,
         },
     })).toBeUndefined();
+
+
+    //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_YEAR.name,
+        offset: 365,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_YEAR.name,
+        offset: 365,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    });
+
+    // All defaults
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_YEAR,
+    }, '2020-03-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_YEAR,
+        offset: 296,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid offset
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_YEAR,
+        offset: 366,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY,
+            period: 12,
+        },
+    }, '2020-03-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DAY_END_OF_YEAR,
+        offset: 296,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY,
+            period: 12,
+        },
+    });
 
 
     //
@@ -2493,6 +3181,80 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
             period: 123,
         },
     })).toBeUndefined();
+
+
+    //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_OF_YEAR.name,
+        offset: 52,
+        dayOfWeek: 6,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_OF_YEAR.name,
+        offset: 52,
+        dayOfWeek: 6,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    });
+
+    // All defaults
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_OF_YEAR,
+    }, '2021-01-30')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_OF_YEAR,
+        offset: 4,
+        dayOfWeek: 6,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid offset.
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_OF_YEAR,
+        offset: 53,
+        dayOfWeek: 0,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY,
+            period: 3,
+        }
+    }, '2021-01-30')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_OF_YEAR,
+        offset: 4,
+        dayOfWeek: 0,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 3,
+        },
+    });
+
+    // Invalid dow
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_OF_YEAR,
+        offset: 5,
+        dayOfWeek: 7,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.DAILY,
+            period: 3,
+        }
+    }, '2021-01-30')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_OF_YEAR,
+        offset: 5,
+        dayOfWeek: 6,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 3,
+        },
+    });
 
 
     //
@@ -2710,6 +3472,76 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
 
 
     //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR.name,
+        offset: 52,
+        dayOfWeek: 6,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR.name,
+        offset: 52,
+        dayOfWeek: 6,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 5,
+        },
+    });
+
+    // All defaults
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR,
+    }, '2020-12-02')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR,
+        offset: 4,
+        dayOfWeek: 3,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid offset.
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR,
+        offset: 53,
+        dayOfWeek: 0,
+    }, '2020-12-02')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR,
+        offset: 4,
+        dayOfWeek: 0,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 1,
+        },
+    });
+
+    // Invalid dow
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR,
+        offset: 0,
+        dayOfWeek: 7,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.DAILY,
+            period: 5,
+        }
+    }, '2020-12-02')).toEqual({
+        occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR,
+        offset: 0,
+        dayOfWeek: 3,
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+            period: 5,
+        },
+    });
+
+
+    //
     // Next Date
     let result;
     const A = {
@@ -2862,6 +3694,57 @@ test('DateOccurrences-ON_DATE', () => {
             period: -123,
         },
     })).toBeInstanceOf(Error);
+
+
+    //
+    // Make valid
+
+    // All valid
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.ON_DATE.name,
+        startYMDDate: '2020-01-02',
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.DAILY.name,
+            period: 5,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.ON_DATE.name,
+        startYMDDate: '2020-01-02',
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.DAILY.name,
+            period: 5,
+        },
+    });
+
+    // All defaults
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.ON_DATE.name,
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.ON_DATE.name,
+        startYMDDate: '2020-12-10',
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.NO_REPEAT.name,
+            period: 1,
+        },
+    });
+
+    // Invalid date
+    expect(DO.makeValidDateOccurrenceDefinition({
+        occurrenceType: DO.OccurrenceType.ON_DATE.name,
+        startYMDDate: 'abc2020-12-32',
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 10,
+        },
+    }, '2020-12-10')).toEqual({
+        occurrenceType: DO.OccurrenceType.ON_DATE.name,
+        startYMDDate: '2020-12-10',
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.YEARLY.name,
+            period: 10,
+        },
+    });
+    
 
     //
     // Next Date
