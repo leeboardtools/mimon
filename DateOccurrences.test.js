@@ -882,21 +882,14 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
     // Validation
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_MONTH,
-        offset: 1,
-        dayOfWeek: 0,
-    })).toBeUndefined();
-
-    // Invalid offset
-    expect(DO.validateDateOccurrenceDefinition({
-        occurrenceType: DO.OccurrenceType.DOW_OF_MONTH,
         offset: 0,
         dayOfWeek: 0,
-    })).toBeInstanceOf(Error);
+    })).toBeUndefined();
 
     // Missing dayOfWeek
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_MONTH,
-        offset: 1,
+        offset: 0,
     })).toBeInstanceOf(Error);
 
     // Missing offset & dayOfWeek
@@ -906,7 +899,7 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_MONTH,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 7,
     })).toBeInstanceOf(Error);
 
@@ -914,7 +907,7 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
     // Validate repeat type
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.NO_REPEAT.name,
@@ -924,7 +917,7 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.WEEKLY.name,
@@ -934,7 +927,7 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
@@ -944,7 +937,7 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.YEARLY.name,
@@ -959,7 +952,7 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
     let result;
     const A = {
         occurrenceType: DO.OccurrenceType.DOW_OF_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 1,
     };
     // Before first dow
@@ -999,7 +992,7 @@ test('DateOccurrences-DOW_OF_MONTH', () => {
     // With repeat
     const B = {
         occurrenceType: DO.OccurrenceType.DOW_OF_MONTH,
-        offset: 2,
+        offset: 1,
         dayOfWeek: 3,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.MONTHLY,
@@ -1060,27 +1053,21 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
     // Validation
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
     })).toBeUndefined();
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 6,
     })).toBeUndefined();
 
-    // Invalid offset
-    expect(DO.validateDateOccurrenceDefinition({
-        occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH,
-        offset: 0,
-        dayOfWeek: 1,
-    })).toBeInstanceOf(Error);
 
     // Missing dayOfWeek
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH,
-        offset: 1,
+        offset: 0,
     })).toBeInstanceOf(Error);
 
     // Missing dayOfWeek, offset
@@ -1090,7 +1077,7 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 7,
     })).toBeInstanceOf(Error);
 
@@ -1098,7 +1085,7 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
     // Validate repeat type
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.NO_REPEAT.name,
@@ -1108,7 +1095,7 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.WEEKLY.name,
@@ -1118,7 +1105,7 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
@@ -1128,7 +1115,7 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.YEARLY.name,
@@ -1142,7 +1129,7 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
     let result;
     const A = {
         occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 2,
     };
     // After last dow
@@ -1182,7 +1169,7 @@ test('DateOccurrences-DOW_END_OF_MONTH', () => {
     // With repeat definition...
     const B = {
         occurrenceType: DO.OccurrenceType.DOW_END_OF_MONTH,
-        offset: 2,
+        offset: 1,
         dayOfWeek: 3,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.MONTHLY,
@@ -1709,13 +1696,13 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
     // Validation
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         month: 0,
     })).toBeUndefined();
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 6,
         month: 11,
     })).toBeUndefined();
@@ -1731,14 +1718,14 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 7,
         month: 11,
     })).toBeInstanceOf(Error);
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 6,
         month: 12,
     })).toBeInstanceOf(Error);
@@ -1747,7 +1734,7 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
     // Validate repeat type
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 1,
         month: 11,
         repeatDefinition: {
@@ -1758,7 +1745,7 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 1,
         month: 11,
         repeatDefinition: {
@@ -1769,7 +1756,7 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 1,
         month: 11,
         repeatDefinition: {
@@ -1780,7 +1767,7 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 1,
         month: 11,
         repeatDefinition: {
@@ -1795,7 +1782,7 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
     let result;
     const A = {
         occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH.name,
-        offset: 2,  // 2nd 
+        offset: 1,  // 2nd 
         dayOfWeek: 3, // 
         month: 1,   // February
     };
@@ -1847,7 +1834,7 @@ test('DateOccurrences-DOW_OF_SPECIFIC_MONTH', () => {
     // With repeat definition...
     const B = {
         occurrenceType: DO.OccurrenceType.DOW_OF_SPECIFIC_MONTH.name,
-        offset: 5,
+        offset: 4,
         dayOfWeek: 6,
         month: 1,   // February
         repeatDefinition: {
@@ -1910,13 +1897,13 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
     // Validation
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         month: 0,
     })).toBeUndefined();
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 6,
         month: 11,
     })).toBeUndefined();
@@ -1932,14 +1919,14 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 7,
         month: 11,
     })).toBeInstanceOf(Error);
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 6,
         month: 12,
     })).toBeInstanceOf(Error);
@@ -1948,7 +1935,7 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
     // Validate repeat type
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 1,
         month: 11,
         repeatDefinition: {
@@ -1959,7 +1946,7 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 1,
         month: 11,
         repeatDefinition: {
@@ -1970,7 +1957,7 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 1,
         month: 11,
         repeatDefinition: {
@@ -1981,7 +1968,7 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 1,
         month: 11,
         repeatDefinition: {
@@ -1996,7 +1983,7 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
     let result;
     const A = {
         occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH.name,
-        offset: 2, 
+        offset: 1, 
         dayOfWeek: 3, // 
         month: 1,   // February
     };
@@ -2048,7 +2035,7 @@ test('DateOccurrences-DOW_END_OF_SPECIFIC_MONTH', () => {
     // with repeat definition
     const B = {
         occurrenceType: DO.OccurrenceType.DOW_END_OF_SPECIFIC_MONTH.name,
-        offset: 3, 
+        offset: 2, 
         dayOfWeek: 0,   // Sunday
         month: 1,   // February
         repeatDefinition: {
@@ -2440,13 +2427,13 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
     // Validation
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_YEAR,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
     })).toBeUndefined();
     
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_YEAR,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 6,
     })).toBeUndefined();
 
@@ -2461,7 +2448,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_YEAR,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 7,
     })).toBeInstanceOf(Error);
 
@@ -2469,7 +2456,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
     // Validate repeat type
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_YEAR.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.NO_REPEAT.name,
@@ -2479,7 +2466,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_YEAR.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.WEEKLY.name,
@@ -2489,7 +2476,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_YEAR.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
@@ -2499,7 +2486,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_OF_YEAR.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.YEARLY.name,
@@ -2513,7 +2500,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
     let result;
     const A = {
         occurrenceType: DO.OccurrenceType.DOW_OF_YEAR.name,
-        offset: 3,
+        offset: 2,
         dayOfWeek: 4,
     };
 
@@ -2563,7 +2550,7 @@ test('DateOccurrences-DOW_OF_YEAR', () => {
     // With repeat definition...
     const B = {
         occurrenceType: DO.OccurrenceType.DOW_OF_YEAR.name,
-        offset: 2,
+        offset: 1,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.YEARLY,
@@ -2624,13 +2611,13 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
     // Validation
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
     })).toBeUndefined();
     
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 6,
     })).toBeUndefined();
 
@@ -2645,7 +2632,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 7,
     })).toBeInstanceOf(Error);
 
@@ -2654,13 +2641,13 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
     // Validation
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
     })).toBeUndefined();
     
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 6,
     })).toBeUndefined();
 
@@ -2675,7 +2662,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 7,
     })).toBeInstanceOf(Error);
 
@@ -2683,7 +2670,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
     // Validate repeat type
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.NO_REPEAT.name,
@@ -2693,7 +2680,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.WEEKLY.name,
@@ -2703,7 +2690,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.MONTHLY.name,
@@ -2713,7 +2700,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR.name,
-        offset: 1,
+        offset: 0,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.YEARLY.name,
@@ -2727,7 +2714,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
     let result;
     const A = {
         occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR.name,
-        offset: 3,
+        offset: 2,
         dayOfWeek: 6,
     };
 
@@ -2777,7 +2764,7 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
     // With repeat definition
     const B = {
         occurrenceType: DO.OccurrenceType.DOW_END_OF_YEAR.name,
-        offset: 3,
+        offset: 2,
         dayOfWeek: 0,
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.YEARLY,
