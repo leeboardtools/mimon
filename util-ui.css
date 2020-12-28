@@ -116,9 +116,15 @@
 }
 /** End util-ui/CurrencyyDisplay.jsx */
 
-
-.DateOccurrenceEditor-DayOfYearEditor, .DateOccurrenceEditor-DayEndOfYearEditor {
+.DateField-editor {
+    text-align: center;
     max-width: 8rem;
+}
+
+.DateOccurrenceEditor-NumberField {
+    max-width: 8rem;
+    text-align: right;
+    padding-right: .25rem;
 }
 
 
@@ -183,14 +189,24 @@ that's on the same line */
     padding-left: 2rem;
 }
 
-/** For putting space after a Field component */
+/** For putting wide space after a Field component */
 .Field-postIndent {
     padding-right: 2rem;
+}
+
+/** For putting a single space after a Field component */
+.Field-postSpace {
+    padding-right: 1rem;
 }
 
 /** For a container of Field components on the same line **/
 .FieldContainer-inline {
     display: flex !important;
+}
+
+/** For edit boxes in a field */
+.Field-editor {
+    height: calc(1.5em + .75rem + 2px);
 }
 
 
