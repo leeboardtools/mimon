@@ -39,13 +39,6 @@ export const DateField = React.forwardRef(
     }
 );
 
-/**
- * @callback DateField~onChange
- * @param {Event} e The change event. e.target.value is the entered text if the
- * text is not a valid number.
- * @param {number} newValue The number entered, if the text entered was not a valid
- * number this is NaN.
- */
 
 
 /**
@@ -60,7 +53,8 @@ export const DateField = React.forwardRef(
  * classes to add to the &lt;input&gt; entity.
  * @property {string}   [errorMsg]  If specified an error message to be displayed
  * below the input box.
- * @property {DateField~onChange} [onChange]  onChange event handler.
+ * @property {CellDateEditor~onChange} [onChange]  onChange callback. Note the arg
+ * is the modified date string.
  * @property {function} [onFocus]   onFocus event handler
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onfocus}.
  * @property {function} [onBlur]    onBlur event handler
