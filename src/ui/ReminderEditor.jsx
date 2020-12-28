@@ -9,7 +9,10 @@ import { TextField } from '../util-ui/TextField';
 import deepEqual from 'deep-equal';
 import * as R from '../engine/Reminders';
 import * as T from '../engine/Transactions';
+import * as DO from '../util/DateOccurrences';
 import { SeparatorBar } from '../util-ui/SeparatorBar';
+import { DateOccurrenceEditor } from '../util-ui/DateOccurrenceEditor';
+import { YMDDate } from '../util/YMDDate';
 
 
 class TransactionTemplateEditor extends React.Component {
@@ -47,6 +50,7 @@ export class ReminderEditor extends React.Component {
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onEnabledChanged = this.onEnabledChanged.bind(this);
         this.onTransactionTemplateChange = this.onTransactionTemplateChange.bind(this);
+        this.onOccurrenceChange = this.onOccurrenceChange.bind(this);
 
         this.setErrorMsg = this.setErrorMsg.bind(this);
 
@@ -59,7 +63,20 @@ export class ReminderEditor extends React.Component {
             reminderDataItem = accessor.getReminderDataItemWithId(reminderId);
         }
         else {
+            const today = new YMDDate();
             reminderDataItem.isEnabled = true;
+            reminderDataItem.occurrenceDefinition = {
+                occurrenceType: DO.OccurrenceType.DAY_OF_MONTH,
+                offset: today.getDOM() - 1,
+                dayOfWeek: today.getDayOfWeek(),
+                month: today.getMonth(),
+                startYMDDate: today,
+                repeatDefinition: {
+                    repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
+                    period: 1,
+                },
+            };
+            reminderDataItem.lastOccurrenceState = {};
         }
 
         this.state = {
@@ -276,8 +293,34 @@ export class ReminderEditor extends React.Component {
     }
 
 
-    renderDateOccurrenceEditor() {
+    onOccurrenceChange({ occurrenceDefinition: occurrenceDefinitionChanges, 
+        lastOccurrenceState: lastOccurrenceStateChanges }) {
+        const { reminderDataItem } = this.state;
+        let { occurrenceDefinition, lastOccurrenceState } = reminderDataItem;
+        if (occurrenceDefinitionChanges) {
+            occurrenceDefinition = Object.assign({}, occurrenceDefinition, 
+                occurrenceDefinitionChanges);
+        }
+        if (lastOccurrenceStateChanges) {
+            lastOccurrenceState = Object.assign({}, lastOccurrenceState,
+                lastOccurrenceStateChanges);
+        }
 
+        this.updateReminderDataItem({
+            occurrenceDefinition: occurrenceDefinition,
+            lastOccurrenceState: lastOccurrenceState,
+        });
+    }
+
+    renderDateOccurrenceEditor() {
+        const { reminderDataItem } = this.state;
+        const { occurrenceDefinition, lastOccurrenceState } = reminderDataItem;
+        return <DateOccurrenceEditor
+            id = "ReminderEditor-OccurrenceEditor"
+            occurrenceDefinition = {occurrenceDefinition}
+            lastOccurrenceState = {lastOccurrenceState}
+            onChange = {this.onOccurrenceChange}
+        />;
     }
 
 

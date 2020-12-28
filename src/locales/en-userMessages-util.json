@@ -25,6 +25,79 @@
     "DateOccurrenceEditor-typeSelector_DOW_OF_YEAR": "Day of the week of the year",
     "DateOccurrenceEditor-typeSelector_DOW_END_OF_YEAR": "Day of the week from the end of the year",
     "DateOccurrenceEditor-typeSelector_ON_DATE": "On this date",
+
+    "DateOccurrenceEditor-DAY_OF_WEEK_dayOfWeekSelector_prefix": "On ",
+    "DateOccurrenceEditor-DAY_OF_WEEK_dayOfWeekSelector_suffix": "",
+
+    "DateOccurrenceEditor-DAY_OF_MONTH_dayOfMonthSelector_prefix": "On the ",
+    "DateOccurrenceEditor-DAY_OF_MONTH_dayOfMonthSelector_suffix": " day of the month",
+
+    "DateOccurrenceEditor-dayEndOfMonthSelector_last": "last",
+    "DateOccurrenceEditor-dayEndOfMonthSelector_fromLast": ["", " to last"],
+
+    "DateOccurrenceEditor-dowEndOffsetSelector_last": "last",
+    "DateOccurrenceEditor-dowEndOffsetSelector_fromLast": ["", " from last"],
+
+    "DateOccurrenceEditor-DAY_END_OF_MONTH_dayEndOfMonthSelector_prefix": "On the ",
+    "DateOccurrenceEditor-DAY_END_OF_MONTH_dayEndOfMonthSelector_suffix": " day of the month",
+
+    "DateOccurrenceEditor-DOW_OF_MONTH_dowOffsetSelector_prefix": "On the ",
+    "DateOccurrenceEditor-DOW_OF_MONTH_dowOffsetSelector_suffix": "",
+    "DateOccurrenceEditor-DOW_OF_MONTH_dayOfWeekSelector_prefix": "  ",
+    "DateOccurrenceEditor-DOW_OF_MONTH_dayOfWeekSelector_suffix": " of the month",
+
+    "DateOccurrenceEditor-DOW_END_OF_MONTH_dowEndOffsetSelector_prefix": "On the ",
+    "DateOccurrenceEditor-DOW_END_OF_MONTH_dowEndOffsetSelector_suffix": "",
+    "DateOccurrenceEditor-DOW_END_OF_MONTH_dayOfWeekSelector_prefix": "  ",
+    "DateOccurrenceEditor-DOW_END_OF_MONTH_dayOfWeekSelector_suffix": " of the month",
+
+    "DateOccurrenceEditor-DAY_OF_SPECIFIC_MONTH_specificMonthSelector_prefix": "On ",
+    "DateOccurrenceEditor-DAY_OF_SPECIFIC_MONTH_specificMonthSelector_suffix": "",
+    "DateOccurrenceEditor-DAY_OF_SPECIFIC_MONTH_dayOfMonthSelector_prefix": "  ",
+    "DateOccurrenceEditor-DAY_OF_SPECIFIC_MONTH_dayOfMonthSelector_suffix": "",
+
+    "DateOccurrenceEditor-DAY_END_OF_SPECIFIC_MONTH_specificMonthSelector_prefix": " day of ",
+    "DateOccurrenceEditor-DAY_END_OF_SPECIFIC_MONTH_specificMonthSelector_suffix": "",
+    "DateOccurrenceEditor-DAY_END_OF_SPECIFIC_MONTH_dayEndOfMonthSelector_prefix": "On the ",
+    "DateOccurrenceEditor-DAY_END_OF_SPECIFIC_MONTH_dayEndOfMonthSelector_suffix": "  ",
+
+    "DateOccurrenceEditor-DOW_OF_SPECIFIC_MONTH_dowOffsetSelector_prefix": "On the ",
+    "DateOccurrenceEditor-DOW_OF_SPECIFIC_MONTH_dowOffsetSelector_suffix": "",
+    "DateOccurrenceEditor-DOW_OF_SPECIFIC_MONTH_dayOfWeekSelector_prefix": "  ",
+    "DateOccurrenceEditor-DOW_OF_SPECIFIC_MONTH_dayOfWeekSelector_suffix": " of ",
+    "DateOccurrenceEditor-DOW_OF_SPECIFIC_MONTH_specificMonthSelector_prefix": "  ",
+    "DateOccurrenceEditor-DOW_OF_SPECIFIC_MONTH_specificMonthSelector_suffix": "",
+
+    "DateOccurrenceEditor-DOW_END_OF_SPECIFIC_MONTH_dowOffsetSelector_prefix": "On the ",
+    "DateOccurrenceEditor-DOW_END_OF_SPECIFIC_MONTH_dowOffsetSelector_suffix": "",
+    "DateOccurrenceEditor-DOW_END_OF_SPECIFIC_MONTH_dayOfWeekSelector_prefix": "  ",
+    "DateOccurrenceEditor-DOW_END_OF_SPECIFIC_MONTH_dayOfWeekSelector_suffix": " of ",
+    "DateOccurrenceEditor-DOW_END_OF_SPECIFIC_MONTH_specificMonthSelector_prefix": "  ",
+    "DateOccurrenceEditor-DOW_END_OF_SPECIFIC_MONTH_specificMonthSelector_suffix": "",
+
+    "DateOccurrenceEditor-DAY_OF_YEAR_dayOfYearEditor_prefix": "On day ",
+    "DateOccurrenceEditor-DAY_OF_YEAR_dayOfYearEditor_suffix": " of the year",
+
+    "DateOccurrenceEditor-DAY_END_OF_YEAR_dayOfYearEditor_prefix": "When it is ",
+    "DateOccurrenceEditor-DAY_END_OF_YEAR_dayOfYearEditor_suffix": " days from the last day of the year",
+
+    "DateOccurrenceEditor-DOW_OF_YEAR_dowYearOffsetEditor_prefix": "On the ",
+    "DateOccurrenceEditor-DOW_OF_YEAR_dowYearOffsetEditor_suffix": "",
+    "DateOccurrenceEditor-DOW_OF_YEAR_dayOfWeekSelector_prefix": "  ",
+    "DateOccurrenceEditor-DOW_OF_YEAR_dayOfWeekSelector_suffix": " of the year",
+
+    "DateOccurrenceEditor-DOW_END_OF_YEAR_dowEndYearOffsetEditor_prefix": "On the ",
+    "DateOccurrenceEditor-DOW_END_OF_YEAR_dowEndYearOffsetEditor_suffix": "",
+    "DateOccurrenceEditor-DOW_END_OF_YEAR_dayOfWeekSelector_prefix": "  ",
+    "DateOccurrenceEditor-DOW_END_OF_YEAR_dayOfWeekSelector_suffix": " from the end of the year",
+
+    "DateOccurrenceEditor-ON_DATE_dateSelector_prefix": "On ",
+    "DateOccurrenceEditor-ON_DATE_dateSelector_suffix": "",
+
+    "DateOccurrenceEditor-DayOfYearEditor_dayOfYear_invalid": "Value must be >= 1 and <= 366",
+    "DateOccurrenceEditor-DayEndOfYearEditor_dayOfYear_invalid": "Value must be >= 0 and < 366",
+    "DateOccurrenceEditor-DOWYearOffsetEditor_dowYearOffset_invalid": "Value must be >= 1 and <= 52",
+    "DateOccurrenceEditor-DOWEndYearOffsetEditor_dowEndYearOffset_invalid": "Value must be >= 0 and < 52",
     
 
     "DateOccurrences-repeatType_invalid": "The repeat type is not valid.",
@@ -48,23 +121,6 @@
     "FileSelector-readdir_failed": ["Could not read the folder '", "'. ", ""],
     "FileSelector-open": "Open",
     "FileSelector-create": "Create",
-
-
-    "Repeats-weekly_offset_dayOfWeek_invalid": "The weekly offset must have a valid day of week.",
-    "Repeats-month_NTH_DAY_offset_invalid": "The offset for monthly repeats with day offset must be a number between -31 and 31.",
-    "Repeats-month_NTH_WEEK_offset_invalid": "The offset for monthly repeats with week offset must be a number between -5 and 5.",
-    "Repeats-monthly_offset_type_missing": "The monthly repeat type is missing or invalid.",
-    "Repeats-year_NTH_DAY_offset_invalid": "The offset for yearly repeats with day offset is invalid.",
-    "Repeats-year_NTH_DAY_month_invalid": "The optional month for yearly repeats with day offset is invalid.",
-    "Repeats-year_NTH_WEEK_offset_invalid": "The offset for yearly repeats with week offset is invalid.",
-    "Repeats-year_NTH_WEEK_month_invalid": "The optional month for yearly repeats with week offset is invalid.",
-    "Repeats-year_NTH_WEEK_dayOfWeek_invalid": "A valid day of week must be specified for yearly repeats with week offset.",
-    "Repeats-year_month_offset_invalid": "A valid month must be specified for yearly repeats with month.",
-    "Repeats-yearly_offset_type_missing": "The yearly repeat type is missing or invalid.",
-    "Repeats-validate_type_missing": "The repeat type is missing or invalid.",
-    "Repeats-period_invalid": "The repetition period must be >= 1.",
-    "Repeats-start_date_invalid": "The start date is is missing or invalid.",
-    "Repeats-repeatCount_invalid": "The repeat count, if present, must be a number.",
 
 
     "SequentialPages-next_btn": "Next",

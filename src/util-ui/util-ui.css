@@ -111,6 +111,10 @@
 /** End util-ui/CurrencyyDisplay.jsx */
 
 
+.DateOccurrenceEditor-DayOfYearEditor, .DateOccurrenceEditor-DayEndOfYearEditor {
+    max-width: 8rem;
+}
+
 
 /** For util-ui/DropdownMenu.jsx */
 .dropdown-item-checked::before {
@@ -171,6 +175,11 @@
 that's on the same line */
 .Field-indent {
     padding-left: 2rem;
+}
+
+/** For putting space after a Field component */
+.Field-postIndent {
+    padding-right: 2rem;
 }
 
 /** For a container of Field components on the same line **/
