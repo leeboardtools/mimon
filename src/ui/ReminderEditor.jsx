@@ -63,26 +63,23 @@ export class ReminderEditor extends React.Component {
             reminderDataItem = accessor.getReminderDataItemWithId(reminderId);
         }
         else {
-            const today = new YMDDate();
             reminderDataItem.isEnabled = true;
             reminderDataItem.occurrenceDefinition = {
                 occurrenceType: DO.OccurrenceType.DAY_OF_MONTH,
-                offset: today.getDOM() - 1,
-                dayOfWeek: today.getDayOfWeek(),
-                month: today.getMonth(),
-                startYMDDate: today,
-                repeatDefinition: {
-                    repeatType: DO.OccurrenceRepeatType.NO_REPEAT,
-                    period: 1,
-                },
             };
             reminderDataItem.lastOccurrenceState = {};
         }
 
+        const originalReminderDataItem = R.getReminderDataItem(
+            reminderDataItem, true);
+
+        const today = new YMDDate();
+        reminderDataItem.occurrenceDefinition = DO.makeValidDateOccurrenceDefinition(
+            reminderDataItem.occurrenceDefinition, today);
+
         this.state = {
             reminderDataItem: reminderDataItem,
-            originalReminderDataItem: R.getReminderDataItem(
-                reminderDataItem, true),
+            originalReminderDataItem: originalReminderDataItem,
             isOKToSave: (reminderId !== undefined),
         };
     }
@@ -124,7 +121,8 @@ export class ReminderEditor extends React.Component {
     isSomethingToSave() {
         const { reminderId, accessor } = this.props;
         if (!reminderId) {
-            return this.state.isOKToSave;
+            return !deepEqual(this.state.reminderDataItem, 
+                this.state.originalReminderDataItem);
         }
 
         const reminderDataItem = accessor.getReminderDataItemWithId(reminderId);
@@ -185,16 +183,22 @@ export class ReminderEditor extends React.Component {
 
     updateReminderDataItem(changes, reloadOriginal) {
         this.setState((state) => {
+
+            // If the occurrence type changed, we need to make sure the
+            // occurrence definition is valid.
+            const { occurrenceDefinition } = state.reminderDataItem;
+            const newOccurrenceDefinition = changes.occurrenceDefinition;
+            if (newOccurrenceDefinition) {
+                if (occurrenceDefinition.occurrenceType
+                 !== newOccurrenceDefinition.occurrenceType) {
+                    changes.occurrenceDefinition = DO.makeValidDateOccurrenceDefinition(
+                        newOccurrenceDefinition, new YMDDate());
+                }
+            }
+
             const newReminderDataItem 
                 = Object.assign({}, state.reminderDataItem, changes);
             
-            const { accessor } = this.props;
-            let { originalReminderDataItem, } = state;
-            if (reloadOriginal) {
-                originalReminderDataItem = R.getReminderDataItem(
-                    newReminderDataItem, true);
-            }
-
             // TODO:
             // Update isOKToSave
             let isOKToSave = true;
@@ -235,7 +239,6 @@ export class ReminderEditor extends React.Component {
                 reminderDataItem: newReminderDataItem,
                 isOKToSave: isOKToSave,
                 nameErrorMsg: nameErrorMsg,
-                originalReminderDataItem: originalReminderDataItem,
             };
         });
     }
