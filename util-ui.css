@@ -124,7 +124,6 @@
 .DateOccurrenceEditor-NumberField {
     max-width: 8rem;
     text-align: right;
-    padding-right: .25rem;
 }
 
 
@@ -207,6 +206,8 @@ that's on the same line */
 /** For edit boxes in a field */
 .Field-editor {
     height: calc(1.5em + .75rem + 2px);
+    padding-left: .25rem;
+    padding-right: .25rem;
 }
 
 
