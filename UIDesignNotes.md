@@ -461,16 +461,25 @@ Common menus:
 
 
     - Reminders Editor
-        - List of reminders
-        - Sortable by name, date, account
-        - Editor window
-        - Paradigm somewhat similar to account list/account editor
+        - Changing window size doesn't make scroll bars appear, content
+        overflows button bar.
+
+
+    - Reminders List
+        - Display last paid date
+        - Repeated count
+        - Next due date
 
 
     - Active Reminders
 
 
     - File import
+
+
+    - Account Selector
+        - Add a search box.
+
     
 
 - RowTable To Do:
@@ -494,6 +503,7 @@ Common menus:
     - Root Imbalance account for the default currency.
     - Additional imbalance accounts as needed for other currencies.
 
+
 - Should we be able to disable lots?
     - By this mean if you turn off lots, then buying and selling securities
     does not use lots.
@@ -509,6 +519,3 @@ Common menus:
     - Which one is user option, should be able to use CSS classes.
 
 
-- Dropdown menu/Dropdown Field
-    - not showing all items (top items clipped)
-    - Arrow keys don't work

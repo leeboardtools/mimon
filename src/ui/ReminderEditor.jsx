@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { userMsg } from '../util/UserMessages';
+import { userMsg, getUserMsgLocale, numberToOrdinalString } 
+    from '../util/UserMessages';
 import { ModalPage } from '../util-ui/ModalPage';
 import { Checkbox } from '../util-ui/Checkbox';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
@@ -16,9 +17,13 @@ import { accountEntriesToItems, AccountSelector,
     addAccountIdsToAccountEntries } from './AccountSelector';
 import { QuantityField, getValidQuantityBaseValue } 
     from '../util-ui/QuantityField';
-import { YMDDate } from '../util/YMDDate';
+import { YMDDate, getYMDDate } from '../util/YMDDate';
+import { formatDate } from '../util-ui/CellDateEditor';
 
 
+/**
+ * Component for editing the transaction template of a {@link Reminder}.
+ */
 class TransactionTemplateEditor extends React.Component {
     constructor(props) {
         super(props);
@@ -27,7 +32,6 @@ class TransactionTemplateEditor extends React.Component {
         this.onPrimaryAccountSelected = this.onPrimaryAccountSelected.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onSplitSelected = this.onSplitSelected.bind(this);
-        this.onQuantityEditorChange = this.onQuantityEditorChange.bind(this);
         this.onDebitCreditChange = this.onDebitCreditChange.bind(this);
 
         this.state = {
@@ -190,9 +194,10 @@ class TransactionTemplateEditor extends React.Component {
             placeholder = {userMsg('TransactionTemplateEditor-description_label')}
             value = {description}
             onChange = {this.onDescriptionChange}
-            fieldClassExtras = "TransactionTemplateEditor-descriptionField"
+            fieldClassExtras 
+                = "Field-postSpace TransactionTemplateEditor-descriptionField"
             inputClassExtras 
-                = "Field-postSpace TransactionTemplateEditor-descriptionEditor"
+                = "TransactionTemplateEditor-descriptionEditor"
         />;
     }
 
@@ -244,70 +249,8 @@ class TransactionTemplateEditor extends React.Component {
             selectedAccountId = {secondaryAccountId}
             onChange = {this.onSplitSelected}
             fieldClassExtras
-                = "TransactionTemplateEditor-splitsSelectorField"
+                = "Field-postSpace TransactionTemplateEditor-splitsSelectorField"
             inputClassExtras = "TransactionTemplateEditor-splitsSelector"
-        />;
-    }
-
-
-    onQuantityEditorChange(e, quantityDefinition, sign) {
-        let quantityBaseValue = e.target.value.trim();
-        try {
-            quantityBaseValue = getValidQuantityBaseValue(
-                quantityBaseValue,
-                quantityDefinition);
-            if (typeof quantityBaseValue === 'number') {
-                quantityBaseValue *= sign;
-            }
-        }
-        catch (e) {
-            quantityBaseValue = e.target.value;
-        }
-
-        this.updateSplit(0, {
-            quantityBaseValue: quantityBaseValue,
-        });
-
-        this.setState({
-            lastEditedSign: sign,
-        });
-    }
-
-    renderQuantityEditor({ sign, id, ariaLabel, label, disabled, classExtras, }) {
-        const { accessor, transactionTemplate } = this.props;
-        const split = transactionTemplate.splits[0];
-
-        const { accountId, quantityBaseValue } = split;
-        const currency = accessor.getCurrencyOfAccountId(accountId);
-        const quantityDefinition = currency.getQuantityDefinition();
-
-        let value = quantityBaseValue;
-        if (typeof value === 'number') {
-            value *= sign;
-            if (value < 0) {
-                value = '';
-            }
-        }
-        else if (sign !== this.state.lastEditedSign) {
-            value = '';
-        }
-
-        let className = 'TransactionTemplateEditor-quantityEditor';
-        if (classExtras) {
-            className += ' ' + classExtras;
-        }
-
-        return <QuantityField
-            id = {id}
-            arialLabel = {ariaLabel}
-            value = {value}
-            quantityDefinition = {quantityDefinition}
-            inputClassExtras = {className}
-            onChange = {(e) => this.onQuantityEditorChange(
-                e, quantityDefinition, sign)}
-            disabled = {disabled}
-            placeholder = {label}
-            allowEmpty = {true}
         />;
     }
 
@@ -344,7 +287,7 @@ class TransactionTemplateEditor extends React.Component {
     }
 
 
-    renderDebitCreditEditor(type) {
+    renderDebitCreditEditor(type, classExtras) {
         const { accessor, transactionTemplate } = this.props;
         const { splits } = transactionTemplate;
         const split = splits[0];
@@ -377,6 +320,7 @@ class TransactionTemplateEditor extends React.Component {
             arialLabel = {type + ' Editor'}
             value = {value}
             quantityDefinition = {quantityDefinition}
+            fieldClassExtras = {classExtras}
             inputClassExtras = {className}
             onChange = {(e) => this.onDebitCreditChange(
                 e, type, quantityDefinition, sign)}
@@ -389,7 +333,7 @@ class TransactionTemplateEditor extends React.Component {
     renderSecondRow() {
         const descriptionEditor = this.renderDescriptionEditor();
         const secondaryAccountSelector = this.renderSplitSelector();
-        const debitEditor = this.renderDebitCreditEditor('debit');
+        const debitEditor = this.renderDebitCreditEditor('debit', 'Field-postSpace');
         const creditEditor = this.renderDebitCreditEditor('credit');
 
         return <div className 
@@ -731,11 +675,35 @@ export class ReminderEditor extends React.Component {
     }
 
 
+    renderLastOccurrenceStateEditor() {
+        const { reminderDataItem } = this.state;
+        const { lastOccurrenceState } = reminderDataItem;
+        if (lastOccurrenceState && lastOccurrenceState.lastOccurrenceYMDDate) {
+            const lastOccurrenceYMDDate 
+                = getYMDDate(lastOccurrenceState.lastOccurrenceYMDDate);
+            const occurrenceCount = lastOccurrenceState.occurrenceCount || 1;
+            if (YMDDate.isValidDate(lastOccurrenceYMDDate)) {
+                const { accessor } = this.props;
+                const dateFormat = accessor.getDateFormat();
+                const dateText = formatDate(
+                    lastOccurrenceYMDDate, dateFormat, getUserMsgLocale());
+                const lastOccurrenceText = userMsg('ReminderEditor-lastOccurrenceDate',
+                    dateText,
+                    numberToOrdinalString(occurrenceCount));
+                return <div className = "Field-editor">
+                    {lastOccurrenceText}
+                </div>;
+            }
+        }
+    }
+
+
     renderPage() {
         const descriptionEditor = this.renderDescriptionEditor();
         const enabledEditor = this.renderEnabledEditor();
         const transactionTemplateEditor = this.renderTransactionTemplateEditor();
         const dateOccurrenceEditor = this.renderDateOccurrenceEditor();
+        const lastStateEditor = this.renderLastOccurrenceStateEditor();
 
         return <div className="container-fluid mt-auto mb-auto text-left">
             <div className = "row align-items-end">
@@ -762,6 +730,11 @@ export class ReminderEditor extends React.Component {
             <div className = "row">
                 <div className = "col">
                     {dateOccurrenceEditor}
+                </div>
+            </div>
+            <div className = "row">
+                <div className = "col">
+                    {lastStateEditor}
                 </div>
             </div>
         </div>;
@@ -791,7 +764,6 @@ export class ReminderEditor extends React.Component {
         </ModalPage>;
     }
 }
-
 
 ReminderEditor.propTypes = {
     accessor: PropTypes.object.isRequired,

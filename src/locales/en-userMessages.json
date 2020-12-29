@@ -374,8 +374,10 @@
     "ReminderEditor-prompt_cancel_title": "Confirm Cancel",
     "ReminderEditor-prompt_cancel_msg": "Are you sure you want to cancel?\nAny changes will be lost.",
 
-    "ReminderEditor-transactionTemplate_heading": "Transaction Template",
+    "ReminderEditor-transactionTemplate_heading": "Template Transaction",
     "ReminderEditor-occurrenceDefinition_heading": "Occurs On",
+
+    "ReminderEditor-lastOccurrenceDate": ["Last occurrence was on ", ", which was the ", " occurrence."],
 
     "ReminderEditorHandler-newReminder_title": ["New Reminder"],
     "ReminderEditorHandler-modifyReminder_title": ["Edit Reminder"],

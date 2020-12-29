@@ -26,6 +26,8 @@
     "DateOccurrenceEditor-typeSelector_DOW_END_OF_YEAR": "Day of the week from the end of the year",
     "DateOccurrenceEditor-typeSelector_ON_DATE": "On this date",
 
+    "DateOccurrenceEditor-startDateEditorCheckbox_text": "Only start on or after ",
+
     "DateOccurrenceEditor-DAY_OF_WEEK_dayOfWeekSelector_prefix": "On ",
     "DateOccurrenceEditor-DAY_OF_WEEK_dayOfWeekSelector_suffix": "",
 
