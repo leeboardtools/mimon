@@ -209,6 +209,10 @@ export class DropdownSelector extends React.Component {
                 className += 'active ';
                 valueText = text;
             }
+            if (item.disabled) {
+                className += 'disabled ';
+            }
+
             if (classExtras) {
                 className += classExtras;
             }
@@ -219,7 +223,11 @@ export class DropdownSelector extends React.Component {
                     key = {value} 
                     className = {className}
                     style = {style}
-                    onClick = {(e) => this.onItemClick(e, value)}
+                    onClick = {(e) => {
+                        if (!item.disabled) {
+                            this.onItemClick(e, value);
+                        }
+                    }}
                 >
                     {component}
                 </a>
@@ -307,6 +315,7 @@ export class DropdownSelector extends React.Component {
  * @typedef {object} DropdownSelector~Item
  * @property {string}   value
  * @property {string}   [text]
+ * @property {boolean}  [disabled=false]
  * @property {string}   [classExtras]   Class names to add to the item's class list.
  * @property {DropdownSelector~onRenderItem}   [onRenderItem]
  * @property {number}   [indent]
