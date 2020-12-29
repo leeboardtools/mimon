@@ -82,16 +82,16 @@ export class OccurrenceRepeatDefinitionEditor extends React.Component {
     }
 
     renderTypeSelector(repeatDefinitionDataItem) {
-        let { allowedRepeatTypes } = this.props;
-        if (!allowedRepeatTypes) {
-            allowedRepeatTypes = [];
+        let { allowedRepeatTypeNames } = this.props;
+        if (!allowedRepeatTypeNames) {
+            allowedRepeatTypeNames = [];
             for (let typeName in DO.OccurrenceRepeatType) {
-                allowedRepeatTypes.push(typeName);
+                allowedRepeatTypeNames.push(typeName);
             }
         }
 
         const items = [];
-        for (let type of allowedRepeatTypes) {
+        for (let type of allowedRepeatTypeNames) {
             const typeName = DO.getOccurrenceRepeatTypeString(type);
             items.push({
                 value: typeName,
@@ -407,7 +407,7 @@ export class OccurrenceRepeatDefinitionEditor extends React.Component {
 OccurrenceRepeatDefinitionEditor.propTypes = {
     id: PropTypes.string,
     repeatDefinition: PropTypes.object.isRequired,
-    allowedRepeatTypes: PropTypes.arrayOf(
+    allowedRepeatTypeNames: PropTypes.arrayOf(
         PropTypes.oneOfType([
             PropTypes.string,
             PropTypes.object,
@@ -430,6 +430,7 @@ export class DateOccurrenceEditor extends React.Component {
         this.onDayEndOfMonthSelected = this.onDayOfMonthSelected;
         this.onDOWOffsetSelected = this.onDayOfMonthSelected;
         this.onDOWEndOffsetSelected = this.onDOWOffsetSelected;
+        this.onSpecificMonthSelected = this.onSpecificMonthSelected.bind(this);
         this.onDayOfYearChange = this.onDayOfYearChange.bind(this);
         this.onDayEndOfYearChange = this.onDayEndOfYearChange.bind(this);
         this.onDOWYearOffsetChange = this.onDOWYearOffsetChange.bind(this);
@@ -1268,7 +1269,8 @@ export class DateOccurrenceEditor extends React.Component {
 
         const repeatDefinitionEditor = <OccurrenceRepeatDefinitionEditor
             id = {this.makeId('OccurrenceRepeatDefinitionEditor')}
-            allowedRepeatTypes = {occurrenceDefinition.occurrenceType.allowedRepeatTypes}
+            allowedRepeatTypeNames 
+                = {occurrenceDefinition.occurrenceType.allowedRepeatTypeNames}
             repeatDefinition = {occurrenceDefinition.repeatDefinition}
             onChange = {this.onRepeatDefinitionChange}
         />;
