@@ -1304,7 +1304,8 @@ export function getDateOccurrenceDefinitionDataItem(definition, alwaysCopy) {
         const occurrenceType = getOccurrenceTypeString(definition.occurrenceType);
         const startYMDDate = getYMDDateString(definition.startYMDDate);
         const repeatDefinition = getOccurrenceRepeatDefinitionDataItem(
-            definition.repeatDefinition);
+            definition.repeatDefinition, 
+            alwaysCopy);
         if (alwaysCopy
          || (occurrenceType !== definition.occurrenceType)
          || (startYMDDate !== definition.startYMDDate)
