@@ -69,7 +69,20 @@ function renderEnabledCell(args) {
 function getDescriptionCellValue(args) {
     const reminderDataItem = getReminderDataItem(args);
     if (reminderDataItem) {
-        return reminderDataItem.description;
+        let { description } = reminderDataItem;
+        if (!description) {
+            const { transactionTemplate } = reminderDataItem;
+            if (transactionTemplate) {
+                description = transactionTemplate.description;
+                if (!description) {
+                    const { splits } = transactionTemplate;
+                    if (splits && splits.length) {
+                        description = splits[0].description;
+                    }
+                }
+            }
+        }
+        return description;
     }
 }
 
@@ -77,7 +90,7 @@ function getAccountNameCellValue(args) {
     const split = getMainSplit(args);
     const accessor = getAccessor(args);
     if (split && accessor) {
-        const accountDataItem = accessor.getAccountDataItemForId(
+        const accountDataItem = accessor.getAccountDataItemWithId(
             split.accountId);
         if (accountDataItem) {
             return accountDataItem.name;
