@@ -21,3 +21,4 @@ This project incorporates the following (I may have missed some projects, especi
 - [uuid](https://github.com/kelektiv/node-uuid#readme) for generating UUIDs.
 - [Material Design Icons](https://material.io/resources/icons/?style=baseline), Google's Material icons
 - [React Date Picker](https://github.com/Hacker0x01/react-datepicker) for picking dates.
+- [date-fns](https://date-fns.org/) for formatting dates.
