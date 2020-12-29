@@ -8,6 +8,7 @@ import { asyncSetupNewFile } from './NewFileSetup';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
 import { format } from 'date-fns';
 import { bSearch } from '../util/BinarySearch';
+import { getCurrency } from '../util/Currency';
 
 
 /**
@@ -870,6 +871,28 @@ export class EngineAccessor extends EventEmitter {
      */
     getCategoryOfAccountId(accountId) {
         return this._accountManager.getCategoryOfAccountId(accountId);
+    }
+
+
+    /**
+     * Retrieves the {@link Currency} associated with a given account id.
+     * @param {number} accountId 
+     * @returns {Currency}
+     */
+    getCurrencyOfAccountId(accountId) {
+        let currency;
+        const accountDataItem = this._accountManager.getCategoryOfAccountId(accountId);
+        if (accountDataItem) {
+            const pricedItemDataItem = this.getPricedItemDataItemWithId(
+                accountDataItem.pricedItemId);
+            if (pricedItemDataItem) {
+                currency = getCurrency(pricedItemDataItem.currency);
+            }
+        }
+
+        return (currency)
+            ? currency
+            : getCurrency(this.getBaseCurrencyCode());
     }
     
 
