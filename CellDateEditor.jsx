@@ -6,6 +6,36 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { format } from 'date-fns';
 import { Tooltip } from './Tooltip';
 
+
+/**
+ * Simple date formatter, uses date-fns.
+ * Placing this here and not in YMDDate so we don't force in date-fns.
+ * @param {YMDDate|string} ymdDate 
+ * @param {string} dateFormat Date format string compatible with 
+ * {@link https://date-fns.org/v2.0.0-alpha.18/docs/I18n}
+ * @param {string} locale 
+ * @returns {string}
+ */
+export function formatDate(ymdDate, dateFormat, locale) {
+    ymdDate = getYMDDate(ymdDate);
+    if (!ymdDate) {
+        return;
+    }
+
+    if (dateFormat) {
+        const localDate = ymdDate.toLocalDate();
+        let localeArg;
+        if (typeof locale === 'object') {
+            // locale has to be a date-fns locale, not a locale string.
+            localeArg = {
+                locale: locale
+            };
+        }
+        return format(localDate, dateFormat, localeArg);
+    }
+    return ymdDate.toString();
+}
+
 //
 // How do we want to do this?
 // Very simple.
@@ -188,14 +218,7 @@ export function CellDateDisplay(props) {
     }
 
     if (dateFormat && value) {
-        const localDate = getYMDDate(value).toLocalDate();
-        let localeArg;
-        if (locale) {
-            localeArg = {
-                locale: locale
-            };
-        }
-        value = format(localDate, dateFormat, localeArg);
+        value = formatDate(value, dateFormat, locale);
     }
 
     const divClassName = '';
@@ -242,3 +265,5 @@ CellDateDisplay.propTypes = {
         PropTypes.array,
     ]),
 };
+
+

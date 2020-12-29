@@ -10,6 +10,21 @@ import { CheckboxField } from './CheckboxField';
 import { getDaysOfTheWeekText, getMonthsText, getYMDDateString, YMDDate, } 
     from '../util/YMDDate';
 
+function addEditorsToFields(fields, editors) {
+    if (editors) {
+        if (Array.isArray(editors)) {
+            editors.forEach((editor) => {
+                if (editor) { fields.push(editor); }
+            });
+        }
+        else {
+            fields.push(editors);
+        }
+    }
+    return fields;
+}
+
+
 
 /**
  * React component for editing {@link OccurrenceRepeatDefinition}
@@ -183,7 +198,7 @@ export class OccurrenceRepeatDefinitionEditor extends React.Component {
             value = {this.state.isFinalYMDDate}
             checkboxText = {
                 userMsg('OccurrenceRepeatDefinitionEditor-finalDateEditorCheckbox_text')}
-            inputClassExtras = "Field-indent"
+            fieldClassExtras = "Field-indent"
             onChange = {this.onFinalDateCheckboxChange}
         />;
 
@@ -237,7 +252,7 @@ export class OccurrenceRepeatDefinitionEditor extends React.Component {
             value = {this.state.isMaxRepeats}
             checkboxText = {
                 userMsg('OccurrenceRepeatDefinitionEditor-maxRepeatsEditorCheckbox_text')}
-            inputClassExtras = "Field-indent"
+            fieldClassExtras = "Field-indent"
             onChange = {this.onMaxRepeatsCheckboxChange}
         />;
 
@@ -279,28 +294,13 @@ export class OccurrenceRepeatDefinitionEditor extends React.Component {
     }
 
 
-    addEditorsToFields(fields, editors) {
-        if (editors) {
-            if (Array.isArray(editors)) {
-                editors.forEach((editor) => {
-                    if (editor) { fields.push(editor); }
-                });
-            }
-            else {
-                fields.push(editors);
-            }
-        }
-        return fields;
-    }
-
-
     renderLimitEditors(repeatDefinitionDataItem) {
         const editors = [];
         const finalDateEditor = this.renderFinalDateEditor(repeatDefinitionDataItem);
-        this.addEditorsToFields(editors, finalDateEditor);
+        addEditorsToFields(editors, finalDateEditor);
 
         const maxRepeatsEditor = this.renderMaxRepeatsEditor(repeatDefinitionDataItem);
-        this.addEditorsToFields(editors, maxRepeatsEditor);
+        addEditorsToFields(editors, maxRepeatsEditor);
 
         return editors;
     }
@@ -308,7 +308,7 @@ export class OccurrenceRepeatDefinitionEditor extends React.Component {
 
     addLimitEditors(fields, repeatDefinitionDataItem) {
         const limitEditors = this.renderLimitEditors(repeatDefinitionDataItem);
-        fields = this.addEditorsToFields(fields, limitEditors);
+        fields = addEditorsToFields(fields, limitEditors);
 
         return fields;
     }
@@ -425,6 +425,9 @@ export class DateOccurrenceEditor extends React.Component {
 
         this.onTypeChange = this.onTypeChange.bind(this);
 
+        this.onStartDateCheckboxChange = this.onStartDateCheckboxChange.bind(this);
+        this.onStartDateSelected = this.onStartDateSelected.bind(this);
+
         this.onDayOfWeekSelected = this.onDayOfWeekSelected.bind(this);
         this.onDayOfMonthSelected = this.onDayOfMonthSelected.bind(this);
         this.onDayEndOfMonthSelected = this.onDayOfMonthSelected;
@@ -440,8 +443,15 @@ export class DateOccurrenceEditor extends React.Component {
         this.onRepeatDefinitionChange = this.onRepeatDefinitionChange.bind(this);
 
         this.state = {
-
         };
+
+        const occurrenceDefinitionDataItem = DO.getDateOccurrenceDefinitionDataItem(
+            this.props.occurrenceDefinition);
+        if (occurrenceDefinitionDataItem.occurrenceType
+         !== DO.OccurrenceType.ON_DATE.name) {
+            this.state.isStartYMDDate = occurrenceDefinitionDataItem.startYMDDate;
+            this.state.editedStartYMDDate = occurrenceDefinitionDataItem.startYMDDate;
+        }
     }
 
 
@@ -509,6 +519,59 @@ export class DateOccurrenceEditor extends React.Component {
     }
 
 
+    onStartDateCheckboxChange(isCheck) {
+        this.setState({
+            isStartYMDDate: isCheck,
+        });
+        this.updateDefinition({
+            occurrenceDefinition: {
+                startYMDDate: (isCheck) ? this.state.editedStartYMDDate : undefined,
+            },
+        });
+    }
+
+    onStartDateSelected(ymdDate) {
+        this.setState({
+            editedStartYMDDate: ymdDate,
+            isStartYMDDate: true,
+        });
+        this.updateDefinition({
+            occurrenceDefinition: {
+                startYMDDate: ymdDate,
+            },
+        });
+    }
+
+    renderStartDateEditor(occurrenceDefinition) {
+        const checkboxId = this.makeId('StartDateCheckbox');
+        const dateCheckbox = <CheckboxField 
+            key = {checkboxId}
+            id = {checkboxId}
+            ariaLabel = "Start Date Checkbox"
+            value = {this.state.isStartYMDDate}
+            checkboxText = {
+                userMsg('DateOccurrenceEditor-startDateEditorCheckbox_text')}
+            fieldClassExtras = "Field-indent"
+            onChange = {this.onStartDateCheckboxChange}
+        />;
+
+        const selectorId = this.makeId('StartDateSelector');
+        const dateSelector = <DateField 
+            key = {selectorId}
+            id = {selectorId}
+            value = {this.state.editedStartYMDDate}
+            onChange = {this.onStartDateSelected}
+            inputClassExtras = "DateOccurrenceEditor-StartDateSelector"
+            tabIndex = {0}
+        />;
+
+        return [
+            dateCheckbox,
+            dateSelector,
+        ];
+    }
+
+
     renderDayOfWeekSelector(args) {
         if (!this._dayOfWeekItems) {
             const items = [];
@@ -562,7 +625,9 @@ export class DateOccurrenceEditor extends React.Component {
             suffix: userMsg('DateOccurrenceEditor-DAY_OF_WEEK_dayOfWeekSelector_suffix'),
         });
 
-        return dayOfWeekSelector;
+        const editors = [ dayOfWeekSelector ];
+        addEditorsToFields(editors, this.renderStartDateEditor());
+        return editors;
     }
 
 
@@ -602,7 +667,9 @@ export class DateOccurrenceEditor extends React.Component {
                 'DateOccurrenceEditor-DAY_OF_MONTH_dayOfMonthSelector_suffix'),
         });
 
-        return dayOfMonthSelector;
+        const editors = [ dayOfMonthSelector ];
+        addEditorsToFields(editors, this.renderStartDateEditor());
+        return editors;
     }
 
 
@@ -640,7 +707,9 @@ export class DateOccurrenceEditor extends React.Component {
                 'DateOccurrenceEditor-DAY_END_OF_MONTH_dayEndOfMonthSelector_suffix'),
         });
 
-        return dayEndOfMonthSelector;
+        const editors = [ dayEndOfMonthSelector ];
+        addEditorsToFields(editors, this.renderStartDateEditor());
+        return editors;
     }
 
 
@@ -685,7 +754,9 @@ export class DateOccurrenceEditor extends React.Component {
                 'DateOccurrenceEditor-DOW_OF_MONTH_dayOfWeekSelector_suffix'),
         });
 
-        return [dowOffsetSelector, dayOfWeekSelector];
+        const editors = [dowOffsetSelector, dayOfWeekSelector];
+        addEditorsToFields(editors, this.renderStartDateEditor());
+        return editors;
     }
 
 
@@ -736,7 +807,9 @@ export class DateOccurrenceEditor extends React.Component {
                 'DateOccurrenceEditor-DOW_END_OF_MONTH_dayOfWeekSelector_suffix'),
         });
 
-        return [dowEndOffsetSelector, dayOfWeekSelector];
+        const editors = [dowEndOffsetSelector, dayOfWeekSelector];
+        addEditorsToFields(editors, this.renderStartDateEditor());
+        return editors;
     }
 
 
@@ -771,7 +844,9 @@ export class DateOccurrenceEditor extends React.Component {
             ),
         });
 
-        return [ specificMonthSelector, dayOfMonthSelector, ];
+        const editors = [ specificMonthSelector, dayOfMonthSelector, ];
+        addEditorsToFields(editors, this.renderStartDateEditor());
+        return editors;
     }
 
     renderDAY_END_OF_SPECIFIC_MONTH(occurrenceDefinition) {
@@ -803,7 +878,9 @@ export class DateOccurrenceEditor extends React.Component {
             ),
         });
 
-        return [ dayEndOfMonthSelector, specificMonthSelector, ];
+        const editors = [ dayEndOfMonthSelector, specificMonthSelector, ];
+        addEditorsToFields(editors, this.renderStartDateEditor());
+        return editors;
     }
 
     renderDOW_OF_SPECIFIC_MONTH(occurrenceDefinition) {
@@ -839,7 +916,9 @@ export class DateOccurrenceEditor extends React.Component {
             ),
         });
 
-        return [ dowOffsetSelector, dayOfWeekSelector, specificMonthSelector, ];
+        const editors = [ dowOffsetSelector, dayOfWeekSelector, specificMonthSelector, ];
+        addEditorsToFields(editors, this.renderStartDateEditor());
+        return editors;
     }
 
     renderDOW_END_OF_SPECIFIC_MONTH(occurrenceDefinition) {
@@ -881,7 +960,10 @@ export class DateOccurrenceEditor extends React.Component {
             ),
         });
 
-        return [ dowEndOffsetSelector, dayOfWeekSelector, specificMonthSelector, ];
+        const editors = [ dowEndOffsetSelector, dayOfWeekSelector, 
+            specificMonthSelector, ];
+        addEditorsToFields(editors, this.renderStartDateEditor());
+        return editors;
     }
 
 
@@ -944,7 +1026,9 @@ export class DateOccurrenceEditor extends React.Component {
                 'DateOccurrenceEditor-DAY_OF_YEAR_dayOfYearEditor_suffix'),
         });
 
-        return [dayOfYearEditor];
+        const editors = [ dayOfYearEditor ];
+        addEditorsToFields(editors, this.renderStartDateEditor());
+        return editors;
     }
 
 
@@ -1002,7 +1086,9 @@ export class DateOccurrenceEditor extends React.Component {
                 'DateOccurrenceEditor-DAY_END_OF_YEAR_dayOfYearEditor_suffix'),
         });
 
-        return [dayEndOfYearEditor];
+        const editors = [ dayEndOfYearEditor ];
+        addEditorsToFields(editors, this.renderStartDateEditor());
+        return editors;
     }
 
 
@@ -1076,7 +1162,9 @@ export class DateOccurrenceEditor extends React.Component {
                 'DateOccurrenceEditor-DOW_OF_YEAR_dayOfWeekSelector_suffix'),
         });
 
-        return [dowYearOffsetEditor, dayOfWeekSelector, ];
+        const editors = [dowYearOffsetEditor, dayOfWeekSelector, ];
+        addEditorsToFields(editors, this.renderStartDateEditor());
+        return editors;
     }
 
 
@@ -1144,7 +1232,9 @@ export class DateOccurrenceEditor extends React.Component {
                 'DateOccurrenceEditor-DOW_END_OF_YEAR_dayOfWeekSelector_suffix'),
         });
 
-        return [dowEndYearOffsetEditor, dayOfWeekSelector, ];
+        const editors = [dowEndYearOffsetEditor, dayOfWeekSelector, ];
+        addEditorsToFields(editors, this.renderStartDateEditor());
+        return editors;
     }
 
 
