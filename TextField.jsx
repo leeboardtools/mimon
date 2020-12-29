@@ -9,26 +9,27 @@ import { Field } from './Field';
  */
 export const TextField = React.forwardRef(
     function TextFieldImpl(props, ref) {
-        const { ariaLabel, value, inputClassExtras, 
+        const { ariaLabel, value, inputClassExtras, placeholder,
             onChange, onFocus, onBlur, onKeyDown, disabled, 
             ...passThroughProps } = props;
 
         return <Field
             {...passThroughProps}
-            editorClassExtras={inputClassExtras}
-            onRenderEditor={(inputClassName) =>
+            editorClassExtras = {inputClassExtras}
+            onRenderEditor = {(inputClassName) =>
                 <input type="text"
-                    id={props.id}
-                    className={'Field-editor TextField-editor' 
+                    id = {props.id}
+                    className = {'Field-editor TextField-editor' 
                         + (inputClassName || '')}
-                    aria-label={ariaLabel}
-                    value={value || ''}
-                    disabled={disabled}
-                    onChange={onChange}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
-                    onKeyDown={onKeyDown}
-                    ref={ref}
+                    aria-label = {ariaLabel}
+                    value = {value || ''}
+                    placeholder = {placeholder}
+                    disabled = {disabled}
+                    onChange = {onChange}
+                    onFocus = {onFocus}
+                    onBlur = {onBlur}
+                    onKeyDown = {onKeyDown}
+                    ref = {ref}
                 />
             }
         />;
@@ -42,6 +43,7 @@ export const TextField = React.forwardRef(
  * @property {string}   [ariaLabel]
  * @property {string}   [label]
  * @property {string}   [value]
+ * @property {string}   [placeholder]
  * @property {string}   [fieldClassExtras] If specified additional CSS
  * classes to add to the outer field container.
  * @property {string}   [inputClassExtras]  If specified additional CSS
@@ -67,6 +69,7 @@ TextField.propTypes = {
     ariaLabel: PropTypes.string,
     label: PropTypes.string,
     value: PropTypes.string,
+    placeholder: PropTypes.string,
     inputClassExtras: PropTypes.string,
     errorMsg: PropTypes.string,
     onChange: PropTypes.func,
