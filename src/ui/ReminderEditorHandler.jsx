@@ -26,9 +26,12 @@ export class ReminderEditorHandler extends MainWindowHandlerBase {
      * object for a reminder register page.
      * @param {string} tabId 
      * @param {number}  reminderId
+     * @param {TransactionDataItem} [transactionDataItem] If reminderId is not valid
+     * (i.e. a new reminder) and this is specified, the reminder is being created
+     * with this transaction as the template.
      * @returns {TabbedPages~TabEntry}
      */
-    createTabEntry(tabId, reminderId) {
+    createTabEntry(tabId, reminderId, transactionDataItem) {
         const reminderDataItem = this.props.accessor.getReminderDataItemWithId(
             reminderId);
         const title = (reminderDataItem) 
@@ -40,6 +43,7 @@ export class ReminderEditorHandler extends MainWindowHandlerBase {
             title: title,
             //hasClose: true,
             reminderId: reminderId,
+            transactionTemplate: transactionDataItem,
             //dropdownInfo: this.getTabDropdownInfo(tabId),
             onRenderTabPage: this.onRenderTabPage,
         };
@@ -53,10 +57,11 @@ export class ReminderEditorHandler extends MainWindowHandlerBase {
      */
     onRenderTabPage(tabEntry, isActive) {
         const { accessor } = this.props;
-        const { reminderId } = tabEntry;
+        const { reminderId, transactionTemplate } = tabEntry;
         return <ReminderEditor
             accessor={accessor}
             reminderId={reminderId}
+            transactionTemplate = {transactionTemplate}
             onClose={() => this.closeTab(tabEntry.tabId)}
         />;
     }

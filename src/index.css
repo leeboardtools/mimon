@@ -438,7 +438,50 @@ body {
 }
 
 
+
 .ReminderEditor-description {
+  width: 100%;
+}
+
+.ReminderEditor-section_label {
+  text-align: left;
+  font-size: large;
+  font-weight: bold;
+  padding-bottom: 1rem;
+}
+
+.TransactionTemplateEditor-row {
+  width: 100%;
+}
+
+.TransactionTemplateEditor-accountSelector {
+  min-width: 30rem;
+}
+
+/** The width: inherits for both the field and inner editor
+are necessary to max out the width */
+.TransactionTemplateEditor-descriptionField {
+  width: inherit;
+}
+
+.TransactionTemplateEditor-descriptionEditor {
+  width: inherit;
+}
+
+.TransactionTemplateEditor-splitsSelectorField {
+  width: inherit;
+}
+
+.TransactionTemplateEditor-splitsSelector {
+  width: inherit;
+}
+
+.TransactionTemplateEditor-debitCreditEditor {
+  text-align: right;
+  max-width: 10rem;
+}
+
+.TransactionTemplateEditor-secondRow {
   width: 100%;
 }
 

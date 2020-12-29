@@ -544,14 +544,14 @@ export class MainWindow extends React.Component {
     }
 
 
-    openReminderEditor(reminderId) {
+    openReminderEditor(reminderId, transactionDataItem) {
         let tabId = this._reminderEditorsByReminderId.get(reminderId);
         if (!tabId) {
             const tabType = 'reminderEditor';
             tabId = tabType + '_' + (reminderId || '_new');
             this._reminderEditorsByReminderId.set(reminderId, tabId);
             const tabEntry = this._reminderEditorHandler.createTabEntry(
-                tabId, reminderId);
+                tabId, reminderId, transactionDataItem);
             this.addTabEntry(tabEntry, tabType);
         }
 

@@ -368,14 +368,23 @@
     "ReconcilingWindow-amount_heading": "Amount",
 
     
-    "ReminderEditor-description_label": "Description",
+    "ReminderEditor-description_label": "Optional Description",
     "ReminderEditor-enabled_label": "Enabled",
 
     "ReminderEditor-prompt_cancel_title": "Confirm Cancel",
     "ReminderEditor-prompt_cancel_msg": "Are you sure you want to cancel?\nAny changes will be lost.",
 
+    "ReminderEditor-transactionTemplate_heading": "Transaction Template",
+    "ReminderEditor-occurrenceDefinition_heading": "Occurs On",
+
     "ReminderEditorHandler-newReminder_title": ["New Reminder"],
     "ReminderEditorHandler-modifyReminder_title": ["Edit Reminder"],
+
+    "TransactionTemplateEditor-primaryAccountSelector_label": "Primary account: ",
+    "TransactionTemplateEditor-description_label": "Description",
+    "TransactionTemplateEditor-secondaryAccountSelector_multiSplits": "-Split-",
+
+
 
     "RemindersList-enabled_heading": "Enabled",
     "RemindersList-accountName_heading": "Account",
