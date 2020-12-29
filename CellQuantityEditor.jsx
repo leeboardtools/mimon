@@ -60,6 +60,9 @@ export const CellQuantityEditor = React.forwardRef(
         if (typeof value === 'number') {
             value = quantityDefinition.baseValueToValueText(value);
         }
+        else if (props.allowEmpty && (!value || !value.trim())) {
+            // OK to be empty...
+        }
         else if (!errorMsg) {
             // Validate the value.
             try {
@@ -122,6 +125,7 @@ CellQuantityEditor.propTypes = {
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
     disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
+    allowEmpty: PropTypes.bool,
 };
 
 
