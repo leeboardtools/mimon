@@ -41,7 +41,7 @@ function quantityFieldOnChange(e, value, quantityDefinition, onChange) {
     // Resolve any simple math operations.
     let newValue = parseFloat(e.target.value);
     if (!isNaN(newValue)) {
-        e.target.value = newValue;
+        //e.target.value = newValue;
     }
     onChange(e, newValue);
 }

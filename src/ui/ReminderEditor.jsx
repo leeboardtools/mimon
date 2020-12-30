@@ -34,6 +34,7 @@ class TransactionTemplateEditor extends React.Component {
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onSplitSelected = this.onSplitSelected.bind(this);
         this.onDebitCreditChange = this.onDebitCreditChange.bind(this);
+        this.onDebitCreditBlur = this.onDebitCreditBlur.bind(this);
 
         this.state = {
             lastEditedSign:undefined,
@@ -288,6 +289,32 @@ class TransactionTemplateEditor extends React.Component {
     }
 
 
+    onDebitCreditBlur(e, type, quantityDefinition, sign) {
+        const text = this.state[type + 'ValueText'];
+        if (text) {
+            try {
+                // This is all to swap the number to the other side of it is negative.
+                let quantityBaseValue = getValidQuantityBaseValue(text,
+                    quantityDefinition);
+                if (typeof quantityBaseValue === 'number') {
+                    if (quantityBaseValue < 0) {
+                        // Want to swap with the other type...
+                        const otherType = (type === 'debit') ? 'credit' : 'debit';
+                        const stateChange = {};
+                        stateChange[otherType + 'ValueText'] 
+                            = quantityDefinition.baseValueToValueText(-quantityBaseValue);
+                        stateChange[type + 'ValueText'] = '';
+                        this.setState(stateChange);
+                    }
+                }
+            }
+            catch (e) {
+                // Ignore...
+            }
+        }
+    }
+
+
     renderDebitCreditEditor(type, classExtras) {
         const { accessor, transactionTemplate } = this.props;
         const { splits } = transactionTemplate;
@@ -324,6 +351,8 @@ class TransactionTemplateEditor extends React.Component {
             fieldClassExtras = {classExtras}
             inputClassExtras = {className}
             onChange = {(e) => this.onDebitCreditChange(
+                e, type, quantityDefinition, sign)}
+            onBlur = {(e) => this.onDebitCreditBlur(
                 e, type, quantityDefinition, sign)}
             disabled = {disabled}
             placeholder = {accountType[type + 'Label']}
