@@ -296,6 +296,7 @@ test('DateOccurrences-DAY_OF_WEEK', () => {
         occurrenceType: DO.OccurrenceType.DAY_OF_WEEK,
         offset: 123,
         dayOfWeek: 3,
+        startYMDDate: getYMDDate('2020-11-01'),
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.YEARLY,
             period: 123,
@@ -305,6 +306,7 @@ test('DateOccurrences-DAY_OF_WEEK', () => {
         occurrenceType: DO.OccurrenceType.DAY_OF_WEEK.name,
         offset: 123,
         dayOfWeek: 3,
+        startYMDDate: '2020-11-01',
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.YEARLY.name,
             period: 123,
@@ -547,6 +549,25 @@ test('DateOccurrences-DAY_OF_WEEK', () => {
         isDone: true,
     });
 
+
+    // Check startYMDDate
+    const D = {
+        occurrenceType: DO.OccurrenceType.DAY_OF_WEEK.name,
+        dayOfWeek: 1,   // Monday
+        startYMDDate: '2021-03-01',
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.WEEKLY,
+            period: 1,
+        }
+    };
+    result = DO.getNextDateOccurrenceState(D, {
+        lastOccurrenceYMDDate: '2020-12-01',
+    });
+    expect(result).toEqual({
+        lastOccurrenceYMDDate: getYMDDate('2021-03-01'),
+        occurrenceCount: 1,
+        isDone: false,
+    });
 });
 
 //
@@ -3652,23 +3673,23 @@ test('DateOccurrences-DOW_END_OF_YEAR', () => {
 test('DateOccurrences-ON_DATE', () => {
     expectOccurrenceConversion({
         occurrenceType: DO.OccurrenceType.ON_DATE,
-        startYMDDate: getYMDDate('2020-12-26'),
+        onYMDDate: getYMDDate('2020-12-26'),
     },
     {
         occurrenceType: DO.OccurrenceType.ON_DATE.name,
-        startYMDDate: '2020-12-26',
+        onYMDDate: '2020-12-26',
     });
 
     //
     // Validation
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.ON_DATE,
-        startYMDDate: '2020-12-26',
+        onYMDDate: '2020-12-26',
     })).toBeUndefined();
     
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.ON_DATE,
-        startYMDDate: 'abc2020-12-26',
+        onYMDDate: 'abc2020-12-26',
     })).toBeInstanceOf(Error);
     
     expect(DO.validateDateOccurrenceDefinition({
@@ -3679,7 +3700,7 @@ test('DateOccurrences-ON_DATE', () => {
     // Validate repeat type
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.ON_DATE.name,
-        startYMDDate: '2020-12-26',
+        onYMDDate: '2020-12-26',
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.NO_REPEAT.name,
             period: 123,
@@ -3688,7 +3709,7 @@ test('DateOccurrences-ON_DATE', () => {
 
     expect(DO.validateDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.ON_DATE.name,
-        startYMDDate: '2020-12-26',
+        onYMDDate: '2020-12-26',
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.WEEKLY.name,
             period: -123,
@@ -3702,14 +3723,14 @@ test('DateOccurrences-ON_DATE', () => {
     // All valid
     expect(DO.makeValidDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.ON_DATE.name,
-        startYMDDate: '2020-01-02',
+        onYMDDate: '2020-01-02',
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.DAILY.name,
             period: 5,
         },
     }, '2020-12-10')).toEqual({
         occurrenceType: DO.OccurrenceType.ON_DATE.name,
-        startYMDDate: '2020-01-02',
+        onYMDDate: '2020-01-02',
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.DAILY.name,
             period: 5,
@@ -3721,7 +3742,7 @@ test('DateOccurrences-ON_DATE', () => {
         occurrenceType: DO.OccurrenceType.ON_DATE.name,
     }, '2020-12-10')).toEqual({
         occurrenceType: DO.OccurrenceType.ON_DATE.name,
-        startYMDDate: '2020-12-10',
+        onYMDDate: '2020-12-10',
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.NO_REPEAT.name,
             period: 1,
@@ -3731,14 +3752,14 @@ test('DateOccurrences-ON_DATE', () => {
     // Invalid date
     expect(DO.makeValidDateOccurrenceDefinition({
         occurrenceType: DO.OccurrenceType.ON_DATE.name,
-        startYMDDate: 'abc2020-12-32',
+        onYMDDate: 'abc2020-12-32',
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.YEARLY.name,
             period: 10,
         },
     }, '2020-12-10')).toEqual({
         occurrenceType: DO.OccurrenceType.ON_DATE.name,
-        startYMDDate: '2020-12-10',
+        onYMDDate: '2020-12-10',
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.YEARLY.name,
             period: 10,
@@ -3751,7 +3772,7 @@ test('DateOccurrences-ON_DATE', () => {
     let result;
     const A = {
         occurrenceType: DO.OccurrenceType.ON_DATE,
-        startYMDDate: '2020-12-15',
+        onYMDDate: '2020-12-15',
     };
 
     // Day before
@@ -3788,7 +3809,7 @@ test('DateOccurrences-ON_DATE', () => {
     // With repeat definition
     const B = {
         occurrenceType: DO.OccurrenceType.ON_DATE.name,
-        startYMDDate: '2020-01-29',
+        onYMDDate: '2020-01-29',
         repeatDefinition: {
             repeatType: DO.OccurrenceRepeatType.MONTHLY,
             period: 1,
