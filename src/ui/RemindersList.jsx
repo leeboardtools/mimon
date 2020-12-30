@@ -142,7 +142,7 @@ function getNextDateCellValue(args) {
         if (occurrenceDefinition) {
             const nextOccurrenceState = DO.getNextDateOccurrenceState(
                 occurrenceDefinition, lastOccurrenceState);
-            if (!nextOccurrenceState.occurrencesAllDone) {
+            if (!nextOccurrenceState.isDone) {
                 return {
                     accessor: getAccessor(args),
                     ymdDate: nextOccurrenceState.lastOccurrenceYMDDate,
