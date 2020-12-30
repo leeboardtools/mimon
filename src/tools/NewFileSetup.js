@@ -414,6 +414,30 @@ async function asyncLoadTransactions(setupInfo) {
 }
 
 
+//
+//---------------------------------------------------------
+//
+async function asyncLoadReminders(setupInfo) {
+    const { reminders } = setupInfo.initialContents;
+    if (!reminders) {
+        return;
+    }
+
+    const { reminderManager, warnings } = setupInfo;
+    for (let i = 0; i < reminders.length; ++i) {
+        const reminder = reminders[i];
+
+        try {
+            await reminderManager.asyncAddReminder(reminder);
+        }
+        catch (e) {
+            warnings.push(userMsg('NewFileSetup-addReminder_failed', 
+                reminder.description, e));
+        }
+    }
+}
+
+
 /**
  * Sets up a blank accounting file from JSON template data.
  * @param {EngineAccessor} accessor
@@ -434,6 +458,7 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
         transactionManager: accountingSystem.getTransactionManager(),
         lotManager: accountingSystem.getLotManager(),
         priceManager: accountingSystem.getPriceManager(),
+        reminderManager: accountingSystem.getReminderManager(),
 
         pricedItemMapping: new Map(),
         pricedItemNameMapping: new Map(),
@@ -456,6 +481,7 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
     await asyncLoadAccounts(setupInfo);
     await asyncLoadLots(setupInfo);
     await asyncLoadTransactions(setupInfo);
+    await asyncLoadReminders(setupInfo);
 
     await accountingSystem.getUndoManager().asyncClearUndos();
 

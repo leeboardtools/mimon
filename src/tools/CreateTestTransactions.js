@@ -1,5 +1,6 @@
 import * as T from '../engine/Transactions';
 import { getDecimalDefinition } from '../util/Quantities';
+import * as DO from '../util/DateOccurrences';
 
 
 function findAccountEntry(newFileContents, accountPath) {
@@ -833,6 +834,8 @@ export function createTestTransactions(newFileContents, options) {
     if (fourOhOneKAccount) {
         // 
     }
+
+    createTestReminders(newFileContents, options);
 }
 
 
@@ -986,4 +989,130 @@ function addLotTransaction(args, args2) {
         description: description,
         splits: splits,
     });
+}
+
+
+export function createTestReminders(newFileContents, options) {
+    options = options || {};
+    const reminders = [];
+    newFileContents.reminders = reminders;
+
+    const paycheckTemplate = {
+        description: 'Paycheck',
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Checking Account',
+                quantityBaseValue: 60000,
+                description: 'First paycheck',
+            },
+            {
+                accountId: 'INCOME-Salary',
+                quantityBaseValue: 100000,
+            },
+            {
+                accountId: 'INCOME-Bonus',
+                quantityBaseValue: 20000,
+                description: 'A bonus',
+            },
+            {
+                accountId: 'ASSET-Investments-401(k) Account',
+                quantityBaseValue: 20000,
+            },
+            {
+                accountId: 'EXPENSE-Taxes-Federal Income Tax',
+                quantityBaseValue: 20000,
+            },
+            {
+                accountId: 'EXPENSE-Taxes-State Income Tax',
+                quantityBaseValue: 10000,
+            },
+            {
+                accountId: 'EXPENSE-Taxes-Social Security',
+                quantityBaseValue: 7000,
+            },
+            {
+                accountId: 'EXPENSE-Taxes-Medicare',
+                quantityBaseValue: 3000,
+            },
+        ]
+    };
+    reminders.push({
+        isEnabled: true,
+        transactionTemplate: paycheckTemplate,
+        occurrenceDefinition: {
+            occurrenceType: DO.OccurrenceType.DAY_OF_WEEK,
+            dayOfWeek: 5,
+            repeatDefinition: {
+                repeatType: DO.OccurrenceRepeatType.WEEKLY,
+                period: 2,
+            },
+        },
+        lastOccurrenceState: {
+            lastOccurrenceYMDDate: '2020-01-17',
+            occurrenceCount: 3,
+        },
+    });
+
+
+    const rentTemplate = {
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Checking Account',
+                quantityBaseValue: -50000,
+                description: 'Rent',
+            },
+            { 
+                accountId: 'EXPENSE-Rent',
+                quantityBaseValue: 50000,
+            },
+        ] 
+    };
+    reminders.push({
+        isEnabled: true,
+        transactionTemplate: rentTemplate,
+        occurrenceDefinition: {
+            occurrenceType: DO.OccurrenceType.DAY_END_OF_MONTH,
+            offset: 2,
+            repeatDefinition: {
+                repeatType: DO.OccurrenceRepeatType.MONTHLY,
+                period: 1,
+            }
+        },
+        lastOccurrenceState: {
+            lastOccurrenceYMDDate: '2020-01-30',
+            occurrenceCount: 25,
+        },
+    });
+
+
+    const phoneTemplate = {
+        description: 'Phone Bill',
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Checking Account',
+                quantityBaseValue: -5000,
+                reconcileState: 'PENDING',
+            },
+            { 
+                accountId: 'EXPENSE-Utilities-Phone',
+                quantityBaseValue: 5000,
+            },
+        ] 
+    };
+    reminders.push({
+        transactionTemplate: phoneTemplate,
+        occurrenceDefinition: {
+            occurrenceType: DO.OccurrenceType.DAY_OF_MONTH,
+            offset: 15,
+            repeatDefinition: {
+                repeatType: DO.OccurrenceRepeatType.MONTHLY,
+                period: 1,
+            }
+        },
+        lastOccurrenceState: {
+            lastOccurrenceYMDDate: '2020-01-30',
+            occurrenceCount: 5,
+        },
+    });
+
 }
