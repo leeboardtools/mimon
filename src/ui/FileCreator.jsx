@@ -9,7 +9,8 @@ import { asyncGetNewFileTemplates } from '../tools/Templates';
 import { NewFileConfigurator} from './NewFileConfigurator';
 import { YMDDate } from '../util/YMDDate';
 import { CurrencySelector } from '../util-ui/CurrencySelector';
-import { createTestTransactions } from '../tools/CreateTestTransactions';
+import { createTestTransactions, createTestReminders } 
+    from '../tools/CreateTestTransactions';
 
 const os = require('os');
 const path = require('path');
@@ -165,6 +166,7 @@ class GeneralSettingsEditor extends React.Component {
         
         this.state = {
             addTestTransactions: false,
+            addTestReminders: false,
         };
     }
 
@@ -239,10 +241,33 @@ class GeneralSettingsEditor extends React.Component {
     }
 
 
+    renderAddTestReminders() {
+        const { onSetAddTestReminders } = this.props;
+        if (onSetAddTestReminders) {
+            return <div className = "text-left">
+                <div className = "row mb-2">&nbsp;</div>
+                <input type = "checkbox" 
+                    id = "addTestReminders"
+                    value = {this.state.addTestReminders}
+                    onClick = {(e) => {
+                        const add = !this.state.addTestReminders;
+                        onSetAddTestReminders(add);
+                        this.setState({
+                            addTestReminders: add,
+                        });
+                    }}
+                />
+                <label htmlFor = "addTestReminders">Add Test Transactions</label>
+            </div>;
+        }
+    }
+
+
     render() {
         const openingBalancesDateEditor = this.renderOpeningBalancesDateEditor();
         const defaultCurrency = this.renderDefaultCurrency();
         const addTestTransactions = this.renderAddTestTransactions();
+        const addTestReminders = this.renderAddTestReminders();
 
         return <div className = "container-fluid mt-auto mb-auto">
             <h4 className = "pageTitle pb-3 mb-4 border-bottom">
@@ -252,6 +277,7 @@ class GeneralSettingsEditor extends React.Component {
             <div className = "row mb-2">&nbsp;</div>
             {defaultCurrency}
             {addTestTransactions}
+            {addTestReminders}
         </div>;
     }
 }
@@ -262,6 +288,7 @@ GeneralSettingsEditor.propTypes = {
     defaultCurrency: PropTypes.string.isRequired,
     onSetDefaultCurrency: PropTypes.func.isRequired,
     onSetAddTestTransactions: PropTypes.func,
+    onSetAddTestReminders: PropTypes.func,
 };
 
 
@@ -306,6 +333,7 @@ export class FileCreator extends React.Component {
         this.onSetOpeningBalancesDate = this.onSetOpeningBalancesDate.bind(this);
         this.onSetDefaultCurrency = this.onSetDefaultCurrency.bind(this);
         this.onSetAddTestTransactions = this.onSetAddTestTransactions.bind(this);
+        this.onSetAddTestReminders = this.onSetAddTestReminders.bind(this);
 
         this.onUpdateFileContents = this.onUpdateFileContents.bind(this);
         this.onSetEndEditAsyncCallback = this.onSetEndEditAsyncCallback.bind(this);
@@ -411,6 +439,12 @@ export class FileCreator extends React.Component {
         });
     }
 
+    onSetAddTestReminders(add) {
+        this.setState({
+            addTestReminders: add,
+        });
+    }
+
     onUpdateFileContents(newFileContents) {
         this.setState({
             newFileContents: newFileContents
@@ -457,12 +491,16 @@ export class FileCreator extends React.Component {
                 const onSetAddTestTransactions = (isDevMode)
                     ? this.onSetAddTestTransactions
                     : undefined;
+                const onSetAddTestReminders = (isDevMode)
+                    ? this.onSetAddTestReminders
+                    : undefined;
                 component = <GeneralSettingsEditor
                     openingBalancesDate = {this.state.openingBalancesDate}
                     onSetOpeningBalancesDate = {this.onSetOpeningBalancesDate}
                     defaultCurrency = {this.state.baseCurrency}
                     onSetDefaultCurrency = {this.onSetDefaultCurrency}
                     onSetAddTestTransactions = {onSetAddTestTransactions}
+                    onSetAddTestReminders = {onSetAddTestReminders}
                 />;
             }
             break;
@@ -501,6 +539,11 @@ export class FileCreator extends React.Component {
                 createTestTransactions(newFileContents, {
                     includeReverseSplit: true,
                     includeReturnOfCapital: true,
+                });
+            }
+            
+            if (this.state.addTestReminders) {
+                createTestReminders(newFileContents, {
                 });
             }
             
