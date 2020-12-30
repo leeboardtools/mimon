@@ -38,6 +38,8 @@
     "NewFileSetup-addTransaction_invalid_lotId": ["A lot with description '", "' was not found."],
     "NewFileSetup-price_pricedItem_not_found": ["Could not add the prices for '", "', the priced item was not defined"],
     "NewFileSetup-price_add_failed": ["Could not add the prices for '", "'. ", ""],
+    "NewFileSetup-addReminder_failed": ["Could not add the reminder '", "'. ", ""],
+    "NewFileSetup-addReminder_invalid_accountId": ["An account identified by '", "' was not found."],
     
 
     "App-mru_open_failed": ["Could not open '", "'. ", ""],

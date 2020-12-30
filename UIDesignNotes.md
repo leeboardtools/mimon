@@ -463,13 +463,21 @@ Common menus:
     - Reminders Editor
         - Changing window size doesn't make scroll bars appear, content
         overflows button bar.
-        - Entering negative value for a quantity does not convert to positive value in other editor
+
 
     - Reminders List
         - Clicking enabled button does nothing.
         - Add Apply now command.
 
-    - Active Reminders
+
+    - Due Reminders
+        - List of reminders that are due
+        - Apply All
+        - Apply Selected
+        - Skip Reminder
+        - Reminders that have been applied are marked as such (green checkbox?)
+        - Reminders that are due have red 'Due'?
+        - Double clicking on applied reminder opens added transaction.
 
 
     - File import

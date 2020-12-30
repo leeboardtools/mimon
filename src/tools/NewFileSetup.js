@@ -414,6 +414,48 @@ async function asyncLoadTransactions(setupInfo) {
 }
 
 
+//
+//---------------------------------------------------------
+//
+async function asyncLoadReminders(setupInfo) {
+    const { reminders } = setupInfo.initialContents;
+    if (!reminders) {
+        return;
+    }
+
+    const { reminderManager, accountNameMapping, warnings } = setupInfo;
+    for (let i = 0; i < reminders.length; ++i) {
+        const item = reminders[i];
+
+        try {
+            const reminder = Object.assign({}, item);
+            let { transactionTemplate } = reminder;
+            if (transactionTemplate) {
+                transactionTemplate = T.getTransactionDataItem(transactionTemplate, true);
+                reminder.transactionTemplate = transactionTemplate;
+
+                const { splits } = transactionTemplate;
+                for (let i = 0; i < splits.length; ++i) {
+                    const split = splits[i];
+                    const accountDataItem = accountNameMapping.get(split.accountId);
+                    if (!accountDataItem) {
+                        throw userError('NewFileSetup-addReminder_invalid_accountId', 
+                            split.accountId);
+                    }
+                    split.accountId = accountDataItem.id;
+                }
+            }
+
+            await reminderManager.asyncAddReminder(reminder);
+        }
+        catch (e) {
+            warnings.push(userMsg('NewFileSetup-addReminder_failed', 
+                item.description, e));
+        }
+    }
+}
+
+
 /**
  * Sets up a blank accounting file from JSON template data.
  * @param {EngineAccessor} accessor
@@ -434,6 +476,7 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
         transactionManager: accountingSystem.getTransactionManager(),
         lotManager: accountingSystem.getLotManager(),
         priceManager: accountingSystem.getPriceManager(),
+        reminderManager: accountingSystem.getReminderManager(),
 
         pricedItemMapping: new Map(),
         pricedItemNameMapping: new Map(),
@@ -456,6 +499,7 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
     await asyncLoadAccounts(setupInfo);
     await asyncLoadLots(setupInfo);
     await asyncLoadTransactions(setupInfo);
+    await asyncLoadReminders(setupInfo);
 
     await accountingSystem.getUndoManager().asyncClearUndos();
 
