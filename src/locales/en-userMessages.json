@@ -104,6 +104,7 @@
     "AccountsListHandler-reconcileAccount": "Reconcile Account",
     "AccountsListHandler-openAccountRegister": "Open Account Register",
     "AccountsListHandler-openPricesList": "Open Prices",
+    "AccountsListHandler-makeReminder": "Make Repeating Reminder...",
     "AccountsListHandler-newAccount": "New Account...",
     "AccountsListHandler-modifyAccount": "Modify Account Settings...",
     "AccountsListHandler-removeAccount": "Delete Account...",

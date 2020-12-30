@@ -463,7 +463,7 @@ Common menus:
     - Reminders Editor
         - Changing window size doesn't make scroll bars appear, content
         overflows button bar.
-
+        - Entering negative value for a quantity does not convert to positive value in other editor
 
     - Reminders List
         - Clicking enabled button does nothing.

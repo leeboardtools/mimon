@@ -15,6 +15,7 @@ import { SeparatorBar } from '../util-ui/SeparatorBar';
 import { DateOccurrenceEditor } from '../util-ui/DateOccurrenceEditor';
 import { accountEntriesToItems, AccountSelector, 
     addAccountIdsToAccountEntries } from './AccountSelector';
+import { MultiSplitsEditor } from './MultiSplitsEditor';
 import { QuantityField, getValidQuantityBaseValue } 
     from '../util-ui/QuantityField';
 import { YMDDate, getYMDDate } from '../util/YMDDate';
@@ -380,6 +381,8 @@ export class ReminderEditor extends React.Component {
         this.onTransactionTemplateChange = this.onTransactionTemplateChange.bind(this);
         this.onOccurrenceChange = this.onOccurrenceChange.bind(this);
 
+        this.onMultiSplitsEditorDone = this.onMultiSplitsEditorDone.bind(this);
+        this.onMultiSplitsEditorCancel = this.onMultiSplitsEditorCancel.bind(this);
         this.onOpenMultiSplitsEditor = this.onOpenMultiSplitsEditor.bind(this);
 
         this.setErrorMsg = this.setErrorMsg.bind(this);
@@ -399,10 +402,16 @@ export class ReminderEditor extends React.Component {
             reminderDataItem.isEnabled = true;
         }
 
-
+        let forceDirty;
         let { transactionTemplate } = reminderDataItem;
         if (!transactionTemplate) {
             transactionTemplate = this.props.transactionTemplate;
+
+            if (transactionTemplate) {
+                // This is the case of creating a new reminder from a transaction, 
+                // want to create a new reminder when Done is pressed.
+                forceDirty = true;
+            }
         }
         if (!transactionTemplate || (transactionTemplate.splits.length < 2)) {
             transactionTemplate = {
@@ -434,6 +443,10 @@ export class ReminderEditor extends React.Component {
         if (!originalReminderDataItem) {
             originalReminderDataItem = R.getReminderDataItem(
                 reminderDataItem, true);
+
+            if (forceDirty) {
+                originalReminderDataItem.transactionTemplate = undefined;
+            }
         }
 
 
@@ -549,7 +562,7 @@ export class ReminderEditor extends React.Component {
     }
 
 
-    updateReminderDataItem(changes, reloadOriginal) {
+    updateReminderDataItem(changes, callback) {
         this.setState((state) => {
 
             let isOKToSave = true;
@@ -577,7 +590,8 @@ export class ReminderEditor extends React.Component {
                 reminderDataItem: newReminderDataItem,
                 isOKToSave: isOKToSave,
             };
-        });
+        },
+        callback);
     }
 
 
@@ -626,9 +640,39 @@ export class ReminderEditor extends React.Component {
     }
 
 
-    onOpenMultiSplitsEditor() {
-        console.log('onOpenMultiSplitsEditor');
+    onMultiSplitsEditorDone({splits}) {
+        const { reminderDataItem } = this.state;
+        let { transactionTemplate } = reminderDataItem;
+        transactionTemplate = T.getTransactionDataItem(
+            transactionTemplate, true);
+        transactionTemplate.splits = splits;
+        this.updateReminderDataItem({
+            transactionTemplate: transactionTemplate,
+        },
+        () => this.setModal(undefined)
+        );
     }
+
+    onMultiSplitsEditorCancel() {
+        this.setModal(undefined);
+    }
+
+
+    onOpenMultiSplitsEditor() {
+        const { accessor, refreshUndoMenu, } = this.props;
+        const { reminderDataItem } = this.state;
+        const { transactionTemplate } = reminderDataItem;
+
+        this.setModal(() => <MultiSplitsEditor
+            accessor = {accessor}
+            splits = {transactionTemplate.splits}
+            splitIndex = {0}
+            onDone = {this.onMultiSplitsEditorDone}
+            onCancel = {this.onMultiSplitsEditorCancel}
+            refreshUndoMenu = {refreshUndoMenu}
+        />);
+    }
+
 
     renderTransactionTemplateEditor() {
         const { reminderDataItem } = this.state;
@@ -756,7 +800,7 @@ export class ReminderEditor extends React.Component {
         return <ModalPage
             onDone = {this.onFinish}
             onCancel = {this.onCancel}
-            doneDisabled={!isOKToSave}
+            doneDisabled={!isOKToSave || !this.isSomethingToSave()}
         >
             {page}
         </ModalPage>;
@@ -768,4 +812,5 @@ ReminderEditor.propTypes = {
     reminderId: PropTypes.number,
     transactionTemplate: PropTypes.object,
     onClose: PropTypes.func.isRequired,
+    refreshUndoMenu: PropTypes.func,
 };

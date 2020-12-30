@@ -3,6 +3,7 @@ import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountRegister } from './AccountRegister';
 import { EventEmitter } from 'events';
+import * as T from '../engine/Transactions';
 
 
 function getUndoRedoInfo(tabEntry) {
@@ -49,13 +50,35 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
 
 
     onOpenPricesList(tabId) {
-        const { accountId} = this.getTabIdState(tabId);
+        const { accountId } = this.getTabIdState(tabId);
         if (accountId) {
             const { accessor } = this.props;
             const accountDataItem = accessor.getAccountDataItemWithId(accountId);
             this.openTab('pricesList', { pricedItemId: accountDataItem.pricedItemId, });
         }
     }
+
+
+    onMakeReminder(tabId) {
+        const { activeSplitInfo } = this.getTabIdState(tabId);
+        if (activeSplitInfo) {
+            const transactionDataItem = T.getTransactionDataItem(
+                activeSplitInfo.transactionDataItem, true);
+            const { splitIndex } = activeSplitInfo;
+            if (splitIndex) {
+                // Want the split at splitIndex to be at 0.
+                const { splits } = transactionDataItem;
+                const tmpSplit = splits[0];
+                splits[0] = splits[splitIndex];
+                splits[splitIndex] = tmpSplit;
+            }
+
+            this.openTab('reminderEditor', { 
+                transactionDataItem: transactionDataItem,
+            });
+        }
+    }
+
 
     onRemoveTransaction(tabId) {
         const { activeSplitInfo } = this.getTabIdState(tabId);
@@ -178,6 +201,11 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
                 disabled: !accountType.hasLots,
                 onChooseItem: () => this.onOpenPricesList(tabId),
             },
+            { id: 'makeReminder',
+                label: userMsg('AccountsListHandler-makeReminder'),
+                disabled: accountType.hasLots,
+                onChooseItem: () => this.onMakeReminder(tabId),
+            },
 
             // TODO:
             // 'clearNewTransaction - resets the new transaction...
@@ -228,7 +256,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             openArgs: openArgs,
         };
         newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
-        
+
         return newState;
     }
 

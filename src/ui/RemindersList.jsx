@@ -31,16 +31,7 @@ function getMainSplit(args) {
     const transactionTemplate = getTransactionTemplate(args);
     if (transactionTemplate && transactionTemplate.splits.length) {
         const { splits } = transactionTemplate;
-        let maxIndex = 0;
-        let maxQuantityBaseValue = Math.abs(splits[0].quantityBaseValue);
-        for (let i = 1; i < splits.length; ++i) {
-            const quantityBaseValue = Math.abs(splits[i].quantityBaseValue);
-            if (quantityBaseValue > maxQuantityBaseValue) {
-                maxIndex = i;
-                maxQuantityBaseValue = quantityBaseValue;
-            }
-        }
-        return splits[maxIndex];
+        return splits[0];
     }
 }
 

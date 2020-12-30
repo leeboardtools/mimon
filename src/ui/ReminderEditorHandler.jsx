@@ -63,6 +63,7 @@ export class ReminderEditorHandler extends MainWindowHandlerBase {
             reminderId={reminderId}
             transactionTemplate = {transactionTemplate}
             onClose={() => this.closeTab(tabEntry.tabId)}
+            refreshUndoMenu = {this.refreshUndoMenu}
         />;
     }
 }
