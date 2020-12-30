@@ -391,7 +391,7 @@
     "RemindersList-enabled_heading": "Enabled",
     "RemindersList-accountName_heading": "Account",
     "RemindersList-amount_heading": "Amount",
-    "RemindersList-lastDate_heading": "Last Paid",
+    "RemindersList-lastDate_heading": "Last Occurrence",
     "RemindersList-nextDate_heading": "Next Due",
 
     "RemindersListHandler-masterReminderList_title": "Reminders",

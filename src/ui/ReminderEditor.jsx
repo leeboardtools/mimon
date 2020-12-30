@@ -520,6 +520,9 @@ export class ReminderEditor extends React.Component {
                         this.setErrorMsg(e);
                     });
             }
+            else {
+                this.props.onClose();
+            }
         }
     }
 

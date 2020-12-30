@@ -466,10 +466,8 @@ Common menus:
 
 
     - Reminders List
-        - Display last paid date
-        - Repeated count
-        - Next due date
-
+        - Clicking enabled button does nothing.
+        - Add Apply now command.
 
     - Active Reminders
 

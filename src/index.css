@@ -101,6 +101,14 @@ body {
 }
 
 
+.CheckboxCell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+
 .date-base {
   text-align: center;
 }
