@@ -97,6 +97,8 @@
 
 .checkbox-checked::before {
     content: '✓';
+    position: relative;
+    top: -2px;
 }
 
 .checkbox-label {
