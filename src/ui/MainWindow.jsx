@@ -401,7 +401,8 @@ export class MainWindow extends React.Component {
     }
 
 
-    openAccountRegister(accountId, openArgs) {
+    openAccountRegister(openArgs) {
+        const { accountId } = openArgs;
         let tabId = this._accountRegistersByAccountId.get(accountId);
         if (!tabId) {
             const tabType = 'accountRegister';
@@ -422,7 +423,7 @@ export class MainWindow extends React.Component {
     }
 
 
-    openAccountEditor(accountId, parentAccountId, childListIndex) {
+    openAccountEditor({ accountId, parentAccountId, childListIndex, }) {
         let tabId = this._accountEditorsByAccountId.get(accountId);
         if (!tabId) {
             const tabType = 'accountEditor';
@@ -454,7 +455,7 @@ export class MainWindow extends React.Component {
     }
 
 
-    openPricedItemEditor(pricedItemId, pricedItemTypeName) {
+    openPricedItemEditor({ pricedItemId, pricedItemTypeName, }) {
         const editorsByPricedItemId 
             = this._pricedItemEditorsByPricedItemId[pricedItemTypeName];
         let tabId = editorsByPricedItemId.get(pricedItemId);
@@ -473,7 +474,8 @@ export class MainWindow extends React.Component {
     }
 
 
-    openPricesList(pricedItemId, openArgs) {
+    openPricesList(openArgs) {
+        const { pricedItemId } = openArgs;
         let tabId = this._pricesListsByPricedItemId.get(pricedItemId);
         if (!tabId) {
             const tabType = 'pricesList';
@@ -508,7 +510,8 @@ export class MainWindow extends React.Component {
     }
 
 
-    openReconciler(accountId, openArgs) {
+    openReconciler(openArgs) {
+        const { accountId } = openArgs;
         let tabId = this._reconcilersByAccountId.get(accountId);
         if (!tabId) {
             const tabType = 'reconciler';
@@ -544,7 +547,10 @@ export class MainWindow extends React.Component {
     }
 
 
-    openReminderEditor(reminderId, transactionDataItem) {
+    openReminderEditor(openArgs) {
+        openArgs = openArgs || {};
+        const { reminderId, transactionDataItem, } = openArgs;
+        
         let tabId = this._reminderEditorsByReminderId.get(reminderId);
         if (!tabId) {
             const tabType = 'reminderEditor';

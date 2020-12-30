@@ -33,14 +33,14 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     onReconcileAccount(tabId) {
         const { activeAccountId} = this.getTabIdState(tabId);
         if (activeAccountId) {
-            this.openTab('reconciler', activeAccountId);
+            this.openTab('reconciler', { accountId: activeAccountId, });
         }
     }
 
 
     openAccountRegister(accountId) {
         if (accountId) {
-            this.openTab('accountRegister', accountId);
+            this.openTab('accountRegister', { accountId: accountId, });
         }
     }
 
@@ -59,7 +59,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             const { accessor } = this.props;
             const accountDataItem = accessor.getAccountDataItemWithId(activeAccountId);
             if (accountDataItem) {
-                this.openTab('pricesList', accountDataItem.pricedItemId);
+                this.openTab('pricesList', { pricedItemId: accountDataItem.pricedItemId, });
             }
         }
     }
@@ -84,14 +84,17 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                     activeAccountId) + 1;
             }
         }
-        this.openTab('accountEditor', undefined, parentAccountId, childListIndex);
+        this.openTab('accountEditor', { 
+            parentAccountId: parentAccountId, 
+            childListIndex: childListIndex,
+        });
     }
 
 
     onModifyAccount(tabId) {
         const { activeAccountId} = this.getTabIdState(tabId);
         if (activeAccountId) {
-            this.openTab('accountEditor', activeAccountId);
+            this.openTab('accountEditor', { accountId: activeAccountId, });
         }
     }
 

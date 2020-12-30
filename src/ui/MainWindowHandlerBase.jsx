@@ -30,7 +30,8 @@ export class MainWindowHandlerBase {
      */
     onOpenRegisterForTransactionSplit(transactionDataItem, splitIndex) {
         const split = transactionDataItem.splits[splitIndex];
-        this.openTab('accountRegister', split.accountId, {
+        this.openTab('accountRegister', {
+            accountId: split.accountId,
             transactionDataItem: transactionDataItem,
             splitIndex: splitIndex,
         });

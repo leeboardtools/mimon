@@ -43,7 +43,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     onReconcileAccount(tabId) {
         const { accountId} = this.getTabIdState(tabId);
         if (accountId) {
-            this.openTab('reconciler', accountId);
+            this.openTab('reconciler', { accountId: accountId, });
         }
     }
 
@@ -53,7 +53,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         if (accountId) {
             const { accessor } = this.props;
             const accountDataItem = accessor.getAccountDataItemWithId(accountId);
-            this.openTab('pricesList', accountDataItem.pricedItemId);
+            this.openTab('pricesList', { pricedItemId: accountDataItem.pricedItemId, });
         }
     }
 

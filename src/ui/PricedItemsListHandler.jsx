@@ -45,7 +45,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
 
     onNewPricedItem(tabId, pricedItemTypeName) {
-        this.openTab('pricedItemEditor', undefined, pricedItemTypeName);
+        this.openTab('pricedItemEditor', { pricedItemTypeName: pricedItemTypeName, });
     }
 
 
@@ -53,7 +53,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const { activePricedItemId, pricedItemTypeName } = this.getTabIdState(tabId);
         if (activePricedItemId) {
             this.openTab('pricedItemEditor', 
-                activePricedItemId, pricedItemTypeName);
+                { pricedItemId: activePricedItemId, 
+                    pricedItemTypeName: pricedItemTypeName, 
+                });
         }
     }
 
@@ -107,7 +109,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
 
     onOpenPricesList(tabId, pricedItemId, pricedItemTypeName) {
-        this.openTab('pricesList', pricedItemId);
+        this.openTab('pricesList', { pricedItemId: pricedItemId, });
     }
 
 
@@ -234,7 +236,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     
     onChoosePricedItem(tabId, pricedItemId) {
         if (pricedItemId) {
-            this.openTab('pricesList', pricedItemId);
+            this.openTab('pricesList', { pricedItemId: pricedItemId, });
         }
     }
 

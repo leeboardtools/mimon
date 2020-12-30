@@ -27,14 +27,14 @@ export class RemindersListHandler extends MainWindowHandlerBase {
 
 
     onNewReminder(tabId) {
-        this.openTab('reminderEditor', undefined);
+        this.openTab('reminderEditor');
     }
 
 
     onModifyReminder(tabId) {
         const { activeReminderId} = this.getTabIdState(tabId);
         if (activeReminderId) {
-            this.openTab('reminderEditor', activeReminderId);
+            this.openTab('reminderEditor', { reminderId: activeReminderId, });
         }
     }
 
@@ -165,7 +165,7 @@ export class RemindersListHandler extends MainWindowHandlerBase {
     
     onChooseReminder(tabId, reminderId) {
         if (reminderId) {
-            this.openTab('reminderEditor', reminderId);
+            this.openTab('reminderEditor', { reminderId: reminderId, });
         }
     }
 
