@@ -486,11 +486,6 @@ export class ReminderEditor extends React.Component {
     isSomethingToSave() {
         const { reminderId, accessor } = this.props;
         if (!reminderId) {
-            console.log({
-                reminderDataItem: this.state.reminderDataItem,
-                original: this.state.originalReminderDataItem,
-            });
-            
             return !deepEqual(this.state.reminderDataItem, 
                 this.state.originalReminderDataItem);
         }
