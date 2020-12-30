@@ -132,14 +132,18 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     }
     
 
-    getTabDropdownInfo(tabId) {
+    getTabDropdownInfo(tabId, state) {
         let activeSplitInfo;
         let accountType = {};
-        const state = this.getTabIdState(tabId);
+        let disableReconcile;
+        state = state || this.getTabIdState(tabId);
         if (state) {
             activeSplitInfo = state.activeSplitInfo;
             const { accessor } = this.props;
             accountType = accessor.getTypeOfAccountId(state.accountId);
+            if (accountType.hasLots) {
+                disableReconcile = true;
+            }
         }
         const menuItems = [
             { id: 'removeTransaction',
@@ -167,6 +171,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             { id: 'reconciler',
                 label: userMsg('AccountsListHandler-reconcileAccount'),
                 onChooseItem: () => this.onReconcileAccount(tabId),
+                disabled: disableReconcile,
             },
             { id: 'openPricesList',
                 label: userMsg('AccountsListHandler-openPricesList'),
@@ -212,17 +217,19 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     createTabEntry(tabId, accountId, openArgs) {
         const accountDataItem = this.props.accessor.getAccountDataItemWithId(
             accountId);
-        return {
+        const newState = {
             tabId: tabId,
             title: accountDataItem.name,
             hasClose: true,
             accountId: accountId,
-            dropdownInfo: this.getTabDropdownInfo(tabId),
             onRenderTabPage: this.onRenderTabPage,
             accountRegisterRef: React.createRef(),
             getUndoRedoInfo: getUndoRedoInfo,
             openArgs: openArgs,
         };
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        return newState;
     }
 
 
