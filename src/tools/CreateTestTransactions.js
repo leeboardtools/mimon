@@ -175,6 +175,36 @@ export function createTestTransactions(newFileContents, options) {
         ] 
     });
 
+    transactions.push({
+        ymdDate: '2020-01-24',
+        description: 'Power Bill',
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Checking Account',
+                quantityBaseValue: -7000,
+            },
+            { 
+                accountId: 'EXPENSE-Utilities-Power',
+                quantityBaseValue: 7000,
+            },
+        ] 
+    });
+
+    transactions.push({
+        ymdDate: '2020-01-24',
+        description: 'Gas Bill',
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Checking Account',
+                quantityBaseValue: -10000,
+            },
+            { 
+                accountId: 'EXPENSE-Utilities-Gas',
+                quantityBaseValue: 10000,
+            },
+        ] 
+    });
+
     for (let i = 1; i <= 29; ++i) {
         let date = '2020-02-';
         if (i < 10) {
@@ -1110,6 +1140,36 @@ export function createTestReminders(newFileContents, options) {
         lastOccurrenceState: {
             lastOccurrenceYMDDate: '2020-01-30',
             occurrenceCount: 5,
+        },
+    });
+
+
+    const powerTemplate = {
+        description: 'Power Bill',
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Checking Account',
+                //quantityBaseValue: -5000,
+                //reconcileState: 'PENDING',
+            },
+            { 
+                accountId: 'EXPENSE-Utilities-Power',
+                //quantityBaseValue: 5000,
+            },
+        ] 
+    };
+    reminders.push({
+        isEnabled: true,
+        transactionTemplate: powerTemplate,
+        occurrenceDefinition: {
+            occurrenceType: DO.OccurrenceType.DAY_OF_MONTH,
+            offset: 24,
+            repeatDefinition: {
+                repeatType: DO.OccurrenceRepeatType.MONTHLY,
+                period: 1,
+            }
+        },
+        lastOccurrenceState: {
         },
     });
 

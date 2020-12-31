@@ -257,7 +257,7 @@ class GeneralSettingsEditor extends React.Component {
                         });
                     }}
                 />
-                <label htmlFor = "addTestReminders">Add Test Transactions</label>
+                <label htmlFor = "addTestReminders">Add Test Reminders</label>
             </div>;
         }
     }
