@@ -104,7 +104,7 @@ export const CellDateEditor = React.forwardRef(
             dateFormat, locale } = props;
 
         const divClassName = '';
-        let className = 'form-control cellDateEditor-textInput ' 
+        let className = 'form-control CellDateEditor-textInput ' 
             + (inputClassExtras || '');
 
         let errorMsgComponent;
@@ -222,7 +222,7 @@ export function CellDateDisplay(props) {
     }
 
     const divClassName = '';
-    const className = 'form-control cellTextEditor-textInput cellTextEditor-textDisplay ' 
+    const className = 'form-control CellTextEditor-textInput CellTextEditor-textDisplay ' 
         + (inputClassExtras || '');
 
     return <Tooltip tooltip={props.tooltip}>

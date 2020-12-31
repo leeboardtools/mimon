@@ -60,7 +60,7 @@ export class TabbedPages extends React.Component {
             let closeButton;
             if (tabEntry.hasClose && this.props.onCloseTab) {
                 closeButton = <button type="button" 
-                    className="close tabCloseButton" 
+                    className="close TabCloseButton" 
                     data-dismiss="modal" 
                     aria-label="Close Tab" 
                     onClick={() => this.props.onCloseTab(tabEntry.tabId)}>

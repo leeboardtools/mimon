@@ -11,9 +11,9 @@ export function Checkbox(props) {
     const onChange = props.onChange || (() => {});
     const { value, label, tabIndex, classExtras, children } = props;
     let ariaLabel = props.ariaLabel || label;
-    let buttonClassName = 'checkbox text-center';
+    let buttonClassName = 'Checkbox text-center';
     if (value) {
-        buttonClassName += ' checkbox-checked';
+        buttonClassName += ' Checkbox-checked';
     }
 
     if (!label && !children && classExtras) {
@@ -41,7 +41,7 @@ export function Checkbox(props) {
 
     let labelComponent;
     if (label) {
-        labelComponent = <div className = "checkbox-label">
+        labelComponent = <div className = "Checkbox-label">
             {label}
         </div>;
     }

@@ -249,7 +249,7 @@ export class DropdownSelector extends React.Component {
         const { itemComponents, valueText } = this.renderItems();
 
         const dropdownList = <div 
-            className = "scrollable-menu DropdownSelector-dropdownList"
+            className = "Scrollable-menu DropdownSelector-dropdownList"
             aria-labelledby = {id}
             onKeyDown = {this.onKeyDown}
             onBlur = {this.onDropdownListBlur}

@@ -4,5 +4,5 @@ import React from 'react';
  * Simple separator bar React component.
  */
 export function SeparatorBar() {
-    return <div className = "separatorBar"></div>;
+    return <div className = "SeparatorBar"></div>;
 }
