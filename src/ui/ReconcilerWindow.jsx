@@ -15,6 +15,7 @@ import { RowTable } from '../util-ui/RowTable';
 import { ContentFramer } from '../util-ui/ContentFramer';
 import * as ACE from './AccountingCellEditors';
 import deepEqual from 'deep-equal';
+import { Checkbox } from '../util-ui/Checkbox';
 
 
 function getDateCellValue(args) {
@@ -67,13 +68,10 @@ function getReconcileCellValue(args) {
 
 function renderReconcileCell(args) {
     const { caller, rowEntry, value } = args;
-    let className = 'checkbox text-center';
-    if (value) {
-        className += ' checkbox-checked';
-    }
-
-    return <div className = {className}
-        onClick = {(e) => caller.toggleSplitInfoReconcile(rowEntry.splitInfo)}
+    return <Checkbox 
+        value = {value}
+        ariaLabel = "Reconciled"
+        onChange = {(e) => caller.toggleSplitInfoReconcile(rowEntry.splitInfo)}
     />;
 }
 
@@ -109,6 +107,7 @@ class ReconcileSplitInfosSelector extends React.Component {
                 header: {
                     label: userMsg('ReconcilingWindow-reconcile_heading'),
                 },
+                cellClassExtras: 'text-center CheckboxCell',
                 getCellValue: getReconcileCellValue,
                 renderDisplayCell: renderReconcileCell,
             },
