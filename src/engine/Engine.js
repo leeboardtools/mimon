@@ -11,6 +11,7 @@ import defUserMessagesEngine from '../locales/en-userMessages-engine.json';
 const path = require('path');
 
 let locale;
+let _appPathName;
 
 
 /**
@@ -30,6 +31,8 @@ export async function initializeEngine(settingsPathName, appPathName) {
 
     locale = (noElectron) ? undefined : require('electron').remote.app.getLocale();
     appPathName = appPathName || `${__dirname}/..`;
+    _appPathName = appPathName;
+
     const basePathName = path.normalize(appPathName + '/locales');
     const userMsgsPathNames = [
         [ path.join(basePathName, 'en-userMessages-util.json'),
@@ -53,4 +56,11 @@ export async function initializeEngine(settingsPathName, appPathName) {
     loadTransactionsUserMessages();
 
     loadStandardTags();
+}
+
+/**
+ * @returns {string} Where the app is located, normally the src folder.
+ */
+export function getAppPathName() {
+    return _appPathName;
 }
