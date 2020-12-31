@@ -22,3 +22,4 @@ This project incorporates the following (I may have missed some projects, especi
 - [Material Design Icons](https://material.io/resources/icons/?style=baseline), Google's Material icons
 - [React Date Picker](https://github.com/Hacker0x01/react-datepicker) for picking dates.
 - [date-fns](https://date-fns.org/) for formatting dates.
+- [sax-js](https://www.npmjs.com/package/sax) for parsing XML.
