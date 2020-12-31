@@ -19,7 +19,7 @@ export const TextField = React.forwardRef(
             onRenderEditor = {(inputClassName) =>
                 <input type="text"
                     id = {props.id}
-                    className = {'Field-editor TextField-editor' 
+                    className = {'Field-editor TextField-editor ' 
                         + (inputClassName || '')}
                     aria-label = {ariaLabel}
                     value = {value || ''}
