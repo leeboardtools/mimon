@@ -620,7 +620,7 @@ export class RemindersListHandler extends MainWindowHandlerBase {
                 return;
             }
         }
-        else if (reminderId) {
+        if (reminderId) {
             this.onOpenReminder(tabId, reminderId);
         }
     }
