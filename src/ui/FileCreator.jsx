@@ -320,10 +320,12 @@ export class FileCreator extends React.Component {
             {
                 pageId: 'generalSettings',
             },
-            {
-                pageId: 'accounts',
-            },
         ];
+        if (!this.props.isImport) {
+            this._pages.push({
+                pageId: 'accounts',
+            });
+        }
 
         this.onSetBaseDirName = this.onSetBaseDirName.bind(this);
         this.onSetProjectName = this.onSetProjectName.bind(this);
@@ -485,8 +487,8 @@ export class FileCreator extends React.Component {
         
         case 'generalSettings':
             {
-                const { mainSetup } = this.props;
-                const isDevMode = mainSetup && mainSetup.isDevMode;
+                const { mainSetup, isImport } = this.props;
+                const isDevMode = mainSetup && mainSetup.isDevMode && !isImport;
                 const onSetAddTestTransactions = (isDevMode)
                     ? this.onSetAddTestTransactions
                     : undefined;
@@ -636,6 +638,7 @@ export class FileCreator extends React.Component {
 FileCreator.propTypes = {
     accessor: PropTypes.object.isRequired,
     mainSetup: PropTypes.object,
+    isImport: PropTypes.bool,
     frameManager: PropTypes.object.isRequired,
     onFileCreated: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,

@@ -8,10 +8,12 @@ import { FileCreator } from './FileCreator';
 import * as FM from '../util/FrameManager';
 import { MainWindow } from './MainWindow';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
-import { asyncFileOrDirExists, asyncDirExists } from '../util/Files';
+import { asyncFileOrDirExists, asyncDirExists, } 
+    from '../util/Files';
 import { FileSelector } from '../util-ui/FileSelector';
 import deepEqual from 'deep-equal';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
+import { FileImporter } from '../tools/FileImporter';
 import * as path from 'path';
 import * as electron from 'electron';
 import * as process from 'process';
@@ -83,6 +85,7 @@ class AppOpenScreen extends React.Component {
         const { props } = this;
         let buttonClassName = 'btn btn-outline-primary btn-md btn-block';
         let mruComponent;
+        let importButton;
         const { validPathNames } = this.state;
         if (validPathNames && (validPathNames.length > 0)) {
             const className = buttonClassName;
@@ -120,6 +123,15 @@ class AppOpenScreen extends React.Component {
             buttonClassName = 'btn btn-outline-secondary btn-sm btn-block';
         }
 
+        const { onImportClick } = props;
+        if (onImportClick) {
+            importButton = <button className={buttonClassName}
+                onClick={onImportClick}
+                aria-label="Import File">
+                {userMsg('AppOpeningScreen-import_file')}
+            </button>;
+        }
+
         return (
             <div className="d-flex w-100 h-100 p-1 mx-auto flex-column">
                 <div className="mb-4 mt-4">
@@ -135,11 +147,14 @@ class AppOpenScreen extends React.Component {
                             <button className={buttonClassName}
                                 onClick={props.onNewClick}
                                 aria-label="New File">
-                                {userMsg('AppOpeningScreen-new_file')}</button>
+                                {userMsg('AppOpeningScreen-new_file')}
+                            </button>
                             <button className={buttonClassName}
                                 onClick={props.onOpenClick}
                                 aria-label="Open File">
-                                {userMsg('AppOpeningScreen-open_file')}</button>
+                                {userMsg('AppOpeningScreen-open_file')}
+                            </button>
+                            {importButton}
                         </div>
                         <div className="col"> </div>
                     </div>
@@ -165,6 +180,7 @@ AppOpenScreen.propTypes = {
     mruPathNames: PropTypes.array,
     onNewClick: PropTypes.func.isRequired,
     onOpenClick: PropTypes.func.isRequired,
+    onImportClick: PropTypes.func,
     onRecentClick: PropTypes.func.isRequired,
     onRemoveRecentClick: PropTypes.func.isRequired,
     onExitClick: PropTypes.func.isRequired,
@@ -185,6 +201,7 @@ export default class App extends React.Component {
 
         this.onNewClick = this.onNewClick.bind(this);
         this.onOpenClick = this.onOpenClick.bind(this);
+        this.onImportClick = this.onImportClick.bind(this);
         this.onRecentClick = this.onRecentClick.bind(this);
         this.onRemoveRecentClick = this.onRemoveRecentClick.bind(this);
 
@@ -194,6 +211,13 @@ export default class App extends React.Component {
         this.onOpenFile = this.onOpenFile.bind(this);
         this.onFilterOpenFile = this.onFilterOpenFile.bind(this);
         this.onOpenFileDirSelect = this.onOpenFileDirSelect.bind(this);
+
+        this.onImportFile = this.onImportFile.bind(this);
+        this.onFilterImportFile = this.onFilterImportFile.bind(this);
+        this.onImportFileDirSelect = this.onImportFileDirSelect.bind(this);
+        this.onImportFileFileSelect = this.onImportFileFileSelect.bind(this);
+
+        this.onImportProjectFileCreated = this.onImportProjectFileCreated.bind(this);
 
         this.onRevertFile = this.onRevertFile.bind(this);
         this.onCloseFile = this.onCloseFile.bind(this);
@@ -246,6 +270,8 @@ export default class App extends React.Component {
         if (!currentDir || !asyncDirExists(currentDir)) {
             currentDir = app.getPath('documents');
         }
+
+        this._fileImporter = new FileImporter(this._accessor);
 
         this.setState({
             appState: 'openingScreen',
@@ -472,6 +498,7 @@ export default class App extends React.Component {
         this.setState({
             appState: 'openingScreen',
             errorMsg: undefined,
+            importPathName: undefined,
         });
     }
 
@@ -528,6 +555,56 @@ export default class App extends React.Component {
         });
     }
 
+
+    onFilterImportFile(dirEnt, currentDirPath) {
+        if (dirEnt.isDirectory()) {
+            return true;
+        }
+        return this._fileImporter.isFileNamePossibleImport(dirEnt.name);
+    }
+
+    onImportFileDirSelect(pathName) {
+        this.setState({
+            isImportFileEnabled: this._fileImporter.isDirNamePossibleImport(pathName),
+        });
+    }
+
+    onImportFileFileSelect(pathName) {
+        this.setState({
+            isImportFileEnabled: this._fileImporter.isFileNamePossibleImport(pathName),
+        });
+    }
+
+    onImportFile(importPathName) {
+        this.setState({
+            appState: 'importFileNewFile',
+            importPathName: importPathName,
+        });
+    }
+
+    onImportClick() {
+        this.setState({
+            appState: 'importFile',
+            errorMsg: undefined,
+        });
+    }
+
+    onImportProjectFileCreated() {
+        process.nextTick(async () => {
+            const { importPathName } = this.state;
+            try {
+                await this._fileImporter.asyncImportFile(importPathName);
+                this.enterMainWindow();
+            }
+            catch (e) {
+                this.setState({
+                    errorMsg: userMsg('App-import_failed', importPathName, e.toString()),
+                });
+            }
+        });
+    }
+
+
     onRecentClick(pathName) {
         process.nextTick(async () => {
             try {
@@ -555,7 +632,7 @@ export default class App extends React.Component {
     render() {
         let mainComponent;
         const { appState, mruPathNames, errorMsg, currentDir,
-            isOpenFileEnabled, modalRenderer } = this.state;
+            isOpenFileEnabled, isImportFileEnabled, modalRenderer } = this.state;
         if (errorMsg) {
             return <ErrorReporter message={errorMsg} 
                 onClose={this.onCancel}
@@ -572,6 +649,7 @@ export default class App extends React.Component {
                 mruPathNames = {mruPathNames}
                 onNewClick = {this.onNewClick}
                 onOpenClick = {this.onOpenClick}
+                onImportClick = {this.onImportClick}
                 onRecentClick = {this.onRecentClick}
                 onRemoveRecentClick = {this.onRemoveRecentClick}
                 onExitClick = {this.onExit}
@@ -598,6 +676,31 @@ export default class App extends React.Component {
                 okButtonText = {userMsg('FileSelector-open')}
                 isOKDisabled = {!isOpenFileEnabled}
             />;
+        
+        case 'importFile' :
+            return <FileSelector
+                title = {userMsg('App-import_file_title')}
+                initialDir = {currentDir}
+                onOK = {this.onImportFile}
+                onCancel = {this.onCancel}
+                onFilterDirEnt = {this.onFilterImportFile}
+                onDirSelect = {this.onImportFileDirSelect}
+                onFileSelect = {this.onImportFileFileSelect}
+                okButtonText = {userMsg('App-importButton')}
+                isOKDisabled = {!isImportFileEnabled}
+            />;
+
+        case 'importFileNewFile' :
+            return <FileCreator
+                accessor = {this._accessor}
+                mainSetup = {this.state.mainSetup}
+                isImport = {true}
+                frameManager = {this._frameManager}
+                onFileCreated = {this.onImportProjectFileCreated}
+                onCancel = {this.onCancel}
+                initialDir = {currentDir}
+            />;
+
         
         case 'mainWindow' :
             return <MainWindow

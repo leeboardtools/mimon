@@ -450,6 +450,8 @@ Common menus:
             
         - Multi-row support?
 
+        - Multi-split tooltip with securities shows same sign for buy and sell (sell shows positive, should be negative)
+
 
     - Get Sub-menus working in MenuList, etc.
         - View Columns menus.
@@ -463,28 +465,10 @@ Common menus:
     - Reminders Editor
         - Changing window size doesn't make scroll bars appear, content
         overflows button bar.
-        - Add memo support to transaction template editing.
-            - Good for suggesting an amount without actually filling in the amount.
 
     - Reminders List
         - Clicking enabled button does nothing.
         - Add Apply now command.
-
-
-    - Due Reminders
-        - List of reminders that are due
-        - Apply All
-        - Apply Selected
-        - Skip Reminder
-        - Reminders that have been applied are marked as such (green checkbox?)
-        - Reminders that are due have red 'Due'?
-        - Double clicking on applied reminder opens added transaction.
-
-    
-    - Applying a reminder:
-        - If the template is complete, add a new transaction using the apply date.
-        - If the template is not complete, add a new transaction for editing and
-        open the account register for the primary account.
 
 
     - File import
