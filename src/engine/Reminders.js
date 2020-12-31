@@ -106,6 +106,34 @@ export function getReminderDataItem(reminder, alwaysCopy) {
 }
 
 
+/**
+ * Determines if a reminder is due.
+ * @param {Reminder|ReminderDataItem} reminder 
+ * @param {YMDDate|string} [refYMDDate] If not specified today is used.
+ * @param {DateOccurrenceState|DateOccurrenceStateDataItem} [occurrenceState]
+ * If specified overrides the reminder's lastOccurrenceState.
+ * @returns {DateOccurrenceState|undefined} Returns <code>undefined</code> if
+ * the reminder is not currently due.
+ */
+export function isReminderDue(reminder, refYMDDate, occurrenceState) {
+    reminder = getReminder(reminder);
+    if (reminder && reminder.isEnabled) {
+        const { occurrenceDefinition, lastOccurrenceState } = reminder;
+        if (occurrenceDefinition) {
+            occurrenceState = occurrenceState || lastOccurrenceState;
+            const nextOccurrenceState = DO.getNextDateOccurrenceState(
+                occurrenceDefinition, occurrenceState, refYMDDate);
+            if (!nextOccurrenceState.isDone) {
+                refYMDDate = getYMDDate(refYMDDate) || new YMDDate();
+                if (YMDDate.compare(
+                    nextOccurrenceState.lastOccurrenceYMDDate, refYMDDate) <= 0) {
+                    return nextOccurrenceState;
+                }
+            }
+        }
+    }
+}
+
 
 
 /**

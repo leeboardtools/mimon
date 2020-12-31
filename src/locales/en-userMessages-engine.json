@@ -134,6 +134,9 @@
     "Actions-addTransactions": "New Transaction",
     "Actions-removeTransactions": "Delete Transaction",
     "Actions-modifyTransactions": "Modify Transactions",
+    "Actions-addReminder": "New Reminder",
+    "Actions-removeReminder": "Delete Reminder",
+    "Actions-modifyReminder": "Modify Reminder",
 
     "LotManager-invalid_pricedItem_id": ["A priced item with id '", "' was not found."],
     "LotManager-lotOriginType_missing": ["The lot is missing an origin type."],

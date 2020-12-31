@@ -463,7 +463,8 @@ Common menus:
     - Reminders Editor
         - Changing window size doesn't make scroll bars appear, content
         overflows button bar.
-
+        - Add memo support to transaction template editing.
+            - Good for suggesting an amount without actually filling in the amount.
 
     - Reminders List
         - Clicking enabled button does nothing.
@@ -478,6 +479,12 @@ Common menus:
         - Reminders that have been applied are marked as such (green checkbox?)
         - Reminders that are due have red 'Due'?
         - Double clicking on applied reminder opens added transaction.
+
+    
+    - Applying a reminder:
+        - If the template is complete, add a new transaction using the apply date.
+        - If the template is not complete, add a new transaction for editing and
+        open the account register for the primary account.
 
 
     - File import

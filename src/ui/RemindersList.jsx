@@ -10,7 +10,8 @@ import { getCurrencyForAccountId }
     from '../tools/AccountHelpers';
 import { getCurrency } from '../util/Currency';
 import { Checkbox } from '../util-ui/Checkbox';
-import * as DO from '../util/DateOccurrences';
+import { isReminderDue } from '../engine/Reminders';
+import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 
 
 function getReminderDataItem(args) {
@@ -42,6 +43,11 @@ function getAccessor(args) {
     }
 }
 
+
+//
+//---------------------------------------------------------
+// Enable State
+
 function getEnabledCellValue(args) {
     const reminderDataItem = getReminderDataItem(args);
     if (reminderDataItem) {
@@ -56,6 +62,33 @@ function renderEnabledCell(args) {
         onChange = {(isChecked) => caller.toggleEnabled(rowIndex)}
     />;
 }
+
+
+//
+//---------------------------------------------------------
+// Due status
+
+function getDueStatusCellValue(args) {
+    const { rowEntry } = args;
+    if (rowEntry) {
+        return rowEntry.dueStatus || 'DUE';
+    }
+}
+
+function renderDueStatusCell(args) {
+    const { value, } = args;
+    const className = 'RemindersList-dueStatus RemindersList-dueStatus_' + value;
+    const text = userMsg(
+        'RemindersList-dueStatus_' + value);
+    return <div className = {className}>
+        {text}
+    </div>;
+}
+
+
+//
+//---------------------------------------------------------
+// Description
 
 function getDescriptionCellValue(args) {
     const reminderDataItem = getReminderDataItem(args);
@@ -77,6 +110,11 @@ function getDescriptionCellValue(args) {
     }
 }
 
+
+//
+//---------------------------------------------------------
+// Account name
+
 function getAccountNameCellValue(args) {
     const split = getMainSplit(args);
     const accessor = getAccessor(args);
@@ -93,6 +131,10 @@ function getAccountNameCellValue(args) {
     }
 }
 
+
+//
+//---------------------------------------------------------
+// Amount
 
 function getAmountCellValue(args) {
     const split = getMainSplit(args);
@@ -112,6 +154,10 @@ function getAmountCellValue(args) {
 }
 
 
+//
+//---------------------------------------------------------
+// Last applied date
+
 function getLastAppliedDateCellValue(args) {
     const reminderDataItem = getReminderDataItem(args);
     if (reminderDataItem) {
@@ -126,27 +172,28 @@ function getLastAppliedDateCellValue(args) {
 }
 
 
+//
+//---------------------------------------------------------
+// Next due date
+
 function getNextDateCellValue(args) {
     const reminderDataItem = getReminderDataItem(args);
     if (reminderDataItem) {
-        const { occurrenceDefinition, lastOccurrenceState } = reminderDataItem;
-        if (occurrenceDefinition) {
-            const nextOccurrenceState = DO.getNextDateOccurrenceState(
-                occurrenceDefinition, lastOccurrenceState);
-            if (!nextOccurrenceState.isDone) {
-                return {
-                    accessor: getAccessor(args),
-                    ymdDate: nextOccurrenceState.lastOccurrenceYMDDate,
-                };
-            }
+        const nextOccurrenceState = isReminderDue(reminderDataItem);
+        if (nextOccurrenceState) {
+            return {
+                accessor: getAccessor(args),
+                ymdDate: nextOccurrenceState.lastOccurrenceYMDDate,
+            };
         }
     }
 }
 
 
 let columnInfoDefs;
+let dueColumnInfoDefs;
 
-function getRemindersListColumnInfoDefs() {
+function getRemindersListColumnInfoDefs(dueEntriesById) {
     if (!columnInfoDefs) {
         const cellClassName = 'm-0';
         const inputClassExtras = 'text-center';
@@ -209,9 +256,27 @@ function getRemindersListColumnInfoDefs() {
                 renderDisplayCell: ACE.renderDateDisplay,
             },
         };
+
+        dueColumnInfoDefs = {
+            dueStatus: { key: 'dueStatus',
+                header: {
+                    label: userMsg('RemindersList-dueStatus_heading'),
+                    ariaLabel: 'Status',
+                    classExtras: 'text-center',
+                },
+                cellClassName: cellClassName,
+                getCellValue: getDueStatusCellValue,
+                renderDisplayCell: renderDueStatusCell,
+            },
+            description: columnInfoDefs.description,
+            accountName: columnInfoDefs.accountName,
+            amount: columnInfoDefs.amount,
+            lastDate: columnInfoDefs.lastDate,
+            nextDate: columnInfoDefs.nextDate,
+        };
     }
 
-    return columnInfoDefs;
+    return (dueEntriesById) ? dueColumnInfoDefs : columnInfoDefs;
 }
 
 
@@ -230,7 +295,8 @@ export class RemindersList extends React.Component {
         this.onActivateRow = this.onActivateRow.bind(this);
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
 
-        const columnInfoDefs = getRemindersListColumnInfoDefs();
+        const columnInfoDefs = getRemindersListColumnInfoDefs(
+            this.props.dueEntriesById);
 
         const columnInfos = [];
 
@@ -258,6 +324,10 @@ export class RemindersList extends React.Component {
             }
         };
 
+        if (this.props.dueEntriesById) {
+            this._sizingRowEntry.dueStatus = 'APPLIED';
+        }
+
         this.state.columns = columnInfosToColumns(this.state);
 
         this.state.rowEntries = this.buildRowEntries().rowEntries;
@@ -265,7 +335,8 @@ export class RemindersList extends React.Component {
 
 
     onReminderAdd(result) {
-        if (this.isReminderIdDisplayed(result.newReminderDataItem.id)) {
+        const { id } = result.newReminderDataItem;
+        if (this.isReminderIdDisplayed(id)) {
             this.updateRowEntries();
         }
     }
@@ -320,6 +391,12 @@ export class RemindersList extends React.Component {
             rowsNeedUpdating = true;
         }
 
+        if (!rowsNeedUpdating) {
+            if (!deepEqual(this.props.dueEntriesById, prevProps.dueEntriesById)) {
+                rowsNeedUpdating = true;
+            }
+        }
+
         if (rowsNeedUpdating) {
             const { prevActiveRowKey } = this.state;
             const result = this.buildRowEntries();
@@ -354,17 +431,22 @@ export class RemindersList extends React.Component {
     }
 
 
-    // Setting up the row entries:
-    // Want to be able to filter what gets displayed.
-    // Support summary rows for say reminder balances.
     buildRowEntries() {
         const rowEntries = [];
-        const { accessor } = this.props;
-        const reminderIds = accessor.getReminderIds();
+        const { accessor, dueEntriesById } = this.props;
 
-        reminderIds.forEach((id) => {
-            this.addReminderIdToRowEntries(rowEntries, id);
-        });
+        if (dueEntriesById) {
+            dueEntriesById.forEach((value, id) => {
+                this.addReminderIdToRowEntries(id, rowEntries);
+            });
+        }
+        else {
+            const reminderIds = accessor.getReminderIds();
+
+            reminderIds.forEach((id) => {
+                this.addReminderIdToRowEntries(id, rowEntries);
+            });
+        }
 
         let { activeRowKey } = this.state;
         let activeRowEntry;
@@ -393,27 +475,49 @@ export class RemindersList extends React.Component {
     }
 
 
-    addReminderIdToRowEntries(rowEntries, reminderId) {
+    addReminderIdToRowEntries(reminderId, rowEntries) {
         if (!this.isReminderIdDisplayed(reminderId)) {
             return;
         }
 
-        const { accessor } = this.props;
+        const { accessor, dueEntriesById } = this.props;
         const reminderDataItem = accessor.getReminderDataItemWithId(reminderId);
 
         const key = reminderDataItem.id.toString();
         const index = rowEntries.length;
 
-        rowEntries.push({
+        let dueStatus;
+        if (dueEntriesById) {
+            const status = dueEntriesById.get(reminderId);
+            if (status) {
+                dueStatus = status.dueStatus;
+            }
+            else {
+                dueStatus = 'DUE';
+            }
+        }
+
+        const rowEntry = {
             key: key,
             index: index,
             reminderDataItem: reminderDataItem,
-        });
+            dueStatus: dueStatus,
+        };
+
+        if (rowEntries) {
+            rowEntries.push(rowEntry);
+        }
+
+        return rowEntry;
     }
 
 
     isReminderIdDisplayed(reminderId) {
-        const { showHiddenReminders } = this.props;
+        const { dueEntriesById, showHiddenReminders } = this.props;
+        if (dueEntriesById) {
+            return dueEntriesById.has(reminderId);
+        }
+
         if (!showHiddenReminders && this._hiddenReminderIds.has(reminderId)) {
             return false;
         }
@@ -474,8 +578,9 @@ export class RemindersList extends React.Component {
 
     onOpenActiveRow({rowIndex}) {
         const rowEntry = this.state.rowEntries[rowIndex];
-        const { onChooseReminder } = this.props;
         const { reminderDataItem } = rowEntry;
+        const { onChooseReminder } = this.props;
+
         if (onChooseReminder && reminderDataItem) {
             onChooseReminder(reminderDataItem.id);
         }
@@ -512,12 +617,30 @@ export class RemindersList extends React.Component {
     }
 
 
+    renderNoRemindersDue() {
+        return <QuestionPrompter
+            message = {userMsg('RemindersList-no_reminders_due')}
+            buttons = {StandardButton.OK}
+            onButton = {() => this.props.onClose()}
+        />;
+    }
+
+
     render() {
-        const { state } = this;
+        const { props, state } = this;
+        const { rowEntries } = state;
+        const { dueEntriesById } = props;
+        if (dueEntriesById) {
+            // If there are no reminders due say so...
+            if (!rowEntries.length) {
+                return this.renderNoRemindersDue();
+            }
+        }
+
         return <div className="RowTableContainer RemindersList">
             <RowTable
                 columns = { state.columns }
-                rowCount = { state.rowEntries.length }
+                rowCount = { rowEntries.length }
                 getRowKey = { this.getRowKey }
 
                 onRenderCell={this.onRenderCell}
@@ -542,8 +665,10 @@ RemindersList.propTypes = {
     onChooseReminder: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
+    onClose: PropTypes.func.isRequired,
     hiddenReminderIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenReminders: PropTypes.bool,
     showReminderIds: PropTypes.bool,
+    dueEntriesById: PropTypes.objectOf(Map),
     children: PropTypes.any,
 };

@@ -396,7 +396,15 @@
     "RemindersList-amount_heading": "Amount",
     "RemindersList-lastDate_heading": "Last Occurrence",
     "RemindersList-nextDate_heading": "Next Due",
+    "RemindersList-no_reminders_due": "You have no reminders due.",
+    "RemindersList-dueStatus_heading": "Status",
 
+    "RemindersList-dueStatus_DUE": "DUE",
+    "RemindersList-dueStatus_APPLIED": "Applied",
+    "RemindersList-dueStatus_SKIPPED": "Skipped",
+    "RemindersList-dueStatus_PARTIAL": "Partial",
+
+    "RemindersListHandler-remindersDueList_title": "Due Reminders",
     "RemindersListHandler-masterReminderList_title": "Reminders",
     "RemindersListHandler-newReminder": "New Reminder...",
     "RemindersListHandler-modifyReminder": "Modify Reminder...",
@@ -404,6 +412,23 @@
     "RemindersListHandler-showReminder": "Show Reminder",
     "RemindersListHandler-hideReminder": "Hide Reminder",
     "RemindersListHandler-showHiddenReminders": "Show Hidden Reminders",
+    "RemindersListHandler-openSelectedAppliedReminderTransaction": "Open Transaction for Applied/Partial Reminder",
+    "RemindersListHandler-applySelectedRemindersNext": "Apply Selected Reminder for Next Date Only",
+    "RemindersListHandler-applyAllDueRemindersNext": "Apply All Due Reminders for Next Date Only",
+    "RemindersListHandler-applySelectedRemindersLatest": "Apply Selected Reminder for Latest Date Only",
+    "RemindersListHandler-applyAllDueRemindersLatest": "Apply All Due Reminders for Latest Date Only",
+    "RemindersListHandler-applySelectedRemindersAll": "Apply Selected Reminder For All Due Dates Until Today",
+    "RemindersListHandler-applyAllDueRemindersAll": "Apply All Due Reminders for All Due Dates Until Today",
+    "RemindersListHandler-skipSelectedRemindersNext": "Skip Selected Reminder's Next Due Date",
+    "RemindersListHandler-skipAllDueRemindersNext": "Skip All Due Reminders Next Due Date",
+    "RemindersListHandler-skipSelectedRemindersAll": "Skip Selected Reminder's Due Dates Until Today",
+    "RemindersListHandler-skipAllDueRemindersAll": "Skip All Due Reminders Due Dates Until Today",
+
+    "RemindersListHandler-applyReminderAction_NEXT": "Apply Reminders for next date",
+    "RemindersListHandler-skipReminderAction_NEXT": "Skip Reminders for next date",
+    "RemindersListHandler-applyReminderAction_ALL": "Apply Reminders for all dates",
+    "RemindersListHandler-skipReminderAction_ALL": "Skip Reminders for all dates",
+
 
     "": ""
 }

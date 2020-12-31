@@ -210,6 +210,9 @@ export class MainWindow extends React.Component {
             else if (tabId === 'remindersList') {
                 this._remindersListTabEntry = undefined;
             }
+            else if (tabId === 'remindersDueList') {
+                this._remindersDueListTabEntry = undefined;
+            }
             else if (tabId.startsWith('reminderEditor_')) {
                 this._reminderEditorsByReminderId.delete(tabEntry.reminderId);
             }
@@ -318,7 +321,7 @@ export class MainWindow extends React.Component {
 
 
     onCheckReminders() {
-        this.onSetErrorMsg('onCheckReminders is not yet implemented.');
+        this.onOpenTab('remindersDueList');
     }
 
 
@@ -375,6 +378,11 @@ export class MainWindow extends React.Component {
             if (!deepEqual(oldTabEntry, newTabEntry)) {
                 this._tabItemsById.set(tabId, [newTabEntry, oldTabItem[1]]);
 
+                let stateCallback;
+                if (callback) {
+                    stateCallback = (state) => callback(newTabEntry);
+                }
+
                 this.setState((oldState) => {
                     const newTabEntries = oldState.tabEntries.map((tabEntry) => 
                         (tabEntry.tabId === tabId) ? newTabEntry : tabEntry);
@@ -382,7 +390,7 @@ export class MainWindow extends React.Component {
                         tabEntries: newTabEntries,
                     };
                 },
-                callback);
+                stateCallback);
             }
         }
     }
@@ -546,6 +554,21 @@ export class MainWindow extends React.Component {
         });
     }
 
+    
+    openRemindersDueList(openArgs) {
+        const tabId = 'remindersDueList';
+        if (!this._remindersDueListTabEntry) {
+            const tabEntry = this._remindersListHandler.createTabEntry(
+                tabId, openArgs);
+            this.addTabEntry(tabEntry, tabId);
+            this._remindersDueListTabEntry = tabEntry;
+        }
+
+        this.setState({
+            activeTabId: tabId,
+        });
+    }
+
 
     openReminderEditor(openArgs) {
         openArgs = openArgs || {};
@@ -619,6 +642,10 @@ export class MainWindow extends React.Component {
         
         case 'remindersList' :
             this.openRemindersList(...args);
+            break;
+    
+        case 'remindersDueList' :
+            this.openRemindersDueList(...args);
             break;
     
         default :

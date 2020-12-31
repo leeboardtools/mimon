@@ -458,6 +458,28 @@ body {
   padding-bottom: 1rem;
 }
 
+
+.RemindersList-dueStatus {
+  text-align: center;
+}
+
+.RemindersList-dueStatus_DUE {
+  color: darkred;
+}
+
+.RemindersList-dueStatus_APPLIED {
+  color: darkgreen;
+}
+
+.RemindersList-dueStatus_SKIPPED {
+  color: darkblue;
+}
+
+.RemindersList-dueStatus_PARTIAL {
+  color: orange;
+}
+
+
 .TransactionTemplateEditor-row {
   width: 100%;
 }
