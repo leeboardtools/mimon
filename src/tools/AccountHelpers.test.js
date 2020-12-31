@@ -2,7 +2,8 @@ import { createDir, cleanupDir } from '../util/FileTestHelpers';
 import * as EATH from './EngineAccessTestHelpers';
 import * as AH from './AccountHelpers';
 import { getQuantityDefinition } from '../util/Quantities';
-const path = require('path');
+import * as path from 'path';
+
 
 test('AccountHelpers', async () => {
     const baseDir = await createDir('AccountHelpers');

@@ -3,7 +3,7 @@ import * as EATH from './EngineAccessTestHelpers';
 import * as T from '../engine/Transactions';
 
 import { createDir, cleanupDir } from '../util/FileTestHelpers';
-const path = require('path');
+import * as path from 'path';
 
 
 test('asyncCreateSplitDataItemForSPLIT', async () => {

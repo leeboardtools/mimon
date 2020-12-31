@@ -18,9 +18,9 @@ import { userError } from '../util/UserMessages';
 import { GroupedItemManager, ItemGroups } from '../util/GroupedItemManager';
 import { getYMDDateString } from '../util/YMDDate';
 import { SortedArray } from '../util/SortedArray';
+import * as path from 'path';
+import { promises as fsPromises } from 'fs';
 
-const path = require('path');
-const fsPromises = require('fs').promises;
 
 const FILE_EXT = '.gz';
 const FILE_SUFFIX = '.json';

@@ -2,8 +2,7 @@ import * as ASTH from './AccountingSystemTestHelpers';
 import { createDir, cleanupDir } from '../util/FileTestHelpers';
 import * as EATH from '../tools/EngineAccessTestHelpers';
 import { accessSync } from 'fs';
-
-const path = require('path');
+import * as path from 'path';
 
 
 test('AutoCompleteSplitsManager-getSplitInfos', async () => {

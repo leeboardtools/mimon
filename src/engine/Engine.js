@@ -7,8 +7,8 @@ import { loadStandardTags } from './StandardTags';
 import defUserMessages from '../locales/en-userMessages.json';
 import defUserMessagesUtil from '../locales/en-userMessages-util.json';
 import defUserMessagesEngine from '../locales/en-userMessages-engine.json';
+import * as path from 'path';
 
-const path = require('path');
 
 let locale;
 let _appPathName;

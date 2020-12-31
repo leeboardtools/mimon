@@ -2,7 +2,7 @@ import { createDir, cleanupDir } from '../util/FileTestHelpers';
 import * as EATH from '../tools/EngineAccessTestHelpers';
 import * as LCE from './LotCellEditors';
 import * as T from '../engine/Transactions';
-const path = require('path');
+import * as path from 'path';
 
 
 function removeLotIds(transactionDataItem) {

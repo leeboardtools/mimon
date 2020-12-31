@@ -8,8 +8,7 @@ import * as PI from './PricedItems';
 import * as ASTH from './AccountingSystemTestHelpers';
 import * as DO from '../util/DateOccurrences';
 import { getQuantityDefinition, getDecimalDefinition } from '../util/Quantities';
-
-const path = require('path');
+import * as path from 'path';
 
 
 

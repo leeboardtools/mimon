@@ -183,11 +183,14 @@
     "PriceManager-invalid_price_date": "The price is invalid, it must have a valid date.",
     "PriceManager-invalid_price_close": "The price is invalid, it must have a valid closing price.",
 
+
     "Reconciler-invalid_closing_date": "A closing date is required.",
     "Reconciler-closing_date_before_last": ["The closing date must be after the last closing date, which was ", "."],
     "Reconciler-account_not_balanced": ["The reconciled balance, ", ", does not match the closing balance, ", "."],
+    "Reconciler-reconcile_action_name": ["Reconcile ", ""],
 
-
+    "ReminderManager-lastOccurrenceYMDDate_invalid": "The last occurrence date is invalid.",
+    "ReminderManager-occurrenceCount_invalid": "The occurrence count must be a number.",
     "ReminderManager-occurrence_definition_required": "An occurrence definition must be defined.",
     "ReminderManager-remove_no_id": ["The reminder cannot be deleted. An item with id '", "' was not found."],
     "ReminderManager-modify_no_id": ["The reminder could not be modified. An item with id '", "' was not found."],
@@ -268,11 +271,9 @@
     "LotTransactionHelpers-no_lots_roc": "The Return of Capital transaction cannot be performed unless there are already shares in the account.",
 
 
-    "Reconciler-reconcile_action_name": ["Reconcile ", ""],
-
-    "ReminderManager-lastOccurrenceYMDDate_invalid": "The last occurrence date is invalid.",
-    "ReminderManager-occurrenceCount_invalid": "The occurrence count must be a number.",
-
+    "FileImporter-file_not_exist": ["'", "' could not be imported. ", ""],
+    "FileImporter-importFailed": ["'", "' could not be imported into '", "'. ", ""],
+    
 
     "": ""
 }

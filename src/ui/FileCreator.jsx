@@ -11,10 +11,9 @@ import { YMDDate } from '../util/YMDDate';
 import { CurrencySelector } from '../util-ui/CurrencySelector';
 import { createTestTransactions, createTestReminders } 
     from '../tools/CreateTestTransactions';
-
-const os = require('os');
-const path = require('path');
-const fsPromises = require('fs').promises;
+import * as path from 'path';
+import * as os from 'os';
+import { promises as fsPromises } from 'fs';
 
 
 /**

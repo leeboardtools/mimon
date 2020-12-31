@@ -45,6 +45,8 @@
     "App-mru_open_failed": ["Could not open '", "'. ", ""],
     "App-open_file_title": "Accounting File To Open",
     "App-open_failed": ["Could not open '", "'. ", ""],
+    "App-import_file_title": "Accounting Project to Import",
+    "App-import_failed": ["Could not import '", "'. ", ""],
     "App-save_failed_title": "Save Failed",
     "App-save_Failed-msg": ["Could not save '", "'. ", "\nDo you want to try again?"],
     "App-save_retry_button": "Retry Save",
@@ -54,10 +56,13 @@
     "App-confirm_revert_title": "Confirm Revert",
     "App-confirm_revert_msg": ["Are you sure you want to revert all changes made to '", "'?", "\nThe changes will be permanently lost."],
 
+    "App-importButton": "Import",
+
 
     "AppOpeningScreen-mru_title": "Recently Opened:",
     "AppOpeningScreen-new_file": "Create a New Accounting Project...",
     "AppOpeningScreen-open_file": "Open an Existing Accounting Project...",
+    "AppOpeningScreen-import_file": "Import an XML Accounting Project...",
     "AppOpeningScreen-exit":"Exit Mimon",
 
 

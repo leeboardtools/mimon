@@ -8,8 +8,7 @@ import * as DO from '../util/DateOccurrences';
 import { getDecimalDefinition } from '../util/Quantities';
 import { getYMDDate } from '../util/YMDDate';
 import * as EATH from './EngineAccessTestHelpers';
-
-const path = require('path');
+import * as path from 'path';
 
 
 //

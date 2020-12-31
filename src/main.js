@@ -5,8 +5,6 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 const { app, Menu, BrowserWindow, ipcMain } = require('electron');
 app.allowRendererProcessReuse = true;
 
-//const path = require('path');
-
 const { session } = require('electron');
 
 const isDevMode = process.execPath.match(/[\\/]electron/);

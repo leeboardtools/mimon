@@ -3,9 +3,9 @@ import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { asyncDirExists, splitDirs } from '../util/Files';
 import folder from '../images/folder.png';
+import * as path from 'path';
+import { promises as fsPromises } from 'fs';
 
-const fsPromises = require('fs').promises;
-const path = require('path');
 
 /**
  * A component for selecting files or folders.

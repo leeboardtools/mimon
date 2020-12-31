@@ -2,7 +2,8 @@ import { createDir, cleanupDir } from '../util/FileTestHelpers';
 import * as EATH from './EngineAccessTestHelpers';
 import * as T from '../engine/Transactions';
 import { getYMDDate } from '../util/YMDDate';
-const path = require('path');
+import * as path from 'path';
+
 
 test('Reconciler', async () => {
     const baseDir = await createDir('Reconciler');

@@ -12,14 +12,13 @@ import { asyncFileOrDirExists, asyncDirExists } from '../util/Files';
 import { FileSelector } from '../util-ui/FileSelector';
 import deepEqual from 'deep-equal';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
+import * as path from 'path';
+import * as electron from 'electron';
+import * as process from 'process';
 
-
-const electron = require('electron');
 const { app } = electron.remote;
 const { ipcRenderer } = electron;
 
-const process = require('process');
-const path = require('path');
 
 
 async function asyncGetStartupOptions() {

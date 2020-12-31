@@ -4,8 +4,7 @@ import * as GH from './GainHelpers';
 import * as L from '../engine/Lots';
 import { getDecimalDefinition } from '../util/Quantities';
 import { getYMDDate } from '../util/YMDDate';
-
-const path = require('path');
+import * as path from 'path';
 
 
 let baseDir;

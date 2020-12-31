@@ -1,4 +1,4 @@
-const path = require('path');
+import * as path from 'path';
 
 /**
  * Simple class for constructing/deconstructing a base file name (name.ext) from a 

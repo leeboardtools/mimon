@@ -1,8 +1,8 @@
 import { performFileActions, DeleteFileAction, CopyFileAction } from './FileActions';
 import { asyncGetFilesOnlyInDir, asyncFileExists } from './Files';
 import { userError } from './UserMessages';
+import * as path from 'path';
 
-const path = require('path');
 
 const yearFormatter = new Intl.NumberFormat(undefined, {
     style: 'decimal',

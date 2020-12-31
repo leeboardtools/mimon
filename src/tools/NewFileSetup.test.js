@@ -4,8 +4,8 @@ import { asyncSetupNewFile } from './NewFileSetup';
 import * as PI from '../engine/PricedItems';
 import * as QD from '../util/Quantities';
 import * as A from '../engine/Accounts';
+import * as path from 'path';
 
-const path = require('path');
 
 test('NewFileSetup', async () => {
     const baseDir = await createDir('NewFileSetup');
