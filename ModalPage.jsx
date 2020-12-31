@@ -10,7 +10,7 @@ import { ContentFramer } from './ContentFramer';
  * bar at the bottom and an optional title at the top.
  */
 export function ModalPage(props) {
-    const body = <div className = "h-inherit ModalPage-body"
+    const body = <div className = "H-inherit ModalPage-body"
     >
         {props.children}
     </div>;

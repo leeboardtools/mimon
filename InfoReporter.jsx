@@ -35,7 +35,7 @@ export function InfoReporter(props) {
     let { title, message } = props;
     let titleComponent;
     if (title) {
-        titleComponent = <h5 className="pageTitle pt-3 pb-3 mb-4 border-bottom">
+        titleComponent = <h5 className="PageTitle pt-3 pb-3 mb-4 border-bottom">
             {title}
         </h5>;
     }
