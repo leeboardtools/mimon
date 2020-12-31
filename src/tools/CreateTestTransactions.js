@@ -864,6 +864,8 @@ export function createTestTransactions(newFileContents, options) {
     if (fourOhOneKAccount) {
         // 
     }
+
+    createTestReminders(newFileContents, options);
 }
 
 
