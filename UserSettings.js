@@ -1,6 +1,6 @@
-const fsPromises = require('fs').promises;
-const path = require('path');
-const deepEqual = require('deep-equal');
+import * as path from 'path';
+import { promises as fsPromises } from 'fs';
+import deepEqual from 'deep-equal';
 
 let userSettingsPathName;
 let createDirIfNecessary = true;

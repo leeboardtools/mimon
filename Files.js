@@ -1,5 +1,6 @@
-const path = require('path');
-const fsPromises = require('fs').promises;
+import * as path from 'path';
+import { promises as fsPromises } from 'fs';
+
 
 /**
  * Determines if a file or directory exists.

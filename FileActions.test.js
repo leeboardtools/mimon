@@ -3,9 +3,9 @@ import { DeleteFileAction, RenameFileAction, ReplaceFileAction,
     performFileActions, KeepFileAction, getFullPathName, CopyFileAction 
 } from './FileActions';
 import { asyncFileExists } from './Files';
+import * as path from 'path';
+import { promises as fsPromises } from 'fs';
 
-const path = require('path');
-const fsPromises = require('fs').promises;
 
 test('FileNameHelpers', () => {
     const pathA = path.join('Abc', 'Def');

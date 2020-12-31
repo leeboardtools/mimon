@@ -1,5 +1,5 @@
-const fsPromises = require('fs').promises;
-const path = require('path');
+import * as path from 'path';
+import { promises as fsPromises } from 'fs';
 
 let msgs = {};
 let userMsgsLocale;

@@ -3,8 +3,8 @@ import { parseDecimalInteger, defMakeBackupFileName, defParseBackupFileName,
 import { createDir, cleanupDir, writeFile, expectFileToBe } from './FileTestHelpers';
 import { ReplaceFileAction, DeleteFileAction, performFileActions, 
     asyncFileExists } from './FileActions';
+import * as path from 'path';
 
-const path = require('path');
 
 test('parseDecimalInteger', () => {
     expect(parseDecimalInteger('1234')).toEqual(1234);

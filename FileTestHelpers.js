@@ -1,8 +1,8 @@
 import { asyncGetFullPathsInDir, asyncGetDirectoriesOnlyInDir, } from './Files';
+import * as path from 'path';
+import * as os from 'os';
+import { promises as fsPromises } from 'fs';
 
-const os = require('os');
-const path = require('path');
-const fsPromises = require('fs').promises;
 
 export async function createDir(dir) {
     const baseDir = path.join(os.tmpdir(), dir);
