@@ -261,7 +261,7 @@ export class FileSelector extends React.Component {
         let postFileListComponent = (onGetPostFileListComponent)
             ? onGetPostFileListComponent() : undefined;
 
-        return <div className="modal-dialog modal-dialog-scrollable modal-full-height" 
+        return <div className="modal-dialog modal-dialog-scrollable Modal-full-height" 
             role="document">
             <div className="modal-content">
                 <div className="modal-header">

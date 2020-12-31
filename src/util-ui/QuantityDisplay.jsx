@@ -14,7 +14,7 @@ export function QuantityDisplay(props) {
     
     if (quantityDefinition && (quantityBaseValue !== undefined)) {
         const { ariaLabel, classExtras } = props;
-        let className = 'quantityDisplay ';
+        let className = 'QuantityDisplay ';
         if (classExtras) {
             className += classExtras;
         }

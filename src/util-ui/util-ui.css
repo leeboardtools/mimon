@@ -1,13 +1,13 @@
 
 /* For util-ui/FileSelector.jsx */
-.modal-full-height {
+.Modal-full-height {
     height: calc(100% - 3.5em);
 }
 /* End util-ui/FileSelector.jsx */
 
 
 /** For util-ui/CellButton.jsx */
-.cellButton {
+.CellButton {
     margin: 0px;
     padding: 0px 0px;
     height: calc(1.5rem + .3rem + 2px);
@@ -15,37 +15,31 @@
     color: #007bff;
 }
 
-.cellButton:focus {
+.CellButton:focus {
     color: #007bff;
 }
 /** End util-ui/CellButton.jsx */
 
 
 /* For util-ui/CellDateEditor.jsx */
-.cellDateEditor-textInput {
+.CellDateEditor-textInput {
     margin: 0px;
     padding: 0px 2px;
     height: calc(1.5rem + .3rem + 2px);
-    border-radius: 0;
-}
-
-.cellDateEditor-textDisplay {
-    border: none;
-    background-color: inherit;
     border-radius: 0;
 }
 /* End util-ui/CellDateEditor.jsx */
 
 
 /* For util-ui/CellTextEditor.jsx */
-.cellTextEditor-textInput {
+.CellTextEditor-textInput {
     margin: 0px;
     padding: 0px 2px;
     height: calc(1.5rem + .3rem + 2px);
     border-radius: 0;
 }
 
-.cellTextEditor-textDisplay {
+.CellTextEditor-textDisplay {
     border: none;
     background-color: inherit;
     border-radius: 0;
@@ -54,20 +48,20 @@
 
 
 /* For util-ui/CellSelectEditor.jsx */
-.cellSelectEditor-select {
+.CellSelectEditor-select {
     margin: 0px;
     padding: 0px 0px;
     height: calc(1.5rem + .3rem + 2px);
     border-radius: 0;
 }
 
-.cellSelectEditor-display {
+.CellSelectEditor-display {
     border: none;
     background-color: inherit;
     border-radius: 0;
 }
 /*
-.cellToggleSelectEditor-button {
+.CellToggleSelectEditor-button {
     margin: 0px;
     padding: 0px 0px;
     height: calc(1.5rem + .3rem + 2px);
@@ -78,11 +72,11 @@
 
 
 /*
- A plain checkbox button, 
- "checkbox" displays only the box
- "checkbox checkbox-checked" displays the box checked.
+ A plain Checkbox button, 
+ "Checkbox" displays only the box
+ "Checkbox Checkbox-checked" displays the box checked.
 */
-.checkbox {
+.Checkbox {
     text-align: center;
     width: 1.25rem;
     height: 1.25rem;
@@ -91,17 +85,17 @@
     border-radius: 5px;
     border-color: rgba(0, 0, 0, 0.5);
 }
-.checkbox::before {
+.Checkbox::before {
     font-weight: 600;
 }
 
-.checkbox-checked::before {
+.Checkbox-checked::before {
     content: '✓';
     position: relative;
     top: -2px;
 }
 
-.checkbox-label {
+.Checkbox-label {
     padding-left: 0.5rem;
 }
 
@@ -111,12 +105,6 @@
     border: none;
 }
 
-
-/** For util-ui/CurrencyDisplay.jsx */
-.currencyDisplay {
-    text-align: right;
-}
-/** End util-ui/CurrencyyDisplay.jsx */
 
 .DateField-editor {
     text-align: center;
@@ -179,7 +167,7 @@
 }
 
 
-.field-input-form-control {
+.Field-input-form-control {
     flex: 1 1 0%;
     width: 100%;
 }
@@ -354,7 +342,7 @@ that's on the same line */
 
 
 /** For util-ui/DropdownField.jsx */
-.scrollable-menu {
+.Scrollable-menu {
     height: auto;
     max-height: 90vh;
     overflow-x: hidden;
@@ -364,13 +352,13 @@ that's on the same line */
   
 
 /** For util-ui/QuantityDisplay.jsx */
-.quantityDisplay {
+.QuantityDisplay {
     text-align: right;
 }
 /** End util-ui/QuantityDisplay.jsx */
 
 
-.separatorBar {
+.SeparatorBar {
     border-bottom: 1px solid #dee2e6;
     margin-top: 1rem;
     margin-bottom: 1rem;
@@ -378,19 +366,19 @@ that's on the same line */
 
 
 /** Used by util-ui/TabbedPages.jsx */
-.tabCloseButton {
+.TabCloseButton {
     margin-left: 0.5rem;
 }
 /** End util-ui/TabbedPages.jsx */
 
 
 /** Used by util-ui/Tooltip.jsx */
-.simple-tooltip {
+.Simple-tooltip {
   position: relative;
   display: inline-block;
 }
 
-.simple-tooltip .simple-tooltiptext {
+.Simple-tooltip .Simple-tooltiptext {
   visibility: hidden;
   width: 250px;
   background-color: #555;
@@ -407,7 +395,7 @@ that's on the same line */
   margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
 }
 
-.simple-tooltip .simple-tooltiptext::after {
+.Simple-tooltip .Simple-tooltiptext::after {
   content: "";
   position: absolute;
   bottom: 100%;
@@ -418,7 +406,7 @@ that's on the same line */
   border-color: transparent transparent #555 transparent;
 }
 
-.simple-tooltip:hover .simple-tooltiptext {
+.Simple-tooltip:hover .Simple-tooltiptext {
   visibility: visible;
   opacity: 1;
 }

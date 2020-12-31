@@ -11,7 +11,7 @@ export function CurrencyDisplay(props) {
     const { quantityBaseValue, displayCurrencySymbol } = props;
     if (currency && (quantityBaseValue !== undefined)) {
         const { ariaLabel, classExtras } = props;
-        let className = 'quantityDisplay ';
+        let className = 'QuantityDisplay ';
         if (classExtras) {
             className += classExtras;
         }

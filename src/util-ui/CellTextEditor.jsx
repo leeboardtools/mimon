@@ -12,7 +12,7 @@ export const CellTextEditor = React.forwardRef(
             onChange, onFocus, onBlur, disabled, placeholder } = props;
 
         const divClassName = 'input-group mb-0 ';
-        let className = 'form-control cellTextEditor-textInput ' 
+        let className = 'form-control CellTextEditor-textInput ' 
             + (inputClassExtras || '');
 
         const inputType = props.inputType || 'text';
@@ -94,7 +94,7 @@ export function CellTextDisplay(props) {
     }
 
     const divClassName = 'input-group mb-0 ';
-    const className = 'form-control cellTextEditor-textInput cellTextEditor-textDisplay ' 
+    const className = 'form-control CellTextEditor-textInput CellTextEditor-textDisplay ' 
         + (inputClassExtras || '');
 
     const component = <div className={divClassName}>

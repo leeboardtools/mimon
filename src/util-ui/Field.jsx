@@ -55,7 +55,7 @@ export function Field(props) {
     }
 
     if (prepend || append) {
-        editorClassName += ' field-input-form-control';
+        editorClassName += ' Field-input-form-control';
     }
 
     let inputComponent = onRenderEditor(editorClassName);

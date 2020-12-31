@@ -25,9 +25,9 @@ export function Tooltip(props) {
     }
     
     if (tooltip) {
-        return <div className = "simple-tooltip w-100"> 
+        return <div className = "Simple-tooltip w-100"> 
             {children}
-            <div className = "simple-tooltiptext">
+            <div className = "Simple-tooltiptext">
                 {tooltip}
             </div>
         </div>;

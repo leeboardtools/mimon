@@ -128,7 +128,7 @@ export class ContextMenu extends React.Component {
             menuClassExtras += ' show';
             menuComponent = <MenuList
                 items={items}
-                menuClassExtras={'scrollable-menu ' + menuClassExtras}
+                menuClassExtras={'Scrollable-menu ' + menuClassExtras}
                 itemClassExtras={itemClassExtras}
                 onChooseItem={onChooseItem}
                 ref={this._menuRef}
