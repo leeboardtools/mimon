@@ -583,10 +583,10 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
             columnInfoDefs.splits = { key: 'splits',
                 header: {
                     label: userMsg('AccountRegister-split'),
-                    classExtras: 'header-base splits-base splits-header',
+                    classExtras: 'RowTable-header-base Splits-base Splits-header',
                 },
-                inputClassExtras: 'splits-base splits-input',
-                cellClassName: 'cell-base splits-base splits-cell',
+                inputClassExtras: 'Splits-base splits-input',
+                cellClassName: 'RowTable-cell-base Splits-base Splits-cell',
 
                 propertyName: 'splits',
                 getCellValue: getSplitsListCellValue,

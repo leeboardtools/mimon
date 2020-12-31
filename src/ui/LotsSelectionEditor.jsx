@@ -231,10 +231,10 @@ function getLotsSelectionEditorColumnInfos() {
             header: {
                 label: userMsg('LotsSelectionEditor-term'),
                 ariaLabel: 'Term',
-                classExtras: 'header-base',
+                classExtras: 'RowTable-header-base',
             },
             inputClassExtras: '',
-            cellClassName: 'cell-base',
+            cellClassName: 'RowTable-cell-base',
 
             getCellValue: (args) => getCellValue(args, 'term'),
             renderDisplayCell: ACE.renderTextDisplay,
@@ -244,10 +244,10 @@ function getLotsSelectionEditorColumnInfos() {
             header: {
                 label: userMsg('LotsSelectionEditor-availableShares'),
                 ariaLabel: 'Term',
-                classExtras: 'header-base shares-base shares-header',
+                classExtras: 'RowTable-header-base Shares-base Shares-header',
             },
-            inputClassExtras: 'shares-base shares-input',
-            cellClassName: 'cell-base shares-base shares-cell',
+            inputClassExtras: 'Shares-base shares-input',
+            cellClassName: 'RowTable-cell-base Shares-base Shares-cell',
 
             getCellValue: (args) => getSharesCellValue(args, 'availableSharesBaseValue'),
             renderDisplayCell: ACE.renderQuantityDisplay,
@@ -257,10 +257,10 @@ function getLotsSelectionEditorColumnInfos() {
             header: {
                 label: userMsg('LotsSelectionEditor-selectedShares'),
                 ariaLabel: 'Term',
-                classExtras: 'header-base shares-base shares-header',
+                classExtras: 'RowTable-header-base Shares-base Shares-header',
             },
-            inputClassExtras: 'shares-base shares-input',
-            cellClassName: 'cell-base shares-base shares-cell',
+            inputClassExtras: 'Shares-base shares-input',
+            cellClassName: 'RowTable-cell-base Shares-base Shares-cell',
 
             getCellValue: (args) => getSharesCellValue(args, 'selectedSharesBaseValue'),
             saveCellValue: saveSelectedSharesCellValue,
@@ -272,11 +272,11 @@ function getLotsSelectionEditorColumnInfos() {
         allButton: {
             header: {
                 ariaLabel: 'All Buttons',
-                classExtras: 'header-base',
+                classExtras: 'RowTable-header-base',
             },
             ariaLabel: 'All',
-            inputClassExtras: 'button-input',
-            cellClassName: 'cell-base all_none-button',
+            inputClassExtras: 'Button-input',
+            cellClassName: 'RowTable-cell-base All_None-button',
 
             getCellValue: (args) => '',
             saveCellValue: (args) => '',    
@@ -289,11 +289,11 @@ function getLotsSelectionEditorColumnInfos() {
         noneButton: {
             header: {
                 ariaLabel: 'None Buttons',
-                classExtras: 'header-base',
+                classExtras: 'RowTable-header-base',
             },
             ariaLabel: 'None',
-            inputClassExtras: 'button-input',
-            cellClassName: 'cell-base all_none-button',
+            inputClassExtras: 'Button-input',
+            cellClassName: 'RowTable-cell-base All_None-button',
 
             getCellValue: (args) => '',
             saveCellValue: (args) => '',

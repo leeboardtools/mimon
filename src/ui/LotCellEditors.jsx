@@ -1335,10 +1335,10 @@ export function getActionColumnInfo(args) {
         header: {
             label: userMsg('LotCellEditors-actionType'),
             ariaLabel: 'Action',
-            classExtras: 'header-base actionType-base actionType-header',
+            classExtras: 'RowTable-header-base actionType-base actionType-header',
         },
         inputClassExtras: 'actionType-base actionType-input',
-        cellClassName: 'cell-base actionType-base actionType-cell',
+        cellClassName: 'RowTable-cell-base actionType-base actionType-cell',
 
         getCellValue: (args) => getActionCellValue(args, columnInfoArgs),
         saveCellValue: (args) => saveActionCellValue(args, columnInfoArgs),
@@ -1466,11 +1466,11 @@ function getQuantityEditorColumnInfo(editorName, args, className, readOnlyFilter
         header: {
             label: label,
             ariaLabel: label,
-            classExtras: 'header-base ' + className + '-base '
+            classExtras: 'RowTable-header-base ' + className + '-base '
                 + className + '-header' + headerClassExtras,
         },
         inputClassExtras: className + '-base ' + className + '-input' + inputClassExtras,
-        cellClassName: 'cell-base ' + className + '-base ' + className + '-cell'
+        cellClassName: 'RowTable-cell-base ' + className + '-base ' + className + '-cell'
             + cellClassExtras,
 
         getCellValue: (args) => 
@@ -1613,7 +1613,7 @@ function renderSharesEditor(args, columnInfoArgs) {
         return <CellButton
             value = {value}
             ariaLabel = {ariaLabel}
-            classExtras = {inputClassExtras + ' button-input'}
+            classExtras = {inputClassExtras + ' Button-input'}
             size = {inputSize}
             onClick = {(e) => handleSellByLots(args, columnInfoArgs)}
             errorMsg = {errorMsg}
@@ -1678,7 +1678,7 @@ export function getFeesColumnInfo(args) {
             }
         },
         {
-            headerClassExtras: 'fees-header',
+            headerClassExtras: 'Fees-header',
         });
 }
 
@@ -1724,10 +1724,10 @@ export function getTotalSharesColumnInfo(args) {
         header: {
             label: userMsg('LotCellEditors-totalShares'),
             ariaLabel: 'Total Shares',
-            classExtras: 'header-base shares-base shares-header',
+            classExtras: 'RowTable-header-base Shares-base Shares-header',
         },
-        inputClassExtras: 'shares-base shares-input',
-        cellClassName: 'cell-base shares-base shares-cell',
+        inputClassExtras: 'Shares-base shares-input',
+        cellClassName: 'RowTable-cell-base Shares-base Shares-cell',
 
         getCellValue: (args) => 
             getTotalSharesCellValue(args, columnInfoArgs),
@@ -1769,10 +1769,10 @@ export function getTotalMarketValueColumnInfo(args) {
         header: {
             label: userMsg('LotCellEditors-totalMarketValue'),
             ariaLabel: 'Total Shares',
-            classExtras: 'header-base monetary-base monetary-header',
+            classExtras: 'RowTable-header-base Monetary-base Monetary-header',
         },
-        inputClassExtras: 'monetary-base monetary-input',
-        cellClassName: 'cell-base monetary-base monetary-cell',
+        inputClassExtras: 'Monetary-base monetary-input',
+        cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell',
 
         getCellValue: (args) => 
             getTotalMarketValueCellValue(args, columnInfoArgs),
@@ -1847,10 +1847,10 @@ export function getTotalCostBasisColumnInfo(args) {
         header: {
             label: userMsg('LotCellEditors-totalCostBasis'),
             ariaLabel: 'Total Cost Basis',
-            classExtras: 'header-base monetary-base monetary-header',
+            classExtras: 'RowTable-header-base Monetary-base Monetary-header',
         },
-        inputClassExtras: 'monetary-base monetary-input',
-        cellClassName: 'cell-base monetary-base monetary-cell',
+        inputClassExtras: 'Monetary-base monetary-input',
+        cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell',
 
         getCellValue: (args) => 
             getTotalCostBasisCellValue(args, columnInfoArgs),
@@ -1896,10 +1896,10 @@ export function getTotalCashInColumnInfo(args) {
         header: {
             label: userMsg('LotCellEditors-totalCashIn'),
             ariaLabel: 'Total Cash-In',
-            classExtras: 'header-base monetary-base monetary-header',
+            classExtras: 'RowTable-header-base Monetary-base Monetary-header',
         },
-        inputClassExtras: 'monetary-base monetary-input',
-        cellClassName: 'cell-base monetary-base monetary-cell',
+        inputClassExtras: 'Monetary-base monetary-input',
+        cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell',
 
         getCellValue: (args) => 
             getTotalCashInCellValue(args, columnInfoArgs),
@@ -1939,10 +1939,10 @@ export function getTotalGainColumnInfo(args) {
         header: {
             label: userMsg('LotCellEditors-totalGain'),
             ariaLabel: 'Total Gain',
-            classExtras: 'header-base monetary-base monetary-header',
+            classExtras: 'RowTable-header-base Monetary-base Monetary-header',
         },
-        inputClassExtras: 'monetary-base monetary-input',
-        cellClassName: 'cell-base monetary-base monetary-cell',
+        inputClassExtras: 'Monetary-base monetary-input',
+        cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell',
     },
     args);
 }
@@ -2032,10 +2032,10 @@ export function getTotalSimplePercentGainColumnInfo(args) {
         header: {
             label: userMsg('LotCellEditors-totalPercentGain'),
             ariaLabel: 'Total Percent Gain',
-            classExtras: 'header-base percent-base percent-header',
+            classExtras: 'RowTable-header-base Percent-base Percent-header',
         },
-        inputClassExtras: 'percent-base percent-input',
-        cellClassName: 'cell-base percent-base percent-cell',
+        inputClassExtras: 'Percent-base percent-input',
+        cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
     },
     args);
 }
@@ -2068,10 +2068,10 @@ export function getTotalCashInGainColumnInfo(args) {
         header: {
             label: userMsg('LotCellEditors-totalCashInGain'),
             ariaLabel: 'Total Cash In Gain',
-            classExtras: 'header-base monetary-base monetary-header',
+            classExtras: 'RowTable-header-base Monetary-base Monetary-header',
         },
-        inputClassExtras: 'monetary-base monetary-input',
-        cellClassName: 'cell-base monetary-base monetary-cell',
+        inputClassExtras: 'Monetary-base monetary-input',
+        cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell',
     },
     args);
 }
@@ -2104,10 +2104,10 @@ export function getTotalCashInPercentGainColumnInfo(args) {
         header: {
             label: userMsg('LotCellEditors-totalCashInPercentGain'),
             ariaLabel: 'Total Cash In Percent Gain',
-            classExtras: 'header-base percent-base percent-header',
+            classExtras: 'RowTable-header-base Percent-base Percent-header',
         },
-        inputClassExtras: 'percent-base percent-input',
-        cellClassName: 'cell-base percent-base percent-cell',
+        inputClassExtras: 'Percent-base percent-input',
+        cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
     },
     args);
 }
@@ -2140,10 +2140,10 @@ export function getTotalAnnualPercentGainColumnInfo(args) {
         header: {
             label: userMsg('LotCellEditors-totalAnnualPercentGain'),
             ariaLabel: 'Total Annual Percent Gain',
-            classExtras: 'header-base percent-base percent-header',
+            classExtras: 'RowTable-header-base Percent-base Percent-header',
         },
-        inputClassExtras: 'percent-base percent-input',
-        cellClassName: 'cell-base percent-base percent-cell',
+        inputClassExtras: 'Percent-base percent-input',
+        cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
     },
     args);
 }
@@ -2210,10 +2210,10 @@ export function getTotalAnnualCashInPercentGainColumnInfo(args) {
         header: {
             label: userMsg('LotCellEditors-totalAnnualCashInPercentGain'),
             ariaLabel: 'Total Annual Cash-In Percent Gain',
-            classExtras: 'header-base percent-base percent-header',
+            classExtras: 'RowTable-header-base Percent-base Percent-header',
         },
-        inputClassExtras: 'percent-base percent-input',
-        cellClassName: 'cell-base percent-base percent-cell',
+        inputClassExtras: 'Percent-base percent-input',
+        cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
     },
     args);
 }

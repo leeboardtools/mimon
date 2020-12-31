@@ -30,7 +30,7 @@ export function getAccountsListColumnInfoDefs() {
                 header: {
                     label: userMsg('AccountsList-name'),
                     ariaLabel: 'Name',
-                    classExtras: 'header-base text-left',
+                    classExtras: 'RowTable-header-base text-left',
                 },
                 inputClassExtras: 'text-left',
                 cellClassName: 'm-0 w-50',

@@ -216,7 +216,7 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
                 header: {
                     label: userMsg('RemindersList-accountName_heading'),
                     ariaLabel: 'Account Name',
-                    classExtras: 'text-left name-cell',
+                    classExtras: 'text-left Name-cell',
                 },
                 cellClassName: cellClassName,
                 getCellValue: getAccountNameCellValue,

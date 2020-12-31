@@ -412,8 +412,8 @@ export class PriceRetrieverWindow extends React.Component {
         }
 
         return <div className = "row align-items-center w-100 h-100" style = {style}>
-            <div className = "d-flex flex-row w-inherit h-inherit m-1">
-                <div className = "flex-row flex-grow-1 pl-3 pb-2 h-inherit">
+            <div className = "d-flex flex-row W-inherit H-inherit m-1">
+                <div className = "flex-row flex-grow-1 pl-3 pb-2 H-inherit">
                     <TickerSelector
                         accessor = { this.props.accessor }
                         tickerEntries = {tickerEntries}
@@ -519,7 +519,7 @@ export class PriceRetrieverWindow extends React.Component {
         const header = <div>
             <div className = "row">
                 <div className = "col">
-                    <h4 className = "pageTitle pb-3 border-bottom"
+                    <h4 className = "PageTitle pb-3 border-bottom"
                     >
                         {userMsg('PriceRetrieverWindow-title')}
                     </h4>

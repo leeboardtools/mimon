@@ -46,7 +46,7 @@
     "App-open_file_title": "Accounting File To Open",
     "App-open_failed": ["Could not open '", "'. ", ""],
     "App-save_failed_title": "Save Failed",
-    "App-save_failed_msg": ["Could not save '", "'. ", "\nDo you want to try again?"],
+    "App-save_Failed-msg": ["Could not save '", "'. ", "\nDo you want to try again?"],
     "App-save_retry_button": "Retry Save",
     "App-save_ignore_button": "Lose Changes",
     "App-save_exit_button": "Lose Changes and Exit",

@@ -209,10 +209,10 @@ export function getRefNumColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-refNum'),
             ariaLabel: 'Reference Number',
-            classExtras: 'header-base refNum-base refNum-header',
+            classExtras: 'RowTable-header-base RefNum-base refNum-header',
         },
-        inputClassExtras: 'refNum-base refNum-input',
-        cellClassName: 'cell-base refNum-base refNum-cell',
+        inputClassExtras: 'RefNum-base refNum-input',
+        cellClassName: 'RowTable-cell-base RefNum-base RefNum-cell',
 
         renderDisplayCell: renderRefNumDisplay,
         renderEditCell: renderRefNumEditor,
@@ -281,10 +281,10 @@ export function getNameColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-name'),
             ariaLabel: 'Name',
-            classExtras: 'header-base name-base name-header',
+            classExtras: 'RowTable-header-base Name-base name-header',
         },
-        inputClassExtras: 'name-base name-input',
-        cellClassName: 'cell-base name-base name-cell',
+        inputClassExtras: 'Name-base name-input',
+        cellClassName: 'RowTable-cell-base Name-base Name-cell',
 
         renderDisplayCell: renderNameDisplay,
         renderEditCell: renderNameEditor,
@@ -351,10 +351,10 @@ export function getDescriptionColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-description'),
             ariaLabel: 'Description',
-            classExtras: 'header-base description-base description-header',
+            classExtras: 'RowTable-header-base Description-base Description-header',
         },
-        inputClassExtras: 'description-base description-input',
-        cellClassName: 'cell-base description-base description-cell',
+        inputClassExtras: 'Description-base description-input',
+        cellClassName: 'RowTable-cell-base Description-base Description-cell',
 
         renderDisplayCell: renderDescriptionDisplay,
         renderEditCell: renderDescriptionEditor,
@@ -447,10 +447,10 @@ export function getDateColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-date'),
             ariaLabel: 'Date',
-            classExtras: 'header-base date-base date-header',
+            classExtras: 'RowTable-header-base Date-base date-header',
         },
-        inputClassExtras: 'date-base date-input',
-        cellClassName: 'cell-base date-base date-cell',
+        inputClassExtras: 'Date-base date-input',
+        cellClassName: 'RowTable-cell-base Date-base Date-cell',
 
         renderDisplayCell: renderDateDisplay,
         renderEditCell: renderDateEditor,
@@ -565,10 +565,10 @@ export function getAccountTypeColumnInfo(args) {
     return Object.assign({ key: 'accountType',
         header: {
             label: userMsg('AccountingCellEditors-accountType'),
-            classExtras: 'header-base accountType-base accountType-header',
+            classExtras: 'RowTable-header-base AccountType-base accountType-header',
         },
-        inputClassExtras: 'accountType-base accountType-input',
-        cellClassName: 'cell-base accountType-base accountType-cell',
+        inputClassExtras: 'AccountType-base accountType-input',
+        cellClassName: 'RowTable-cell-base AccountType-base AccountType-cell',
 
         renderDisplayCell: renderAccountTypeDisplay,
         renderEditCell: renderAccountTypeEditor,
@@ -701,10 +701,10 @@ export function getAccountIdColumnInfo(args) {
     return Object.assign({ key: 'accountId',
         header: {
             label: userMsg('AccountingCellEditors-accountId'),
-            classExtras: 'header-base accountId-base accountId-header',
+            classExtras: 'RowTable-header-base AccountId-base AccountId-header',
         },
-        inputClassExtras: 'accountId-base accountId-input',
-        cellClassName: 'cell-base accountId-base accountId-cell',
+        inputClassExtras: 'AccountId-base accountId-input',
+        cellClassName: 'RowTable-cell-base AccountId-base AccountId-cell',
 
         renderDisplayCell: renderAccountIdDisplay,
         renderEditCell: renderAccountIdEditor,
@@ -816,10 +816,10 @@ export function getReconcileStateColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-reconcile'),
             ariaLabel: 'Reconcile',
-            classExtras: 'header-base reconcile-base reconcile-header',
+            classExtras: 'RowTable-header-base Reconcile-base reconcile-header',
         },
-        inputClassExtras: 'reconcile-base reconcile-input',
-        cellClassName: 'cell-base reconcile-base reconcile-cell',
+        inputClassExtras: 'Reconcile-base reconcile-input',
+        cellClassName: 'RowTable-cell-base Reconcile-base Reconcile-cell',
 
         renderDisplayCell: renderReconcileStateDisplay,
         renderEditCell: renderReconcileStateEditor,
@@ -1053,12 +1053,12 @@ export function getBalanceColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-balance'),
             ariaLabel: 'Balance',
-            classExtras: 'header-base monetary-base monetary-header '
+            classExtras: 'RowTable-header-base Monetary-base Monetary-header '
                 + 'balance-base balance-header',
         },
-        inputClassExtras: 'monetary-base monetary-input '
+        inputClassExtras: 'Monetary-base monetary-input '
             + 'balance-base balance-input',
-        cellClassName: 'cell-base monetary-base monetary-cell '
+        cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell '
             + 'balance-base balance-cell',
 
         renderDisplayCell: renderBalanceDisplay,
@@ -1363,10 +1363,10 @@ export function getSplitQuantityColumnInfo(args, type, label) {
     return Object.assign({ key: type,
         header: {
             label: label,
-            classExtras: 'header-base splitQuantity-base splitQuantity-header',
+            classExtras: 'RowTable-header-base SplitQuantity-base SplitQuantity-header',
         },
-        inputClassExtras: 'splitQuantity-base splitQuantity-input',
-        cellClassName: 'cell-base splitQuantity-base splitQuantity-cell',
+        inputClassExtras: 'SplitQuantity-base splitQuantity-input',
+        cellClassName: 'RowTable-cell-base SplitQuantity-base SplitQuantity-cell',
 
         renderDisplayCell: renderSplitQuantityDisplay,
         renderEditCell: renderSplitQuantityEditor,

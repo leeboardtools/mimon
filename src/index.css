@@ -12,10 +12,6 @@ body {
   display: flex;
 }
 
-.fixed-width-button {
-  width: 5rem;
-}
-
 
 /* Make this a little darker than Bootstrap's */
 .dropdown-item:hover {
@@ -23,12 +19,12 @@ body {
 }
 
 
-.undo-tooltip {
+.Undo-tooltip {
   position: relative;
   display: inline-block;
 }
 
-.undo-tooltip .undo-tooltiptext {
+.Undo-tooltip .Undo-tooltip-text {
   visibility: hidden;
   width: 200px;
   background-color: #555;
@@ -45,7 +41,7 @@ body {
   margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
 }
 
-.undo-tooltip .undo-tooltiptext::after {
+.Undo-tooltip .Undo-tooltip-text::after {
   content: "";
   position: absolute;
   bottom: 100%;
@@ -56,7 +52,7 @@ body {
   border-color: transparent transparent #555 transparent;
 }
 
-.undo-tooltip:hover .undo-tooltiptext {
+.Undo-tooltip:hover .Undo-tooltip-text {
   visibility: visible;
   opacity: 1;
 }
@@ -64,7 +60,7 @@ body {
 
 
 
-.pageTitle {
+.PageTitle {
   margin-top: 0.5rem;
 }
 
@@ -88,13 +84,13 @@ body {
 */
 
 
-.header-base  {
+.RowTable-header-base  {
   /* TEST!!! */
   /*border: 1px solid #666666;*/
   flex-grow: 0;
 }
 
-.cell-base {
+.RowTable-cell-base {
   /* TEST!!! */
   /*border: 1px solid #333333;*/
   flex-grow: 0;
@@ -109,100 +105,100 @@ body {
 }
 
 
-.date-base {
+.Date-base {
   text-align: center;
 }
 
-.date-cell {
+.Date-cell {
   flex-basis: 10rem;
 }
 
 
-.refNum-base {
+.RefNum-base {
   text-align: center;
 }
 
-.refNum-cell {
+.RefNum-cell {
   flex-basis: 6rem;
 }
 
 
-.name-base {
+.Name-base {
   text-align: left;
 }
 
-.name-cell {
+.Name-cell {
   flex-grow: 2;
 }
 
 
-.description-base {
+.Description-base {
   text-align: left;
 }
 
-.description-header {
+.Description-header {
   flex-grow: 2;
 }
 
-.description-cell {
+.Description-cell {
   flex-grow: 2;
 }
 
 
-.accountType-base {
+.AccountType-base {
   text-align: left;
 }
 
-.accountType-cell {
+.AccountType-cell {
   flex-grow: 1;
 }
 
 
-.accountId-base {
+.AccountId-base {
   text-align: left;
 }
 
-.accountId-header {
+.AccountId-header {
   flex-grow: 2;
 }
 
-.accountId-cell {
+.AccountId-cell {
   flex-grow: 2;
 }
 
 
-.splits-base {
+.Splits-base {
   text-align: left;
 }
 
-.splits-header {
+.Splits-header {
   flex-grow: 2;
 }
 
-.splits-cell {
+.Splits-cell {
   flex-grow: 2;
 }
 
 
-.reconcile-base {
+.Reconcile-base {
   text-align: center;
 }
 
-.reconcile-cell {
+.Reconcile-cell {
   flex-basis: 3rem;
 }
 
 
-.splitQuantity-base {
+.SplitQuantity-base {
   text-align: right;
 }
 
-.splitQuantity-header {
+.SplitQuantity-header {
   text-align: center;
   flex-basis: 9rem;
 }
 
-.splitQuantity-cell {
+.SplitQuantity-cell {
   flex-basis: 9rem;
 }
 
@@ -212,35 +208,35 @@ body {
 }
 
 
-.shares-base {
+.Shares-base {
   text-align: right;
 }
 
-.shares-header {
-  text-align: right;
-  flex-basis: 10rem;
-}
-
-.shares-cell {
-  flex-basis: 10rem;
-}
-
-
-.monetary-base {
-  text-align: right;
-}
-
-.monetary-header {
+.Shares-header {
   text-align: right;
   flex-basis: 10rem;
 }
 
-.monetary-cell {
+.Shares-cell {
+  flex-basis: 10rem;
+}
+
+
+.Monetary-base {
+  text-align: right;
+}
+
+.Monetary-header {
+  text-align: right;
+  flex-basis: 10rem;
+}
+
+.Monetary-cell {
   flex-grow: 0;
   flex-basis: 10rem;
 }
 
-.fees-header {
+.Fees-header {
   flex-grow: 0;
   flex-basis: 4rem;
 }
@@ -251,39 +247,39 @@ body {
 }
 
 
-.percent-base {
+.Percent-base {
   text-align: right;
 }
 
-.percent-header {
+.Percent-header {
   text-align: right;
   flex-basis: 8rem;
 }
 
-.percent-cell {
+.Percent-cell {
   flex-grow: 0;
   flex-basis: 8rem;
 }
 
 
-.priceItemType-base {
+.PriceItemType-base {
   text-align: left;
 }
 
-.priceItemType-cell {
+.PriceItemType-cell {
   flex-grow: 0;
 }
 
 
 
-.button-input {
+.Button-input {
   border-width: 1px;
   border-radius: 2px;
   border-color: darkgray;
   text-align: center;
 }
 
-.all_none-button {
+.All_None-button {
   flex-basis: 5rem;
 }
 
@@ -352,15 +348,9 @@ body {
   background-color: #fff;
 }
 
-.ticker-base {
+.Ticker-base {
   text-align: left;
   left: 1rem;
-}
-.ticker-checked::before {
-    position: absolute;
-    left: -.4rem;
-    content: '✓';
-    font-weight: 600;
 }
 
 
@@ -524,19 +514,19 @@ are necessary to max out the width */
 }
 
 
-.h-inherit {
+.H-inherit {
   height: inherit;
 }
 
-.w-inherit {
+.W-inherit {
   width: inherit;
 }
 
 
-.failed_msg {
+.Failed-msg {
   color: darkred;
 }
 
-.success_msg {
+.Success-msg {
   color: darkgreen;
 }

@@ -708,7 +708,7 @@ export class MainWindow extends React.Component {
         undoInfo = undoInfo || {};
         redoInfo = redoInfo || {};
 
-        let undoClassName = baseClassName + ' undo-tooltip';
+        let undoClassName = baseClassName + ' Undo-tooltip';
         if (!undoInfo.onClick) {
             undoClassName += ' disabled';
         }
@@ -721,11 +721,11 @@ export class MainWindow extends React.Component {
             role="button"
         >
             <i className="material-icons">undo</i>
-            <span className="undo-tooltiptext">{undoInfo.label}</span>
+            <span className="Undo-tooltip-text">{undoInfo.label}</span>
         </a>;
 
 
-        let redoClassName = baseClassName + ' undo-tooltip';
+        let redoClassName = baseClassName + ' Undo-tooltip';
         if (!redoInfo.onClick) {
             redoClassName += ' disabled';
         }
@@ -737,7 +737,7 @@ export class MainWindow extends React.Component {
             role="button"
         >
             <i className="material-icons">redo</i>
-            <span className="undo-tooltiptext">{redoInfo.label}</span>
+            <span className="Undo-tooltip-text">{redoInfo.label}</span>
         </a>;
 
 

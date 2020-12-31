@@ -101,7 +101,7 @@ export class TickerSelector extends React.Component {
                 className += ' active';
             }
 
-            let tickerClassName = 'col ticker-base';
+            let tickerClassName = 'col Ticker-base';
 
             let tickerComponent = ticker;
             if (!noTickerTooltips && pricedItemDataItem && pricedItemDataItem.name) {
@@ -120,11 +120,11 @@ export class TickerSelector extends React.Component {
             </label>;
 
 
-            let statusClassName = 'col monetary-base';
+            let statusClassName = 'col Monetary-base';
             let statusMsg;
             if (errorMsg) {
                 statusMsg = errorMsg;
-                statusClassName += ' failed_msg';
+                statusClassName += ' Failed-msg';
             }
             else {
                 statusMsg = retrievedPrice;
@@ -141,7 +141,7 @@ export class TickerSelector extends React.Component {
                     }
                 }
 
-                statusClassName += ' success_msg';
+                statusClassName += ' Success-msg';
             }
             
             return <li key = {ticker}

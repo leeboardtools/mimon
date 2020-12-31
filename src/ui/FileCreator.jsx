@@ -130,7 +130,7 @@ class NewFileName extends React.Component {
         const projectNameEditor = this.renderProjectNameEditor();
 
         return <div className = "container-fluid mt-auto mb-auto">
-            <h4 className = "pageTitle pb-3 mb-4 border-bottom">
+            <h4 className = "PageTitle pb-3 mb-4 border-bottom">
                 {userMsg('NewFileName-heading')}
             </h4>
             {baseDirSelector}
@@ -270,7 +270,7 @@ class GeneralSettingsEditor extends React.Component {
         const addTestReminders = this.renderAddTestReminders();
 
         return <div className = "container-fluid mt-auto mb-auto">
-            <h4 className = "pageTitle pb-3 mb-4 border-bottom">
+            <h4 className = "PageTitle pb-3 mb-4 border-bottom">
                 {userMsg('GeneraSettingsEditor-heading')}
             </h4>
             {openingBalancesDateEditor}

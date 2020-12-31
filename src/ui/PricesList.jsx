@@ -163,10 +163,10 @@ function getPriceItemTypeColumnInfo() {
     return { key: 'priceItemType',
         header: {
             label: userMsg('PricesList-label_type'),
-            classExtras: 'header-base priceItemType-base priceItemType-header',
+            classExtras: 'RowTable-header-base PriceItemType-base PriceItemType-header',
         },
-        inputClassExtras: 'priceItemType-base priceItemType-input',
-        cellClassName: 'cell-base priceItemType-base priceItemType-cell',
+        inputClassExtras: 'PriceItemType-base priceItemType-input',
+        cellClassName: 'RowTable-cell-base PriceItemType-base PriceItemType-cell',
 
         getCellValue: getPriceItemTypeCellValue,
         saveCellValue: savePriceItemTypeCellValue,
@@ -280,10 +280,10 @@ function getPriceValueColumnInfo(name, multiplierName, countSuffix) {
         header: {
             label: userMsg('PricesList-label_' + name),
             ariaLabel: name,
-            classExtras: 'header-base monetary-base monetary-header',
+            classExtras: 'RowTable-header-base Monetary-base Monetary-header',
         },
-        inputClassExtras: 'monetary-base monetary-input',
-        cellClassName: 'cell-base monetary-base monetary-cell',
+        inputClassExtras: 'Monetary-base monetary-input',
+        cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell',
 
         getCellValue: (args) => 
             getPriceValueCellValue(args, name, multiplierName, countSuffix),

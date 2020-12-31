@@ -209,7 +209,7 @@ export class NewFileConfigurator extends React.Component {
         // Have the undo/redo buttons...
         const baseClassName = 'nav nav-link pl-2 pr-2';
 
-        let undoClassName = baseClassName + ' undo-tooltip';
+        let undoClassName = baseClassName + ' Undo-tooltip';
         let undoLabel;
         let undoOnClick;
         if (undoItem) {
@@ -231,11 +231,11 @@ export class NewFileConfigurator extends React.Component {
             role = "button"
         >
             <i className = "material-icons">undo</i>
-            <span className = "undo-tooltiptext">{undoLabel}</span>
+            <span className = "Undo-tooltip-text">{undoLabel}</span>
         </a>;
 
 
-        let redoClassName = baseClassName + ' undo-tooltip';
+        let redoClassName = baseClassName + ' Undo-tooltip';
         let redoLabel;
         let redoOnClick;
         if (redoItem) {
@@ -256,7 +256,7 @@ export class NewFileConfigurator extends React.Component {
             role = "button"
         >
             <i className = "material-icons">redo</i>
-            <span className = "undo-tooltiptext">{redoLabel}</span>
+            <span className = "Undo-tooltip-text">{redoLabel}</span>
         </a>;
 
 
@@ -305,7 +305,7 @@ export class NewFileConfigurator extends React.Component {
             onPostRenderTabs = {this.onPostRenderTabs}
         />;
 
-        const titleBar = <h4 className = "pageTitle pb-3 border-bottom"
+        const titleBar = <h4 className = "PageTitle pb-3 border-bottom"
         >
             {userMsg('NewFileAccountsEditor-heading')}
         </h4>;

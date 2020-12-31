@@ -360,7 +360,7 @@ export default class App extends React.Component {
                 catch (e) {
                     const name = path.parse(
                         this._accessor.getAccountingFilePathName()).base;
-                    const msg = userMsg('App-save_failed_msg', name, e.toString());
+                    const msg = userMsg('App-save_Failed-msg', name, e.toString());
                     const buttons = [
                         { id: 'yes', label: userMsg('App-save_retry_button'), },
                         { id: 'no', label: noButtonLabel, },
