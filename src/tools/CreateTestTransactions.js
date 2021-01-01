@@ -36,7 +36,9 @@ function findAccountEntry(newFileContents, accountPath) {
 export function createTestTransactions(newFileContents, options) {
     options = options || {};
     const transactions = [];
-    newFileContents.transactions = transactions;
+    newFileContents.transactions = {
+        transactions: transactions,
+    };
 
     transactions.push({
         ymdDate: '2020-01-03',
@@ -864,8 +866,6 @@ export function createTestTransactions(newFileContents, options) {
     if (fourOhOneKAccount) {
         // 
     }
-
-    createTestReminders(newFileContents, options);
 }
 
 
@@ -1025,7 +1025,9 @@ function addLotTransaction(args, args2) {
 export function createTestReminders(newFileContents, options) {
     options = options || {};
     const reminders = [];
-    newFileContents.reminders = reminders;
+    newFileContents.reminders = {
+        reminders: reminders,
+    };
 
     const paycheckTemplate = {
         description: 'Paycheck',

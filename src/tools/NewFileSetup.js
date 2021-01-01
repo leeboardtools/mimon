@@ -8,15 +8,79 @@ import { userMsg, userError } from '../util/UserMessages';
 
 /**
  * @typedef {object}    NewFileContents_PricedItem
- * @property {string}   type
- * @property {string}   name
- * @property {string}   [id]
- * @property {string}   [ticker]
+ * @property {string|number} [id]  The priced item's id.
+ * @property {string}   type    name property of one of {@link PricedItemType}.
+ * @property {string}   [currency]  The 3 letter currency name of the currency 
+ * underlying the priced item. If <code>undefined</code> the base currency from 
+ * the priced item manager is to be used. Required if type is 
+ * {@link PrciedItemType~CURRENCY}
+ * @property {string}   [quantityDefinition]  The name of the {@link QuantityDefinition} 
+ * defining quantities of the priced item.
+ * @property {string}   [priceQuantityDefinition]   If specified the
+ * name of the {@link QuantityDefinition} defining the prices of the item, normally
+ * used for securities.
+ * @property {string}   [name]  The user supplied name of the priced item.
+ * @property {string}   [description]   The user supplied description of the 
+ * priced item.
+ * @property {string}   [ticker]    The ticker symbol, only for priced item types
+ * that have hasTickerSymbol.
+ * @property {string}   [onlineUpdateType]  The online update type, only for 
+ * priced item types that have hasTickerSymbol.
+ * @property {string|number} [id]
  */
 
 /**
  * @typedef {object}    NewFileContents_PricedItems
- * @property {NewFileContents_PricedItem[]}    [pricedItems]
+ * @property {NewFileContents_PricedItem} [pricedItems]
+ */
+
+
+
+/**
+ * @typedef {object}    NewFileContents_Lot
+ * @property {string|number} pricedItemId The id property from a 
+ * NewFileContents_PricedItem
+ * @property {string} [description]
+ * @property {string|number} [id]
+ * @property {string} [lotOriginType]
+ */
+
+/**
+ * @typedef {object}    NewFileContents_Lots
+ * The pricedItemId property is the string/number referring to the matching 
+ * string/number id property of a NewFileContents_PricedItem.
+ * @property {LotDataItem[]} [lots]
+ */
+
+
+/**
+ * @typedef {object}    NewFileContents_PricesItem
+ * @property {string|number} pricedItemId The id property from a 
+ * NewFileContents_PricedItem
+ * @property {PriceDataItem[]} [prices]
+ */
+
+/**
+ * @typedef {object}    NewFileContents_Prices
+ * The pricedItemId property is the string/number referring to the matching 
+ * string/number id property of a NewFileContents_PricedItem.
+ * @property {NewFileContents_PricesItem[]} [prices]
+ */
+
+
+/**
+ * @typedef {object}    NewFileContents_Transactions
+ * Account ids in the splits are strings/numbers referring to the matching 
+ * string/number id property of a NewFileContents_Account.
+ * @property {TransactionDataItem[]} [transactions]
+ */
+
+
+/**
+ * @typedef {object}    NewFileContents_Reminders
+ * Account ids in the splits are strings/numbers referring to the matching 
+ * string/number id property of a NewFileContents_Account.
+ * @property {ReminderDataItem[]} [reminders]
  */
 
 /**
@@ -24,23 +88,35 @@ import { userMsg, userError } from '../util/UserMessages';
  * @property {string}   type
  * @property {string}   name
  * @property {string}   [id]
+ * @property {string}   [refId]
+ * @property {string}   [description]
+ * @property {string[]} [tags]
+ * @property {string|number} [pricedItemId] The id property from a 
+ * NewFileContents_PricedItem, if <code>undefined</code> the account will use
+ * the base currency priced item.
  * @property {NewFileContents_Account[]}    [childAccounts]
+ * @property {string} [openingBalance]
  */
 
 /**
  * @typedef {object}    NewFileContents_Accounts
- * @property {NewFileContents_Account[]}    ASSETS
- * @property {NewFileContents_Account[]}    LIABILITIES
+ * @property {NewFileContents_Account[]}    ASSET
+ * @property {NewFileContents_Account[]}    LIABILITY
  * @property {NewFileContents_Account[]}    INCOME
- * @property {NewFileContents_Account[]}    EXPENSES
+ * @property {NewFileContents_Account[]}    EXPENSE
  * @property {NewFileContents_Account[]}    EQUITY
  */
 
 /**
  * @typedef {object} NewFileContents
+ * @property {string} [baseCurrency]
  * @property {string}   [openingBalancesDate]
- * @property {NewFileContents_PricedItems}    [pricedItems]
+ * @property {NewFileContents_PricedItems} [pricedItems]
+ * @property {NewFileContents_Lots} [lots]
+ * @property {NewFileContents_Prices} [prices]
  * @property {NewFileContents_Accounts} [accounts]
+ * @property {NewFileContents_Transactions} [transactions]
+ * @property {NewFileContents_Reminders} [reminders]
  */
 
 //
@@ -113,6 +189,7 @@ async function asyncLoadPricedItems(setupInfo) {
                 description: item.description,
                 currency: item.currency || baseCurrency,
                 quantityDefinition: quantityDefinition,
+                priceQuantityDefinition: item.priceQuantityDefinition,
             };
             if (item.ticker) {
                 settings.ticker = item.ticker;
@@ -354,7 +431,11 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
 //---------------------------------------------------------
 //
 async function asyncLoadTransactions(setupInfo) {
-    const { transactions } = setupInfo.initialContents;
+    if (!setupInfo.initialContents.transactions) {
+        return;
+    }
+
+    const { transactions } = setupInfo.initialContents.transactions;
     if (!transactions) {
         return;
     }
@@ -365,6 +446,7 @@ async function asyncLoadTransactions(setupInfo) {
         setupInfo.transactionManager.isDebugAccountStates 
             = setupInfo.initialContents.isDebugAccountStates;
 
+        const transactionsToAdd = [];
         for (let i = 0; i < transactions.length; ++i) {
             item = transactions[i];
 
@@ -401,8 +483,9 @@ async function asyncLoadTransactions(setupInfo) {
             const transaction = Object.assign({}, item);
             transaction.splits = splits;
 
-            await setupInfo.transactionManager.asyncAddTransaction(transaction);
+            transactionsToAdd.push(transaction);
         }
+        await setupInfo.transactionManager.asyncAddTransaction(transactionsToAdd);
     }
     catch (e) {
         warnings.push(userMsg('NewFileSetup-addTransaction_failed',
@@ -418,7 +501,11 @@ async function asyncLoadTransactions(setupInfo) {
 //---------------------------------------------------------
 //
 async function asyncLoadReminders(setupInfo) {
-    const { reminders } = setupInfo.initialContents;
+    if (!setupInfo.initialContents.reminders) {
+        return;
+    }
+
+    const { reminders } = setupInfo.initialContents.reminders;
     if (!reminders) {
         return;
     }
