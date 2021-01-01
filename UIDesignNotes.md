@@ -472,7 +472,7 @@ Common menus:
 
 
     - File import
-
+        - Report warnings from importer in App.
 
     - Account Selector
         - Add a search box.

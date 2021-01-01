@@ -217,7 +217,7 @@ export default class App extends React.Component {
         this.onImportFileDirSelect = this.onImportFileDirSelect.bind(this);
         this.onImportFileFileSelect = this.onImportFileFileSelect.bind(this);
 
-        this.onImportProjectFileCreated = this.onImportProjectFileCreated.bind(this);
+        this.onImportProjectCreateFile = this.onImportProjectCreateFile.bind(this);
 
         this.onRevertFile = this.onRevertFile.bind(this);
         this.onCloseFile = this.onCloseFile.bind(this);
@@ -589,11 +589,20 @@ export default class App extends React.Component {
         });
     }
 
-    onImportProjectFileCreated() {
+    onImportProjectCreateFile({ pathName: projectPathName, newFileContents, }) {
         process.nextTick(async () => {
             const { importPathName } = this.state;
             try {
-                await this._fileImporter.asyncImportFile(importPathName);
+                // TODO:
+                // Want to report any errors or warnings...
+                const warnings = await this._fileImporter.asyncImportFile(importPathName, 
+                    projectPathName, newFileContents);
+                warnings;
+
+                if (warnings && warnings.length) {
+                    console.log(warnings);
+                }
+
                 this.enterMainWindow();
             }
             catch (e) {
@@ -696,7 +705,7 @@ export default class App extends React.Component {
                 mainSetup = {this.state.mainSetup}
                 isImport = {true}
                 frameManager = {this._frameManager}
-                onFileCreated = {this.onImportProjectFileCreated}
+                onCreateFile = {this.onImportProjectCreateFile}
                 onCancel = {this.onCancel}
                 initialDir = {currentDir}
             />;

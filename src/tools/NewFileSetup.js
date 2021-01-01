@@ -197,8 +197,16 @@ async function asyncLoadPricedItems(setupInfo) {
             if (item.onlineUpdateType) {
                 settings.onlineUpdateType = item.onlineUpdateType;
             }
+
             const pricedItemDataItem = (await pricedItemManager.asyncAddPricedItem(
                 settings)).newPricedItemDataItem;
+
+            if (setupInfo.initialContents.pricedItems.isDebug) {
+                console.log({
+                    id: item.id,
+                    pricedItemDataItem: pricedItemDataItem,
+                });
+            }
 
             pricedItemMapping.set(item.id, pricedItemDataItem);
 
@@ -245,6 +253,14 @@ async function asyncLoadLots(setupInfo) {
             };
             const lotDataItem = (await lotManager.asyncAddLot(
                 settings)).newLotDataItem;
+
+
+            if (setupInfo.initialContents.lots.isDebug) {
+                console.log({
+                    id: item.id,
+                    pricedItemDataItem: lotDataItem,
+                });
+            }
 
             lotMapping.set(item.id, lotDataItem);
             lotNameMapping.set(item.description, lotDataItem);
@@ -534,6 +550,7 @@ async function asyncLoadReminders(setupInfo) {
             }
 
             await reminderManager.asyncAddReminder(reminder);
+
         }
         catch (e) {
             warnings.push(userMsg('NewFileSetup-addReminder_failed', 

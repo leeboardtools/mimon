@@ -305,7 +305,6 @@ export class FileCreator extends React.Component {
             activePageIndex: 0,
             newFileContents: { 
                 accounts: [], 
-                pricedItems: [], 
                 openingBalancesDate: (new YMDDate()).toString(),
                 baseCurrency: 'USD',
             },
@@ -346,15 +345,17 @@ export class FileCreator extends React.Component {
         process.nextTick(async () => {
             const defaultProjectName = userMsg('FileCreator-default_project_name');
 
-            this._newFileTemplates = await asyncGetNewFileTemplates();
-
-            const newFileContents = this._newFileTemplates[0];
-
-            this.setState({
+            const stateChanges = {
                 projectName: await asyncGetUniqueFileName(this.state.baseDirName, 
                     defaultProjectName),
-                newFileContents: newFileContents,
-            });
+            };
+
+            if (!this.props.isImport) {
+                this._newFileTemplates = await asyncGetNewFileTemplates();
+                stateChanges.newFileContents = this._newFileTemplates[0];
+            }
+
+            this.setState(stateChanges);
         });
     }
 
@@ -552,20 +553,27 @@ export class FileCreator extends React.Component {
             try {
                 const { accessor } = this.props;
 
-                const warnings = await accessor.asyncCreateAccountingFile(
-                    pathName, fileFactoryIndex, newFileContents);
-
-                if (warnings.length) {
-                    this.setState({
-                        warningTitle: 
-                            userMsg('FileCreator-file_create_warnings', pathName),
-                        warningMsg: warnings,
+                if (this.props.onCreateFile) {
+                    this.props.onCreateFile({
+                        pathName: pathName,
+                        newFileContents: newFileContents,
                     });
                 }
                 else {
-                    this.props.onFileCreated();
-                }
+                    const warnings = await accessor.asyncCreateAccountingFile(
+                        pathName, fileFactoryIndex, newFileContents);
 
+                    if (warnings.length) {
+                        this.setState({
+                            warningTitle: 
+                                userMsg('FileCreator-file_create_warnings', pathName),
+                            warningMsg: warnings,
+                        });
+                    }
+                    else {
+                        this.props.onFileCreated();
+                    }
+                }
             }
             catch (e) {
                 this.setState({
@@ -618,6 +626,18 @@ export class FileCreator extends React.Component {
     }
 }
 
+
+/**
+ * @typedef {object} FileCreator~onCreateFileArgs
+ * @property {string} pathName
+ * @property {NewFileContents} newFileContents
+ */
+
+/**
+ * @callback FileCreator~onCreateFile
+ * @param {FileCreator~onCreateFileArgs} args
+ */
+
 /**
  * @callback FileCreator~onFileCreated
  */
@@ -630,6 +650,8 @@ export class FileCreator extends React.Component {
  * @typedef {object}    FileCreator~propTypes
  * @property {EngineAccessor}   accessor
  * @property {FrameManager} frameManager    Used for the file open dialog box
+ * @property {FileCreator~onCreateFile} onCreateFile If this is specified it is called
+ * to handle the actual file creation, onFileCreated is not called.
  * @property {FileCreator~onFileCreated}    onFileCreated Called once the file has
  * been created.
  * @property {FileCreator~onCancel} onCancel    Called if the file creation is cancelled.
@@ -640,7 +662,8 @@ FileCreator.propTypes = {
     mainSetup: PropTypes.object,
     isImport: PropTypes.bool,
     frameManager: PropTypes.object.isRequired,
-    onFileCreated: PropTypes.func.isRequired,
+    onFileCreated: PropTypes.func,
+    onCreateFile: PropTypes.func,
     onCancel: PropTypes.func.isRequired,
     initialDir: PropTypes.string,
 };

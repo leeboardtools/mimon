@@ -275,5 +275,7 @@
     "FileImporter-importFailed": ["'", "' could not be imported into '", "'. ", ""],
     
 
+    "XMLFileImporter-pricedItem_currency_missing": ["The currency for the priced item '", "' was invalid. Currency: ", ""],
+
     "": ""
 }
