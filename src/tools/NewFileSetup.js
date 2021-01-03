@@ -475,8 +475,10 @@ async function asyncLoadTransactions(setupInfo) {
         return;
     }
 
-    const { warnings, accountNameMapping, lotNameMapping } = setupInfo;
+    const { warnings, accessor,
+        accountNameMapping, accountMapping, lotNameMapping } = setupInfo;
     let item;
+    let transaction;
     try {
         setupInfo.transactionManager.isDebugAccountStates 
             = setupInfo.initialContents.isDebugAccountStates;
@@ -488,7 +490,10 @@ async function asyncLoadTransactions(setupInfo) {
             const splits = [];
             item.splits.forEach((itemSplit) => {
                 const split = Object.assign({}, itemSplit);
-                const accountDataItem = accountNameMapping.get(itemSplit.accountId);
+                let accountDataItem = accountNameMapping.get(itemSplit.accountId);
+                if (!accountDataItem) {
+                    accountDataItem = accountMapping.get(itemSplit.accountId);
+                }
                 if (!accountDataItem) {
                     throw userError('NewFileSetup-addTransaction_invalid_accountId', 
                         itemSplit.accountId);
@@ -512,10 +517,27 @@ async function asyncLoadTransactions(setupInfo) {
                     }
                 }
 
+                if (split.quantity !== undefined) {
+                    split.quantityBaseValue = accessor.pricedItemQuantityTextToBaseValue(
+                        accountDataItem.pricedItemId, split.quantity);
+
+                    const category = accessor.getCategoryOfAccountId(
+                        accountDataItem.id);
+                    if (item.isCredit) {
+                        split.quantityBaseValue *= category.creditSign;
+                    }
+                    else {
+                        split.quantityBaseValue *= -category.creditSign;
+                    }
+
+                    delete split.isCredit;
+                    delete split.quantity;
+                }
+
                 splits.push(split);
             });
 
-            const transaction = Object.assign({}, item);
+            transaction = Object.assign({}, item);
             transaction.splits = splits;
 
             transactionsToAdd.push(transaction);
@@ -523,8 +545,16 @@ async function asyncLoadTransactions(setupInfo) {
         await setupInfo.transactionManager.asyncAddTransaction(transactionsToAdd);
     }
     catch (e) {
+        if (setupInfo.initialContents.isDebug && e.transactionDataItem) {
+            console.info({
+                transactionDataItem: e.transactionDataItem,
+                splits: e.transactionDataItem.splits,
+            });
+        }
+
+        const description = item.description || item.ymdDate;
         warnings.push(userMsg('NewFileSetup-addTransaction_failed',
-            item.name, e));
+            description, e));
     }
     finally {
         setupInfo.transactionManager.isDebugAccountStates = false;
@@ -545,7 +575,7 @@ async function asyncLoadReminders(setupInfo) {
         return;
     }
 
-    const { reminderManager, accountNameMapping, warnings } = setupInfo;
+    const { reminderManager, accountNameMapping, accountMapping, warnings } = setupInfo;
     for (let i = 0; i < reminders.length; ++i) {
         const item = reminders[i];
 
@@ -559,7 +589,10 @@ async function asyncLoadReminders(setupInfo) {
                 const { splits } = transactionTemplate;
                 for (let i = 0; i < splits.length; ++i) {
                     const split = splits[i];
-                    const accountDataItem = accountNameMapping.get(split.accountId);
+                    let accountDataItem = accountNameMapping.get(split.accountId);
+                    if (!accountDataItem) {
+                        accountDataItem = accountMapping.get(split.accountId);
+                    }
                     if (!accountDataItem) {
                         throw userError('NewFileSetup-addReminder_invalid_accountId', 
                             split.accountId);
