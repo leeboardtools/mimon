@@ -1875,6 +1875,7 @@ export class TransactionManager extends EventEmitter {
 
         const splitsError = this.validateSplits(transactionDataItem.splits, isModify);
         if (splitsError) {
+            splitsError.transactionDataItem = transactionDataItem;
             return splitsError;
         }
     }
@@ -1999,7 +2000,8 @@ export class TransactionManager extends EventEmitter {
      * transactions 
      * @param {boolean} validateOnly
      * @returns {TransactionManager~AddTransactionResult}
-     * @throws Error
+     * @throws Error Note that on split validation errors the Error object has a
+     * transactionDataItem property tacked on.
      * @fires {TransactionManager~transactionsAdd}
      */
     async asyncAddTransactions(transactions, validateOnly) {
@@ -2222,7 +2224,8 @@ export class TransactionManager extends EventEmitter {
      * transactions 
      * @param {boolean} validateOnly
      * @returns {TransactionManager~ModifyTransactionResult}
-     * @throws Error
+     * @throws Error Note that on split validation errors the Error object has a
+     * transactionDataItem property tacked on.
      * @fires {TransactionManager~modifyTransaction}
      */
     async asyncModifyTransactions(transactions, validateOnly) {
