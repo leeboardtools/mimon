@@ -276,6 +276,15 @@
     
 
     "XMLFileImporter-pricedItem_currency_missing": ["The currency for the priced item '", "' was invalid. Currency: ", ""],
+    "XMLFileImporter-root_account_not_found": ["The root level account with reference id '", "' was not found. It and all its child accounts will be ignored."],
+    "XMLFileImporter-root_account_type_invalid": ["The account type of the root level account '", "', which is '", "', is not supported. The account and all its child accounts will be ignored."],
+    "XMLFileImporter-child_account_not_found": ["The child account of '", "' with reference id '", "' was not found. The child account and all its child accounts will be ignored."],
+    "XMLFileImporter-securityId_not_found": ["The first security associated with '", "', with id '", "', was not found. The account and all its child accounts will be ignored."],
+    "XMLFileImporter-multiple_securityIds": ["Multiple securities are associated with '", "'. Only the first security, '", "', will be used."],
+    "XMLFileImporter-account_currency_not_found": ["The currency of account '", "', with id '", "', was not found. The base currency will be used."],
+    "XMLFileImporter-unsupported_account_type": ["The account type of account '", "', which is '", "', is not supported. The account and all its child accounts will be ignored."],
+    "XMLFileImporter-child_security_making_parent_brokerage": ["The account '", "' contains a security child account, but its type, '", "', does not support security child accounts. Its type is being set to '", "'."],
+
 
     "": ""
 }
