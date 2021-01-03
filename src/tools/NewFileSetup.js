@@ -96,6 +96,12 @@ import { userMsg, userError } from '../util/UserMessages';
  * the base currency priced item.
  * @property {NewFileContents_Account[]}    [childAccounts]
  * @property {string} [openingBalance]
+ * @property {string} [lastReconcileYMDDate]
+ * @property {string} [lastReconcileBalance]
+ * @property {string} [pendingReconcileYMDDate]
+ * @property {string} [pendingReconcileBalance]
+ * @property {boolean} [isHidden]
+ * @property {boolean} [isLocked]
  */
 
 /**
@@ -385,6 +391,25 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
                 = pricedItemManager.getBaseCurrencyPricedItemId();
         }
 
+
+        const accountCategory = A.AccountType[item.type].category;
+
+        // Reconcile balances...
+        const { lastReconcileBalance, pendingReconcileBalance } = item;
+        if (lastReconcileBalance !== undefined) {
+            const quantityBaseValue = accessor.pricedItemQuantityTextToBaseValue(
+                accountSettings.pricedItemId, lastReconcileBalance);
+            accountSettings.lastReconcileBalanceBaseValue = quantityBaseValue
+                * -accountCategory.creditSign;
+        }
+        if (pendingReconcileBalance !== undefined) {
+            const quantityBaseValue = accessor.pricedItemQuantityTextToBaseValue(
+                accountSettings.pricedItemId, pendingReconcileBalance);
+            accountSettings.pendingReconcileBalanceBaseValue = quantityBaseValue
+                * -accountCategory.creditSign;
+        }
+
+
         const accountDataItem = (await accountManager.asyncAddAccount(accountSettings))
             .newAccountDataItem;
 
@@ -406,7 +431,6 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
                 // Add the opening balance transaction...
                 let quantityBaseValue = accessor.pricedItemQuantityTextToBaseValue(
                     accountDataItem.pricedItemId, openingBalance);
-                const accountCategory = A.AccountType[item.type].category;
                 const obQuantityBaseValue = quantityBaseValue 
                     * -accountCategory.creditSign;
                 
