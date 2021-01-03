@@ -284,6 +284,7 @@
     "XMLFileImporter-account_currency_not_found": ["The currency of account '", "', with id '", "', was not found. The base currency will be used."],
     "XMLFileImporter-unsupported_account_type": ["The account type of account '", "', which is '", "', is not supported. The account and all its child accounts will be ignored."],
     "XMLFileImporter-child_security_making_parent_brokerage": ["The account '", "' contains a security child account, but its type, '", "', does not support security child accounts. Its type is being set to '", "'."],
+    "XMLFileImporter-transaction_entry_account_ids_inconsistent": ["A transaction dated ", " ", " is not in a supported format, none of the accounts appears in all the transaction entries. The transaction will be ignored."],
 
 
     "": ""

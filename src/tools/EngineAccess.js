@@ -403,13 +403,14 @@ export class EngineAccessor extends EventEmitter {
      * this particular file factory will be used, otherwise the first file factory
      * whose {@link AccountingFile#asyncCanCreateFile} returns <code>true</code>
      * will be used.
-     * @param {object}  [initlaContents]    Optional initial contents to set up the file
+     * @param {object}  [initialContents]    Optional initial contents to set up the file
      * with, passed to {@link asyncSetupNewFile}.
      * @returns {string[]} An array containing any warning messages. These are primarily
      * from the attempt to set up the initial contents.
      * @throws {Error}
      */
-    async asyncCreateAccountingFile(pathName, fileFactoryIndex, initialContents) {
+    async asyncCreateAccountingFile(pathName, options) {
+        let { fileFactoryIndex, initialContents } = options || {};
         let accountingFile;
         if ((fileFactoryIndex >= 0) && (fileFactoryIndex < this._fileFactories.length)) {
             accountingFile = await this._fileFactories[fileFactoryIndex].asyncCreateFile(

@@ -540,9 +540,17 @@ async function asyncLoadTransactions(setupInfo) {
             transaction = Object.assign({}, item);
             transaction.splits = splits;
 
-            transactionsToAdd.push(transaction);
+            if (setupInfo.skipFailedTransactions) {
+                await setupInfo.transactionManager.asyncAddTransaction(transaction);
+            }
+            else {
+                transactionsToAdd.push(transaction);
+            }
         }
-        await setupInfo.transactionManager.asyncAddTransaction(transactionsToAdd);
+
+        if (!setupInfo.skipFailedTransactions) {
+            await setupInfo.transactionManager.asyncAddTransaction(transactionsToAdd);
+        }
     }
     catch (e) {
         if (setupInfo.initialContents.isDebug && e.transactionDataItem) {
@@ -619,12 +627,15 @@ async function asyncLoadReminders(setupInfo) {
  * @param {NewFileContents} initialContents 
  * @returns {string[]}  An array containing any warning messages.
  */
-export async function asyncSetupNewFile(accessor, accountingFile, initialContents) {
+export async function asyncSetupNewFile(accessor, accountingFile, initialContents, 
+    options) {
     const accountingSystem = accountingFile.getAccountingSystem();
 
     const setupInfo = {
         accessor: accessor,
         initialContents: initialContents,
+        options: options || {},
+
         accountingFile: accountingFile,
         accountingSystem: accountingSystem,
         pricedItemManager: accountingSystem.getPricedItemManager(),
@@ -648,6 +659,10 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
 
         warnings: [],
     };
+
+    if (!setupInfo.options.isStrictImport) {
+        setupInfo.skipFailedTransactions = true;
+    }
 
     await asyncSetBaseCurrency(setupInfo);
     await asyncLoadPricedItems(setupInfo);

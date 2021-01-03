@@ -107,8 +107,8 @@ test('XMLFileImporter-asyncImportXMLFile', async () => {
             newProjectPathName: mimonPathName,
             verbose: false,
         });
-        if (result) {
-            //console.log(result);
+        if (result && result.length) {
+            console.log(result);
         }
 
         await asyncExpectSecurity(accessor, 'PBW', {
@@ -204,7 +204,9 @@ test('XMLFileImporter-asyncImportXMLFile', async () => {
                 isLocked: true,
             });
 
-        
+
+        //
+        // Check reconcile info...        
         const savingsAccountDataItem = getAccountFromPath(accessor,
             accessor.getRootAssetAccountId(), 'Current Assets>Savings');
         expect(savingsAccountDataItem.lastReconcileBalanceBaseValue)
@@ -229,6 +231,10 @@ test('XMLFileImporter-asyncImportXMLFile', async () => {
             .toEqual(50000);
         expect(checkingAccountDataItem.pendingReconcileYMDDate)
             .toEqual(new YMDDate(1506744000000).toString());
+
+
+
+        // Transactions...
 
 
         //

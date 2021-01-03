@@ -561,7 +561,10 @@ export class FileCreator extends React.Component {
                 }
                 else {
                     const warnings = await accessor.asyncCreateAccountingFile(
-                        pathName, fileFactoryIndex, newFileContents);
+                        pathName, {
+                            fileFactoryIndex: fileFactoryIndex, 
+                            initialContents: newFileContents,
+                        });
 
                     if (warnings.length) {
                         this.setState({

@@ -119,7 +119,10 @@ export async function asyncSetupWithTestTransactions(pathName, options) {
     }
 
     const warnings = await accessor.asyncCreateAccountingFile(
-        pathName, 0, newFileContents);
+        pathName, {
+            fileFactoryIndex: 0, 
+            initialContents: newFileContents,
+        });
     if (warnings.length) {
         console.log('Warnings: ' + JSON.stringify(warnings));
     }

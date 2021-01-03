@@ -1,6 +1,7 @@
 import { userMsg } from '../util/UserMessages';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
+import * as T from '../engine/Transactions';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as sax from 'sax';
@@ -522,10 +523,18 @@ class AccountDefinitionProcessor extends AccountProcessor {
             return;
         
         case 'EXCLUDEDFROMBUDGET' :
-            break;
+            this.importer.pushProcessor(new XMLNodeProcessor(
+                this.importer, tag, (tag, processor) =>
+                    this.account.excludedFromBudget = processor.getTextAsString()
+            ));
+            return;
         
         case 'NOTES' :
-            break;
+            this.importer.pushProcessor(new XMLNodeProcessor(
+                this.importer, tag, (tag, processor) =>
+                    this.account.notes = processor.getTextAsString()
+            ));
+            return;
         
         case 'CURRENCYNODE' :
             // There's probably the possibility this could be a currency
@@ -534,10 +543,18 @@ class AccountDefinitionProcessor extends AccountProcessor {
             break;
         
         case 'ACCOUNTNUMBER' :
-            break;
+            this.importer.pushProcessor(new XMLNodeProcessor(
+                this.importer, tag, (tag, processor) =>
+                    this.account.accountNumber = processor.getTextAsString()
+            ));
+            return;
         
         case 'ACCOUNTCODE' :
-            break;
+            this.importer.pushProcessor(new XMLNodeProcessor(
+                this.importer, tag, (tag, processor) =>
+                    this.account.accountCode = processor.getTextAsString()
+            ));
+            return;
         
         case 'ATTRIBUTES' :
             this.importer.pushProcessor(new AttributesProcessor(
@@ -612,11 +629,21 @@ class TransactionArrayProcessor extends XMLNodeProcessor {
         switch (tag.name) {
         case 'TRANSACTION' :
         case 'INVESTMENTTRANSACTION' :
-            this.importer.pushProcessor(new TransactionProcessor(
-                this.importer, tag, (tag, processor, transactionId) => 
-                    this.transactionIds.push(transactionId)
-            ));
-            return;
+            if (tag.attributes.REFERENCE) {
+                this.importer.pushProcessor(new TransactionReferenceProcessor(
+                    this.importer, tag, (tag, processor, transactionId) => 
+                        this.transactionIds.push(transactionId)
+                ));
+                return;
+            }
+            else if (tag.attributes.ID) {
+                this.importer.pushProcessor(new TransactionDefinitionProcessor(
+                    this.importer, tag, (tag, processor, transactionId) => 
+                        this.transactionIds.push(transactionId)
+                ));
+                return;
+            }
+            break;
         }
 
         return XMLNodeProcessor.prototype.onOpenTag.call(this, tag);
@@ -627,25 +654,65 @@ class TransactionArrayProcessor extends XMLNodeProcessor {
 //
 //---------------------------------------------------------
 //
-class TransactionProcessor extends XMLNodeProcessor {
+class TransactionReferenceProcessor extends XMLNodeProcessor {
+    constructor(importer, tag, onCloseProcessorCallback) {
+        super(importer, tag, onCloseProcessorCallback);
+
+        this.transactionId = tag.attributes.REFERENCE;
+        this.argsOnCloseCallback = this.transactionId;
+    }
+}
+
+//
+//---------------------------------------------------------
+//
+class TransactionDefinitionProcessor extends XMLNodeProcessor {
     constructor(importer, tag, onCloseProcessorCallback) {
         super(importer, tag, onCloseProcessorCallback);
 
         this.transactionId = tag.attributes.ID;
         this.argsOnCloseCallback = this.transactionId;
+
+        this.transaction = {
+            id: this.transactionId,
+        };
     }
+
 
     onOpenTag(tag) {
         switch (tag.name) {
         case 'DATE' :
+            this.importer.pushProcessor(new XMLNodeProcessor(
+                this.importer, tag, (tag, processor) =>
+                    this.transaction.date = processor.getTextAsString()
+            ));
+            return;
+
         case 'TIMESTAMP' :
+            this.importer.pushProcessor(new XMLNodeProcessor(
+                this.importer, tag, (tag, processor) =>
+                    this.transaction.lastModifiedTimeStamp = processor.getTextAsString()
+            ));
+            return;
+
+        case 'NUMBER' :
+            this.importer.pushProcessor(new XMLNodeProcessor(
+                this.importer, tag, (tag, processor) =>
+                    this.transaction.number = processor.getTextAsString()
+            ));
+            return;
+
         case 'PAYEE' :
-            break;
+            this.importer.pushProcessor(new XMLNodeProcessor(
+                this.importer, tag, (tag, processor) =>
+                    this.transaction.description = processor.getTextAsString()
+            ));
+            return;
 
         case 'TRANSACTIONENTRIES' :
             this.importer.pushProcessor(new TransactionEntriesProcessor(
                 this.importer, tag, (tag, processor, transactionEntries) =>
-                    this.transactionEntries = transactionEntries
+                    this.transaction.transactionEntries = transactionEntries
             ));
             return;
         }
@@ -655,7 +722,7 @@ class TransactionProcessor extends XMLNodeProcessor {
 
 
     onCloseProcessor() {
-        // TODO: Add the transaction.
+        this.importer.addTransaction(this.transaction);
 
         return XMLNodeProcessor.prototype.onCloseProcessor.call(this);
     }
@@ -713,8 +780,7 @@ class TransactionEntryProcessor extends XMLNodeProcessor {
     pushAmount(tag, entry) {
         this.importer.pushProcessor(new XMLNodeProcessor(
             this.importer, tag, (tag, processor) =>
-                entry.amount 
-                    = numberOrUndefined(processor.getTextAsString())));
+                entry.amount = processor.getTextAsString()));
         return true;
     }
 
@@ -729,7 +795,11 @@ class TransactionEntryProcessor extends XMLNodeProcessor {
     onOpenTag(tag) {
         switch (tag.name) {
         case 'TRANSACTIONTAG' :
-            break;
+            this.importer.pushProcessor(new XMLNodeProcessor(
+                this.importer, tag, (tag, processor) =>
+                    this.transactionTag = processor.getTextAsString()
+            ));
+            return;
         
         case 'CREDITACCOUNT' :
             if (this.pushAccount(tag, this.creditEntry)) {
@@ -766,6 +836,13 @@ class TransactionEntryProcessor extends XMLNodeProcessor {
                 return;
             }
             break;
+        
+        case 'MEMO' :
+            this.importer.pushProcessor(new XMLNodeProcessor(
+                this.importer, tag, (tag, processor) =>
+                    this.memo = processor.getTextAsString()
+            ));
+            return;
         }
 
         return XMLNodeProcessor.prototype.onOpenTag.call(this, tag);
@@ -847,9 +924,11 @@ const xmlAccountTypeMappings = {
 //---------------------------------------------------------
 //
 class XMLFileImporterImpl {
-    constructor({ accessor, pathNameToImport, newProjectPathName, 
-        newFileContents, verbose, }) {
+    constructor(options) {
+        const { accessor, pathNameToImport, newProjectPathName, 
+            newFileContents, verbose, } = options;
 
+        this.options = options;
         this.accessor = accessor;
         this.pathNameToImport = pathNameToImport,
         this.newProjectPathName = newProjectPathName;
@@ -880,6 +959,7 @@ class XMLFileImporterImpl {
         this.securitiesById = new Map();
 
         this.accountsById = new Map();
+        this.transactionsById = new Map();
 
         this.newFileContents = Object.assign({
             pricedItems: {
@@ -1091,8 +1171,9 @@ class XMLFileImporterImpl {
     }
     
     addTransaction(transaction) {
-        this.newFileContents.transactions.transactions.push(transaction);
+        this.transactionsById.set(transaction.id, transaction);
     }
+
 
     addReminder(reminder) {
         this.newFileContents.reminders.reminders.push(reminder);
@@ -1136,6 +1217,19 @@ class XMLFileImporterImpl {
         }
         if (xmlAccount.isLocked) {
             account.isLocked = true;
+        }
+        if (xmlAccount.excludedFromBudget === 'true') {
+            account.isExcludedFromBudget = true;
+        }
+        if (xmlAccount.notes) {
+            account.notes = xmlAccount.notes;
+        }
+        if (xmlAccount.accountNumber && this.options.includeAccountNumbers) {
+            // Account numbers are opt-in...
+            account.accountNumber = xmlAccount.accountNumber;
+        }
+        if (xmlAccount.accountCode) {
+            account.accountCode = xmlAccount.accountCode;
         }
 
         const { securityIds } = xmlAccount;
@@ -1345,8 +1439,161 @@ class XMLFileImporterImpl {
     }
 
 
+    createSplitFromCreditDebitEntry(entry) {
+        const split = {
+            accountId: entry.accountId,
+            quantity: entry.amount,
+        };
+
+        if (entry.reconciled === 'RECONCILED') {
+            split.reconcileState = T.ReconcileState.RECONCILED.name;
+        }
+        else if (entry.reconciled === 'CLEARED') {
+            split.reconcileState = T.ReconcileState.PENDING.name;
+        }
+
+        if (entry.description) {
+            split.description = entry.memo;
+        }
+
+        return split;
+    }
+
+    processXMLTransaction(transactions, xmlTransaction) {
+        const splits = [];
+        const { transactionEntries } = xmlTransaction;
+        if (!transactionEntries || !transactionEntries.length) {
+            return;
+        }
+
+        // If there's a single transaction entry it's simple, otherwise
+        // we have to do a bit more work.
+        if (transactionEntries.length === 1) {
+            const xmlEntry = transactionEntries[0];
+            const { creditEntry, debitEntry } = xmlEntry;
+
+            const split0 = this.createSplitFromCreditDebitEntry(debitEntry);
+            splits.push(split0);
+
+            const split1 = this.createSplitFromCreditDebitEntry(creditEntry);
+            split1.isCredit = true;
+            splits.push(split1);
+
+            if (xmlTransaction.number !== undefined) {
+                split0.refNum = xmlTransaction.number;
+                split1.refNum = xmlTransaction.number;
+            }
+        }
+        else {
+            const instanceCountsByAccountIds = new Map();
+            transactionEntries.forEach((xmlEntry) => {
+                // There should be one common account, and it will have one instance
+                // in either the credit or debit side.
+                // This will be the first split.
+                // The remaining transaction entries will fill in the rest.
+                const { creditEntry, debitEntry } = xmlEntry;
+                let instanceCounts = instanceCountsByAccountIds.get(
+                    creditEntry.accountId);
+                if (!instanceCounts) {
+                    instanceCounts = [0, 0 ];
+                    instanceCountsByAccountIds.set(creditEntry.accountId, instanceCounts);
+                }
+                ++instanceCounts[0];
+
+                instanceCounts = instanceCountsByAccountIds.get(debitEntry.accountId);
+                if (!instanceCounts) {
+                    instanceCounts = [0, 0 ];
+                    instanceCountsByAccountIds.set(debitEntry.accountId, instanceCounts);
+                }
+                ++instanceCounts[1];
+            });
+
+            let baseAccountId;
+            let isBaseAccountCredit;
+            for (const [id, instanceCounts] of instanceCountsByAccountIds) {
+                if (instanceCounts[0] + instanceCounts[1] === transactionEntries.length) {
+                    baseAccountId = id;
+                    isBaseAccountCredit = (instanceCounts[0] === 1);
+                    break;
+                }
+            }
+
+            let baseSum = 0;
+            transactionEntries.forEach((xmlEntry) => {
+                const { creditEntry, debitEntry } = xmlEntry;
+
+                let baseEntry;
+                let entry;
+                if (debitEntry.accountId === baseAccountId) {
+                    baseEntry = debitEntry;
+                    entry = creditEntry;
+                }
+                else {
+                    baseEntry = creditEntry;
+                    entry = debitEntry;
+                }
+
+                const split = this.createSplitFromCreditDebitEntry(entry);
+                if (entry === creditEntry) {
+                    split.isCredit = true;
+                }
+
+                const amount = numberOrUndefined(baseEntry.amount);
+                if (amount) {
+                    baseSum += amount;
+                }
+
+                splits.push(split);
+            });
+
+            // Add the base entry...
+            const baseSplit = {
+                accountId: baseAccountId,
+                quantity: baseSum.toString(),
+                isCredit: isBaseAccountCredit,
+            };
+            splits.splice(0, 0, baseSplit);
+
+            if (!baseAccountId) {
+                this.recordWarning(userMsg(
+                    'XMLFileImporter-transaction_entry_account_ids_inconsistent',
+                    xmlTransaction.date,
+                    xmlTransaction.description,
+                ));
+                return;
+            }
+        }
+
+        const transaction = {
+            ymdDate: xmlTransaction.date,
+            lastModifiedTimeStamp: 
+                numberOrUndefined(xmlTransaction.lastModifiedTimeStamp),
+            splits: splits,
+        };
+        transactions.push(transaction);
+    }
+
+
+    postProcessTransactions() {
+        const { newFileContents } = this;
+        if (!newFileContents.transactions) {
+            newFileContents.transactions = {};
+        }
+
+        let { transactions } = newFileContents.transactions;
+        if (!transactions) {
+            transactions = [];
+            newFileContents.transactions.transactions = transactions;
+        }
+
+        this.transactionsById.forEach((xmlTransaction) => 
+            this.processXMLTransaction(transactions, xmlTransaction));
+    }
+
+
     async asyncFinalizeImport() {
         this.postProcessAccounts();
+        this.postProcessTransactions();
 
         if (this.verbose) {
             if (this.warnings.length) {
@@ -1366,7 +1613,10 @@ class XMLFileImporterImpl {
         }
 
         return this.accessor.asyncCreateAccountingFile(
-            this.newProjectPathName, undefined, this.newFileContents);
+            this.newProjectPathName, {
+                initialContents: this.newFileContents,
+                isStrictImport: false,
+            });
     }
 }
 
