@@ -64,6 +64,18 @@ export class FileSelector extends React.Component {
                 }
             });
 
+            let { activePathName } = this.state;
+            if (!activePathName) {
+                if (files && files.length) {
+                    activePathName = path.join(currentDirPath, files[0].name);
+                    this.onSelectFile(activePathName);
+                }
+                else if (dirs && dirs.length) {
+                    activePathName = path.join(currentDirPath, dirs[0].name);
+                    this.onSelectDir(activePathName);
+                }
+            }
+
             this.setState({
                 dirs: dirs,
                 files: files,
@@ -176,16 +188,7 @@ export class FileSelector extends React.Component {
             currentDirComponents.push(component);
         }
 
-
-        let { activePathName } = this.state;
-        if (!activePathName) {
-            if (files && files.length) {
-                activePathName = path.join(currentDirPath, files[0].name);
-            }
-            else if (dirs && dirs.length) {
-                activePathName = path.join(currentDirPath, dirs[0].name);
-            }
-        }
+        const { activePathName } = this.state;
 
         const entityComponents = [];
         dirs.forEach((dir) => {
