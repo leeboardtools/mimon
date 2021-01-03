@@ -4,6 +4,7 @@ import * as ASTH from './AccountingSystemTestHelpers';
 import * as ATH from './AccountTestHelpers';
 import { getDecimalDefinition } from '../util/Quantities';
 import { StandardAccountTag } from './StandardTags';
+import { YMDDate } from '../util/YMDDate';
 
 function testAccountDataItem(account) {
     const dataItem = A.getAccountDataItem(account);
@@ -27,6 +28,8 @@ test('Account-Data Items', () => {
         id: 123,
         type: A.AccountType.ASSET,
         pricedItemId: 12345,
+        lastReconcileYMDDate: new YMDDate('2020-02-02'),
+        pendingReconcileYMDDate: new YMDDate('1919-19-19'),
     };
     testAccountDataItem(plainAccount);
 

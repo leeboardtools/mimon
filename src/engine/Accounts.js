@@ -337,15 +337,21 @@ export function getAccount(accountDataItem, alwaysCopy) {
     if (accountDataItem) {
         const type = getAccountType(accountDataItem.type);
         const lastReconcileYMDDate = getYMDDate(accountDataItem.lastReconcileYMDDate);
+        const pendingReconcileYMDDate = getYMDDate(
+            accountDataItem.pendingReconcileYMDDate);
         if (alwaysCopy
          || (type !== accountDataItem.type)
-         || (lastReconcileYMDDate !== accountDataItem.lastReconcileYMDDate)) {
+         || (lastReconcileYMDDate !== accountDataItem.lastReconcileYMDDate)
+         || (pendingReconcileYMDDate !== accountDataItem.pendingReconcileYMDDate)) {
             const account = Object.assign({}, accountDataItem);
             if (type !== undefined) {
                 account.type = type;
             }
             if (lastReconcileYMDDate !== undefined) {
                 account.lastReconcileYMDDate = lastReconcileYMDDate;
+            }
+            if (pendingReconcileYMDDate !== undefined) {
+                account.pendingReconcileYMDDate = pendingReconcileYMDDate;
             }
             if (accountDataItem.tags !== undefined) {
                 account.tags = Array.from(accountDataItem.tags);
@@ -375,15 +381,20 @@ export function getAccountDataItem(account, alwaysCopy) {
     if (account) {
         const typeName = getAccountTypeName(account.type);
         const lastReconcileYMDDate = getYMDDateString(account.lastReconcileYMDDate);
+        const pendingReconcileYMDDate = getYMDDateString(account.pendingReconcileYMDDate);
         if (alwaysCopy
          || (typeName !== account.type)
-         || (lastReconcileYMDDate !== account.lastReconcileYMDDate)) {
+         || (lastReconcileYMDDate !== account.lastReconcileYMDDate)
+         || (pendingReconcileYMDDate !== account.pendingReconcileYMDDate)) {
             const accountDataItem = Object.assign({}, account);
             if (typeName !== undefined) {
                 accountDataItem.type = typeName;
             }
             if (lastReconcileYMDDate !== undefined) {
                 accountDataItem.lastReconcileYMDDate = lastReconcileYMDDate;
+            }
+            if (pendingReconcileYMDDate !== undefined) {
+                accountDataItem.pendingReconcileYMDDate = pendingReconcileYMDDate;
             }
             if (account.tags !== undefined) {
                 accountDataItem.tags = Array.from(account.tags);
