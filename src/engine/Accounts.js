@@ -80,7 +80,7 @@ export function accountCategory(ref) {
  * @property {AccountTypeDef}   REAL_ESTATE For a specific piece of real estate.
  * @property {AccountTypeDef}   PROPERTY    For specific piece of property.
  *
- * @property {AccountTypeDef}   LAIBILITY   All purpose liability account.
+ * @property {AccountTypeDef}   LIABILITY   All purpose liability account.
  * @property {AccountTypeDef}   CREDIT_CARD For credit cards.
  * @property {AccountTypeDef}   LOAN    For a basic loan such as an auto loan.
  * @property {AccountTypeDef}   MORTGAGE    For mortgages, which typically include 
