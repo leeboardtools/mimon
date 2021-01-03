@@ -295,6 +295,8 @@ export function loadAccountsUserMessages() {
  * of the last account pending reconciliation.
  * @property {DefaultSplitAccountIds}   [defaultSplitAccountIds]    Optional object
  * containing account ids for default accounts for different splits.
+ * @property {boolean}  [isHidden]
+ * @property {boolean}  [isLocked]
  */
 
 /**
@@ -319,6 +321,8 @@ export function loadAccountsUserMessages() {
  * of the last account pending reconciliation.
  * @property {DefaultSplitAccountIds}   [defaultSplitAccountIds]    Optional object
  * containing account ids for default accounts for different splits.
+ * @property {boolean}  [isHidden]
+ * @property {boolean}  [isLocked]
  */
 
 /**

@@ -367,16 +367,11 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
         accessor, warnings } = setupInfo;
 
     try {
-        const accountSettings = {
+        const accountSettings = Object.assign({}, item, {
             parentAccountId: parentAccountId,
-            refId: item.refId,
-            type: item.type,
-            name: item.name,
-            description: item.description,
-        };
-        if (item.tags) {
-            accountSettings.tags = item.tags;
-        }
+        });
+        delete accountSettings.childAccounts;
+
         if (item.pricedItemId) {
             const { pricedItemNameMapping } = setupInfo;
             const pricedItemId = pricedItemNameMapping.get(item.pricedItemId);
