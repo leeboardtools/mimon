@@ -98,3 +98,4 @@ docs/
 Z.json
 Z_*.*
 log.txt
+src/test.data/warnings.txt

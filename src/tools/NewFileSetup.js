@@ -173,7 +173,8 @@ async function asyncLoadPricedItems(setupInfo) {
 
         const currency = getCurrency(item.currency || baseCurrency);
         if (!currency) {
-            warnings.push('NewFileSetup-invalid_currency', item.name, currency);
+            warnings.push(userMsg(
+                'NewFileSetup-invalid_currency', item.name, currency));
             continue;
         }
 
@@ -246,8 +247,10 @@ async function asyncLoadLots(setupInfo) {
 
         const pricedItem = pricedItemNameMapping.get(item.pricedItemId);
         if (!pricedItem) {
-            warnings.push('NewFileSetup-lot_pricedItem_not_found', 
-                item.description, item.pricedItemId);
+            warnings.push(userMsg(
+                'NewFileSetup-lot_pricedItem_not_found', 
+                item.description, item.pricedItemId,
+            ));
             continue;
         }
 
@@ -349,10 +352,12 @@ async function asyncLoadAccountsForRoot(setupInfo, rootAccountId) {
         return;
     }
 
-    const { accountManager } = setupInfo;
+    const { accountManager, accountMapping } = setupInfo;
     const rootAccountDataItem = accountManager.getAccountDataItemWithId(rootAccountId);
     const rootType = A.AccountType[rootAccountDataItem.type];
     const rootCategory = rootType.category;
+
+    accountMapping.set(rootCategory.name, rootAccountDataItem);
 
     accounts = accounts[rootCategory.name];
     if (!accounts) {
@@ -476,7 +481,7 @@ async function asyncLoadTransactions(setupInfo) {
     }
 
     const { warnings, accessor,
-        accountNameMapping, accountMapping, lotNameMapping } = setupInfo;
+        accountNameMapping, accountMapping, lotMapping } = setupInfo;
     let item;
     let transaction;
     try {
@@ -501,25 +506,57 @@ async function asyncLoadTransactions(setupInfo) {
                 split.accountId = accountDataItem.id;
 
                 if (split.lotChanges) {
+                    const currencyQuantityDefinition 
+                        = accessor.getCurrencyOfAccountId(accountDataItem.id)
+                            .getQuantityDefinition();
+
                     split.lotChanges = Array.from(split.lotChanges);
                     const { lotChanges } = split;
                     for (let i = 0; i < lotChanges.length; ++i) {
-                        lotChanges[i] = Object.assign({}, lotChanges[i]);
-                        if (lotChanges[i].lotId) {
-                            const lotDataItem = lotNameMapping.get(lotChanges[i].lotId);
+                        const lotChange = Object.assign({}, lotChanges[i]);
+                        lotChanges[i] = lotChange;
+                        if (lotChange.lotId) {
+                            const lotDataItem = lotMapping.get(lotChange.lotId);
                             if (!lotDataItem) {
                                 throw userError(
                                     'NewFileSetup-addTransaction_invalid_lotId',
-                                    lotChanges[i].lotId);
+                                    lotChange.lotId);
                             }
-                            lotChanges[i].lotId = lotDataItem.id;
+                            lotChange.lotId = lotDataItem.id;
+                        }
+                        
+                        if (lotChange.quantity !== undefined) {
+                            lotChange.quantityBaseValue 
+                                = accessor.pricedItemQuantityTextToBaseValue(
+                                    accountDataItem.pricedItemId, lotChange.quantity);
+                        }
+                        if (lotChange.costBasis !== undefined) {
+                            const result = currencyQuantityDefinition.fromValueText(
+                                lotChange.costBasis);
+                            if (result && result.quantity) {
+                                lotChange.costBasisBaseValue 
+                                    = result.quantity.getBaseValue();
+                            }
+                            else {
+                                throw userError(
+                                    'NewFileSetup-addTransaction_invalid_costBasis',
+                                    lotChange.lotId,
+                                    lotChange.costBasis);
+                            }
                         }
                     }
                 }
 
+                if (split.sellAutoLotQuantity !== undefined) {
+                    split.sellAutoLotQuantityBaseValue 
+                        = accessor.accountQuantityTextToBaseValue(accountDataItem.id,
+                            split.sellAutoLotQuantity);
+                }
+
                 if (split.quantity !== undefined) {
-                    split.quantityBaseValue = accessor.pricedItemQuantityTextToBaseValue(
-                        accountDataItem.pricedItemId, split.quantity);
+                    const currency = accessor.getCurrencyOfAccountId(accountDataItem.id);
+                    split.quantityBaseValue 
+                        = currency.baseValueFromString(split.quantity);
 
                     const category = accessor.getCategoryOfAccountId(
                         accountDataItem.id);
@@ -673,6 +710,10 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
     await asyncLoadReminders(setupInfo);
 
     await accountingSystem.getUndoManager().asyncClearUndos();
+
+    if (setupInfo.warnings && setupInfo.warnings.length) {
+        console.log(setupInfo.warnings);
+    }
 
     return setupInfo.warnings;
 }

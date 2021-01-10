@@ -285,6 +285,21 @@
     "XMLFileImporter-unsupported_account_type": ["The account type of account '", "', which is '", "', is not supported. The account and all its child accounts will be ignored."],
     "XMLFileImporter-child_security_making_parent_brokerage": ["The account '", "' contains a security child account, but its type, '", "', does not support security child accounts. Its type is being set to '", "'."],
     "XMLFileImporter-transaction_entry_account_ids_inconsistent": ["A transaction dated ", " ", " is not in a supported format, none of the accounts appears in all the transaction entries. The transaction will be ignored."],
+    "XMLFileImporter-investmentTransactionEntry_invalid": ["An investment transaction dated ", " ", " and of type '", "' is not a supported format. The transaction will be ignored."],
+    "XMLFileImporter-transactionEntry_accountId_invalid": ["A transaction dated ", " ", " refers to the account with id '", "' which was not found. The transaction will be ignored."],
+    "XMLFileImporter-transactionEntry_investment_entry_missing":  ["An investment transaction dated ", " ", " contained an investment entry that did not contain an investment account. The transaction will be ignored."],
+    "XMLFileImporter-extra_investment_transaction_entries": ["An investment transaction dated ", " ", " contains extra unsupported transaction entries. Those extra transaction entries will be ignored."],
+    "XMLFileImporter-investment_transaction_invalid_fee": ["An investment transaction dated ", " ", " contains an invalid fee entry, '", "'. The fee will be ignored."],
+    "XMLFileImporter-lotTransaction_cash_uses_parent": ["An investment transaction dated ", " ", " contains a cash transaction into a lot based account. The transaction will be made to the parent account."],
+    "XMLFileImporter-investment_fees_to_investment": ["An investment transaction dated ", " ", " contains a fee going back into the investment account. The fee will be made to the root Expenses account."],
+    "XMLFileImporter-multiple_lot_changes_same_date": ["There are multiple changes to lots for the account with id '", "', the latest from the investment transaction dated ", " ", ". Only a single change is currently supported, the transaction will be ignored."],
+    "XMLFileImporter-sellLot_lotId_invalid": ["An investment sell/remove transaction dated ", " ", " contains a LOT descriptor in the memo, '", "', that does not refer to an existing lot. The transaction will be processed as FIFO."],
+    "XMLFileImporter-sellLot_lot_quantity_negative":  ["An investment sell/remove transaction dated ", " ", " contains a LOT descriptor in the memo, '", "', that resulted in the number of shares in a lot becoming negative. The transaction will be processed as FIFO."],
+    "XMLFileImporter-removeFIFO_lot_account_id_invalid": ["The investment transaction dated ", " ", " could not remove shares because the account id '", "' does not have any lots associated with it. The transaction will be ignored."],
+    "XMLFileImporter-removeFIFO_not_enough_lot_shares": ["The investment transaction dated ", " ", " could not remove shares because there are fewer shares in the available lots than the requested shares ", ". The transaction will be ignored."],
+    "XMLFileImporter-mergeSplit_account_id_invalid": ["The investment transaction dated ", " ", " could add or remove shares because the account id '", "' does not have any lots associated with it. The transaction will be ignored."],
+    "XMLFileImporter-merge_too_large": ["The investment merge transaction dated ", " ", " could not be performed because the merge removes ", " shares but there are only ", " shares available. The transaction will be ignored."],
+    "XMLFileImporter-dividend_account_id_invalid": ["The dividend transaction dated ", " ", " could not be performed because the dividend account with id '", "' was not found. The transaction will be ignored."],
 
 
     "": ""

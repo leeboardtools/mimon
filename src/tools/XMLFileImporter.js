@@ -1,11 +1,14 @@
-import { userMsg } from '../util/UserMessages';
+import { userError, userMsg } from '../util/UserMessages';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
 import * as T from '../engine/Transactions';
+import * as L from '../engine/Lots';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as sax from 'sax';
 import { YMDDate } from '../util/YMDDate';
+import { SortedArray } from '../util/SortedArray';
+import { getDecimalDefinition } from '../util/Quantities';
 
 
 class XMLNodeProcessor {
@@ -78,12 +81,18 @@ class CURRENCYNODE extends XMLNodeProcessor {
 //---------------------------------------------------------
 //
 function numberOrUndefined(value) {
-    if (typeof value === 'string') {
+    switch (typeof value) {
+    case 'string' :
+    {
         value = value.trim();
         const number = parseFloat(value);
         if (!isNaN(number)) {
             return number;
         }
+        break;
+    }
+    case 'number' :
+        return value;
     }
 }
 
@@ -674,6 +683,7 @@ class TransactionDefinitionProcessor extends XMLNodeProcessor {
         this.argsOnCloseCallback = this.transactionId;
 
         this.transaction = {
+            transactionType: tag.name,
             id: this.transactionId,
         };
     }
@@ -764,10 +774,12 @@ class TransactionEntryProcessor extends XMLNodeProcessor {
         this.creditEntry = {};
         this.debitEntry = {};
 
-        this.argsOnCloseCallback = {
+        this.entry = {
+            entryType: tag.name,
             creditEntry: this.creditEntry,
             debitEntry: this.debitEntry,
         };
+        this.argsOnCloseCallback = this.entry;
     }
 
 
@@ -797,7 +809,7 @@ class TransactionEntryProcessor extends XMLNodeProcessor {
         case 'TRANSACTIONTAG' :
             this.importer.pushProcessor(new XMLNodeProcessor(
                 this.importer, tag, (tag, processor) =>
-                    this.transactionTag = processor.getTextAsString()
+                    this.entry.transactionTag = processor.getTextAsString()
             ));
             return;
         
@@ -840,7 +852,21 @@ class TransactionEntryProcessor extends XMLNodeProcessor {
         case 'MEMO' :
             this.importer.pushProcessor(new XMLNodeProcessor(
                 this.importer, tag, (tag, processor) =>
-                    this.memo = processor.getTextAsString()
+                    this.entry.memo = processor.getTextAsString()
+            ));
+            return;
+        
+        case 'PRICE' :
+            this.importer.pushProcessor(new XMLNodeProcessor(
+                this.importer, tag, (tag, processor) =>
+                    this.entry.price = processor.getTextAsString()
+            ));
+            return;
+        
+        case 'QUANTITY' :
+            this.importer.pushProcessor(new XMLNodeProcessor(
+                this.importer, tag, (tag, processor) =>
+                    this.entry.quantity = processor.getTextAsString()
             ));
             return;
         }
@@ -960,6 +986,13 @@ class XMLFileImporterImpl {
 
         this.accountsById = new Map();
         this.transactionsById = new Map();
+
+        // Each entry is a SortedArray of the lots for the account id sorted by
+        // creation date. The entries of the SortedArray are {ymdDate, lot, quantity}
+        this.lotsEntriesByAccountId = new Map();
+
+        // The entries in lotsEntriesByAccountId mapped by lot id
+        this.lotEntriesByLotId = new Map();
 
         this.newFileContents = Object.assign({
             pricedItems: {
@@ -1161,10 +1194,6 @@ class XMLFileImporterImpl {
         this.newFileContents.prices.prices.push(pricesItem);
     }
 
-    addLot(lot) {
-        this.newFileContents.lots.lots.push(lot);
-    }
-
 
     addAccount(account) {
         this.accountsById.set(account.id, account);
@@ -1344,6 +1373,8 @@ class XMLFileImporterImpl {
             }
         }
 
+        xmlAccount.account = account;
+
         accounts.push(account);
     }
 
@@ -1439,11 +1470,48 @@ class XMLFileImporterImpl {
     }
 
 
-    createSplitFromCreditDebitEntry(entry) {
+    getEquityAccountId() {
+        return 'EQUITY';
+    }
+
+
+    getFeesAccountId() {
+        return 'EXPENSE';
+    }
+
+
+    getDividendsAccountId(accountId) {
+        return 'INCOME';
+    }
+
+
+    createSplitFromCreditDebitEntry(entry, xmlTransaction) {
         const split = {
             accountId: entry.accountId,
             quantity: entry.amount,
         };
+
+        const accountEntry = this.accountsById.get(entry.accountId);
+        if (!accountEntry) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-transactionEntry_accountId_invalid',
+                xmlTransaction.date,
+                xmlTransaction.description,
+                entry.accountId,
+            ));
+            return;
+        }
+
+        const accountType = A.getAccountType(accountEntry.account.type);
+        if (accountType.hasLots) {
+            // Gotta use the parent.
+            this.recordWarning(userMsg(
+                'XMLFileImporter-lotTransaction_cash_uses_parent',
+                xmlTransaction.date,
+                xmlTransaction.description,
+            ));
+            split.accountId = accountEntry.parentId;
+        }
 
         if (entry.reconciled === 'RECONCILED') {
             split.reconcileState = T.ReconcileState.RECONCILED.name;
@@ -1456,9 +1524,926 @@ class XMLFileImporterImpl {
             split.description = entry.memo;
         }
 
+
         return split;
     }
 
+
+    makeLotId(accountId, lotId) {
+        return accountId + '-' + lotId;
+    }
+
+
+    isCreditDebitEntryInvesmentAccount(entry) {
+        const { accountId } = entry;
+        let accountEntry = this.accountsById.get(accountId);
+        if (!accountEntry) {
+            return;
+        }
+
+        const type = A.getAccountType(accountEntry.account.type);
+        return type.hasLots;
+    }
+
+    getCreditDebitEntryWithInvestmentAccount(xmlTransactionEntry) {
+        if (this.isCreditDebitEntryInvesmentAccount(
+            xmlTransactionEntry.creditEntry)) {
+            return xmlTransactionEntry.creditEntry;
+        }
+        else if (this.isCreditDebitEntryInvesmentAccount(
+            xmlTransactionEntry.debitEntry)) {
+            return xmlTransactionEntry.debitEntry;
+        }
+    }
+
+
+    addLot(xmlTransaction, xmlTransactionEntry, lotOriginType) {
+        const investmentEntry = this.getCreditDebitEntryWithInvestmentAccount(
+            xmlTransactionEntry
+        );
+        if (!investmentEntry) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-transactionEntry_investment_entry_missing',
+                xmlTransaction.date,
+                xmlTransaction.description,
+            ));
+        }
+
+        const accountId = investmentEntry.accountId;
+
+        let lotsEntry = this.lotsEntriesByAccountId.get(accountId);
+        if (lotsEntry === undefined) {
+            lotsEntry = new SortedArray((a, b) => 
+                YMDDate.compare(a.ymdDate, b.ymdDate));
+            this.lotsEntriesByAccountId.set(accountId, lotsEntry);
+        }
+
+
+        let lotId;
+        const { description } = xmlTransactionEntry;
+        if (description && description.trim().startsWith('LOT:')) {
+            const parts = description.trim().split(':');
+            if (parts.length > 1) {
+                lotId = parts[1].trim().split(' ');
+            }
+        }
+
+        if (!lotId) {
+            // The transaction date is yyyy-mm-dd
+            // We want Lot ids to be mm/dd/yy
+            const dateParts = xmlTransaction.date.split('-');
+            lotId = dateParts[1] + '/' + dateParts[2] 
+                + '/' + dateParts[0].slice(2);
+        }
+
+        lotId = this.makeLotId(accountId, lotId);
+
+        const accountEntry = this.accountsById.get(accountId);
+        const lot = {
+            id: lotId,
+            pricedItemId: accountEntry.account.pricedItemId,
+            lotOriginType: lotOriginType,
+        };
+
+        const lotEntry = {
+            ymdDate: new YMDDate(xmlTransaction.date),
+            lot: lot,
+            quantity: numberOrUndefined(xmlTransactionEntry.quantity),
+        };
+        lotsEntry.add(lotEntry);
+
+        this.lotEntriesByLotId.set(lotId, lotEntry);
+
+        return lotId;
+    }
+
+
+    //
+    // Returns an array of { lotId, shares }, where shares may be undefined.
+    parseStringToLotIds(text) {
+        if (!text) {
+            return;
+        }
+
+        const entries = text.split(';').map(entry => entry.trim());
+        for (let i = 0; i < entries.length; ++i) {
+            const entry = entries[i];
+            if (!entry.startsWith('LOT:') && !entry.startsWith('LOT ')) {
+                entries.splice(i, 1);
+                continue;
+            }
+
+            let parts = entry.split(' ');
+            if (parts.length <= 1) {
+                // It obviously starts with 'LOT:'
+                parts = entry.split(':');
+            }
+
+            entries[i] = {
+                lotId: parts[1].trim(),
+            };
+            if (parts.length > 2) {
+                entries[i].shares = parseFloat(parts[2]);
+            }
+        }
+
+        return entries;
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    numberToCurrencyText(number) {
+        number = Math.round(number * 100) / 100;
+        return number.toString();
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    numberToSharesText(number) {
+        number = Math.round(number * 10000) / 10000;
+        return number.toString();
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    getTransactionEntryCostBasis(transactionEntry) {
+        if ((transactionEntry.price !== undefined)
+         && (transactionEntry.quantity !== undefined)) {
+            let costBasis = parseFloat(transactionEntry.price)
+                * parseFloat(transactionEntry.quantity);
+            if (!isNaN(costBasis)) {
+                return this.numberToCurrencyText(costBasis);
+            }
+        }
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    addInvestmentFeesSplit({
+        splits, xmlTransaction, costBasis, }) {
+        const { transactionEntries } = xmlTransaction;
+        if (transactionEntries.length <= 1) {
+            return costBasis;
+        }
+
+        // Look for the INVESTMENT_FEE tag.
+        let feeEntry;
+        for (let i = 0; i < transactionEntries.length; ++i) {
+            if (transactionEntries[i].transactionTag === 'INVESTMENT_FEE') {
+                feeEntry = transactionEntries[i];
+                break;
+            }
+        }
+
+        if (feeEntry === undefined) {
+            // Just warn for now.
+            this.recordWarning(userMsg(
+                'XMLFileImporter-extra_investment_transaction_entries',
+                xmlTransaction.date,
+                xmlTransaction.description,
+            ));
+        }
+        else {
+            const { creditEntry, debitEntry } = feeEntry;
+            let entry = feeEntry.creditEntry;
+            let fee;
+            let amount;
+            let accountId;
+            if (creditEntry.accountId === debitEntry.accountId) {
+                // This happens if the security sale goes back into the security account.
+                // We want to send it to expenses.
+                let creditFee = numberOrUndefined(creditEntry.amount);
+                let debitFee = numberOrUndefined(debitEntry.amount);
+                if (creditFee > 0) {
+                    fee = creditFee;
+                    entry = creditEntry;
+                }
+                else if (debitFee > 0) {
+                    fee = debitFee;
+                    entry = debitEntry;
+                }
+                else {
+                    fee = Math.abs(creditFee);
+                    amount = this.numberToCurrencyText(fee);
+                }
+
+                accountId = this.getFeesAccountId();
+
+                this.recordWarning(userMsg(
+                    'XMLFileImporter-investment_fees_to_investment',
+                    xmlTransaction.date,
+                    xmlTransaction.description,
+                ));
+            }
+            else if (this.isCreditDebitEntryInvesmentAccount(feeEntry.creditEntry)) {
+                entry = feeEntry.debitEntry;
+            }
+            else {
+                entry = feeEntry.creditEntry;
+            }
+            if (accountId === undefined) {
+                accountId = entry.accountId;
+            }
+            if (amount === undefined) {
+                amount = entry.amount;
+            }
+
+            if (fee === undefined) {
+                fee = numberOrUndefined(entry.amount);
+            }
+            if (fee === undefined) {
+                this.recordWarning(userMsg(
+                    'XMLFileImporter-investment_transaction_invalid_fee',
+                    xmlTransaction.date,
+                    xmlTransaction.description,
+                    amount,
+                ));
+            }
+            else {
+                costBasis = numberOrUndefined(costBasis);
+                costBasis -= fee;
+                costBasis = this.numberToCurrencyText(costBasis);
+
+                splits.push({
+                    quantity: amount,
+                    accountId: accountId,
+                });
+            }
+        }
+
+        return costBasis;
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    processTransactionEntryAddX({ splits, xmlTransaction, mainEntry }) {
+        const lotId = this.addLot(xmlTransaction, mainEntry,
+            L.LotOriginType.CASH_PURCHASE.name);
+        if (!lotId) {
+            return;
+        }
+
+        const costBasis = this.getTransactionEntryCostBasis(mainEntry);
+        splits.push({
+            quantity: costBasis,
+            accountId: mainEntry.creditEntry.accountId,
+            lotTransactionType: T.LotTransactionType.BUY_SELL.name,
+            lotChanges: [
+                {
+                    lotId: lotId,
+                    quantity: mainEntry.quantity,
+                    costBasis: costBasis,
+                }
+            ]
+        });
+        splits.push({
+            quantity: '-' + costBasis,
+            accountId: this.getEquityAccountId(),
+        });
+
+        return true;
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    processTransactionEntryBuyX({ splits, xmlTransaction, mainEntry }) {
+        const lotId = this.addLot(xmlTransaction, mainEntry,
+            L.LotOriginType.CASH_PURCHASE.name);
+        if (!lotId) {
+            return;
+        }
+
+        const investmentCreditDebitEntry 
+            = this.getCreditDebitEntryWithInvestmentAccount(mainEntry);
+        if (!investmentCreditDebitEntry) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-transactionEntry_investment_entry_missing',
+                xmlTransaction.date,
+                xmlTransaction.description,
+            ));
+        }
+
+        const { accountId } = investmentCreditDebitEntry;
+
+        const accountEntry = this.accountsById.get(accountId);
+
+        let costBasis = this.getTransactionEntryCostBasis(mainEntry);
+        splits.push({
+            quantity: costBasis,
+            accountId: accountId,
+            lotTransactionType: T.LotTransactionType.BUY_SELL.name,
+            lotChanges: [
+                {
+                    lotId: lotId,
+                    quantity: mainEntry.quantity,
+                    costBasis: costBasis,
+                }
+            ]
+        });
+
+        costBasis = this.addInvestmentFeesSplit({
+            splits: splits,
+            xmlTransaction: xmlTransaction,
+            costBasis: '-' + costBasis
+        });
+        if (!costBasis) {
+            return;
+        }
+
+        splits.push({
+            quantity: costBasis,
+            accountId: accountEntry.parentId,
+        });
+        return true;
+    }
+    
+    
+
+    //
+    //-----------------------------------------------------
+    //
+    processTransactionEntryDividendX({ splits, xmlTransaction, mainEntry, }) {
+        const investmentCreditDebitEntry 
+            = this.getCreditDebitEntryWithInvestmentAccount(mainEntry);
+        if (!investmentCreditDebitEntry) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-transactionEntry_investment_entry_missing',
+                xmlTransaction.date,
+                xmlTransaction.description,
+            ));
+        }
+        
+        const accountEntry = this.accountsById.get(investmentCreditDebitEntry.accountId);
+        if (!accountEntry) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-dividend_account_id_invalid',
+                xmlTransaction.date,
+                xmlTransaction.description,
+                investmentCreditDebitEntry.accountId,
+            ));
+            return;
+        }
+
+        splits.push({
+            accountId: accountEntry.parentId,
+            quantity: investmentCreditDebitEntry.amount,
+        });
+
+        const dividendCreditDebitEntry 
+            = (investmentCreditDebitEntry === mainEntry.creditEntry)
+                ? mainEntry.debitEntry
+                : mainEntry.creditEntry;
+        const dividendAccountEntry = this.accountsById.get(
+            dividendCreditDebitEntry.accountId);
+        if (!dividendAccountEntry) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-dividend_account_id_invalid',
+                xmlTransaction.date,
+                xmlTransaction.description,
+                dividendCreditDebitEntry.accountId,
+            ));
+            return;
+        }
+
+        splits.push({
+            accountId: dividendAccountEntry.parentId,
+            quantity: dividendCreditDebitEntry.amount,
+        });
+
+        return true;
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    processTransactionEntryReinvestDivX({ splits, xmlTransaction, mainEntry, }) {
+        const lotId = this.addLot(xmlTransaction, mainEntry,
+            L.LotOriginType.REINVESTED_DIVIDEND.name);
+        if (!lotId) {
+            return;
+        }
+
+        const investmentCreditDebitEntry 
+            = this.getCreditDebitEntryWithInvestmentAccount(mainEntry);
+        if (!investmentCreditDebitEntry) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-transactionEntry_investment_entry_missing',
+                xmlTransaction.date,
+                xmlTransaction.description,
+            ));
+        }
+
+        const { accountId } = investmentCreditDebitEntry;
+
+        let costBasis = this.getTransactionEntryCostBasis(mainEntry);
+        splits.push({
+            quantity: costBasis,
+            accountId: accountId,
+            lotTransactionType: T.LotTransactionType.REINVESTED_DIVIDEND.name,
+            lotChanges: [
+                {
+                    lotId: lotId,
+                    quantity: mainEntry.quantity,
+                    costBasis: costBasis,
+                }
+            ]
+        });
+
+        costBasis = this.addInvestmentFeesSplit({
+            splits: splits,
+            xmlTransaction: xmlTransaction,
+            costBasis: '-' + costBasis
+        });
+        if (!costBasis) {
+            return;
+        }
+
+        splits.push({
+            quantity: costBasis,
+            accountId: this.getDividendsAccountId(accountId),
+        });
+        return true;
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    removeFIFOQuantityFromLots(
+        { accountId, quantity, lotChanges, xmlTransaction, }) {
+
+        if (lotChanges) {
+            lotChanges.length = 0;
+        }
+        if (quantity <= 0) {
+            return;
+        }
+
+        const lotsEntries = this.lotsEntriesByAccountId.get(accountId);
+        if (!lotsEntries) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-removeFIFO_lot_account_id_invalid',
+                xmlTransaction.date,
+                xmlTransaction.description,
+                accountId,
+            ));
+            return;
+        }
+
+        let i = 0;
+        for (; i < lotsEntries.length; ++i) {
+            const lotEntry = lotsEntries.at(i);
+            if (lotEntry.quantity > 0) {
+                const toRemove = Math.min(lotEntry.quantity, quantity);
+                lotEntry.quantity -= toRemove;
+                quantity -= toRemove;
+
+                if (lotChanges) {
+                    lotChanges.push({
+                        lotId: lotEntry.lot.id,
+                        quantity: toRemove,
+                    });
+                }
+
+                if (quantity <= 0) {
+                    break;
+                }
+            }
+        }
+
+        if (quantity > 0) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-removeFIFO_not_enough_lot_shares',
+                xmlTransaction.date,
+                xmlTransaction.description,
+                quantity,
+            ));
+            return;
+        }
+
+        return true;
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    removeLotQuantitiesFromSpecificLots(
+        { accountId, xmlTransaction, xmlTransactionEntry, lots, lotChanges, }) {
+
+        let quantityRemaining = numberOrUndefined(xmlTransactionEntry.quantity);
+
+        const lotEntryUpdates = [];
+
+        for (let i = 0; i < lots.length; ++i) {
+            const lot = lots[i];
+            const lotId = this.makeLotId(accountId, lot.lotId);
+            const lotChange = {
+                lotId: lotId,
+            };
+
+            const lotEntry = this.lotEntriesByLotId.get(lotId);
+            if (!lotEntry) {
+                this.recordWarning(userMsg(
+                    'XMLFileImporter-sellLot_lotId_invalid',
+                    xmlTransaction.date,
+                    xmlTransaction.description,
+                    lotId,
+                ));
+                return;
+            }
+
+            let currentLotQuantity = lotEntry.quantity;
+
+            let lotQuantity;
+            if (lot.shares !== undefined) {
+                lotChange.quantity = '-' + lot.shares;
+                lotQuantity = numberOrUndefined(lot.shares);
+            }
+            else {
+                lotQuantity = Math.min(quantityRemaining, currentLotQuantity);
+
+                lotChange.quantity = '-' + lotQuantity;
+            }
+            quantityRemaining -= lotQuantity;
+            currentLotQuantity -= lotQuantity;
+
+            if (currentLotQuantity < 0) {
+                this.recordWarning(userMsg(
+                    'XMLFileImporter-sellLot_lot_quantity_negative',
+                    xmlTransaction.date,
+                    xmlTransaction.description,
+                    lotId,
+                ));
+                return;
+            }
+
+            lotEntryUpdates.push([lotEntry, currentLotQuantity]);
+
+            lotChanges.push(lotChange);
+        }
+
+        lotEntryUpdates.forEach(([lotEntry, quantity]) => 
+            lotEntry.quantity = quantity);
+
+        return true;
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    createLotRemovalSplit(
+        { splits, xmlTransaction, mainEntry, dstAccountId, }) {
+        const investmentCreditDebitEntry 
+            = this.getCreditDebitEntryWithInvestmentAccount(mainEntry);
+        if (!investmentCreditDebitEntry) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-transactionEntry_investment_entry_missing',
+                xmlTransaction.date,
+                xmlTransaction.description,
+            ));
+        }
+
+        const { accountId } = investmentCreditDebitEntry;
+
+        let costBasis = this.getTransactionEntryCostBasis(mainEntry);
+        const mainSplit = {
+            quantity: '-' + costBasis,
+            accountId: accountId,
+            lotTransactionType: T.LotTransactionType.BUY_SELL.name,
+            lotChanges: [],
+        };
+
+        // Do we have lots identified?
+        let lots = this.parseStringToLotIds(mainEntry.memo);
+        if (lots && lots.length) {
+            if (!this.removeLotQuantitiesFromSpecificLots({ 
+                accountId: accountId, 
+                xmlTransaction: xmlTransaction, 
+                xmlTransactionEntry: mainEntry, 
+                lots: lots, 
+                lotChanges: mainSplit.lotChanges,
+            })) {
+                return;
+            }
+        }
+        else {
+            if (!this.removeFIFOQuantityFromLots({
+                accountId: accountId, 
+                quantity: numberOrUndefined(mainEntry.quantity),
+                xmlTransaction: xmlTransaction, 
+                xmlTransactionEntry: mainEntry, 
+            })) {
+                return;
+            }
+            mainSplit.sellAutoLotType = T.AutoLotType.LIFO.name;
+            mainSplit.sellAutoLotQuantity = mainEntry.quantity;
+        }
+
+        splits.push(mainSplit);
+
+
+        costBasis = this.addInvestmentFeesSplit({
+            splits: splits,
+            xmlTransaction: xmlTransaction,
+            costBasis: costBasis
+        });
+        if (!costBasis) {
+            return;
+        }
+
+        splits.push({
+            quantity: costBasis,
+            accountId: dstAccountId,
+        });
+        return true;
+    }
+
+    //
+    //-----------------------------------------------------
+    //
+    processTransactionEntryRemoveX(args) {
+        const { xmlTransaction, mainEntry, } = args;
+        const investmentCreditDebitEntry 
+            = this.getCreditDebitEntryWithInvestmentAccount(mainEntry);
+        if (!investmentCreditDebitEntry) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-transactionEntry_investment_entry_missing',
+                xmlTransaction.date,
+                xmlTransaction.description,
+            ));
+        }
+
+        args = Object.assign({}, args, {
+            dstAccountId: this.getEquityAccountId(),
+        });
+        return this.createLotRemovalSplit(args);
+    }
+
+    //
+    //-----------------------------------------------------
+    //
+    processTransactionEntrySellX(args) {
+        const { xmlTransaction, mainEntry, } = args;
+        const investmentCreditDebitEntry 
+            = this.getCreditDebitEntryWithInvestmentAccount(mainEntry);
+        if (!investmentCreditDebitEntry) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-transactionEntry_investment_entry_missing',
+                xmlTransaction.date,
+                xmlTransaction.description,
+            ));
+        }
+
+        const { accountId } = investmentCreditDebitEntry;
+        const accountEntry = this.accountsById.get(accountId);
+
+        args = Object.assign({}, args, {
+            dstAccountId: accountEntry.parentId,
+        });
+        return this.createLotRemovalSplit(args);
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    getAccountQuantityDefinition(accountId) {
+        return getDecimalDefinition(4);
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    adjustLotsForSplitMerge(
+        { accountId, xmlTransaction, xmlTransactionEntry, lotChanges,
+            sign, }) {
+
+        const accountLotEntries = this.lotsEntriesByAccountId.get(accountId);
+        if (!accountLotEntries) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-mergeSplit_account_id_invalid',
+                xmlTransaction.date,
+                xmlTransaction.description,
+                accountId,
+            ));
+            return;
+        }
+
+        const quantityDefinition = this.getAccountQuantityDefinition(accountId);
+
+        const quantityRemaining = numberOrUndefined(xmlTransactionEntry.quantity);
+        let remainingSharesBaseValue = quantityDefinition.numberToBaseValue(
+            quantityRemaining
+        );
+
+        let totalSharesBaseValue = 0;
+        const lotSharesBaseValues = [];
+        accountLotEntries.forEach((lotEntry) => {
+            const quantityBaseValue = quantityDefinition.numberToBaseValue(
+                lotEntry.quantity);
+            lotSharesBaseValues.push(quantityBaseValue);
+            totalSharesBaseValue += quantityBaseValue;
+        });
+        
+        remainingSharesBaseValue *= sign;
+        const deltaSharesBaseValue = remainingSharesBaseValue;
+        if (totalSharesBaseValue + deltaSharesBaseValue < 1) {
+            this.recordWarning(userError(
+                'XMLFileImporter-merge_too_large',
+                xmlTransaction.date,
+                xmlTransaction.description,
+                xmlTransaction.quantity,
+                quantityDefinition.baseValueToNumber(totalSharesBaseValue),
+            ));
+            return;
+        }
+
+        const lastIndex = accountLotEntries.length - 1;
+        for (let i = 0; i < lastIndex; ++i) {
+            let deltaQuantityBaseValue = Math.round(
+                lotSharesBaseValues[i] * deltaSharesBaseValue 
+                    / totalSharesBaseValue);
+            if (deltaQuantityBaseValue + lotSharesBaseValues[i] < 0) {
+                deltaQuantityBaseValue = 0;
+            }
+            
+            if (deltaQuantityBaseValue) {
+                const lotEntry = accountLotEntries.at(i);
+                lotChanges.push({
+                    lotId: lotEntry.lot.id,
+                    quantityBaseValue: deltaQuantityBaseValue,
+                });
+                remainingSharesBaseValue -= deltaQuantityBaseValue;
+
+                lotEntry.quantity = quantityDefinition.baseValueToValueText(
+                    lotSharesBaseValues[i] + deltaQuantityBaseValue);
+            }
+        }
+
+        if (remainingSharesBaseValue) {
+            const lotEntry = accountLotEntries.at(lastIndex);
+            lotChanges.push({
+                lotId: lotEntry.lot.id,
+                quantityBaseValue: remainingSharesBaseValue,
+            });
+
+            lotEntry.quantity = quantityDefinition.baseValueToValueText(
+                lotSharesBaseValues[lastIndex] + remainingSharesBaseValue);
+        }
+    }
+
+
+
+    //
+    //-----------------------------------------------------
+    //
+    processTransactionEntryMergeX(
+        { splits, xmlTransaction, mainEntry, }) {
+        // We have the new number of shares, need to proportionally apply this to all
+        // lots.
+        const investmentCreditDebitEntry 
+            = this.getCreditDebitEntryWithInvestmentAccount(mainEntry);
+        if (!investmentCreditDebitEntry) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-transactionEntry_investment_entry_missing',
+                xmlTransaction.date,
+                xmlTransaction.description,
+            ));
+        }
+
+        const { accountId } = investmentCreditDebitEntry;
+        const lotChanges = [];
+        splits.push({
+            accountId: accountId,
+            lotTransactionType: T.LotTransactionType.SPLIT.name,
+            lotChanges: lotChanges,
+        });
+
+        this.adjustLotsForSplitMerge({ 
+            accountId: accountId, 
+            xmlTransaction: xmlTransaction, 
+            xmlTransactionEntry: mainEntry, 
+            lotChanges: lotChanges,
+            sign: -1,
+        });
+
+        return true;
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    processTransactionEntrySplitX(
+        { splits, xmlTransaction, mainEntry, }) {
+        // We have the new number of shares, need to proportionally apply this to all
+        // lots.
+        const investmentCreditDebitEntry 
+            = this.getCreditDebitEntryWithInvestmentAccount(mainEntry);
+        if (!investmentCreditDebitEntry) {
+            this.recordWarning(userMsg(
+                'XMLFileImporter-transactionEntry_investment_entry_missing',
+                xmlTransaction.date,
+                xmlTransaction.description,
+            ));
+        }
+
+        const { accountId } = investmentCreditDebitEntry;
+        const lotChanges = [];
+        splits.push({
+            accountId: accountId,
+            lotTransactionType: T.LotTransactionType.SPLIT.name,
+            lotChanges: lotChanges,
+        });
+
+        this.adjustLotsForSplitMerge({ 
+            accountId: accountId, 
+            xmlTransaction: xmlTransaction, 
+            xmlTransactionEntry: mainEntry, 
+            lotChanges: lotChanges,
+            sign: 1,
+        });
+
+        return true;
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
+    processInvestmentXMLTransactionSplits(args) {
+        const { xmlTransaction, } = args;
+        const { transactionEntries } = xmlTransaction;
+        let transactionType = transactionEntries[0].entryType;
+        let mainEntry;
+        for (let i = 0; i < transactionEntries.length; ++i) {
+            if (transactionEntries[i].entryType !== 'TRANSACTIONENTRY') {
+                transactionType = transactionEntries[i].entryType;
+                mainEntry = transactionEntries[i];
+                break;
+            }
+        }
+
+        args = Object.assign({}, args, {
+            mainEntry: mainEntry,
+        });
+
+        switch (transactionType) {
+        case 'TRANSACTIONENTRYADDX' :
+            return this.processTransactionEntryAddX(args);
+        
+        case 'TRANSACTIONENTRYBUYX' :
+            return this.processTransactionEntryBuyX(args);
+        
+        case 'TRANSACTIONENTRYDIVIDENDX' :
+            return this.processTransactionEntryDividendX(args);
+        
+        case 'TRANSACTIONENTRYMERGEX' :
+            return this.processTransactionEntryMergeX(args);
+        
+        case 'TRANSACTIONENTRYREINVESTDIVX' :
+            return this.processTransactionEntryReinvestDivX(args);
+
+        case 'TRANSACTIONENTRYREMOVEX' :
+            return this.processTransactionEntryRemoveX(args);
+        
+        case 'TRANSACTIONENTRYSELLX' :
+            return this.processTransactionEntrySellX(args);
+        
+        case 'TRANSACTIONENTRYSPLITX' :
+            return this.processTransactionEntrySplitX(args);
+
+        default :
+            this.recordWarning(userMsg(
+                'XMLFileImporter-investmentTransactionEntry_invalid',
+                xmlTransaction.date,
+                xmlTransaction.description,
+                transactionType,
+            ));
+            return false;
+        }
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
     processXMLTransaction(transactions, xmlTransaction) {
         const splits = [];
         const { transactionEntries } = xmlTransaction;
@@ -1466,101 +2451,140 @@ class XMLFileImporterImpl {
             return;
         }
 
-        // If there's a single transaction entry it's simple, otherwise
-        // we have to do a bit more work.
-        if (transactionEntries.length === 1) {
-            const xmlEntry = transactionEntries[0];
-            const { creditEntry, debitEntry } = xmlEntry;
-
-            const split0 = this.createSplitFromCreditDebitEntry(debitEntry);
-            splits.push(split0);
-
-            const split1 = this.createSplitFromCreditDebitEntry(creditEntry);
-            split1.isCredit = true;
-            splits.push(split1);
-
-            if (xmlTransaction.number !== undefined) {
-                split0.refNum = xmlTransaction.number;
-                split1.refNum = xmlTransaction.number;
+        if (xmlTransaction.transactionType === 'INVESTMENTTRANSACTION') {
+            if (!this.processInvestmentXMLTransactionSplits({
+                splits: splits, 
+                xmlTransaction: xmlTransaction,
+            })) {
+                return;
             }
         }
         else {
-            const instanceCountsByAccountIds = new Map();
-            transactionEntries.forEach((xmlEntry) => {
-                // There should be one common account, and it will have one instance
-                // in either the credit or debit side.
-                // This will be the first split.
-                // The remaining transaction entries will fill in the rest.
+            /*
+            Transaction tags:
+                BANK
+                DIVIDEND
+                FEES_OFFSET
+                GAIN_LOSS
+                GAINS_OFFSET
+                INVESTMENT
+                INVESTMENT_FEE
+                INVESTMENT_CASH_TRANSFER
+                VAT
+            */
+
+
+            // If there's a single transaction entry it's simple, otherwise
+            // we have to do a bit more work.
+            if (transactionEntries.length === 1) {
+                const xmlEntry = transactionEntries[0];
                 const { creditEntry, debitEntry } = xmlEntry;
-                let instanceCounts = instanceCountsByAccountIds.get(
-                    creditEntry.accountId);
-                if (!instanceCounts) {
-                    instanceCounts = [0, 0 ];
-                    instanceCountsByAccountIds.set(creditEntry.accountId, instanceCounts);
-                }
-                ++instanceCounts[0];
 
-                instanceCounts = instanceCountsByAccountIds.get(debitEntry.accountId);
-                if (!instanceCounts) {
-                    instanceCounts = [0, 0 ];
-                    instanceCountsByAccountIds.set(debitEntry.accountId, instanceCounts);
+                const split0 = this.createSplitFromCreditDebitEntry(
+                    debitEntry, xmlTransaction);
+                if (!split0) {
+                    return;
                 }
-                ++instanceCounts[1];
-            });
+                splits.push(split0);
 
-            let baseAccountId;
-            let isBaseAccountCredit;
-            for (const [id, instanceCounts] of instanceCountsByAccountIds) {
-                if (instanceCounts[0] + instanceCounts[1] === transactionEntries.length) {
-                    baseAccountId = id;
-                    isBaseAccountCredit = (instanceCounts[0] === 1);
-                    break;
+                const split1 = this.createSplitFromCreditDebitEntry(
+                    creditEntry, xmlTransaction);
+                if (!split1) {
+                    return;
+                }
+                split1.isCredit = true;
+                splits.push(split1);
+
+                if (xmlTransaction.number !== undefined) {
+                    split0.refNum = xmlTransaction.number;
+                    split1.refNum = xmlTransaction.number;
                 }
             }
+            else {
+                const instanceCountsByAccountIds = new Map();
+                transactionEntries.forEach((xmlEntry) => {
+                    // There should be one common account, and it will have one instance
+                    // in either the credit or debit side.
+                    // This will be the first split.
+                    // The remaining transaction entries will fill in the rest.
+                    const { creditEntry, debitEntry } = xmlEntry;
+                    let instanceCounts = instanceCountsByAccountIds.get(
+                        creditEntry.accountId);
+                    if (!instanceCounts) {
+                        instanceCounts = [0, 0 ];
+                        instanceCountsByAccountIds.set(creditEntry.accountId, 
+                            instanceCounts);
+                    }
+                    ++instanceCounts[0];
 
-            let baseSum = 0;
-            transactionEntries.forEach((xmlEntry) => {
-                const { creditEntry, debitEntry } = xmlEntry;
+                    instanceCounts = instanceCountsByAccountIds.get(debitEntry.accountId);
+                    if (!instanceCounts) {
+                        instanceCounts = [0, 0 ];
+                        instanceCountsByAccountIds.set(debitEntry.accountId, 
+                            instanceCounts);
+                    }
+                    ++instanceCounts[1];
+                });
 
-                let baseEntry;
-                let entry;
-                if (debitEntry.accountId === baseAccountId) {
-                    baseEntry = debitEntry;
-                    entry = creditEntry;
+                let baseAccountId;
+                let isBaseAccountCredit;
+                for (const [id, instanceCounts] of instanceCountsByAccountIds) {
+                    if (instanceCounts[0] + instanceCounts[1]
+                     === transactionEntries.length) {
+                        baseAccountId = id;
+                        isBaseAccountCredit = (instanceCounts[0] === 1);
+                        break;
+                    }
                 }
-                else {
-                    baseEntry = creditEntry;
-                    entry = debitEntry;
+
+                let baseSum = 0;
+                transactionEntries.forEach((xmlEntry) => {
+                    const { creditEntry, debitEntry } = xmlEntry;
+
+                    let baseEntry;
+                    let entry;
+                    if (debitEntry.accountId === baseAccountId) {
+                        baseEntry = debitEntry;
+                        entry = creditEntry;
+                    }
+                    else {
+                        baseEntry = creditEntry;
+                        entry = debitEntry;
+                    }
+
+                    const split = this.createSplitFromCreditDebitEntry(entry,
+                        xmlTransaction);
+                    if (!split) {
+                        return;
+                    }
+                    if (entry === creditEntry) {
+                        split.isCredit = true;
+                    }
+
+                    const amount = numberOrUndefined(baseEntry.amount);
+                    if (amount) {
+                        baseSum += amount;
+                    }
+
+                    splits.push(split);
+                });
+
+                // Add the base entry...
+                const baseSplit = {
+                    accountId: baseAccountId,
+                    quantity: baseSum.toString(),
+                    isCredit: isBaseAccountCredit,
+                };
+                splits.splice(0, 0, baseSplit);
+
+                if (!baseAccountId) {
+                    this.recordWarning(userMsg(
+                        'XMLFileImporter-transaction_entry_account_ids_inconsistent',
+                        xmlTransaction.date,
+                        xmlTransaction.description,
+                    ));
+                    return;
                 }
-
-                const split = this.createSplitFromCreditDebitEntry(entry);
-                if (entry === creditEntry) {
-                    split.isCredit = true;
-                }
-
-                const amount = numberOrUndefined(baseEntry.amount);
-                if (amount) {
-                    baseSum += amount;
-                }
-
-                splits.push(split);
-            });
-
-            // Add the base entry...
-            const baseSplit = {
-                accountId: baseAccountId,
-                quantity: baseSum.toString(),
-                isCredit: isBaseAccountCredit,
-            };
-            splits.splice(0, 0, baseSplit);
-
-            if (!baseAccountId) {
-                this.recordWarning(userMsg(
-                    'XMLFileImporter-transaction_entry_account_ids_inconsistent',
-                    xmlTransaction.date,
-                    xmlTransaction.description,
-                ));
-                return;
             }
         }
 
@@ -1568,12 +2592,97 @@ class XMLFileImporterImpl {
             ymdDate: xmlTransaction.date,
             lastModifiedTimeStamp: 
                 numberOrUndefined(xmlTransaction.lastModifiedTimeStamp),
+            description: xmlTransaction.description,
             splits: splits,
         };
         transactions.push(transaction);
     }
 
 
+
+    //
+    //-----------------------------------------------------
+    //
+    getXMLTransactionPriority(xmlTransaction) {
+        if (xmlTransaction.transactionType === 'INVESTMENTTRANSACTION') {
+            // Only care about investment transactions...
+            const { transactionEntries } = xmlTransaction;
+            for (let i = 0; i < transactionEntries.length; ++i) {
+                let subPriority;
+
+                const transactionEntry = transactionEntries[i];
+                switch (transactionEntry.entryType) {
+                case 'TRANSACTIONENTRYADDX' :
+                    subPriority = 10;
+                    break;
+                
+                case 'TRANSACTIONENTRYBUYX' :
+                    subPriority = 10;
+                    break;
+                
+                case 'TRANSACTIONENTRYDIVIDENDX' :
+                    continue;
+                
+                case 'TRANSACTIONENTRYMERGEX' :
+                    subPriority = 10;
+                    break;
+                
+                case 'TRANSACTIONENTRYREINVESTDIVX' :
+                    subPriority = 10;
+                    break;
+                
+                case 'TRANSACTIONENTRYREMOVEX' :
+                    subPriority = 100;
+                    break;
+                
+                case 'TRANSACTIONENTRYSELLX' :
+                    subPriority = 100;
+                    break;
+                                
+                case 'TRANSACTIONENTRYSPLITX' :
+                    subPriority = 10;
+                    break;
+                
+                default :
+                    continue;
+                }
+
+                return subPriority;
+            }
+        }
+
+        return 0;
+    }
+
+
+
+    //
+    //-----------------------------------------------------
+    //
+    xmlTransactionCompare(a, b) {
+        let result = YMDDate.compare(a.ymdDate, b.ymdDate);
+        if (result) {
+            return result;
+        }
+
+        // If either has investment transactions...
+        // Sell transactions should come after buy transactions? This would
+        // really depend upon lots...
+        const aPriority = this.getXMLTransactionPriority(a);
+        const bPriority = this.getXMLTransactionPriority(b);
+        result = aPriority - bPriority;
+        if (result) {
+            return result;
+        }
+
+        return a.id.localeCompare(b.id);
+    }
+
+
+
+    //
+    //-----------------------------------------------------
+    //
     postProcessTransactions() {
         const { newFileContents } = this;
         if (!newFileContents.transactions) {
@@ -1586,14 +2695,51 @@ class XMLFileImporterImpl {
             newFileContents.transactions.transactions = transactions;
         }
 
-        this.transactionsById.forEach((xmlTransaction) => 
+        const xmlTransactions = Array.from(this.transactionsById.values());
+        xmlTransactions.forEach((xmlTransaction) => {
+            xmlTransaction.ymdDate = new YMDDate(xmlTransaction.date);
+        });
+
+        xmlTransactions.sort((a, b) => this.xmlTransactionCompare(a, b));
+
+        xmlTransactions.forEach((xmlTransaction) => 
             this.processXMLTransaction(transactions, xmlTransaction));
     }
 
 
+
+    //
+    //-----------------------------------------------------
+    //
+    postProcessLots() {
+        if (!this.lotsEntriesByAccountId.size) {
+            return;
+        }
+
+        const { newFileContents } = this;
+        if (!newFileContents.lots) {
+            newFileContents.lots = {};
+        }
+
+        let { lots } = newFileContents.lots;
+        if (!lots) {
+            lots = [];
+            newFileContents.lots.lots = lots;
+        }
+
+        this.lotsEntriesByAccountId.forEach((entry) => {
+            entry.forEach((lotEntry) => lots.push(lotEntry.lot));
+        });
+    }
+
+
+    //
+    //-----------------------------------------------------
+    //
     async asyncFinalizeImport() {
         this.postProcessAccounts();
         this.postProcessTransactions();
+        this.postProcessLots();
 
         if (this.verbose) {
             if (this.warnings.length) {
@@ -1609,6 +2755,14 @@ class XMLFileImporterImpl {
             const logPathName = path.join(parts.dir, 'log.txt');
             const stream = fs.createWriteStream(logPathName);
             this.log.forEach((entry) => stream.write(entry + '\n'));
+            stream.end();
+        }
+
+        if (this.warnings.length) {
+            const parts = path.parse(this.pathNameToImport);
+            const logPathName = path.join(parts.dir, 'warnings.txt');
+            const stream = fs.createWriteStream(logPathName);
+            this.warnings.forEach((entry) => stream.write(entry + '\n'));
             stream.end();
         }
 
