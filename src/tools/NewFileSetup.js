@@ -3,6 +3,7 @@ import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
 import * as PI from '../engine/PricedItems';
 import * as QD from '../util/Quantities';
+import * as AH from './AccountHelpers';
 import { YMDDate } from '../util/YMDDate';
 import { userMsg, userError } from '../util/UserMessages';
 
@@ -340,6 +341,23 @@ async function asyncLoadAccounts(setupInfo) {
     await asyncLoadAccountsForRoot(setupInfo, accountManager.getRootIncomeAccountId());
     await asyncLoadAccountsForRoot(setupInfo, accountManager.getRootExpenseAccountId());
     await asyncLoadAccountsForRoot(setupInfo, accountManager.getRootEquityAccountId());
+
+    await asyncFinalizeAccounts(setupInfo);
+}
+
+
+//
+//---------------------------------------------------------
+//
+async function asyncFinalizeAccounts(setupInfo) {
+    const { defaultSplitAccountsByAccountId, accountManager } = setupInfo;
+
+    for (const [accountId, defaultSplitAccountIds ] of defaultSplitAccountsByAccountId) {
+        await accountManager.asyncModifyAccount({
+            id: accountId,
+            defaultSplitAccountIds: defaultSplitAccountIds,
+        });
+    }
 }
 
 
@@ -375,7 +393,7 @@ async function asyncLoadAccountsForRoot(setupInfo, rootAccountId) {
 //
 async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
     const { accountManager, accountMapping, accountNameMapping, pricedItemManager,
-        accessor, warnings } = setupInfo;
+        defaultSplitAccountsByAccountId, accessor, warnings } = setupInfo;
 
     try {
         const accountSettings = Object.assign({}, item, {
@@ -395,7 +413,6 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
             accountSettings.pricedItemId 
                 = pricedItemManager.getBaseCurrencyPricedItemId();
         }
-
 
         const accountCategory = A.AccountType[item.type].category;
 
@@ -419,6 +436,10 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
             .newAccountDataItem;
 
         accountMapping.set(item.id, accountDataItem);
+
+        if (item.defaultSplitAccountIds) {
+            defaultSplitAccountsByAccountId.set(accountDataItem.id, item.defaultSplitAccountIds);
+        }
 
         const name = parentName + '-' + accountDataItem.name;
         accountNameMapping.set(name, accountDataItem);
@@ -467,6 +488,56 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
     }
 }
 
+
+//
+//---------------------------------------------------------
+//
+export function makeDefaultSplitsAccountId(defaultSplitsAccountType, baseAccountId) {
+    if (typeof defaultSplitsAccountType === 'object') {
+        defaultSplitsAccountType = defaultSplitsAccountType.name;
+    }
+    return '__DEFAULT_SPLITS__' + defaultSplitsAccountType + '__' + baseAccountId;
+}
+
+
+//
+//---------------------------------------------------------
+//
+function resolveAccountId(setupInfo, accountId) {
+    const { accessor,
+        accountNameMapping, accountMapping, } = setupInfo;
+    
+    // Default splits account type?
+    // Format is __DEFAULT_SPLITS__DefaultSplitAccountType__baseAccountId
+    const parts = accountId.split('__');
+    if ((parts.length === 4) && !parts[0] && (parts[1] === 'DEFAULT_SPLITS')) {
+        const defaultSplitAccountType = parts[2];
+        const baseAccountId = parts[3];
+        const baseAccountDataItem = resolveAccountId(setupInfo, baseAccountId);
+
+        accountId = AH.getDefaultSplitAccountId(accessor, baseAccountDataItem, 
+            defaultSplitAccountType);
+        accountDataItem = accessor.getAccountDataItemWithId(accountId);
+        if (!accountDataItem) {
+            throw userError(
+                'NewFileSetup-addTransaction_invalid_default_split_accountId',
+                accountId);
+        }
+        return accountDataItem;
+    }
+
+    let accountDataItem = accountNameMapping.get(accountId);
+    if (!accountDataItem) {
+        accountDataItem = accountMapping.get(accountId);
+    }
+    if (!accountDataItem) {
+        throw userError('NewFileSetup-addTransaction_invalid_accountId', 
+            accountId);
+    }
+
+    return accountDataItem;
+}
+
 //
 //---------------------------------------------------------
 //
@@ -480,8 +551,7 @@ async function asyncLoadTransactions(setupInfo) {
         return;
     }
 
-    const { warnings, accessor,
-        accountNameMapping, accountMapping, lotMapping } = setupInfo;
+    const { warnings, accessor, lotMapping } = setupInfo;
     let item;
     let transaction;
     try {
@@ -495,14 +565,8 @@ async function asyncLoadTransactions(setupInfo) {
             const splits = [];
             item.splits.forEach((itemSplit) => {
                 const split = Object.assign({}, itemSplit);
-                let accountDataItem = accountNameMapping.get(itemSplit.accountId);
-                if (!accountDataItem) {
-                    accountDataItem = accountMapping.get(itemSplit.accountId);
-                }
-                if (!accountDataItem) {
-                    throw userError('NewFileSetup-addTransaction_invalid_accountId', 
-                        itemSplit.accountId);
-                }
+                const accountDataItem = resolveAccountId(setupInfo, itemSplit.accountId);
+
                 split.accountId = accountDataItem.id;
 
                 if (split.lotChanges) {
@@ -687,6 +751,10 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
 
         accountMapping: new Map(),
         accountNameMapping: new Map(),
+
+        // These are the default split account entries from the template,
+        // we need to process these after all the accounts have been loaded.
+        defaultSplitAccountsByAccountId: new Map(),
 
         lotMapping: new Map(),
         lotNameMapping: new Map(),

@@ -9,6 +9,9 @@ import * as sax from 'sax';
 import { YMDDate } from '../util/YMDDate';
 import { SortedArray } from '../util/SortedArray';
 import { getDecimalDefinition } from '../util/Quantities';
+import { DefaultSplitAccountType } from './AccountHelpers';
+import { makeDefaultSplitsAccountId } from './NewFileSetup';
+import { StandardAccountTag } from '../engine/StandardTags';
 
 
 class XMLNodeProcessor {
@@ -945,6 +948,100 @@ const xmlAccountTypeMappings = {
     MUTUAL: A.AccountType.MUTUAL_FUND.name,
 };
 
+const incomeAccountTagMappings = [
+    {
+        regexp: /\bINTEREST/,
+        tags: [ StandardAccountTag.INTEREST.name, ],
+        defaultSplitAccountType: DefaultSplitAccountType.INTEREST_INCOME.name,
+        childAccountTypes: [ 
+            A.AccountType.BANK.name, 
+            A.AccountType.BROKERAGE.name, 
+            A.AccountType.SECURITY.name, 
+            A.AccountType.MUTUAL_FUND.name, 
+            A.AccountType.REAL_ESTATE.name, 
+            A.AccountType.PROPERTY.name, 
+            A.AccountType.CREDIT_CARD.name, 
+            A.AccountType.LOAN.name, 
+            A.AccountType.MORTGAGE.name, 
+        ],
+    },
+    {
+        regexp: /\bDIVIDENDS*/,
+        tags: [ StandardAccountTag.DIVIDENDS.name, ],
+        defaultSplitAccountType: DefaultSplitAccountType.DIVIDENDS_INCOME.name,
+        childAccountTypes: [ 
+            A.AccountType.BANK.name, 
+            A.AccountType.BROKERAGE.name, 
+            A.AccountType.SECURITY.name, 
+            A.AccountType.MUTUAL_FUND.name, 
+        ],
+    },
+];
+
+const expenseAccountTagMappings = [
+    {
+        regexp: /\bINTEREST/,
+        tags: [ StandardAccountTag.INTEREST.name, ],
+        defaultSplitAccountType: DefaultSplitAccountType.INTEREST_EXPENSE,
+        childAccountTypes: [ 
+            A.AccountType.BANK.name, 
+            A.AccountType.BROKERAGE.name, 
+            A.AccountType.SECURITY.name, 
+            A.AccountType.MUTUAL_FUND.name, 
+            A.AccountType.REAL_ESTATE.name, 
+            A.AccountType.PROPERTY.name, 
+            A.AccountType.CREDIT_CARD.name, 
+            A.AccountType.LOAN.name, 
+            A.AccountType.MORTGAGE.name, 
+        ],
+    },
+    {
+        regexp: /\bFEES/,
+        tags: [ StandardAccountTag.FEES.name, ],
+        defaultSplitAccountType: DefaultSplitAccountType.FEES_EXPENSE,
+        childAccountTypes: [ 
+            A.AccountType.BANK.name, 
+            A.AccountType.BROKERAGE.name, 
+            A.AccountType.SECURITY.name, 
+            A.AccountType.MUTUAL_FUND.name, 
+            A.AccountType.REAL_ESTATE.name, 
+            A.AccountType.PROPERTY.name, 
+            A.AccountType.CREDIT_CARD.name, 
+            A.AccountType.LOAN.name, 
+            A.AccountType.MORTGAGE.name, 
+        ],
+    },
+    {
+        regexp: /\bBANK\bFEES/,
+        tags: [StandardAccountTag.BANK_FEES.name, ],
+        defaultSplitAccountType: DefaultSplitAccountType.FEES_EXPENSE,
+        childAccountTypes: [ 
+            A.AccountType.BANK.name, 
+            A.AccountType.BROKERAGE.name, 
+            A.AccountType.CREDIT_CARD.name, 
+            A.AccountType.LOAN.name, 
+            A.AccountType.MORTGAGE.name, 
+        ],
+    },
+    {
+        regexp: /\bCOMMISSIONS/,
+        tags: [ StandardAccountTag.BROKERAGE_COMMISSIONS.name, ],
+        defaultSplitAccountType: DefaultSplitAccountType.FEES_EXPENSE,
+        childAccountTypes: [ 
+            A.AccountType.BROKERAGE.name, 
+            A.AccountType.SECURITY.name, 
+            A.AccountType.MUTUAL_FUND.name, 
+            A.AccountType.REAL_ESTATE.name, 
+        ],
+    },
+    {
+        regexp: /\bTAXES/,
+        tags: [
+            StandardAccountTag.TAXES.name,
+        ],
+    }
+];
+
 
 //
 //---------------------------------------------------------
@@ -1467,21 +1564,114 @@ class XMLFileImporterImpl {
                 this.processXMLAccount(rootAccounts, xmlAccount, 0, []);
             });
         }
+
+        // Try to tag income and expense accounts.
+        this.tagIncomeAccounts();
+        this.tagExpenseAccounts();
+    }
+
+    tagIncomeAccounts() {
+        const { newFileContents } = this;
+        const { accounts } = newFileContents;
+        this.applyAccountTags(accounts.INCOME, incomeAccountTagMappings);
+    }
+
+    tagExpenseAccounts() {
+        const { newFileContents } = this;
+        const { accounts } = newFileContents;
+        this.applyAccountTags(accounts.EXPENSE, expenseAccountTagMappings);
     }
 
 
-    getEquityAccountId() {
+    applyAccountTags(accounts, tagMappings) {
+        accounts.forEach((account) => {
+            tagMappings.forEach((mapping) => {
+                if (mapping.regexp) {
+                    if (mapping.regexp.test(account.name.toUpperCase())) {
+                        if (!account.tags) {
+                            account.tags = [];
+                        }
+                        account.tags = account.tags.concat(mapping.tags);
+
+                        if (mapping.defaultSplitAccountType
+                         && mapping.childAccountTypes
+                         && account.childAccounts) {
+                            this.applyDefaultSplitAccountTypes(account.childAccounts,
+                                mapping);
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    applyDefaultSplitAccountTypes(accounts, mapping) {
+        accounts.forEach((account) => {
+            const assetAccount = this.findAssetAccountWithName(account.name);
+            if (assetAccount) {
+                if (mapping.childAccountTypes.indexOf(assetAccount.type) >= 0) {
+                    // Match!
+                    let { defaultSplitAccountIds } = assetAccount;
+                    if (!defaultSplitAccountIds) {
+                        defaultSplitAccountIds = {};
+                        assetAccount.defaultSplitAccountIds = defaultSplitAccountIds;
+                    }
+                    defaultSplitAccountIds[mapping.defaultSplitAccountType.property]
+                        = account.id;
+                }
+            }
+            else {
+                if (account.childAccounts) {
+                    this.applyDefaultSplitAccountTypes(account.childAccounts, mapping);
+                }
+            }
+        });
+    }
+
+    findAssetAccountWithName(name) {
+        const { newFileContents } = this;
+        const { accounts } = newFileContents;
+        const assetAccounts = accounts.ASSET;
+        return this.findAccountWithName(assetAccounts, name);
+    }
+
+    findAccountWithName(accounts, name) {
+        if (!name) {
+            return;
+        }
+
+        name = name.toUpperCase();
+        for (let i = 0; i < accounts.length; ++i) {
+            const account = accounts[i];
+            if (account.name && (account.name.toUpperCase() === name)) {
+                return accounts[i];
+            }
+
+            if (account.childAccounts) {
+                const childAccount = this.findAccountWithName(
+                    account.childAccounts, name);
+                if (childAccount) {
+                    return childAccount;
+                }
+            }
+        }
+    }
+
+
+    getEquityAccountId(accountId) {
         return 'EQUITY';
     }
 
 
-    getFeesAccountId() {
-        return 'EXPENSE';
+    getFeesAccountId(accountId) {
+        return makeDefaultSplitsAccountId(
+            DefaultSplitAccountType.FEES_EXPENSE.name, accountId);
     }
 
 
     getDividendsAccountId(accountId) {
-        return 'INCOME';
+        return makeDefaultSplitsAccountId(
+            DefaultSplitAccountType.DIVIDENDS_INCOME.name, accountId);
     }
 
 
@@ -1735,7 +1925,7 @@ class XMLFileImporterImpl {
                     amount = this.numberToCurrencyText(fee);
                 }
 
-                accountId = this.getFeesAccountId();
+                accountId = this.getFeesAccountId(creditEntry.accountId);
 
                 this.recordWarning(userMsg(
                     'XMLFileImporter-investment_fees_to_investment',
@@ -1793,10 +1983,11 @@ class XMLFileImporterImpl {
             return;
         }
 
+        const { accountId } = mainEntry.creditEntry;
         const costBasis = this.getTransactionEntryCostBasis(mainEntry);
         splits.push({
             quantity: costBasis,
-            accountId: mainEntry.creditEntry.accountId,
+            accountId: accountId,
             lotTransactionType: T.LotTransactionType.BUY_SELL.name,
             lotChanges: [
                 {
@@ -1808,7 +1999,7 @@ class XMLFileImporterImpl {
         });
         splits.push({
             quantity: '-' + costBasis,
-            accountId: this.getEquityAccountId(),
+            accountId: this.getEquityAccountId(accountId),
         });
 
         return true;
@@ -2189,7 +2380,7 @@ class XMLFileImporterImpl {
         }
 
         args = Object.assign({}, args, {
-            dstAccountId: this.getEquityAccountId(),
+            dstAccountId: this.getEquityAccountId(mainEntry.accountId),
         });
         return this.createLotRemovalSplit(args);
     }

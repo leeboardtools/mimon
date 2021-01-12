@@ -35,6 +35,7 @@
     "NewFileSetup-openingBalance_Description": "Opening balance",
     "NewFileSetup-addTransaction_failed": ["Could not create the transaction '", "'. ", ""],
     "NewFileSetup-addTransaction_invalid_accountId": ["An account identified by '", "' was not found."],
+    "NewFileSetup-addTransaction_invalid_default_split_accountId": ["The default split account identified by '", "' was not found."],
     "NewFileSetup-addTransaction_invalid_lotId": ["A lot with description '", "' was not found."],
     "NewFileSetup-addTransaction_invalid_costBasis": ["The cost basis value for the lot with id '", "', '", "', is invalid."],
     "NewFileSetup-price_pricedItem_not_found": ["Could not add the prices for '", "', the priced item was not defined"],

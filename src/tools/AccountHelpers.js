@@ -252,6 +252,13 @@ export const DefaultSplitAccountType = {
 };
 
 
+export function getDefaultSplitAccountType(defaultSplitAccountType) {
+    return (typeof defaultSplitAccountType === 'string')
+        ? DefaultSplitAccountType[defaultSplitAccountType]
+        : defaultSplitAccountType;
+}
+
+
 /**
  * Retrieves the tags array for a {@link DefaultSplitAccountTypeDef},
  * handling the special cases for a specific account data item.
@@ -262,6 +269,7 @@ export const DefaultSplitAccountType = {
 export function getDefaultSplitAccountTags(accountDataItem,
     defaultSplitAccountType) {
 
+    defaultSplitAccountType = getDefaultSplitAccountType(defaultSplitAccountType);
     let { tags, specialTags } = defaultSplitAccountType;
     if (specialTags) {
         if (specialTags[accountDataItem.type]) {
@@ -284,6 +292,8 @@ export function getDefaultSplitAccountTags(accountDataItem,
 export function getDefaultSplitAccountId(accessor, accountDataItem, 
     defaultSplitAccountType) {
     
+    defaultSplitAccountType = getDefaultSplitAccountType(defaultSplitAccountType);
+
     if (typeof accountDataItem === 'number') {
         accountDataItem = accessor.getAccountDataItemWithId(accountDataItem);
     }
