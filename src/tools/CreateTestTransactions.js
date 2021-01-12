@@ -934,6 +934,7 @@ function addLotTransaction(args, args2) {
 
     if (!lotTransactionType.noShares && !autoLotType && !lotsToSell) {
         lots.push({ 
+            id: lotId,
             pricedItemId: pricedItemId, 
             description: lotId, 
             lotOriginType: lotTransactionType.lotOriginType,
