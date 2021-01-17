@@ -126,6 +126,19 @@ import { userMsg, userError } from '../util/UserMessages';
  * @property {NewFileContents_Reminders} [reminders]
  */
 
+
+//
+//---------------------------------------------------------
+//
+function updateStatus(setupInfo, msg) {
+    const { statusCallback } = setupInfo.options;
+    if (statusCallback) {
+        if (statusCallback(msg)) {
+            throw userError('NewFileSetup-statusUpdate_canceled');
+        }
+    }
+}
+
 //
 //---------------------------------------------------------
 //
@@ -350,12 +363,20 @@ async function asyncLoadAccounts(setupInfo) {
 //---------------------------------------------------------
 //
 async function asyncFinalizeAccounts(setupInfo) {
-    const { defaultSplitAccountsByAccountId, accountManager } = setupInfo;
+    const { defaultSplitAccountsByAccountId, accountManager, accountMapping } = setupInfo;
 
     for (const [accountId, defaultSplitAccountIds ] of defaultSplitAccountsByAccountId) {
+        const resolvedDefaultSplitAccountIds = {};
+        for (const name in defaultSplitAccountIds) {
+            const mappedAccount = accountMapping.get(defaultSplitAccountIds[name]);
+            if (mappedAccount !== undefined) {
+                resolvedDefaultSplitAccountIds[name] = mappedAccount.id;
+            }
+        }
+
         await accountManager.asyncModifyAccount({
             id: accountId,
-            defaultSplitAccountIds: defaultSplitAccountIds,
+            defaultSplitAccountIds: resolvedDefaultSplitAccountIds,
         });
     }
 }
@@ -438,7 +459,8 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
         accountMapping.set(item.id, accountDataItem);
 
         if (item.defaultSplitAccountIds) {
-            defaultSplitAccountsByAccountId.set(accountDataItem.id, item.defaultSplitAccountIds);
+            defaultSplitAccountsByAccountId.set(accountDataItem.id, 
+                item.defaultSplitAccountIds);
         }
 
         const name = parentName + '-' + accountDataItem.name;
@@ -563,89 +585,106 @@ async function asyncLoadTransactions(setupInfo) {
             item = transactions[i];
 
             const splits = [];
-            item.splits.forEach((itemSplit) => {
-                const split = Object.assign({}, itemSplit);
-                const accountDataItem = resolveAccountId(setupInfo, itemSplit.accountId);
 
-                split.accountId = accountDataItem.id;
+            try {
+                item.splits.forEach((itemSplit) => {
+                    const split = Object.assign({}, itemSplit);
+                    const accountDataItem = resolveAccountId(
+                        setupInfo, itemSplit.accountId);
 
-                if (split.lotChanges) {
-                    const currencyQuantityDefinition 
-                        = accessor.getCurrencyOfAccountId(accountDataItem.id)
-                            .getQuantityDefinition();
+                    split.accountId = accountDataItem.id;
 
-                    split.lotChanges = Array.from(split.lotChanges);
-                    const { lotChanges } = split;
-                    for (let i = 0; i < lotChanges.length; ++i) {
-                        const lotChange = Object.assign({}, lotChanges[i]);
-                        lotChanges[i] = lotChange;
-                        if (lotChange.lotId) {
-                            const lotDataItem = lotMapping.get(lotChange.lotId);
-                            if (!lotDataItem) {
-                                throw userError(
-                                    'NewFileSetup-addTransaction_invalid_lotId',
-                                    lotChange.lotId);
+                    if (split.lotChanges) {
+                        const currencyQuantityDefinition 
+                            = accessor.getCurrencyOfAccountId(accountDataItem.id)
+                                .getQuantityDefinition();
+
+                        split.lotChanges = Array.from(split.lotChanges);
+                        const { lotChanges } = split;
+                        for (let i = 0; i < lotChanges.length; ++i) {
+                            const lotChange = Object.assign({}, lotChanges[i]);
+                            lotChanges[i] = lotChange;
+                            if (lotChange.lotId) {
+                                const lotDataItem = lotMapping.get(lotChange.lotId);
+                                if (!lotDataItem) {
+                                    throw userError(
+                                        'NewFileSetup-addTransaction_invalid_lotId',
+                                        lotChange.lotId);
+                                }
+                                lotChange.lotId = lotDataItem.id;
                             }
-                            lotChange.lotId = lotDataItem.id;
-                        }
-                        
-                        if (lotChange.quantity !== undefined) {
-                            lotChange.quantityBaseValue 
-                                = accessor.pricedItemQuantityTextToBaseValue(
-                                    accountDataItem.pricedItemId, lotChange.quantity);
-                        }
-                        if (lotChange.costBasis !== undefined) {
-                            const result = currencyQuantityDefinition.fromValueText(
-                                lotChange.costBasis);
-                            if (result && result.quantity) {
-                                lotChange.costBasisBaseValue 
-                                    = result.quantity.getBaseValue();
+                            
+                            if (lotChange.quantity !== undefined) {
+                                lotChange.quantityBaseValue 
+                                    = accessor.pricedItemQuantityTextToBaseValue(
+                                        accountDataItem.pricedItemId, lotChange.quantity);
                             }
-                            else {
-                                throw userError(
-                                    'NewFileSetup-addTransaction_invalid_costBasis',
-                                    lotChange.lotId,
+                            if (lotChange.costBasis !== undefined) {
+                                const result = currencyQuantityDefinition.fromValueText(
                                     lotChange.costBasis);
+                                if (result && result.quantity) {
+                                    lotChange.costBasisBaseValue 
+                                        = result.quantity.getBaseValue();
+                                }
+                                else {
+                                    throw userError(
+                                        'NewFileSetup-addTransaction_invalid_costBasis',
+                                        lotChange.lotId,
+                                        lotChange.costBasis);
+                                }
                             }
                         }
                     }
-                }
 
-                if (split.sellAutoLotQuantity !== undefined) {
-                    split.sellAutoLotQuantityBaseValue 
-                        = accessor.accountQuantityTextToBaseValue(accountDataItem.id,
-                            split.sellAutoLotQuantity);
-                }
-
-                if (split.quantity !== undefined) {
-                    const currency = accessor.getCurrencyOfAccountId(accountDataItem.id);
-                    split.quantityBaseValue 
-                        = currency.baseValueFromString(split.quantity);
-
-                    const category = accessor.getCategoryOfAccountId(
-                        accountDataItem.id);
-                    if (item.isCredit) {
-                        split.quantityBaseValue *= category.creditSign;
-                    }
-                    else {
-                        split.quantityBaseValue *= -category.creditSign;
+                    if (split.sellAutoLotQuantity !== undefined) {
+                        split.sellAutoLotQuantityBaseValue 
+                            = accessor.accountQuantityTextToBaseValue(accountDataItem.id,
+                                split.sellAutoLotQuantity);
                     }
 
-                    delete split.isCredit;
-                    delete split.quantity;
+                    if (split.quantity !== undefined) {
+                        const currency = accessor.getCurrencyOfAccountId(
+                            accountDataItem.id);
+                        split.quantityBaseValue 
+                            = currency.baseValueFromString(split.quantity);
+
+                        const category = accessor.getCategoryOfAccountId(
+                            accountDataItem.id);
+                        if (item.isCredit) {
+                            split.quantityBaseValue *= category.creditSign;
+                        }
+                        else {
+                            split.quantityBaseValue *= -category.creditSign;
+                        }
+
+                        delete split.isCredit;
+                        delete split.quantity;
+                    }
+
+                    splits.push(split);
+                });
+
+                transaction = Object.assign({}, item);
+                transaction.splits = splits;
+
+                if (setupInfo.skipFailedTransactions) {
+                    await setupInfo.transactionManager.asyncAddTransaction(transaction);
                 }
-
-                splits.push(split);
-            });
-
-            transaction = Object.assign({}, item);
-            transaction.splits = splits;
-
-            if (setupInfo.skipFailedTransactions) {
-                await setupInfo.transactionManager.asyncAddTransaction(transaction);
+                else {
+                    transactionsToAdd.push(transaction);
+                }
             }
-            else {
-                transactionsToAdd.push(transaction);
+            catch (e) {
+                let description = item.ymdDate;
+                if (item.description) {
+                    description += ' ' + item.description;
+                }
+                warnings.push(userMsg('NewFileSetup-addTransaction_failed',
+                    description, e));
+
+                if (!setupInfo.skipFailedTransactions) {
+                    throw e;
+                }
             }
         }
 
@@ -661,7 +700,10 @@ async function asyncLoadTransactions(setupInfo) {
             });
         }
 
-        const description = item.description || item.ymdDate;
+        let description = item.ymdDate;
+        if (item.description) {
+            description += ' ' + item.description;
+        }
         warnings.push(userMsg('NewFileSetup-addTransaction_failed',
             description, e));
     }
@@ -732,10 +774,12 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
     options) {
     const accountingSystem = accountingFile.getAccountingSystem();
 
+    options = options || {};
+
     const setupInfo = {
         accessor: accessor,
         initialContents: initialContents,
-        options: options || {},
+        options: options,
 
         accountingFile: accountingFile,
         accountingSystem: accountingSystem,
@@ -770,11 +814,23 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
     }
 
     await asyncSetBaseCurrency(setupInfo);
+
+    updateStatus(setupInfo, userMsg('NewFileSetup-statusUpdate_loadingPricedItems'));
     await asyncLoadPricedItems(setupInfo);
+
+    updateStatus(setupInfo, userMsg('NewFileSetup-statusUpdate_loadingPrices'));
     await asyncLoadPrices(setupInfo);
+
+    updateStatus(setupInfo, userMsg('NewFileSetup-statusUpdate_loadingAccounts'));
     await asyncLoadAccounts(setupInfo);
+
+    updateStatus(setupInfo, userMsg('NewFileSetup-statusUpdate_loadingLots'));
     await asyncLoadLots(setupInfo);
+
+    updateStatus(setupInfo, userMsg('NewFileSetup-statusUpdate_loadingTransactions'));
     await asyncLoadTransactions(setupInfo);
+
+    updateStatus(setupInfo, userMsg('NewFileSetup-statusUpdate_loadingReminders'));
     await asyncLoadReminders(setupInfo);
 
     await accountingSystem.getUndoManager().asyncClearUndos();

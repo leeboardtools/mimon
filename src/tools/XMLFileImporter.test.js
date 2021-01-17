@@ -5,6 +5,8 @@ import * as path from 'path';
 import { EngineAccessor } from './EngineAccess';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
+import * as AH from './AccountHelpers';
+import { StandardAccountTag } from '../engine/StandardTags';
 import { YMDDate, getYMDDate } from '../util/YMDDate';
 
 
@@ -203,6 +205,62 @@ test('XMLFileImporter-asyncImportXMLFile', async () => {
                 isHidden: true,
                 isLocked: true,
             });
+        
+
+        //
+        // DefaultSplitAccountIds...
+        let accountDataItem = getAccountFromPath(accessor, 
+            accessor.getRootAssetAccountId(),
+            'Investments>IRA>SNXFX');
+
+        let dividendsAccountDataItem = getAccountFromPath(accessor,
+            accessor.getRootIncomeAccountId(),
+            'Dividends>IRA>SNXFX');
+
+        const ref = {};
+        ref[AH.DefaultSplitAccountType.DIVIDENDS_INCOME.property] 
+            = dividendsAccountDataItem.id;
+        expect(accountDataItem.defaultSplitAccountIds).toEqual(ref);
+
+
+        // Investments>IRA>Apple does not link to Dividends>IRA>AAPL
+        // (though maybe it should via the security ticker???)
+        accountDataItem = getAccountFromPath(accessor, 
+            accessor.getRootAssetAccountId(),
+            'Investments>IRA>Apple');
+        expect(accountDataItem.defaultSplitAccountIds).toBeUndefined();
+
+
+        //
+        // Tags
+        accountDataItem = getAccountFromPath(accessor, 
+            accessor.getRootIncomeAccountId(),
+            'Interest');
+        expect(accountDataItem.tags).toEqual(expect.arrayContaining([
+            StandardAccountTag.INTEREST.name,
+        ]));
+
+        accountDataItem = getAccountFromPath(accessor, 
+            accessor.getRootIncomeAccountId(),
+            'Dividends');
+        expect(accountDataItem.tags).toEqual(expect.arrayContaining([
+            StandardAccountTag.DIVIDENDS.name,
+        ]));
+
+        accountDataItem = getAccountFromPath(accessor, 
+            accessor.getRootExpenseAccountId(),
+            'Taxes');
+        expect(accountDataItem.tags).toEqual(expect.arrayContaining([
+            StandardAccountTag.TAXES.name,
+        ]));
+
+        accountDataItem = getAccountFromPath(accessor, 
+            accessor.getRootExpenseAccountId(),
+            'Commissions & Fees');
+        expect(accountDataItem.tags).toEqual(expect.arrayContaining([
+            StandardAccountTag.FEES.name,
+            StandardAccountTag.BROKERAGE_COMMISSIONS.name,
+        ]));
 
 
         //
@@ -235,7 +293,18 @@ test('XMLFileImporter-asyncImportXMLFile', async () => {
 
 
         // Transactions...
+        const brokerageAccountId = getAccountFromPath(accessor,
+            accessor.getRootAssetAccountId(), 'Investments>Brokerage').id;
+        brokerageAccountId;
 
+        const iraAccountId = getAccountFromPath(accessor,
+            accessor.getRootAssetAccountId(), 'Investments>IRA').id;
+        iraAccountId;
+
+        const iraAppleAccountId = getAccountFromPath(accessor,
+            accessor.getRootAssetAccountId(), 'Investments>IRA>Apple').id;
+        iraAppleAccountId;
+        
 
         //
         // All done...

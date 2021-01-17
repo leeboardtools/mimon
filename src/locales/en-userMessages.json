@@ -42,6 +42,14 @@
     "NewFileSetup-price_add_failed": ["Could not add the prices for '", "'. ", ""],
     "NewFileSetup-addReminder_failed": ["Could not add the reminder '", "'. ", ""],
     "NewFileSetup-addReminder_invalid_accountId": ["An account identified by '", "' was not found."],
+
+    "NewFileSetup-statusUpdate_canceled": "File setup canceled.",
+    "NewFileSetup-statusUpdate_loadingPricedItems": "Writing out priced items...",
+    "NewFileSetup-statusUpdate_loadingPrices": "Writing out prices...",
+    "NewFileSetup-statusUpdate_loadingAccounts": "Writing out accounts...",
+    "NewFileSetup-statusUpdate_loadingLots": "Writing out lots...",
+    "NewFileSetup-statusUpdate_loadingTransactions": "Writing out transactions...",
+    "NewFileSetup-statusUpdate_loadingReminders": "Writing out reminders...",
     
 
     "App-mru_open_failed": ["Could not open '", "'. ", ""],

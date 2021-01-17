@@ -219,6 +219,8 @@ export default class App extends React.Component {
 
         this.onImportProjectCreateFile = this.onImportProjectCreateFile.bind(this);
 
+        this.statusCallback = this.statusCallback.bind(this);
+
         this.onRevertFile = this.onRevertFile.bind(this);
         this.onCloseFile = this.onCloseFile.bind(this);
         this.onExit = this.onExit.bind(this);
@@ -593,11 +595,21 @@ export default class App extends React.Component {
         process.nextTick(async () => {
             const { importPathName } = this.state;
             try {
+                this.setState({
+                    appState: 'status',
+                    isCancelled: false,
+                });
+
                 // TODO:
                 // Want to report any errors or warnings...
-                const warnings = await this._fileImporter.asyncImportFile(importPathName, 
-                    projectPathName, newFileContents);
-                warnings;
+                const warnings = await this._fileImporter.asyncImportFile(
+                    {
+                        pathNameToImport: importPathName, 
+                        newProjectPathName: projectPathName, 
+                        newFileContents: newFileContents,
+                        statusCallback: this.statusCallback,
+                    }
+                );
 
                 if (warnings && warnings.length) {
                     console.log(warnings);
@@ -608,9 +620,18 @@ export default class App extends React.Component {
             catch (e) {
                 this.setState({
                     errorMsg: userMsg('App-import_failed', importPathName, e.toString()),
+                    isCancelled: false,
                 });
             }
         });
+    }
+
+
+    statusCallback(msg) {
+        this.setState({
+            statusMsg: msg,
+        });
+        return this.state.isCancelled;
     }
 
 
@@ -709,7 +730,12 @@ export default class App extends React.Component {
                 onCancel = {this.onCancel}
                 initialDir = {currentDir}
             />;
-
+        
+        case 'status' :
+            // TODO: FIX ME!!!
+            return <div className="container-fluid">
+                <span>{this.state.statusMsg}</span>
+            </div>;
         
         case 'mainWindow' :
             return <MainWindow

@@ -404,6 +404,18 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             hiddenColumns: [],
         };
 
+        // TODO: Load this from somewhere...
+        const columns = [
+            'name',
+            'type',
+            'balance',
+            'totalShares',
+            'costBasis',
+            'percentGain',
+            'annualCashInPercentGain',
+        ];
+
+
         return {
             tabId: tabId,
             title: userMsg('AccountsListHandler-masterAccountList_title'),
@@ -412,6 +424,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             hiddenRootAccountTypes: [],
             hiddenAccountIds: [],
             hiddenColumns: [],
+            columns: columns,
         };
     }
 
@@ -432,15 +445,13 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             contextMenuItems = dropdownInfo.items;
         }
 
-        const columns = [];
-
         return <AccountsList
             accessor={accessor}
             onSelectAccount={(accountId) => 
                 this.onSelectAccount(tabEntry.tabId, accountId)}
             onChooseAccount={(accountId) => 
                 this.onChooseAccount(tabEntry.tabId, accountId)}
-            columns={columns}
+            columns={tabEntry.columns}
             hiddenRootAccountTypes={tabEntry.hiddenRootAccountTypes}
             hiddenAccountIds={tabEntry.hiddenAccountIds}
             showHiddenAccounts={tabEntry.showHiddenAccounts}

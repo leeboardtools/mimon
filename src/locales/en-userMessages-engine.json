@@ -293,7 +293,7 @@
     "XMLFileImporter-lotTransaction_cash_uses_parent": ["An investment transaction dated ", " ", " contains a cash transaction into a lot based account. The transaction will be made to the parent account."],
     "XMLFileImporter-investment_fees_to_investment": ["An investment transaction dated ", " ", " contains a fee going back into the investment account. The fee will be made to the root Expenses account."],
     "XMLFileImporter-multiple_lot_changes_same_date": ["There are multiple changes to lots for the account with id '", "', the latest from the investment transaction dated ", " ", ". Only a single change is currently supported, the transaction will be ignored."],
-    "XMLFileImporter-sellLot_lotId_invalid": ["An investment sell/remove transaction dated ", " ", " contains a LOT descriptor in the memo, '", "', that does not refer to an existing lot. The transaction will be processed as FIFO."],
+    "XMLFileImporter-sellLot_lotId_invalid": ["An investment sell/remove transaction dated ", " ", " contains a LOT descriptor in the memo, '", "', that does not refer to an existing lot. The transaction will be ignored."],
     "XMLFileImporter-sellLot_lot_quantity_negative":  ["An investment sell/remove transaction dated ", " ", " contains a LOT descriptor in the memo, '", "', that resulted in the number of shares in a lot becoming negative. The transaction will be processed as FIFO."],
     "XMLFileImporter-removeFIFO_lot_account_id_invalid": ["The investment transaction dated ", " ", " could not remove shares because the account id '", "' does not have any lots associated with it. The transaction will be ignored."],
     "XMLFileImporter-removeFIFO_not_enough_lot_shares": ["The investment transaction dated ", " ", " could not remove shares because there are fewer shares in the available lots than the requested shares ", ". The transaction will be ignored."],
@@ -301,6 +301,10 @@
     "XMLFileImporter-merge_too_large": ["The investment merge transaction dated ", " ", " could not be performed because the merge removes ", " shares but there are only ", " shares available. The transaction will be ignored."],
     "XMLFileImporter-dividend_account_id_invalid": ["The dividend transaction dated ", " ", " could not be performed because the dividend account with id '", "' was not found. The transaction will be ignored."],
 
+    "XMLFileImporter-updateStatus_processXMLAccount": ["Processing account id '", "' ", ""],
+    "XMLFileImporter-statusUpdate_processingTransaction": ["Processing transaction dated '", "' ", ""],
+    "XMLFileImporter-statusUpdate_readingFile": "Reading in the XML file...",
+    "XMLFileImporter-userCanceled": "Import was canceled.",
 
     "": ""
 }

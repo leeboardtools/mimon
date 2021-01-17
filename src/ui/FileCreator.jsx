@@ -304,7 +304,7 @@ export class FileCreator extends React.Component {
             projectName: undefined,
             activePageIndex: 0,
             newFileContents: { 
-                accounts: [], 
+                accounts: {}, 
                 openingBalancesDate: (new YMDDate()).toString(),
                 baseCurrency: 'USD',
             },

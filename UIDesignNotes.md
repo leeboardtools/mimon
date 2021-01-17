@@ -473,6 +473,13 @@ Common menus:
 
     - File import
         - Report warnings from importer in App.
+        - Add loading feedback.
+        - Add import options:
+            - Save intermediate JSON file.
+            - Write log
+                - Log transactions
+            - Write parse warnings
+            - Write import warnings
 
     - Account Selector
         - Add a search box.
@@ -516,3 +523,4 @@ Common menus:
     - Which one is user option, should be able to use CSS classes.
 
 
+- Add rounding option for accounts (specific accounts might round up or down).

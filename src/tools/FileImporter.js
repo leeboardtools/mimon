@@ -44,7 +44,8 @@ export class FileImporter {
      * @param {string} pathName
      * @param {NewFileContents} newFileContents
      */
-    async asyncImportFile(pathNameToImport, newProjectPathName, newFileContents) {
+    async asyncImportFile(args) {
+        const { pathNameToImport, } = args;
         const accountingFilePathName = this._accessor.getAccountingFilePathName();
         const stat = await fsPromises.lstat(pathNameToImport);
         if (!stat) {
@@ -60,8 +61,7 @@ export class FileImporter {
         for (let i = 0; i < this._fileImporters.length; ++i) {
             if (isPossibleImport(pathNameToImport)) {
                 try {
-                    await this._fileImporters[i].asyncImportFile(
-                        pathNameToImport, newProjectPathName, newFileContents);
+                    await this._fileImporters[i].asyncImportFile(args);
                     return;
                 }
                 catch (e) {
