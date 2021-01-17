@@ -271,6 +271,38 @@
     "LotTransactionHelpers-no_lots_roc": "The Return of Capital transaction cannot be performed unless there are already shares in the account.",
 
 
+
+
+    
+
+    "NewFileSetup-setBaseCurrency_failed": ["Could not set the default currency to '", "'. ", ""],
+    "NewFileSetup-invalid_currency": ["Could not set up the priced item '", "'. '", "' is not a valid currency."],
+    "NewFileSetup-addPricedItem_failed": ["Could not add the priced item '", "'. ", ""],
+    "NewFileSetup-addLot_failed": ["Could not add the lot '", "'. ", ""],
+    "NewFileSetup-lot_pricedItem_not_found": ["Could not add the lot '", "'. The priced item '", "' was not defined."],
+    "NewFileSetup-addAccount_failed": ["Could not add the account '", "'. ", ""],
+    "NewFileSetup-addOpeningBalance_failed": ["The opening balance of '", "' could not be set to '", "'. ", ""],
+    "NewFileSetup-pricedItem_not_found": ["The priced item '", "' was not defined."],
+    "NewFileSetup-openingBalance_Description": "Opening balance",
+    "NewFileSetup-addTransaction_failed": ["Could not create the transaction '", "'. ", ""],
+    "NewFileSetup-addTransaction_invalid_accountId": ["An account identified by '", "' was not found."],
+    "NewFileSetup-addTransaction_invalid_default_split_accountId": ["The default split account identified by '", "' was not found."],
+    "NewFileSetup-addTransaction_invalid_lotId": ["A lot with description '", "' was not found."],
+    "NewFileSetup-addTransaction_invalid_costBasis": ["The cost basis value for the lot with id '", "', '", "', is invalid."],
+    "NewFileSetup-price_pricedItem_not_found": ["Could not add the prices for '", "', the priced item was not defined"],
+    "NewFileSetup-price_add_failed": ["Could not add the prices for '", "'. ", ""],
+    "NewFileSetup-addReminder_failed": ["Could not add the reminder '", "'. ", ""],
+    "NewFileSetup-addReminder_invalid_accountId": ["An account identified by '", "' was not found."],
+
+    "NewFileSetup-statusUpdate_canceled": "File setup canceled.",
+    "NewFileSetup-statusUpdate_loadingPricedItems": "Writing out priced items...",
+    "NewFileSetup-statusUpdate_loadingPrices": "Writing out prices...",
+    "NewFileSetup-statusUpdate_loadingAccounts": "Writing out accounts...",
+    "NewFileSetup-statusUpdate_loadingLots": "Writing out lots...",
+    "NewFileSetup-statusUpdate_loadingTransactions": "Writing out transactions...",
+    "NewFileSetup-statusUpdate_loadingReminders": "Writing out reminders...",
+
+
     "FileImporter-file_not_exist": ["'", "' could not be imported. ", ""],
     "FileImporter-importFailed": ["'", "' could not be imported into '", "'. ", ""],
     
@@ -305,6 +337,9 @@
     "XMLFileImporter-statusUpdate_processingTransaction": ["Processing transaction dated '", "' ", ""],
     "XMLFileImporter-statusUpdate_readingFile": "Reading in the XML file...",
     "XMLFileImporter-userCanceled": "Import was canceled.",
+
+
+
 
     "": ""
 }
