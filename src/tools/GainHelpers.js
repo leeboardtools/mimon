@@ -707,10 +707,31 @@ export function sumLotStatePart(args, lotStates) {
  * @returns {number|undefined}
  */
 export function getTotalMarketValueBaseValue(args, lotStates) {
-    return sumLotStatePart(Object.assign({}, args, {
-        getLotStatePart: calcLotStateMarketValueBaseValue,
-    }),
-    lotStates);
+    const accountStateInfo = createAccountStateInfo(args);
+    if (!accountStateInfo) {
+        return;
+    }
+
+    let sumBaseValue = 0;
+
+    lotStates = resolveLotStatesFromArgs(args, lotStates);
+    if (lotStates) {
+        lotStates.forEach((lotState) => {
+            sumBaseValue += lotState.quantityBaseValue;
+        });
+
+        sumBaseValue = calcLotStateMarketValueBaseValue(
+            accountStateInfo, sumBaseValue);
+    }
+
+    const { sumQuantityDefinition } = args;
+    const quantityDefinition = sumQuantityDefinition 
+        || accountStateInfo.currencyQuantityDefinition;
+
+    return {
+        quantityBaseValue: sumBaseValue,
+        quantityDefinition: quantityDefinition,
+    };
 }
 
 
