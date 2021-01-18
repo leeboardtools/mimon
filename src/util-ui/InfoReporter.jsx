@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { userMsg } from '../util/UserMessages';
-import { PageTitle } from './PageTitle';
+import { PageBody } from './PageBody';
+import { ModalPage } from './ModalPage';
 
 
 /**
@@ -34,13 +34,7 @@ InfoReporter.propTypes = {
  */
 export function InfoReporter(props) {
     let { title, message } = props;
-    let titleComponent;
-    if (title) {
-        titleComponent = <PageTitle>
-            {title}
-        </PageTitle>;
-    }
-
+ 
     if (!Array.isArray(message)) {
         message = [message];
     }
@@ -53,21 +47,12 @@ export function InfoReporter(props) {
         {components}
     </ul>;
 
-    return <div className="d-flex w-100 h-100 p-1 mx-auto flex-column">
-        {titleComponent}
-        <div className="container">
+    return <ModalPage
+        title = {title}
+        onDone = {props.onClose}
+    >
+        <PageBody>
             {messageComponent}
-        </div>
-        <div className="mt-auto">
-            <div className="row border-top m-2">
-                <div className="col text-right mt-2">
-                    <button className="btn btn-primary"
-                        onClick={props.onClose}
-                    >
-                        {userMsg('ok')}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>;
+        </PageBody>
+    </ModalPage>;
 }
