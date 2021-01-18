@@ -15,14 +15,16 @@ export function ModalPage(props) {
         {props.children}
     </div>;
 
-    const { title, onCancel, onDone, doneDisabled,
+    const { title, onCancel, cancelDisabled, onDone, doneDisabled,
         actionButtons, classExtras } = props;
 
     let cancelBtn;
     if (onCancel) {
         const cancelLabel = props.cancelLabel || userMsg('cancel');
         cancelBtn = <button className = "btn btn-secondary m-2 mr-4"
-            onClick = {onCancel}>
+            onClick = {onCancel}
+            disabled = {cancelDisabled}
+        >
             {cancelLabel}
         </button>;
     }
@@ -137,6 +139,7 @@ export function ModalPage(props) {
  * @property {ModalPage~onCancel} [onCancel]  If specified, a Cancel button is
  * added and this is the callback called when it is chosen.
  * @property {string}   [cancelLabel]
+ * @property {boolean}  [cancelDisabled]
  * @property {string}   [title] Optional title.
  * @property {*}    [children]  The form's components
  */
@@ -147,6 +150,7 @@ ModalPage.propTypes = {
     actionButtons: PropTypes.array,
     onCancel: PropTypes.func,
     cancelLabel: PropTypes.string,
+    cancelDisabled: PropTypes.bool,
     title: PropTypes.string,
     classExtras: PropTypes.string,
     children: PropTypes.any,
