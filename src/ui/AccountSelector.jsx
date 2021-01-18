@@ -109,7 +109,7 @@ export function AccountSelector(props) {
     let items = [];
     if (disabledRoot) {
         items.push({
-            value: selectedAccountId,
+            value: -1,
             text: userMsg('AccountSelector-disabled_root'),
         });
     }
