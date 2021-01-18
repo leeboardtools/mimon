@@ -51,7 +51,7 @@ export function InfoReporter(props) {
         title = {title}
         onDone = {props.onClose}
     >
-        <PageBody>
+        <PageBody classExtras = "InfoReporter-body">
             {messageComponent}
         </PageBody>
     </ModalPage>;
