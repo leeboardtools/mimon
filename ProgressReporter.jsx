@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { userMsg } from '../util/UserMessages';
-import { PageTitle } from './PageTitle';
+import { PageBody } from './PageBody';
+import { ModalPage } from './ModalPage';
 
 
 /**
@@ -25,6 +25,7 @@ import { PageTitle } from './PageTitle';
  *  progress
  * @property {ProgressReporter~onCancel}    onCancel Called when the cancel button
  * is chosen, no cancel button is displayed if this is not defined.
+ * @property {boolean} [cancelDisabled]
  */
 ProgressReporter.propTypes = {
     progress: PropTypes.oneOfType([
@@ -37,6 +38,7 @@ ProgressReporter.propTypes = {
     ]),
     title: PropTypes.string,
     onCancel: PropTypes.func,
+    cancelDisabled: PropTypes.bool,
 };
 
 
@@ -47,13 +49,6 @@ ProgressReporter.propTypes = {
  */
 export function ProgressReporter(props) {
     let { title, progress, onCancel, } = props;
-
-    let titleComponent;
-    if (title) {
-        titleComponent = <PageTitle>
-            {title}
-        </PageTitle>;
-    }
 
     let entries;
     if (progress) {
@@ -82,27 +77,13 @@ export function ProgressReporter(props) {
         }
     }
 
-    let cancelComponent;
-    if (onCancel) {
-        // 
-        cancelComponent = <div className="mt-auto">
-            <div className="row border-top m-2">
-                <div className="col text-right mt-2">
-                    <button className="btn btn-primary"
-                        onClick={onCancel}
-                    >
-                        {userMsg('cancel')}
-                    </button>
-                </div>
-            </div>
-        </div>;
-    }
-
-    return <div className="d-flex w-100 h-100 p-1 mx-auto flex-column">
-        {titleComponent}
-        <div className="container">
+    return <ModalPage
+        title = {title}
+        onCancel = {onCancel}
+        cancelDisabled = {props.cancelDisabled}
+    >
+        <PageBody classExtras = "text-center">
             {entryComponents}
-        </div>
-        {cancelComponent}
-    </div>;
+        </PageBody>
+    </ModalPage>;
 }
