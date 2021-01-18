@@ -779,7 +779,6 @@ export class ReconcilerSetupWindow extends React.Component {
             className += ' ' + classExtras;
         }
 
-        //<div className="container-fluid mt-auto mb-auto text-left">
         return <ModalPage
             onDone = {this.onDone}
             doneLabel = {userMsg('continue')}

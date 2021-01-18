@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import { userMsg, getUserMsgLocale, numberToOrdinalString } 
     from '../util/UserMessages';
 import { ModalPage } from '../util-ui/ModalPage';
+import { PageBody } from '../util-ui/PageBody';
+import { ErrorBoundary } from '../util-ui/ErrorBoundary';
 import { Checkbox } from '../util-ui/Checkbox';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
@@ -776,7 +778,7 @@ export class ReminderEditor extends React.Component {
         const dateOccurrenceEditor = this.renderDateOccurrenceEditor();
         const lastStateEditor = this.renderLastOccurrenceStateEditor();
 
-        return <div className="container-fluid mt-auto mb-auto text-left">
+        return <PageBody classExtras = "Editor-body ReminderEditor-body">
             <div className = "row align-items-end">
                 <div className = "col">
                     {descriptionEditor}
@@ -808,7 +810,7 @@ export class ReminderEditor extends React.Component {
                     {lastStateEditor}
                 </div>
             </div>
-        </div>;
+        </PageBody>;
     }
 
 
@@ -826,13 +828,15 @@ export class ReminderEditor extends React.Component {
 
         const page = this.renderPage();
 
-        return <ModalPage
-            onDone = {this.onFinish}
-            onCancel = {this.onCancel}
-            doneDisabled={!isOKToSave || !this.isSomethingToSave()}
-        >
-            {page}
-        </ModalPage>;
+        return <ErrorBoundary>
+            <ModalPage
+                onDone = {this.onFinish}
+                onCancel = {this.onCancel}
+                doneDisabled={!isOKToSave || !this.isSomethingToSave()}
+            >
+                {page}
+            </ModalPage>
+        </ErrorBoundary>;
     }
 }
 

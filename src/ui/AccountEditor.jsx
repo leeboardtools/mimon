@@ -11,6 +11,7 @@ import * as PI from '../engine/PricedItems';
 import { DropdownField } from '../util-ui/DropdownField';
 import { PricedItemSelector } from './PricedItemSelector';
 import { ModalPage } from '../util-ui/ModalPage';
+import { PageBody } from '../util-ui/PageBody';
 import { ErrorBoundary } from '../util-ui/ErrorBoundary';
 import * as AH from '../tools/AccountHelpers';
 
@@ -598,29 +599,27 @@ export class AccountEditor extends React.Component {
         const refIdEditor = this.renderRefIdEditor();
         const defaultSplitAccountEditors = this.renderDefaultSplitAccountEditors();
 
-        return <ErrorBoundary>
-            <div className="container-fluid mt-auto mb-auto text-left">
-                <div className="row">
-                    <div className="col">
-                        {parentEditor}
-                    </div>
-                    <div className="col">
-                        {typeEditor}
-                    </div>
+        return <PageBody classExtras = "Editor-body AccountEditor-body">
+            <div className="row">
+                <div className="col">
+                    {parentEditor}
                 </div>
-                <div className="row">
-                    <div className="col">
-                        {nameEditor}
-                    </div>
-                    <div className="col">
-                        {refIdEditor}
-                    </div>
+                <div className="col">
+                    {typeEditor}
                 </div>
-                {descriptionEditor}
-                {pricedItemEditor}
-                {defaultSplitAccountEditors}
             </div>
-        </ErrorBoundary>;
+            <div className="row">
+                <div className="col">
+                    {nameEditor}
+                </div>
+                <div className="col">
+                    {refIdEditor}
+                </div>
+            </div>
+            {descriptionEditor}
+            {pricedItemEditor}
+            {defaultSplitAccountEditors}
+        </PageBody>;
     }
 
 
@@ -636,13 +635,15 @@ export class AccountEditor extends React.Component {
             return modal();
         }
 
-        return <ModalPage
-            onDone = {this.onFinish}
-            doneDisabled = {!isOKToSave}
-            onCancel = {this.onCancel}
-        >
-            {this.onRenderPage()}
-        </ModalPage>;
+        return <ErrorBoundary>
+            <ModalPage
+                onDone = {this.onFinish}
+                doneDisabled = {!isOKToSave}
+                onCancel = {this.onCancel}
+            >
+                {this.onRenderPage()}
+            </ModalPage>
+        </ErrorBoundary>;
     }
 }
 

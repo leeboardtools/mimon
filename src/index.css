@@ -506,6 +506,16 @@ are necessary to max out the width */
 }
 
 
+.Editor-body {
+  text-align: left;
+  padding-left: 1rem;
+  /* The 1.1 right side padding seems to be needed to avoid a horizontal scroll
+  under normal circumstances.*/
+  padding-right: 1.1rem;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
 .ModalPage-inner_rows_container {
   text-align: left;
   margin: auto;
