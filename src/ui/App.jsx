@@ -796,6 +796,7 @@ export default class App extends React.Component {
                 title = {this.state.statusTitle}
                 progress = {this.state.statusProgress}
                 onCancel = {onCancel}
+                cancelDisabled = {this.state.isCancelled}
             />;
         }
         
