@@ -239,6 +239,10 @@ class SECURITYNODE extends XMLNodeProcessor {
 
         if (tag.ID) {
             this.id = tag.ID;
+
+            importer.updateStatus(
+                userMsg('XMLFileImporter-updatePrimaryStaus_readingPrices'));
+
         }
         else if (tag.REFERENCE) {
             this.id = tag.REFERENCE;
@@ -529,6 +533,15 @@ class AccountDefinitionProcessor extends AccountProcessor {
         if (tag.attributes.LOCKED === 'true') {
             this.account.isLocked = true;
         }
+
+        importer.updateStatus([
+            userMsg(
+                'XMLFileImporter-updatePrimaryStatus_readingXMLAccount'),
+            userMsg(
+                'XMLFileImporter-updateSecondaryStatus_readingXMLAccount',
+                this.account.id,
+                this.account.name),
+        ]);
     }
 
     onOpenTag(tag) {
@@ -1155,11 +1168,8 @@ class XMLFileImporterImpl {
             }
         },
         newFileContents);
-
-
-        this.isLogLots = options.isLogLots;
-        this.isLogTransactions = options.isLogTransactions;
     }
+
 
     onError(e) {
         console.log('error! ' + e);
@@ -1268,11 +1278,24 @@ class XMLFileImporterImpl {
     }
 
 
+    handleException(e) {
+        this._error = e;
+    }
+
 
     onOpenTag(tag) {
+        if (this._error) {
+            return;
+        }
+
         const func = this['onOpenTag_' + this.state];
         if (func) {
-            return func(tag);
+            try {
+                return func(tag);
+            }
+            catch (e) {
+                this.handleException(e);
+            }
         }
     }
 
@@ -1286,7 +1309,12 @@ class XMLFileImporterImpl {
     onCloseTag(tagName) {
         const func = this['onCloseTag_' + this.state];
         if (func) {
-            return func(tagName);
+            try {
+                return func(tagName);
+            }
+            catch (e) {
+                this.handleException(e);
+            }
         }
     }
 
@@ -1360,23 +1388,40 @@ class XMLFileImporterImpl {
 
 
     recordLog(entry) {
-        this.log.push(entry);
+        if (this.options.isLog) {
+            this.log.push(entry);
+        }
     }
 
     recordLogIndent(indent, entry) {
-        entry = '\t'.repeat(indent) + entry;
-        this.recordLog(entry);
+        if (this.options.isLog) {
+            if (indent) {
+                entry = '\t'.repeat(indent) + entry;
+            }
+            this.recordLog(entry);
+        }
+    }
+
+
+    logAccount(entry, indent) {
+        const prefix = (entry.context || 'Account') + ':\t';
+        if (this.options.isLogAccountNames) {
+            this.recordLogIndent(indent, prefix + entry.id + ' ' + entry.name);
+        }
+        else {
+            this.recordLogIndent(indent, prefix + entry.id);
+        }
     }
 
 
     logLot(entry) {
-        if (this.isLogLots) {
+        if (this.options.isLogLots) {
             this.recordLog('Lot:\t' + entry);
         }
     }
 
     logTransaction(type, entry) {
-        if (this.isLogTransactions) {
+        if (this.options.isLogTransactions) {
             const { xmlTransaction, splits, extra } = entry;
             let text = 'Transaction_' + type
                 + '\t' + xmlTransaction.date
@@ -1454,10 +1499,7 @@ class XMLFileImporterImpl {
             account.accountCode = xmlAccount.accountCode;
         }
 
-        this.recordLogIndent(depth, 'new Account: ' + xmlAccount.id
-            + ' ' + xmlAccount.name);
-        this.updateStatus(userMsg('XMLFileImporter-updateStatus_processXMLAccount',
-            xmlAccount.id, xmlAccount.name));
+        this.logAccount(xmlAccount, depth);
 
 
         const { securityIds } = xmlAccount;
@@ -1644,7 +1686,11 @@ class XMLFileImporterImpl {
             // root account.
             const { transactionIds, childAccountIds } = xmlAccount;
             if (transactionIds && transactionIds.length) {
-                this.recordLog('Straight Root: ' + xmlAccount.name);
+                this.logAccount({
+                    context: 'Straight Root',
+                    id: xmlAccount.id,
+                    name: xmlAccount.name,
+                });
                 rootXMLAccounts.push(xmlAccount);
             }
             else if (childAccountIds) {
@@ -1661,8 +1707,11 @@ class XMLFileImporterImpl {
                     }
                     rootXMLAccounts.push(childXMLAccount);
 
-                    this.recordLog('Root child: ' 
-                        + childAccountId + ' ' + childXMLAccount.name);
+                    this.logAccount({
+                        context: 'Root account child',
+                        id: childAccountId,
+                        name: childXMLAccount.name,
+                    });
                 });
             } 
         });
@@ -2384,7 +2433,7 @@ class XMLFileImporterImpl {
 
         const originalQuantity = quantity;
         const originalQuantities = [];
-        if (this.isLogTransactions) {
+        if (this.options.isLogTransactions) {
             lotsDateEntries.forEach((lotsDateEntry) => {
                 lotsDateEntry.lotEntries.forEach((entry) => {
                     originalQuantities.push(entry.quantity);
@@ -2432,7 +2481,7 @@ class XMLFileImporterImpl {
                 quantity,
             ));
 
-            if (this.isLogTransactions) {
+            if (this.options.isLogTransactions) {
                 let extra = '\t' + originalQuantity + '\t' + quantity + '\t'
                     + originalQuantities.join(', ');
                 this.logTransaction('NOT_ENOUGH_SHARES',
@@ -3050,10 +3099,6 @@ class XMLFileImporterImpl {
             return;
         }
 
-        this.updateStatus(userMsg('XMLFileImporter-statusUpdate_processingTransaction',
-            xmlTransaction.date, xmlTransaction.description,
-        ));
-
         if (xmlTransaction.transactionType === 'INVESTMENTTRANSACTION') {
             if (!this.processInvestmentXMLTransactionSplits({
                 splits: splits, 
@@ -3222,6 +3267,11 @@ class XMLFileImporterImpl {
     //-----------------------------------------------------
     //
     async asyncFinalizeImport() {
+        this.updateStatus(userMsg(
+            'XMLFileImporter-updatePrimaryStatus_processingAccountAndTransactions',
+            this.accountsById.size,
+            this.transactionsById.size));
+
         this.postProcessAccounts();
         this.postProcessTransactions();
         this.postProcessLots();
@@ -3231,13 +3281,13 @@ class XMLFileImporterImpl {
                 console.log(this.warnings);
             }
         }
-        //console.log(this.newFileContents.accounts);
 
-        this.newFileContents.isDebug = true;
+        //this.newFileContents.isDebug = true;
 
         if (this.log.length) {
             const parts = path.parse(this.pathNameToImport);
-            const logPathName = path.join(parts.dir, 'log.txt');
+            const logPathName = path.join(parts.dir, 
+                'XMLFileImporter-log.txt');
             const stream = fs.createWriteStream(logPathName);
             this.log.forEach((entry) => stream.write(entry + '\n'));
             stream.end();
@@ -3245,7 +3295,8 @@ class XMLFileImporterImpl {
 
         if (this.warnings.length) {
             const parts = path.parse(this.pathNameToImport);
-            const logPathName = path.join(parts.dir, 'warnings.txt');
+            const logPathName = path.join(parts.dir, 
+                'XMLFileImporter-warnings.txt');
             const stream = fs.createWriteStream(logPathName);
             this.warnings.forEach((entry) => stream.write(entry + '\n'));
             stream.end();
@@ -3253,7 +3304,8 @@ class XMLFileImporterImpl {
 
         if (this.options.isWriteIntermediateJSON) {
             const parts = path.parse(this.pathNameToImport);
-            const logPathName = path.join(parts.dir, 'newFileContents.json');
+            const logPathName = path.join(parts.dir, 
+                'XMLFileImporter-newFileContents.json');
             const stream = fs.createWriteStream(logPathName);
             stream.write(JSON.stringify(this.newFileContents));
             stream.end();
@@ -3264,6 +3316,7 @@ class XMLFileImporterImpl {
                 initialContents: this.newFileContents,
                 isStrictImport: false,
                 statusCallback: this.statusCallback,
+                importWarings: this.warnings,
             });
     }
 }
@@ -3307,10 +3360,25 @@ export async function asyncImportXMLFile(args) {
     }
 
     return new Promise((resolve, reject) => {
-        fs.createReadStream(args.pathNameToImport)
-            .pipe(saxStream)
-            .on('error', (err) => reject(err))
-            .on('end', () => resolve());
+        try {
+            const readStream = fs.createReadStream(args.pathNameToImport);
+            importer._readStream = readStream;
+            importer._saxStream = saxStream;
+
+            readStream.pipe(saxStream)
+                .on('error', (err) => reject(err))
+                .on('end', () => {
+                    if (importer._error) {
+                        reject(importer._error);
+                    }
+                    else {
+                        resolve();
+                    }
+                });
+        }
+        catch (e) {
+            reject(e);
+        }
     }).then(() => importer.asyncFinalizeImport());
 }
 

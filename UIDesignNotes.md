@@ -472,8 +472,8 @@ Common menus:
 
 
     - File import
+        - Will not bother importing Reminders
         - Report warnings from importer in App.
-        - Add loading feedback.
         - Add import options:
             - Save intermediate JSON file.
             - Write log
@@ -524,3 +524,4 @@ Common menus:
 
 
 - Add rounding option for accounts (specific accounts might round up or down).
+

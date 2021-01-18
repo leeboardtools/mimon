@@ -14,6 +14,7 @@ import { FileSelector } from '../util-ui/FileSelector';
 import deepEqual from 'deep-equal';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { FileImporter } from '../tools/FileImporter';
+import { ProgressReporter } from '../util-ui/ProgressReporter';
 import * as path from 'path';
 import * as electron from 'electron';
 import * as process from 'process';
@@ -220,6 +221,9 @@ export default class App extends React.Component {
         this.onImportProjectCreateFile = this.onImportProjectCreateFile.bind(this);
 
         this.statusCallback = this.statusCallback.bind(this);
+
+        this.onStatusCancel = this.onStatusCancel.bind(this);
+        this.onConfirmStatusCancelButton = this.onConfirmStatusCancelButton.bind(this);
 
         this.onRevertFile = this.onRevertFile.bind(this);
         this.onCloseFile = this.onCloseFile.bind(this);
@@ -598,6 +602,10 @@ export default class App extends React.Component {
                 this.setState({
                     appState: 'status',
                     isCancelled: false,
+                    statusTitle: userMsg('App-importingStatus_title',
+                        importPathName),
+                    statusConfirmCancelMessage: userMsg('App-confirm_import_cancel',
+                        importPathName),
                 });
 
                 // TODO:
@@ -618,8 +626,9 @@ export default class App extends React.Component {
                 this.enterMainWindow();
             }
             catch (e) {
+                // asyncImportFile() populates the error message...
                 this.setState({
-                    errorMsg: userMsg('App-import_failed', importPathName, e.toString()),
+                    errorMsg: e.toString(),
                     isCancelled: false,
                 });
             }
@@ -627,11 +636,41 @@ export default class App extends React.Component {
     }
 
 
-    statusCallback(msg) {
-        this.setState({
-            statusMsg: msg,
-        });
+    statusCallback(progress) {
+        if (!this.state.isCancelled) {
+            this.setState((state) => {
+                return {
+                    statusProgress: progress,
+                };
+            });
+        }
         return this.state.isCancelled;
+    }
+
+
+    onStatusCancel() {
+        this.setState({
+            appState: 'statusConfirmCancel',
+        });
+    }
+
+
+    onConfirmStatusCancelButton(buttonId) {
+        switch (buttonId) {
+        case 'yes':
+            this.setState({
+                appState: 'status',
+                statusProgress: userMsg('App-cancelling_import'), 
+                isCancelled: true,
+            });
+            break;
+        
+        default :
+            this.setState({
+                appState: 'status',
+            });
+            break;
+        }
     }
 
 
@@ -732,10 +771,24 @@ export default class App extends React.Component {
             />;
         
         case 'status' :
-            // TODO: FIX ME!!!
-            return <div className="container-fluid">
-                <span>{this.state.statusMsg}</span>
-            </div>;
+        {
+            let onCancel;
+            if (this.state.statusConfirmCancelMessage) {
+                onCancel = this.onStatusCancel;
+            }
+            return <ProgressReporter 
+                title = {this.state.statusTitle}
+                progress = {this.state.statusProgress}
+                onCancel = {onCancel}
+            />;
+        }
+        
+        case 'statusConfirmCancel' :
+            return <QuestionPrompter
+                message = {this.state.statusConfirmCancelMessage}
+                onButton = {this.onConfirmStatusCancelButton}
+                buttons = {StandardButton.YES_NO}
+            />;
         
         case 'mainWindow' :
             return <MainWindow

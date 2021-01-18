@@ -301,6 +301,7 @@
     "NewFileSetup-statusUpdate_loadingLots": "Writing out lots...",
     "NewFileSetup-statusUpdate_loadingTransactions": "Writing out transactions...",
     "NewFileSetup-statusUpdate_loadingReminders": "Writing out reminders...",
+    "NewFileSetup-updateSecondaryStatus_transaction": ["", " of ", "..."],
 
 
     "FileImporter-file_not_exist": ["'", "' could not be imported. ", ""],
@@ -333,8 +334,10 @@
     "XMLFileImporter-merge_too_large": ["The investment merge transaction dated ", " ", " could not be performed because the merge removes ", " shares but there are only ", " shares available. The transaction will be ignored."],
     "XMLFileImporter-dividend_account_id_invalid": ["The dividend transaction dated ", " ", " could not be performed because the dividend account with id '", "' was not found. The transaction will be ignored."],
 
-    "XMLFileImporter-updateStatus_processXMLAccount": ["Processing account id '", "' ", ""],
-    "XMLFileImporter-statusUpdate_processingTransaction": ["Processing transaction dated '", "' ", ""],
+    "XMLFileImporter-updatePrimaryStaus_readingPrices": "Reading XML security prices...",
+    "XMLFileImporter-updatePrimaryStatus_readingXMLAccount": "Reading XML accounts...",
+    "XMLFileImporter-updateSecondaryStatus_readingXMLAccount": ["", " - '", "'"],
+    "XMLFileImporter-updatePrimaryStatus_processingAccountAndTransactions": ["Processing ", " accounts and ", " transactions."],
     "XMLFileImporter-statusUpdate_readingFile": "Reading in the XML file...",
     "XMLFileImporter-userCanceled": "Import was canceled.",
 

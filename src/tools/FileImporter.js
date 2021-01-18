@@ -45,8 +45,7 @@ export class FileImporter {
      * @param {NewFileContents} newFileContents
      */
     async asyncImportFile(args) {
-        const { pathNameToImport, } = args;
-        const accountingFilePathName = this._accessor.getAccountingFilePathName();
+        const { pathNameToImport, newProjectPathName } = args;
         const stat = await fsPromises.lstat(pathNameToImport);
         if (!stat) {
             // File doesn't exist...
@@ -72,7 +71,7 @@ export class FileImporter {
 
         if (lastError) {
             throw userError('FileImporter-importFailed', pathNameToImport, 
-                accountingFilePathName,
+                newProjectPathName,
                 lastError);
         }
     }

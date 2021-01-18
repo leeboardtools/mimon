@@ -435,7 +435,8 @@ export class EngineAccessor extends EventEmitter {
 
         let warnings = [];
         if (initialContents) {
-            warnings = await asyncSetupNewFile(this, accountingFile, initialContents);
+            warnings = await asyncSetupNewFile(this, 
+                accountingFile, initialContents, options);
             await accountingFile.asyncWriteFile(true);
         }
 

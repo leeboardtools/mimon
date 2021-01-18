@@ -130,14 +130,41 @@ import { userMsg, userError } from '../util/UserMessages';
 //
 //---------------------------------------------------------
 //
-function updateStatus(setupInfo, msg) {
+function updatePrimaryStatus(setupInfo, msg) {
     const { statusCallback } = setupInfo.options;
     if (statusCallback) {
+        if (typeof msg === 'string') {
+            setupInfo.primaryStatus = {
+                message: msg,
+            };
+        }
+        else {
+            setupInfo.primaryStatus = msg;
+        }
+
         if (statusCallback(msg)) {
             throw userError('NewFileSetup-statusUpdate_canceled');
         }
     }
 }
+
+
+//
+//---------------------------------------------------------
+//
+function updateSecondaryStatus(setupInfo, msg) {
+    const { statusCallback } = setupInfo.options;
+    if (statusCallback) {
+        const progress = [
+            setupInfo.primaryStatus,
+            msg,
+        ];
+        if (statusCallback(progress)) {
+            throw userError('NewFileSetup-statusUpdate_canceled');
+        }
+    }
+}
+
 
 //
 //---------------------------------------------------------
@@ -582,6 +609,12 @@ async function asyncLoadTransactions(setupInfo) {
 
         const transactionsToAdd = [];
         for (let i = 0; i < transactions.length; ++i) {
+            updateSecondaryStatus(setupInfo, userMsg(
+                'NewFileSetup-updateSecondaryStatus_transaction',
+                i + 1,
+                transactions.length,
+            ));
+
             item = transactions[i];
 
             const splits = [];
@@ -815,22 +848,28 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
 
     await asyncSetBaseCurrency(setupInfo);
 
-    updateStatus(setupInfo, userMsg('NewFileSetup-statusUpdate_loadingPricedItems'));
+    updatePrimaryStatus(setupInfo, 
+        userMsg('NewFileSetup-statusUpdate_loadingPricedItems'));
     await asyncLoadPricedItems(setupInfo);
 
-    updateStatus(setupInfo, userMsg('NewFileSetup-statusUpdate_loadingPrices'));
+    updatePrimaryStatus(setupInfo, 
+        userMsg('NewFileSetup-statusUpdate_loadingPrices'));
     await asyncLoadPrices(setupInfo);
 
-    updateStatus(setupInfo, userMsg('NewFileSetup-statusUpdate_loadingAccounts'));
+    updatePrimaryStatus(setupInfo, 
+        userMsg('NewFileSetup-statusUpdate_loadingAccounts'));
     await asyncLoadAccounts(setupInfo);
 
-    updateStatus(setupInfo, userMsg('NewFileSetup-statusUpdate_loadingLots'));
+    updatePrimaryStatus(setupInfo, 
+        userMsg('NewFileSetup-statusUpdate_loadingLots'));
     await asyncLoadLots(setupInfo);
 
-    updateStatus(setupInfo, userMsg('NewFileSetup-statusUpdate_loadingTransactions'));
+    updatePrimaryStatus(setupInfo, 
+        userMsg('NewFileSetup-statusUpdate_loadingTransactions'));
     await asyncLoadTransactions(setupInfo);
 
-    updateStatus(setupInfo, userMsg('NewFileSetup-statusUpdate_loadingReminders'));
+    updatePrimaryStatus(setupInfo, 
+        userMsg('NewFileSetup-statusUpdate_loadingReminders'));
     await asyncLoadReminders(setupInfo);
 
     await accountingSystem.getUndoManager().asyncClearUndos();
