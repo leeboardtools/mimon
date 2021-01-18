@@ -8,6 +8,9 @@ import { InfoReporter } from '../util-ui/InfoReporter';
 import { asyncGetNewFileTemplates } from '../tools/Templates';
 import { NewFileConfigurator} from './NewFileConfigurator';
 import { PageTitle } from '../util-ui/PageTitle';
+import { PageBody } from '../util-ui/PageBody';
+import { Field } from '../util-ui/Field';
+import { Checkbox } from '../util-ui/Checkbox';
 import { YMDDate } from '../util/YMDDate';
 import { CurrencySelector } from '../util-ui/CurrencySelector';
 import { createTestTransactions, createTestReminders } 
@@ -133,9 +136,11 @@ class NewFileName extends React.Component {
             <PageTitle>
                 {userMsg('NewFileName-heading')}
             </PageTitle>
-            {baseDirSelector}
-            {projectNameEditor}
-            {fileTypeSelector}
+            <PageBody>
+                {baseDirSelector}
+                {projectNameEditor}
+                {fileTypeSelector}
+            </PageBody>
         </div>;
     }
 }
@@ -180,12 +185,10 @@ class GeneralSettingsEditor extends React.Component {
         const label = userMsg('GeneraSettingsEditor-openingBalancesDate_label');
         const inputClassName = 'form-control';
 
-        return <div className = "form-row text-left">
-            <div className = "form-col">
-                <label className = "mb-0" 
-                    htmlFor = "GeneralSettingsEditor-openingBalancesDate">
-                    {label}
-                </label>
+        return <Field
+            id = "GeneralSettingsEditor-openingBalancesDate"
+            label = {label}
+            onRenderEditor = {() =>                 
                 <div className = "mb-0">
                     <input type = "date"
                         id = "GeneralSettingsEditor-openingBalancesDate"
@@ -194,19 +197,18 @@ class GeneralSettingsEditor extends React.Component {
                         aria-label = "Opening Balance Date"
                         value = {this.props.openingBalancesDate}/>
                 </div>
-            </div>
-        </div>;
+            }
+        />;
     }
 
     
     renderDefaultCurrency() {
         const label = userMsg('GeneraSettingsEditor-defaultCurrency_label');
-        return <div className = "form-row text-left">
-            <div className = "form-col">
-                <label className = "mb-0" 
-                    htmlFor = "GeneralSettingsEditor-defaultCurrency">
-                    {label}
-                </label>
+
+        return <Field
+            id = "GeneralSettingsEditor-defaultCurrency"
+            label = {label}
+            onRenderEditor = {() =>
                 <div className = "mb-0">
                     <CurrencySelector
                         id = "GeneralSettingsEditor-defaultCurrency"
@@ -214,70 +216,101 @@ class GeneralSettingsEditor extends React.Component {
                         aria-label = "Default Currency"
                         value = {this.props.defaultCurrency}/>
                 </div>
-            </div>
-        </div>;
+            }
+        />;
     }
 
     
-    renderAddTestTransactions() {
+    renderOptions() {
+        const components = [];
+
         const { onSetAddTestTransactions } = this.props;
         if (onSetAddTestTransactions) {
-            return <div className = "text-left">
-                <div className = "row mb-2">&nbsp;</div>
-                <input type = "checkbox" 
-                    id = "addTestTransactions"
-                    value = {this.state.addTestTransactions}
-                    onClick = {(e) => {
-                        const add = !this.state.addTestTransactions;
-                        onSetAddTestTransactions(add);
-                        this.setState({
-                            addTestTransactions: add,
-                        });
-                    }}
-                />
-                <label htmlFor = "addTestTransactions">Add Test Transactions</label>
-            </div>;
+            components.push(<Checkbox 
+                id = "GeneralSettingsEditor-addTestTransactions"
+                key = "GeneralSettingsEditor-addTestTransactions"
+                label = "Add Test Transactions"
+                value = {this.state.addTestTransactions}
+                onChange = {(value) => {
+                    onSetAddTestTransactions(value);
+                    this.setState({
+                        addTestTransactions: value,
+                    });
+                }}
+            />);
         }
-    }
 
-
-    renderAddTestReminders() {
         const { onSetAddTestReminders } = this.props;
         if (onSetAddTestReminders) {
-            return <div className = "text-left">
-                <div className = "row mb-2">&nbsp;</div>
-                <input type = "checkbox" 
-                    id = "addTestReminders"
-                    value = {this.state.addTestReminders}
-                    onClick = {(e) => {
-                        const add = !this.state.addTestReminders;
-                        onSetAddTestReminders(add);
-                        this.setState({
-                            addTestReminders: add,
-                        });
-                    }}
-                />
-                <label htmlFor = "addTestReminders">Add Test Reminders</label>
-            </div>;
+            components.push(<Checkbox
+                id = "GeneralSettingsEditor-addTestReminders"
+                key = "GeneralSettingsEditor-addTestReminders"
+                label = "Add Test Reminders"
+                value = {this.state.addTestReminders}
+                onChange = {(value) => {
+                    onSetAddTestReminders(value);
+                    this.setState({
+                        addTestReminders: value,
+                    });
+                }}
+            />);
         }
+
+        // TEMP!!!
+        const { onSetIsLog, onSetIsWriteIntermediateJSON } = this.props;
+        if (onSetIsLog) {
+            components.push(<Checkbox 
+                id = "GeneralSettingsEditor-isLogCheckbox"
+                key = "GeneralSettingsEditor-isLogCheckbox"
+                label = "Record Log File"
+                value = {this.state.isLog}
+                onChange = {(value) => {
+                    onSetIsLog(value);
+                    this.setState({
+                        isLog: value,
+                    });
+                }}
+
+            />);
+        }
+
+        if (onSetIsLog) {
+            components.push(<Checkbox 
+                id = "GeneralSettingsEditor-isWriteJSONCheckbox"
+                key = "GeneralSettingsEditor-isWriteJSONCheckbox"
+                label = {'Save intermediate JSON file '
+                    + '(will contain all transferred information!)'}
+                value = {this.state.isWriteIntermediateJSON}
+                onChange = {(value) => {
+                    onSetIsWriteIntermediateJSON(value);
+                    this.setState({
+                        isWriteIntermediateJSON: value,
+                    });
+                }}
+
+            />);
+        }
+        
+        return <div className = "">
+            {components}
+        </div>;
     }
 
 
     render() {
         const openingBalancesDateEditor = this.renderOpeningBalancesDateEditor();
         const defaultCurrency = this.renderDefaultCurrency();
-        const addTestTransactions = this.renderAddTestTransactions();
-        const addTestReminders = this.renderAddTestReminders();
+        const options = this.renderOptions();
 
         return <div className = "container-fluid mt-auto mb-auto">
             <PageTitle>
                 {userMsg('GeneraSettingsEditor-heading')}
             </PageTitle>
-            {openingBalancesDateEditor}
-            <div className = "row mb-2">&nbsp;</div>
-            {defaultCurrency}
-            {addTestTransactions}
-            {addTestReminders}
+            <PageBody>
+                {openingBalancesDateEditor}
+                {defaultCurrency}
+                {options}
+            </PageBody>
         </div>;
     }
 }
@@ -289,6 +322,10 @@ GeneralSettingsEditor.propTypes = {
     onSetDefaultCurrency: PropTypes.func.isRequired,
     onSetAddTestTransactions: PropTypes.func,
     onSetAddTestReminders: PropTypes.func,
+
+    // TEMP!!!
+    onSetIsLog: PropTypes.func,
+    onSetIsWriteIntermediateJSON: PropTypes.func,
 };
 
 
@@ -311,6 +348,7 @@ export class FileCreator extends React.Component {
             },
             openingBalancesDate: (new YMDDate()).toString(),
             baseCurrency: 'USD',
+            options: {},
         };
 
         this._pages = [
@@ -335,6 +373,10 @@ export class FileCreator extends React.Component {
         this.onSetDefaultCurrency = this.onSetDefaultCurrency.bind(this);
         this.onSetAddTestTransactions = this.onSetAddTestTransactions.bind(this);
         this.onSetAddTestReminders = this.onSetAddTestReminders.bind(this);
+
+        // TEMP!
+        this.onSetIsLog = this.onSetIsLog.bind(this);
+        this.onSetIsWriteIntermediateJSON = this.onSetIsWriteIntermediateJSON.bind(this);
 
         this.onUpdateFileContents = this.onUpdateFileContents.bind(this);
         this.onSetEndEditAsyncCallback = this.onSetEndEditAsyncCallback.bind(this);
@@ -448,6 +490,33 @@ export class FileCreator extends React.Component {
         });
     }
 
+
+    // TEMP!!!
+    onSetIsLog(value) {
+        this.setState((state) => {
+            return {
+                options: Object.assign({}, state.options, {
+                    isLog: value,
+                    isLogAccountNames: value,
+                    isLogLots: value,
+                    isLogTransactions: value,
+                }),
+            };
+        });
+    }
+
+    // TEMP!!!
+    onSetIsWriteIntermediateJSON(value) {
+        this.setState((state) => {
+            return {
+                options: Object.assign({}, state.options, {
+                    isWriteIntermediateJSON: value,
+                }),
+            };
+        });
+    }
+
+
     onUpdateFileContents(newFileContents) {
         this.setState({
             newFileContents: newFileContents
@@ -497,6 +566,12 @@ export class FileCreator extends React.Component {
                 const onSetAddTestReminders = (isDevMode)
                     ? this.onSetAddTestReminders
                     : undefined;
+                const onSetIsLog = (isImport)
+                    ? this.onSetIsLog 
+                    : undefined;
+                const onSetIsWriteIntermediateJSON = (isImport)
+                    ? this.onSetIsWriteIntermediateJSON
+                    : undefined;
                 component = <GeneralSettingsEditor
                     openingBalancesDate = {this.state.openingBalancesDate}
                     onSetOpeningBalancesDate = {this.onSetOpeningBalancesDate}
@@ -504,6 +579,8 @@ export class FileCreator extends React.Component {
                     onSetDefaultCurrency = {this.onSetDefaultCurrency}
                     onSetAddTestTransactions = {onSetAddTestTransactions}
                     onSetAddTestReminders = {onSetAddTestReminders}
+                    onSetIsLog = {onSetIsLog}
+                    onSetIsWriteIntermediateJSON = {onSetIsWriteIntermediateJSON}
                 />;
             }
             break;
@@ -558,6 +635,7 @@ export class FileCreator extends React.Component {
                     this.props.onCreateFile({
                         pathName: pathName,
                         newFileContents: newFileContents,
+                        options: this.state.options,
                     });
                 }
                 else {
@@ -635,6 +713,7 @@ export class FileCreator extends React.Component {
  * @typedef {object} FileCreator~onCreateFileArgs
  * @property {string} pathName
  * @property {NewFileContents} newFileContents
+ * @property {*} options
  */
 
 /**
