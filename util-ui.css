@@ -201,6 +201,12 @@ that's on the same line */
 }
 
 
+.InfoReporter-body {
+    margin-left: 2rem;
+    margin-right: 2rem;
+}
+
+
 /** For util-ui/MultiColumnList.jsx */
 .MultiColumnList {
     display: flex;
@@ -216,6 +222,11 @@ that's on the same line */
     border-color: darkgrey;
 }
 /** End util-ui/MultiColumnList.jsx */
+
+
+.PageBody {
+    overflow: auto;
+}
 
 
 .Popup {
