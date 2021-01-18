@@ -2615,7 +2615,7 @@ class XMLFileImporterImpl {
             })) {
                 return;
             }
-            mainSplit.sellAutoLotType = T.AutoLotType.LIFO.name;
+            mainSplit.sellAutoLotType = T.AutoLotType.FIFO.name;
             mainSplit.sellAutoLotQuantity = mainEntry.quantity;
         }
 
