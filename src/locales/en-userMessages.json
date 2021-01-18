@@ -40,6 +40,7 @@
     "App-importingStatus_title": ["Importing '", "'"],
     "App-confirm_import_cancel": ["Are you sure you want to cancel importing '", "'?"],
     "App-cancelling_import": "Cancelling import...",
+    "App-importWarnings_title": ["Importing '", "' generated the following warnings:"],
 
 
     "AppOpeningScreen-mru_title": "Recently Opened:",

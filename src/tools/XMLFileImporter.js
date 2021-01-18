@@ -3312,11 +3312,12 @@ class XMLFileImporterImpl {
         }
 
         return this.accessor.asyncCreateAccountingFile(
-            this.newProjectPathName, {
+            this.newProjectPathName, 
+            {
                 initialContents: this.newFileContents,
                 isStrictImport: false,
                 statusCallback: this.statusCallback,
-                importWarings: this.warnings,
+                priorWarnings: this.warnings,
             });
     }
 }
@@ -3383,6 +3384,13 @@ export async function asyncImportXMLFile(args) {
 }
 
 
+function onSetSubLogValue(options, optionName, value) {
+    if (value) {
+        options.isLog = true;
+    }
+}
+
+
 /**
  * File importer for XML files.
  */
@@ -3403,6 +3411,58 @@ export class XMLFileImporter {
     isDirNamePossibleImport(dirPathName) {
     }
 
+
+    getOptionDefs() {
+        return {
+            isLog: { 
+                value: false, 
+                description: userMsg('XMLFileImporter-option_isLog_description'),
+            },
+            isLogAccountNames: {
+                value: false,
+                description: userMsg(
+                    'XMLFileImporter-option_isLogAccountNames_description'),
+                onSetValue: onSetSubLogValue,
+            },
+            isLogLots: {
+                value: false,
+                description: userMsg('XMLFileImporter-option_isLogLots_description'),
+                onSetValue: onSetSubLogValue,
+            },
+            isLogTransactions: {
+                value: false,
+                description: userMsg(
+                    'XMLFileImporter-option_isLogTransactions_description'),
+                onSetValue: onSetSubLogValue,
+            },
+            includeAccountNumbers: {
+                value: false,
+                description: userMsg(
+                    'XMLFileImporter-option_includeAccountNumbers_description'),
+            },
+            isWriteIntermediateJSON: {
+                value: false,
+                description: userMsg(
+                    'XMLFileImporter-option_isWriteIntermediateJSON_description'),
+            },
+        };
+    }
+
+
+    /**
+     * @typedef {object} XMLFileImporter~ImportFileArgs
+     * @property {string} pathNameToImport
+     * @property {string} newProjectPathName
+     * @property {NewFileContents} newFileContents
+     * @property {boolean} [verbose]
+     * @property {boolean} [isLog]
+     * @property {boolean} [isLogAccountNames]
+     * @property {boolean} [isLogLots]
+     * @property {boolean} [isLogTransactions]
+     * @property {boolean} [includeAccountNumbers]
+     * @property {boolean} [isWriteIntermediateJSON]
+     * @property {StatusCallback} [statusCallback]
+     */
 
     async asyncImportFile(args) {
         args = Object.assign({}, args, {

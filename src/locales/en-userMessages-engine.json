@@ -341,7 +341,12 @@
     "XMLFileImporter-statusUpdate_readingFile": "Reading in the XML file...",
     "XMLFileImporter-userCanceled": "Import was canceled.",
 
-
+    "XMLFileImporter-option_isLog_description": "Write log file",
+    "XMLFileImporter-option_isLogAccountNames_description": "Log account names",
+    "XMLFileImporter-option_isLogLots_description": "Log lots",
+    "XMLFileImporter-option_isLogTransactions_description": "Log transactions",
+    "XMLFileImporter-option_includeAccountNumbers_description": "Include account numbers in created accounts",
+    "XMLFileImporter-option_isWriteIntermediateJSON_description": "Write out intermediate JSON file (all information will be visible)",
 
 
     "": ""

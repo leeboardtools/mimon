@@ -394,17 +394,23 @@ export class EngineAccessor extends EventEmitter {
 
 
     /**
+     * @typedef {object} EngineAccessor~asyncCreateAccountingFileOptions
+     * @property {number} [fileFactoryIndex]   Optional file factory index, if specified
+     * this particular file factory will be used, otherwise the first file factory
+     * whose {@link AccountingFile#asyncCanCreateFile} returns <code>true</code>
+     * will be used.
+     * @property {object}  [initialContents]    Optional initial contents to set up 
+     * the file with, passed to {@link asyncSetupNewFile}.
+     * @property {string[]} [priorWarnings] If specified additional warnings to return.
+     */
+
+    /**
      * Creates a new accounting file system, replacing an existing one if necessary.
      * @param {string} pathName The path name for the new file system. If the file 
      * system already exists
      * it should be overwritten. If {@link AccountingFileFactor#isDirBased} returns 
      * <code>true</code> this should be a directory, otherwise it should be a file name.
-     * @param {number} [fileFactoryIndex]   Optional file factory index, if specified
-     * this particular file factory will be used, otherwise the first file factory
-     * whose {@link AccountingFile#asyncCanCreateFile} returns <code>true</code>
-     * will be used.
-     * @param {object}  [initialContents]    Optional initial contents to set up the file
-     * with, passed to {@link asyncSetupNewFile}.
+     * @param {EngineAccessor~asyncCreateAccountingFileOptions} [options]
      * @returns {string[]} An array containing any warning messages. These are primarily
      * from the attempt to set up the initial contents.
      * @throws {Error}
@@ -438,6 +444,10 @@ export class EngineAccessor extends EventEmitter {
             warnings = await asyncSetupNewFile(this, 
                 accountingFile, initialContents, options);
             await accountingFile.asyncWriteFile(true);
+        }
+
+        if (options.priorWarnings) {
+            warnings = options.priorWarnings.concat(warnings);
         }
 
         if (accountingFile) {

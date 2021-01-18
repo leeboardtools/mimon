@@ -38,11 +38,36 @@ export class FileImporter {
     }
 
 
+    async asyncGetClosestImporter(pathNameToImport) {
+        const stat = await fsPromises.lstat(pathNameToImport);
+        if (!stat) {
+            // File doesn't exist...
+            throw userError('FileImporter-file_not_exist', pathNameToImport);
+        }
+
+        const isPossibleImport = (stat.isDirectory())
+            ? this.isDirNamePossibleImport
+            : this.isFileNamePossibleImport;
+
+        for (let i = 0; i < this._fileImporters.length; ++i) {
+            if (isPossibleImport(pathNameToImport)) {
+                return this._fileImporters[i];
+            }
+        }
+    }
+
+
+    /**
+     * @typedef {object} FileImporter~ImportFileArgs
+     * Additional properties may be added by specific importers.
+     * @property {string} pathNameToImport
+     * @property {string} newProjectPathName
+     * @property {NewFileContents} newFileContents
+     */
+
     /**
      * Main importing method.
-     * @param {string} pathNameToImport 
-     * @param {string} pathName
-     * @param {NewFileContents} newFileContents
+     * @param {FileImporter~ImportFileArgs} args 
      */
     async asyncImportFile(args) {
         const { pathNameToImport, newProjectPathName } = args;
@@ -60,8 +85,7 @@ export class FileImporter {
         for (let i = 0; i < this._fileImporters.length; ++i) {
             if (isPossibleImport(pathNameToImport)) {
                 try {
-                    await this._fileImporters[i].asyncImportFile(args);
-                    return;
+                    return await this._fileImporters[i].asyncImportFile(args);
                 }
                 catch (e) {
                     lastError = e;

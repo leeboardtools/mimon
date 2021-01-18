@@ -18,6 +18,7 @@ import { ProgressReporter } from '../util-ui/ProgressReporter';
 import * as path from 'path';
 import * as electron from 'electron';
 import * as process from 'process';
+import { InfoReporter } from '../util-ui/InfoReporter';
 
 const { app } = electron.remote;
 const { ipcRenderer } = electron;
@@ -595,7 +596,7 @@ export default class App extends React.Component {
         });
     }
 
-    onImportProjectCreateFile({ pathName: projectPathName, newFileContents, }) {
+    onImportProjectCreateFile({ pathName: projectPathName, newFileContents, options, }) {
         process.nextTick(async () => {
             const { importPathName } = this.state;
             try {
@@ -608,22 +609,30 @@ export default class App extends React.Component {
                         importPathName),
                 });
 
-                // TODO:
-                // Want to report any errors or warnings...
+                const importArgs = Object.assign({}, options, {
+                    pathNameToImport: importPathName, 
+                    newProjectPathName: projectPathName, 
+                    newFileContents: newFileContents,
+                    statusCallback: this.statusCallback,
+                });
                 const warnings = await this._fileImporter.asyncImportFile(
-                    {
-                        pathNameToImport: importPathName, 
-                        newProjectPathName: projectPathName, 
-                        newFileContents: newFileContents,
-                        statusCallback: this.statusCallback,
-                    }
+                    importArgs
                 );
 
                 if (warnings && warnings.length) {
-                    console.log(warnings);
+                    this.setState({
+                        appState: 'importWarnings',
+                        importWarningsTitle: userMsg(
+                            'App-importWarnings_title',
+                            importPathName,
+                        ),
+                        importWarnings: warnings,
+                    });
+                }
+                else {
+                    this.enterMainWindow();
                 }
 
-                this.enterMainWindow();
             }
             catch (e) {
                 // asyncImportFile() populates the error message...
@@ -768,6 +777,13 @@ export default class App extends React.Component {
                 onCreateFile = {this.onImportProjectCreateFile}
                 onCancel = {this.onCancel}
                 initialDir = {currentDir}
+            />;
+        
+        case 'importWarnings' :
+            return <InfoReporter
+                title = {this.state.importWarningsTitle}
+                message = {this.state.importWarnings}
+                onClose = {() => this.enterMainWindow()}
             />;
         
         case 'status' :
