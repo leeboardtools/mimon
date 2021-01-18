@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
+import { PageTitle } from './PageTitle';
 
 
 /**
@@ -35,9 +36,9 @@ export function InfoReporter(props) {
     let { title, message } = props;
     let titleComponent;
     if (title) {
-        titleComponent = <h5 className="PageTitle pt-3 pb-3 mb-4 border-bottom">
+        titleComponent = <PageTitle>
             {title}
-        </h5>;
+        </PageTitle>;
     }
 
     if (!Array.isArray(message)) {

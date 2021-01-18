@@ -7,6 +7,7 @@ import { NewFileAccountsEditor,
     cloneAccountDataItems, findAccountDataItemWithId, } from './NewFileAccountsEditor';
 import { DropdownMenu } from '../util-ui/DropdownMenu';
 import { ContentFramer } from '../util-ui/ContentFramer';
+import { PageTitle } from '../util-ui/PageTitle';
 
 
 /**
@@ -305,10 +306,9 @@ export class NewFileConfigurator extends React.Component {
             onPostRenderTabs = {this.onPostRenderTabs}
         />;
 
-        const titleBar = <h4 className = "PageTitle pb-3 border-bottom"
-        >
+        const titleBar = <PageTitle>
             {userMsg('NewFileAccountsEditor-heading')}
-        </h4>;
+        </PageTitle>;
         return <ContentFramer
             onRenderHeader = {() => titleBar}
             onRenderContent = {() => tabbedPages}

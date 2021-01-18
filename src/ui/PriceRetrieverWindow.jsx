@@ -9,6 +9,7 @@ import { ContentFramer } from '../util-ui/ContentFramer';
 import { asyncGetUpdatedPricedItemPrices } from '../engine/PriceRetriever';
 import deepEqual from 'deep-equal';
 import { setFocus } from '../util/ElementUtils';
+import { PageTitle } from '../util-ui/PageTitle';
 
 
 function equalBool(a, b) {
@@ -519,10 +520,9 @@ export class PriceRetrieverWindow extends React.Component {
         const header = <div>
             <div className = "row">
                 <div className = "col">
-                    <h4 className = "PageTitle pb-3 border-bottom"
-                    >
+                    <PageTitle>
                         {userMsg('PriceRetrieverWindow-title')}
-                    </h4>
+                    </PageTitle>
                 </div>
             </div>
             <div className = {controlsClassName} 

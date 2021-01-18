@@ -7,6 +7,7 @@ import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { InfoReporter } from '../util-ui/InfoReporter';
 import { asyncGetNewFileTemplates } from '../tools/Templates';
 import { NewFileConfigurator} from './NewFileConfigurator';
+import { PageTitle } from '../util-ui/PageTitle';
 import { YMDDate } from '../util/YMDDate';
 import { CurrencySelector } from '../util-ui/CurrencySelector';
 import { createTestTransactions, createTestReminders } 
@@ -129,9 +130,9 @@ class NewFileName extends React.Component {
         const projectNameEditor = this.renderProjectNameEditor();
 
         return <div className = "container-fluid mt-auto mb-auto">
-            <h4 className = "PageTitle pb-3 mb-4 border-bottom">
+            <PageTitle>
                 {userMsg('NewFileName-heading')}
-            </h4>
+            </PageTitle>
             {baseDirSelector}
             {projectNameEditor}
             {fileTypeSelector}
@@ -269,9 +270,9 @@ class GeneralSettingsEditor extends React.Component {
         const addTestReminders = this.renderAddTestReminders();
 
         return <div className = "container-fluid mt-auto mb-auto">
-            <h4 className = "PageTitle pb-3 mb-4 border-bottom">
+            <PageTitle>
                 {userMsg('GeneraSettingsEditor-heading')}
-            </h4>
+            </PageTitle>
             {openingBalancesDateEditor}
             <div className = "row mb-2">&nbsp;</div>
             {defaultCurrency}
