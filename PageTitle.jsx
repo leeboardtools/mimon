@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 
 PageTitle.propTypes = {
+    classExtras: PropTypes.string,
     children: PropTypes.any,
 };
 
@@ -13,7 +14,13 @@ PageTitle.propTypes = {
  * @class
  */
 export function PageTitle(props) {
-    return <h4 className="PageTitle pt-3 pb-3 mb-4 border-bottom">
+    let className = 'pt-3 pb-3 mb-4 border-bottom PageTitle';
+    const { classExtras } = props;
+    if (classExtras) {
+        className += ' ' + classExtras;
+    }
+
+    return <h4 className={className}>
         {props.children}
     </h4>;
 }

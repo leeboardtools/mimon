@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 
 PageBody.propTypes = {
+    classExtras: PropTypes.string,
     children: PropTypes.any,
 };
 
@@ -14,7 +15,13 @@ PageBody.propTypes = {
  * @class
  */
 export function PageBody(props) {
-    return <div className = "H-inherit text-left PageBody">
+    let className = 'H-inherit text-left PageBody';
+    const { classExtras } = props;
+    if (classExtras) {
+        className += ' ' + classExtras;
+    }
+
+    return <div className = {className}>
         {props.children}
     </div>;
 }
