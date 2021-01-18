@@ -338,7 +338,9 @@ export class FileCreator extends React.Component {
 
         this.state = {
             fileFactoryIndex: 0,
-            baseDirName: props.initialDir || path.join(os.homedir(), 'Mimon'),
+            baseDirName: props.initialDir 
+                || path.join(os.homedir(), 
+                    userMsg('FileCreator-default_project_folder')),
             projectName: undefined,
             activePageIndex: 0,
             newFileContents: { 

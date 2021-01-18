@@ -43,14 +43,18 @@
     "App-importWarnings_title": ["Importing '", "' generated the following warnings:"],
 
 
+    "AppOpeningScreen-title_main": "MiMoN",
+    "AppOpeningScreen-title_secondary": "A personal finance app",
+    "AppOpeningScreen-title_from": "from LeeboardTools",
     "AppOpeningScreen-mru_title": "Recently Opened:",
     "AppOpeningScreen-new_file": "Create a New Accounting Project...",
     "AppOpeningScreen-open_file": "Open an Existing Accounting Project...",
     "AppOpeningScreen-import_file": "Import a jGnash XML Accounting Project...",
-    "AppOpeningScreen-exit":"Exit Mimon",
+    "AppOpeningScreen-exit":"Exit MiMoN",
 
 
     "FileCreator-default_project_name": "Untitled",
+    "FileCreator-default_project_folder": "MiMoN",
     "FileCreator-project_name_required": "A project name is required.",
     "FileCreator-cannot_make_base_dir": ["Could not create the main folder. ", ""],
     "FileCreator-file_create_warnings": ["The file '", "' was created, but with the following issues:"],

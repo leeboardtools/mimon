@@ -1,6 +1,7 @@
 import { AccountingFile, AccountingFileFactory } from './AccountingFile';
 import { asyncAllFilesExist, asyncFileExists, 
     asyncDirExists, asyncCanCreateDir } from '../util/Files';
+import { userMsg } from '../util/UserMessages';
 import * as JGZ from '../util/JSONGzipFiles';
 import * as FA from '../util/FileActions';
 import { FileBackups } from '../util/FileBackups';
@@ -1250,7 +1251,7 @@ export class JSONGzipAccountingFileFactory extends AccountingFileFactory {
      */
     getFileNameFilters() {
         return [
-            { name: 'MiMon JSON Gzip', extensions: ['gz'] }
+            { name: userMsg('JSONGzipAccountingFile-filter_name'), extensions: ['gz'] }
         ];
     }
 
