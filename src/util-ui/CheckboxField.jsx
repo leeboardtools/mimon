@@ -53,8 +53,8 @@ export const CheckboxField = React.forwardRef(
  * classes to add to the &lt;input&gt; entity.
  * @property {string}   [errorMsg]  If specified an error message to be displayed
  * below the input box.
- * @property {Checkbox~onChange} [onChange]  onChange callback. Note the arg
- * is the modified date string.
+ * @property {Checkbox~onChangeCallback} [onChange]  onChange callback. Note the arg
+ * is the new value.
  * @property {function} [onFocus]   onFocus event handler
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onfocus}.
  * @property {function} [onBlur]    onBlur event handler
