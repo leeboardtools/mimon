@@ -225,7 +225,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         });
 
         this.setTabIdState(tabId, {
-            showHiddenAccounts: !state.showHiddenAccounts,
+            hiddenColumns: hiddenColumns,
             dropdownInfo: this.getTabDropdownInfo(tabId, 
                 state.activeAccountId, hiddenInfo),
         });
@@ -276,49 +276,56 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 disabled: !activeAccountId,
                 onChooseItem: () => this.onRemoveAccount(tabId),
             },
+
             {},
-            { id: 'viewAssets',
-                label: userMsg('AccountsListHandler-view_assets'),
-                checked: (hiddenRootAccountTypes.indexOf('ASSET') < 0),
-                onChooseItem: () => this.onToggleViewAccountType(
-                    tabId, A.AccountType.ASSET.name),
-            },
-            { id: 'viewLiabilities',
-                label: userMsg('AccountsListHandler-view_liabilities'),
-                checked: (hiddenRootAccountTypes.indexOf('LIABILITY') < 0),
-                onChooseItem: () => this.onToggleViewAccountType(
-                    tabId, A.AccountType.LIABILITY.name),
-            },
-            { id: 'viewIncome',
-                label: userMsg('AccountsListHandler-view_income'),
-                checked: (hiddenRootAccountTypes.indexOf('INCOME') < 0),
-                onChooseItem: () => this.onToggleViewAccountType(
-                    tabId, A.AccountType.INCOME.name),
-            },
-            { id: 'viewExpenses',
-                label: userMsg('AccountsListHandler-view_expenses'),
-                checked: (hiddenRootAccountTypes.indexOf('EXPENSE') < 0),
-                onChooseItem: () => this.onToggleViewAccountType(
-                    tabId, A.AccountType.EXPENSE.name),
-            },
-            { id: 'viewEquity',
-                label: userMsg('AccountsListHandler-view_equity'),
-                checked: (hiddenRootAccountTypes.indexOf('EQUITY') < 0),
-                onChooseItem: () => this.onToggleViewAccountType(
-                    tabId, A.AccountType.EQUITY.name),
-            },
-            {},
-            { id: 'toggleAccountVisible',
-                label: userMsg(showAccountLabelId),
-                disabled: !activeAccountId,
-                onChooseItem: () => this.onToggleAccountVisible(
-                    tabId, activeAccountId),
-            },
-            { id: 'toggleShowHiddenAccounts',
-                label: userMsg('AccountsListHandler-showHiddenAccounts'),
-                checked: showHiddenAccounts,
-                onChooseItem: () => this.onToggleShowHiddenAccounts(
-                    tabId),
+
+            { id: 'accountsVisibilitySubMenu',
+                label: userMsg('AccountsListHandler-accountsVisibility_subMenu'),
+                subMenuItems: [
+                    { id: 'viewAssets',
+                        label: userMsg('AccountsListHandler-view_assets'),
+                        checked: (hiddenRootAccountTypes.indexOf('ASSET') < 0),
+                        onChooseItem: () => this.onToggleViewAccountType(
+                            tabId, A.AccountType.ASSET.name),
+                    },
+                    { id: 'viewLiabilities',
+                        label: userMsg('AccountsListHandler-view_liabilities'),
+                        checked: (hiddenRootAccountTypes.indexOf('LIABILITY') < 0),
+                        onChooseItem: () => this.onToggleViewAccountType(
+                            tabId, A.AccountType.LIABILITY.name),
+                    },
+                    { id: 'viewIncome',
+                        label: userMsg('AccountsListHandler-view_income'),
+                        checked: (hiddenRootAccountTypes.indexOf('INCOME') < 0),
+                        onChooseItem: () => this.onToggleViewAccountType(
+                            tabId, A.AccountType.INCOME.name),
+                    },
+                    { id: 'viewExpenses',
+                        label: userMsg('AccountsListHandler-view_expenses'),
+                        checked: (hiddenRootAccountTypes.indexOf('EXPENSE') < 0),
+                        onChooseItem: () => this.onToggleViewAccountType(
+                            tabId, A.AccountType.EXPENSE.name),
+                    },
+                    { id: 'viewEquity',
+                        label: userMsg('AccountsListHandler-view_equity'),
+                        checked: (hiddenRootAccountTypes.indexOf('EQUITY') < 0),
+                        onChooseItem: () => this.onToggleViewAccountType(
+                            tabId, A.AccountType.EQUITY.name),
+                    },
+                    {},
+                    { id: 'toggleAccountVisible',
+                        label: userMsg(showAccountLabelId),
+                        disabled: !activeAccountId,
+                        onChooseItem: () => this.onToggleAccountVisible(
+                            tabId, activeAccountId),
+                    },
+                    { id: 'toggleShowHiddenAccounts',
+                        label: userMsg('AccountsListHandler-showHiddenAccounts'),
+                        checked: showHiddenAccounts,
+                        onChooseItem: () => this.onToggleShowHiddenAccounts(
+                            tabId),
+                    },
+                ],
             },
             
             { id: 'columnsSubMenu',

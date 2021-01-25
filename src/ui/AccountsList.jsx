@@ -338,6 +338,10 @@ export class AccountsList extends React.Component {
             return false;
         }
 
+        if (!showHiddenAccounts && accountDataItem.isHidden) {
+            return false;
+        }
+
         if (this._hiddenRootAccountTypes.has(accountDataItem.type)) {
             return false;
         }

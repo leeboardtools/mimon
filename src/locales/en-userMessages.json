@@ -103,6 +103,7 @@
     "AccountsListHandler-newAccount": "New Account...",
     "AccountsListHandler-modifyAccount": "Modify Account Settings...",
     "AccountsListHandler-removeAccount": "Delete Account...",
+    "AccountsListHandler-accountsVisibility_subMenu": "Account Visibility",
     "AccountsListHandler-view_assets": "Show Assets",
     "AccountsListHandler-view_liabilities": "Show Liabilities",
     "AccountsListHandler-view_income": "Show Income",

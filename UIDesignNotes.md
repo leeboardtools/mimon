@@ -466,6 +466,7 @@ Common menus:
         - Changing window size doesn't make scroll bars appear, content
         overflows button bar.
 
+
     - Reminders List
         - Clicking enabled button does nothing.
         - Add Apply now command.
@@ -473,13 +474,8 @@ Common menus:
 
     - File import
         - Will not bother importing Reminders
-        - Report warnings from importer in App.
-        - Add import options:
-            - Save intermediate JSON file.
-            - Write log
-                - Log transactions
-            - Write parse warnings
-            - Write import warnings
+        - Finish the Jest testing.
+
 
     - Account Selector
         - Add a search box.
@@ -488,7 +484,6 @@ Common menus:
 
 - RowTable To Do:
     - Add column resizing support
-    - Change focus rectangle from table body to active row.
 
 
 - CollapsibleRowTable
@@ -524,4 +519,3 @@ Common menus:
 
 
 - Add rounding option for accounts (specific accounts might round up or down).
-

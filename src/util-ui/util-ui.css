@@ -1,12 +1,9 @@
-
-/* For util-ui/FileSelector.jsx */
+/* Used by FileSelector */
 .Modal-full-height {
     height: calc(100% - 3.5em);
 }
-/* End util-ui/FileSelector.jsx */
 
 
-/** For util-ui/CellButton.jsx */
 .CellButton {
     margin: 0px;
     padding: 0px 0px;
@@ -18,20 +15,16 @@
 .CellButton:focus {
     color: #007bff;
 }
-/** End util-ui/CellButton.jsx */
 
 
-/* For util-ui/CellDateEditor.jsx */
 .CellDateEditor-textInput {
     margin: 0px;
     padding: 0px 2px;
     height: calc(1.5rem + .3rem + 2px);
     border-radius: 0;
 }
-/* End util-ui/CellDateEditor.jsx */
 
 
-/* For util-ui/CellTextEditor.jsx */
 .CellTextEditor-textInput {
     margin: 0px;
     padding: 0px 2px;
@@ -44,10 +37,8 @@
     background-color: inherit;
     border-radius: 0;
 }
-/* End util-ui/CellTextEditor.jsx */
 
 
-/* For util-ui/CellSelectEditor.jsx */
 .CellSelectEditor-select {
     margin: 0px;
     padding: 0px 0px;
@@ -68,7 +59,7 @@
     border-radius: 1;
 }
 */
-/** End util-ui/CellSelectEditor.jsx */
+
 
 
 /*
@@ -116,37 +107,6 @@
     text-align: right;
 }
 
-
-/** For util-ui/DropdownMenu.jsx */
-.dropdown-item-checked::before {
-    position: absolute;
-    left: .4rem;
-    content: '✓';
-    font-weight: 600;
-}
-/** End util-ui/DropdownMenu.jsx */
-
-
-/** For util-ui/MenuList.jsx */
-.dropdown-submenu {
-    position: relative;
-}
-
-/* This puts a right pointing arrow at the right side */
-.dropdown-submenu a::after {
-    transform: rotate(-90deg);
-    position: absolute;
-    right: 6px;
-    top: .8em;
-}
-
-.dropdown-submenu .dropdown-menu {
-    top: 0;
-    left: 100%;
-    margin-left: .1rem;
-    margin-right: .1rem;
-}
-/** End util-ui/MenuList.jsx */
 
 
 .DropdownSelector-dropdownList {
@@ -207,7 +167,106 @@ that's on the same line */
 }
 
 
-/** For util-ui/MultiColumnList.jsx */
+/*
+.MenuList {
+}
+*/
+
+.MenuList-itemsContainer {
+    height: auto;
+    left: 0;
+    z-index: 1000;
+    float: left;
+    min-width: 10rem;
+    /*padding: .5rem 0;
+    /*padding: .5rem 0;*/
+    padding-top: .5rem;
+    margin-top: .5rem;
+    margin-bottom: .5rem;
+    padding-bottom: .5rem;
+    /*margin: .125rem 0;*/
+    font-size: 1rem;
+    color: #212529;
+    text-align: left;
+    list-style: none;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: .25rem;
+}
+
+.MenuList-itemsContainer:focus {
+    outline: none;
+}
+
+.MenuList-item {
+    display: block;
+    width: 100%;
+    padding: .25rem 1.5rem;
+    clear: both;
+    font-weight: 400;
+    color: #212529;
+    text-align: inherit;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+}
+
+.MenuList-item.active, .MenuList-submenu.active {
+    background-color: rgba(0, 0, 0, 0.075);
+    text-decoration: none !important;
+    color: inherit !important;
+}
+
+.MenuList-item.disabled, .MenuList-submenu.disabled {
+    color: #6c757d !important;
+    pointer-events: none;
+    background-color: transparent;
+    text-decoration: none !important;
+}
+
+.MenuList-divider {
+    height: 0;
+    margin: .5rem 0;
+    overflow: hidden;
+    border-top: 1px solid #e9ecef;
+}
+
+.MenuList-item-checked::before {
+    position: absolute;
+    left: .4rem;
+    content: '✓';
+    font-weight: 600;
+}
+
+.MenuList-submenu {
+    position: relative;
+    text-align: left;
+}
+
+/* This puts a right pointing arrow at the right side */
+.MenuList-submenu a::after {
+    transform: rotate(-90deg);
+    position: absolute;
+    right: 6px;
+    top: .8em;
+}
+
+.MenuList-submenu .MenuList {
+    top: 0;
+    left: 100%;
+    margin-top: -1rem;
+    margin-left: .1rem;
+    margin-right: .1rem;
+}
+
+/*
+.MenuList-submenu:hover > .MenuList {
+    display: block;
+}
+*/
+
+
 .MultiColumnList {
     display: flex;
     flex-direction: column;
@@ -221,7 +280,7 @@ that's on the same line */
     border-width: 1px;
     border-color: darkgrey;
 }
-/** End util-ui/MultiColumnList.jsx */
+
 
 
 .PageBody {
@@ -239,18 +298,18 @@ that's on the same line */
 }
 
 .Popup-container {
-    position: absolute;
+    position: fixed;
     /*top: 100%;*/
-    left: 0;
+    /*left: 0;*/
     z-index: 1000;
     float: left;
     min-width: 10rem;
-    padding: .5rem 0;
-    margin: .125rem 0 0;
+    /*padding: .5rem 0;
+    margin: .125rem 0 0;*/
 }
 
 
-/** For util-ui/RowTable.jsx */
+
 .RowTable {
     width: 100%;
     height: 100%;
@@ -288,6 +347,10 @@ that's on the same line */
 .RowTableRow {
     display: flex;
     flex-wrap: nowrap;
+}
+
+.RowTableBody:focus {
+    outline: none;
 }
 
 .table-striped .RowTableRow:nth-of-type(odd) {
@@ -329,10 +392,6 @@ that's on the same line */
 }
 
 
-/** End util-ui/RowTable.jsx */
-
-
-/** For util-ui/CollapsibleRowTable.jsx */
 .CollapsibleRowTable-expand-collapse-container {
     display: flex;
     flex-direction: row;
@@ -349,24 +408,19 @@ that's on the same line */
     line-height: 1.5rem;
     padding: 0;
 }
-/** End util-ui/CollapsibleRowTable.jsx */
 
 
-/** For util-ui/DropdownField.jsx */
 .Scrollable-menu {
     height: auto;
     max-height: 90vh;
     overflow-x: hidden;
     overflow-y: auto;
 }
-/** End util-ui/DropdownField.jsx */
   
 
-/** For util-ui/QuantityDisplay.jsx */
 .QuantityDisplay {
     text-align: right;
 }
-/** End util-ui/QuantityDisplay.jsx */
 
 
 .SeparatorBar {
@@ -376,14 +430,11 @@ that's on the same line */
 }
 
 
-/** Used by util-ui/TabbedPages.jsx */
 .TabCloseButton {
     margin-left: 0.5rem;
 }
-/** End util-ui/TabbedPages.jsx */
 
 
-/** Used by util-ui/Tooltip.jsx */
 .Simple-tooltip {
   position: relative;
   display: inline-block;
@@ -421,7 +472,6 @@ that's on the same line */
   visibility: visible;
   opacity: 1;
 }
-/** End util-ui/Tooltip.jsx */
 
 
 

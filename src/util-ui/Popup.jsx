@@ -2,6 +2,85 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { getPositionedAncestor } from '../util/ElementUtils';
 
+
+const HALIGN = {
+    left: 'min',
+    center: 'center',
+    right: 'max',
+    none: 'none',
+};
+
+const VALIGN = {
+    top: 'min',
+    center: 'center',
+    bottom: 'max',
+    none: 'none',
+};
+
+function calcAlignPoint({ align, alignEnum, lowerValue, upperValue, }) {
+    switch (alignEnum[align]) {
+    case 'min' :
+    default :
+        return lowerValue;
+    
+    case 'center' :
+        return 0.5 * (lowerValue + upperValue);
+    
+    case 'max' :
+        return upperValue;
+    }
+}
+
+function calcAlignment({ refArgs, popupArgs, minLowerValue, maxUpperValue, }) {
+    if (popupArgs.align === 'none') {
+        return popupArgs.lowerValue;
+    }
+
+    const refAlignPoint = calcAlignPoint(refArgs);
+    const popupAlignPoint = calcAlignPoint(popupArgs);
+
+    let lowerValue = popupArgs.lowerValue + refAlignPoint - popupAlignPoint;
+    let upperValue = lowerValue + popupArgs.upperValue - popupArgs.lowerValue;
+
+    if (minLowerValue !== undefined) {
+        const span = upperValue - lowerValue;
+        if (lowerValue < minLowerValue) {
+            if (upperValue === refArgs.lowerValue) {
+                // The popup right edge aligned to the ref left edge,
+                // try flipping to the other side.
+                if (refArgs.upperValue + span <= maxUpperValue) {
+                    // We're good to adjust...
+                    lowerValue = refArgs.upperValue;
+                    upperValue = lowerValue + span;
+                }
+            }
+            if (lowerValue < minLowerValue) {
+                upperValue = Math.min(maxUpperValue, minLowerValue + span);
+                lowerValue = minLowerValue;
+            }
+        }
+
+        if (upperValue > maxUpperValue) {
+            if (lowerValue === refArgs.upperValue) {
+                if (refArgs.lowerValue - span >= minLowerValue) {
+                    lowerValue = refArgs.lowerValue - span;
+                    upperValue = refArgs.lowerValue;
+                }
+            }
+            if (upperValue > maxUpperValue) {
+                lowerValue = Math.max(minLowerValue, maxUpperValue - span);
+                upperValue = maxUpperValue;
+            }
+        }
+    }
+
+    return {
+        lowerValue: lowerValue,
+        upperValue: upperValue,
+    };
+}
+
+
 /**
  * React component that pops up. Serious work in progress,
  * used by {@link DropdownSelector}.
@@ -28,9 +107,11 @@ export class Popup extends React.Component {
         };
     }
 
+
     componentDidMount() {
         this._popupRef.current.focus();
     }
+
 
     componentDidUpdate(prevProps, prevState) {
         if (this.props.show && this._containerRef.current) {
@@ -40,6 +121,8 @@ export class Popup extends React.Component {
             const containerHeight = containerRect.height;
 
             const { innerWidth, innerHeight } = window;
+            const minLeft = 2;
+            const minTop = 2;
             const maxRight = innerWidth - 2;
             const maxBottom = innerHeight - 2;
 
@@ -62,29 +145,71 @@ export class Popup extends React.Component {
                     }
                 }
             }
+
+            let right;
+            let bottom;
+
             const refRect = (refElement) ? refElement.getBoundingClientRect() 
                 : undefined;
             if (refRect) {
                 if (left === undefined) {
-                    // Try to line up with the parent's left side.
-                    left = refRect.left;
+                    const result = calcAlignment({
+                        refArgs: {
+                            align: this.props.hAlignParent || 'left',
+                            alignEnum: HALIGN,
+                            lowerValue: refRect.left,
+                            upperValue: refRect.right,
+                        },
+                        popupArgs: {
+                            align: this.props.hAlignPopup || 'left',
+                            alignEnum: HALIGN,
+                            lowerValue: 0,
+                            upperValue: containerWidth,
+                        },
+                        minLowerValue: minLeft,
+                        maxUpperValue: maxRight,
+                    });
+
+                    left = result.lowerValue;
+                    right = result.upperValue;
                 }
+
                 if (top === undefined) {
-                    // Try to line up with the parent's bottom side.
-                    top = refRect.bottom;
+                    const result = calcAlignment({
+                        refArgs: {
+                            align: this.props.vAlignParent || 'bottom',
+                            alignEnum: VALIGN,
+                            lowerValue: refRect.top,
+                            upperValue: refRect.bottom,
+                        },
+                        popupArgs: {
+                            align: this.props.vAlignPopup || 'top',
+                            alignEnum: VALIGN,
+                            lowerValue: 0,
+                            upperValue: containerHeight,
+                        },
+                        minLowerValue: minTop,
+                        maxUpperValue: maxBottom,
+                    });
+
+                    top = result.lowerValue;
+                    bottom = result.upperValue;
                 }
             }
 
-            let right = left + containerWidth;
-            let bottom = top + containerHeight;
-
-            if (right > maxRight) {
-                right = maxRight;
-                left = Math.max(maxRight - containerWidth, 0);
+            if (right === undefined) {
+                right = left + containerWidth;
+                if (right > maxRight) {
+                    right = maxRight;
+                    left = Math.max(maxRight - containerWidth, minLeft);
+                }
             }
-            if (bottom > maxBottom) {
-                bottom = maxBottom;
-                top = Math.max(maxBottom - containerHeight, 0);
+            if (bottom === undefined) {
+                bottom = top + containerHeight;
+                if (bottom > maxBottom) {
+                    bottom = maxBottom;
+                    top = Math.max(maxBottom - containerHeight, minTop);
+                }
             }
 
             const width = right - left;
@@ -116,6 +241,11 @@ export class Popup extends React.Component {
                 });
             }
         }
+    }
+
+
+    getBoundingClientRect() {
+        return this._popupRef.current.getBoundingClientRect();
     }
 
 
@@ -172,9 +302,36 @@ export class Popup extends React.Component {
     }
 }
 
+
+/**
+ * Callback called when the popup is closed.
+ * @callback Popup~onClose
+ */
+
+/**
+ * @typedef {object} Popup~propTypes
+ * @property {number} [x]
+ * @property {number} [y]
+ * @property {string} [hAlignParent='left'] Where on the parent to align horizontally, 
+ * 'left', 'center', or 'right'
+ * @property {string} [hAlignPopup='left'] Where on the popup to align with the parent
+ * hAlignParent alignment point, one of 'left', 'center', or 'right'.
+ * @property {string} [vAlignParent='top'] Where on the parent to align vertically, 
+ * 'top', 'center', or 'bottmo'
+ * @property {string} [vAlignPopup='top'] Where on the popup to align with the parent
+ * vAlignParent alignment point, one of 'top', 'center', or 'bottom'.
+ * @property {boolean} [show]
+ * @property {Popup~onClose} [onClose]
+ * @property {number} [tabIndex]
+ * @property {string} [classExtras]
+ */
 Popup.propTypes = {
     x: PropTypes.number,
     y: PropTypes.number,
+    hAlignParent: PropTypes.string,
+    hAlignPopup: PropTypes.string,
+    vAlignParent: PropTypes.string,
+    vAlignPopup: PropTypes.string,
     show: PropTypes.bool,
     onClose: PropTypes.func,
     tabIndex: PropTypes.number,
