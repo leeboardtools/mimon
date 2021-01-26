@@ -168,12 +168,16 @@ export class RowTable extends React.Component {
             || isAutoHeaderHeight || isAutoFooterHeight;
 
         const columnWidths = columns.map((column) => column.width);
+        console.log({
+            me: 'getStateUpdateFromColumns',
+            columnWidths: columnWidths,
+        });
         return {
             columnWidths: columnWidths,
             defColumnWidths: Array.from(columnWidths),
             isHeader: isHeader,
             isFooter: isFooter,
-            isAutoColWidth: isAutoRowHeight,
+            isAutoColWidth: isAutoColWidth,
             isAutoRowHeight: isAutoRowHeight,
             isAutoHeaderHeight: isAutoHeaderHeight,
             isAutoFooterHeight: isAutoFooterHeight,
@@ -216,7 +220,8 @@ export class RowTable extends React.Component {
         }
 
         if (!deepEqual(prevProps.columns, this.props.columns)) {
-            this.setState(this.getStateUpdateFromColumns());
+            this.setState(this.getStateUpdateFromColumns(),
+                () => this.updateLayout(true));
         }
 
         let visibleRowIndex = (this.state.visibleRowIndex === undefined)
@@ -340,7 +345,6 @@ export class RowTable extends React.Component {
                 }
                 columnWidths[i] = width;
             }
-
         }
 
         this.setState({
@@ -362,7 +366,7 @@ export class RowTable extends React.Component {
     }
 
 
-    updateLayout() {
+    updateLayout(forceUpdate) {
         if (!this._mainRef.current) {
             return;
         }
@@ -373,7 +377,8 @@ export class RowTable extends React.Component {
         }
 
         if ((clientWidth === this.state.clientWidth)
-         && (clientHeight === this.state.clientHeight)) {
+         && (clientHeight === this.state.clientHeight)
+         && !forceUpdate) {
             if (this.state.isSizeRender) {
                 this.updateFromClientSize();
             }
