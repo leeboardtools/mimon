@@ -16,7 +16,10 @@ export class TabbedPages extends React.Component {
         this.handleTabClick = this.handleTabClick.bind(this);
 
         this.state = {
-            activeTabId: this.props.activeTabId || this.props.tabEntries[0].tabId,
+            activeTabId: this.props.activeTabId 
+                || ((this.props.tabEntries.length)
+                    ? this.props.tabEntries[0].tabId
+                    : undefined),
         };
     }
 

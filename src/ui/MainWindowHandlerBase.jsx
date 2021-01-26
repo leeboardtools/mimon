@@ -11,6 +11,8 @@ export class MainWindowHandlerBase {
         this.getTabIdsWithType = props.onGetTabIdsWithType;
         this.getTabIdState = props.onGetTabIdState;
         this.setTabIdState = props.onSetTabIdState;
+        this.getTabIdPersistedSettings = props.onGetTabIdPersistedSettings;
+        this.setTabIdPersistedSettings = props.onSetTabIdPersistedSettings;
         this.setErrorMsg = props.onSetErrorMsg;
         this.setModal = props.onSetModal;
         this.openTab = props.onOpenTab;

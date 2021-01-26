@@ -221,6 +221,10 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 state.activeAccountId, newState);
 
             this.setTabIdState(tabId, newState);
+
+            this.setTabIdPersistedSettings(tabId, {
+                columns: columns,
+            });
         }
     }
 
@@ -388,16 +392,18 @@ export class AccountsListHandler extends MainWindowHandlerBase {
      * @returns {TabbedPages~TabEntry}
      */
     createTabEntry(tabId) {
-        // TODO: Load these from somewhere...
-        const columns = createDefaultColumns();
-        const showHiddenAccounts = false;
+        let settings = this.getTabIdPersistedSettings(tabId) || {};
+        const columns = settings.columns || createDefaultColumns();
+        const showHiddenAccounts = settings.showHiddenAccounts;
+        const hiddenRootAccountTypes = settings.hiddenRootAccountTypes || [];
+        const hiddenAccountIds = settings.hiddenAccountIds || [];
 
         const tabEntry = {
             tabId: tabId,
             title: userMsg('AccountsListHandler-masterAccountList_title'),
             onRenderTabPage: this.onRenderTabPage,
-            hiddenRootAccountTypes: [],
-            hiddenAccountIds: [],
+            hiddenRootAccountTypes: hiddenRootAccountTypes,
+            hiddenAccountIds: hiddenAccountIds,
             showHiddenAccounts: showHiddenAccounts,
             columns: columns,
         };

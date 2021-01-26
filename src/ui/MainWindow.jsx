@@ -5,6 +5,7 @@ import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { TabbedPages } from '../util-ui/TabbedPages';
 import { DropdownMenu } from '../util-ui/DropdownMenu';
 import deepEqual from 'deep-equal';
+import { asyncGetUserSetting, asyncSetUserSetting } from '../util/UserSettings';
 import { AccountsListHandler } from './AccountsListHandler';
 import { AccountRegisterHandler } from './AccountRegisterHandler';
 import { AccountEditorHandler } from './AccountEditorHandler';
@@ -49,6 +50,8 @@ export class MainWindow extends React.Component {
         this.onGetTabIdsWithType = this.onGetTabIdsWithType.bind(this);
         this.onGetTabIdState = this.onGetTabIdState.bind(this);
         this.onSetTabIdState = this.onSetTabIdState.bind(this);
+        this.onGetTabIdPersistedSettings = this.onGetTabIdPersistedSettings.bind(this);
+        this.onSetTabIdPersistedSettings = this.onSetTabIdPersistedSettings.bind(this);
         this.onSetErrorMsg = this.onSetErrorMsg.bind(this);
         this.onSetModal = this.onSetModal.bind(this);
         this.onOpenTab = this.onOpenTab.bind(this);
@@ -65,6 +68,8 @@ export class MainWindow extends React.Component {
             onGetTabIdsWithType: this.onGetTabIdsWithType,
             onGetTabIdState: this.onGetTabIdState,
             onSetTabIdState: this.onSetTabIdState,
+            onGetTabIdPersistedSettings: this.onGetTabIdPersistedSettings,
+            onSetTabIdPersistedSettings: this.onSetTabIdPersistedSettings,
             onSetErrorMsg: this.onSetErrorMsg,
             onSetModal: this.onSetModal,
             onOpenTab: this.onOpenTab,
@@ -115,15 +120,28 @@ export class MainWindow extends React.Component {
         this._tabItemsById = new Map();
 
 
-        const masterAccountsList = this._accountsListHandler.createTabEntry(
-            'masterAccountsList'
-        );
-        this.state.tabEntries.push(masterAccountsList);
-        this._tabItemsById.set(masterAccountsList.tabId, 
-            [masterAccountsList, 'masterAccountsList']);
+        process.nextTick(async () => {
+            this._userSettings = await asyncGetUserSetting('mainWindow');
+            if (!this._userSettings) {
+                this._userSettings = {
+                };
+            }
+            if (!this._userSettings.tabIdSettings) {
+                this._userSettings.tabIdSettings = {};
+            }
+            const masterAccountsList = this._accountsListHandler.createTabEntry(
+                'masterAccountsList'
+            );
+            this._tabItemsById.set(masterAccountsList.tabId, 
+                [masterAccountsList, 'masterAccountsList']);
 
-
-        this.state.activeTabId = this.state.tabEntries[0].tabId;
+            this.setState({
+                tabEntries: [
+                    masterAccountsList,
+                ],
+                activeTabId: masterAccountsList.tabId,
+            });
+        });
     }
 
 
@@ -392,6 +410,28 @@ export class MainWindow extends React.Component {
                 },
                 stateCallback);
             }
+        }
+    }
+
+
+    onGetTabIdPersistedSettings(tabId) {
+        return this._userSettings.tabIdSettings[tabId];
+    }
+
+    onSetTabIdPersistedSettings(tabId, changes) {
+        const { tabIdSettings } = this._userSettings;
+        const newSettings = Object.assign({}, tabIdSettings[tabId], changes);
+        if (!deepEqual(newSettings, tabIdSettings[tabId])) {
+            tabIdSettings[tabId] = newSettings;
+            process.nextTick(async () => {
+                try {
+                    await asyncSetUserSetting('mainWindow', this._userSettings);
+                }
+                catch (e) {
+                    // FIX ME!!!
+                    console.log('Could not save user settings: ' + e);
+                }
+            });
         }
     }
 
