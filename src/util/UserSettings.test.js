@@ -1,5 +1,5 @@
 import { cleanupDir } from './FileTestHelpers';
-import { setUserSettingsPathName, getUserSetting, setUserSetting } from './UserSettings';
+import { setUserSettingsPathName, asyncGetUserSetting, asyncSetUserSetting } from './UserSettings';
 import * as path from 'path';
 import * as os from 'os';
 import { promises as fsPromises } from 'fs';
@@ -26,40 +26,40 @@ test('UserSettings', async () => {
         const pathName = path.join(baseDir, 'user.json');
         await setUserSettingsPathName(pathName);
 
-        expect(await getUserSetting('abc')).toBeUndefined();
-        expect(await getUserSetting('def', 'GHI')).toEqual('GHI');
+        expect(await asyncGetUserSetting('abc')).toBeUndefined();
+        expect(await asyncGetUserSetting('def', 'GHI')).toEqual('GHI');
 
-        await setUserSetting('abc', '123');
-        expect(await getUserSetting('abc')).toEqual('123');
+        await asyncSetUserSetting('abc', '123');
+        expect(await asyncGetUserSetting('abc')).toEqual('123');
 
         const valueDefA = { jkl: 123, lmn: [4, 5, 6] };
-        await setUserSetting('def', valueDefA);
-        expect(await getUserSetting('def')).toEqual(valueDefA);
+        await asyncSetUserSetting('def', valueDefA);
+        expect(await asyncGetUserSetting('def')).toEqual(valueDefA);
 
-        await setUserSetting('def', undefined);
-        expect(await getUserSetting('def', 123)).toEqual(123);
+        await asyncSetUserSetting('def', undefined);
+        expect(await asyncGetUserSetting('def', 123)).toEqual(123);
 
 
         // Test 'override' mode.
-        await setUserSetting('one', {
+        await asyncSetUserSetting('one', {
             abc: 'Abc',
             def: 'Def',
             ghi: 'Ghi',
             jkl: 'Jkl',
         });
 
-        await setUserSetting('two', {
+        await asyncSetUserSetting('two', {
             abc: 'ABC',
             def: 'DEF',
         });
 
-        await setUserSetting('three', {
+        await asyncSetUserSetting('three', {
             def: 'def',
             ghi: 'ghi',
             lmn: 'lmn',
         });
 
-        const settingsA = await getUserSetting(['one', 'two', 'three']);
+        const settingsA = await asyncGetUserSetting(['one', 'two', 'three']);
         expect(settingsA).toEqual({
             abc: 'ABC',
             def: 'def',
@@ -68,7 +68,7 @@ test('UserSettings', async () => {
             lmn: 'lmn',
         });
 
-        const settingsB = await getUserSetting(['one', 'two', 'three'], { xyz: 'XyZ' });
+        const settingsB = await asyncGetUserSetting(['one', 'two', 'three'], { xyz: 'XyZ' });
         expect(settingsB).toEqual({
             abc: 'ABC',
             def: 'def',

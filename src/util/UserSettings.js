@@ -9,12 +9,12 @@ let createDirIfNecessary = true;
  * Sets the path name for the JSON file where user settings are stored.
  * @param {string} pathName The path name for the JSON file.
  */
-export async function setUserSettingsPathName(pathName) {
+export function setUserSettingsPathName(pathName) {
     userSettingsPathName = pathName;
     createDirIfNecessary = true;
 }
 
-async function getUserSettingsJSON() {
+async function asyncGetUserSettingsJSON() {
     try {
         const fileHandle = await fsPromises.open(userSettingsPathName, 'r');
         const fileContents = await fileHandle.readFile({ encoding: 'utf8' });
@@ -30,7 +30,7 @@ async function getUserSettingsJSON() {
     }
 }
 
-async function setUserSettingsJSON(json) {
+async function asyncSetUserSettingsJSON(json) {
     try {
         // Create the directory if necessary.
         if (createDirIfNecessary) {
@@ -67,12 +67,12 @@ async function setUserSettingsJSON(json) {
  * @param {object} [defValue=undefined]   Optional value to return if the key is 
  * not defined.
  */
-export async function getUserSetting(key, defValue) {
+export async function asyncGetUserSetting(key, defValue) {
     if (!userSettingsPathName) {
         return defValue;
     }
 
-    const json = await getUserSettingsJSON();
+    const json = await asyncGetUserSettingsJSON();
     if (json && json.userSettings) {
         if (Array.isArray(key)) {
             const value = Object.assign({}, defValue);
@@ -99,14 +99,14 @@ export async function getUserSetting(key, defValue) {
  * @param {string} key The key of interest.
  * @param {object} value The value to set, if <code>undefined</code> then the key 
  * is deleted, and the next time
- * {@link getUserSetting} is called, the default value will be returned.
+ * {@link asyncGetUserSetting} is called, the default value will be returned.
  */
-export async function setUserSetting(key, value) {
+export async function asyncSetUserSetting(key, value) {
     if (!userSettingsPathName) {
         return;
     }
 
-    const json = await getUserSettingsJSON() || {};
+    const json = await asyncGetUserSettingsJSON() || {};
     if (!json.userSettings) {
         json.userSettings = {};
     }
@@ -119,7 +119,7 @@ export async function setUserSetting(key, value) {
             json.userSettings[key] = value;
         }
 
-        return setUserSettingsJSON(json);
+        return asyncSetUserSettingsJSON(json);
     }
 }
 

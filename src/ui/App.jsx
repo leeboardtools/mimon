@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as Engine from '../engine/Engine';
-import { getUserSetting, setUserSetting } from '../util/UserSettings';
+import { asyncGetUserSetting, asyncSetUserSetting } from '../util/UserSettings';
 import { userMsg } from '../util/UserMessages';
 import { EngineAccessor } from '../tools/EngineAccess';
 import { FileCreator } from './FileCreator';
@@ -26,13 +26,13 @@ const { ipcRenderer } = electron;
 
 
 async function asyncGetStartupOptions() {
-    return getUserSetting('startup', {});
+    return asyncGetUserSetting('startup', {});
 }
 
 async function asyncChangeStartupOptions(newOptions) {
     let options = await asyncGetStartupOptions();
     options = Object.assign(options, newOptions);
-    await setUserSetting('startup', options);
+    await asyncSetUserSetting('startup', options);
 
     return options;
 }
