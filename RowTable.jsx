@@ -168,10 +168,6 @@ export class RowTable extends React.Component {
             || isAutoHeaderHeight || isAutoFooterHeight;
 
         const columnWidths = columns.map((column) => column.width);
-        console.log({
-            me: 'getStateUpdateFromColumns',
-            columnWidths: columnWidths,
-        });
         return {
             columnWidths: columnWidths,
             defColumnWidths: Array.from(columnWidths),
