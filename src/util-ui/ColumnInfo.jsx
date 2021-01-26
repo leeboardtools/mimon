@@ -9,12 +9,15 @@
 /**
  * @typedef {object}    columnInfosToColumnsArgs
  * @property {ColumnInfo[]} columnInfos The array of column infos.
- * @property {number[]} [columnWidths
+ * @property {number[]} [columnWidths]
  */
 
 /**
  * Generates an array of {@link RowTable~Column} from an array of 
  * {@link ColumnInfo} and optional widths.
+ * <p>
+ * This also adds the columnInfo as a property named columnInfo to the
+ * {@link RowTable~Column}.
  * @param {columnInfosToColumnsArgs} args
  * @returns {RowTable~Column[]}
  */
@@ -28,6 +31,7 @@ export function columnInfosToColumns({ columnInfos, columnWidths }) {
             cellClassExtras: columnInfo.cellClassName,
             header: columnInfo.header,
             footer: columnInfo.footer,
+            columnInfo: columnInfo,
         };
     });
 
@@ -41,6 +45,53 @@ export function columnInfosToColumns({ columnInfos, columnWidths }) {
     }
 
     return columns;
+}
+
+
+/**
+ * Retrieves the column with a given key value.
+ * @param {RowTable~Column[]} columns 
+ * @param {string} key 
+ * @returns {RowTable~Column|undefined}
+ */
+export function getColumnWithKey(columns, key) {
+    for (let i = 0; i < columns.length; ++i) {
+        if (columns[i].key === key) {
+            return columns[i];
+        }
+    }
+}
+
+
+/**
+ * Retrieves the index of a column with a given key value.
+ * @param {RowTable~Column[]} columns 
+ * @param {string} key 
+ * @returns {RowTable~Column|undefined}
+ */
+export function getIndexOfColumnWithKey(columns, key) {
+    for (let i = 0; i < columns.length; ++i) {
+        if (columns[i].key === key) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+
+/**
+ * Retrieves all the columns that have an isVisible property that's truthy.
+ * @param {RowTable~Column[]} columns
+ * @returns {RowTable~Column[]}
+ */
+export function getVisibleColumns(columns) {
+    const visibleColumns = [];
+    columns.forEach((column) => {
+        if (column.isVisible) {
+            visibleColumns.push(column);
+        }
+    });
+    return visibleColumns;
 }
 
 

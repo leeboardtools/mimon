@@ -10,7 +10,8 @@ import { getDecimalDefinition, getQuantityDefinitionName } from '../util/Quantit
 import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';
 import * as GH from '../tools/GainHelpers';
-import { columnInfosToColumns,
+import { columnInfosToColumns, getColumnWithKey,
+    getVisibleColumns,
     stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
 import { YMDDate } from '../util/YMDDate';
 
@@ -21,37 +22,46 @@ let columnInfoDefs;
  * @returns {ColumnInfo[]} Array containing the available
  * columns for accounts lists.
  */
-export function getAccountsListColumnInfoDefs() {
+function getAccountsListColumnInfoDefs() {
     if (!columnInfoDefs) {
-
-        columnInfoDefs = {
-            /*
-            name: { key: 'name',
-                header: {
-                    label: userMsg('AccountsList-name'),
-                    ariaLabel: 'Name',
-                    classExtras: 'RowTable-header-base text-left',
-                },
-                inputClassExtras: 'text-left',
-                cellClassName: 'm-0 w-50',
-            },
-            */
-            name: ACE.getNameColumnInfo({}),
-            type: ACE.getAccountTypeColumnInfo({}),
-            balance: ACE.getBalanceColumnInfo({}),
-            totalShares: LCE.getTotalSharesColumnInfo({}),
-            costBasis: LCE.getTotalCostBasisColumnInfo({}),
-            cashIn: LCE.getTotalCashInColumnInfo({}),
-            gain: LCE.getTotalGainColumnInfo({}),
-            cashInGain: LCE.getTotalCashInGainColumnInfo({}),
-            percentGain: LCE.getTotalSimplePercentGainColumnInfo({}),
-            cashInPercentGain: LCE.getTotalCashInPercentGainColumnInfo({}),
-            annualPercentGain: LCE.getTotalAnnualPercentGainColumnInfo({}),
-            annualCashInPercentGain: LCE.getTotalAnnualCashInPercentGainColumnInfo({}),
-        };
+        columnInfoDefs = [
+            ACE.getNameColumnInfo({}),
+            ACE.getAccountTypeColumnInfo({}),
+            ACE.getBalanceColumnInfo({}),
+            LCE.getTotalSharesColumnInfo({}),
+            LCE.getTotalCostBasisColumnInfo({}),
+            LCE.getTotalCashInColumnInfo({}),
+            LCE.getTotalGainColumnInfo({}),
+            LCE.getTotalCashInGainColumnInfo({}),
+            LCE.getTotalSimplePercentGainColumnInfo({}),
+            LCE.getTotalCashInPercentGainColumnInfo({}),
+            LCE.getTotalAnnualPercentGainColumnInfo({}),
+            LCE.getTotalAnnualCashInPercentGainColumnInfo({}),
+        ];
     }
 
     return columnInfoDefs;
+}
+
+/**
+ * Retrieves the account list columns with default settings.
+ */
+export function createDefaultColumns() {
+    const columnInfos = getAccountsListColumnInfoDefs();
+
+    const columns = columnInfosToColumns({
+        columnInfos: columnInfos,
+    });
+
+    getColumnWithKey(columns, 'name').isVisible = true;
+    getColumnWithKey(columns, 'accountType').isVisible = true;
+    getColumnWithKey(columns, 'balance').isVisible = true;
+    getColumnWithKey(columns, 'totalShares').isVisible = true;
+    getColumnWithKey(columns, 'totalCostBasis').isVisible = true;
+    getColumnWithKey(columns, 'totalPercentGain').isVisible = true;
+    getColumnWithKey(columns, 'totalAnnualCashInPercentGain').isVisible = true;
+
+    return columns;
 }
 
 
@@ -75,27 +85,10 @@ export class AccountsList extends React.Component {
 
         const { accessor } = this.props;
 
-        const columnInfoDefs = getAccountsListColumnInfoDefs();
-
-        const columnInfos = [];
-        const { columns } = props;
-        if (columns) {
-            for (let name of columns) {
-                const columnInfo = columnInfoDefs[name];
-                if (columnInfo) {
-                    columnInfos.push(columnInfo);
-                }
-            }
-        }
-
-        if (!columnInfos.length) {
-            for (let name in columnInfoDefs) {
-                columnInfos.push(columnInfoDefs[name]);
-            }
-        }
+        const columns = this.props.columns || createDefaultColumns();
 
         this.state = {
-            columnInfos: columnInfos,
+            columns: getVisibleColumns(columns),
             topLevelAccountIds: [
                 accessor.getRootAssetAccountId(),
                 accessor.getRootLiabilityAccountId(),
@@ -112,8 +105,6 @@ export class AccountsList extends React.Component {
 
         this._hiddenRootAccountTypes = new Set(props.hiddenRootAccountTypes);
         this._hiddenAccountIds = new Set(props.hiddenAccountIds);
-
-        this.state.columns = columnInfosToColumns(this.state);
 
         this.state = Object.assign(this.state, this.buildRowInfos());
         if (this.state.rowInfos.length) {
@@ -213,6 +204,16 @@ export class AccountsList extends React.Component {
 
         if (prevProps.showHiddenAccounts !== showHiddenAccounts) {
             rowsNeedUpdating = true;
+        }
+
+        if (!deepEqual(prevProps.columns, this.props.columns)) {
+            const { columns } = this.props;
+            if (columns) {
+                const visibleColumns = getVisibleColumns(columns);
+                this.setState({
+                    columns: visibleColumns,
+                });
+            }
         }
 
         if (rowsNeedUpdating) {
@@ -602,7 +603,7 @@ export class AccountsList extends React.Component {
     onRenderCell({ rowInfo, columnIndex, isSizeRender, }) {
         let { accountDataItem } = rowInfo;
         
-        const columnInfo = this.state.columnInfos[columnIndex];
+        const { columnInfo } = this.state.columns[columnIndex];
 
         let accountState;
         let quantityDefinition;
@@ -728,7 +729,7 @@ AccountsList.propTypes = {
     onChooseAccount: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
-    columns: PropTypes.arrayOf(PropTypes.string),
+    columns: PropTypes.arrayOf(PropTypes.object),
     hiddenRootAccountTypes: PropTypes.arrayOf(PropTypes.string),
     hiddenAccountIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenAccounts: PropTypes.bool,
