@@ -83,7 +83,7 @@ export class AccountsList extends React.Component {
         this.onActivateRow = this.onActivateRow.bind(this);
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
 
-        const { accessor } = this.props;
+        const { accessor, initialCollapsedAccountIds } = this.props;
 
         const columns = this.props.columns || createDefaultColumns();
 
@@ -101,7 +101,7 @@ export class AccountsList extends React.Component {
             pricesByPricedItemId: new Map(),
         };
 
-        this._collapsedRowIds = new Set();
+        this._collapsedRowIds = new Set(initialCollapsedAccountIds);
 
         this._hiddenRootAccountTypes = new Set(props.hiddenRootAccountTypes);
         this._hiddenAccountIds = new Set(props.hiddenAccountIds);
@@ -243,11 +243,11 @@ export class AccountsList extends React.Component {
                 expandCollapseState: expandCollapseState,
             });
             switch (expandCollapseState) {
-            case ExpandCollapseState.COLLAPSED :
+            case ExpandCollapseState.EXPANDED :
                 this._collapsedRowIds.delete(rowInfo.key);
                 break;
     
-            case ExpandCollapseState.EXPANDED :
+            case ExpandCollapseState.COLLAPSED :
                 this._collapsedRowIds.add(rowInfo.key);
                 break;
             
@@ -255,9 +255,16 @@ export class AccountsList extends React.Component {
                 return;
             }
 
+            const { onUpdateCollapsedAccountIds } = this.props;
+            if (onUpdateCollapsedAccountIds) {
+                onUpdateCollapsedAccountIds(Array.from(this._collapsedRowIds.values()));
+            }
+
             return {
                 rowInfos: updateRowInfo(state.rowInfos, rowInfo),
             };
+        }, 
+        () => {
         });
     }
 
@@ -734,5 +741,7 @@ AccountsList.propTypes = {
     hiddenAccountIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenAccounts: PropTypes.bool,
     showAccountIds: PropTypes.bool,
+    initialCollapsedAccountIds: PropTypes.arrayOf(PropTypes.number),
+    onUpdateCollapsedAccountIds: PropTypes.func,
     children: PropTypes.any,
 };

@@ -14,19 +14,6 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     constructor(props) {
         super(props);
 
-        this.onReconcileAccount = this.onReconcileAccount.bind(this);
-        this.onOpenAccountRegister = this.onOpenAccountRegister.bind(this);
-        this.onNewAccount = this.onNewAccount.bind(this);
-        this.onModifyAccount = this.onModifyAccount.bind(this);
-        this.onRemoveAccount = this.onRemoveAccount.bind(this);
-
-        this.onToggleViewAccountType = this.onToggleViewAccountType.bind(this);
-        this.onToggleAccountVisible = this.onToggleAccountVisible.bind(this);
-        this.onToggleShowHiddenAccounts = this.onToggleShowHiddenAccounts.bind(this);
-
-        this.onSelectAccount = this.onSelectAccount.bind(this);
-        this.onChooseAccount = this.onChooseAccount.bind(this);
-
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
     }
 
@@ -164,6 +151,10 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             state.activeAccountId, newState);
 
         this.setTabIdState(tabId, newState);
+
+        this.setTabIdPersistedSettings(tabId, {
+            hiddenRootAccountTypes: hiddenRootAccountTypes,
+        });
     }
 
 
@@ -187,6 +178,10 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             state.activeAccountId, newState);
 
         this.setTabIdState(tabId, newState);
+
+        this.setTabIdPersistedSettings(tabId, {
+            hiddenAccountIds: hiddenAccountIds,
+        });
     }
 
 
@@ -201,6 +196,20 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         this.setTabIdState(tabId, newState);
 
+        this.setTabIdPersistedSettings(tabId, {
+            showHiddenAccounts: newState.showHiddenAccounts,
+        });
+    }
+
+
+    onUpdateCollapsedAccountIds(tabId, collapsedAccountIds) {
+        this.setTabIdState(tabId, {
+            collapsedAccountIds: collapsedAccountIds
+        });
+
+        this.setTabIdPersistedSettings(tabId, {
+            collapsedAccountIds: collapsedAccountIds
+        });
     }
 
 
@@ -397,6 +406,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const showHiddenAccounts = settings.showHiddenAccounts;
         const hiddenRootAccountTypes = settings.hiddenRootAccountTypes || [];
         const hiddenAccountIds = settings.hiddenAccountIds || [];
+        const collapsedAccountIds = settings.collapsedAccountIds || [];
 
         const tabEntry = {
             tabId: tabId,
@@ -405,6 +415,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             hiddenRootAccountTypes: hiddenRootAccountTypes,
             hiddenAccountIds: hiddenAccountIds,
             showHiddenAccounts: showHiddenAccounts,
+            collapsedAccountIds: collapsedAccountIds,
             columns: columns,
         };
 
@@ -423,23 +434,26 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const { accessor } = this.props;
 
         const state = this.getTabIdState(tabEntry.tabId);
-        const { dropdownInfo } = state;
+        const { dropdownInfo, collapsedAccountIds } = state;
         let contextMenuItems;
         if (dropdownInfo) {
             contextMenuItems = dropdownInfo.items;
         }
 
         return <AccountsList
-            accessor={accessor}
-            onSelectAccount={(accountId) => 
+            accessor = {accessor}
+            onSelectAccount = {(accountId) => 
                 this.onSelectAccount(tabEntry.tabId, accountId)}
-            onChooseAccount={(accountId) => 
+            onChooseAccount = {(accountId) => 
                 this.onChooseAccount(tabEntry.tabId, accountId)}
-            columns={tabEntry.columns}
-            hiddenRootAccountTypes={tabEntry.hiddenRootAccountTypes}
-            hiddenAccountIds={tabEntry.hiddenAccountIds}
-            showHiddenAccounts={tabEntry.showHiddenAccounts}
-            contextMenuItems={contextMenuItems}
+            columns = {tabEntry.columns}
+            hiddenRootAccountTypes = {tabEntry.hiddenRootAccountTypes}
+            hiddenAccountIds = {tabEntry.hiddenAccountIds}
+            showHiddenAccounts = {tabEntry.showHiddenAccounts}
+            initialCollapsedAccountIds = {collapsedAccountIds}
+            onUpdateCollapsedAccountIds = {(collapsedAccountIds) =>
+                this.onUpdateCollapsedAccountIds(tabEntry.tabId, collapsedAccountIds)}
+            contextMenuItems = {contextMenuItems}
         />;
     }
 }
