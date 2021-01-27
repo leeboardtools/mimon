@@ -50,8 +50,10 @@ export class MainWindow extends React.Component {
         this.onGetTabIdsWithType = this.onGetTabIdsWithType.bind(this);
         this.onGetTabIdState = this.onGetTabIdState.bind(this);
         this.onSetTabIdState = this.onSetTabIdState.bind(this);
-        this.onGetTabIdPersistedSettings = this.onGetTabIdPersistedSettings.bind(this);
-        this.onSetTabIdPersistedSettings = this.onSetTabIdPersistedSettings.bind(this);
+        this.onGetTabIdProjectSettings = this.onGetTabIdProjectSettings.bind(this);
+        this.onSetTabIdProjectSettings = this.onSetTabIdProjectSettings.bind(this);
+        this.onGetTabIdUserSettings = this.onGetTabIdUserSettings.bind(this);
+        this.onSetTabIdUserSettings = this.onSetTabIdUserSettings.bind(this);
         this.onSetErrorMsg = this.onSetErrorMsg.bind(this);
         this.onSetModal = this.onSetModal.bind(this);
         this.onOpenTab = this.onOpenTab.bind(this);
@@ -68,8 +70,10 @@ export class MainWindow extends React.Component {
             onGetTabIdsWithType: this.onGetTabIdsWithType,
             onGetTabIdState: this.onGetTabIdState,
             onSetTabIdState: this.onSetTabIdState,
-            onGetTabIdPersistedSettings: this.onGetTabIdPersistedSettings,
-            onSetTabIdPersistedSettings: this.onSetTabIdPersistedSettings,
+            onGetTabIdProjectSettings: this.onGetTabIdProjectSettings,
+            onSetTabIdProjectSettings: this.onSetTabIdProjectSettings,
+            onGetTabIdUserSettings: this.onGetTabIdUserSettings,
+            onSetTabIdUserSettings: this.onSetTabIdUserSettings,
             onSetErrorMsg: this.onSetErrorMsg,
             onSetModal: this.onSetModal,
             onOpenTab: this.onOpenTab,
@@ -121,6 +125,14 @@ export class MainWindow extends React.Component {
 
 
         process.nextTick(async () => {
+            this._projectSettings = props.accessor.getProjectSettings();
+            if (!this._projectSettings.tabIdSettings) {
+                await props.accessor.asyncUpdateProjectSettings({
+                    tabIdSettings: {},
+                });
+                this._projectSettings = props.accessor.getProjectSettings();
+            }
+
             this._userSettings = await asyncGetUserSetting('mainWindow');
             if (!this._userSettings) {
                 this._userSettings = {
@@ -129,6 +141,7 @@ export class MainWindow extends React.Component {
             if (!this._userSettings.tabIdSettings) {
                 this._userSettings.tabIdSettings = {};
             }
+
             const masterAccountsList = this._accountsListHandler.createTabEntry(
                 'masterAccountsList'
             );
@@ -414,11 +427,35 @@ export class MainWindow extends React.Component {
     }
 
 
-    onGetTabIdPersistedSettings(tabId) {
+    onGetTabIdProjectSettings(tabId) {
+        return this._projectSettings.tabIdSettings[tabId];
+    }
+
+    onSetTabIdProjectSettings(tabId, changes) {
+        const { tabIdSettings } = this._projectSettings;
+        const newSettings = Object.assign({}, tabIdSettings[tabId], changes);
+        if (!deepEqual(newSettings, tabIdSettings[tabId])) {
+            tabIdSettings[tabId] = newSettings;
+            process.nextTick(async () => {
+                try {
+                    await this.props.accessor.asyncUpdateProjectSettings({
+                        tabIdSettings: tabIdSettings,
+                    });
+                }
+                catch (e) {
+                    // FIX ME!!!
+                    console.log('Could not save project settings: ' + e);
+                }
+            });
+        }
+    }
+
+
+    onGetTabIdUserSettings(tabId) {
         return this._userSettings.tabIdSettings[tabId];
     }
 
-    onSetTabIdPersistedSettings(tabId, changes) {
+    onSetTabIdUserSettings(tabId, changes) {
         const { tabIdSettings } = this._userSettings;
         const newSettings = Object.assign({}, tabIdSettings[tabId], changes);
         if (!deepEqual(newSettings, tabIdSettings[tabId])) {

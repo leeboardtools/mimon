@@ -178,7 +178,7 @@ export class AccountingSystem extends EventEmitter {
 
 
     /**
-     * Returns the options for the accounting system.
+     * Returns a copy of the options for the accounting system.
      * @returns {object}
      */
     getOptions() {
@@ -210,7 +210,7 @@ export class AccountingSystem extends EventEmitter {
      * 
      * @param {object} optionChanges
      * @returns {AccountingSystem~ModifyOptionsResult}
-     * @fires {AccountingSystem~baseCurrencyChange}
+     * @fires {AccountingSystem~optionsModify}
      */
     async asyncModifyOptions(optionChanges) {
         const oldOptions = this.getOptions();

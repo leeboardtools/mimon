@@ -152,7 +152,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         this.setTabIdState(tabId, newState);
 
-        this.setTabIdPersistedSettings(tabId, {
+        this.setTabIdProjectSettings(tabId, {
             hiddenRootAccountTypes: hiddenRootAccountTypes,
         });
     }
@@ -179,7 +179,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         this.setTabIdState(tabId, newState);
 
-        this.setTabIdPersistedSettings(tabId, {
+        this.setTabIdProjectSettings(tabId, {
             hiddenAccountIds: hiddenAccountIds,
         });
     }
@@ -196,7 +196,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         this.setTabIdState(tabId, newState);
 
-        this.setTabIdPersistedSettings(tabId, {
+        this.setTabIdProjectSettings(tabId, {
             showHiddenAccounts: newState.showHiddenAccounts,
         });
     }
@@ -207,7 +207,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             collapsedAccountIds: collapsedAccountIds
         });
 
-        this.setTabIdPersistedSettings(tabId, {
+        this.setTabIdProjectSettings(tabId, {
             collapsedAccountIds: collapsedAccountIds
         });
     }
@@ -231,7 +231,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
             this.setTabIdState(tabId, newState);
 
-            this.setTabIdPersistedSettings(tabId, {
+            this.setTabIdProjectSettings(tabId, {
                 columns: columns,
             });
         }
@@ -401,7 +401,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
      * @returns {TabbedPages~TabEntry}
      */
     createTabEntry(tabId) {
-        let settings = this.getTabIdPersistedSettings(tabId) || {};
+        let settings = this.getTabIdProjectSettings(tabId) || {};
         const columns = settings.columns || createDefaultColumns();
         const showHiddenAccounts = settings.showHiddenAccounts;
         const hiddenRootAccountTypes = settings.hiddenRootAccountTypes || [];

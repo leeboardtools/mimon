@@ -3,12 +3,15 @@ import { JSONGzipAccountingFileFactory } from '../engine/JSONGzipAccountingFile'
 import { getQuantityDefinition, getDecimalDefinition } from '../util/Quantities';
 import { userError } from '../util/UserMessages';
 import deepEqual from 'deep-equal';
+import { dataDeepCopy } from '../util/DataDeepCopy';
 import { Reconciler } from './Reconciler';
 import { asyncSetupNewFile } from './NewFileSetup';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
 import { format } from 'date-fns';
 import { bSearch } from '../util/BinarySearch';
 import { getCurrency } from '../util/Currency';
+import { promises as fsPromises } from 'fs';
+import * as path from 'path';
 
 
 /**
@@ -96,6 +99,8 @@ export class EngineAccessor extends EventEmitter {
         this._locale = 'en';
 
         this._percentGainQuantityDefinition = getDecimalDefinition(1);
+
+        this._projectSettings = {};
     }
 
 
@@ -109,7 +114,7 @@ export class EngineAccessor extends EventEmitter {
     }
 
 
-    _setupForAccountingFile(accountingFile, fileFactoryIndex) {
+    async _asyncSetupForAccountingFile(accountingFile, fileFactoryIndex) {
         this._accountingFile = accountingFile;
 
         if (accountingFile) {
@@ -165,7 +170,15 @@ export class EngineAccessor extends EventEmitter {
 
             this._autoCompleteSplitsManager 
                 = _accountingSystem.getAutoCompleteSplitsManager();
+            
+            let pathName = accountingFile.getPathName();
+            const stat = await fsPromises.stat(pathName);
+            if (stat.isFile()) {
+                pathName = path.parse(pathName).dir;
+            }
 
+            this._projectSettingsPathName = path.join(pathName, 'ProjectSettings.json');
+            this._projectSettings = {};
         }
         else {
             this._fileFactoryIndex = undefined;
@@ -234,6 +247,9 @@ export class EngineAccessor extends EventEmitter {
             this._lotManager = undefined;
             this._reminderManager = undefined;
             this._autoCompleteSplitsManager = undefined;
+
+            this._projectSettingsPathName = undefined;
+            this._projectSettings = undefined;
         }
     }
 
@@ -437,7 +453,9 @@ export class EngineAccessor extends EventEmitter {
             throw userError('EngineAccess-create_file_not_found', pathName);
         }
 
-        this._setupForAccountingFile(accountingFile, fileFactoryIndex);
+        await this._asyncSetupForAccountingFile(accountingFile, fileFactoryIndex);
+
+        await this._asyncWriteProjectSettings();
 
         let warnings = [];
         if (initialContents) {
@@ -505,7 +523,9 @@ export class EngineAccessor extends EventEmitter {
             }        
         }
 
-        this._setupForAccountingFile(accountingFile, fileFactoryIndex);
+        await this._asyncSetupForAccountingFile(accountingFile, fileFactoryIndex);
+
+        this._projectSettings = (await this._asyncReadProjectSettings()) || {};
 
         if (accountingFile) {
             try {
@@ -560,7 +580,7 @@ export class EngineAccessor extends EventEmitter {
             }        
         }
 
-        this._setupForAccountingFile(accountingFile, fileFactoryIndex);
+        await this._asyncSetupForAccountingFile(accountingFile, fileFactoryIndex);
     }
 
 
@@ -608,7 +628,7 @@ export class EngineAccessor extends EventEmitter {
     async asyncCloseAccountingFile() {
         if (this._accountingFile) {
             await this._accountingFile.asyncCloseFile();
-            this._setupForAccountingFile(undefined);
+            await this._asyncSetupForAccountingFile(undefined);
         }
     }
 
@@ -1621,6 +1641,63 @@ export class EngineAccessor extends EventEmitter {
                 reconciler.filterGetTransactionDataItems);
         }
         return reconciler;
+    }
+
+
+    /**
+     * Retrieves a copy of the project settings.
+     * @returns {object}
+     */
+    getProjectSettings() {
+        return dataDeepCopy(this._projectSettings);
+    }
+
+
+    /**
+     * Updates the project settings. Project settings are modified similar to:
+     * <pre><code>
+     *  newSettings = Object.assign({}, settings, changes);
+     * </code</pre>
+     * @param {object} changes 
+     */
+    async asyncUpdateProjectSettings(changes) {
+        const newProjectSettings = Object.assign({}, this._projectSettings, changes);
+        if (!deepEqual(newProjectSettings, this._projectSettings)) {
+            this._asyncWriteProjectSettings(newProjectSettings);
+            this._projectSettings = dataDeepCopy(newProjectSettings);
+        }
+    }
+
+
+    async _asyncReadProjectSettings() {
+        try {
+            const fileHandle = await fsPromises.open(this._projectSettingsPathName, 'r');
+            const fileContents = await fileHandle.readFile({ encoding: 'utf8' });
+            await fileHandle.close();
+
+            return JSON.parse(fileContents);
+        }
+        catch (e) {
+            if (e.code === 'ENOENT') {
+                return undefined;
+            }
+            console.error('Error reading project settings JSON file. ' + e);
+        }
+    }
+
+
+    async _asyncWriteProjectSettings(projectSettings) {
+        try {
+            // Create the directory if necessary.
+            const fileHandle = await fsPromises.open(this._projectSettingsPathName, 'w+');
+            await fileHandle.writeFile(JSON.stringify(projectSettings), 
+                { encoding: 'utf8' });
+            await fileHandle.close();
+            return true;
+        }
+        catch (e) {
+            console.error('Error writing project settings JSON file. ' + e);
+        }
     }
 
 
