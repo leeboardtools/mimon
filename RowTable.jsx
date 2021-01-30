@@ -582,11 +582,6 @@ export class RowTable extends React.Component {
                 }
                 columnWidths[i] = width;
             }
-
-            console.log({
-                me: 'updateFromClientSize',
-                columnWidths: columnWidths,
-            })
         }
 
         this.setState({
@@ -957,11 +952,6 @@ export class RowTable extends React.Component {
         if (onSetColumnWidth && (columnWidth !== undefined)) {
             const columnWidths = Array.from(this.state.columnWidths);
             columnWidths[columnIndex] += delta;
-            console.log({
-                me: 'onColumnResize',
-                oldColumnWidths: this.state.columnWidths,
-                newColumnWidths: columnWidths,
-            })
             onSetColumnWidth({
                 columnIndex: columnIndex,
                 columnWidth: this.state.columnWidths[columnIndex] + delta,
@@ -1145,9 +1135,9 @@ export class RowTable extends React.Component {
                 let style;
                 const width = columnWidths[c];
                 if (width !== undefined) {
+                    // Setting both minWidth and maxWidth to the desired width
+                    // forces flexbox to use the width...
                     style = {
-                        //flexBasis: width,
-                        //width: width,
                         maxWidth: width,
                         minWidth: width,
                     };
@@ -1167,12 +1157,6 @@ export class RowTable extends React.Component {
                 </div>);
             }
 
-            if (!sizeRenderRefs) {
-                console.log({
-                    me: 'renderHeaderFooter',
-                    columnWidths: columnWidths
-                });
-            }
 
             const { containerClassName } = args;
             let { rowClassName } = args;
@@ -1282,9 +1266,9 @@ export class RowTable extends React.Component {
             let style;
             const width = columnWidths[colIndex];
             if (width !== undefined) {
+                // Setting both minWidth and maxWidth to the desired width
+                // forces flexbox to use the width...
                 style = {
-                    //flexBasis: width,
-                    //width: width,
                     maxWidth: width,
                     minWidth: width,
                 };
