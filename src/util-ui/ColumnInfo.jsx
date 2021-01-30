@@ -96,12 +96,11 @@ export function getVisibleColumns(columns) {
 
 
 export function stateUpdateFromSetColumnWidth({ columnIndex, columnWidth, }, state) {
-    const columnWidths = Array.from(state.columnWidths || []);
-    columnWidths[columnIndex] = columnWidth;
+    const columns = Array.from(state.columns);
+    columns[columnIndex] = Object.assign({}, columns[columnIndex], {
+        width: columnWidth,
+    });
     return {
-        columnWidths: columnWidths,
-        columns: columnInfosToColumns({
-            columnInfos: state.columnInfos,
-            columnWidths: columnWidths, }),
+        columns: columns,
     };
 }
