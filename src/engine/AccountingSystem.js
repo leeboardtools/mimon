@@ -10,6 +10,7 @@ import { UndoManager } from '../util/Undo';
 import { ActionManager } from '../util/Actions';
 import { AccountingActions } from './AccountingActions';
 import { dataDeepCopy } from '../util/DataDeepCopy';
+import { dataChange } from '../util/DataChange';
 
 /**
  * The main interface object from the engine, this provides access to the 
@@ -214,13 +215,14 @@ export class AccountingSystem extends EventEmitter {
      */
     async asyncModifyOptions(optionChanges) {
         const oldOptions = this.getOptions();
-        const newOptions = dataDeepCopy(Object.assign({}, oldOptions, optionChanges));
+        const result = dataChange(oldOptions, optionChanges);
+        const newOptions = dataDeepCopy(result.newObject);
         
         await this._handler.asyncSetOptions(newOptions);
 
         const undoId = await this.getUndoManager()
             .asyncRegisterUndoDataItem('modifyOptions', 
-                { oldOptions: dataDeepCopy(oldOptions), });
+                { oldChangedValues: result.oldChangedValues, });
         
         this.emit('optionsModify', {
             newOptions: newOptions,
@@ -235,8 +237,12 @@ export class AccountingSystem extends EventEmitter {
     }
 
     async _asyncApplyUndoModifyOptions(undoDataItem) {
-        const { oldOptions } = undoDataItem;
+        const { oldChangedValues } = undoDataItem;
         const previousOptions = dataDeepCopy(this._handler.getOptions());
+
+        const result = dataChange(previousOptions, oldChangedValues);
+        const oldOptions = result.newObject;
+
         await this._handler.asyncSetOptions(oldOptions);
 
         this.emit('optionsModify', 
