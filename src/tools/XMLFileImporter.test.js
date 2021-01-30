@@ -110,7 +110,7 @@ test('XMLFileImporter-asyncImportXMLFile', async () => {
             verbose: false,
         });
         if (result && result.length) {
-            console.log(result);
+            //console.log(result);
         }
 
         await asyncExpectSecurity(accessor, 'PBW', {
