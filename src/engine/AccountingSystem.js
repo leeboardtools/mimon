@@ -206,7 +206,7 @@ export class AccountingSystem extends EventEmitter {
      * Modifies the options. Options are modified similar to:
      * <pre><code>
      *  newOptions = Object.assign({}, getOptions(), optionChanges);
-     * </code</pre>
+     * </code></pre>
      * 
      * @param {object} optionChanges
      * @returns {AccountingSystem~ModifyOptionsResult}

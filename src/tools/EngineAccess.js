@@ -1657,7 +1657,7 @@ export class EngineAccessor extends EventEmitter {
      * Updates the project settings. Project settings are modified similar to:
      * <pre><code>
      *  newSettings = Object.assign({}, settings, changes);
-     * </code</pre>
+     * </code></pre>
      * @param {object} changes 
      */
     async asyncUpdateProjectSettings(changes) {
