@@ -432,7 +432,9 @@ export class EngineAccessor extends EventEmitter {
      * @throws {Error}
      */
     async asyncCreateAccountingFile(pathName, options) {
-        let { fileFactoryIndex, initialContents } = options || {};
+        options = options || {};
+        
+        let { fileFactoryIndex, initialContents } = options;
         let accountingFile;
         if ((fileFactoryIndex >= 0) && (fileFactoryIndex < this._fileFactories.length)) {
             accountingFile = await this._fileFactories[fileFactoryIndex].asyncCreateFile(
