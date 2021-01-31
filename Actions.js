@@ -333,6 +333,15 @@ export class ActionManager extends EventEmitter {
     registerAsyncActionApplier(type, asyncApplier) {
         this._asyncAppliersByType.set(type, asyncApplier);
     }
+
+
+    /**
+     * Unregisters an action type.
+     * @param {string} type 
+     */
+    unregisterAsyncActionApplier(type) {
+        this._asyncAppliersByType.delete(type);
+    }
 }
 
 
