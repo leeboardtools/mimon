@@ -143,6 +143,14 @@ export class UndoManager {
     }
 
     /**
+     * Removes an undo applier.
+     * @param {string} name 
+     */
+    unregisterUndoApplier(name) {
+        this._appliersByName.delete(name);
+    }
+
+    /**
      * Called by the subsystems that support undo to register an actual undo item.
      * @param {string}  applier
      * @param {UndoDataItem} undoDataItem
