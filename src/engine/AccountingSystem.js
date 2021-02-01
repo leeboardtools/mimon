@@ -216,13 +216,15 @@ export class AccountingSystem extends EventEmitter {
     async asyncModifyOptions(optionChanges) {
         const oldOptions = this.getOptions();
         const result = dataChange(oldOptions, optionChanges);
-        const newOptions = dataDeepCopy(result.newObject);
+        const newOptions = dataDeepCopy(result.updatedObject);
         
         await this._handler.asyncSetOptions(newOptions);
 
         const undoId = await this.getUndoManager()
             .asyncRegisterUndoDataItem('modifyOptions', 
-                { oldChangedValues: result.oldChangedValues, });
+                { 
+                    savedChanges: result.savedChanges,
+                });
         
         this.emit('optionsModify', {
             newOptions: newOptions,
@@ -237,11 +239,14 @@ export class AccountingSystem extends EventEmitter {
     }
 
     async _asyncApplyUndoModifyOptions(undoDataItem) {
-        const { oldChangedValues } = undoDataItem;
+        const { savedChanges } = undoDataItem;
         const previousOptions = dataDeepCopy(this._handler.getOptions());
 
-        const result = dataChange(previousOptions, oldChangedValues);
-        const oldOptions = result.newObject;
+        const result = dataChange({
+            original: previousOptions, 
+            savedChanges: savedChanges,
+        });
+        const oldOptions = result.updatedObject;
 
         await this._handler.asyncSetOptions(oldOptions);
 

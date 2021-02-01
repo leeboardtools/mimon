@@ -1,7 +1,14 @@
-import { dataChange } from './DataChange';
+//import { dataChange } from './DataChange';
+import * as DC from './DataChange';
 
+const dataChange = DC.dataChange;
+
+//
+//---------------------------------------------------------
+//
 test('dataChange', () => {
     let result;
+    let result2;
 
     const a = {
         abc: 'abc',
@@ -9,19 +16,11 @@ test('dataChange', () => {
         ghi: 'ghi',
     };
 
-    // Some degenerate cases...
-    result = dataChange(a);
-    expect(result).toEqual({
-        newObject: a,
-    });
-    expect(result.newObject).not.toBe(a);
-
     result = dataChange(a, {});
     expect(result).toEqual({
-        newObject: a,
-        oldChangedValues: {},
+        updatedObject: a,
+        savedChanges: {},
     });
-    expect(result.newObject).not.toBe(a);
 
 
     result = dataChange(a, {
@@ -29,24 +28,42 @@ test('dataChange', () => {
         xyz: 'XYZ',
     });
     expect(result).toEqual({
-        newObject: {
+        updatedObject: {
             abc: 'abc',
             def: 'DEF',
             ghi: 'ghi',
             xyz: 'XYZ',
         },
-        oldChangedValues: {
-            def: 'def',
-            xyz: undefined,
+        savedChanges: {
+            changes:  {
+                def: 'def',
+                xyz: undefined,
+            },
         },
     });
 
-    result = dataChange(result.newObject, result.oldChangedValues);
+    result2 = dataChange(result);
+    expect(result2).toEqual({
+        updatedObject: a,
+        savedChanges: {
+            changes: {
+                def: 'DEF',
+                xyz: 'XYZ',
+            },
+        },
+    });
+
+    result = dataChange({
+        original: result.updatedObject, 
+        savedChanges: result.savedChanges,
+    });
     expect(result).toEqual({
-        newObject: a,
-        oldChangedValues: {
-            def: 'DEF',
-            xyz: 'XYZ',
+        updatedObject: a,
+        savedChanges: {
+            changes: {
+                def: 'DEF',
+                xyz: 'XYZ',
+            },
         },
     });
 
@@ -58,24 +75,797 @@ test('dataChange', () => {
     };
     result = dataChange(b, { def: 'DEF', });
     expect(result).toEqual({
-        newObject: {
+        updatedObject: {
             abc: 'abc',
             def: 'DEF',
             ghi: 'ghi',
         },
-        oldChangedValues: {
-            def: undefined,
+        savedChanges: {
+            changes: {
+                def: undefined,
+            },
+        },
+    });
+
+    result = dataChange({
+        original: result.updatedObject, 
+        savedChanges: result.savedChanges,
+    });
+    expect(result).toEqual({
+        updatedObject: {
+            abc: 'abc',
+            ghi: 'ghi',
+        },
+        savedChanges: {
+            changes: {
+                def: 'DEF',
+            },
         }
     });
 
-    result = dataChange(result.newObject, result.oldChangedValues);
+
+    // Inner objects...
+    const c = {
+        abc: 'abc',
+        objDef: {
+            lmn: 'lmn',
+            pqr: 'pqr',
+            objStu: {
+                aaa: 'aaa',
+                bbb: 'bbb',
+            }
+        }
+    };
+    result = dataChange(c, { objDef: { objStu: '123'}});
     expect(result).toEqual({
-        newObject: {
+        updatedObject: {
             abc: 'abc',
-            ghi: 'ghi',
+            objDef: {
+                objStu: '123',
+            }
         },
-        oldChangedValues: {
-            def: 'DEF',
-        },
+        savedChanges: {
+            changes: {
+                objDef: {
+                    lmn: 'lmn',
+                    pqr: 'pqr',
+                    objStu: {
+                        aaa: 'aaa',
+                        bbb: 'bbb',
+                    }
+                }
+            },
+        }
     });
+
+    result2 = dataChange(result);
+    expect(result2).toEqual({
+        updatedObject: c,
+        savedChanges: {
+            changes: {
+                objDef: {
+                    objStu: '123',
+                }
+            }
+        }
+    });
+});
+
+
+//
+//---------------------------------------------------------
+//
+test('dataChange-arrayScenarios', () => {
+    let result;
+
+    const array = [1, 2, 3];
+
+    const changesArray = ['a', 'b'];
+
+    result = dataChange(array, changesArray);
+    expect(result).toEqual({
+        updatedObject: changesArray,
+        savedChanges: {
+            changes: array,
+        }
+    });
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(array);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(changesArray);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(array);
+
+
+    const changesObject = { a: 'abc', };
+    result = dataChange(array, changesObject);
+    expect(result).toEqual({
+        updatedObject: changesObject,
+        savedChanges: {
+            changes: array,
+        }
+    });
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(array);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(changesObject);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(array);
+
+
+    result = dataChange(array, {});
+    expect(result).toEqual({
+        updatedObject: {},
+        savedChanges: {
+            changes: array,
+        }
+    });
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(array);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual({});
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(array);
+
+
+    const changedValue = 'abc';
+
+    result = dataChange(array, changedValue);
+    expect(result).toEqual({
+        updatedObject: changedValue,
+        savedChanges: {
+            changes: array,
+        }
+    });
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(array);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(changedValue);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(array);
+});
+
+
+//
+//---------------------------------------------------------
+//
+test('dataChange-objectScenarios', () => {
+    let result;
+
+    const object = {
+        a: 'abc',
+        b: 'bcd',
+    };
+
+    const changesArray = ['a', 'b'];
+
+    result = dataChange(object, changesArray);
+    expect(result).toEqual({
+        updatedObject: changesArray,
+        savedChanges: {
+            changes: object,
+        }
+    });
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(changesArray);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+
+    const changesObject = { a: 'ABC', };
+    const changedObject = Object.assign({}, object, changesObject);
+
+    result = dataChange(object, changesObject);
+    expect(result).toEqual({
+        updatedObject: changedObject,
+        savedChanges: {
+            changes: {
+                a: 'abc',
+            },
+        }
+    });
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(changedObject);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+
+    // changes = {} requires an empty changesPath...
+    result = dataChange(object, {}, []);
+    expect(result).toEqual({
+        updatedObject: {},
+        savedChanges: {
+            changes: object,
+            changesPath: [],
+        }
+    });
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual({});
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+
+    const changedValue = 'abc';
+
+    result = dataChange(object, changedValue);
+    expect(result).toEqual({
+        updatedObject: changedValue,
+        savedChanges: {
+            changes: object,
+        }
+    });
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(changedValue);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+});
+
+
+//
+//---------------------------------------------------------
+//
+test('dataChange-emptyObjectScenarios', () => {
+    let result;
+
+    const object = {};
+
+    const changesArray = ['a', 'b'];
+
+    result = dataChange(object, changesArray);
+    expect(result).toEqual({
+        updatedObject: changesArray,
+        savedChanges: {
+            changes: object,
+        }
+    });
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(changesArray);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+
+    const changesObject = { a: 'ABC', };
+    const changedObject = Object.assign({}, object, changesObject);
+
+    result = dataChange(object, changesObject);
+    expect(result).toEqual({
+        updatedObject: changedObject,
+        savedChanges: {
+            changes: {
+                a: undefined,
+            },
+            changesPath: [],
+        }
+    });
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(changedObject);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+
+    // changes = {} requires an empty changesPath...
+    result = dataChange(object, {}, []);
+    expect(result).toEqual({
+        updatedObject: {},
+        savedChanges: {
+            changes: object,
+            changesPath: [],
+        }
+    });
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual({});
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+
+    const changedValue = 'abc';
+
+    result = dataChange(object, changedValue);
+    expect(result).toEqual({
+        updatedObject: changedValue,
+        savedChanges: {
+            changes: object,
+        }
+    });
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(changedValue);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(object);
+
+});
+
+
+//
+//---------------------------------------------------------
+//
+test('dataChange-fullPaths', () => {
+    let result;
+
+    const a = {
+        b: 123,
+        c: {
+            d: 'd',
+            e: [
+                0,
+                {
+                    f: 'f',
+                    g: [
+                        [
+                            100, 
+                            101, 
+                            {
+                                i: 'i',
+                            }, 
+                        ],
+                        'g',
+                        {
+                            h: 'h',
+                        }
+                    ]
+                },
+                2,
+            ],
+        }
+    };
+
+    // Assignment of {}
+    result = dataChange(a, {}, []);
+    expect(result.updatedObject).toEqual({});
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual({});
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+
+    // Path fully exists
+    const ref_1 = {
+        b: 123,
+        c: {
+            d: 'd',
+            e: [
+                0,
+                123,
+                2,
+            ],
+        }
+    };
+    result = dataChange(a, 123, ['c', 'e', 1]);
+    expect(result.updatedObject).toEqual(ref_1);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(ref_1);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+    
+
+    const change_2 = {
+        z: 'Z',
+        y: [1, 2, 3],
+    };
+    const ref_2 = {
+        b: 123,
+        c: {
+            d: 'd',
+            e: Object.assign({}, change_2),
+        }
+    };
+    result = dataChange(a, change_2, ['c', 'e']);
+    expect(result.updatedObject).toEqual(ref_2);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(ref_2);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+
+    // Array in array
+    const change_3 = {
+        z: 'Z',
+        y: [1, 2, 3],
+    };
+    const ref_3 = {
+        b: 123,
+        c: {
+            d: 'd',
+            e: [
+                0,
+                {
+                    f: 'f',
+                    g: [
+                        [
+                            100, 
+                            Object.assign({}, change_3), 
+                            {
+                                i: 'i',
+                            }, 
+                        ],
+                        'g',
+                        {
+                            h: 'h',
+                        }
+                    ]
+                },
+                2,
+            ],
+        }
+    };
+    result = dataChange(a, change_3, ['c', 'e', 1, 'g', 0, 1]);
+    expect(result.updatedObject).toEqual(ref_3);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(ref_3);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+
+    const b = [
+        0,
+        { 
+            c: [ 
+                100, 
+                { 
+                    d: { 
+                        e: 123,
+                    },
+                },
+            ],
+        },
+        2,
+    ];
+
+    const change_4 = [1, 2, 3];
+    const ref_4 = [
+        0,
+        { 
+            c: [ 
+                Array.from(change_4), 
+                { 
+                    d: { 
+                        e: 123,
+                    },
+                },
+            ],
+        },
+        2,
+    ];
+    result = dataChange(b, change_4, [1, 'c', 0, ]);
+    expect(result.updatedObject).toEqual(ref_4);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(b);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(ref_4);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(b);
+
+});
+
+
+//
+//---------------------------------------------------------
+//
+test('dataChange-partialPaths', () => {
+    let result;
+
+    const a = {
+        b: [
+            {
+                c: {
+                    d: [
+                        1,
+                        2,
+                        3
+                    ],
+                    e: {
+                        f: 'f',
+                    },
+                }
+            },
+            [
+                200, 
+                300 
+            ],
+            3,
+        ],
+        g: {
+            h: {
+                i: 'i',
+                j: 'j',
+            },
+            k: 123,
+        }
+    };
+
+    //
+    // property not exist in object.
+    const change_1 = { z: 'Z' };
+    const ref_1 = {
+        b: [
+            {
+                c: {
+                    d: [
+                        1,
+                        2,
+                        3
+                    ],
+                    e: {
+                        f: 'f',
+                    },
+                    x: {
+                        y: Object.assign({}, change_1),
+                    },
+                }
+            },
+            [
+                200, 
+                300 
+            ],
+            3,
+        ],
+        g: {
+            h: {
+                i: 'i',
+                j: 'j',
+            },
+            k: 123,
+        }
+    };
+
+    result = dataChange(a, change_1, ['b', 0, 'c', 'x', 'y']);
+    expect(result.updatedObject).toEqual(ref_1);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(ref_1);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+
+    // array instead of object.
+    const ref_2 = {
+        b: [
+            {
+                c: {
+                    d: [
+                        1,
+                        2,
+                        3
+                    ],
+                    e: {
+                        f: 'f',
+                    },
+                }
+            },
+            {
+                x: {
+                    y: Object.assign({}, change_1),
+                },
+            },
+            3,
+        ],
+        g: {
+            h: {
+                i: 'i',
+                j: 'j',
+            },
+            k: 123,
+        }
+    };
+    result = dataChange(a, change_1, ['b', 1, 'x', 'y']);
+    expect(result.updatedObject).toEqual(ref_2);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(ref_2);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+
+    // beyond array bounds
+    const ref_3 = {
+        b: [
+            {
+                c: {
+                    d: [
+                        1,
+                        2,
+                        3
+                    ],
+                    e: {
+                        f: 'f',
+                    },
+                }
+            },
+            [
+                200, 
+                300,
+                undefined,
+                {
+                    y: Object.assign({}, change_1),
+                }
+            ],
+            3,
+        ],
+        g: {
+            h: {
+                i: 'i',
+                j: 'j',
+            },
+            k: 123,
+        }
+    };
+    result = dataChange(a, change_1, ['b', 1, 3, 'y']);
+    expect(result.updatedObject).toEqual(ref_3);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(ref_3);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+
+    // dest is not array.
+    const ref_4 = {
+        b: [
+            {
+                c: {
+                    d: [
+                        1,
+                        2,
+                        3
+                    ],
+                    e: {
+                        f: 'f',
+                    },
+                }
+            },
+            [
+                200, 
+                300 
+            ],
+            3,
+        ],
+        g: [
+            undefined,
+            Object.assign({}, change_1)
+        ],
+    };
+    result = dataChange(a, change_1, ['g', 1]);
+    expect(result.updatedObject).toEqual(ref_4);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(ref_4);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+
+    // multilevel array
+    const ref_5 = {
+        b: [
+            {
+                c: {
+                    d: [
+                        1,
+                        2,
+                        3
+                    ],
+                    e: {
+                        f: 'f',
+                    },
+                }
+            },
+            [
+                200, 
+                300 
+            ],
+            [
+                undefined,
+                {
+                    y: Object.assign({}, change_1),
+                },
+            ],
+        ],
+        g: {
+            h: {
+                i: 'i',
+                j: 'j',
+            },
+            k: 123,
+        }
+    };
+    result = dataChange(a, change_1, ['b', 2, 1, 'y']);
+    expect(result.updatedObject).toEqual(ref_5);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(ref_5);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(a);
 });
