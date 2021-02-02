@@ -334,3 +334,74 @@ function convertPathToChanges(fromIndex, changes, changesPath) {
 
     return entry;
 }
+
+
+/**
+ * Resolves a data path like the changesPath argument of {@link dataChange},
+ * retrieving the item at the end of the path.
+ * @param {*} object 
+ * @param {Array} path 
+ * @returns {*} The item, <code>undefined</code> if any part of the path
+ * could not be resolved.
+ */
+export function resolveDataPath(object, path) {
+    return resolveDataPathWithInfo(object, path).resolvedItem;
+}
+
+/**
+ * @typedef {object} resolveDataPathWithInfo-Result
+ * @property {*} resolvedItem   The item resolved from the path, will be
+ * <code>undefined</code> if the path was not fully resolved.
+ * @property {number} pathIndex The index of the item in the path at which
+ * {@link resolveDataPathWithInfo} returned, this will be path.length if
+ * the path was fully resolved.
+ */
+
+
+/**
+ * Resolves a data path like the changesPath argument of {@link dataChange},
+ * retrieving the item at the end of the path along with the index along
+ * the path.
+ * @param {*} object 
+ * @param {Array} path 
+ * @returns {resolveDataPathWithInfo-Result}
+ */
+export function resolveDataPathWithInfo(object, path) {
+    for (let i = 0; i < path.length; ++i) {
+        const ref = path[i];
+        switch (typeof ref) {
+        case 'string':
+            if (typeof object !== 'object') {
+                return {
+                    pathIndex: i,
+                };
+            }
+            break;
+        
+        case 'number':
+            if (!Array.isArray(object)
+             || (ref >= object.length)) {
+                return {
+                    pathIndex: i,
+                };
+            }
+            break;
+        
+        default:
+        {
+            const error = Error('dataChange(): Elements of changesPath '
+                + 'must either be strings or numbers. '
+                + 'path[' + i + '] = ' + path[i]);
+            console.error(error);
+            throw error;
+        }
+        }
+
+        object = object[ref];
+    }
+
+    return {
+        resolvedItem: object,
+        pathIndex: path.length,
+    };
+}
