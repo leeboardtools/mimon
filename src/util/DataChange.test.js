@@ -1,7 +1,6 @@
 //import { dataChange } from './DataChange';
-import * as DC from './DataChange';
+import {dataChange, resolveDataPath, resolveDataPathWithInfo, } from './DataChange';
 
-const dataChange = DC.dataChange;
 
 //
 //---------------------------------------------------------
@@ -868,4 +867,75 @@ test('dataChange-partialPaths', () => {
 
     result = dataChange(result);
     expect(result.updatedObject).toEqual(a);
+});
+
+
+test('resolveDataPathWithInfo', () => {
+    let result;
+
+    const a = {
+        b: {
+            c: {
+                d: [
+                    10,
+                    {
+                        e: [
+                            100,
+                            {
+                                f: 'F',
+                            }
+                        ]
+                    },
+                    [
+                        1000,
+                        2000,
+                        {
+                            g: 'G',
+                        },
+                    ]
+                ],
+                h: 'H',
+            },
+            i: {
+                j: 'J',
+            }
+        },
+    };
+    result = resolveDataPathWithInfo(a, ['b', 'i', 'j']);
+    expect(result).toEqual({
+        resolvedItem: 'J',
+        pathIndex: 3,
+    });
+
+    expect(resolveDataPath(a, ['b', 'i', 'j'])).toEqual('J');
+
+
+    result = resolveDataPathWithInfo(a, ['b', 1, 2]);
+    expect(result).toEqual({
+        pathIndex: 1,
+    });
+    expect(resolveDataPath(a, ['b', 1, 2])).toBeUndefined();
+
+
+    result = resolveDataPathWithInfo(a, ['b', 'c', 'd', 0]);
+    expect(result).toEqual({
+        resolvedItem: 10,
+        pathIndex: 4,
+    });
+    expect(resolveDataPath(a, ['b', 'c', 'd', 0])).toEqual(10);
+
+
+    result = resolveDataPathWithInfo(a, ['b', 'c', 'd', 2, 2]);
+    expect(result).toEqual({
+        resolvedItem: { g: 'G', },
+        pathIndex: 5,
+    });
+    expect(resolveDataPath(a, ['b', 'c', 'd', 2, 2])).toEqual({ g: 'G', });
+
+    // array index out of range
+    result = resolveDataPathWithInfo(a, ['b', 'c', 'd', 3, 'e']);
+    expect(result).toEqual({
+        pathIndex: 3,
+    });
+    expect(resolveDataPath(a, ['b', 'c', 'd', 3, 'e'])).toBeUndefined();
 });
