@@ -5,5 +5,9 @@
  * @returns {object}
  */
 export function dataDeepCopy(data) {
-    return JSON.parse(JSON.stringify(data));
+    if (typeof data === 'object') {
+        return JSON.parse(JSON.stringify(data));
+    }
+
+    return data;
 }
