@@ -18,6 +18,7 @@
  * @property {*} original
  * @property {*} changes
  * @property {Array} changesPath
+ * @property {boolean} [assignChanges]
  */
 
 /**
@@ -66,9 +67,14 @@
  * a string it is the name of a property at that depth from original. If an element
  * is a number it is the index of an array at that depth from original.
  * <p>
- * When changesPath is specified, changes is applied as-is. That is, if it is an
- * empty object, the point referred to by the changesPath is replaced with the 
- * empty object.
+ * When changesPath is specified, changes is applied as-is, with one exception. 
+ * That is, if it is an empty object, the point referred to by the changesPath 
+ * is replaced with the empty object.
+ * <p>
+ * The exception is if the assignChanges property is truthy in the
+ * {@link dataChange-Args} (which must be used), and both the item to be changed
+ * and changes are non-array objects. In this case Object.assign({}, item, changes)
+ * is used.
  * <p>
  * For example:
  * <pre><code> const a = {
@@ -114,6 +120,7 @@
  * @return {dataChange-Result}
  */
 export function dataChange(original, changes, changesPath) {
+    let assignChanges;
     if (!changes && !changesPath) {
         if ((original.changes !== undefined) || (original.changesPath !== undefined)) {
             changes = original.changes;
@@ -132,12 +139,13 @@ export function dataChange(original, changes, changesPath) {
             changes = savedChanges.changes;
             changesPath = savedChanges.changesPath;
         }
+        assignChanges = original.assignChanges;
 
         original = original.original || original.updatedObject;
     }
 
     if (changesPath) {
-        return handleChangesPath(original, changes, changesPath);
+        return handleChangesPath(original, changes, changesPath, assignChanges);
     }
 
 
@@ -214,7 +222,7 @@ export function dataChange(original, changes, changesPath) {
 //
 //---------------------------------------------------------
 //
-function handleChangesPath(original, changes, changesPath) {
+function handleChangesPath(original, changes, changesPath, assignChanges) {
     // Changes is treated as-is...
     if (!changesPath.length) {
         return {
@@ -280,7 +288,16 @@ function handleChangesPath(original, changes, changesPath) {
 
     // The last object gets replaced directly...
     const savedChanges = objects[objects.length - 1];
-    objects[objects.length - 1] = changes;
+    if (assignChanges
+     && (typeof savedChanges === 'object')
+     && (typeof changes === 'object')
+     && !Array.isArray(savedChanges)
+     && !Array.isArray(changes)) {
+        objects[objects.length - 1] = Object.assign({}, savedChanges, changes);
+    }
+    else {
+        objects[objects.length - 1] = changes;
+    }
 
 
     // Copy the objects in the chain and update the references...

@@ -608,6 +608,87 @@ test('dataChange-fullPaths', () => {
     result = dataChange(result);
     expect(result.updatedObject).toEqual(b);
 
+
+    //
+    // assignChanges
+    const c = {
+        a: {
+            b: {
+                c: 123,
+                d: 456,
+            },
+            c: {
+                g: {
+                    h: 'H',
+                },
+            },
+        },
+    };
+
+    const change_5 = {
+        g: {
+            j: '123',
+        }
+    };
+    const ref_5 = {
+        a: {
+            b: {
+                c: 123,
+                d: 456,
+                g: {
+                    j: '123',
+                },
+            },
+            c: {
+                g: {
+                    h: 'H',
+                },
+            },
+        },
+    };
+    result = dataChange({
+        original: c,
+        changes: change_5,
+        changesPath: ['a', 'b'],
+        assignChanges: true,
+    });
+    expect(result.updatedObject).toEqual(ref_5);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(c);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(ref_5);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(c);
+
+
+    const ref_6 = {
+        a: {
+            b: {
+                c: 123,
+                d: 456,
+            },
+            c: Object.assign({}, change_5),
+        },
+    };
+    result = dataChange({
+        original: c,
+        changes: change_5,
+        changesPath: ['a', 'c'],
+        assignChanges: true,
+    });
+    expect(result.updatedObject).toEqual(ref_6);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(c);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(ref_6);
+
+    result = dataChange(result);
+    expect(result.updatedObject).toEqual(c);
 });
 
 
