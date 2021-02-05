@@ -18,7 +18,10 @@
  * @property {*} original
  * @property {*} changes
  * @property {Array} changesPath
- * @property {boolean} [assignChanges]
+ * @property {boolean} [assignChanges] If truthy and changesPath is specified,
+ * and both changesPath and the final item are non-array objects,
+ * Object.assign({}, item, changes) is used to assign the changes, otherwise
+ * the changes is assigned directly if changesPath is specified.
  */
 
 /**
@@ -145,7 +148,12 @@ export function dataChange(original, changes, changesPath) {
     }
 
     if (changesPath) {
-        return handleChangesPath(original, changes, changesPath, assignChanges);
+        return handleChangesPath({
+            original: original, 
+            changes: changes, 
+            changesPath: changesPath, 
+            assignChanges: assignChanges,
+        });
     }
 
 
@@ -222,7 +230,7 @@ export function dataChange(original, changes, changesPath) {
 //
 //---------------------------------------------------------
 //
-function handleChangesPath(original, changes, changesPath, assignChanges) {
+function handleChangesPath({ original, changes, changesPath, assignChanges, }) {
     // Changes is treated as-is...
     if (!changesPath.length) {
         return {
