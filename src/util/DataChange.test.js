@@ -948,6 +948,33 @@ test('dataChange-partialPaths', () => {
 
     result = dataChange(result);
     expect(result.updatedObject).toEqual(a);
+
+
+    const c = {
+        mainWindow: {
+            tabIdSettings: {},
+        },
+    };
+    const change_2 = {
+        hiddenRootAccountTypes: ['LIABILITY'],
+    };
+    result = dataChange({
+        original: c, 
+        changes: change_2,
+        changesPath: ['mainWindow', 'tabIdSettings', 'masterAccountsList'],
+        assignChanges: true,
+        isDebug: true,
+    });
+
+    const ref_6 = {
+        mainWindow: {
+            tabIdSettings: {
+                masterAccountsList: Object.assign({}, change_2),
+            },
+        },
+    };
+    console.log(JSON.stringify(result));
+    expect(result.updatedObject).toEqual(ref_6);
 });
 
 
