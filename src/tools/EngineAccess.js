@@ -4,6 +4,7 @@ import { getQuantityDefinition, getDecimalDefinition } from '../util/Quantities'
 import { userError } from '../util/UserMessages';
 import deepEqual from 'deep-equal';
 import { dataDeepCopy } from '../util/DataDeepCopy';
+import { dataChange, resolveDataPath } from '../util/DataChange';
 import { Reconciler } from './Reconciler';
 import { asyncSetupNewFile } from './NewFileSetup';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
@@ -69,6 +70,12 @@ export class EngineAccessor extends EventEmitter {
         this.asyncUndoLastAppliedAction = this.asyncUndoLastAppliedActions;
         this.asyncReapplyLastUndoneAction = this.asyncReapplyLastUndoneActions;
         this.asyncGetTransactionDataItemWithId = this.asyncGetTransactionDataItemsWithIds;
+
+
+        this._asyncModifyProjectSettingsActionApplier 
+            = this._asyncModifyProjectSettingsActionApplier.bind(this);
+        this._asyncModifyProjectSettingsUndoApplier 
+            = this._asyncModifyProjectSettingsUndoApplier.bind(this);
 
 
         this._fileFactories = [];
@@ -177,11 +184,31 @@ export class EngineAccessor extends EventEmitter {
                 pathName = path.parse(pathName).dir;
             }
 
+            this._actionManager.registerAsyncActionApplier(
+                'modifyProjectSettingsAction',
+                this._asyncModifyProjectSettingsActionApplier
+            );
+            const undoManager = this._accountingSystem.getUndoManager();
+            undoManager.registerUndoApplier(
+                'modifyProjectSettings',
+                this._asyncModifyProjectSettingsUndoApplier
+            );
+
             this._projectSettingsPathName = path.join(pathName, 'ProjectSettings.json');
             this._projectSettings = {};
         }
         else {
             this._fileFactoryIndex = undefined;
+
+            if (this._actionManager) {
+                this._actionManager.unregisterAsyncActionApplier(
+                    'modifyProjectSettings');
+
+                const undoManager = this._accountingSystem.getUndoManager();
+                undoManager.unregisterUndoApplier(
+                    'modifyProjectSettingsAction');
+            }
+
 
             if (this._accountingActions) {
                 this._accountingActions.off('actionApply', this._handleActionApply);
@@ -433,7 +460,7 @@ export class EngineAccessor extends EventEmitter {
      */
     async asyncCreateAccountingFile(pathName, options) {
         options = options || {};
-        
+
         let { fileFactoryIndex, initialContents } = options;
         let accountingFile;
         if ((fileFactoryIndex >= 0) && (fileFactoryIndex < this._fileFactories.length)) {
@@ -472,8 +499,7 @@ export class EngineAccessor extends EventEmitter {
 
         if (accountingFile) {
             try {
-                await this.asyncClearAppliedActions();
-                await this.asyncClearUndoneActions();
+                await this.asyncClearAllActions();
             }
             catch (err) {
                 // 
@@ -532,8 +558,7 @@ export class EngineAccessor extends EventEmitter {
         if (accountingFile) {
             try {
                 if (clearActions) {
-                    await this.asyncClearAppliedActions();
-                    await this.asyncClearUndoneActions();
+                    await this.asyncClearAllActions();
                 }
             }
             catch (err) {
@@ -698,6 +723,17 @@ export class EngineAccessor extends EventEmitter {
     async asyncClearUndoneActions() {
         this._clearLastAppliedAction();
         return this._actionManager.asyncClearUndoneActions();
+    }
+
+
+    /**
+     * Removes all actions from the manager.
+     * @fires {EngineAccessor#actionChange}
+     * @fires {EngineAccessor#actionChange}
+     */
+    async asyncClearAllActions() {
+        await this.asyncClearAppliedActions();
+        await this.asyncClearUndoneActions();
     }
 
 
@@ -1648,27 +1684,130 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * Retrieves a copy of the project settings.
+     * @param {Array} [path] If specified an array of strings and numbers used
+     * to identify the sub-item to retrieve, see {@link resolveDataPath}.
+     * Specifying a path avoids a deep copy of all the project settings.
      * @returns {object}
      */
-    getProjectSettings() {
+    getProjectSettings(path) {
+        if (path) {
+            const object = resolveDataPath(this._projectSettings, path);
+            return dataDeepCopy(object);
+        }
         return dataDeepCopy(this._projectSettings);
     }
 
+    /**
+     * This is fired whenever the project settings are modified.
+     * @event EngineAccessor#modifyProjectSettings
+     * @type {object}
+     * @property {dataChange-Result} dataChangeResult The result from the call
+     * to {@link dataChange}
+     * @property {EngineAccessor~createModifyProjectSettingsAction} originalAction
+     * The action that originally made the change. This event is also fired if
+     * the change is undone.
+     */
 
     /**
-     * Updates the project settings. Project settings are modified similar to:
-     * <pre><code>
-     *  newSettings = Object.assign({}, settings, changes);
-     * </code></pre>
-     * @param {object} changes 
+     * @typedef {object}    EngineAccessor~ModifyProjectSettingsResult
+     * @property {boolean}  isChanged
+     * @property {number}   undoId
      */
-    async asyncUpdateProjectSettings(changes) {
-        const newProjectSettings = Object.assign({}, this._projectSettings, changes);
-        if (!deepEqual(newProjectSettings, this._projectSettings)) {
-            this._asyncWriteProjectSettings(newProjectSettings);
+
+    /**
+     * @typedef {object} EngineAccessor~createModifyProjectSettingsAction
+     * @property {string} name The simple name for the action.
+     * @property {string} [description] Optional description for the action.
+     * @property {*} changes The changes to the project settings to be made.
+     * @property {Array} [changesPath] Optional path for changes, see 
+     * {@link dataChange}
+     * @property {boolean} [assignChanges] Optional flag for using
+     * Object.assign() to assign the changes, see {@link dataChange-Args}.
+     */
+
+    /**
+     * Creates an action for modifying the project settings.
+     * <p>
+     * Applying the action fires a {@link AccountingActions#actionApply} via
+     * the engine accessor, whose result property is a 
+     * {@link EngineAccessor~ModifyProjectSettingsResult}.
+     * @param {EngineAccessor~createModifyProjectSettingsAction} args
+     * @returns {ActionDataItem}
+     */
+    createModifyProjectSettingsAction(args) {
+        return Object.assign({}, args, {
+            type: 'modifyProjectSettingsAction',
+        });
+    }
+
+    async _asyncModifyProjectSettingsActionApplier(isValidateOnly, action) {
+        const { changes, changesPath, assignChanges } = action;
+
+        let result = dataChange({
+            original: this._projectSettings, 
+            changes: changes, 
+            changesPath: changesPath,
+            assignChanges: assignChanges,
+        });
+        
+        if (isValidateOnly) {
+            return;
+        }
+
+        const isChanged = (this._projectSettings !== result.updatedObject);
+        if (isChanged) {
+            const newProjectSettings = result.updatedObject;
+            await this._asyncWriteProjectSettings(newProjectSettings);
             this._projectSettings = dataDeepCopy(newProjectSettings);
+
+            const undoManager = this._accountingSystem.getUndoManager();
+            const undoId = await undoManager
+                .asyncRegisterUndoDataItem('modifyProjectSettings', 
+                    { 
+                        savedChanges: result.savedChanges, 
+                        originalAction: action,
+                    });
+
+            result = {
+                dataChangeResult: result,
+                originalAction: action,
+            };
+            this.emit('modifyProjectSettings', result);
+
+            const actionResult = {
+                result: result,
+                undoId: undoId,
+            };
+            this._emitActionEvent(isValidateOnly, action, actionResult);
         }
     }
+
+
+    _emitActionEvent(isValidateOnly, action, result) {
+        if (!isValidateOnly) {
+            this.emit(action.type, action, result);
+            this.emit('actionApply', action, result);
+        }
+    }
+
+    async _asyncModifyProjectSettingsUndoApplier(undoDataItem) {
+        const { savedChanges, } = undoDataItem;
+
+        const result = dataChange({
+            original: this._projectSettings, 
+            savedChanges: savedChanges,
+        });
+        
+        const oldProjectSettings = result.updatedObject;
+        await this._asyncWriteProjectSettings(oldProjectSettings);
+        this._projectSettings = dataDeepCopy(oldProjectSettings);
+
+        this.emit('modifyProjectSettings', {
+            dataChangeResult: result,
+            originalAction: undoDataItem.originalAction,
+        });
+    }
+
 
 
     async _asyncReadProjectSettings() {
@@ -1683,7 +1822,8 @@ export class EngineAccessor extends EventEmitter {
             if (e.code === 'ENOENT') {
                 return undefined;
             }
-            console.error('Error reading project settings JSON file. ' + e);
+            console.error('Error reading project settings JSON file. ' 
+                + this._projectSettingsPathName + e);
         }
     }
 
@@ -1692,7 +1832,7 @@ export class EngineAccessor extends EventEmitter {
         try {
             // Create the directory if necessary.
             const fileHandle = await fsPromises.open(this._projectSettingsPathName, 'w+');
-            await fileHandle.writeFile(JSON.stringify(projectSettings), 
+            await fileHandle.writeFile(JSON.stringify(projectSettings || {}), 
                 { encoding: 'utf8' });
             await fileHandle.close();
             return true;

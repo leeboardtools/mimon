@@ -551,6 +551,56 @@ test('EngineAccessor-actions', async () => {
         expect(accessor.getReminderIds()).toEqual([reminderA.id]);
         expect(accessor.getReminderDataItemWithId(reminderA.id)).toEqual(reminderA);
 
+
+
+        //
+        // Project settings.
+        const psChangesA = {
+            a: { 
+                c: 'c',
+                d: [ 'd', 'e', 'f', ],
+            },
+            b: [ 1, 2, 3, ],
+        };
+        const psActionA = accessor.createModifyProjectSettingsAction({
+            name: 'A test',
+            changes: psChangesA,
+            changesPath: [ 'testSettings', 'subSettings', ],
+        });
+
+        result = await accessor.asyncApplyAction(psActionA);
+
+        result = accessor.getProjectSettings(['testSettings', 'subSettings']);
+        expect(result).toEqual(psChangesA);
+
+
+        const psChangesB = {
+            d: 'abc',
+        };
+        const psRefB = {
+            a: { 
+                c: 'c',
+                d: 'abc',
+            },
+            b: [ 1, 2, 3, ],
+        };
+        const psActionB = accessor.createModifyProjectSettingsAction({
+            name: 'A second test',
+            changes: psChangesB,
+            changesPath: [ 'testSettings', 'subSettings', 'a', ],
+            assignChanges: true,
+        });
+
+        await accessor.asyncApplyAction(psActionB);
+        result = accessor.getProjectSettings(['testSettings', 'subSettings']);
+        expect(result).toEqual(psRefB);
+
+        await accessor.asyncUndoLastAppliedAction();
+        result = accessor.getProjectSettings(['testSettings', 'subSettings']);
+        expect(result).toEqual(psChangesA);
+
+
+
         //
         // All done...
         //
