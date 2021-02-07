@@ -20,6 +20,8 @@ import { ReminderEditorHandler } from './ReminderEditorHandler';
 import { RemindersListHandler } from './RemindersListHandler';
 
 
+const projectSettingsMainWindow = ['mainWindow'];
+
 
 /**
  * The main window component. This is responsible for managing the normal
@@ -37,6 +39,8 @@ export class MainWindow extends React.Component {
         this.onActionChange = this.onActionChange.bind(this);
         this.onUndo = this.onUndo.bind(this);
         this.onRedo = this.onRedo.bind(this);
+
+        this.onModifyProjectSettings = this.onModifyProjectSettings.bind(this);
 
         this.onForceReload = this.onForceReload.bind(this);
 
@@ -125,12 +129,23 @@ export class MainWindow extends React.Component {
 
 
         process.nextTick(async () => {
-            this._projectSettings = props.accessor.getProjectSettings();
-            if (!this._projectSettings.tabIdSettings) {
-                await props.accessor.asyncUpdateProjectSettings({
-                    tabIdSettings: {},
+            const { accessor } = props;
+            this._projectSettings = accessor.getProjectSettings(
+                projectSettingsMainWindow);
+            if (!this._projectSettings || !this._projectSettings.tabIdSettings) {
+                const action = accessor.createModifyProjectSettingsAction({
+                    name: 'initialize project settings',
+                    changes: {
+                        tabIdSettings: {},
+                    },
+                    changesPath: projectSettingsMainWindow,
                 });
-                this._projectSettings = props.accessor.getProjectSettings();
+                await accessor.asyncApplyAction(action);
+                await accessor.asyncClearAllActions();
+
+                this._projectSettings = accessor.getProjectSettings(
+                    projectSettingsMainWindow
+                );
             }
 
             this._userSettings = await asyncGetUserSetting('mainWindow');
@@ -163,13 +178,28 @@ export class MainWindow extends React.Component {
 
         accessor.on('actionChange', this.onActionChange);
         this.onActionChange();
+
+        accessor.on('modifyProjectSettings', this.onModifyProjectSettings);
     }
 
 
     componentWillUnmount() {
         const { accessor } = this.props;
 
+        accessor.off('modifyProjectSettings', this.onModifyProjectSettings);
+
         accessor.off('actionChange', this.onActionChange);
+
+        this._accountsListHandler.shutdownHandler();
+        this._accountRegisterHandler.shutdownHandler();
+        this._accountEditorHandler.shutdownHandler();
+        this._pricedItemsListHandler.shutdownHandler();
+        this._pricedItemEditorHandler.shutdownHandler();
+        this._pricesListHandler.shutdownHandler();
+        this._priceRetrieverWindowHandler.shutdownHandler();
+        this._reconcilerWindowHandler.shutdownHandler();
+        this._remindersListHandler.shutdownHandler();
+        this._reminderEditorHandler.shutdownHandler();
     }
 
 
@@ -431,22 +461,81 @@ export class MainWindow extends React.Component {
         return this._projectSettings.tabIdSettings[tabId];
     }
 
-    onSetTabIdProjectSettings(tabId, changes) {
-        const { tabIdSettings } = this._projectSettings;
-        const newSettings = Object.assign({}, tabIdSettings[tabId], changes);
-        if (!deepEqual(newSettings, tabIdSettings[tabId])) {
-            tabIdSettings[tabId] = newSettings;
-            process.nextTick(async () => {
-                try {
-                    await this.props.accessor.asyncUpdateProjectSettings({
-                        tabIdSettings: tabIdSettings,
-                    });
+    onSetTabIdProjectSettings(tabId, changes, actionName) {
+        const { accessor } = this.props;
+        const action = accessor.createModifyProjectSettingsAction({
+            name: actionName || userMsg('MainWindow-action_modify_project_settings'),
+            changes: changes,
+            changesPath: projectSettingsMainWindow.concat([ 'tabIdSettings', tabId]),
+            assignChanges: true,
+        });
+
+        process.nextTick(async () => {
+            try {
+                await accessor.asyncApplyAction(action);
+                this._projectSettings.tabIdSettings[tabId] = accessor.getProjectSettings(
+                    action.changesPath
+                );
+            }
+            catch (e) {
+                // FIX ME!!!
+                console.log('Could not save project settings: ' + e);
+            }
+        });
+    }
+
+    onModifyProjectSettings(result) {
+        const { originalAction } = result;
+        if (!originalAction) {
+            return;
+        }
+
+        const { changes, changesPath } = originalAction;
+        if (!changesPath || (changesPath[0] !== projectSettingsMainWindow[0])) {
+            // Not our change...
+            return;
+        }
+
+        if (changesPath[1] === 'tabIdSettings') {
+            const tabId = changesPath[2];
+            if (!tabId) {
+                return;
+            }
+
+            let tabIdSettings = this.props.accessor.getProjectSettings(
+                changesPath
+            );
+            this._projectSettings.tabIdSettings[tabId] = tabIdSettings;
+
+            const tabEntry = this.onGetTabIdState(tabId);
+            if (!tabEntry) {
+                return;
+            }
+            
+            const { onTabIdProjectSettingsModified } = tabEntry;
+            if (onTabIdProjectSettingsModified) {
+                if (changes && !deepEqual(changes, tabIdSettings)
+                 && !Array.isArray(changes) && !Array.isArray(tabIdSettings)) {
+                    // Make sure tabIdSettings has the same set of properties as
+                    // changes, this way any changes that were added will be available
+                    // for removal.
+                    tabIdSettings = Object.assign({}, tabIdSettings);
+                    for (const name in changes) {
+                        if (!Object.prototype.hasOwnProperty.call(tabIdSettings, name)) {
+                            if (Array.isArray(changes[name])) {
+                                tabIdSettings[name] = [];
+                            }
+                            else {
+                                tabIdSettings[name] = undefined;
+                            }
+                        }
+                    }
                 }
-                catch (e) {
-                    // FIX ME!!!
-                    console.log('Could not save project settings: ' + e);
+
+                if (onTabIdProjectSettingsModified(tabId, tabIdSettings)) {
+                    this.forceUpdate();
                 }
-            });
+            }
         }
     }
 

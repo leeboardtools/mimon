@@ -4,7 +4,9 @@ import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountsList, createDefaultColumns } from './AccountsList';
 import * as A from '../engine/Accounts';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
-import { getColumnWithKey, getIndexOfColumnWithKey } from '../util-ui/ColumnInfo';
+import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
+import { RowTableHandler } from './RowTableHelpers';
+
 
 /**
  * Handler for {@link AccountsList} components and their pages in the 
@@ -15,6 +17,21 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         super(props);
 
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
+
+        this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
+
+
+        // This should be after all the bind() calls...
+        this._rowTableHandler = new RowTableHandler({
+            mainWindowHandler: this,
+            userIdBase: 'AccountsListHandler',
+        });
+    }
+
+
+    shutdownHandler() {
+        this._rowTableHandler.shutdownHandler();
+        this._rowTableHandler = undefined;
     }
 
 
@@ -137,24 +154,28 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const state = this.getTabIdState(tabId);
         const hiddenRootAccountTypes = Array.from(state.hiddenRootAccountTypes);
         const index = hiddenRootAccountTypes.indexOf(accountType);
+        let actionNameId;
         if (index >= 0) {
             hiddenRootAccountTypes.splice(index, 1);
+            actionNameId = 'AccountsListHandler-action_showAccountType';
         }
         else {
             hiddenRootAccountTypes.push(accountType);
+            actionNameId = 'AccountsListHandler-action_hideAccountType';
         }
 
         const newState = Object.assign({}, state, {
             hiddenRootAccountTypes: hiddenRootAccountTypes,
         });
-        newState.dropdownInfo = this.getTabDropdownInfo(tabId, 
-            state.activeAccountId, newState);
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
 
         this.setTabIdState(tabId, newState);
 
-        this.setTabIdProjectSettings(tabId, {
-            hiddenRootAccountTypes: hiddenRootAccountTypes,
-        });
+        this.setTabIdProjectSettings(tabId, 
+            {
+                hiddenRootAccountTypes: hiddenRootAccountTypes,
+            },
+            userMsg(actionNameId, A.AccountType[accountType].description));
     }
 
 
@@ -162,26 +183,33 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const state = this.getTabIdState(tabId);
         const hiddenAccountIds = Array.from(state.hiddenAccountIds);
         const index = hiddenAccountIds.indexOf(accountId);
+        let actionNameId;
         if (index >= 0) {
             hiddenAccountIds.splice(index, 1);
+            actionNameId = 'AccountsListHandler-action_showAccount';
         }
         else {
             hiddenAccountIds.push(accountId);
             // TODO: Also need to set the active account to something else
             // if we're not showing hidden accounts.
+            actionNameId = 'AccountsListHandler-action_hideAccount';
         }
 
         const newState = Object.assign({}, state, {
             hiddenAccountIds: hiddenAccountIds,
         });
-        newState.dropdownInfo = this.getTabDropdownInfo(tabId, 
-            state.activeAccountId, newState);
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
 
         this.setTabIdState(tabId, newState);
 
-        this.setTabIdProjectSettings(tabId, {
-            hiddenAccountIds: hiddenAccountIds,
-        });
+        const accountDataItem = this.props.accessor.getAccountDataItemWithId(
+            accountId);
+
+        this.setTabIdProjectSettings(tabId, 
+            {
+                hiddenAccountIds: hiddenAccountIds,
+            },
+            userMsg(actionNameId, accountDataItem.name));
     }
 
 
@@ -191,63 +219,59 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const newState = Object.assign({}, state, {
             showHiddenAccounts: !state.showHiddenAccounts,
         });
-        newState.dropdownInfo = this.getTabDropdownInfo(tabId, 
-            state.activeAccountId, newState);
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = (newState.showHiddenAccounts)
+            ? 'AccountsListHandler-action_showHiddenAccounts'
+            : 'AccountsListHandler-action_hideHiddenAccounts';
 
         this.setTabIdState(tabId, newState);
 
-        this.setTabIdProjectSettings(tabId, {
-            showHiddenAccounts: newState.showHiddenAccounts,
-        });
+        this.setTabIdProjectSettings(tabId, 
+            {
+                showHiddenAccounts: newState.showHiddenAccounts,
+            },
+            userMsg(actionNameId));
     }
 
 
-    onUpdateCollapsedAccountIds(tabId, collapsedAccountIds) {
+    onUpdateCollapsedAccountIds(tabId, 
+        { accountId, expandCollapseState, collapsedAccountIds}) {
+
         this.setTabIdState(tabId, {
             collapsedAccountIds: collapsedAccountIds
         });
 
-        this.setTabIdProjectSettings(tabId, {
-            collapsedAccountIds: collapsedAccountIds
-        });
-    }
+        const actionNameId = (expandCollapseState === ExpandCollapseState.EXPANDED)
+            ? 'AccountsListHandler-action_expandAccount'
+            : 'AccountsListHandler-action_collapseAccount';
 
-
-    onToggleColumn(tabId, columnName) {
-        const state = this.getTabIdState(tabId);
-        const columns = Array.from(state.columns);
-
-        const index = getIndexOfColumnWithKey(columns, columnName);
-        if (index >= 0) {
-            const column = Object.assign({}, columns[index]);
-            column.isVisible = !column.isVisible;
-            columns[index] = column;
-
-            const newState = Object.assign({}, state, {
-                columns: columns,
-            });
-            newState.dropdownInfo = this.getTabDropdownInfo(tabId, 
-                state.activeAccountId, newState);
-
-            this.setTabIdState(tabId, newState);
-
-            this.setTabIdProjectSettings(tabId, {
-                columns: columns,
-            });
+        const accountDataItem = this.props.accessor.getAccountDataItemWithId(
+            accountId);
+        
+        let actionName;
+        if (accountDataItem) {
+            actionName = userMsg(actionNameId, accountDataItem.name);
         }
+
+        this.setTabIdProjectSettings(tabId, 
+            {
+                collapsedAccountIds: collapsedAccountIds,
+            },
+            actionName);
     }
 
-    toggleColumnMenuItem(tabId, columns, name) {
-        return { id: 'toggleColumn_' + name,
-            label: userMsg('AccountsListHandler-col_' + name),
-            checked: getColumnWithKey(columns, name).isVisible,
-            onChooseItem: () => this.onToggleColumn(
-                tabId, name),
-        };
-    }
 
-    
-    getTabDropdownInfo(tabId, activeAccountId, state) {
+
+    getTabDropdownInfo(tabId, state, activeAccountId) {
+        if (!activeAccountId) {
+            const state = this.getTabIdState(tabId);
+            if (state) {
+                activeAccountId = state.activeAccountId;
+            }
+        }
+
+
         const { hiddenRootAccountTypes, hiddenAccountIds, showHiddenAccounts,
             columns }
             = state;
@@ -260,12 +284,11 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         const accountType = accessor.getTypeOfAccountId(activeAccountId) || {};
 
-        const toggleColumnsSubMenuItems = [];
-        columns.map((column) => {
-            toggleColumnsSubMenuItems.push(
-                this.toggleColumnMenuItem(tabId, columns, column.key)
-            );
-        });
+
+        const toggleColumnsSubMenuItems 
+            = this._rowTableHandler.createToggleColumnMenuItems(
+                tabId, columns);
+
 
         const menuItems = [
             { id: 'reconciler',
@@ -376,7 +399,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             this.setTabIdState(tabId,
                 {
                     activeAccountId: accountId,
-                    dropdownInfo: this.getTabDropdownInfo(tabId, accountId, state),
+                    dropdownInfo: this.getTabDropdownInfo(tabId, state, accountId),
                 });
         }
         else {
@@ -402,7 +425,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
      */
     createTabEntry(tabId) {
         let settings = this.getTabIdProjectSettings(tabId) || {};
-        const columns = settings.columns || createDefaultColumns();
+        const columns = createDefaultColumns();
         const showHiddenAccounts = settings.showHiddenAccounts;
         const hiddenRootAccountTypes = settings.hiddenRootAccountTypes || [];
         const hiddenAccountIds = settings.hiddenAccountIds || [];
@@ -419,7 +442,10 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             columns: columns,
         };
 
-        tabEntry.dropdownInfo = this.getTabDropdownInfo(tabId, undefined, tabEntry);
+        this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);
+
+        tabEntry.dropdownInfo = this.getTabDropdownInfo(tabId, tabEntry);
+
         return tabEntry;
     }
 
@@ -451,8 +477,17 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             hiddenAccountIds = {tabEntry.hiddenAccountIds}
             showHiddenAccounts = {tabEntry.showHiddenAccounts}
             initialCollapsedAccountIds = {collapsedAccountIds}
-            onUpdateCollapsedAccountIds = {(collapsedAccountIds) =>
-                this.onUpdateCollapsedAccountIds(tabEntry.tabId, collapsedAccountIds)}
+            onUpdateCollapsedAccountIds = {(args) =>
+                this.onUpdateCollapsedAccountIds(tabEntry.tabId, args)}
+            onUpdateColumns = {(columns, columnIndex) =>
+                this._rowTableHandler.onUpdateColumns(
+                    {
+                        tabId: tabEntry.tabId,
+                        labelId: 'AccountsListHandler-action_updateColumns', 
+                        columns: columns,
+                        columnIndex: columnIndex,
+                    })
+            }
             contextMenuItems = {contextMenuItems}
         />;
     }

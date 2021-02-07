@@ -1,3 +1,5 @@
+import { userMsg } from '../util/UserMessages';
+
 /**
  * Base class for the handlers used by {@link MainWindow}
  */
@@ -24,6 +26,11 @@ export class MainWindowHandlerBase {
         this.onOpenRegisterForTransactionSplit 
             = this.onOpenRegisterForTransactionSplit.bind(this);
     }
+
+
+    shutdownHandler() {
+
+    }
     
 
     /**
@@ -40,7 +47,6 @@ export class MainWindowHandlerBase {
             splitIndex: splitIndex,
         });
     }
-
 
 }
 
@@ -88,6 +94,22 @@ export class MainWindowHandlerBase {
  * @param {string}  tabId
  * @param {object}  newState
  * @param {function}    [callback]
+ */
+
+/**
+ * Retrieves the project settings for a tab entry.
+ * @function MainWindowHandlerBase#getTabIdProjectSettings
+ * @param {string} tabId
+ * @returns {*}
+ */
+
+/**
+ * Changes the project settings for a tab entry. This creates and applies
+ * an action to do perform the changes if there are changes.
+ * @function MainWindowHandlerBase#setTabIdProjectSettings
+ * @param {string} tabId
+ * @param {string} [actionName]
+ * @param {*} changes
  */
 
 /**

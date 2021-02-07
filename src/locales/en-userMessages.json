@@ -21,6 +21,8 @@
     "MainWindow-exit": "Exit",
     "MainWindow-forceReload": "Force Reload",
 
+    "MainWindow-action_modify_project_settings": "Modify Project Settings",
+
     
 
     "App-mru_open_failed": ["Could not open '", "'. ", ""],
@@ -132,6 +134,22 @@
     "AccountsListHandler-prompt_remove_priced_item_with_dependees_title": ["Confirm Delete ", ""],
     "AccountsListHandler-prompt_remove_priced_item_with_dependees": 
         ["", " '", "' has one or more accounts that refer to it.\nDeleting it will delete those accounts. Continue?"],
+    
+    "AccountsListHandler-action_showAccountType": ["Show ", " Accounts"],
+    "AccountsListHandler-action_hideAccountType": ["Hide ", " Accounts"],
+    "AccountsListHandler-action_showAccount": ["Show ", ""],
+    "AccountsListHandler-action_hideAccount": ["Hide ", ""],
+    "AccountsListHandler-action_showHiddenAccounts": "Show Hidden Accounts",
+    "AccountsListHandler-action_hideHiddenAccounts": "Hide Hidden Accounts",
+    "AccountsListHandler-action_expandAccount": ["Expand Child Accounts of ", ""],
+    "AccountsListHandler-action_collapseAccount": ["Collapse Child Accounts of ", ""],
+    "AccountsListHandler-action_showColumn": ["Show ", " Column"],
+    "AccountsListHandler-action_hideColumn": ["Hide ", " Column"],
+    "AccountsListHandler-action_updateColumns": ["", " Column Change"],
+
+
+    "RowTableHandler-action_showColumn": ["Show ", " Column"],
+    "RowTableHandler-action_hideColumn": ["Hide ", " Column"],
 
 
     "AccountEditorHandler-newAccount_title": "New Account",
@@ -202,8 +220,8 @@
     "LotCellEditors-totalMarketValue": "Market Value",
     "LotCellEditors-totalCostBasis": "Cost Basis",
     "LotCellEditors-totalCashIn": "Cash-In",
-    "LotCellEditors-totalGain": "Gain",
-    "LotCellEditors-totalPercentGain": "% Gain",
+    "LotCellEditors-totalGain": "Total Gain",
+    "LotCellEditors-totalPercentGain": "% Total Gain",
     "LotCellEditors-totalCashInGain": "Cash-In Gain",
     "LotCellEditors-totalCashInPercentGain": "% Cash-In Gain",
     "LotCellEditors-totalAnnualPercentGain": "% Annual Gain",

@@ -257,7 +257,11 @@ export class AccountsList extends React.Component {
 
             const { onUpdateCollapsedAccountIds } = this.props;
             if (onUpdateCollapsedAccountIds) {
-                onUpdateCollapsedAccountIds(Array.from(this._collapsedRowIds.values()));
+                onUpdateCollapsedAccountIds({
+                    accountId: rowInfo.key,
+                    expandCollapseState: expandCollapseState,
+                    collapsedAccountIds: Array.from(this._collapsedRowIds.values()),
+                });
             }
 
             return {
@@ -394,8 +398,14 @@ export class AccountsList extends React.Component {
     }
 
 
-    onSetColumnWidth(args) {
-        this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
+    onSetColumnWidth(args) {        
+        this.setState((state) => stateUpdateFromSetColumnWidth(args, state),
+            () => {
+                const { onUpdateColumns } = this.props;
+                if (onUpdateColumns) {
+                    onUpdateColumns(this.state.columns, args.columnIndex);
+                }
+            });
     }
 
 
@@ -743,5 +753,6 @@ AccountsList.propTypes = {
     showAccountIds: PropTypes.bool,
     initialCollapsedAccountIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedAccountIds: PropTypes.func,
+    onUpdateColumns: PropTypes.func,
     children: PropTypes.any,
 };

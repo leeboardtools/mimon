@@ -415,6 +415,9 @@ Common menus:
         - Custom Account Lists
         - Listen on prices for market value updates.
 
+        - Expand/collapse account action doesn't undo because AccountsList stores the collapsed
+        state.
+
 
     - Priced Item List
         - Custom Priced Item Lists
@@ -456,6 +459,8 @@ Common menus:
     - Get Sub-menus working in MenuList, etc.
         - View Columns menus.
         - Add zoom in/out to main menu.
+
+        - Context menu loses focus if tooltip is displayed elsewhere.
     
 
     - Reconciler
