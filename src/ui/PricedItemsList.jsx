@@ -6,17 +6,12 @@ import deepEqual from 'deep-equal';
 import { getQuantityDefinition } from '../util/Quantities';
 import * as CE from './AccountingCellEditors';
 import { RowTable } from '../util-ui/RowTable';
-import { columnInfosToColumns, 
-    stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns, getVisibleColumns, } from '../util-ui/ColumnInfo';
 
 
 let columnInfoDefs;
 
-/**
- * @returns {ColumnInfo[]} Array containing the available
- * columns for priced item lists.
- */
-export function getPricedItemsListColumnInfoDefs() {
+function getPricedItemsListColumnInfoDefs() {
     if (!columnInfoDefs) {
         const cellClassName = 'm-0';
         const inputClassExtras = 'text-center';
@@ -86,6 +81,33 @@ export function getPricedItemsListColumnInfoDefs() {
     return columnInfoDefs;
 }
 
+/**
+ * Retrieves the priced item list columns with default settings.
+ */
+export function createDefaultColumns(pricedItemType) {
+    pricedItemType = PI.getPricedItemType(pricedItemType);
+
+    const columnInfoDefs = getPricedItemsListColumnInfoDefs();
+    const columnInfos = [];
+    if (pricedItemType.hasTickerSymbol) {
+        columnInfos.push(columnInfoDefs.ticker);
+        columnInfos.push(columnInfoDefs.onlineSource);
+    }
+
+    columnInfos.push(columnInfoDefs.name);
+    //columnInfos.push(columnInfoDefs.description);
+    columnInfos.push(columnInfoDefs.currency);
+    columnInfos.push(columnInfoDefs.quantityDefinition);
+
+    const columns = columnInfosToColumns({
+        columnInfos: columnInfos,
+    });
+
+    columns.forEach((column) => column.isVisible = true);
+
+    return columns;
+}
+
 
 /**
  * Component for displaying a list of priced items.
@@ -99,7 +121,6 @@ export class PricedItemsList extends React.Component {
         this.onPricedItemRemove = this.onPricedItemRemove.bind(this);
 
         this.getRowKey = this.getRowKey.bind(this);
-        this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
 
         this.onRenderCell = this.onRenderCell.bind(this);
         this.onActivateRow = this.onActivateRow.bind(this);
@@ -108,40 +129,12 @@ export class PricedItemsList extends React.Component {
         const { pricedItemTypeName } = this.props;
         const pricedItemType = PI.getPricedItemType(pricedItemTypeName);
 
-        const columnInfoDefs = getPricedItemsListColumnInfoDefs();
+        this._hiddenPricedItemIds = new Set(this.props.hiddenPricedItemIds);
 
-        const columnInfos = [];
-        const { columns } = props;
-        if (columns) {
-            for (let name of columns) {
-                const columnInfo = columnInfoDefs[name];
-                if (columnInfo) {
-                    columnInfos.push(columnInfo);
-                }
-            }
-        }
-
-        if (!columnInfos.length) {
-            if (pricedItemType.hasTickerSymbol) {
-                columnInfos.push(columnInfoDefs.ticker);
-                columnInfos.push(columnInfoDefs.onlineSource);
-
-                columnInfos.push(columnInfoDefs.name);
-            }
-            else {
-                columnInfos.push(columnInfoDefs.name);
-            }
-
-            //columnInfos.push(columnInfoDefs.description);
-            columnInfos.push(columnInfoDefs.currency);
-            columnInfos.push(columnInfoDefs.quantityDefinition);
-        }
-
-
-        this._hiddenPricedItemIds = new Set();
+        const columns = this.props.columns || createDefaultColumns(pricedItemType);
 
         this.state = {
-            columnInfos: columnInfos,
+            columns: getVisibleColumns(columns),
             rowEntries: [],
             columnKeys: new Set(),
         };
@@ -155,8 +148,6 @@ export class PricedItemsList extends React.Component {
                 ticker: 'WWWW',
             }
         };
-
-        this.state.columns = columnInfosToColumns(this.state);
 
         this.state.rowEntries = this.buildRowEntries().rowEntries;
     }
@@ -218,6 +209,23 @@ export class PricedItemsList extends React.Component {
             rowsNeedUpdating = true;
         }
 
+        if (!deepEqual(prevProps.columns, this.props.columns)) {
+            const { columns } = this.props;
+            if (columns) {
+                const visibleColumns = getVisibleColumns(columns);
+
+                // columnKeys is used to add tooltip info to the name/ticker items
+                // depending on whether a description or name column is showing.
+                const columnKeys = new Set();
+                visibleColumns.forEach((column) => columnKeys.add(column.key));
+
+                this.setState({
+                    columns: visibleColumns,
+                    columnKeys: columnKeys,
+                });
+            }
+        }
+
         if (rowsNeedUpdating) {
             const { prevActiveRowKey } = this.state;
             const result = this.buildRowEntries();
@@ -240,15 +248,6 @@ export class PricedItemsList extends React.Component {
             }
         }
 
-
-        const { columnInfos } = this.state;
-        const columnKeys = new Set();
-        columnInfos.forEach((columnInfo) => columnKeys.add(columnInfo.key));
-        if (!deepEqual(columnKeys, prevState.columnKeys)) {
-            this.setState({
-                columnKeys: columnKeys,
-            });
-        }
     }
 
 
@@ -348,10 +347,6 @@ export class PricedItemsList extends React.Component {
         if (rowEntry) {
             return rowEntry.key;
         }
-    }
-
-    onSetColumnWidth(args) {
-        this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
     }
 
 
@@ -454,7 +449,7 @@ export class PricedItemsList extends React.Component {
         // online update type
 
         const { pricedItemDataItem } = rowEntry;
-        const columnInfo = this.state.columnInfos[columnIndex];
+        const columnInfo = this.state.columns[columnIndex].columnInfo;
         switch (columnInfo.key) {
         case 'name' :
             return CE.renderNameDisplay({
@@ -520,7 +515,7 @@ export class PricedItemsList extends React.Component {
 
                 onRenderCell={this.onRenderCell}
 
-                onSetColumnWidth = { this.onSetColumnWidth }
+                onSetColumnWidth = { this.props.onSetColumnWidth }
 
                 activeRowIndex = {state.activeRowIndex}
                 onActivateRow = {this.onActivateRow}
@@ -561,7 +556,8 @@ PricedItemsList.propTypes = {
     onChoosePricedItem: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
-    columns: PropTypes.arrayOf(PropTypes.string),
+    columns: PropTypes.arrayOf(PropTypes.object),
+    onSetColumnWidth: PropTypes.func,
     hiddenPricedItemIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenPricedItems: PropTypes.bool,
     showPricedItemIds: PropTypes.bool,

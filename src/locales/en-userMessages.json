@@ -315,6 +315,8 @@
     "PricedItemsListHandler-showHiddenPricedItems": ["Show Hidden ", ""],
     "PricedItemsListHandler-title": ["", " List"],
 
+    "PricedItemsListHandler-action_toggleShowHiddenPricedItems": ["Toggle Show Hidden ", ""],
+
 
     "PricedItemSelector-baseCurrency_label": ["Default Currency (", ")" ],
     "PricedItemSelector-currency_label": ["", " - ", ""],

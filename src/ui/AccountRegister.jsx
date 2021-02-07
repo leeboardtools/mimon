@@ -513,7 +513,7 @@ function saveSplitQuantityCellValue(args) {
 
 /**
  */
-export function getAccountRegisterColumnInfoDefs(accountType) {
+function getAccountRegisterColumnInfoDefs(accountType) {
     accountType = A.getAccountType(accountType);
 
     let columnInfoDefs = allColumnInfoDefs[accountType.name];

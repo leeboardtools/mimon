@@ -164,6 +164,12 @@
     "PricedItemType-REAL_ESTATE": "Real Estate",
     "PricedItemType-PROPERTY": "Property",
 
+    "PricedItemType-plural_CURRENCY": "Currencies",
+    "PricedItemType-plural_SECURITY": "Securities",
+    "PricedItemType-plural_MUTUAL_FUND": "Mutual Funds",
+    "PricedItemType-plural_REAL_ESTATE": "Real Estate",
+    "PricedItemType-plural_PROPERTY": "Properties",
+
     "PricedItemOnlineUpdateType-NONE": "Not Updated",
     "PricedItemOnlineUpdateType-YAHOO_FINANCE": "Yahoo Finance",
 

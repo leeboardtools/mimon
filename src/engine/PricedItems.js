@@ -9,7 +9,8 @@ import { userError } from '../util/UserMessages';
 /**
  * @typedef {object}    PricedItemTypeDef
  * @property {string}   name    The name of the priced item type.
- * @property {strign}   description The user readable description of the priced item type.
+ * @property {string}   description The user readable description of the priced item type.
+ * @property {string}   pluralDescription The plural version of description.
  * @property {boolean}  [hasTickerSymbol]   If <code>true</code> priced items of this
  * type have a ticker symbol property.
  */
@@ -102,6 +103,7 @@ export function getPricedItemTypeName(type) {
 export function loadPricedItemUserMessages() {
     for (const type of Object.values(PricedItemType)) {
         type.description = userMsg('PricedItemType-' + type.name);
+        type.pluralDescription = userMsg('PricedItemType-plural_' + type.name);
     }
     for (const type of Object.values(PricedItemOnlineUpdateType)) {
         type.description = userMsg('PricedItemOnlineUpdateType-' + type.name);

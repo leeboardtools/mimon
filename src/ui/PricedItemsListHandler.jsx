@@ -1,9 +1,10 @@
 import React from 'react';
 import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
-import { PricedItemsList } from './PricedItemsList';
+import { PricedItemsList, createDefaultColumns } from './PricedItemsList';
 import * as PI from '../engine/PricedItems';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
+import { RowTableHandler } from './RowTableHelpers';
 
 /**
  * Handler for {@link PricedItemsList} components and their pages in the 
@@ -26,7 +27,22 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         this.onChoosePricedItem = this.onChoosePricedItem.bind(this);
 
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
+        this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
+
+
+        // This should be after all the bind() calls...
+        this._rowTableHandler = new RowTableHandler({
+            mainWindowHandler: this,
+            userIdBase: 'AccountsListHandler',
+        });
     }
+
+
+    shutdownHandler() {
+        this._rowTableHandler.shutdownHandler();
+        this._rowTableHandler = undefined;
+    }
+
 
     /*
     openPricedItemRegister(pricedItemId) {
@@ -117,47 +133,64 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const state = this.getTabIdState(tabId);
         const hiddenPricedItemIds = Array.from(state.hiddenPricedItemIds);
         const index = hiddenPricedItemIds.indexOf(pricedItemId);
+        let actionNameId;
         if (index >= 0) {
             hiddenPricedItemIds.splice(index, 1);
+            actionNameId = 'PricedItemsListHandler-showPricedItem';
         }
         else {
             hiddenPricedItemIds.push(pricedItemId);
+            actionNameId = 'PricedItemsListHandler-hidePricedItem';
             // TODO: Also need to set the active pricedItem to something else
             // if we're not showing hidden pricedItems.
         }
 
-        const hiddenInfo = Object.assign({}, state, {
+        const newState = Object.assign({}, state, {
             hiddenPricedItemIds: hiddenPricedItemIds,
         });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
 
-        this.setTabIdState(tabId, {
-            hiddenPricedItemIds: hiddenPricedItemIds,
-            dropdownInfo: this.getTabDropdownInfo(tabId, 
-                state.activePricedItemId, pricedItemTypeName, hiddenInfo),
-        });
+        this.setTabIdState(tabId, newState);
+
+        const pricedItemDataItem = this.props.accessor.getPricedItemDataItemWithId(
+            pricedItemId);
+
+        this.setTabIdProjectSettings(tabId, 
+            {
+                hiddenPricedItemIds: hiddenPricedItemIds,
+            },
+            userMsg(actionNameId, pricedItemDataItem.name));
     }
 
 
     onToggleShowHiddenPricedItems(tabId, pricedItemTypeName) {
         const state = this.getTabIdState(tabId);
 
-        const hiddenInfo = Object.assign({}, state, {
+        const newState = Object.assign({}, state, {
             showHiddenPricedItems: !state.showHiddenPricedItems,
         });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
 
-        this.setTabIdState(tabId, {
-            showHiddenPricedItems: !state.showHiddenPricedItems,
-            dropdownInfo: this.getTabDropdownInfo(tabId, 
-                state.activePricedItemId, pricedItemTypeName, hiddenInfo),
-        });
 
+        this.setTabIdState(tabId, newState);
+
+        const pluralTypeDescription 
+            = PI.getPricedItemType(pricedItemTypeName).pluralDescription;
+        this.setTabIdProjectSettings(tabId, 
+            {
+                showHiddenPricedItems: newState.showHiddenPricedItems,
+            },
+            userMsg('PricedItemsListHandler-action_toggleShowHiddenPricedItems',
+                pluralTypeDescription
+            ));
     }
 
 
     
-    getTabDropdownInfo(tabId, activePricedItemId, pricedItemTypeName, hiddenInfo) {
-        const { hiddenPricedItemIds, showHiddenPricedItems }
-            = hiddenInfo;
+    getTabDropdownInfo(tabId, state) {
+        const { activePricedItemId, pricedItemTypeName, 
+            hiddenPricedItemIds, showHiddenPricedItems,
+        } = state;
 
         const showPricedItemLabelId 
             = (hiddenPricedItemIds.indexOf(activePricedItemId) >= 0)
@@ -165,6 +198,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                 : 'PricedItemsListHandler-hidePricedItem';
 
         const typeDescription = PI.getPricedItemType(pricedItemTypeName).description;
+        const pluralTypeDescription 
+            = PI.getPricedItemType(pricedItemTypeName).pluralDescription;
         const menuItems = [
             { id: 'openPricesList',
                 label: userMsg('PricedItemsListHandler-openPricesList', 
@@ -200,11 +235,14 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             },
             { id: 'toggleShowHiddenPricedItems',
                 label: userMsg('PricedItemsListHandler-showHiddenPricedItems', 
-                    typeDescription),
+                    pluralTypeDescription),
                 checked: showHiddenPricedItems,
                 onChooseItem: () => this.onToggleShowHiddenPricedItems(
                     tabId, pricedItemTypeName),
-            }
+            },
+
+            {},
+            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId),
         ];
 
         return {
@@ -218,12 +256,11 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const prevActivePricedItemId = state.activePricedItemId;
         if ((!prevActivePricedItemId && pricedItemId)
          || (prevActivePricedItemId && !pricedItemId)) {
-            this.setTabIdState(tabId,
-                {
-                    activePricedItemId: pricedItemId,
-                    dropdownInfo: this.getTabDropdownInfo(tabId, 
-                        pricedItemId, pricedItemTypeName, state),
-                });
+            const newState = Object.assign({}, state, {
+                activePricedItemId: pricedItemId,
+            });
+            newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+            this.setTabIdState(tabId, newState);
         }
         else {
             this.setTabIdState(tabId,
@@ -249,23 +286,26 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
      * @returns {TabbedPages~TabEntry}
      */
     createTabEntry(tabId, pricedItemTypeName) {
-        const hiddenInfo = {
-            hiddenPricedItemIds: [],
-            showHiddenPricedItems: false,
-        };
+        let settings = this.getTabIdProjectSettings(tabId) || {};
+        const columns = createDefaultColumns(pricedItemTypeName);
 
         const typeDescription = PI.getPricedItemType(pricedItemTypeName).description;
-        return {
+        const tabEntry = {
             tabId: tabId,
             title: userMsg('PricedItemsListHandler-title', 
                 typeDescription),
             hasClose: true,
-            dropdownInfo: this.getTabDropdownInfo(tabId, undefined, 
-                pricedItemTypeName, hiddenInfo),
             onRenderTabPage: this.onRenderTabPage,
-            hiddenPricedItemIds: [],
             pricedItemTypeName: pricedItemTypeName,
+            columns: columns,
+            hiddenPricedItemIds: settings.hiddenPricedItemIds || [],
+            showHiddenPricedItems: settings.showHiddenPricedItems,
         };
+
+        this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);
+        tabEntry.dropdownInfo = this.getTabDropdownInfo(tabId, tabEntry);
+
+        return tabEntry;
     }
 
 
@@ -285,8 +325,6 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             contextMenuItems = dropdownInfo.items;
         }
 
-        const columns = [];
-
         return <PricedItemsList
             accessor={accessor}
             pricedItemTypeName={tabEntry.pricedItemTypeName}
@@ -295,7 +333,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                     tabEntry.pricedItemTypeName)}
             onChoosePricedItem={(pricedItemId) => 
                 this.onChoosePricedItem(tabEntry.tabId, pricedItemId)}
-            columns={columns}
+            columns={tabEntry.columns}
+            onSetColumnWidth = {(args) =>
+                this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)}
             hiddenPricedItemIds={tabEntry.hiddenPricedItemIds}
             showHiddenPricedItems={tabEntry.showHiddenPricedItems}
             contextMenuItems={contextMenuItems}
