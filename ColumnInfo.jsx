@@ -95,6 +95,42 @@ export function getVisibleColumns(columns) {
 }
 
 
+/**
+ * Retrieves the keys of all the columns that have an isVisible property 
+ * that's truthy.
+ * @param {RowTable~Column[]} columns
+ * @returns {string[]}
+ */
+export function getVisibleColumnKeys(columns) {
+    const visibleColumns = [];
+    columns.forEach((column) => {
+        if (column.isVisible) {
+            visibleColumns.push(column.key);
+        }
+    });
+    return visibleColumns;
+}
+
+
+/**
+ * Updates the isVisible property of columns based on the column key being
+ * present in an array of visible column keys. The counterpart of 
+ * {@link getVisibleColumnKeys}
+ * @param {RowTable-Column[]} columns 
+ * @param {string[]} visibleColumns 
+ * @returns {RowTable-Column[]} Returns columns.
+ */
+export function updateColumnsFromVisibleColumnList(columns, visibleColumns) {
+    if (visibleColumns) {
+        visibleColumns = new Set(visibleColumns);
+        columns.forEach((column) => {
+            column.isVisible = visibleColumns.has(column.key);
+        });
+    }
+    return columns;
+}
+
+
 export function stateUpdateFromSetColumnWidth({ columnIndex, columnWidth, }, state) {
     const columns = Array.from(state.columns);
     columns[columnIndex] = Object.assign({}, columns[columnIndex], {
