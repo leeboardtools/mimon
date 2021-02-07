@@ -107,6 +107,24 @@ export class RowTableHandler {
     }
 
 
+    getColumnLabel(columns, columnName) {
+        const column = CI.getColumnWithKey(columns, columnName);
+        const { header } = column;
+        if (header && header.label) {
+            return header.label;
+        }
+
+        const { footer } = column;
+        if (footer && footer.label) {
+            return footer.label;
+        }
+
+        const { userIdBase } = this.props;
+        if (userIdBase) {
+            return userMsg(userIdBase + '-col_' + columnName);
+        }
+    }
+
 
     _onToggleColumn(tabId, columnName) {
         const state = this.getTabIdState(tabId);
@@ -131,7 +149,7 @@ export class RowTableHandler {
                 ? 'RowTableHandler-action_showColumn'
                 : 'RowTableHandler-action_hideColumn';
             const actionName = userMsg(actionNameId,
-                userMsg(this.props.userIdBase + '-col_' + columnName)
+                this.getColumnLabel(columns, columnName)
             );
 
             this.setTabIdProjectSettings(tabId, 
@@ -144,7 +162,7 @@ export class RowTableHandler {
 
     _createToggleColumnMenuItem(tabId, columns, name) {
         return { id: 'toggleColumn_' + name,
-            label: userMsg(this.props.userIdBase + '-col_' + name),
+            label: this.getColumnLabel(columns, name),
             checked: CI.getColumnWithKey(columns, name).isVisible,
             onChooseItem: () => this._onToggleColumn(
                 tabId, name),
@@ -311,7 +329,7 @@ export class RowTableHandler {
         const columnStates = columnStatesFromColumns(columns);
 
         const actionName = userMsg('RowTableHandler-action_setColumnWidth',
-            userMsg(this.props.userIdBase + '-col_' + newColumn.key)
+            this.getColumnLabel(columns, newColumn.key)
         );
 
         this.setTabIdProjectSettings(tabId, 

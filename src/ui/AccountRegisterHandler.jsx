@@ -1,9 +1,10 @@
 import React from 'react';
 import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
-import { AccountRegister } from './AccountRegister';
+import { AccountRegister, createDefaultColumns } from './AccountRegister';
 import { EventEmitter } from 'events';
 import * as T from '../engine/Transactions';
+import { RowTableHandler } from './RowTableHelpers';
 
 
 function getUndoRedoInfo(tabEntry) {
@@ -26,6 +27,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         super(props);
 
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
+        this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
 
         this.onRemoveTransaction = this.onRemoveTransaction.bind(this);
 
@@ -37,7 +39,20 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
 
         this.onSelectSplit = this.onSelectSplit.bind(this);
 
+
+        // This should be after all the bind() calls...
+        this._rowTableHandler = new RowTableHandler({
+            mainWindowHandler: this,
+            userIdBase: 'AccountsRegisterHandler',
+        });
+
         this._eventEmitter = new EventEmitter();
+    }
+
+
+    shutdownHandler() {
+        this._rowTableHandler.shutdownHandler();
+        this._rowTableHandler = undefined;
     }
 
 
@@ -209,6 +224,9 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
 
             // TODO:
             // 'clearNewTransaction - resets the new transaction...
+
+            {},
+            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId),
         ];
         return {
             items: menuItems,
@@ -245,6 +263,9 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     createTabEntry(tabId, accountId, openArgs) {
         const accountDataItem = this.props.accessor.getAccountDataItemWithId(
             accountId);
+        let settings = this.getTabIdProjectSettings(tabId) || {};
+        const columns = createDefaultColumns(accountDataItem.type);
+
         const newState = {
             tabId: tabId,
             title: accountDataItem.name,
@@ -254,7 +275,11 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             accountRegisterRef: React.createRef(),
             getUndoRedoInfo: getUndoRedoInfo,
             openArgs: openArgs,
+            columns: columns,
         };
+
+        this._rowTableHandler.setupTabEntryFromSettings(newState, settings);
+
         newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
 
         return newState;
@@ -301,6 +326,11 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             onOpenRegisterForTransactionSplit = {
                 this.onOpenRegisterForTransactionSplit
             }
+
+            columns = {tabEntry.columns}
+            onSetColumnWidth = {(args) =>
+                this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)} 
+
             contextMenuItems={contextMenuItems}
             refreshUndoMenu = {this.refreshUndoMenu}
             eventEmitter = {this._eventEmitter}

@@ -740,7 +740,6 @@ AccountsList.propTypes = {
     showAccountIds: PropTypes.bool,
     initialCollapsedAccountIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedAccountIds: PropTypes.func,
-    onUpdateColumns: PropTypes.func,
     onSetColumnWidth: PropTypes.func,
     children: PropTypes.any,
 };

@@ -8,8 +8,7 @@ import * as T from '../engine/Transactions';
 import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';
 import * as AH from '../tools/AccountHelpers';
-import { columnInfosToColumns, 
-    stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns, getVisibleColumns, } from '../util-ui/ColumnInfo';
 import deepEqual from 'deep-equal';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor';
@@ -640,6 +639,23 @@ export function getAccountRegisterColumnInfoDefs(accountType) {
     return columnInfoDefs;
 }
 
+/**
+ * Retrieves the account register columns with default settings.
+ */
+export function createDefaultColumns(accountType) {
+    const columnInfos = getAccountRegisterColumnInfoDefs(accountType);
+
+    const columns = columnInfosToColumns({
+        columnInfos: columnInfos,
+    });
+
+    columns.forEach((column) => {
+        column.isVisible = true;
+    });
+
+    return columns;
+}
+
 
 /**
  * Component for account registers.
@@ -670,7 +686,8 @@ export class AccountRegister extends React.Component {
 
         this._cellEditorsManager = new CellEditorsManager({
             getRowEntry: this.getRowEntry,
-            getColumnInfo: (columnIndex) => this.state.columnInfos[columnIndex],
+            getColumnInfo: (columnIndex) => 
+                this.state.columns[columnIndex].columnInfo,
             setManagerState: (state) => this.setState({
                 managerState: state,
             }),
@@ -690,29 +707,6 @@ export class AccountRegister extends React.Component {
         const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
             accountDataItem.pricedItemId);
 
-        const columnInfoDefs = getAccountRegisterColumnInfoDefs(accountType);
-
-        const columnInfos = [];
-        const { columns } = props;
-
-        if (columns) {
-            for (let name of columns) {
-                const columnInfo = columnInfoDefs[name];
-                if (columnInfo) {
-                    columnInfos.push(columnInfo);
-                }
-            }
-        }
-
-        if (!columnInfos.length) {
-            for (let name in columnInfoDefs) {
-                const columnInfoDef = columnInfoDefs[name];
-                if (columnInfoDef) {
-                    columnInfos.push(columnInfoDef);
-                }
-            }
-        }
-
 
         this._hiddenTransactionIds = new Set();
 
@@ -725,9 +719,11 @@ export class AccountRegister extends React.Component {
                 T.ReconcileState.RECONCILED.description],
         ];
 
+        const columns = this.props.columns || createDefaultColumns(accountType);
+
         this.state = {
             accountType: A.getAccountTypeName(accountType),
-            columnInfos: columnInfos,
+            columns: getVisibleColumns(columns),
             rowEntries: [],
             rowEntriesByTransactionId: new Map(),
             currency: pricedItemDataItem.currency,
@@ -781,8 +777,6 @@ export class AccountRegister extends React.Component {
                 name: userMsg('AccountRegister-dummy_accountName'),
             }
         };
-
-        this.state.columns = columnInfosToColumns(this.state);
 
         this.updateRowEntries();
 
@@ -921,6 +915,16 @@ export class AccountRegister extends React.Component {
 
         if (prevProps.showHiddenTransactions !== showHiddenTransactions) {
             rowsNeedUpdating = true;
+        }
+
+        if (!deepEqual(prevProps.columns, this.props.columns)) {
+            const { columns } = this.props;
+            if (columns) {
+                const visibleColumns = getVisibleColumns(columns);
+                this.setState({
+                    columns: visibleColumns,
+                });
+            }
         }
 
         if (rowsNeedUpdating) {
@@ -1327,11 +1331,6 @@ export class AccountRegister extends React.Component {
         }
 
         return true;
-    }
-
-
-    onSetColumnWidth(args) {
-        this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
     }
 
 
@@ -1817,7 +1816,7 @@ export class AccountRegister extends React.Component {
 
                 onLoadRows = {this.onLoadRows}
 
-                onSetColumnWidth = {this.onSetColumnWidth}
+                onSetColumnWidth = {this.props.onSetColumnWidth}
 
                 contextMenuItems = {this.props.contextMenuItems}
                 onChooseContextMenuItem = {this.props.onChooseContextMenuItem}
@@ -1863,7 +1862,8 @@ AccountRegister.propTypes = {
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
     refreshUndoMenu: PropTypes.func,
-    columns: PropTypes.arrayOf(PropTypes.string),
+    columns: PropTypes.arrayOf(PropTypes.object),
+    onSetColumnWidth: PropTypes.func,
     hiddenTransactionIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenTransactions: PropTypes.bool,
     showTransactionIds: PropTypes.bool,
