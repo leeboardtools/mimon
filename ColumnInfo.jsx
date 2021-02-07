@@ -22,6 +22,14 @@
  * @returns {RowTable~Column[]}
  */
 export function columnInfosToColumns({ columnInfos, columnWidths }) {
+    if (!Array.isArray(columnInfos) && (typeof columnInfos === 'object')) {
+        const array = [];
+        for (const name in columnInfos) {
+            array.push(columnInfos[name]);
+        }
+        columnInfos = array;
+    }
+
     const columns = columnInfos.map((columnInfo) => {
         return {
             key: columnInfo.key,
