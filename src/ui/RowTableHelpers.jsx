@@ -3,12 +3,37 @@ import * as CI from '../util-ui/ColumnInfo';
 import { dataDeepCopy } from '../util/DataDeepCopy';
 
 
+function updateColumnsFromColumnStates(columns, columnStates, defaultColumnStates) {
+    columns.forEach((column) => {
+        const { key } = column;
+        const columnState = (columnStates[key])
+            || (defaultColumnStates ? defaultColumnStates[key] : undefined);
+        if (columnState) {
+            column.isVisible = columnState.isVisible;
+            column.width = columnState.width;
+        }
+    });
+}
+
+
+function columnStatesFromColumns(columns) {
+    const columnStates = {};
+    columns.forEach((column) => {
+        columnStates[column.key] = {
+            isVisible: column.isVisible,
+            width: column.width,
+        };
+    });
+    return columnStates;
+}
+
+
 /**
  * Handler for use by main window handler implementations that support
  * {@link RowTable}s.
  * <p>
  * The main window handler implementation must implement the following methods:
- * <li>getTabDropdownInfo
+ * <li>getTabDropdownInfo 
  * <p>
  * The main window handler implementation may optionally implement the following
  * methods:
@@ -16,8 +41,45 @@ import { dataDeepCopy } from '../util/DataDeepCopy';
  * <p>
  * RowTableHandler's constructor should be called AFTER the main window handler
  * binds any methods.
+ * <p>
+ * {@link RowTableHandler#shutdownHandler} should be called from the main window
+ * handler's shutdownHandler() method.
  */
 export class RowTableHandler {
+
+    /**
+     * @callback RowTableHandler~getTabDropdownInfo
+     * Handler method for updating the tab's dropdown info.
+     * @param {string} tabId
+     * @param {object} newState
+     */
+
+    /**
+     * @callback RowTableHandler~updateStateFromModifiedProjectSettings
+     * Optional handler method for performing additional tab id state updating
+     * when the project settings are modified.
+     * @param {string} tabId
+     * @param {object} newState
+     * @param {*} projectSettings
+     */
+
+    /**
+     * @typedef {MainWindowHandlerBase} RowTableHandler~MainWindowHandler
+     * @property {RowTableHandler~getTabDropdownInfo} getTabDropdownInfo
+     * @property {RowTableHandler~updateStateFromModifiedProjectSettings}
+     *  [updateStateFromModifiedProjectSettings]
+     */
+
+    /**
+     * @typedef {object} RowTableHandler~props
+     * @property {RowTableHandler~MainWindowHandler} mainWindowHandler The 
+     * main window handler that's using this.
+     */
+
+    /**
+     * Constructor.
+     * @param {RowTableHandler~props} props 
+     */
     constructor(props) {
         this.props = props;
 
@@ -33,6 +95,7 @@ export class RowTableHandler {
         this._onTabIdProjectSettingsModified 
             = this._onTabIdProjectSettingsModified.bind(this);
 
+        this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
 
     }
 
@@ -42,6 +105,7 @@ export class RowTableHandler {
     shutdownHandler() {
         this._handler = undefined;
     }
+
 
 
     _onToggleColumn(tabId, columnName) {
@@ -61,7 +125,7 @@ export class RowTableHandler {
 
             this.setTabIdState(tabId, newState);
 
-            const visibleColumns = CI.getVisibleColumnKeys(columns);
+            const columnStates = columnStatesFromColumns(columns);
 
             let actionNameId = (column.isVisible)
                 ? 'RowTableHandler-action_showColumn'
@@ -72,7 +136,7 @@ export class RowTableHandler {
 
             this.setTabIdProjectSettings(tabId, 
                 {
-                    visibleColumns: visibleColumns,
+                    columnStates: columnStates,
                 },
                 actionName);
         }
@@ -108,17 +172,81 @@ export class RowTableHandler {
 
 
     /**
-     * Sets up column stuff in a tab entry from settings. The columns property must
-     * already be set 
+     * Creates a menu item for resetting all the column widths.
+     * @param {string} tabId 
+     * @returns {MenuList~Item}
+     */
+    createResetColumnWidthsMenuItem(tabId) {
+        return {
+            id: 'resetColumnWidths',
+            label: userMsg('RowTableHandler-action_resetColumnWidth'),
+            onChooseItem: () => this._onResetColumnWidths(
+                tabId),
+        };
+    }
+
+    _onResetColumnWidths(tabId) {
+        const state = this.getTabIdState(tabId);
+        const columns = Array.from(state.columns);
+
+        const { defaultColumnStates } = state;
+
+        for (let i = 0; i < columns.length; ++i) {
+            let column = columns[i];
+
+            const { key } = column;
+            let defaultWidth;
+            if (defaultColumnStates && defaultColumnStates[key]) {
+                defaultWidth = defaultColumnStates[key].width;
+            }
+
+            if (defaultWidth !== column.width) {
+                column = Object.assign({}, column);
+                if (defaultWidth !== undefined) {
+                    column.width = defaultWidth;
+                }
+                else {
+                    delete column.width;
+                }
+
+                columns[i] = column;
+            }
+        }
+
+        const newState = Object.assign({}, state, {
+            columns: columns,
+        });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+
+        this.setTabIdState(tabId, newState);
+
+        const columnStates = columnStatesFromColumns(columns);
+
+        const actionName = userMsg('RowTableHandler-action_resetColumnWidth');
+
+        this.setTabIdProjectSettings(tabId, 
+            {
+                columnStates: columnStates,
+            },
+            actionName);
+    }
+
+
+    /**
+     * Normally called from the main window handler's createTabEntry after the columns
+     * property has been set up with default values, sets up column stuff in a tab 
+     * entry from settings.
      * @param {*} tabEntry 
      * @param {*} settings 
      */
     setupTabEntryFromSettings(tabEntry, settings) {
         const { columns } = tabEntry;
 
-        tabEntry.defaultVisibleColumns = CI.getVisibleColumnKeys(columns);
-        CI.updateColumnsFromVisibleColumnList(columns,
-            settings.visibleColumns);
+        tabEntry.defaultColumnStates = columnStatesFromColumns(columns);
+        if (settings.columnStates) {
+            updateColumnsFromColumnStates(columns, settings.columnStates,
+                tabEntry.defaultColumnStates);
+        }
 
         tabEntry.onTabIdProjectSettingsModified = this._onTabIdProjectSettingsModified;
 
@@ -138,14 +266,12 @@ export class RowTableHandler {
     _onTabIdProjectSettingsModified(tabId, projectSettings, originalChanges) {
         const state = this.getTabIdState(tabId);
         const newState = Object.assign({}, state, projectSettings);
-        if (projectSettings.visibleColumns) {
+        if (projectSettings.columnStates) {
             newState.columns = dataDeepCopy(newState.columns);
-            
-            const visibleColumns = (projectSettings.visibleColumns.length)
-                ? projectSettings.visibleColumns
-                : state.defaultVisibleColumns;
-            CI.updateColumnsFromVisibleColumnList(
-                newState.columns, visibleColumns);
+
+            updateColumnsFromColumnStates(newState.columns, 
+                projectSettings.columnStates,
+                state.defaultColumnStates);
         }
 
         const { updateStateFromModifiedProjectSettings } = this._handler;
@@ -159,20 +285,39 @@ export class RowTableHandler {
     }
 
 
+    /**
+     * The {@link RowTable~onSetColumnWidth} for the {@link RowTable}'s
+     * onSetColumnWidth property.
+     * @param {string} tabId 
+     * @param {RowTable~onSetColumnWidthArgs} args 
+     */
+    onSetColumnWidth(tabId, args) {
+        const { columnWidth, columnIndex } = args;
+        const state = this.getTabIdState(tabId);
+        const columns = Array.from(state.columns);
 
-    onUpdateColumns({ tabId, labelId, columns, columnIndex, }) {
-        let columnName = '';
-        const { columnInfo } = columns[columnIndex];
-        if (columnInfo) {
-            if (columnInfo.header && columnInfo.header.label) {
-                columnName = columnInfo.header.label;
-            }
-            else if (columnInfo.footer && columnInfo.footer.label) {
-                columnName = columnInfo.footer.label;
-            }
-        }
+        const newColumn = Object.assign({}, columns[columnIndex], {
+            width: columnWidth,
+        });
+        columns[columnIndex] = newColumn;
 
-        //const name = userMsg(labelId, columnName);
-        //this.setTabIdProjectSettings(tabId, changes, actionName);
+        const newState = Object.assign({}, state, {
+            columns: columns,
+        });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+
+        this.setTabIdState(tabId, newState);
+
+        const columnStates = columnStatesFromColumns(columns);
+
+        const actionName = userMsg('RowTableHandler-action_setColumnWidth',
+            userMsg(this.props.userIdBase + '-col_' + newColumn.key)
+        );
+
+        this.setTabIdProjectSettings(tabId, 
+            {
+                columnStates: columnStates,
+            },
+            actionName);
     }
 }

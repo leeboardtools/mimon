@@ -143,13 +143,6 @@
     "AccountsListHandler-action_hideHiddenAccounts": "Hide Hidden Accounts",
     "AccountsListHandler-action_expandAccount": ["Expand Child Accounts of ", ""],
     "AccountsListHandler-action_collapseAccount": ["Collapse Child Accounts of ", ""],
-    "AccountsListHandler-action_showColumn": ["Show ", " Column"],
-    "AccountsListHandler-action_hideColumn": ["Hide ", " Column"],
-    "AccountsListHandler-action_updateColumns": ["", " Column Change"],
-
-
-    "RowTableHandler-action_showColumn": ["Show ", " Column"],
-    "RowTableHandler-action_hideColumn": ["Hide ", " Column"],
 
 
     "AccountEditorHandler-newAccount_title": "New Account",
@@ -448,6 +441,12 @@
     "RemindersListHandler-skipReminderAction_NEXT": "Skip Reminders for next date",
     "RemindersListHandler-applyReminderAction_ALL": "Apply Reminders for all dates",
     "RemindersListHandler-skipReminderAction_ALL": "Skip Reminders for all dates",
+
+
+    "RowTableHandler-action_showColumn": ["Show ", " Column"],
+    "RowTableHandler-action_hideColumn": ["Hide ", " Column"],
+    "RowTableHandler-action_setColumnWidth": ["", " Column Width Change"],
+    "RowTableHandler-action_resetColumnWidth": "Reset Column Widths",
 
 
     "": ""

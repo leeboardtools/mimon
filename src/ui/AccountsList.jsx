@@ -706,7 +706,7 @@ export class AccountsList extends React.Component {
 
                 onRenderCell = {this.onRenderCell}
 
-                onSetColumnWidth = {this.onSetColumnWidth}
+                onSetColumnWidth = {this.props.onSetColumnWidth}
 
                 activeRowKey = {state.activeRowKey}
                 onActivateRow = {this.onActivateRow}
@@ -754,5 +754,6 @@ AccountsList.propTypes = {
     initialCollapsedAccountIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedAccountIds: PropTypes.func,
     onUpdateColumns: PropTypes.func,
+    onSetColumnWidth: PropTypes.func,
     children: PropTypes.any,
 };

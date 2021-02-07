@@ -377,6 +377,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 label: userMsg('AccountsListHandler-columns_subMenu'),
                 subMenuItems: toggleColumnsSubMenuItems,
             },
+
+            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId),
         ];
 
         return {
@@ -479,15 +481,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             initialCollapsedAccountIds = {collapsedAccountIds}
             onUpdateCollapsedAccountIds = {(args) =>
                 this.onUpdateCollapsedAccountIds(tabEntry.tabId, args)}
-            onUpdateColumns = {(columns, columnIndex) =>
-                this._rowTableHandler.onUpdateColumns(
-                    {
-                        tabId: tabEntry.tabId,
-                        labelId: 'AccountsListHandler-action_updateColumns', 
-                        columns: columns,
-                        columnIndex: columnIndex,
-                    })
-            }
+            onSetColumnWidth = {(args) =>
+                this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)}
             contextMenuItems = {contextMenuItems}
         />;
     }
