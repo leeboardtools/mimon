@@ -11,8 +11,7 @@ import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';
 import * as GH from '../tools/GainHelpers';
 import { columnInfosToColumns, getColumnWithKey,
-    getVisibleColumns,
-    stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
+    getVisibleColumns } from '../util-ui/ColumnInfo';
 import { YMDDate } from '../util/YMDDate';
 
 
@@ -78,7 +77,6 @@ export class AccountsList extends React.Component {
 
         this.onExpandCollapseRow = this.onExpandCollapseRow.bind(this);
         this.onRenderCell = this.onRenderCell.bind(this);
-        this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
 
         this.onActivateRow = this.onActivateRow.bind(this);
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
@@ -395,17 +393,6 @@ export class AccountsList extends React.Component {
                 });
             }
         });
-    }
-
-
-    onSetColumnWidth(args) {        
-        this.setState((state) => stateUpdateFromSetColumnWidth(args, state),
-            () => {
-                const { onUpdateColumns } = this.props;
-                if (onUpdateColumns) {
-                    onUpdateColumns(this.state.columns, args.columnIndex);
-                }
-            });
     }
 
 
