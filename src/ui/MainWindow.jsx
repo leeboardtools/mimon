@@ -660,8 +660,10 @@ export class MainWindow extends React.Component {
             this.addTabEntry(tabEntry, tabType);
         }
         else {
-            this._pricesListHandler.openTabEntry(tabId, pricedItemId, 
-                openArgs);
+            if (this._pricesListHandler.openTabEntry) {
+                this._pricesListHandler.openTabEntry(tabId, pricedItemId, 
+                    openArgs);
+            }
         }
 
         this.setState({
@@ -696,8 +698,10 @@ export class MainWindow extends React.Component {
             this.addTabEntry(tabEntry, tabType);
         }
         else {
-            this._reconcilerWindowHandler.openTabEntry(tabId, accountId, 
-                openArgs);
+            if (this._reconcilerWindowHandler.openTabEntry) {
+                this._reconcilerWindowHandler.openTabEntry(tabId, accountId, 
+                    openArgs);
+            }
         }
 
         this.setState({
