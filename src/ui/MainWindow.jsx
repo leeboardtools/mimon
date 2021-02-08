@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { EventEmitter } from 'events';
 import { userMsg } from '../util/UserMessages';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { TabbedPages } from '../util-ui/TabbedPages';
@@ -30,6 +31,10 @@ const projectSettingsMainWindow = ['mainWindow'];
 export class MainWindow extends React.Component {
     constructor(props) {
         super(props);
+
+        this._eventEmitter = new EventEmitter();
+        this.on = this.on.bind(this);
+        this.off = this.off.bind(this);
 
         this.onCancel = this.onCancel.bind(this);
         this.onCloseTab = this.onCloseTab.bind(this);
@@ -83,6 +88,8 @@ export class MainWindow extends React.Component {
             onOpenTab: this.onOpenTab,
             onCloseTab: this.onCloseTab,
             onRefreshUndoMenu: this.onRefreshUndoMenu,
+            on: this.on,
+            off: this.off,
         };
         this._accountsListHandler = new AccountsListHandler(handlerArgs);
 
@@ -204,6 +211,15 @@ export class MainWindow extends React.Component {
 
 
     componentDidUpdate(prevProps, prevState) {
+    }
+
+
+    on(event, listener) {
+        this._eventEmitter.on(event, listener);
+    }
+
+    off(event, listener) {
+        this._eventEmitter.off(event, listener);
     }
 
 
@@ -506,36 +522,27 @@ export class MainWindow extends React.Component {
                 changesPath
             );
             this._projectSettings.tabIdSettings[tabId] = tabIdSettings;
-
-            const tabEntry = this.onGetTabIdState(tabId);
-            if (!tabEntry) {
-                return;
-            }
             
-            const { onTabIdProjectSettingsModified } = tabEntry;
-            if (onTabIdProjectSettingsModified) {
-                if (changes && !deepEqual(changes, tabIdSettings)
-                 && !Array.isArray(changes) && !Array.isArray(tabIdSettings)) {
-                    // Make sure tabIdSettings has the same set of properties as
-                    // changes, this way any changes that were added will be available
-                    // for removal.
-                    tabIdSettings = Object.assign({}, tabIdSettings);
-                    for (const name in changes) {
-                        if (!Object.prototype.hasOwnProperty.call(tabIdSettings, name)) {
-                            if (Array.isArray(changes[name])) {
-                                tabIdSettings[name] = [];
-                            }
-                            else {
-                                tabIdSettings[name] = undefined;
-                            }
+            if (changes && !deepEqual(changes, tabIdSettings)
+                && !Array.isArray(changes) && !Array.isArray(tabIdSettings)) {
+                // Make sure tabIdSettings has the same set of properties as
+                // changes, this way any changes that were added will be available
+                // for removal.
+                tabIdSettings = Object.assign({}, tabIdSettings);
+                for (const name in changes) {
+                    if (!Object.prototype.hasOwnProperty.call(tabIdSettings, name)) {
+                        if (Array.isArray(changes[name])) {
+                            tabIdSettings[name] = [];
+                        }
+                        else {
+                            tabIdSettings[name] = undefined;
                         }
                     }
                 }
-
-                if (onTabIdProjectSettingsModified(tabId, tabIdSettings)) {
-                    this.forceUpdate();
-                }
             }
+
+            this._eventEmitter.emit('tabIdProjectSettingsModify', 
+                tabId, tabIdSettings, changes);
         }
     }
 

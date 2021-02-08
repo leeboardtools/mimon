@@ -242,7 +242,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             },
 
             {},
-            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId),
+            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state),
         ];
 
         return {
@@ -286,7 +286,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
      * @returns {TabbedPages~TabEntry}
      */
     createTabEntry(tabId, pricedItemTypeName) {
-        let settings = this.getTabIdProjectSettings(tabId) || {};
+        const projectSettingsId = 'PricedItemsListHandler-' + pricedItemTypeName;
+        let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
         const columns = createDefaultColumns(pricedItemTypeName);
 
         const typeDescription = PI.getPricedItemType(pricedItemTypeName).description;
@@ -298,6 +299,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             onRenderTabPage: this.onRenderTabPage,
             pricedItemTypeName: pricedItemTypeName,
             columns: columns,
+            projectSettingsId: projectSettingsId,
             hiddenPricedItemIds: settings.hiddenPricedItemIds || [],
             showHiddenPricedItems: settings.showHiddenPricedItems,
         };

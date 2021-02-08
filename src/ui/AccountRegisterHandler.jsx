@@ -226,7 +226,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             // 'clearNewTransaction - resets the new transaction...
 
             {},
-            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId),
+            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state),
         ];
         return {
             items: menuItems,
@@ -266,7 +266,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         let settings = this.getTabIdProjectSettings(tabId) || {};
         const columns = createDefaultColumns(accountDataItem.type);
 
-        const newState = {
+        const tabEntry = {
             tabId: tabId,
             title: accountDataItem.name,
             hasClose: true,
@@ -278,11 +278,11 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             columns: columns,
         };
 
-        this._rowTableHandler.setupTabEntryFromSettings(newState, settings);
+        this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);
 
-        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        tabEntry.dropdownInfo = this.getTabDropdownInfo(tabId, tabEntry);
 
-        return newState;
+        return tabEntry;
     }
 
 

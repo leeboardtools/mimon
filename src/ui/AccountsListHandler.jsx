@@ -378,7 +378,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 subMenuItems: toggleColumnsSubMenuItems,
             },
 
-            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId),
+            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state),
         ];
 
         return {

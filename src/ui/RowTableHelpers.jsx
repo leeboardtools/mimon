@@ -6,7 +6,7 @@ import { dataDeepCopy } from '../util/DataDeepCopy';
 function updateColumnsFromColumnStates(columns, columnStates, defaultColumnStates) {
     columns.forEach((column) => {
         const { key } = column;
-        const columnState = (columnStates[key])
+        const columnState = (columnStates ? columnStates[key] : undefined)
             || (defaultColumnStates ? defaultColumnStates[key] : undefined);
         if (columnState) {
             column.isVisible = columnState.isVisible;
@@ -44,6 +44,9 @@ function columnStatesFromColumns(columns) {
  * <p>
  * {@link RowTableHandler#shutdownHandler} should be called from the main window
  * handler's shutdownHandler() method.
+ * <p>
+ * Normally the project settings are stored using the tabId. This can be overridden
+ * by adding a projectSettingsId property with the desired id to the tab state.
  */
 export class RowTableHandler {
 
@@ -92,6 +95,7 @@ export class RowTableHandler {
 
         this.getTabDropdownInfo = handler.getTabDropdownInfo;
 
+        this._onCloseTab = this._onCloseTab.bind(this);
         this._onTabIdProjectSettingsModified 
             = this._onTabIdProjectSettingsModified.bind(this);
 
@@ -152,7 +156,8 @@ export class RowTableHandler {
                 this.getColumnLabel(columns, columnName)
             );
 
-            this.setTabIdProjectSettings(tabId, 
+            const projectSettingsId = state.projectSettingsId || tabId;
+            this.setTabIdProjectSettings(projectSettingsId, 
                 {
                     columnStates: columnStates,
                 },
@@ -194,10 +199,29 @@ export class RowTableHandler {
      * @param {string} tabId 
      * @returns {MenuList~Item}
      */
-    createResetColumnWidthsMenuItem(tabId) {
+    createResetColumnWidthsMenuItem(tabId, state) {
+        let disabled = true;
+        const { columns, defaultColumnStates } = state;
+        if (columns) {
+            for (let i = 0; i < columns.length; ++i) {
+                const column = columns[i];
+                if (column.width !== undefined) {
+                    if (defaultColumnStates && defaultColumnStates[column.key]) {
+                        if (defaultColumnStates[column.key].width === column.width) {
+                            continue;
+                        }
+                    }
+
+                    disabled = false;
+                    break;
+                }
+            }
+        }
+        
         return {
             id: 'resetColumnWidths',
-            label: userMsg('RowTableHandler-action_resetColumnWidth'),
+            label: userMsg('RowTableHandler-resetColumnWidth'),
+            disabled: disabled,
             onChooseItem: () => this._onResetColumnWidths(
                 tabId),
         };
@@ -242,11 +266,20 @@ export class RowTableHandler {
 
         const actionName = userMsg('RowTableHandler-action_resetColumnWidth');
 
-        this.setTabIdProjectSettings(tabId, 
+        const projectSettingsId = state.projectSettingsId || tabId;
+        this.setTabIdProjectSettings(projectSettingsId, 
             {
                 columnStates: columnStates,
             },
             actionName);
+    }
+
+
+    _onCloseTab(tabId, tabEntry) {
+        const { onTabIdProjectSettingsModify } = tabEntry.rowTableHelpers;
+        if (onTabIdProjectSettingsModify) {
+            this._handler.off('tabIdProjectSettingsModify', onTabIdProjectSettingsModify);
+        }
     }
 
 
@@ -266,30 +299,55 @@ export class RowTableHandler {
                 tabEntry.defaultColumnStates);
         }
 
-        tabEntry.onTabIdProjectSettingsModified = this._onTabIdProjectSettingsModified;
+        tabEntry.rowTableHelpers = {
+            onCloseTab: tabEntry.onCloseTab,
+            // We use a separate function for each tabEntry so the listeners are unique.
+            onTabIdProjectSettingsModify: (projectSettingsId, 
+                projectSettings, originalChanges) => {
+                this._onTabIdProjectSettingsModified(
+                    tabEntry.tabId, projectSettingsId, projectSettings, originalChanges);
+            },
+        };
+        tabEntry.onCloseTab = this.onCloseTab;
+
+        this._handler.on('tabIdProjectSettingsModify', 
+            tabEntry.rowTableHelpers.onTabIdProjectSettingsModify);
+        //tabEntry.onTabIdProjectSettingsModified = this._onTabIdProjectSettingsModified;
 
         return tabEntry;
     }
 
 
-    /**
-     * Callback passed as the onTabIdProjectSettingsModified property of the
-     * tab entry, used to sync up the updated project settings with the
-     * tab id state. Automatically installed by 
-     * {@link RowTableHandler#setupTabEntryFromSettings}.
-     * @param {*} tabId 
-     * @param {*} projectSettings 
-     * @param {*} originalChanges 
-     */
-    _onTabIdProjectSettingsModified(tabId, projectSettings, originalChanges) {
+    _onTabIdProjectSettingsModified(tabId, projectSettingsId, 
+        projectSettings, originalChanges) {
         const state = this.getTabIdState(tabId);
-        const newState = Object.assign({}, state, projectSettings);
-        if (projectSettings.columnStates) {
+
+        if (state.projectSettingsId) {
+            if (state.projectSettingsId !== projectSettingsId) {
+                return;
+            }
+        }
+        else if (tabId !== projectSettingsId) {
+            return;
+        }
+
+        let newState;
+        if (projectSettings.columnStates || originalChanges.columnStates) {
+            newState = Object.assign({}, state);
             newState.columns = dataDeepCopy(newState.columns);
 
             updateColumnsFromColumnStates(newState.columns, 
                 projectSettings.columnStates,
                 state.defaultColumnStates);
+            
+            console.log({
+                tabId: tabId,
+                columnStates: projectSettings.columnStates,
+                defaultColumnStates: state.defaultColumnStates,
+            });
+        }
+        else {
+            newState = Object.assign({}, state, projectSettings);
         }
 
         const { updateStateFromModifiedProjectSettings } = this._handler;
@@ -332,7 +390,8 @@ export class RowTableHandler {
             this.getColumnLabel(columns, newColumn.key)
         );
 
-        this.setTabIdProjectSettings(tabId, 
+        const projectSettingsId = state.projectSettingsId || tabId;
+        this.setTabIdProjectSettings(projectSettingsId, 
             {
                 columnStates: columnStates,
             },

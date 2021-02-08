@@ -1,4 +1,3 @@
-import { userMsg } from '../util/UserMessages';
 
 /**
  * Base class for the handlers used by {@link MainWindow}
@@ -22,6 +21,8 @@ export class MainWindowHandlerBase {
         this.openTab = props.onOpenTab;
         this.closeTab = props.onCloseTab;
         this.refreshUndoMenu = props.onRefreshUndoMenu;
+        this.on = props.on;
+        this.off = props.off;
 
         this.onOpenRegisterForTransactionSplit 
             = this.onOpenRegisterForTransactionSplit.bind(this);

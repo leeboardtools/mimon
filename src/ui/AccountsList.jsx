@@ -734,12 +734,12 @@ AccountsList.propTypes = {
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
     columns: PropTypes.arrayOf(PropTypes.object),
+    onSetColumnWidth: PropTypes.func,
     hiddenRootAccountTypes: PropTypes.arrayOf(PropTypes.string),
     hiddenAccountIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenAccounts: PropTypes.bool,
     showAccountIds: PropTypes.bool,
     initialCollapsedAccountIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedAccountIds: PropTypes.func,
-    onSetColumnWidth: PropTypes.func,
     children: PropTypes.any,
 };

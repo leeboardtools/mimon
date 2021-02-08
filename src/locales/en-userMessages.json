@@ -450,6 +450,7 @@
     "RowTableHandler-action_setColumnWidth": ["", " Column Width Change"],
     "RowTableHandler-action_resetColumnWidth": "Reset Column Widths",
 
+    "RowTableHandler-resetColumnWidth": "Reset column widths",
 
     "": ""
 }
