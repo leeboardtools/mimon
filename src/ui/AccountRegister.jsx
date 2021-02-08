@@ -677,8 +677,6 @@ export class AccountRegister extends React.Component {
 
         this.onActiveRowChanged = this.onActiveRowChanged.bind(this);
 
-        this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
-
         this.getRowEntry = this.getRowEntry.bind(this);
         this.startRowEdit = this.startRowEdit.bind(this);
         this.getSaveBuffer = this.getSaveBuffer.bind(this);
