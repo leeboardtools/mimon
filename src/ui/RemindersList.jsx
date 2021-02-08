@@ -3,8 +3,7 @@ import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { RowTable } from '../util-ui/RowTable';
 import deepEqual from 'deep-equal';
-import { columnInfosToColumns, 
-    stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns, getVisibleColumns } from '../util-ui/ColumnInfo';
 import * as ACE from './AccountingCellEditors';
 import { getCurrencyForAccountId } 
     from '../tools/AccountHelpers';
@@ -280,6 +279,22 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
 }
 
 
+/**
+ * Retrieves the account list columns with default settings.
+ */
+export function createDefaultColumns(dueEntriesById) {
+    const columnInfos = getRemindersListColumnInfoDefs(dueEntriesById);
+
+    const columns = columnInfosToColumns({
+        columnInfos: columnInfos,
+    });
+
+    columns.forEach((column) => column.isVisible = true);
+
+    return columns;
+}
+
+
 export class RemindersList extends React.Component {
     constructor(props) {
         super(props);
@@ -289,30 +304,19 @@ export class RemindersList extends React.Component {
         this.onReminderRemove = this.onReminderRemove.bind(this);
 
         this.getRowKey = this.getRowKey.bind(this);
-        this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
 
         this.onRenderCell = this.onRenderCell.bind(this);
         this.onActivateRow = this.onActivateRow.bind(this);
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
 
-        const columnInfoDefs = getRemindersListColumnInfoDefs(
-            this.props.dueEntriesById);
-
-        const columnInfos = [];
-
-        if (!columnInfos.length) {
-            for (let name in columnInfoDefs) {
-                columnInfos.push(columnInfoDefs[name]);
-            }
-        }
+        const columns = this.props.columns || createDefaultColumns();
 
 
         this._hiddenReminderIds = new Set();
 
         this.state = {
-            columnInfos: columnInfos,
+            columns: getVisibleColumns(columns),
             rowEntries: [],
-            columnKeys: new Set(),
         };
 
         this._sizingRowEntry = {
@@ -327,8 +331,6 @@ export class RemindersList extends React.Component {
         if (this.props.dueEntriesById) {
             this._sizingRowEntry.dueStatus = 'APPLIED';
         }
-
-        this.state.columns = columnInfosToColumns(this.state);
 
         this.state.rowEntries = this.buildRowEntries().rowEntries;
     }
@@ -391,6 +393,16 @@ export class RemindersList extends React.Component {
             rowsNeedUpdating = true;
         }
 
+        if (!deepEqual(prevProps.columns, this.props.columns)) {
+            const { columns } = this.props;
+            if (columns) {
+                const visibleColumns = getVisibleColumns(columns);
+                this.setState({
+                    columns: visibleColumns,
+                });
+            }
+        }
+
         if (!rowsNeedUpdating) {
             if (!deepEqual(this.props.dueEntriesById, prevProps.dueEntriesById)) {
                 rowsNeedUpdating = true;
@@ -417,16 +429,6 @@ export class RemindersList extends React.Component {
                         : undefined);
                 }
             }
-        }
-
-
-        const { columnInfos } = this.state;
-        const columnKeys = new Set();
-        columnInfos.forEach((columnInfo) => columnKeys.add(columnInfo.key));
-        if (!deepEqual(columnKeys, prevState.columnKeys)) {
-            this.setState({
-                columnKeys: columnKeys,
-            });
         }
     }
 
@@ -553,10 +555,6 @@ export class RemindersList extends React.Component {
         return rowIndex;
     }
 
-    onSetColumnWidth(args) {
-        this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
-    }
-
 
     onActivateRow(activeRowIndex) {
         const rowEntry = (activeRowIndex !== undefined)
@@ -598,7 +596,7 @@ export class RemindersList extends React.Component {
             isActive: args.rowIndex === this.state.activeRowIndex,
         });
 
-        const columnInfo = this.state.columnInfos[args.columnIndex];
+        const { columnInfo } = this.state.columns[args.columnIndex];
         const { renderDisplayCell } = columnInfo;
         if (renderDisplayCell) {
             const value = columnInfo.getCellValue(args);
@@ -645,7 +643,7 @@ export class RemindersList extends React.Component {
 
                 onRenderCell={this.onRenderCell}
 
-                onSetColumnWidth = { this.onSetColumnWidth }
+                onSetColumnWidth = { this.props.onSetColumnWidth }
 
                 activeRowIndex = {state.activeRowIndex}
                 onActivateRow = {this.onActivateRow}
@@ -666,6 +664,8 @@ RemindersList.propTypes = {
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
     onClose: PropTypes.func.isRequired,
+    columns: PropTypes.arrayOf(PropTypes.object),
+    onSetColumnWidth: PropTypes.func,
     hiddenReminderIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenReminders: PropTypes.bool,
     showReminderIds: PropTypes.bool,

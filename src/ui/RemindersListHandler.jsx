@@ -1,12 +1,13 @@
 import React from 'react';
 import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
-import { RemindersList } from './RemindersList';
+import { RemindersList, createDefaultColumns } from './RemindersList';
 import { isReminderDue } from '../engine/Reminders';
 import { createCompositeAction } from '../util/Actions';
 import * as T from '../engine/Transactions';
 import { YMDDate } from '../util/YMDDate';
 import deepEqual from 'deep-equal';
+import { RowTableHandler } from './RowTableHelpers';
 
 
 /**
@@ -37,6 +38,15 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         this.onCloseTab = this.onCloseTab.bind(this);
 
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
+
+        this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
+
+
+        // This should be after all the bind() calls...
+        this._rowTableHandler = new RowTableHandler({
+            mainWindowHandler: this,
+            userIdBase: 'RemindersListHandler',
+        });
     }
 
 
@@ -83,30 +93,26 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             // if we're not showing hidden reminders.
         }
 
-        const hiddenInfo = Object.assign({}, state, {
+        const newState = Object.assign({}, state, {
             hiddenReminderIds: hiddenReminderIds,
         });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, 
+            newState);
 
-        this.setTabIdState(tabId, {
-            hiddenReminderIds: hiddenReminderIds,
-            dropdownInfo: this.getTabDropdownInfo(tabId, 
-                state.activeReminderId, hiddenInfo),
-        });
+        this.setTabIdState(tabId, newState);
     }
 
 
     onToggleShowHiddenReminders(tabId) {
         const state = this.getTabIdState(tabId);
 
-        const hiddenInfo = Object.assign({}, state, {
+        const newState = Object.assign({}, state, {
             showHiddenReminders: !state.showHiddenReminders,
         });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, 
+            newState);
 
-        this.setTabIdState(tabId, {
-            showHiddenReminders: !state.showHiddenReminders,
-            dropdownInfo: this.getTabDropdownInfo(tabId, 
-                state.activeReminderId, hiddenInfo),
-        });
+        this.setTabIdState(tabId, newState);
 
     }
 
@@ -278,17 +284,14 @@ export class RemindersListHandler extends MainWindowHandlerBase {
 
 
     updateDueEntriesById(tabId, newDueEntriesById) {
-        this.setTabIdState(tabId, {
+        const state = this.getTabIdState(tabId);
+        const newState = Object.assign({}, state, {
             dueEntriesById: newDueEntriesById,
-        },
-        (state) => {
-            this.setTabIdState(
-                tabId, {
-                    dropdownInfo: this.getTabDropdownInfo(tabId, 
-                        state.activeReminderId, state),
-                },
-            );
         });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, 
+            newState);
+
+        this.setTabIdState(tabId, newState);
     }
 
     onReminderAdd(tabId, result) {
@@ -339,8 +342,9 @@ export class RemindersListHandler extends MainWindowHandlerBase {
     }
 
 
-    getTabDropdownInfo(tabId, activeReminderId, state) {
-        const { hiddenReminderIds, showHiddenReminders, dueEntriesById, }
+    getTabDropdownInfo(tabId, state) {
+        const { activeReminderId, 
+            hiddenReminderIds, showHiddenReminders, dueEntriesById, }
             = state;
 
         const showReminderLabelId = (hiddenReminderIds.indexOf(activeReminderId) >= 0)
@@ -543,6 +547,9 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             menuItems.push(toggleReminderVisibleItem);
             menuItems.push(toggleShowHiddenRemindersItem);
         }
+        menuItems.push({});
+        menuItems.push(
+            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state));
 
         return {
             items: menuItems,
@@ -571,11 +578,12 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         }
 
         if (dropdownInfoNeedsUpdate) {
-            this.setTabIdState(tabId,
-                {
-                    activeReminderId: reminderId,
-                    dropdownInfo: this.getTabDropdownInfo(tabId, reminderId, state),
-                });
+            const newState = Object.assign({}, state, {
+                activeReminderId: reminderId,
+            });
+            newState.dropdownInfo = this.getTabDropdownInfo(tabId, 
+                newState);
+            this.setTabIdState(tabId, newState);
         }
         else {
             this.setTabIdState(tabId,
@@ -634,12 +642,15 @@ export class RemindersListHandler extends MainWindowHandlerBase {
      * @returns {TabbedPages~TabEntry}
      */
     createTabEntry(tabId) {
+        let settings = this.getTabIdProjectSettings(tabId) || {};
+        const columns = createDefaultColumns();
+
         const isRemindersDue = (tabId === 'remindersDueList');
         const titleId = (isRemindersDue)
             ? 'RemindersListHandler-remindersDueList_title'
             : 'RemindersListHandler-masterReminderList_title';
 
-        const newState = {
+        const tabEntry = {
             tabId: tabId,
             isRemindersDue: isRemindersDue,
             title: userMsg(titleId),
@@ -648,7 +659,7 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             onCloseTab: this.onCloseTab,
             hiddenReminderIds: [],
             showHiddenReminders: false,
-            hiddenColumns: [],
+            columns: columns,
         };
 
         if (isRemindersDue) {
@@ -666,19 +677,21 @@ export class RemindersListHandler extends MainWindowHandlerBase {
                 }
             });
 
-            newState.dueEntriesById = dueEntriesById;
+            tabEntry.dueEntriesById = dueEntriesById;
 
-            newState.onReminderAdd = (result) => this.onReminderAdd(tabId, result);
-            newState.onReminderModify = (result) => this.onReminderModify(tabId, result);
-            newState.onReminderRemove = (result) => this.onReminderRemove(tabId, result);
+            tabEntry.onReminderAdd = (result) => this.onReminderAdd(tabId, result);
+            tabEntry.onReminderModify = (result) => this.onReminderModify(tabId, result);
+            tabEntry.onReminderRemove = (result) => this.onReminderRemove(tabId, result);
 
-            accessor.on('reminderAdd', newState.onReminderAdd);
-            accessor.on('reminderModify', newState.onReminderModify);
-            accessor.on('reminderRemove', newState.onReminderRemove);
+            accessor.on('reminderAdd', tabEntry.onReminderAdd);
+            accessor.on('reminderModify', tabEntry.onReminderModify);
+            accessor.on('reminderRemove', tabEntry.onReminderRemove);
         }
 
-        newState.dropdownInfo = this.getTabDropdownInfo(tabId, undefined, newState);
-        return newState;
+        this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);
+
+        tabEntry.dropdownInfo = this.getTabDropdownInfo(tabId, tabEntry);
+        return tabEntry;
     }
 
 
@@ -709,6 +722,9 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             showHiddenReminders = {tabEntry.showHiddenReminders}
             dueEntriesById = {tabEntry.dueEntriesById}
             contextMenuItems = {contextMenuItems}
+            columns = {tabEntry.columns}
+            onSetColumnWidth = {(args) =>
+                this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)}
         />;
     }
 }

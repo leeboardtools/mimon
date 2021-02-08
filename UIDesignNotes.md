@@ -433,7 +433,8 @@ Common menus:
 
 
     - Prices List
-
+        - Changing column width of prices list then undoing/redoing does not
+        properly resize other open tabs that are not active.
 
     - Price Retrieval Window
         - Add a new security?
@@ -524,3 +525,7 @@ Common menus:
 
 
 - Add rounding option for accounts (specific accounts might round up or down).
+
+
+- Immediate TODO:
+    - Redo column width does not do anything.
