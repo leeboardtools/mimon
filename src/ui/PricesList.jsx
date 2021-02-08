@@ -2,9 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { EditableRowTable } from '../util-ui/EditableRowTable';
-//import { PricesListHandler } from './PricesListHandler';
-import { columnInfosToColumns, 
-    stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns, getVisibleColumns } from '../util-ui/ColumnInfo';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import * as PI from '../engine/PricedItems';
 import * as ACE from './AccountingCellEditors';
@@ -340,6 +338,21 @@ export function getPricesListColumnInfoDefs(pricedItemType) {
     return columnInfoDefs;
 }
 
+/**
+ * Retrieves the price list columns with default settings.
+ */
+export function createDefaultColumns(pricedItemType) {
+    const columnInfos = getPricesListColumnInfoDefs(pricedItemType);
+
+    const columns = columnInfosToColumns({
+        columnInfos: columnInfos,
+    });
+
+    columns.forEach((column) => column.isVisible = true);
+
+    return columns;
+}
+
 
 /**
  * Component for the historical price editing list.
@@ -356,8 +369,6 @@ export class PricesList extends React.Component {
 
         this.onActiveRowChanged = this.onActiveRowChanged.bind(this);
 
-        this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
-
         this.getRowEntry = this.getRowEntry.bind(this);
         this.startRowEdit = this.startRowEdit.bind(this);
         this.getSaveBuffer = this.getSaveBuffer.bind(this);
@@ -365,7 +376,7 @@ export class PricesList extends React.Component {
 
         this._cellEditorsManager = new CellEditorsManager({
             getRowEntry: this.getRowEntry,
-            getColumnInfo: (columnIndex) => this.state.columnInfos[columnIndex],
+            getColumnInfo: (columnIndex) => this.state.columns[columnIndex].columnInfo,
             setManagerState: (state) => this.setState({
                 managerState: state,
             }),
@@ -385,34 +396,11 @@ export class PricesList extends React.Component {
         const pricedItemDataItem = accessor.getPricedItemDataItemWithId(pricedItemId);
         const pricedItemType = PI.getPricedItemType(pricedItemDataItem.type);
 
-        const columnInfoDefs = getPricesListColumnInfoDefs(pricedItemType);
-
-        const columnInfos = [];
-        const { columns } = props;
-
-        if (columns) {
-            for (let name of columns) {
-                const columnInfo = columnInfoDefs[name];
-                if (columnInfo) {
-                    columnInfos.push(columnInfo);
-                }
-            }
-        }
-
-        if (!columnInfos.length) {
-            for (let name in columnInfoDefs) {
-                const columnInfoDef = columnInfoDefs[name];
-                if (columnInfoDef) {
-                    columnInfos.push(columnInfoDef);
-                }
-            }
-        }
-
-
+        const columns = this.props.columns || createDefaultColumns(pricedItemType);
 
         this.state = {
             rowEntries: [],
-            columnInfos: columnInfos,
+            columns: getVisibleColumns(columns),
             priceQuantityDefinition: accessor.getPriceQuantityDefinitionForPricedItem(
                 pricedItemId),
             countQuantityDefinition: getDecimalDefinition(0),
@@ -430,9 +418,6 @@ export class PricesList extends React.Component {
             priceItemType: PriceItemType.PRICE,
             caller: this,
         };
-
-
-        this.state.columns = columnInfosToColumns(this.state);
 
         this.updateRowEntries();
     }
@@ -453,6 +438,15 @@ export class PricesList extends React.Component {
 
     
     componentDidUpdate(prevProps, prevState) {
+        if (!deepEqual(prevProps.columns, this.props.columns)) {
+            const { columns } = this.props;
+            if (columns) {
+                const visibleColumns = getVisibleColumns(columns);
+                this.setState({
+                    columns: visibleColumns,
+                });
+            }
+        }
     }
 
 
@@ -626,11 +620,6 @@ export class PricesList extends React.Component {
 
 
     onLoadRows({firstRowIndex, lastRowIndex}) {
-    }
-
-
-    onSetColumnWidth(args) {
-        this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
     }
 
 
@@ -832,7 +821,7 @@ export class PricesList extends React.Component {
 
                 onLoadRows = {this.onLoadRows}
 
-                onSetColumnWidth = {this.onSetColumnWidth}
+                onSetColumnWidth = {this.props.onSetColumnWidth}
 
                 contextMenuItems = {this.props.contextMenuItems}
                 onChooseContextMenuItem = {this.props.onChooseContextMenuItem}
@@ -871,6 +860,7 @@ PricesList.propTypes = {
     contextMenuItems: PropTypes.array,
     onSelectPrice: PropTypes.func,
     onChooseContextMenuItem: PropTypes.func,
-    columns: PropTypes.arrayOf(PropTypes.string),
+    columns: PropTypes.arrayOf(PropTypes.object),
+    onSetColumnWidth: PropTypes.func,
     children: PropTypes.any,
 };

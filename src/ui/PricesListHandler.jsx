@@ -1,8 +1,9 @@
 import React from 'react';
 import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
-import { PricesList } from './PricesList';
+import { PricesList, createDefaultColumns } from './PricesList';
 import * as P from '../engine/Prices';
+import { RowTableHandler } from './RowTableHelpers';
 
 
 function getUndoRedoInfo(tabEntry) {
@@ -30,18 +31,29 @@ export class PricesListHandler extends MainWindowHandlerBase {
 
         this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
+
+
+        // This should be after all the bind() calls...
+        this._rowTableHandler = new RowTableHandler({
+            mainWindowHandler: this,
+            userIdBase: 'PricesListHandler',
+        });
+    }
+
+
+    shutdownHandler() {
+        this._rowTableHandler.shutdownHandler();
+        this._rowTableHandler = undefined;
     }
 
 
     onSetActivePrice(tabId, priceDataItem) {
-        this.setTabIdState(tabId, {
+        const newState = Object.assign({}, this.getTabIdState(tabId), {
             activePriceDataItem: priceDataItem,
-        },
-        () => {
-            this.setTabIdState(tabId, {
-                dropdownInfo: this.getTabDropdownInfo(tabId),
-            });
         });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+
+        this.setTabIdState(tabId, newState);
     }
 
 
@@ -85,9 +97,8 @@ export class PricesListHandler extends MainWindowHandlerBase {
     }
 
 
-    getTabDropdownInfo(tabId) {
+    getTabDropdownInfo(tabId, state) {
         let activePriceDataItem;
-        const state = this.getTabIdState(tabId);
         if (state) {
             activePriceDataItem = state.activePriceDataItem;
         }
@@ -103,6 +114,8 @@ export class PricesListHandler extends MainWindowHandlerBase {
                 disabled: !activePriceDataItem,
                 onChooseItem: () => this.onUpdatePrices(tabId),
             },
+            {},
+            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state),
         ];
         return {
             items: menuItems,
@@ -121,17 +134,30 @@ export class PricesListHandler extends MainWindowHandlerBase {
     createTabEntry(tabId, pricedItemId, openArgs) {
         const pricedItemDataItem = this.props.accessor.getPricedItemDataItemWithId(
             pricedItemId);
-        return {
+
+
+        const projectSettingsId = 'PricesListHandler-' + pricedItemDataItem.type;
+        let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
+
+        const columns = createDefaultColumns(pricedItemDataItem.type);
+        const tabEntry = {
             tabId: tabId,
             title: pricedItemDataItem.name,
             hasClose: true,
             pricedItemId: pricedItemId,
-            dropdownInfo: this.getTabDropdownInfo(tabId),
             onRenderTabPage: this.onRenderTabPage,
             pricesListRef: React.createRef(),
             getUndoRedoInfo: getUndoRedoInfo,
             openArgs: openArgs,
+            projectSettingsId: projectSettingsId,
+            columns: columns,
         };
+
+        this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);
+
+        tabEntry.dropdownInfo = this.getTabDropdownInfo(tabId, tabEntry);
+
+        return tabEntry;
     }
 
 
@@ -159,6 +185,9 @@ export class PricesListHandler extends MainWindowHandlerBase {
                 this.onSetActivePrice(tabEntry.tabId, priceDataItem)}
             contextMenuItems={contextMenuItems}
             refreshUndoMenu = {this.refreshUndoMenu}
+            columns = {tabEntry.columns}
+            onSetColumnWidth = {(args) =>
+                this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)}
             openArgs = {tabEntry.openArgs}
             ref = {pricesListRef}
         />;
