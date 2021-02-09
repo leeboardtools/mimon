@@ -4,7 +4,7 @@ import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountRegister, createDefaultColumns } from './AccountRegister';
 import { EventEmitter } from 'events';
 import * as T from '../engine/Transactions';
-import { RowTableHandler } from './RowTableHelpers';
+import { TabIdRowTableHandler } from './RowTableHelpers';
 
 
 function getUndoRedoInfo(tabEntry) {
@@ -41,7 +41,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
 
 
         // This should be after all the bind() calls...
-        this._rowTableHandler = new RowTableHandler({
+        this._rowTableHandler = new TabIdRowTableHandler({
             mainWindowHandler: this,
             userIdBase: 'AccountsRegisterHandler',
         });

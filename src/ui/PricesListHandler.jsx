@@ -3,7 +3,7 @@ import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { PricesList, createDefaultColumns } from './PricesList';
 import * as P from '../engine/Prices';
-import { RowTableHandler } from './RowTableHelpers';
+import { TabIdRowTableHandler } from './RowTableHelpers';
 
 
 function getUndoRedoInfo(tabEntry) {
@@ -34,7 +34,7 @@ export class PricesListHandler extends MainWindowHandlerBase {
 
 
         // This should be after all the bind() calls...
-        this._rowTableHandler = new RowTableHandler({
+        this._rowTableHandler = new TabIdRowTableHandler({
             mainWindowHandler: this,
             userIdBase: 'PricesListHandler',
         });

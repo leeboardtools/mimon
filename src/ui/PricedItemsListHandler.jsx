@@ -4,7 +4,7 @@ import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { PricedItemsList, createDefaultColumns } from './PricedItemsList';
 import * as PI from '../engine/PricedItems';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
-import { RowTableHandler } from './RowTableHelpers';
+import { TabIdRowTableHandler } from './RowTableHelpers';
 
 /**
  * Handler for {@link PricedItemsList} components and their pages in the 
@@ -31,7 +31,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
 
         // This should be after all the bind() calls...
-        this._rowTableHandler = new RowTableHandler({
+        this._rowTableHandler = new TabIdRowTableHandler({
             mainWindowHandler: this,
             userIdBase: 'AccountsListHandler',
         });

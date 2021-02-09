@@ -445,12 +445,12 @@
     "RemindersListHandler-skipReminderAction_ALL": "Skip Reminders for all dates",
 
 
-    "RowTableHandler-action_showColumn": ["Show ", " Column"],
-    "RowTableHandler-action_hideColumn": ["Hide ", " Column"],
-    "RowTableHandler-action_setColumnWidth": ["", " Column Width Change"],
+    "RowTableHandler-action_showColumn": ["Show '", "' Column"],
+    "RowTableHandler-action_hideColumn": ["Hide '", "' Column"],
+    "RowTableHandler-action_setColumnWidth": ["'", "' Column Width Change"],
     "RowTableHandler-action_resetColumnWidth": "Reset Column Widths",
 
-    "RowTableHandler-resetColumnWidth": "Reset column widths",
+    "RowTableHandler-resetColumnWidth": "Reset Column Widths",
 
     "": ""
 }

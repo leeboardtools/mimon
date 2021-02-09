@@ -5,7 +5,7 @@ import { AccountsList, createDefaultColumns } from './AccountsList';
 import * as A from '../engine/Accounts';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
-import { RowTableHandler } from './RowTableHelpers';
+import { TabIdRowTableHandler } from './RowTableHelpers';
 
 
 /**
@@ -22,7 +22,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
 
         // This should be after all the bind() calls...
-        this._rowTableHandler = new RowTableHandler({
+        this._rowTableHandler = new TabIdRowTableHandler({
             mainWindowHandler: this,
             userIdBase: 'AccountsListHandler',
         });
