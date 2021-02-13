@@ -2,8 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { ModalPage } from '../util-ui/ModalPage';
-import { columnInfosToColumns, 
-    stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns } from '../util-ui/ColumnInfo';
 import { EditableRowTable } from '../util-ui/EditableRowTable';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import * as ACE from './AccountingCellEditors';
@@ -11,6 +10,10 @@ import * as AH from '../tools/AccountHelpers';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
 import deepEqual from 'deep-equal';
+import { AccessorRowTableHandler } from './RowTableHelpers';
+
+
+const projectSettingsPath = ['MultiSplitsEditor', ];
 
 
 export function getDefaultAccountIdForNewSplit(accessor, accountType) {
@@ -171,6 +174,18 @@ function getMultiSplitsEditorColumnInfos(accountType) {
 }
 
 
+function createDefaultColumns(accountType) {
+    const columnInfos = getMultiSplitsEditorColumnInfos(accountType);
+
+    const columns = columnInfosToColumns({
+        columnInfos: columnInfos,
+    });
+    columns.forEach((column) => column.isVisible = true);
+
+    return columns;
+}
+
+
 export class MultiSplitsEditor extends React.Component {
     constructor(props) {
         super(props);
@@ -186,15 +201,13 @@ export class MultiSplitsEditor extends React.Component {
 
         this.onActiveRowChanged = this.onActiveRowChanged.bind(this);
 
-        this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
-
         this.getRowEntry = this.getRowEntry.bind(this);
         this.getSaveBuffer = this.getSaveBuffer.bind(this);
         this.asyncSaveBuffer = this.asyncSaveBuffer.bind(this);
 
         this._cellEditorsManager = new CellEditorsManager({
             getRowEntry: this.getRowEntry,
-            getColumnInfo: (columnIndex) => this.state.columnInfos[columnIndex],
+            getColumnInfo: (columnIndex) => this.state.columns[columnIndex].columnInfo,
             setManagerState: (state) => this.setState({
                 managerState: state,
             }),
@@ -211,29 +224,18 @@ export class MultiSplitsEditor extends React.Component {
         const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
             accountDataItem.pricedItemId);
 
-        const columnInfoDefs = getMultiSplitsEditorColumnInfos(accountDataItem.type);
 
-        const columnInfos = [];
-        const { columns } = props;
+        this._rowTableHandler = new AccessorRowTableHandler({
+            accessor: props.accessor,
+            getState: (stateId) => this.state,
+            setState: (stateId, state) => this.setState(state),
+            projectSettingsPath: projectSettingsPath,
+        });
 
-        if (columns) {
-            for (let name of columns) {
-                const columnInfo = columnInfoDefs[name];
-                if (columnInfo) {
-                    columnInfos.push(columnInfo);
-                }
-            }
-        }
-
-        if (!columnInfos.length) {
-            for (let name in columnInfoDefs) {
-                columnInfos.push(columnInfoDefs[name]);
-            }
-        }
-
+        const columns = createDefaultColumns(accountDataItem.type);
 
         this.state = {
-            columnInfos: columnInfos,
+            columns: columns,
             rowEntries: [],
             activeRowIndex: 0,
             accountType: accountDataItem.type,
@@ -256,13 +258,29 @@ export class MultiSplitsEditor extends React.Component {
         };
 
 
-        this.state.columns = columnInfosToColumns(this.state);
+        let settings = props.accessor.getProjectSettings(
+            projectSettingsPath
+        ) || {};
+        this._rowTableHandler.setupNewStateFromSettings(undefined, 
+            this.state, settings);
+
 
         this.state = Object.assign(this.state, 
             this.buildRowEntries(this.props));
         
         this._undoStates = [];
         this._redoStates = [];
+    }
+
+
+    componentDidMount() {
+
+    }
+
+
+    componentWillUnmount() {
+        this._rowTableHandler.shutdownHandler();
+        this._rowTableHandler = undefined;
     }
 
 
@@ -343,11 +361,6 @@ export class MultiSplitsEditor extends React.Component {
         }
 
         this.setState(this.buildRowEntries(this.props));
-    }
-
-
-    onSetColumnWidth(args) {
-        this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
     }
 
 
@@ -643,7 +656,8 @@ export class MultiSplitsEditor extends React.Component {
 
                 //onLoadRows = {this.onLoadRows}
 
-                onSetColumnWidth = {this.onSetColumnWidth}
+                onSetColumnWidth = {(args) =>
+                    this._rowTableHandler.onSetColumnWidth(undefined, args)}
 
                 //contextMenuItems = {this.props.contextMenuItems}
                 //onChooseContextMenuItem = {this.props.onChooseContextMenuItem}

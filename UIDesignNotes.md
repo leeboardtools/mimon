@@ -447,6 +447,13 @@ Common menus:
 
     - Lot selection editor
         - Add context menu to support resetting column widths.
+        - Figure out what to do about undo/redo and changing column widths.
+            - Maybe just get rid of undo/redo support for editor?
+            - Or undo/redo support for changing column widths in editor?
+
+
+    - Multi-splits editor
+        - Add context menu to support resetting column widths.
 
 
     - Account Register
