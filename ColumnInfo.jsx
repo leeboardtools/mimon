@@ -138,13 +138,3 @@ export function updateColumnsFromVisibleColumnList(columns, visibleColumns) {
     return columns;
 }
 
-
-export function stateUpdateFromSetColumnWidth({ columnIndex, columnWidth, }, state) {
-    const columns = Array.from(state.columns);
-    columns[columnIndex] = Object.assign({}, columns[columnIndex], {
-        width: columnWidth,
-    });
-    return {
-        columns: columns,
-    };
-}
