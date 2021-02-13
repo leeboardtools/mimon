@@ -1,8 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg, userError } from '../util/UserMessages';
-import { columnInfosToColumns, 
-    stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns, } from '../util-ui/ColumnInfo';
 import { ModalPage } from '../util-ui/ModalPage';
 import { EditableRowTable } from '../util-ui/EditableRowTable';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
@@ -13,7 +12,10 @@ import { getQuantityDefinition } from '../util/Quantities';
 import { getCurrency } from '../util/Currency';
 import { bSearch } from '../util/BinarySearch';
 import * as T from '../engine/Transactions';
+import { AccessorRowTableHandler } from './RowTableHelpers';
 
+
+const projectSettingsPath = ['LotsSelectionEditor', ];
 
 async function asyncProcessLotTransactions({ accessor, accountId, 
     transactionId, ymdDate, }) {
@@ -227,7 +229,7 @@ function getLotsSelectionEditorColumnInfos() {
             }
         }),
 
-        term: {
+        term: { key: 'term',
             header: {
                 label: userMsg('LotsSelectionEditor-term'),
                 ariaLabel: 'Term',
@@ -240,7 +242,7 @@ function getLotsSelectionEditorColumnInfos() {
             renderDisplayCell: ACE.renderTextDisplay,
         },
 
-        availableShares: {
+        availableShares: { key: 'availableShares',
             header: {
                 label: userMsg('LotsSelectionEditor-availableShares'),
                 ariaLabel: 'Term',
@@ -253,7 +255,7 @@ function getLotsSelectionEditorColumnInfos() {
             renderDisplayCell: ACE.renderQuantityDisplay,
         },
 
-        selectedShares: {
+        selectedShares: { key: 'selectedShares',
             header: {
                 label: userMsg('LotsSelectionEditor-selectedShares'),
                 ariaLabel: 'Term',
@@ -269,7 +271,7 @@ function getLotsSelectionEditorColumnInfos() {
         },
 
         // All button
-        allButton: {
+        allButton: { key: 'allButton',
             header: {
                 ariaLabel: 'All Buttons',
                 classExtras: 'RowTable-header-base',
@@ -286,7 +288,7 @@ function getLotsSelectionEditorColumnInfos() {
         },
 
         // None button
-        noneButton: {
+        noneButton: { key: 'noneButton',
             header: {
                 ariaLabel: 'None Buttons',
                 classExtras: 'RowTable-header-base',
@@ -309,7 +311,21 @@ function getLotsSelectionEditorColumnInfos() {
 }
 
 
+function createDefaultColumns() {
+    const columnInfos = getLotsSelectionEditorColumnInfos();
 
+    const columns = columnInfosToColumns({
+        columnInfos: columnInfos,
+    });
+    columns.forEach((column) => column.isVisible = true);
+
+    return columns;
+}
+
+
+/**
+ * React component for selecting lots.
+ */
 export class LotsSelectionEditor extends React.Component {
     constructor(props) {
         super(props);
@@ -325,8 +341,6 @@ export class LotsSelectionEditor extends React.Component {
 
         this.onActiveRowChanged = this.onActiveRowChanged.bind(this);
 
-        this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
-
         this.getRowEntry = this.getRowEntry.bind(this);
         this.getRowKey = this.getRowKey.bind(this);
         
@@ -335,7 +349,7 @@ export class LotsSelectionEditor extends React.Component {
 
         this._cellEditorsManager = new CellEditorsManager({
             getRowEntry: this.getRowEntry,
-            getColumnInfo: (columnIndex) => this.state.columnInfos[columnIndex],
+            getColumnInfo: (columnIndex) => this.state.columns[columnIndex].columnInfo,
             setManagerState: (state) => this.setState({
                 managerState: state,
             }),
@@ -347,28 +361,36 @@ export class LotsSelectionEditor extends React.Component {
         this._rowTableRef = React.createRef();
 
 
-        const columnInfoDefs = getLotsSelectionEditorColumnInfos();
-        const columnInfos = [];
-        if (!columnInfos.length) {
-            for (let name in columnInfoDefs) {
-                columnInfos.push(columnInfoDefs[name]);
-            }
-        }
+        this._rowTableHandler = new AccessorRowTableHandler({
+            accessor: props.accessor,
+            getState: (stateId) => this.state,
+            setState: (stateId, state) => this.setState(state),
+            projectSettingsPath: projectSettingsPath,
+        });
+
+        const columns = createDefaultColumns();
 
         this.state = {
-            columnInfos: columnInfos,
+            columns: columns,
             rowEntries: [],
             activeRowIndex: 0,
         };
 
         this._sizingRowEntry = {
+            key: 'sizing',
             ymdDatePurchased: '2020-12-3112',
             term: userMsg('LotsSelectionEditor-SHORT_TERM'),
             availableSharesBaseValue: ACE.BalanceSizingBaseValue,
             selectedSharesBaseValue: ACE.BalanceSizingBaseValue,
         };
 
-        this.state.columns = columnInfosToColumns(this.state);
+
+        let settings = props.accessor.getProjectSettings(
+            projectSettingsPath
+        ) || {};
+        this._rowTableHandler.setupNewStateFromSettings(undefined, 
+            this.state, settings);
+
 
         this._undoStates = [];
         this._redoStates = [];
@@ -377,8 +399,18 @@ export class LotsSelectionEditor extends React.Component {
     }
 
 
-    componentDidUpdate(prevProps) {
+    componentDidMount() {
 
+    }
+
+
+    componentWillUnmount() {
+        this._rowTableHandler.shutdownHandler();
+        this._rowTableHandler = undefined;
+    }
+
+
+    componentDidUpdate(prevProps) {
     }
 
 
@@ -500,11 +532,6 @@ export class LotsSelectionEditor extends React.Component {
             rowEntries: newRowEntries,
             totalSelectedSharesBaseValue: totalSelectedSharesBaseValue,
         };
-    }
-
-
-    onSetColumnWidth(args) {
-        this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
     }
 
 
@@ -734,7 +761,8 @@ export class LotsSelectionEditor extends React.Component {
 
                 //onLoadRows = {this.onLoadRows}
 
-                onSetColumnWidth = {this.onSetColumnWidth}
+                onSetColumnWidth = {(args) =>
+                    this._rowTableHandler.onSetColumnWidth(undefined, args)}
 
                 //contextMenuItems = {this.props.contextMenuItems}
                 //onChooseContextMenuItem = {this.props.onChooseContextMenuItem}

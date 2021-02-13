@@ -443,6 +443,10 @@ Common menus:
     - Lots List
         - Hierarchy, by security (priced items)
         - Only for securities and mutual funds?
+    
+
+    - Lot selection editor
+        - Add context menu to support resetting column widths.
 
 
     - Account Register

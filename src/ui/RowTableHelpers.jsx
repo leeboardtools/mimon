@@ -1,6 +1,7 @@
 import { userMsg } from '../util/UserMessages';
 import * as CI from '../util-ui/ColumnInfo';
 import { dataDeepCopy } from '../util/DataDeepCopy';
+import deepEqual from 'deep-equal';
 
 
 function updateColumnsFromColumnStates(columns, columnStates, defaultColumnStates) {
@@ -52,9 +53,11 @@ export class RowTableHandler {
         this.getState = props.getState;
         this.setState = props.setState;
         this.setProjectSettings = props.setProjectSettings;
+        this.updateStateFromModifiedProjectSettings
+            = props.updateStateFromModifiedProjectSettings;
 
-        this.onProjectSettingsModified 
-            = this.onProjectSettingsModified.bind(this);
+        this._onProjectSettingsModified 
+            = this._onProjectSettingsModified.bind(this);
 
         this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
     }
@@ -226,11 +229,7 @@ export class RowTableHandler {
 
 
 
-    /**
-     * @param {*} newState 
-     * @param {*} settings 
-     */
-    setupNewStateFromSettings(newState, settings) {
+    _setupNewStateFromSettings(newState, settings) {
         const { columns } = newState;
 
         newState.defaultColumnStates = columnStatesFromColumns(columns);
@@ -243,7 +242,7 @@ export class RowTableHandler {
     }
 
 
-    onProjectSettingsModified(stateId, projectSettingsId, 
+    _onProjectSettingsModified(stateId, projectSettingsId, 
         projectSettings, originalChanges) {
 
         const state = this.getState(stateId);
@@ -429,14 +428,14 @@ export class TabIdRowTableHandler extends RowTableHandler {
      * @param {*} settings 
      */
     setupTabEntryFromSettings(tabEntry, settings) {
-        this.setupNewStateFromSettings(tabEntry, settings);
+        this._setupNewStateFromSettings(tabEntry, settings);
 
         tabEntry.rowTableHelpers = {
             onCloseTab: tabEntry.onCloseTab,
             // We use a separate function for each tabEntry so the listeners are unique.
             onTabIdProjectSettingsModify: (projectSettingsId, 
                 projectSettings, originalChanges) => {
-                this.onProjectSettingsModified(
+                this._onProjectSettingsModified(
                     tabEntry.tabId, projectSettingsId, projectSettings, originalChanges);
             },
         };
@@ -448,4 +447,145 @@ export class TabIdRowTableHandler extends RowTableHandler {
         return tabEntry;
     }
 
+}
+
+
+/**
+ * Row handler that directly interacts with {@link EngineAccessor} for
+ * saving the column to project settings.
+ */
+export class AccessorRowTableHandler extends RowTableHandler {
+    constructor(props) {
+        super(props);
+
+        this._accessor = props.accessor;
+
+        this._onModifyProjectSettings = this._onModifyProjectSettings.bind(this);
+        this.setProjectSettings = this.setProjectSettings 
+            || this._setProjectSettings.bind(this);
+
+        this._stateIds = new Set();
+
+        this.props.accessor.on('modifyProjectSettings', this._onModifyProjectSettings);
+    }
+
+
+    shutdownHandler() {
+        this.props.accessor.off('modifyProjectSettings', this._onModifyProjectSettings);
+
+        this.props = undefined;
+        this._accessor = undefined;
+    }
+
+
+    makeBaseChangesPath() {
+        const { projectSettingsPath } = this.props;
+
+        if (projectSettingsPath) {
+            return (Array.isArray(projectSettingsPath))
+                ? projectSettingsPath
+                : [projectSettingsPath];
+        }
+        return [];
+    }
+
+
+    _setProjectSettings(stateId, projectSettings, actionName) {
+        const { accessor, } = this.props;
+
+        let changesPath = this.makeBaseChangesPath();
+        if (stateId) {
+            changesPath = changesPath.concat(stateId);
+        }
+
+        const action = accessor.createModifyProjectSettingsAction({
+            name: actionName,
+            changes: projectSettings,
+            changesPath: changesPath,
+            assignChanges: true,
+        });
+
+        process.nextTick(async () => {
+            try {
+                await accessor.asyncApplyAction(action);
+            }
+            catch (e) {
+                // FIX ME!!!
+                console.log('Could not save project settings: ' + e);
+            }
+        });
+    }
+
+    
+    _onModifyProjectSettings(result) {
+        const { originalAction } = result;
+        if (!originalAction) {
+            return;
+        }
+
+        const baseChangesPath = this.makeBaseChangesPath();
+
+        const { changes, changesPath } = originalAction;
+        if (!changesPath || !changesPath.length) {
+            return;
+        }
+
+        let pathIndex = 0;
+        if (baseChangesPath.length) {
+            if (changesPath.length <= baseChangesPath.length) {
+                return;
+            }
+            for (let i = 0; i < baseChangesPath.length; ++i) {
+                if (changesPath[i] !== baseChangesPath[i]) {
+                    return;
+                }
+            }
+
+            pathIndex = baseChangesPath.length;
+        }
+
+        // Look for a matching state id...
+        const stateId = changesPath[pathIndex];
+        if (!this._stateIds.has(stateId)) {
+            return;
+        }
+
+
+        let currentSettings = this.props.accessor.getProjectSettings(
+            changesPath
+        );
+        
+        if (!deepEqual(changes, currentSettings)
+            && !Array.isArray(changes) && !Array.isArray(currentSettings)) {
+            // Make sure currentSettings has the same set of properties as
+            // changes, this way any changes that were added will be available
+            // for removal.
+            currentSettings = Object.assign({}, currentSettings);
+            for (const name in changes) {
+                if (!Object.prototype.hasOwnProperty.call(currentSettings, name)) {
+                    if (Array.isArray(changes[name])) {
+                        currentSettings[name] = [];
+                    }
+                    else {
+                        currentSettings[name] = undefined;
+                    }
+                }
+            }
+        }
+
+        this._onProjectSettingsModified(stateId, currentSettings, changes);
+    }
+
+
+    setupNewStateFromSettings(stateId, newState, settings) {
+        this._setupNewStateFromSettings(newState, settings);
+        this._stateIds.add(stateId);
+
+        return newState;
+    }
+
+
+    shutdownState(stateId) {
+        this._stateIds.delete(stateId);
+    }
 }
