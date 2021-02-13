@@ -34,12 +34,46 @@ function columnStatesFromColumns(columns) {
 export class RowTableHandler {
 
     /**
+     * @callback RowTableHandler~getState
+     * Callback for retrieving a state object for a given state id.
+     * @param {string} stateId
+     * @returns {object}
+     */
+
+    /**
+     * @callback RowTableHandler~setState
+     * Callback for updating the state object for a given state id.
+     * @param {string} stateId
+     * @param {*} changes Changes to the state object, normally this should be
+     * treated as newState = Object.assign({}, oldState, changes)
+     */
+
+    /**
+     * @callback RowTableHandler~setProjectSettings
+     * Callback for updating the project settings.
+     * @param {string} projectSettingsId The project settings id, this is either
+     * the projectSettingsId property from the state object if the state object
+     * has one, or the state id.
+     * @param {object} changes The changes to be made to the project settings.
+     * @param {string} actionLabel The label for the action.
+     */
+
+    /**
      * @callback RowTableHandler~updateStateFromModifiedProjectSettings
      * Optional handler method for performing additional state updating
      * when the project settings are modified.
      * @param {string} stateId
      * @param {object} newState
      * @param {*} projectSettings
+     */
+
+    /**
+     * @typedef {object} RowTableHandler~props
+     * @property {RowTableHandler~getState} getState
+     * @property {RowTableHandler~setState} setState
+     * @property {RowTableHandler~setProjectSettings} setProjectSettings
+     * @property {RowTableHandler~updateStateFromModifiedProjectSettings} 
+     * [setProjectSettings]
      */
 
 
@@ -453,8 +487,22 @@ export class TabIdRowTableHandler extends RowTableHandler {
 /**
  * Row handler that directly interacts with {@link EngineAccessor} for
  * saving the column to project settings.
+ * <p>
+ * This is normally used by the modal pages.
  */
 export class AccessorRowTableHandler extends RowTableHandler {
+
+
+    /**
+     * @typedef {object} AccessorRowTableHandler~props
+     * {@link RowTableHandler~props} with the following:
+     * @property {EngineAccessor} accessor
+     */
+
+    /**
+     * Constructor.
+     * @param {AccessorRowTableHandler~props} props 
+     */
     constructor(props) {
         super(props);
 
@@ -470,6 +518,9 @@ export class AccessorRowTableHandler extends RowTableHandler {
     }
 
 
+    /**
+     * Call from the React component's componentWillUnmount()
+     */
     shutdownHandler() {
         this.props.accessor.off('modifyProjectSettings', this._onModifyProjectSettings);
 
@@ -577,6 +628,13 @@ export class AccessorRowTableHandler extends RowTableHandler {
     }
 
 
+    /**
+     * Call to initialize a state object.
+     * @param {*} stateId Set to <code>untitled</code> if individual state objects are
+     * not needed for the handler.
+     * @param {*} newState The state object to initialize.
+     * @param {*} settings The project settings to load from.
+     */
     setupNewStateFromSettings(stateId, newState, settings) {
         this._setupNewStateFromSettings(newState, settings);
         this._stateIds.add(stateId);
@@ -585,6 +643,12 @@ export class AccessorRowTableHandler extends RowTableHandler {
     }
 
 
+    /**
+     * If state ids were passed to 
+     * {@link AccessorRowTableHandler#setupNewStateFromSettings} this should be called
+     * when the state id is no longer in use.
+     * @param {*} stateId 
+     */
     shutdownState(stateId) {
         this._stateIds.delete(stateId);
     }
