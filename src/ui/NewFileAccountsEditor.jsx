@@ -10,8 +10,7 @@ import { EditableRowTable } from '../util-ui/EditableRowTable';
 import * as C from '../util/Currency';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import * as ACE from './AccountingCellEditors';
-import { columnInfosToColumns,
-    stateUpdateFromSetColumnWidth } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns, } from '../util-ui/ColumnInfo';
 
 
 const EditableCollapsibleRowTable = collapsibleRowTable(EditableRowTable);
@@ -140,8 +139,6 @@ export class NewFileAccountsEditor extends React.Component {
 
         this.onExpandCollapseRow = this.onExpandCollapseRow.bind(this);
         this.onActiveRowChanged = this.onActiveRowChanged.bind(this);
-
-        this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
 
         this.getRowEntry = this.getRowEntry.bind(this);
         this.getSaveBuffer = this.getSaveBuffer.bind(this);
@@ -610,11 +607,6 @@ export class NewFileAccountsEditor extends React.Component {
                 }
             }
         });
-    }
-
-
-    onSetColumnWidth(args) {
-        this.setState((state) => stateUpdateFromSetColumnWidth(args, state));
     }
 
 
