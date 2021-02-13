@@ -1335,10 +1335,10 @@ export function getActionColumnInfo(args) {
         header: {
             label: userMsg('LotCellEditors-actionType'),
             ariaLabel: 'Action',
-            classExtras: 'RowTable-header-base actionType-base actionType-header',
+            classExtras: 'RowTable-header-base ActionType-base ActionType-header',
         },
-        inputClassExtras: 'actionType-base actionType-input',
-        cellClassName: 'RowTable-cell-base actionType-base actionType-cell',
+        inputClassExtras: 'ActionType-base ActionType-input',
+        cellClassName: 'RowTable-cell-base ActionType-base ActionType-cell',
 
         getCellValue: (args) => getActionCellValue(args, columnInfoArgs),
         saveCellValue: (args) => saveActionCellValue(args, columnInfoArgs),
