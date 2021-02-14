@@ -248,7 +248,7 @@ function getLotsSelectionEditorColumnInfos() {
                 ariaLabel: 'Term',
                 classExtras: 'RowTable-header-base Shares-base Shares-header',
             },
-            inputClassExtras: 'Shares-base shares-input',
+            inputClassExtras: 'Shares-base Shares-input',
             cellClassName: 'RowTable-cell-base Shares-base Shares-cell',
 
             getCellValue: (args) => getSharesCellValue(args, 'availableSharesBaseValue'),
@@ -261,7 +261,7 @@ function getLotsSelectionEditorColumnInfos() {
                 ariaLabel: 'Term',
                 classExtras: 'RowTable-header-base Shares-base Shares-header',
             },
-            inputClassExtras: 'Shares-base shares-input',
+            inputClassExtras: 'Shares-base Shares-input',
             cellClassName: 'RowTable-cell-base Shares-base Shares-cell',
 
             getCellValue: (args) => getSharesCellValue(args, 'selectedSharesBaseValue'),

@@ -1630,7 +1630,7 @@ function renderSharesEditor(args, columnInfoArgs) {
  */
 export function getSharesColumnInfo(args) {
     const columnInfoArgs = args;
-    return Object.assign(getQuantityEditorColumnInfo('shares', args), {
+    return Object.assign(getQuantityEditorColumnInfo('shares', args, 'Shares'), {
         getCellValue: (args) =>
             getSharesCellValue(args, columnInfoArgs),
         renderDisplayCell: (args) =>
@@ -1648,7 +1648,7 @@ export function getSharesColumnInfo(args) {
  * @returns {CellEditorsManager~ColumnInfo}
  */
 export function getMonetaryAmountColumnInfo(args) {
-    return getQuantityEditorColumnInfo('monetaryAmount', args, 'monetary',
+    return getQuantityEditorColumnInfo('monetaryAmount', args, 'Monetary',
         (args, columnInfoArgs) => {
             const splitInfo = getSplitInfo(args, columnInfoArgs);
             if (splitInfo) {
@@ -1667,7 +1667,7 @@ export function getMonetaryAmountColumnInfo(args) {
  * @returns {CellEditorsManager~ColumnInfo}
  */
 export function getFeesColumnInfo(args) {
-    return getQuantityEditorColumnInfo('fees', args, 'monetary',
+    return getQuantityEditorColumnInfo('fees', args, 'Monetary',
         (args, columnInfoArgs) => {
             const splitInfo = getSplitInfo(args, columnInfoArgs);
             if (splitInfo) {
@@ -1689,7 +1689,7 @@ export function getFeesColumnInfo(args) {
  * @returns {CellEditorsManager~ColumnInfo}
  */
 export function getPriceColumnInfo(args) {
-    return getQuantityEditorColumnInfo('price', args, 'monetary',
+    return getQuantityEditorColumnInfo('price', args, 'Monetary',
         (args, columnInfoArgs) => {
             const splitInfo = getSplitInfo(args, columnInfoArgs);
             if (splitInfo) {
@@ -1726,7 +1726,7 @@ export function getTotalSharesColumnInfo(args) {
             ariaLabel: 'Total Shares',
             classExtras: 'RowTable-header-base Shares-base Shares-header',
         },
-        inputClassExtras: 'Shares-base shares-input',
+        inputClassExtras: 'Shares-base Shares-input',
         cellClassName: 'RowTable-cell-base Shares-base Shares-cell',
 
         getCellValue: (args) => 
@@ -1771,7 +1771,7 @@ export function getTotalMarketValueColumnInfo(args) {
             ariaLabel: 'Total Shares',
             classExtras: 'RowTable-header-base Monetary-base Monetary-header',
         },
-        inputClassExtras: 'Monetary-base monetary-input',
+        inputClassExtras: 'Monetary-base Monetary-input',
         cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell',
 
         getCellValue: (args) => 
@@ -1849,7 +1849,7 @@ export function getTotalCostBasisColumnInfo(args) {
             ariaLabel: 'Total Cost Basis',
             classExtras: 'RowTable-header-base Monetary-base Monetary-header',
         },
-        inputClassExtras: 'Monetary-base monetary-input',
+        inputClassExtras: 'Monetary-base Monetary-input',
         cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell',
 
         getCellValue: (args) => 
@@ -1898,7 +1898,7 @@ export function getTotalCashInColumnInfo(args) {
             ariaLabel: 'Total Cash-In',
             classExtras: 'RowTable-header-base Monetary-base Monetary-header',
         },
-        inputClassExtras: 'Monetary-base monetary-input',
+        inputClassExtras: 'Monetary-base Monetary-input',
         cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell',
 
         getCellValue: (args) => 
@@ -1941,7 +1941,7 @@ export function getTotalGainColumnInfo(args) {
             ariaLabel: 'Total Gain',
             classExtras: 'RowTable-header-base Monetary-base Monetary-header',
         },
-        inputClassExtras: 'Monetary-base monetary-input',
+        inputClassExtras: 'Monetary-base Monetary-input',
         cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell',
     },
     args);
@@ -2070,7 +2070,7 @@ export function getTotalCashInGainColumnInfo(args) {
             ariaLabel: 'Total Cash In Gain',
             classExtras: 'RowTable-header-base Monetary-base Monetary-header',
         },
-        inputClassExtras: 'Monetary-base monetary-input',
+        inputClassExtras: 'Monetary-base Monetary-input',
         cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell',
     },
     args);

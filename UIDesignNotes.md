@@ -419,6 +419,13 @@ Common menus:
         state.
 
 
+    - AccountRegister
+        - Add columns sub-menu
+            - Ref num
+            - Extra securities columns
+
+
+
     - Priced Item List
         - Custom Priced Item Lists
 
@@ -447,9 +454,12 @@ Common menus:
 
     - Lot selection editor
         - Add context menu to support resetting column widths.
+        - Columns for cost-basis, gain, ref number
+        - Add summary info.
         - Figure out what to do about undo/redo and changing column widths.
             - Maybe just get rid of undo/redo support for editor?
             - Or undo/redo support for changing column widths in editor?
+            - Or just don't allow column resizing
 
 
     - Multi-splits editor
@@ -480,8 +490,6 @@ Common menus:
 
 
     - Reminders Editor
-        - Changing window size doesn't make scroll bars appear, content
-        overflows button bar.
 
 
     - Reminders List
@@ -500,7 +508,6 @@ Common menus:
     
 
 - RowTable To Do:
-    - Add column resizing support
 
 
 - CollapsibleRowTable
@@ -539,4 +546,3 @@ Common menus:
 
 
 - Immediate TODO:
-    - Redo column width does not do anything.

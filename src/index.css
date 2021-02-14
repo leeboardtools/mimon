@@ -452,6 +452,11 @@ body {
 }
 
 
+.RemindersList-checkbox-cell {
+  flex-basis: 5rem;
+}
+
+
 .TransactionTemplateEditor-row {
   width: 100%;
 }
