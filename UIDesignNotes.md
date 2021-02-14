@@ -287,6 +287,8 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Listen on prices for market value updates.
         - Summary rows
 
+        - Move hidden account state to AccountDataItem.
+
 
     - Account Register
         - Auto-complete for description
@@ -321,15 +323,22 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Figure out what to do about undo/redo and changing column widths.
             - Maybe just get rid of undo/redo support for editor?
             - Or undo/redo support for changing column widths in editor?
-            - Or just don't allow column resizing
+            - Or just don't allow column resizing.
 
 
     - Multi-splits editor
         - Add context menu to support resetting column widths.
+        - Or don't allow column resizing.
 
 
     - Priced Item List
         - Custom Priced Item Lists
+        - Redo to it is more report-like rather than info for the priced items. 'Positions' style,
+            - Have priced item (security)
+                - Summary of the priced item
+                    - Quantity, Price, Price Change, Market Value, Day Change, Cost Basis, Gain/Loss...
+                    - Collapsible accounts of those priced items
+
 
 
     - Priced Item Editor

@@ -285,12 +285,8 @@ export class RowTableHandler {
 
         const state = this.getState(stateId);
 
-        if (state.projectSettingsId) {
-            if (state.projectSettingsId !== projectSettingsId) {
-                return;
-            }
-        }
-        else if (stateId !== projectSettingsId) {
+        if ((state.projectSettingsId !== projectSettingsId)
+         && (stateId !== projectSettingsId)) {
             return;
         }
 

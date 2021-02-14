@@ -3,10 +3,13 @@ import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import * as PI from '../engine/PricedItems';
 import deepEqual from 'deep-equal';
+import { YMDDate } from '../util/YMDDate';
 import { getQuantityDefinition, getDecimalDefinition } from '../util/Quantities';
-import * as CE from './AccountingCellEditors';
-import { RowTable } from '../util-ui/RowTable';
+import * as ACE from './AccountingCellEditors';
+import * as AH from '../tools/AccountHelpers';
 import { columnInfosToColumns, getVisibleColumns, } from '../util-ui/ColumnInfo';
+import { CollapsibleRowTable, ExpandCollapseState,
+    findRowInfoWithKey, updateRowInfo } from '../util-ui/CollapsibleRowTable';
 
 
 let columnInfoDefs;
@@ -16,7 +19,7 @@ function getPricedItemsListColumnInfoDefs() {
         const cellClassName = 'm-0';
         const inputClassExtras = 'text-center';
 
-        columnInfoDefs = columnInfoDefs = {
+        columnInfoDefs = {
             name: { key: 'name',
                 header: {
                     label: userMsg('PricedItemsList-name'),
@@ -120,13 +123,17 @@ export class PricedItemsList extends React.Component {
         this.onPricedItemModify = this.onPricedItemModify.bind(this);
         this.onPricedItemRemove = this.onPricedItemRemove.bind(this);
 
-        this.getRowKey = this.getRowKey.bind(this);
+        this.accountIdsUpdated = this.accountIdsUpdated.bind(this);
+        this.onAccountAdd = this.accountIdsUpdated;
+        this.onAccountModify = this.accountIdsUpdated;
+        this.onAccountRemove = this.accountIdsUpdated;
 
+        this.onExpandCollapseRow = this.onExpandCollapseRow.bind(this);
         this.onRenderCell = this.onRenderCell.bind(this);
         this.onActivateRow = this.onActivateRow.bind(this);
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
 
-        const { pricedItemTypeName } = this.props;
+        const { pricedItemTypeName, collapsedPricedItemIds } = this.props;
         const pricedItemType = PI.getPricedItemType(pricedItemTypeName);
 
         this._hiddenPricedItemIds = new Set(this.props.hiddenPricedItemIds);
@@ -135,9 +142,21 @@ export class PricedItemsList extends React.Component {
 
         this.state = {
             columns: getVisibleColumns(columns),
-            rowEntries: [],
+            rowInfos: [],
+            rowInfosByKey: new Map(),
             columnKeys: new Set(),
+            accountIdsByPricedItemId: new Map(),
+            pricesYMDDate: undefined,
+            pricesByPricedItemId: new Map(),
         };
+
+        this._collapsedRowIds = new Set(collapsedPricedItemIds);
+
+        this.state.rowInfos = this.buildRowInfos().rowInfos;
+        if (this.state.rowInfos.length) {
+            this.state.activeRowKey = this.state.rowInfos[0].key;
+        }
+
 
         this._sizingRowEntry = {
             pricedItemDataItem: {
@@ -146,26 +165,27 @@ export class PricedItemsList extends React.Component {
                 type: pricedItemTypeName,
                 onlineUpdateType: PI.PricedItemOnlineUpdateType.YAHOO_FINANCE.name,
                 ticker: 'WWWW',
+                accountState: {
+                    quantityBaseValue: ACE.BalanceSizingBaseValue,
+                },
                 quantityDefinition: getDecimalDefinition(4),
             }
         };
-
-        this.state.rowEntries = this.buildRowEntries().rowEntries;
     }
 
 
     onPricedItemAdd(result) {
         if (this.isPricedItemIdDisplayed(result.newPricedItemDataItem.id)) {
-            this.updateRowEntries();
+            this.rebuildRowInfos();
         }
     }
 
     
     onPricedItemModify(result) {
         const { id } = result.newPricedItemDataItem;
-        for (let rowEntry of this.state.rowEntries) {
+        for (let rowEntry of this.state.rowInfos) {
             if (rowEntry.pricedItemDataItem.id === id) {
-                this.updateRowEntries();
+                this.rebuildRowInfos();
                 return;
             }
         }
@@ -174,9 +194,9 @@ export class PricedItemsList extends React.Component {
 
     onPricedItemRemove(result) {
         const { id } = result.removedPricedItemDataItem;
-        for (let rowEntry of this.state.rowEntries) {
+        for (let rowEntry of this.state.rowInfos) {
             if (rowEntry.pricedItemDataItem.id === id) {
-                this.updateRowEntries();
+                this.rebuildRowInfos();
                 return;
             }
         }
@@ -187,9 +207,21 @@ export class PricedItemsList extends React.Component {
         this.props.accessor.on('pricedItemAdd', this.onPricedItemAdd);
         this.props.accessor.on('pricedItemModify', this.onPricedItemModify);
         this.props.accessor.on('pricedItemRemove', this.onPricedItemRemove);
+
+        this.props.accessor.on('accountAdd', this.onAccountAdd);
+        this.props.accessor.on('accountModify', this.onAccountModify);
+        this.props.accessor.on('accountRemove', this.onAccountRemove);
+
+        this.accountIdsUpdated();
+
+        this.updatePrices();
     }
 
     componentWillUnmount() {
+        this.props.accessor.off('accountAdd', this.onAccountAdd);
+        this.props.accessor.off('accountModify', this.onAccountModify);
+        this.props.accessor.off('accountRemove', this.onAccountRemove);
+
         this.props.accessor.off('pricedItemAdd', this.onPricedItemAdd);
         this.props.accessor.off('pricedItemModify', this.onPricedItemModify);
         this.props.accessor.off('pricedItemRemove', this.onPricedItemRemove);
@@ -207,6 +239,19 @@ export class PricedItemsList extends React.Component {
         }
 
         if (prevProps.showHiddenPricedItems !== showHiddenPricedItems) {
+            rowsNeedUpdating = true;
+        }
+
+        if (!rowsNeedUpdating) {
+            if (!deepEqual(prevState.accountIdsByPricedItemId,
+                this.state.accountIdsByPricedItemId)) {
+                rowsNeedUpdating = true;
+            }
+        }
+
+        if (!deepEqual(prevProps.collapsedPricedItemIds, 
+            this.props.collapsedPricedItemIds)) {
+            this._collapsedRowIds = new Set(this.props.collapsedPricedItemIds);
             rowsNeedUpdating = true;
         }
 
@@ -229,9 +274,9 @@ export class PricedItemsList extends React.Component {
 
         if (rowsNeedUpdating) {
             const { prevActiveRowKey } = this.state;
-            const result = this.buildRowEntries();
+            const result = this.buildRowInfos();
             this.setState({
-                rowEntries: result.rowEntries,
+                rowInfos: result.rowInfos,
                 activeRowKey: result.activeRowKey,
                 activeRowIndex: result.activeRowIndex,
             });
@@ -252,46 +297,55 @@ export class PricedItemsList extends React.Component {
     }
 
 
+    accountIdsUpdated() {
+        this.setState({
+            accountIdsByPricedItemId: 
+                AH.getAccountIdsByPricedItemId(this.props.accessor),
+        });
+    }
+
+
     // Setting up the row entries:
     // Want to be able to filter what gets displayed.
     // Support summary rows for say pricedItem balances.
-    buildRowEntries() {
-        const rowEntries = [];
+    buildRowInfos() {
+        const rowInfos = [];
         const { accessor, pricedItemTypeName } = this.props;
         const pricedItemIds = accessor.getPricedItemIdsForType(pricedItemTypeName);
 
         pricedItemIds.forEach((id) => {
-            this.addPricedItemIdToRowEntries(rowEntries, id);
+            this.addPricedItemIdToRowEntries(rowInfos, id);
         });
 
         let { activeRowKey } = this.state;
-        let activeRowEntry;
-        let activeRowIndex;
+        let newActiveRowKey;
         if (activeRowKey) {
-            let currentIndex;
-            for (currentIndex = 0; currentIndex < rowEntries.length; ++currentIndex) {
-                if (rowEntries[currentIndex].key === activeRowKey) {
-                    activeRowEntry = rowEntries[currentIndex];
-                    activeRowIndex = currentIndex;
-                    break;
-                }
-            }
-            if (currentIndex >= rowEntries.length) {
-                // The active row is no longer visible...
-                activeRowKey = undefined;
+            // Make sure the active row key is still valid.
+            if (findRowInfoWithKey(rowInfos, activeRowKey)) {
+                newActiveRowKey = activeRowKey;
             }
         }
 
+        const rowInfosByKey = new Map();
+        rowInfos.forEach((rowInfo) => {
+            rowInfosByKey.set(rowInfo.key, rowInfo);
+            const { childRowInfos } = rowInfo;
+            if (childRowInfos) {
+                childRowInfos.forEach((rowInfo) => {
+                    rowInfosByKey.set(rowInfo.key, rowInfo);
+                });
+            }
+        });
+
         return {
-            rowEntries: rowEntries,
-            activeRowIndex: activeRowIndex,
-            activeRowKey: activeRowKey,
-            activeRowEntry: activeRowEntry,
+            rowInfos: rowInfos,
+            rowInfosByKey: rowInfosByKey,
+            activeRowKey: newActiveRowKey,
         };
     }
 
 
-    addPricedItemIdToRowEntries(rowEntries, pricedItemId) {
+    addPricedItemIdToRowEntries(rowInfos, pricedItemId) {
         if (!this.isPricedItemIdDisplayed(pricedItemId)) {
             return;
         }
@@ -299,14 +353,46 @@ export class PricedItemsList extends React.Component {
         const { accessor } = this.props;
         const pricedItemDataItem = accessor.getPricedItemDataItemWithId(pricedItemId);
 
-        const key = pricedItemDataItem.id.toString();
-        const index = rowEntries.length;
+        const key = pricedItemDataItem.id;
+        const isCollapsed = this._collapsedRowIds.has(key);
+        const index = rowInfos.length;
 
-        rowEntries.push({
+        const { accountIdsByPricedItemId } = this.state;
+        let expandCollapseState = ExpandCollapseState.NO_EXPAND_COLLAPSE;
+        const accountIds = accountIdsByPricedItemId.get(pricedItemId);
+        if (accountIds && accountIds.length) {
+            expandCollapseState = (isCollapsed)
+                ? ExpandCollapseState.COLLAPSED
+                : ExpandCollapseState.EXPANDED;
+        }
+
+        const rowInfo = {
             key: key,
             index: index,
+            expandCollapseState: expandCollapseState,
             pricedItemDataItem: pricedItemDataItem,
-        });
+        };
+        rowInfos.push(rowInfo);
+
+        if (accountIds) {
+            rowInfo.childRowInfos = [];
+            const { childRowInfos } = rowInfo;
+
+            const { showHiddenAccounts } = this.props;
+            accountIds.forEach((accountId) => {
+                const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+                if (!showHiddenAccounts && accountDataItem.isHidden) {
+                    return;
+                }
+
+                childRowInfos.push({
+                    key: 'AccountId_' + accountId,
+                    index: childRowInfos.length,
+                    expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
+                    accountDataItem: accountDataItem,
+                });
+            });
+        }
     }
 
 
@@ -330,11 +416,11 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    updateRowEntries() {
+    rebuildRowInfos() {
         this.setState((state) => {
-            const result = this.buildRowEntries();
+            const result = this.buildRowInfos();
             return {
-                rowEntries: result.rowEntries,
+                rowInfos: result.rowInfos,
                 activeRowKey: result.activeRowKey,
                 activeRowIndex: result.activeRowIndex,
             };
@@ -342,118 +428,122 @@ export class PricedItemsList extends React.Component {
     }
 
 
+    updatePrices() {
+        process.nextTick(async () => {
+            const newPricesByPricedItemId = new Map();
 
-    getRowKey(rowIndex) {
-        const rowEntry = this.state.rowEntries[rowIndex];
-        if (rowEntry) {
-            return rowEntry.key;
-        }
+            const { accessor } = this.props;
+            let { pricesYMDDate: ymdDate } = this.state;
+            if (!ymdDate) {
+                ymdDate = new YMDDate();
+            }
+
+            const pricedItemIds = accessor.getPricedItemIds();
+            for (let i = 0; i < pricedItemIds.length; ++i) {
+                const pricedItemId = pricedItemIds[i];
+                const priceDataItem 
+                    = await accessor.asyncGetPriceDataItemOnOrClosestBefore(
+                        pricedItemId, ymdDate);
+                newPricesByPricedItemId.set(pricedItemId, priceDataItem);
+            }
+
+            if (!deepEqual(newPricesByPricedItemId, this.state.pricesByPricedItemId)) {
+                this.setState({
+                    pricesByPricedItemId: newPricesByPricedItemId,
+                });
+            }
+        });
     }
 
 
-    onActivateRow(activeRowIndex) {
-        const rowEntry = (activeRowIndex !== undefined)
-            ? this.state.rowEntries[activeRowIndex]
-            : undefined;
-        const activeRowKey = (rowEntry) ? rowEntry.key : undefined;
+
+    onExpandCollapseRow({rowInfo, expandCollapseState}) {
+        this.setState((state) => {
+            rowInfo = Object.assign({}, rowInfo, {
+                expandCollapseState: expandCollapseState,
+            });
+            switch (expandCollapseState) {
+            case ExpandCollapseState.EXPANDED :
+                this._collapsedRowIds.delete(rowInfo.key);
+                break;
+    
+            case ExpandCollapseState.COLLAPSED :
+                this._collapsedRowIds.add(rowInfo.key);
+                break;
+            
+            default :
+                return;
+            }
+
+            const { onUpdateCollapsedPricedItemIds } = this.props;
+            if (onUpdateCollapsedPricedItemIds) {
+                onUpdateCollapsedPricedItemIds({
+                    pricedItemId: rowInfo.key,
+                    expandCollapseState: expandCollapseState,
+                    collapsedPricedItemIds: Array.from(this._collapsedRowIds.values()),
+                });
+            }
+
+            return {
+                rowInfos: updateRowInfo(state.rowInfos, rowInfo),
+            };
+        }, 
+        () => {
+        });
+    }
+
+
+    onActivateRow({ rowInfo }) {
+        const activeRowKey = (rowInfo) ? rowInfo.key : undefined;
         this.setState({
-            activeRowIndex: activeRowIndex,
             activeRowKey: activeRowKey,
         });
 
+        const { accountDataItem } = rowInfo;
+        if (accountDataItem) {
+            const { onSelectAccount } = this.props;
+            if (onSelectAccount) {
+                onSelectAccount(accountDataItem.id);
+            }
+        }
+
         const { onSelectPricedItem } = this.props;
         if (onSelectPricedItem) {
-            const { pricedItemDataItem } = rowEntry;
+            const { pricedItemDataItem } = rowInfo;
             onSelectPricedItem(pricedItemDataItem ? pricedItemDataItem.id : undefined);
         }
     }
 
 
     onOpenActiveRow({rowIndex}) {
-        const rowEntry = this.state.rowEntries[rowIndex];
-        const { onChoosePricedItem } = this.props;
-        const { pricedItemDataItem } = rowEntry;
-        if (onChoosePricedItem && pricedItemDataItem) {
-            onChoosePricedItem(pricedItemDataItem.id);
-        }
-    }
+        const { activeRowKey, rowInfosByKey } = this.state;
+        const rowInfo = rowInfosByKey.get(activeRowKey);
+        if (rowInfo) {
+            const { pricedItemDataItem } = rowInfo;
+            if (pricedItemDataItem) {
+                const { onChoosePricedItem } = this.props;
+                if (onChoosePricedItem) {
+                    onChoosePricedItem(pricedItemDataItem.id);
+                }
+            }
+            else {
+                const { accountDataItem } = rowInfo;
+                if (accountDataItem) {
+                    const { onChooseAccount } = this.props;
+                    if (onChooseAccount) {
+                        onChooseAccount(accountDataItem.id);
+                    }
+                }
+            }
 
-    renderCurrency(columnInfo, pricedItemDataItem) {
-        let { currency } = pricedItemDataItem;
-        if (!currency) {
-            // Base currency...
-            const { accessor } = this.props;
-            currency = userMsg('PricedItemsList-default_currency', 
-                accessor.getBaseCurrencyCode());
-        }
-        return CE.renderTextDisplay({
-            columnInfo: columnInfo, 
-            value: currency,
-        });
-    }
-
-
-    renderQuantityDefinition(columnInfo, pricedItemDataItem) {
-        const quantityDefinition 
-            = getQuantityDefinition(pricedItemDataItem.quantityDefinition);
-        if (quantityDefinition) {
-            return CE.renderTextDisplay({
-                columnInfo: columnInfo, 
-                value: quantityDefinition.getDisplayText(),
-            });
         }
     }
 
 
-    renderOnlineSource(columnInfo, pricedItemDataItem) {
-        const onlineUpdateType = PI.getPricedItemOnlineUpdateType(
-            pricedItemDataItem.onlineUpdateType);
-        if (onlineUpdateType) {
-            return CE.renderTextDisplay({
-                columnInfo: columnInfo, 
-                value: onlineUpdateType.description,
-            });
-        }
-    }
-
-
-    renderShares(columnInfo, pricedItemDataItem) {
-
-    }
-
-
-    renderMarketValue(columnInfo, pricedItemDataItem) {
-        
-    }
-
-
-    renderCostBasis(columnInfo, pricedItemDataItem) {
-        
-    }
-
-
-    renderCashIn(columnInfo, pricedItemDataItem) {
-        
-    }
-
-
-    onRenderCell({ rowIndex, columnIndex, isSizeRender }) {
-        const rowEntry = (isSizeRender)
-            ? this._sizingRowEntry
-            : this.state.rowEntries[rowIndex];
-        // type - x
-        // name
-        // currency
-        // description
-        // quantity definition
-        // ticker
-        // online update type
-
-        const { pricedItemDataItem } = rowEntry;
-        const columnInfo = this.state.columns[columnIndex].columnInfo;
-        switch (columnInfo.key) {
-        case 'name' :
-            return CE.renderNameDisplay({
+    renderName(columnInfo, rowInfo) {
+        const { pricedItemDataItem } = rowInfo;
+        if (pricedItemDataItem) {
+            return ACE.renderNameDisplay({
                 columnInfo: columnInfo,
                 value: (this.state.columnKeys.has('description'))
                     ? pricedItemDataItem.name
@@ -462,22 +552,68 @@ export class PricedItemsList extends React.Component {
                         description: pricedItemDataItem.description,
                     },
             });
-        
-        case 'description' :
-            return CE.renderDescriptionDisplay({
+        }
+
+        const { accountDataItem } = rowInfo;
+        if (accountDataItem) {
+            const name = AH.getShortAccountAncestorNames(this.props.accessor,
+                accountDataItem.id);
+            return ACE.renderNameDisplay({
+                columnInfo: columnInfo,
+                value: name,
+            });
+        }
+    }
+
+
+    renderDescription(columnInfo, rowInfo) {
+        const { pricedItemDataItem } = rowInfo;
+        if (pricedItemDataItem) {
+            return ACE.renderDescriptionDisplay({
                 columnInfo: columnInfo,
                 value: pricedItemDataItem.description,
             });
-        
-        case 'currency' :
-            return this.renderCurrency(columnInfo, pricedItemDataItem);
-        
-        case 'quantityDefinition' :
-            return this.renderQuantityDefinition(
-                columnInfo, pricedItemDataItem);
-        
-        case 'ticker' :
-            return CE.renderTextDisplay({
+        }
+    }
+
+
+    renderCurrency(columnInfo, rowInfo) {
+        const { pricedItemDataItem } = rowInfo;
+        if (pricedItemDataItem) {
+            let { currency } = pricedItemDataItem;
+            if (!currency) {
+                // Base currency...
+                const { accessor } = this.props;
+                currency = userMsg('PricedItemsList-default_currency', 
+                    accessor.getBaseCurrencyCode());
+            }
+            return ACE.renderTextDisplay({
+                columnInfo: columnInfo, 
+                value: currency,
+            });
+        }
+    }
+
+
+    renderQuantityDefinition(columnInfo, rowInfo) {
+        const { pricedItemDataItem } = rowInfo;
+        if (pricedItemDataItem) {
+            const quantityDefinition 
+                = getQuantityDefinition(pricedItemDataItem.quantityDefinition);
+            if (quantityDefinition) {
+                return ACE.renderTextDisplay({
+                    columnInfo: columnInfo, 
+                    value: quantityDefinition.getDisplayText(),
+                });
+            }
+        }
+    }
+
+
+    renderTicker(columnInfo, rowInfo) {
+        const { pricedItemDataItem } = rowInfo;
+        if (pricedItemDataItem) {
+            return ACE.renderTextDisplay({
                 columnInfo: columnInfo, 
                 value: (this.state.columnKeys.has('name'))
                     ? pricedItemDataItem.ticker
@@ -486,22 +622,79 @@ export class PricedItemsList extends React.Component {
                         tooltip: pricedItemDataItem.name,
                     },
             });
+        }
+    }
+
+
+    renderOnlineSource(columnInfo, rowInfo) {
+        const { pricedItemDataItem } = rowInfo;
+        if (pricedItemDataItem) {
+            const onlineUpdateType = PI.getPricedItemOnlineUpdateType(
+                pricedItemDataItem.onlineUpdateType);
+            if (onlineUpdateType) {
+                return ACE.renderTextDisplay({
+                    columnInfo: columnInfo, 
+                    value: onlineUpdateType.description,
+                });
+            }
+        }
+    }
+
+
+    renderShares(columnInfo, rowInfo) {
+
+    }
+
+
+    renderMarketValue(columnInfo, rowInfo) {
+        
+    }
+
+
+    renderCostBasis(columnInfo, rowInfo) {
+        
+    }
+
+
+    renderCashIn(columnInfo, rowInfo) {
+        
+    }
+
+
+    onRenderCell({ rowInfo, columnIndex, isSizeRender }) {
+
+        const { columnInfo } = this.state.columns[columnIndex];
+
+        switch (columnInfo.key) {
+        case 'name' :
+            return this.renderName(columnInfo, rowInfo);
+        
+        case 'description' :
+            return this.renderDescription(columnInfo, rowInfo);
+        
+        case 'currency' :
+            return this.renderCurrency(columnInfo, rowInfo);
+        
+        case 'quantityDefinition' :
+            return this.renderQuantityDefinition(columnInfo, rowInfo);
+        
+        case 'ticker' :
+            return this.renderTicker(columnInfo, rowInfo);
         
         case 'onlineSource' :
-            return this.renderOnlineSource(
-                columnInfo, pricedItemDataItem);
+            return this.renderOnlineSource(columnInfo, rowInfo);
         
         case 'shares' :
-            return this.renderShares(columnInfo, pricedItemDataItem);
+            return this.renderShares(columnInfo, rowInfo);
         
         case 'marketValue' :
-            return this.renderMarketValue(columnInfo, pricedItemDataItem);
+            return this.renderMarketValue(columnInfo, rowInfo);
         
         case 'costBasis' :
-            return this.renderCostBasis(columnInfo, pricedItemDataItem);
+            return this.renderCostBasis(columnInfo, rowInfo);
 
         case 'cashIn' :
-            return this.renderCurrency(columnInfo, pricedItemDataItem);
+            return this.renderCurrency(columnInfo, rowInfo);
         }
     }
 
@@ -509,16 +702,16 @@ export class PricedItemsList extends React.Component {
     render() {
         const { state } = this;
         return <div className="RowTableContainer PricedItemsList">
-            <RowTable
+            <CollapsibleRowTable
                 columns = { state.columns }
-                rowCount = { state.rowEntries.length }
-                getRowKey = { this.getRowKey }
+                rowInfos = {state.rowInfos}
+                onExpandCollapseRow = {this.onExpandCollapseRow}
 
                 onRenderCell={this.onRenderCell}
 
                 onSetColumnWidth = { this.props.onSetColumnWidth }
 
-                activeRowIndex = {state.activeRowIndex}
+                activeRowKey = {state.activeRowKey}
                 onActivateRow = {this.onActivateRow}
 
                 onOpenActiveRow = {this.onOpenActiveRow}
@@ -555,12 +748,17 @@ PricedItemsList.propTypes = {
     pricedItemTypeName: PropTypes.string.isRequired,
     onSelectPricedItem: PropTypes.func,
     onChoosePricedItem: PropTypes.func,
+    onSelectAccount: PropTypes.func,
+    onChooseAccount: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
     columns: PropTypes.arrayOf(PropTypes.object),
     onSetColumnWidth: PropTypes.func,
     hiddenPricedItemIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenPricedItems: PropTypes.bool,
+    showHiddenAccounts: PropTypes.bool,
     showPricedItemIds: PropTypes.bool,
+    collapsedPricedItemIds: PropTypes.arrayOf(PropTypes.number),
+    onUpdateCollapsedPricedItemIds: PropTypes.func,
     children: PropTypes.any,
 };

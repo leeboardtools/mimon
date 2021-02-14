@@ -315,9 +315,14 @@
     "PricedItemsListHandler-modifyPricedItem": ["Modify ", ""],
     "PricedItemsListHandler-removePricedItem": ["Delete ", ""],
     "PricedItemsListHandler-showHiddenPricedItems": ["Show Hidden ", ""],
+    "PricedItemsListHandler-showHiddenPricedItemAccounts": "Show Hidden Accounts",
     "PricedItemsListHandler-title": ["", " List"],
 
     "PricedItemsListHandler-action_toggleShowHiddenPricedItems": ["Toggle Show Hidden ", ""],
+    "PricedItemsListHandler-action_showHiddenAccounts": "Show Hidden Accounts",
+    "PricedItemsListHandler-action_hideHiddenAccounts": "Hide Hidden Accounts",
+    "PricedItemsListHandler-action_expandPricedItem": ["Show Accounts of ", ""],
+    "PricedItemsListHandler-action_collapsePricedItem": ["Hide Accounts of ", ""],
 
 
     "PricedItemSelector-baseCurrency_label": ["Default Currency (", ")" ],
