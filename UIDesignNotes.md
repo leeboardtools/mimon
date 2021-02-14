@@ -44,9 +44,8 @@ From an `Accounts` tab an individual account may be chosen and an `Account Regis
 that account opened. There is only one `Account Register` tab per account.
 
 The `Account Register` tab represents each transaction split that refers to the account
-in table form, with each split taking up two rows as in a checkbook register. Editing will
-occur in-place, with support for transactions with more than 2 splits opening up multiple
-rows in the table.
+in table form. Editing will occur in-place, with support for transactions with more than 2 
+splits opening up multiple rows in the table.
 
 The `Account Register` tab for accounts that support lots will have additional support for
 lots, particularly for the sale of any lots.
@@ -70,8 +69,7 @@ The decision of whether to use modal windows or just support `Account Editor` ta
 been made.
 
 `Priced Items` tab - This is along the lines of the `Accounts` tab except for priced items.
-There would also only be one `Priced Items` tab (there may be separate ones for securities
-versus real estate, etc.)
+There will be a 'Priced Items' tab for each type of priced item (securities, real estate, etc.)
 
 'Priced Item Editor' tab - This is opened for new priced items (menu choice) or modifying an
 existing priced item (menu choice or from `Priced Items` tab).
@@ -83,7 +81,7 @@ Also have an option to display lots by priced item.
 `Prices` tab - This displays prices for the different priced items. There would be a selector
 for the priced item, and then all the prices for that priced item would be displayed.
 
-`Price Summary` tab - This displays the last n prices for each priced item account, the
+??? `Price Summary` tab - This displays the last n prices for each priced item account, the
 idea would be to allow for simple manual updating of all prices for a given date (i.e.
 Yahoo finance is not available).
 
@@ -166,62 +164,6 @@ Some of the other tab views:
 
 Are the lists really two separate styles? Or can they be combined into one?
 
-### Menu Management
-Startup Mode will not have any menus, as it is an entirely modal operation.
-
-Runtime Mode will have menus that will always be available, and other
-menus that will only appear when a specific tab is active.
-
-Common menus:
-- File
-    - Create Accounting System...
-    - Open Accounting System...
-    - Recent Accounting Systems
-        - MRU list...
-    - Save...
-    - Save As...
-    - Close
-    - Exit
-
-- Edit
-    - Undo
-    - Redo
-
-    - Cut
-    - Copy
-    - Paste
-    - Delete
-
-    - Preferences
-
-- Action
-    - New
-        - Account
-        - Transaction
-        - Priced Item
-        - Lot
-        - Reminder
-
-    - Modify
-        - Account
-        - Transaction
-        - Priced Item
-        - Lot
-        - Reminder
-    
-    - Delete
-
-- View
-    - Accounts List
-    - Account Register
-    - Priced Items List
-    - Lots List
-    - Reminders
-    - Reminders
-    - Transactions List???
-
-- Reports
-
 
 
 ## The Screens
@@ -244,11 +186,12 @@ Common menus:
     all the other running mode windows.
 
 
-### Accounts Table
+### Accounts List
     - Table of accounts.
     - Can configure what columns are displayed.
     - Can filter what accounts are displayed.
-    - Can have more than one Accounts Table, can save the configuration.
+    - Can have more than one Accounts Table, can save the configuration, but
+    one master accounts list.
 
 
 ### Account Register
@@ -276,7 +219,7 @@ Common menus:
     - Can have more than one Account Editor open, but only one editor per account.
 
 
-### Priced Items Table
+### Priced Items List
     - Table of priced items.
     - Will use same underlying implementation as Accounts Table, so will have similar
     features. The big difference is Priced Items do not have hierarchy.
@@ -325,15 +268,8 @@ Common menus:
 ## TODO
 - Rename AccountingSystem to AccountingProject???
 
-- Make the buttons at the top of NewFileAccountsEditor look better.
-
-- Add heading to NewFileConfigurator.
-    - Need to adjust TabbedPages, it currently forces the tabs to the top of the page,
-    not the top of its parent.
-
-
-
 - Test Revert
+
 - Test Save
 
 
@@ -349,9 +285,47 @@ Common menus:
         - Ability to show/hide columns, reorder them.
         - Custom Account Lists
         - Listen on prices for market value updates.
+        - Summary rows
 
 
-    - AccountRegister
+    - Account Register
+        - Auto-complete for description
+        - Copy, Paste, Duplicate transaction actions
+        - Actually add row to the clipboard when Copy Transaction is chosen.
+            - Both HTML and text.
+            - For HTML include the split drop down???
+            
+        - Multi-row support?
+
+        - Multi-split tooltip with securities shows same sign for buy and sell (sell shows positive, should be negative)
+
+
+    - Account Selector
+        - Add a search box.
+
+    
+    - File import
+        - Will not bother importing Reminders
+        - Finish the Jest testing.
+
+
+    - Lots List
+        - Hierarchy, by security (priced items)
+        - Only for securities and mutual funds?
+    
+
+    - Lot selection editor
+        - Add context menu to support resetting column widths.
+        - Columns for cost-basis, gain, ref number
+        - Add summary info.
+        - Figure out what to do about undo/redo and changing column widths.
+            - Maybe just get rid of undo/redo support for editor?
+            - Or undo/redo support for changing column widths in editor?
+            - Or just don't allow column resizing
+
+
+    - Multi-splits editor
+        - Add context menu to support resetting column widths.
 
 
     - Priced Item List
@@ -376,44 +350,6 @@ Common menus:
         - Add a new security?
 
 
-    - Lots List
-        - Hierarchy, by security (priced items)
-        - Only for securities and mutual funds?
-    
-
-    - Lot selection editor
-        - Add context menu to support resetting column widths.
-        - Columns for cost-basis, gain, ref number
-        - Add summary info.
-        - Figure out what to do about undo/redo and changing column widths.
-            - Maybe just get rid of undo/redo support for editor?
-            - Or undo/redo support for changing column widths in editor?
-            - Or just don't allow column resizing
-
-
-    - Multi-splits editor
-        - Add context menu to support resetting column widths.
-
-
-    - Account Register
-        - Auto-complete for description
-        - Copy, Paste, Duplicate transaction actions
-        - Actually add row to the clipboard when Copy Transaction is chosen.
-            - Both HTML and text.
-            - For HTML include the split drop down???
-            
-        - Multi-row support?
-
-        - Multi-split tooltip with securities shows same sign for buy and sell (sell shows positive, should be negative)
-
-
-    - Get Sub-menus working in MenuList, etc.
-        - View Columns menus.
-        - Add zoom in/out to main menu.
-
-        - Context menu loses focus if tooltip is displayed elsewhere.
-    
-
     - Reconciler
         - Last reconciled date not updated after reconcile
 
@@ -426,18 +362,18 @@ Common menus:
         - Add Apply now command.
 
 
-    - File import
-        - Will not bother importing Reminders
-        - Finish the Jest testing.
+- Get Sub-menus working in MenuList, etc.
+    - View Columns menus.
+    - Add zoom in/out to main menu.
+
+    - Context menu loses focus if tooltip is displayed elsewhere.
 
 
-    - Account Selector
-        - Add a search box.
-
-    
 
 - RowTable To Do:
     - Reorder columns
+        - Either menu option to enable dragging of columns or Ctrl drag.
+
     - Sort by columns
 
 
