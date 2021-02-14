@@ -567,18 +567,10 @@ export class RowTable extends React.Component {
             const { columnRefs } = sizeRenderRefs;
             columnWidths = [];
             for (let i = 0; i < columns.length; ++i) {
-                const { headerCellRef, bodyCellRef, footerCellRef } = columnRefs[i];
+                const { bodyCellRef } = columnRefs[i];
                 let width = 0;
-                if (headerCellRef.current) {
-                    width = headerCellRef.current.getBoundingClientRect().width;
-                }
                 if (bodyCellRef.current) {
-                    width = Math.max(width, 
-                        bodyCellRef.current.getBoundingClientRect().width);
-                }
-                if (footerCellRef.current) {
-                    width = Math.max(width, 
-                        footerCellRef.current.getBoundingClientRect().width);
+                    width = bodyCellRef.current.getBoundingClientRect().width;
                 }
                 columnWidths[i] = width;
             }

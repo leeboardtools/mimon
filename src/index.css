@@ -136,10 +136,6 @@ body {
   text-align: left;
 }
 
-.Description-header {
-  flex-grow: 2;
-}
-
 .Description-cell {
   flex-grow: 2;
 }
@@ -158,10 +154,6 @@ body {
   text-align: left;
 }
 
-.AccountId-header {
-  flex-grow: 2;
-}
-
 .AccountId-cell {
   flex-grow: 2;
 }
@@ -169,10 +161,6 @@ body {
 
 .Splits-base {
   text-align: left;
-}
-
-.Splits-header {
-  flex-grow: 2;
 }
 
 .Splits-cell {
@@ -195,7 +183,6 @@ body {
 
 .SplitQuantity-header {
   text-align: center;
-  flex-basis: 9rem;
 }
 
 .SplitQuantity-cell {
@@ -203,7 +190,7 @@ body {
 }
 
 
-.ActionType-header {
+.ActionType-cell {
   flex-basis: 14rem;
 }
 
@@ -214,7 +201,6 @@ body {
 
 .Shares-header {
   text-align: right;
-  flex-basis: 10rem;
 }
 
 .Shares-cell {
@@ -228,20 +214,17 @@ body {
 
 .Monetary-header {
   text-align: right;
-  flex-basis: 10rem;
 }
 
 .Monetary-cell {
-  flex-grow: 0;
   flex-basis: 10rem;
 }
 
 .Fees-header {
-  flex-grow: 0;
   flex-basis: 4rem;
 }
 
-.price-header {
+.Price-header {
   flex-grow: 0;
   flex-basis: 4rem;
 }
@@ -253,7 +236,6 @@ body {
 
 .Percent-header {
   text-align: right;
-  flex-basis: 8rem;
 }
 
 .Percent-cell {

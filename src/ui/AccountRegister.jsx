@@ -256,7 +256,7 @@ function renderSplitsListDisplay(args) {
         value = cellEditBuffer.value;
     }
 
-    if (!value || !rowEntry.transactionId) {
+    if (!value) {
         return;
     }
 

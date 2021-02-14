@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import * as PI from '../engine/PricedItems';
 import deepEqual from 'deep-equal';
-import { getQuantityDefinition } from '../util/Quantities';
+import { getQuantityDefinition, getDecimalDefinition } from '../util/Quantities';
 import * as CE from './AccountingCellEditors';
 import { RowTable } from '../util-ui/RowTable';
 import { columnInfosToColumns, getVisibleColumns, } from '../util-ui/ColumnInfo';
@@ -146,6 +146,7 @@ export class PricedItemsList extends React.Component {
                 type: pricedItemTypeName,
                 onlineUpdateType: PI.PricedItemOnlineUpdateType.YAHOO_FINANCE.name,
                 ticker: 'WWWW',
+                quantityDefinition: getDecimalDefinition(4),
             }
         };
 

@@ -1700,7 +1700,7 @@ export function getPriceColumnInfo(args) {
             }
         },
         {
-            headerClassExtras: 'price-header',
+            headerClassExtras: 'Price-header',
         });
 }
 
