@@ -1,4 +1,4 @@
-import { userMsg } from '../util/UserMessages';
+import { isUserMsg, userMsg } from '../util/UserMessages';
 import * as CI from '../util-ui/ColumnInfo';
 import { dataDeepCopy } from '../util/DataDeepCopy';
 import deepEqual from 'deep-equal';
@@ -98,6 +98,14 @@ export class RowTableHandler {
 
 
     getColumnLabel(columns, columnName) {
+        const { userIdBase } = this.props;
+        if (userIdBase) {
+            const msgId = userIdBase + '-col_' + columnName;
+            if (isUserMsg(msgId)) {
+                return userMsg(msgId);
+            }
+        }
+
         const column = CI.getColumnWithKey(columns, columnName);
         const { header } = column;
         if (header && header.label) {
@@ -109,10 +117,6 @@ export class RowTableHandler {
             return footer.label;
         }
 
-        const { userIdBase } = this.props;
-        if (userIdBase) {
-            return userMsg(userIdBase + '-col_' + columnName);
-        }
     }
 
 

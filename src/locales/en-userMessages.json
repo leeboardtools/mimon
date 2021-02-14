@@ -172,6 +172,8 @@
 
     "AccountSelector-disabled_root": "--Root--",
 
+    "AccountsRegisterHandler-col_refNum": "Reference Number",
+    "AccountsRegisterHandler-col_reconcile": "Reconcile",
 
     "AccountRegisterHandler-removeTransaction": "Delete Transaction",
     "AccountRegisterHandler-duplicateTransaction": "Duplicate Transaction",

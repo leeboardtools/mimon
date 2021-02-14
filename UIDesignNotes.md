@@ -332,74 +332,9 @@ Common menus:
     not the top of its parent.
 
 
-- MainWindow
-    - AccountsList
-        - Generic, this may form the basis for reports that display summarized account info.
-        - Have a master accounts list in MainWindow
-        - Support customizing and saving customized versions.
-    
-    - Support for new/modify/delete account, priced items
 
 - Test Revert
 - Test Save
-
-- Think about transitioning to a Navbar based or other entirely render side based menu system.
-    - Cleaner appearance.
-    - Need to think over the command structure.
-
-    - Main Window:
-        - Would provide the main menu button.
-
-            - Menu items:
-                - Undo (button)
-                - Redo (button)
-
-                - Check Reminders
-                - View
-                    - Accounts
-                    - Priced Items
-                    - Prices
-                    - Securities
-                    - Reminders
-                    - Reports
-
-                - File
-                    - Revert File
-                    - Close File
-                    - Exit
-        
-
-        - Active tabs would have their own menu.
-
-            - Drop-down from the tab...
-
-            - Accounts List menu items
-                - Open Account Register
-                - Reconcile Account
-                - New Account
-                - Modify Account
-                - Delete Account
-                - Show/Hide accounts
-            
-            - Account Register menu items
-                - New transaction
-                - Copy transaction
-                - Paste transaction
-                - Delete transaction
-                - Reconcile Account
-            
-            - Securites List menu items
-                - New Security
-                - Modify Security
-                - Delete Security
-                - Open Prices
-                - Open Transactions
-            
-            - Reminders menu items
-                - Check Reminders
-                - New Reminder
-                - Modify Reminder
-                - Delete Reminder
 
 
 - Next Up:
@@ -420,10 +355,8 @@ Common menus:
 
 
     - AccountRegister
-        - Add columns sub-menu
-            - Ref num
-            - Extra securities columns
-
+        - Securities:
+            - Add Gain columns
 
 
     - Priced Item List
@@ -442,6 +375,7 @@ Common menus:
     - Prices List
         - Changing column width of prices list then undoing/redoing does not
         properly resize other open tabs that are not active.
+
 
     - Price Retrieval Window
         - Add a new security?
@@ -508,6 +442,8 @@ Common menus:
     
 
 - RowTable To Do:
+    - Reorder columns
+    - Sort by columns
 
 
 - CollapsibleRowTable

@@ -174,15 +174,36 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         let activeSplitInfo;
         let accountType = {};
         let disableReconcile;
+
+        const optionalColumns = [];
+
         state = state || this.getTabIdState(tabId);
         if (state) {
             activeSplitInfo = state.activeSplitInfo;
             const { accessor } = this.props;
             accountType = accessor.getTypeOfAccountId(state.accountId);
+
+            const { columns } = state;
+            const columnsByName = new Map();
+            columns.forEach((column) => columnsByName.set(column.key, column));
+
+            optionalColumns.push(columnsByName.get('refNum'));
+            optionalColumns.push(columnsByName.get('reconcile'));
+
             if (accountType.hasLots) {
                 disableReconcile = true;
+
+                optionalColumns.push(columnsByName.get('totalShares'));
+                optionalColumns.push(columnsByName.get('totalMarketValue'));
+                optionalColumns.push(columnsByName.get('totalCostBasis'));
+                optionalColumns.push(columnsByName.get('totalCashIn'));
             }
         }
+
+        const toggleColumnsSubMenuItems 
+            = this._rowTableHandler.createToggleColumnMenuItems(
+                tabId, optionalColumns);
+
         const menuItems = [
             { id: 'removeTransaction',
                 label: userMsg('AccountRegisterHandler-removeTransaction'),
@@ -224,6 +245,11 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
 
             // TODO:
             // 'clearNewTransaction - resets the new transaction...
+            
+            { id: 'columnsSubMenu',
+                label: userMsg('AccountsListHandler-columns_subMenu'),
+                subMenuItems: toggleColumnsSubMenuItems,
+            },
 
             {},
             this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state),
@@ -263,7 +289,9 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     createTabEntry(tabId, accountId, openArgs) {
         const accountDataItem = this.props.accessor.getAccountDataItemWithId(
             accountId);
-        let settings = this.getTabIdProjectSettings(tabId) || {};
+
+        const projectSettingsId = 'AccountRegisterHandler-' + accountDataItem.type;
+        let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
         const columns = createDefaultColumns(accountDataItem.type);
 
         const tabEntry = {
@@ -275,6 +303,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             accountRegisterRef: React.createRef(),
             getUndoRedoInfo: getUndoRedoInfo,
             openArgs: openArgs,
+            projectSettingsId: projectSettingsId,
             columns: columns,
         };
 
