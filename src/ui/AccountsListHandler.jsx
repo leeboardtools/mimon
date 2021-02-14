@@ -478,7 +478,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             hiddenRootAccountTypes = {tabEntry.hiddenRootAccountTypes}
             hiddenAccountIds = {tabEntry.hiddenAccountIds}
             showHiddenAccounts = {tabEntry.showHiddenAccounts}
-            initialCollapsedAccountIds = {collapsedAccountIds}
+            collapsedAccountIds = {collapsedAccountIds}
             onUpdateCollapsedAccountIds = {(args) =>
                 this.onUpdateCollapsedAccountIds(tabEntry.tabId, args)}
             onSetColumnWidth = {(args) =>

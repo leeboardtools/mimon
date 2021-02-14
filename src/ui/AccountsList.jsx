@@ -81,7 +81,7 @@ export class AccountsList extends React.Component {
         this.onActivateRow = this.onActivateRow.bind(this);
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
 
-        const { accessor, initialCollapsedAccountIds } = this.props;
+        const { accessor, collapsedAccountIds } = this.props;
 
         const columns = this.props.columns || createDefaultColumns();
 
@@ -99,7 +99,7 @@ export class AccountsList extends React.Component {
             pricesByPricedItemId: new Map(),
         };
 
-        this._collapsedRowIds = new Set(initialCollapsedAccountIds);
+        this._collapsedRowIds = new Set(collapsedAccountIds);
 
         this._hiddenRootAccountTypes = new Set(props.hiddenRootAccountTypes);
         this._hiddenAccountIds = new Set(props.hiddenAccountIds);
@@ -201,6 +201,12 @@ export class AccountsList extends React.Component {
         }
 
         if (prevProps.showHiddenAccounts !== showHiddenAccounts) {
+            rowsNeedUpdating = true;
+        }
+
+        if (!deepEqual(prevProps.collapsedAccountIds, 
+            this.props.collapsedAccountIds)) {
+            this._collapsedRowIds = new Set(this.props.collapsedAccountIds);
             rowsNeedUpdating = true;
         }
 
@@ -739,7 +745,7 @@ AccountsList.propTypes = {
     hiddenAccountIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenAccounts: PropTypes.bool,
     showAccountIds: PropTypes.bool,
-    initialCollapsedAccountIds: PropTypes.arrayOf(PropTypes.number),
+    collapsedAccountIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedAccountIds: PropTypes.func,
     children: PropTypes.any,
 };

@@ -350,13 +350,8 @@ Common menus:
         - Custom Account Lists
         - Listen on prices for market value updates.
 
-        - Expand/collapse account action doesn't undo because AccountsList stores the collapsed
-        state.
-
 
     - AccountRegister
-        - Securities:
-            - Add Gain columns
 
 
     - Priced Item List
