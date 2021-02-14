@@ -158,6 +158,31 @@ test('AccountHelpers', async () => {
 
 
         //
+        // getAccountIdsByPricedItemId()
+        result = AH.getAccountIdsByPricedItemId(accessor);
+
+        expect(result.get(sys.aaplPricedItemId)).toEqual(expect.arrayContaining([
+            sys.aaplBrokerageAId,
+            sys.aaplIRAId,
+        ]));
+        expect(result.get(sys.aaplPricedItemId).length).toEqual(2);
+
+        expect(result.get(sys.msftPricedItemId)).toEqual(expect.arrayContaining([
+            sys.msftBrokerageAId,
+        ]));
+        expect(result.get(sys.msftPricedItemId).length).toEqual(1);
+
+        // parentAccountId specified...
+        result = AH.getAccountIdsByPricedItemId(accessor, sys.iraId);
+
+        expect(result.get(sys.aaplPricedItemId)).toEqual(expect.arrayContaining([
+            sys.aaplIRAId,
+        ]));
+        expect(result.get(sys.aaplPricedItemId).length).toEqual(1);
+        
+
+
+        //
         // All done...
         await accessor.asyncCloseAccountingFile();
     }

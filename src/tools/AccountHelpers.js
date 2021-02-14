@@ -382,3 +382,50 @@ export function getCurrencyForAccountId(accessor, accountId) {
         return getCurrency(pricedItemDataItem.currency || accessor.getBaseCurrencyCode());
     }
 }
+
+
+/**
+ * Returns a Map whose keys are the priced item ids and whose values are arrays
+ * containing the account ids of the accounts referring to those priced item ids.
+ * @param {EngineAccessor} accessor 
+ * @param {number} [parentAccountId]   Optional account id to start from, if given the
+ * descendants of this account are added, otherwise all the accounts in the accessor
+ * are added.
+ * @returns {Map}
+ */
+export function getAccountIdsByPricedItemId(accessor, parentAccountId) {
+    const accountIdsByPricedItemId = new Map();
+    accessor.getPricedItemIds().forEach((id) =>
+        accountIdsByPricedItemId.set(id, []));
+    
+    if (parentAccountId) {
+        addAccountIdsToPricedItemMap(accessor, parentAccountId, accountIdsByPricedItemId);
+    }
+    else {
+        for (let name in A.AccountCategory) {
+            const rootAccountId = accessor.getCategoryRootAccountId(name);
+            addAccountIdsToPricedItemMap(accessor, rootAccountId, 
+                accountIdsByPricedItemId);
+        }
+    }
+
+    return accountIdsByPricedItemId;
+}
+
+
+function addAccountIdsToPricedItemMap(accessor, accountId, accountIdsByPricedItemId) {
+    const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+
+    let accountIds = accountIdsByPricedItemId.get(accountDataItem.pricedItemId);
+    if (!accountIds) {
+        accountIds = [];
+        accountIdsByPricedItemId.set(accountDataItem.pricedItemId, accountIds);
+    }
+    accountIds.push(accountId);
+
+    if (accountDataItem.childAccountIds) {
+        accountDataItem.childAccountIds.forEach((childId) => 
+            addAccountIdsToPricedItemMap(accessor, childId, accountIdsByPricedItemId));
+    }
+}
+
