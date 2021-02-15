@@ -6,6 +6,7 @@ import * as PI from '../engine/PricedItems';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
 import { TabIdRowTableHandler } from './RowTableHelpers';
+import { getColumnWithKey } from '../util-ui/ColumnInfo';
 
 /**
  * Handler for {@link PricedItemsList} components and their pages in the 
@@ -243,12 +244,35 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const { activePricedItemId, pricedItemTypeName, 
             hiddenPricedItemIds, showHiddenPricedItems,
             showHiddenAccounts,
+            columns,
         } = state;
 
         const showPricedItemLabelId 
             = (hiddenPricedItemIds.indexOf(activePricedItemId) >= 0)
                 ? 'PricedItemsListHandler-showPricedItem'
                 : 'PricedItemsListHandler-hidePricedItem';
+
+        const optionalColumns = [];
+        if (PI.getPricedItemType(pricedItemTypeName).hasTickerSymbol) {
+            optionalColumns.push(getColumnWithKey(columns, 'totalMarketValue'));
+            optionalColumns.push(getColumnWithKey(columns, 'totalShares'));
+            optionalColumns.push(getColumnWithKey(columns, 'totalCostBasis'));
+            optionalColumns.push(getColumnWithKey(columns, 'totalCashIn'));
+            optionalColumns.push(getColumnWithKey(columns, 'totalGain'));
+            optionalColumns.push(getColumnWithKey(columns, 'totalCashInGain'));
+            optionalColumns.push(getColumnWithKey(columns, 'totalPercentGain'));
+            optionalColumns.push(getColumnWithKey(columns, 'totalCashInPercentGain'));
+            optionalColumns.push(getColumnWithKey(columns, 'totalAnnualPercentGain'));
+            optionalColumns.push(
+                getColumnWithKey(columns, 'totalAnnualCashInPercentGain'));
+            optionalColumns.push(getColumnWithKey(columns, 'onlineSource'));
+        }
+        optionalColumns.push(getColumnWithKey(columns, 'currency'));
+        optionalColumns.push(getColumnWithKey(columns, 'quantityDefinition'));
+
+        const toggleColumnsSubMenuItems 
+            = this._rowTableHandler.createToggleColumnMenuItems(
+                tabId, optionalColumns);
 
         const typeDescription = PI.getPricedItemType(pricedItemTypeName).description;
         const pluralTypeDescription 
@@ -298,6 +322,11 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                 checked: showHiddenAccounts,
                 onChooseItem: () => this.onToggleShowHiddenAccounts(
                     tabId),
+            },
+            
+            { id: 'columnsSubMenu',
+                label: userMsg('PricedItemsListHandler-columns_subMenu'),
+                subMenuItems: toggleColumnsSubMenuItems,
             },
 
             {},

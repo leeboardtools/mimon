@@ -385,6 +385,8 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Sort by columns
 
+    - Headers are not wrapping
+
 
 - CollapsibleRowTable
     - Need to tweak the expand/collapse indenting.

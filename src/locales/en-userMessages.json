@@ -316,6 +316,7 @@
     "PricedItemsListHandler-removePricedItem": ["Delete ", ""],
     "PricedItemsListHandler-showHiddenPricedItems": ["Show Hidden ", ""],
     "PricedItemsListHandler-showHiddenPricedItemAccounts": "Show Hidden Accounts",
+    "PricedItemsListHandler-columns_subMenu": "Columns",
     "PricedItemsListHandler-title": ["", " List"],
 
     "PricedItemsListHandler-action_toggleShowHiddenPricedItems": ["Toggle Show Hidden ", ""],

@@ -4,10 +4,14 @@ import { userMsg } from '../util/UserMessages';
 import * as PI from '../engine/PricedItems';
 import deepEqual from 'deep-equal';
 import { YMDDate } from '../util/YMDDate';
-import { getQuantityDefinition, getDecimalDefinition } from '../util/Quantities';
+import { getQuantityDefinition, 
+    getDecimalDefinition, getQuantityDefinitionName, } from '../util/Quantities';
 import * as ACE from './AccountingCellEditors';
+import * as LCE from './LotCellEditors';
 import * as AH from '../tools/AccountHelpers';
-import { columnInfosToColumns, getVisibleColumns, } from '../util-ui/ColumnInfo';
+import * as GH from '../tools/GainHelpers';
+import { columnInfosToColumns, getVisibleColumns, 
+    getColumnWithKey, } from '../util-ui/ColumnInfo';
 import { CollapsibleRowTable, ExpandCollapseState,
     findRowInfoWithKey, updateRowInfo } from '../util-ui/CollapsibleRowTable';
 
@@ -20,6 +24,16 @@ function getPricedItemsListColumnInfoDefs() {
         const inputClassExtras = 'text-center';
 
         columnInfoDefs = {
+            ticker: { key: 'ticker',
+                header: {
+                    label: userMsg('PricedItemsList-ticker'),
+                    ariaLabel: 'Ticker Symbol',
+                },
+                propertyName: 'ticker',
+                cellClassName: cellClassName + ' text-left',
+                inputClassExtras: inputClassExtras,
+                inputSize: -6,
+            },
             name: { key: 'name',
                 header: {
                     label: userMsg('PricedItemsList-name'),
@@ -58,16 +72,6 @@ function getPricedItemsListColumnInfoDefs() {
                 inputClassExtras: inputClassExtras,
                 inputSize: -10,
             },
-            ticker: { key: 'ticker',
-                header: {
-                    label: userMsg('PricedItemsList-ticker'),
-                    ariaLabel: 'Ticker Symbol',
-                },
-                propertyName: 'ticker',
-                cellClassName: cellClassName + ' text-left',
-                inputClassExtras: inputClassExtras,
-                inputSize: -6,
-            },
             onlineSource: { key: 'onlineSource',
                 header: {
                     label: userMsg('PricedItemsList-onlineSource'),
@@ -77,11 +81,39 @@ function getPricedItemsListColumnInfoDefs() {
                 cellClassName: cellClassName,
                 inputClassExtras: inputClassExtras,
                 inputSize: -12,
-            }
+            },
+
+            totalMarketValue: LCE.getTotalMarketValueColumnInfo({}),
+
+            totalShares: LCE.getTotalSharesColumnInfo({}),
+
+            totalCostBasis: LCE.getTotalCostBasisColumnInfo({}),
+
+            totalCashIn: LCE.getTotalCashInColumnInfo({}),
+
+            totalGain: LCE.getTotalGainColumnInfo({}),
+
+            totalCashInGain: LCE.getTotalCashInGainColumnInfo({}),
+
+            totalPercentGain: LCE.getTotalSimplePercentGainColumnInfo({}),
+
+            totalCashInPercentGain: LCE.getTotalCashInPercentGainColumnInfo({}),
+
+            totalAnnualPercentGain: LCE.getTotalAnnualPercentGainColumnInfo({}),
+
+            totalAnnualCashInPercentGain: 
+                LCE.getTotalAnnualCashInPercentGainColumnInfo({}),
         };
     }
 
     return columnInfoDefs;
+}
+
+function markColumnVisible(columns, key) {
+    const column = getColumnWithKey(columns, key);
+    if (column) {
+        column.isVisible = true;
+    }
 }
 
 /**
@@ -94,19 +126,44 @@ export function createDefaultColumns(pricedItemType) {
     const columnInfos = [];
     if (pricedItemType.hasTickerSymbol) {
         columnInfos.push(columnInfoDefs.ticker);
-        columnInfos.push(columnInfoDefs.onlineSource);
-    }
+        columnInfos.push(columnInfoDefs.name);
+        columnInfos.push(columnInfoDefs.totalShares);
+        columnInfos.push(columnInfoDefs.totalCostBasis);
+        columnInfos.push(columnInfoDefs.totalCashIn);
+        columnInfos.push(columnInfoDefs.totalMarketValue);
+        columnInfos.push(columnInfoDefs.totalGain);
+        columnInfos.push(columnInfoDefs.totalCashInGain);
+        columnInfos.push(columnInfoDefs.totalPercentGain);
+        columnInfos.push(columnInfoDefs.totalCashInPercentGain);
+        columnInfos.push(columnInfoDefs.totalAnnualPercentGain);
+        columnInfos.push(columnInfoDefs.totalAnnualCashInPercentGain);        
 
-    columnInfos.push(columnInfoDefs.name);
-    //columnInfos.push(columnInfoDefs.description);
-    columnInfos.push(columnInfoDefs.currency);
-    columnInfos.push(columnInfoDefs.quantityDefinition);
+        columnInfos.push(columnInfoDefs.onlineSource);
+        columnInfos.push(columnInfoDefs.currency);
+        columnInfos.push(columnInfoDefs.quantityDefinition);
+    }
+    else {
+        columnInfos.push(columnInfoDefs.name);
+        columnInfos.push(columnInfoDefs.totalMarketValue);
+
+        columnInfos.push(columnInfoDefs.currency);
+        columnInfos.push(columnInfoDefs.quantityDefinition);
+    }
 
     const columns = columnInfosToColumns({
         columnInfos: columnInfos,
     });
 
-    columns.forEach((column) => column.isVisible = true);
+
+    if (pricedItemType.hasTickerSymbol) {
+        markColumnVisible(columns, 'ticker');
+    }
+    markColumnVisible(columns, 'name');
+
+    markColumnVisible(columns, 'totalMarketValue');
+    markColumnVisible(columns, 'totalShares');
+    markColumnVisible(columns, 'totalCostBasis');
+    markColumnVisible(columns, 'totalGain');
 
     return columns;
 }
@@ -160,6 +217,7 @@ export class PricedItemsList extends React.Component {
 
         this._sizingRowEntry = {
             pricedItemDataItem: {
+                id: this.props.accessor.getBaseCurrencyPricedItemId(),
                 name: userMsg('PricedItemsList-dummy_name'),
                 description: userMsg('PricedItemsList-dummy_description'),
                 type: pricedItemTypeName,
@@ -169,8 +227,16 @@ export class PricedItemsList extends React.Component {
                     quantityBaseValue: ACE.BalanceSizingBaseValue,
                 },
                 quantityDefinition: getDecimalDefinition(4),
-            }
+            },
+            accountState: {
+                quantityBaseValue: ACE.BalanceSizingBaseValue,
+            },
+            quantityDefinition: getQuantityDefinitionName(
+                getDecimalDefinition(4)
+            ),
         };
+
+        this._percentSuffix = userMsg('AccountsList-percentSuffix');
     }
 
 
@@ -305,9 +371,6 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    // Setting up the row entries:
-    // Want to be able to filter what gets displayed.
-    // Support summary rows for say pricedItem balances.
     buildRowInfos() {
         const rowInfos = [];
         const { accessor, pricedItemTypeName } = this.props;
@@ -315,6 +378,12 @@ export class PricedItemsList extends React.Component {
 
         pricedItemIds.forEach((id) => {
             this.addPricedItemIdToRowEntries(rowInfos, id);
+        });
+
+        rowInfos.push({
+            key: '_SUMMARY_',
+            index: rowInfos.length,
+            expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
         });
 
         let { activeRowKey } = this.state;
@@ -641,29 +710,200 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    renderShares(columnInfo, rowInfo) {
+    getDisplayInfo(columnInfo, rowInfo) {
+
+        const { accessor } = this.props;
+        const { accountDataItem } = rowInfo;
+        if (accountDataItem) {
+            return {
+                accountState: accessor.getCurrentAccountStateDataItem(
+                    accountDataItem.id),
+                pricedItemId: accountDataItem.pricedItemId,
+            };
+        }
+
+        const { pricedItemDataItem } = rowInfo;
+        const { accountIdsByPricedItemId } = this.state;
+        let accountIds;
+        let pricedItemId;
+        if (pricedItemDataItem) {
+            accountIds = accountIdsByPricedItemId.get(
+                pricedItemDataItem.id);
+            pricedItemId = pricedItemDataItem.id;
+        }
+        else {
+            // Presume this is the final summary row, 
+            accountIds = [];
+
+            const pricedItemIds = accessor.getPricedItemIds();
+            pricedItemIds.forEach((id) => {
+                const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
+                    id);
+                if (pricedItemDataItem.type !== this.props.pricedItemTypeName) {
+                    return;
+                }
+
+                const workingAccountIds = accountIdsByPricedItemId.get(id);
+                accountIds = accountIds.concat(workingAccountIds);
+
+                pricedItemId = id;
+            });
+        }
+
+        const accountState = {
+            quantityBaseValue: 0,
+            lotStates: [],
+        };
+
+        if (accountIds) {
+            accountIds.forEach((accountId) => {
+                if (!this.props.showHiddenAccounts) {
+                    const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+                    if (accountDataItem.isHidden) {
+                        return;
+                    }
+                }
+
+                const workingAccountState = accessor.getCurrentAccountStateDataItem(
+                    accountId);
+                accountState.quantityBaseValue 
+                    += workingAccountState.quantityBaseValue;
+                
+                if (workingAccountState.lotStates) {
+                    accountState.lotStates
+                        = accountState.lotStates.concat(
+                            workingAccountState.lotStates);
+                }
+            });
+        }
+
+        return {
+            accountState: accountState,
+            pricedItemId: pricedItemId,
+        };
+    }
+
+
+
+    renderTotalMarketValue(columnInfo, rowInfo) {
+        const { accountState, pricedItemId } = this.getDisplayInfo(columnInfo, rowInfo);
+        const priceDataItem = this.state.pricesByPricedItemId.get(
+            pricedItemId);
+        if (priceDataItem) {
+            const quantityValue = GH.getTotalMarketValueBaseValue({
+                accessor: this.props.accessor,
+                pricedItemId: pricedItemId,
+                accountStateDataItem: accountState,
+                priceDataItem: priceDataItem,
+            });
+
+            return ACE.renderBalanceDisplay({
+                columnInfo: columnInfo,
+                value: quantityValue,
+            });
+        }
+    }
+
+
+    renderTotalShares(columnInfo, rowInfo) {
+        const { accountState, pricedItemId } = this.getDisplayInfo(columnInfo, rowInfo);
+        let { pricedItemDataItem } = rowInfo;
+        pricedItemDataItem = pricedItemDataItem 
+            || this.props.accessor.getPricedItemDataItemWithId(pricedItemId);
+
+        return LCE.renderTotalSharesDisplay({
+            columnInfo: columnInfo,
+            value: {
+                quantityBaseValue: accountState.quantityBaseValue,
+                quantityDefinition: pricedItemDataItem.quantityDefinition,
+            }
+        });
 
     }
 
 
-    renderMarketValue(columnInfo, rowInfo) {
+    renderTotalCostBasis(columnInfo, rowInfo) {
+        const { accountState, pricedItemId } = this.getDisplayInfo(columnInfo, rowInfo);
         
+        const quantityValue = GH.getTotalCostBasisBaseValue({
+            accessor: this.props.accessor,
+            pricedItemId: pricedItemId,
+            accountStateDataItem: accountState,
+        });
+
+        return ACE.renderBalanceDisplay({
+            columnInfo: columnInfo,
+            value: quantityValue,
+        });
     }
 
 
-    renderCostBasis(columnInfo, rowInfo) {
+    renderTotalCashIn(columnInfo, rowInfo) {
+        const { accountState, pricedItemId } = this.getDisplayInfo(columnInfo, rowInfo);
         
+        const quantityValue = GH.getTotalCashInBaseValue({
+            accessor: this.props.accessor,
+            pricedItemId: pricedItemId,
+            accountStateDataItem: accountState,
+        });
+
+        return ACE.renderBalanceDisplay({
+            columnInfo: columnInfo,
+            value: quantityValue,
+        });
     }
 
 
-    renderCashIn(columnInfo, rowInfo) {
+    renderGainDisplay({ columnInfo, rowInfo, 
+        accountState, pricedItemDataItem, 
+        calcGainValueCallback, suffix, }) {
+
+        const { accessor } = this.props;
+
+        let pricedItemId;
+        if (!accountState) {
+            const result = this.getDisplayInfo(columnInfo, rowInfo);
+            accountState = result.accountState;
+            pricedItemId = result.pricedItemId;
+        }
+        else {
+            pricedItemId = pricedItemDataItem.id;
+        }
         
+        const priceDataItem = this.state.pricesByPricedItemId.get(
+            pricedItemId);
+        if (!priceDataItem) {
+            return;
+        }
+        const quantityValue = calcGainValueCallback({
+            accessor: accessor,
+            pricedItemId: pricedItemId,
+            accountStateDataItem: accountState,
+            priceDataItem: priceDataItem,
+        });
+
+        return ACE.renderBalanceDisplay({
+            columnInfo: columnInfo,
+            value: quantityValue,
+            suffix: suffix,
+        });
     }
 
 
     onRenderCell({ rowInfo, columnIndex, isSizeRender }) {
 
         const { columnInfo } = this.state.columns[columnIndex];
+
+        const args = {
+            columnInfo: columnInfo,
+            rowInfo: rowInfo,
+        };
+
+        if (isSizeRender) {
+            args.pricedItemDataItem = this._sizingRowEntry.pricedItemDataItem;
+            args.accountState = this._sizingRowEntry.accountState;
+            args.quantityDefinition = this._sizingRowEntry.quantityDefinition;
+        }
 
         switch (columnInfo.key) {
         case 'name' :
@@ -684,17 +924,46 @@ export class PricedItemsList extends React.Component {
         case 'onlineSource' :
             return this.renderOnlineSource(columnInfo, rowInfo);
         
-        case 'shares' :
-            return this.renderShares(columnInfo, rowInfo);
+        case 'totalMarketValue' :
+            return this.renderTotalMarketValue(columnInfo, rowInfo);
         
-        case 'marketValue' :
-            return this.renderMarketValue(columnInfo, rowInfo);
+        case 'totalShares' :
+            return this.renderTotalShares(columnInfo, rowInfo);
         
-        case 'costBasis' :
-            return this.renderCostBasis(columnInfo, rowInfo);
+        case 'totalCostBasis' :
+            return this.renderTotalCostBasis(columnInfo, rowInfo);
 
-        case 'cashIn' :
-            return this.renderCurrency(columnInfo, rowInfo);
+        case 'totalCashIn' :
+            return this.renderTotalCashIn(columnInfo, rowInfo);
+
+        case 'totalGain' :
+            args.calcGainValueCallback = LCE.calcSimpleGainBalanceValue;
+            return this.renderGainDisplay(args);
+
+        case 'totalCashInGain' :
+            args.calcGainValueCallback = LCE.calcCashInGainBalanceValue;
+            return this.renderGainDisplay(args);
+
+        case 'totalPercentGain' :
+            args.calcGainValueCallback = LCE.calcSimplePercentGainBalanceValue;
+            args.suffix = this._percentSuffix;
+            return this.renderGainDisplay(args);
+
+        case 'totalCashInPercentGain' :
+            args.calcGainValueCallback = LCE.calcCashInPercentGainBalanceValue;
+            args.suffix = this._percentSuffix;
+            return this.renderGainDisplay(args);
+
+        case 'totalAnnualPercentGain' :
+            args.calcGainValueCallback = LCE.calcAnnualPercentGainBalanceValue;
+            args.suffix = this._percentSuffix;
+            return this.renderGainDisplay(args);
+
+        case 'totalAnnualCashInPercentGain' :
+            args.calcGainValueCallback = LCE.calcAnnualCashInPercentGainBalanceValue;
+            args.suffix = this._percentSuffix;
+            return this.renderGainDisplay(args);
+
         }
     }
 

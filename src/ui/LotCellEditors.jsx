@@ -1789,7 +1789,9 @@ function getTotalMarketValueCellValue(args, columnInfoArgs) {
             sharesQuantityDefinition,
             priceQuantityDefinition,
         } = splitInfo;
-        let priceBaseValue = editStates.price.editorBaseValue;
+        let priceBaseValue = (editStates && editStates.price)
+            ? editStates.price.editorBaseValue
+            : undefined;
         if (typeof priceBaseValue !== 'number') {
             priceBaseValue = splitInfo.referencePriceBaseValue;
         }
