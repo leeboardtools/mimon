@@ -447,9 +447,13 @@ export class TabIdRowTableHandler extends RowTableHandler {
 
 
     _onCloseTab(tabId, tabEntry) {
-        const { onTabIdProjectSettingsModify } = tabEntry.rowTableHelpers;
+        const { onTabIdProjectSettingsModify, onCloseTab } = tabEntry.rowTableHelpers;
         if (onTabIdProjectSettingsModify) {
             this._handler.off('tabIdProjectSettingsModify', onTabIdProjectSettingsModify);
+        }
+
+        if (onCloseTab) {
+            onCloseTab(tabId, tabEntry);
         }
     }
 
@@ -473,7 +477,7 @@ export class TabIdRowTableHandler extends RowTableHandler {
                     tabEntry.tabId, projectSettingsId, projectSettings, originalChanges);
             },
         };
-        tabEntry.onCloseTab = this.onCloseTab;
+        tabEntry.onCloseTab = this._onCloseTab;
 
         this._handler.on('tabIdProjectSettingsModify', 
             tabEntry.rowTableHelpers.onTabIdProjectSettingsModify);
