@@ -241,14 +241,14 @@ export class MenuList extends React.Component {
 
 
     onChooseItem(item) {
+        this.closeMenu(item);
+
         const onChooseItem = (item.onChooseItem)
             ? item.onChooseItem
             : this.props.onChooseItem;
         if (onChooseItem) {
             onChooseItem(item.id);
         }
-
-        this.closeMenu(item);
     }
 
 
