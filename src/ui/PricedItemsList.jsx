@@ -209,7 +209,8 @@ export class PricedItemsList extends React.Component {
 
         this._collapsedRowIds = new Set(collapsedPricedItemIds);
 
-        this.state.rowInfos = this.buildRowInfos().rowInfos;
+        this.state = Object.assign(this.state, this.buildRowInfos());
+
         if (this.state.rowInfos.length) {
             this.state.activeRowKey = this.state.rowInfos[0].key;
         }
@@ -341,22 +342,10 @@ export class PricedItemsList extends React.Component {
         if (rowsNeedUpdating) {
             const { prevActiveRowKey } = this.state;
             const result = this.buildRowInfos();
-            this.setState({
-                rowInfos: result.rowInfos,
-                activeRowKey: result.activeRowKey,
-                activeRowIndex: result.activeRowIndex,
-            });
+            this.setState(result);
 
             if (prevActiveRowKey !== result.activeRowKey) {
-                const { onSelectPricedItem } = this.props;
-                if (onSelectPricedItem) {
-                    const pricedItemDataItem = (result.activeRowEntry)
-                        ? result.activeRowEntry.pricedItemDataItem
-                        : undefined;
-                    onSelectPricedItem(pricedItemDataItem 
-                        ? pricedItemDataItem.id 
-                        : undefined);
-                }
+                this.onSelectItem(result.activeRowEntry);
             }
         }
 
@@ -486,14 +475,7 @@ export class PricedItemsList extends React.Component {
 
 
     rebuildRowInfos() {
-        this.setState((state) => {
-            const result = this.buildRowInfos();
-            return {
-                rowInfos: result.rowInfos,
-                activeRowKey: result.activeRowKey,
-                activeRowIndex: result.activeRowIndex,
-            };
-        });
+        this.setState(this.buildRowInfos());
     }
 
 
@@ -562,25 +544,38 @@ export class PricedItemsList extends React.Component {
     }
 
 
+    buildOnItemArgs(rowInfo) {
+        const args = {};
+        if (rowInfo) {
+            if (rowInfo.pricedItemDataItem) {
+                args.pricedItemId = rowInfo.pricedItemDataItem.id;
+            }
+
+            if (rowInfo.accountDataItem) {
+                args.accountId = rowInfo.accountDataItem.id;
+            }
+        }
+
+        return args;
+    }
+
+
+    onSelectItem(rowInfo) {
+        const { onSelectItem } = this.props;
+        if (onSelectItem) {
+            const args = this.buildOnItemArgs(rowInfo);
+            onSelectItem(args);
+        }
+    }
+
+
     onActivateRow({ rowInfo }) {
         const activeRowKey = (rowInfo) ? rowInfo.key : undefined;
         this.setState({
             activeRowKey: activeRowKey,
         });
 
-        const { accountDataItem } = rowInfo;
-        if (accountDataItem) {
-            const { onSelectAccount } = this.props;
-            if (onSelectAccount) {
-                onSelectAccount(accountDataItem.id);
-            }
-        }
-
-        const { onSelectPricedItem } = this.props;
-        if (onSelectPricedItem) {
-            const { pricedItemDataItem } = rowInfo;
-            onSelectPricedItem(pricedItemDataItem ? pricedItemDataItem.id : undefined);
-        }
+        this.onSelectItem(rowInfo);
     }
 
 
@@ -588,23 +583,11 @@ export class PricedItemsList extends React.Component {
         const { activeRowKey, rowInfosByKey } = this.state;
         const rowInfo = rowInfosByKey.get(activeRowKey);
         if (rowInfo) {
-            const { pricedItemDataItem } = rowInfo;
-            if (pricedItemDataItem) {
-                const { onChoosePricedItem } = this.props;
-                if (onChoosePricedItem) {
-                    onChoosePricedItem(pricedItemDataItem.id);
-                }
+            const { onChooseItem } = this.props;
+            if (onChooseItem) {
+                const args = this.buildOnItemArgs(rowInfo);
+                onChooseItem(args);
             }
-            else {
-                const { accountDataItem } = rowInfo;
-                if (accountDataItem) {
-                    const { onChooseAccount } = this.props;
-                    if (onChooseAccount) {
-                        onChooseAccount(accountDataItem.id);
-                    }
-                }
-            }
-
         }
     }
 
@@ -996,31 +979,35 @@ export class PricedItemsList extends React.Component {
 }
 
 /**
- * @callback PricedItemsList~onSelectPricedItem
- * @param {number}  pricedItemId
+ * @typedef {object} PricedItemsList~onSelectItemArgs
+ * @property {number|undefined} [pricedItemId]
+ * @property {number|undefined} [accountId]
  */
 
 /**
- * @callback PricedItemsList~onChoosePricedItem
- * @param {number}  pricedItemId
+ * @callback PricedItemsList~onSelectItem
+ * @param {PricedItemsList~onSelectItemArgs}  args
+ */
+
+/**
+ * @callback PricedItemsList~onChooseItem
+ * @param {PricedItemsList~onSelectItemArgs}  args
  */
 
 
 /**
  * @typedef {object} PricedItemsList~propTypes
  * @property {EngineAccessor}   accessor
- * @property {PricedItemsList~onSelectPricedItem} [onSelectPricedItem]   
- * Called when an pricedItem is selected.
- * @property {PricedItemsList~onChoosePricedItem} [onChoosePricedItem]   
+ * @property {PricedItemsList~onSelectItem} [onSelectItem]   
+ * Called when an item is selected.
+ * @property {PricedItemsList~onChooseItem} [onChooseItem]   
  * Called when an pricedItem is 'chosen', either double-clicked or enter is pressed.
  */
 PricedItemsList.propTypes = {
     accessor: PropTypes.object.isRequired,
     pricedItemTypeName: PropTypes.string.isRequired,
-    onSelectPricedItem: PropTypes.func,
-    onChoosePricedItem: PropTypes.func,
-    onSelectAccount: PropTypes.func,
-    onChooseAccount: PropTypes.func,
+    onSelectItem: PropTypes.func,
+    onChooseItem: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
     columns: PropTypes.arrayOf(PropTypes.object),

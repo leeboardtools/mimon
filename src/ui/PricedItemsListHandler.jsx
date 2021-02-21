@@ -25,9 +25,6 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         this.onToggleShowHiddenPricedItems 
             = this.onToggleShowHiddenPricedItems.bind(this);
 
-        this.onSelectPricedItem = this.onSelectPricedItem.bind(this);
-        this.onChoosePricedItem = this.onChoosePricedItem.bind(this);
-
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
         this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
 
@@ -339,13 +336,24 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     }
 
 
-    onSelectPricedItem(tabId, pricedItemId, pricedItemTypeName) {
+    onSelectItem(tabId, args) {
         const state = this.getTabIdState(tabId);
         const prevActivePricedItemId = state.activePricedItemId;
+        const prevActiveAccountId = state.activeAccountId;
+        let { pricedItemId, accountId } = args;
+        if (accountId && !pricedItemId) {
+            const { accessor } = this.props;
+            const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+            pricedItemId = accountDataItem.pricedItemId;
+        }
+        
         if ((!prevActivePricedItemId && pricedItemId)
-         || (prevActivePricedItemId && !pricedItemId)) {
+         || (prevActivePricedItemId && !pricedItemId)
+         || (!prevActiveAccountId && accountId)
+         || (prevActiveAccountId && !accountId)) {
             const newState = Object.assign({}, state, {
                 activePricedItemId: pricedItemId,
+                activeAccountId: accountId,
             });
             newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
             this.setTabIdState(tabId, newState);
@@ -354,14 +362,19 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             this.setTabIdState(tabId,
                 {
                     activePricedItemId: pricedItemId,
+                    activeAccountId: accountId,
                 });
         }
     }
 
     
-    onChoosePricedItem(tabId, pricedItemId) {
+    onChooseItem(tabId, args) {
+        const { pricedItemId, accountId } = args;
         if (pricedItemId) {
             this.openTab('pricesList', { pricedItemId: pricedItemId, });
+        }
+        else if (accountId) {
+            this.openTab('accountRegister', { accountId: accountId, });
         }
     }
 
@@ -423,11 +436,10 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         return <PricedItemsList
             accessor = {accessor}
             pricedItemTypeName = {tabEntry.pricedItemTypeName}
-            onSelectPricedItem = {(pricedItemId) => 
-                this.onSelectPricedItem(tabEntry.tabId, pricedItemId, 
-                    tabEntry.pricedItemTypeName)}
-            onChoosePricedItem = {(pricedItemId) => 
-                this.onChoosePricedItem(tabEntry.tabId, pricedItemId)}
+            onSelectItem = {(args) => 
+                this.onSelectItem(tabEntry.tabId, args)}
+            onChooseItem = {(args) => 
+                this.onChooseItem(tabEntry.tabId, args)}
             columns = {tabEntry.columns}
             hiddenPricedItemIds = {tabEntry.hiddenPricedItemIds}
             showHiddenPricedItems = {tabEntry.showHiddenPricedItems}

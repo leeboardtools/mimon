@@ -345,11 +345,8 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
     - Securites/Mutual Fund List
-        - Want quantity, market value, cost basis, cash-in columns
         - Ability to show/hide columns, reorder them.
-        - Collapsible with accounts for each security as sub entries
-
-        - Opening prices list from security with accounts doesn't work.
+        - Clean up column titles alignment (center numeric ones?)
 
 
     - Prices List
@@ -383,7 +380,7 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 - RowTable To Do:
     - Reorder columns
-        - Either menu option to enable dragging of columns or Ctrl drag.
+        - Either menu option to enable dragging of columns or Ctrl drag or just drag?.
 
     - Sort by columns
 
