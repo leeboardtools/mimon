@@ -200,7 +200,7 @@ body {
 }
 
 .Shares-header {
-  text-align: right;
+  text-align: center;
 }
 
 .Shares-cell {
@@ -213,7 +213,7 @@ body {
 }
 
 .Monetary-header {
-  text-align: right;
+  text-align: center;
 }
 
 .Monetary-cell {
@@ -235,7 +235,7 @@ body {
 }
 
 .Percent-header {
-  text-align: right;
+  text-align: center;
 }
 
 .Percent-cell {
