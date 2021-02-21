@@ -362,6 +362,10 @@ export class RowTable extends React.Component {
         this._mainRef = React.createRef();
         this._bodyRef = React.createRef();
         this._rowsContainerRef = React.createRef();
+        
+        this._headerRowRef = React.createRef();
+        this._bodyRowRef = React.createRef();
+        this._footerRowRef = React.createRef();
 
         this.state = this.getStateUpdateFromColumns();
 
@@ -456,6 +460,10 @@ export class RowTable extends React.Component {
             });
         }
 
+        if (this.state.isUpdateHeights && !prevState.isUpdateHeights) {
+            this.updateHeights();
+        }
+
         if (!deepEqual(prevProps.columns, this.props.columns)) {
             this.setState(this.getStateUpdateFromColumns(),
                 () => this.updateLayout(true));
@@ -538,8 +546,8 @@ export class RowTable extends React.Component {
     }
 
 
-    updateFromClientSize() {
-        const { clientWidth, clientHeight } = this.getAdjustedMainRefSize();
+    updateHeights() {
+        const { clientHeight } = this.getAdjustedMainRefSize();
 
         let {
             headerHeight,
@@ -547,21 +555,41 @@ export class RowTable extends React.Component {
             rowHeight,
         } = this.props;
 
-        let { columnWidths } = this.state;
-        const { sizeRenderRefs } = this.state;
-        if (sizeRenderRefs) {
+        const { isSizeRender } = this.state;
+        if (isSizeRender) {
             // We've rendered the sizes, we can now grab the various sizes needed.
-            const headerSize = this.getRefClientSize(sizeRenderRefs.headerRowRef, 
-                headerHeight);
-            const footerSize = this.getRefClientSize(sizeRenderRefs.footerRowRef,
-                footerHeight);
-            const bodyRowSize = this.getRefClientSize(sizeRenderRefs.bodyRowRef,
-                rowHeight);
+            headerHeight = this.getRefClientSize(this._headerRowRef, 
+                headerHeight).height;
 
-            headerHeight = headerSize.height;
-            footerHeight = footerSize.height;
-            rowHeight = bodyRowSize.height;
+            footerHeight = this.getRefClientSize(this._footerRowRef,
+                footerHeight).height;
 
+            rowHeight = this.getRefClientSize(this._bodyRowRef,
+                rowHeight).height;
+        }
+
+        this.setState({
+            headerBlockHeight: headerHeight,
+            footerBlockHeight: footerHeight,
+            bodyRowHeight: rowHeight,
+
+            bodyHeight: clientHeight - headerHeight - footerHeight,
+
+            clientHeight: clientHeight,
+
+            sizeRenderRefs: undefined,
+            isSizeRender: false,
+            isUpdateHeights: false,
+        });
+    }
+
+
+    updateFromClientSize() {
+        const { clientWidth } = this.getAdjustedMainRefSize();
+
+        let { columnWidths } = this.state;
+        const { isSizeRender, sizeRenderRefs } = this.state;
+        if (isSizeRender && sizeRenderRefs) {
             // Figure out the column widths...
             const { columns } = this.props;
             const { columnRefs } = sizeRenderRefs;
@@ -578,19 +606,10 @@ export class RowTable extends React.Component {
 
         this.setState({
             columnWidths: columnWidths,
-
-            headerBlockHeight: headerHeight,
-            footerBlockHeight: footerHeight,
-            bodyRowHeight: rowHeight,
-
             bodyWidth: clientWidth,
-            bodyHeight: clientHeight - headerHeight - footerHeight,
-
             clientWidth: clientWidth,
-            clientHeight: clientHeight,
 
-            sizeRenderRefs: undefined,
-            isSizeRender: false,
+            isUpdateHeights: true,
         });
     }
 
@@ -617,9 +636,7 @@ export class RowTable extends React.Component {
             if (isAutoSize) {
                 const { columns } = this.props;
                 const sizeRenderRefs = {
-                    headerRowRef: React.createRef(),
-                    bodyRowRef: React.createRef(),
-                    footerRowRef: React.createRef(),
+                    //bodyRowRef: React.createRef(),
                     columnRefs: columns.map((column) => {
                         return {
                             headerCellRef: React.createRef(),
@@ -636,7 +653,7 @@ export class RowTable extends React.Component {
                     clientWidth: clientWidth,
                     clientHeight: clientHeight,
                 });
-
+                
                 // Gotta wait for next render now...
                 return;
             }
@@ -647,7 +664,7 @@ export class RowTable extends React.Component {
 
 
         if (this._rowsContainerRef.current
-         && !this.state.sizeRenderRefs) {
+         && !this.state.isSizeRender) {
             const rect = this._rowsContainerRef.current.getBoundingClientRect();
             const rowContainerWidth = rect.width;
             const rowContainerHeight = rect.height;
@@ -1063,6 +1080,11 @@ export class RowTable extends React.Component {
         }
 
         if (isHeaderFooter) {
+            const {
+                sizeRenderRefs,
+                isSizeRender,
+            } = this.state;
+
             const { 
                 cellClassName, 
                 rowIndex, 
@@ -1071,17 +1093,13 @@ export class RowTable extends React.Component {
                 blockWidth,
                 blockHeight,
                 getCellRef, 
-                getRowRef,
-                sizeRenderRefs,
             } = args;
 
             const {
                 onRenderCell,
             } = this.props;
 
-            const columnWidths = (sizeRenderRefs)
-                ? this.state.defColumnWidths
-                : this.state.columnWidths;
+            const { columnWidths } = this.state;
 
             const baseClassName = 'RowTableCell ' + cellClassName;
             const cells = [];
@@ -1097,6 +1115,7 @@ export class RowTable extends React.Component {
                     if (classExtras) {
                         className += ' ' + classExtras;
                     }
+
                     if (label) {
                         cell = <span aria-label = {ariaLabel}>
                             {label}
@@ -1107,7 +1126,7 @@ export class RowTable extends React.Component {
                             rowIndex: rowIndex, 
                             columnIndex: c, 
                             column: column,
-                            isSizeRender: sizeRenderRefs,
+                            isSizeRender: isSizeRender,
                         });
                     }
                 }
@@ -1161,18 +1180,15 @@ export class RowTable extends React.Component {
                 if (height !== undefined) {
                     style.height = height;
                 }
-                else if (!sizeRenderRefs && (blockHeight !== undefined)) {
+                else if (!isSizeRender && (blockHeight !== undefined)) {
                     style.height = blockHeight;
                 }
-                if (!sizeRenderRefs && (blockWidth !== undefined)) {
+                if (!isSizeRender && (blockWidth !== undefined)) {
                     style.width = blockWidth;
                 }
             }
 
-            let ref;
-            if (sizeRenderRefs && getRowRef) {
-                ref = getRowRef(sizeRenderRefs);
-            }
+            const ref = (isSizeRender) ? args.rowRef : undefined;
 
             return <div className = {containerClassName}>
                 <div className = {rowClassName}
@@ -1186,11 +1202,12 @@ export class RowTable extends React.Component {
     }
 
 
-    renderHeader(sizeRenderRefs) {
+
+    renderHeader() {
         return this.renderHeaderFooter({
             getHeaderFooter: (column) => column.header,
             getCellRef: (columnRef) => columnRef.headerCellRef,
-            getRowRef: (renderRefs) => renderRefs.headerRowRef,
+            rowRef: this._headerRowRef,
             cellClassName: 'RowTableHeaderCell',
             rowIndex: HEADER_ROW_INDEX,
             containerClassName: 'RowTableHeader',
@@ -1199,16 +1216,15 @@ export class RowTable extends React.Component {
             height: this.props.headerHeight,
             blockWidth: this.state.headerBlockWidth,
             blockHeight: this.state.headerBlockHeight,
-            sizeRenderRefs: sizeRenderRefs,
         });
     }
 
 
-    renderFooter(sizeRenderRefs) {
+    renderFooter() {
         return this.renderHeaderFooter({
             getHeaderFooter: (column) => column.footer,
             getCellRef: (columnRef) => columnRef.footerCellRef,
-            getRowRef: (renderRefs) => renderRefs.footerRowRef,
+            rowRef: this._footerRowRef,
             cellClassName: 'RowTableFooterCell',
             rowIndex: FOOTER_ROW_INDEX,
             containerClassName: 'RowTableFooter',
@@ -1217,12 +1233,11 @@ export class RowTable extends React.Component {
             height: this.props.footerHeight,
             blockWidth: this.state.footerBlockWidth,
             blockHeight: this.state.footerBlockHeight,
-            sizeRenderRefs: sizeRenderRefs,
         });
     }
 
 
-    renderRow(sizeRenderRefs, rowIndex) {
+    renderRow(rowIndex) {
         const {
             rowClassExtras,
             onRenderCell,
@@ -1230,11 +1245,13 @@ export class RowTable extends React.Component {
             activeRowIndex,
         } = this.props;
 
-        const { 
+        const {
+            sizeRenderRefs,
+            isSizeRender,
             bodyRowHeight,
         } = this.state;
 
-        const columnWidths = (sizeRenderRefs)
+        const columnWidths = (isSizeRender)
             ? this.state.defColumnWidths
             : this.state.columnWidths;
 
@@ -1246,7 +1263,7 @@ export class RowTable extends React.Component {
                 rowIndex: rowIndex, 
                 columnIndex: colIndex, 
                 column: column,
-                isSizeRender: sizeRenderRefs,
+                isSizeRender: isSizeRender,
             });
 
             let cellClassName = 'RowTableCell RowTableRowCell';
@@ -1300,8 +1317,8 @@ export class RowTable extends React.Component {
 
         let style;
         let ref;
-        if (sizeRenderRefs) {
-            ref = sizeRenderRefs.bodyRowRef;
+        if (isSizeRender) {
+            ref = this._bodyRowRef;
         }
         else {
             if (bodyRowHeight !== undefined) {
@@ -1321,7 +1338,7 @@ export class RowTable extends React.Component {
     }
 
 
-    renderBody(sizeRenderRefs) {
+    renderBody() {
         const {
             bodyClassExtras,
             rowCount,
@@ -1329,20 +1346,21 @@ export class RowTable extends React.Component {
 
         const { topVisibleRow, bottomVisibleRow } = this.state;
         const { 
+            isSizeRender,
             bodyHeight, 
             bodyWidth,
             bodyRowHeight,
         } = this.state;
         
         const firstRow = Math.max(Math.floor(topVisibleRow), 0);
-        const lastRow = (sizeRenderRefs) 
+        const lastRow = (isSizeRender) 
             ? firstRow 
             : Math.min(Math.ceil(bottomVisibleRow), rowCount - 1);
 
         const rows = [];
-        if (sizeRenderRefs || (topVisibleRow >= 0)) {
+        if (isSizeRender || (topVisibleRow >= 0)) {
             for (let rowIndex = firstRow; rowIndex <= lastRow; ++rowIndex) {
-                const row = this.renderRow(sizeRenderRefs, rowIndex);
+                const row = this.renderRow(rowIndex);
                 rows.push(row);
             }
         }
@@ -1358,7 +1376,7 @@ export class RowTable extends React.Component {
         let rowsInnerStyle;
         let rowsContainerRef;
 
-        if (!sizeRenderRefs) {
+        if (!isSizeRender) {
             if (bodyHeight || bodyWidth) {
                 bodyStyle = {};
                 if (bodyHeight !== undefined) {
@@ -1414,14 +1432,14 @@ export class RowTable extends React.Component {
     }
 
 
-    renderAll(sizeRenderRefs, style) {
+    renderAll(style) {
         const {
             classExtras
         } = this.props;
 
-        const header = this.renderHeader(sizeRenderRefs);
-        const body = this.renderBody(sizeRenderRefs);
-        const footer = this.renderFooter(sizeRenderRefs);
+        const header = this.renderHeader();
+        const body = this.renderBody();
+        const footer = this.renderFooter();
 
         let className = 'table RowTable';
         if (classExtras) {
@@ -1447,13 +1465,6 @@ export class RowTable extends React.Component {
     render() {
         const regularRender = this.renderAll();
 
-        const { sizeRenderRefs } = this.state;
-
-        let hiddenRender;
-        if (sizeRenderRefs) {
-            hiddenRender = this.renderAll(sizeRenderRefs);
-        }
-
         // The context menu needs to be included in the sizing rendering...
         const contextMenu = this.renderContextMenu();
 
@@ -1462,13 +1473,6 @@ export class RowTable extends React.Component {
             height: '100%',
             overflow: 'hidden',
         };
-        const hiddenStyle = {
-            visibility: 'hidden',
-            width: '100%',
-            position: 'absolute',
-            left: 0,
-            top: 0,
-        };
         return <div style = {containerStyle}
             ref = {this._mainRef}
             onContextMenu={(e) => this.onContextMenu(e)}
@@ -1476,9 +1480,6 @@ export class RowTable extends React.Component {
             <div
             >
                 {regularRender}
-            </div>
-            <div style = {hiddenStyle}>
-                {hiddenRender}
             </div>
             {contextMenu}
         </div>;
@@ -1753,4 +1754,6 @@ RowTable.propTypes = {
     bodyClassExtras: PropTypes.string,
     rowClassExtras: PropTypes.string,
     footerClassExtras: PropTypes.string,
+
+    id: PropTypes.string,
 };

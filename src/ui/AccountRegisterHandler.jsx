@@ -364,6 +364,9 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             refreshUndoMenu = {this.refreshUndoMenu}
             eventEmitter = {this._eventEmitter}
             openArgs = {tabEntry.openArgs}
+
+            id = {tabEntry.tabId}
+            
             ref = {accountRegisterRef}
         />;
     }

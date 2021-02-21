@@ -1835,6 +1835,7 @@ export class AccountRegister extends React.Component {
                 asyncOnSaveRowEdit = {this._cellEditorsManager.asyncOnSaveRowEdit}
                 onCancelRowEdit = {this._cellEditorsManager.onCancelRowEdit}
 
+                id = {this.props.id}
                 ref = {this._rowTableRef}
             />
             {this.props.children}
@@ -1868,4 +1869,6 @@ AccountRegister.propTypes = {
     children: PropTypes.any,
     eventEmitter: PropTypes.object,
     openArgs: PropTypes.object,
+
+    id: PropTypes.string,
 };

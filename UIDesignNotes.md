@@ -349,6 +349,8 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Ability to show/hide columns, reorder them.
         - Collapsible with accounts for each security as sub entries
 
+        - Opening prices list from security with accounts doesn't work.
+
 
     - Prices List
         - Changing column width of prices list then undoing/redoing does not
@@ -385,7 +387,20 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Sort by columns
 
-    - Headers are not wrapping
+    - Users of RowTable et al:
+        - RowTable
+            - ReconcilerWindow
+            - RemindersList
+        
+        - CollapsibleRowTable
+            - AccountsList
+            - PricedItemsList
+
+        - EditableRowTable
+            - AccountRegister
+            - LotsSelectEditor
+            - MultiSplitsEditor
+            - PricesList
 
 
 - CollapsibleRowTable

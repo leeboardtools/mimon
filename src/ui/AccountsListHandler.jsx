@@ -484,6 +484,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             onSetColumnWidth = {(args) =>
                 this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)}
             contextMenuItems = {contextMenuItems}
+
+            id = {tabEntry.tabId}
         />;
     }
 }

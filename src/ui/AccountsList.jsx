@@ -708,6 +708,8 @@ export class AccountsList extends React.Component {
 
                 contextMenuItems = {this.props.contextMenuItems}
                 onChooseContextMenuItem = {this.props.onChooseContextMenuItem}
+
+                id = {this.props.id}
             />
             {this.props.children}
         </div>;
@@ -748,4 +750,5 @@ AccountsList.propTypes = {
     collapsedAccountIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedAccountIds: PropTypes.func,
     children: PropTypes.any,
+    id: PropTypes.string,
 };

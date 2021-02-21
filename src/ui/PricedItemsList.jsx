@@ -987,6 +987,8 @@ export class PricedItemsList extends React.Component {
 
                 contextMenuItems={this.props.contextMenuItems}
                 onChooseContextMenuItem={this.props.onChooseContextMenuItem}
+
+                id = {this.props.id}
             />
             {this.props.children}
         </div>;
@@ -1029,5 +1031,6 @@ PricedItemsList.propTypes = {
     showPricedItemIds: PropTypes.bool,
     collapsedPricedItemIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedPricedItemIds: PropTypes.func,
+    id: PropTypes.string,
     children: PropTypes.any,
 };
