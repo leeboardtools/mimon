@@ -68,6 +68,7 @@ export class MainWindow extends React.Component {
         this.onOpenTab = this.onOpenTab.bind(this);
         this.onRefreshUndoMenu = this.onRefreshUndoMenu.bind(this);
     
+        this.onPrint = this.onPrint.bind(this);
 
         this.onPostRenderTabs = this.onPostRenderTabs.bind(this);
 
@@ -211,6 +212,16 @@ export class MainWindow extends React.Component {
 
 
     componentDidUpdate(prevProps, prevState) {
+        if (this.state.isPrint && !prevState.isPrint) {
+            // We print using the isPrint state in order to have the drop-down menu
+            // go away before printing.
+            this.setState({
+                isPrint: false,
+            },
+            () => {
+                window.print();
+            });
+        }
     }
 
 
@@ -832,6 +843,13 @@ export class MainWindow extends React.Component {
     }
 
 
+    onPrint() {
+        this.setState({
+            isPrint: true,
+        });
+    }
+
+
     onRefreshUndoMenu() {
         this.forceUpdate();
     }
@@ -957,6 +975,12 @@ export class MainWindow extends React.Component {
             { id: 'viewPropertiesList', 
                 label: userMsg('MainWindow-viewPropertiesList'),
                 onChooseItem: () => this.onOpenTab('propertiesList'),
+            },
+            {},
+            {
+                id: 'print',
+                label: userMsg('MainWindow-print'),
+                onChooseItem: this.onPrint,
             },
             {},
             { id: 'revertChanges',
