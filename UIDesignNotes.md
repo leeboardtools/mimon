@@ -333,7 +333,7 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Priced Item List
         - Custom Priced Item Lists
-        - Redo to it is more report-like rather than info for the priced items. 'Positions' style,
+        - Redo so it is more report-like rather than info for the priced items. 'Positions' style,
             - Have priced item (security)
                 - Summary of the priced item
                     - Quantity, Price, Price Change, Market Value, Day Change, Cost Basis, Gain/Loss...
@@ -360,7 +360,7 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Reconciler
         - Last reconciled date not updated after reconcile
-
+        - Add column width support.
 
     - Reminders Editor
 
@@ -383,9 +383,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 - RowTable To Do:
-    - Reorder columns
-        - Either menu option to enable dragging of columns or Ctrl drag or just drag?.
-
     - Sort by columns
 
     - Users of RowTable et al:
@@ -399,7 +396,7 @@ Are the lists really two separate styles? Or can they be combined into one?
 
         - EditableRowTable
             - AccountRegister
-            - LotsSelectEditor
+            - LotsSelectionEditor
             - MultiSplitsEditor
             - PricesList
 
@@ -429,7 +426,8 @@ Are the lists really two separate styles? Or can they be combined into one?
 - Set default interest, dividends, fees accounts in account editing.
 
 
-- Tooltips get clipped on edge of main window (highlight say value in last column of AccountsList)
+- Tooltips
+    - Need to re-align arrow when tooltip Popup is shifted. Maybe move the arrow to Popup...
 
 
 - Need means of formatting negative numbers:

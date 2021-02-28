@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Popup } from './Popup';
 
 /**
  * React container component that supports an optional simple tooltip, its children
@@ -16,7 +17,7 @@ export function Tooltip(props) {
             if (typeof tooltip[0] === 'string') {
                 // Want to format this as a list.
                 for (let i = 0; i < tooltip.length; ++i) {
-                    tooltip[i] = <div className = "row" key = {i}>
+                    tooltip[i] = <div className = "row no-gutters" key = {i}>
                         <div className="col">{tooltip[i]}</div>
                     </div>;
                 }
@@ -25,11 +26,20 @@ export function Tooltip(props) {
     }
     
     if (tooltip) {
-        return <div className = "Simple-tooltip w-100"> 
+        return <div className = "Tooltip">
             {children}
-            <div className = "Simple-tooltiptext">
-                {tooltip}
-            </div>
+            <Popup
+                classExtras = ""
+                hAlignParent = "center"
+                hAlignPopup = "center"
+                vAlignParent = "bottom"
+                vAlignPopup = "top"
+                show = {true}
+            >
+                <div className = "Tooltiptext">
+                    {tooltip}
+                </div>
+            </Popup>        
         </div>;
     }
 
