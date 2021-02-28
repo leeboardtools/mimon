@@ -368,6 +368,10 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Reminders List
         - Clicking enabled button does nothing.
         - Add Apply now command.
+    
+    - Printing
+        - Only print contents of active tab, not full window.
+        - Somehow fit to page so it doesn't get clipped.
 
 
 - Get Sub-menus working in MenuList, etc.
@@ -423,6 +427,9 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 - Set default interest, dividends, fees accounts in account editing.
+
+
+- Tooltips get clipped on edge of main window (highlight say value in last column of AccountsList)
 
 
 - Need means of formatting negative numbers:

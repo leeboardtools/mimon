@@ -273,7 +273,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
 
         const { hiddenRootAccountTypes, hiddenAccountIds, showHiddenAccounts,
-            columns }
+            allColumns }
             = state;
 
         const showAccountLabelId = (hiddenAccountIds.indexOf(activeAccountId) >= 0)
@@ -287,7 +287,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         const toggleColumnsSubMenuItems 
             = this._rowTableHandler.createToggleColumnMenuItems(
-                tabId, columns);
+                tabId, allColumns);
 
 
         const menuItems = [
@@ -379,6 +379,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             },
 
             this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state),
+            this._rowTableHandler.createResetColumnOrderMenuItem(tabId, state),
         ];
 
         return {
@@ -427,7 +428,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
      */
     createTabEntry(tabId) {
         let settings = this.getTabIdProjectSettings(tabId) || {};
-        const columns = createDefaultColumns();
+        const allColumns = createDefaultColumns();
         const showHiddenAccounts = settings.showHiddenAccounts;
         const hiddenRootAccountTypes = settings.hiddenRootAccountTypes || [];
         const hiddenAccountIds = settings.hiddenAccountIds || [];
@@ -441,7 +442,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             hiddenAccountIds: hiddenAccountIds,
             showHiddenAccounts: showHiddenAccounts,
             collapsedAccountIds: collapsedAccountIds,
-            columns: columns,
+            allColumns: allColumns,
         };
 
         this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);
@@ -483,6 +484,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 this.onUpdateCollapsedAccountIds(tabEntry.tabId, args)}
             onSetColumnWidth = {(args) =>
                 this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)}
+            onMoveColumn = {(args) =>
+                this._rowTableHandler.onMoveColumn(tabEntry.tabId, args)}
             contextMenuItems = {contextMenuItems}
 
             id = {tabEntry.tabId}

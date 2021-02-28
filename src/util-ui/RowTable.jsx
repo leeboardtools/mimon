@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import deepEqual from 'deep-equal';
 import { ContextMenu } from './ContextMenu';
@@ -100,11 +100,15 @@ export const FOOTER_ROW_INDEX = -2;
 //
 
 /**
- * React component for the resizer bar that dragged.
+ * React component for the column resizer bar that is dragged.
  */
-class RowTableResizer extends React.Component {
+class RowTableColumnDragger extends React.Component {
     constructor(props) {
         super(props);
+
+        this.onMouseEnter = this.onMouseEnter.bind(this);
+        this.onMouseLeave = this.onMouseLeave.bind(this);
+        this.onGlobalKeyEvent = this.onGlobalKeyEvent.bind(this);
 
         this.onFocus = this.onFocus.bind(this);
         this.onKeyDown = this.onKeyDown.bind(this);
@@ -120,11 +124,53 @@ class RowTableResizer extends React.Component {
     }
 
 
+    componentWillUnmount() {
+        if (this.props.isEnabledCallback) {
+            window.removeEventListener('keydown', this.onGlobalKeyEvent);
+            window.removeEventListener('keyup', this.onGlobalKeyEvent);
+        }
+    }
+
+
     componentDidUpdate(prevProps, prevState) {
         if (this.props.isCancel && !prevProps.isCancel) {
             this.stopTracking();
         }
+        
+        if (this.state.isDisabled && !prevState.isDisabled) {
+            this.stopTracking();
+        }
     }
+
+
+    _handleEnabledCallback(e) {
+        if (this.props.isEnabledCallback) {
+            this.setState({
+                isDisabled: !this.props.isEnabledCallback(e),
+            });
+        }
+    }
+
+    onMouseEnter(e) {
+        if (this.props.isEnabledCallback) {
+            window.addEventListener('keydown', this.onGlobalKeyEvent);
+            window.addEventListener('keyup', this.onGlobalKeyEvent);
+
+            this._handleEnabledCallback(e);
+        }
+    }
+
+    onMouseLeave(e) {
+        if (this.props.isEnabledCallback) {
+            window.removeEventListener('keydown', this.onGlobalKeyEvent);
+            window.removeEventListener('keyup', this.onGlobalKeyEvent);
+        }
+    }
+
+    onGlobalKeyEvent(e) {
+        this._handleEnabledCallback(e);
+    }
+
 
 
     onFocus(e) {
@@ -210,28 +256,42 @@ class RowTableResizer extends React.Component {
 
     onPointerUp(e) {
         if (this.state.isTracking) {
-            this.props.onResize(e.clientX - this.state.startPos);
+            this.props.onEndAction({
+                pageX: e.pageX,
+                clientX: e.clientX,
+                delta: e.clientX - this.state.startPos,
+            });
             this.stopTracking();
         }
     }
 
 
     render() {
-        const { props } = this;
+        const { props, state } = this;
 
-        let resizerClassName = 'RowTableResizer';
-        if (props.onResize) {
-            resizerClassName += ' enabled';
+        let draggerClassName = 'RowTableColumnDragger';
+        let isDisabled = state.isDisabled || !props.onEndAction;
+        if (!isDisabled) {
+            draggerClassName += ' enabled';
         }
-        if (this.state.isTracking) {
-            resizerClassName += ' active';
+        if (state.isTracking) {
+            draggerClassName += ' active';
+        }
+
+        const { classExtras } = props;
+
+        let onMouseEnter;
+        let onMouseLeave;
+        if (props.isEnabledCallback) {
+            onMouseEnter = this.onMouseEnter;
+            onMouseLeave = this.onMouseLeave;
         }
 
         let onPointerDown; 
         let onPointerMove; 
         let onPointerUp;
         let onKeyDown;
-        if (props.onResize) {
+        if (!isDisabled) {
             onPointerDown = this.onPointerDown;
             onPointerUp = this.onPointerUp;
         }
@@ -241,9 +301,17 @@ class RowTableResizer extends React.Component {
             onKeyDown = this.onKeyDown;
             onPointerMove = this.onPointerMove;
             tabIndex = 0;
+
+            draggerClassName += ' tracking';
         }
 
-        return <div className = {resizerClassName}
+        if (classExtras) {
+            draggerClassName += ' ' + classExtras;
+        }
+
+        return <div className = {draggerClassName}
+            onMouseEnter = {onMouseEnter}
+            onMouseLeave = {onMouseLeave}
             onPointerDown = {onPointerDown}
             onPointerMove = {onPointerMove}
             onPointerUp = {onPointerUp}
@@ -252,31 +320,36 @@ class RowTableResizer extends React.Component {
             ref = {this._myRef}
             tabIndex = {tabIndex}
         >
+            {this.props.children}
         </div>;
     }
 }
 
-RowTableResizer.propTypes = {
-    onResize: PropTypes.func,
+RowTableColumnDragger.propTypes = {
+    classExtras: PropTypes.string,
+    onEndAction: PropTypes.func,
     isCancel: PropTypes.bool,
+    isEnabledCallback: PropTypes.func,
     onTrackingStarted: PropTypes.func,
     onTrackingMoved: PropTypes.func,
     onTrackingStopped: PropTypes.func,
     defaultFocusRef: PropTypes.object,
+    children: PropTypes.any,
 };
 
 
 /**
- * React component for the tracking bar, this is used to highlight the full column edge.
+ * React component for the bars used to highlight column resizing and dragging,
+ * this is used to highlight the full column in the table.
  */
-class RowTableResizerTracker extends React.Component {
+class RowTableColumnDraggerTracker extends React.Component {
     constructor(props) {
         super(props);
         this._myRef = React.createRef();
     }
 
     render() {
-        const { pageX, show } = this.props;
+        const { classExtras, pageX, width, show } = this.props;
         const style = {
             position: 'absolute',
             display: (show) ? 'block' : 'none',
@@ -287,43 +360,79 @@ class RowTableResizerTracker extends React.Component {
             if (parentElement) {
                 const boundingRect = parentElement.getBoundingClientRect();
                 style.left = pageX - boundingRect.left;
-                style.width = 1;
+                style.width = width || 1;
                 style.top = boundingRect.top;
                 style.height = boundingRect.height;
             }
         }
 
-        return <div className = "RowTableResizerTracker"
+        let className = 'RowTableColumnDraggerTracker';
+        if (classExtras) {
+            className += ' ' + classExtras;
+        }
+
+        return <div className = {className}
             style = {style}
             ref = {this._myRef}
-        />;
+        >
+            {this.props.children}
+        </div>;
     }
 }
 
-RowTableResizerTracker.propTypes = {
+RowTableColumnDraggerTracker.propTypes = {
+    classExtras: PropTypes.string,
     pageX: PropTypes.number,
+    width: PropTypes.number,
     show: PropTypes.bool,
+    children: PropTypes.any,
 };
 
 
-function RowTableResizerCell(props) {
+function RowTableColumnResizerCell(props) {
     const { classExtras, children, ...resizerProps } = props;
 
-    let className = 'RowTableResizerCell';
+    let className = 'RowTableColumnResizerCell';
     if (classExtras) {
         className += ' ' + props.classExtras;
     }
 
     return <div className = {className}>
-        <div className = "RowTableResizerCell-cell">
+        <div className = "RowTableColumnResizerCell-cell">
             {children}
         </div>
-        <RowTableResizer {...resizerProps} />
+        <RowTableColumnDragger {...resizerProps} 
+            classExtras = "RowTableColumnResizer"
+        />
     </div>;
 }
 
-RowTableResizerCell.propTypes = {
-    onResize: PropTypes.func,
+RowTableColumnResizerCell.propTypes = {
+    onEndAction: PropTypes.func,
+    isCancel: PropTypes.bool,
+    onTrackingStarted: PropTypes.func,
+    onTrackingMoved: PropTypes.func,
+    onTrackingStopped: PropTypes.func,
+    defaultFocusRef: PropTypes.object,
+    children: PropTypes.any,
+    classExtras: PropTypes.string,
+};
+
+
+function RowTableColumnMoverCell(props) {
+    const { children, ...draggerProps } = props;
+
+    return <RowTableColumnDragger {...draggerProps}
+        classExtras = "RowTableColumnMover"
+        isEnabledCallback = {(e) => 
+            e.ctrlKey && !e.shiftKey && !e.altKey}
+    >
+        {children}
+    </RowTableColumnDragger>;
+}
+
+RowTableColumnMoverCell.propTypes = {
+    onEndAction: PropTypes.func,
     isCancel: PropTypes.bool,
     onTrackingStarted: PropTypes.func,
     onTrackingMoved: PropTypes.func,
@@ -358,6 +467,13 @@ export class RowTable extends React.Component {
             = this.onColumnResizeTrackingMoved.bind(this);
         this.onColumnResizeTrackingStopped 
             = this.onColumnResizeTrackingStopped.bind(this);
+
+        this.onColumnMoveTrackingStarted 
+            = this.onColumnMoveTrackingStarted.bind(this);
+        this.onColumnMoveTrackingMoved 
+            = this.onColumnMoveTrackingMoved.bind(this);
+        this.onColumnMoveTrackingStopped 
+            = this.onColumnMoveTrackingStopped.bind(this);
 
         this._mainRef = React.createRef();
         this._bodyRef = React.createRef();
@@ -974,6 +1090,8 @@ export class RowTable extends React.Component {
         this.setState({
             isColumnResizeTracking: true,
             pageX: pageX,
+            trackingWidth: 1,
+            trackingClassExtras: 'RowTableColumnResizerTracker',
         });
     }
 
@@ -987,6 +1105,72 @@ export class RowTable extends React.Component {
     onColumnResizeTrackingStopped() {
         this.setState({
             isColumnResizeTracking: false,
+            trackingWidth: undefined,
+            trackingClassExtras: undefined,
+        });
+    }
+
+
+    onColumnMove(args, columnIndex) {
+        const { onMoveColumn } = this.props;
+        if (!onMoveColumn) {
+            return;
+        }
+
+        const { columnWidths } = this.state;
+
+        let newColumnIndex = columnIndex;
+        const x = args.pageX;
+        let edge = 0;
+        for (let i = 0; i < columnWidths.length; ++i) {
+            edge += columnWidths[i];
+            if (x <= edge) {
+                newColumnIndex = i;
+                break;
+            }
+        }
+
+        if (newColumnIndex !== columnIndex) {
+            onMoveColumn({
+                originalColumnIndex: columnIndex, 
+                newColumnIndex: newColumnIndex,
+                column: this.props.columns[columnIndex],
+            });
+        }
+    }
+
+
+    onColumnMoveTrackingStarted(pageX, columnIndex) {
+        const { columnWidths } = this.state;
+        const columnWidth = columnWidths[columnIndex];
+        let columnStart = 0;
+        for (let i = 0; i < columnIndex; ++i) {
+            columnStart += columnWidths[i];
+        }
+
+        this.setState({
+            isColumnMoveTracking: true,
+            pageX: columnStart,
+            trackingOffset: pageX - columnStart,
+            trackingWidth: columnWidth,
+            trackingClassExtras: 'RowTableColumnMoverTracker',
+        });
+    }
+
+    onColumnMoveTrackingMoved(pageX) {
+        this.setState((state) => {
+            return {
+                isColumnMoveTracking: true,
+                pageX: pageX - state.trackingOffset,
+            };
+        });
+    }
+
+    onColumnMoveTrackingStopped() {
+        this.setState({
+            isColumnMoveTracking: false,
+            trackingWidth: undefined,
+            trackingClassExtras: undefined,
         });
     }
 
@@ -1131,16 +1315,29 @@ export class RowTable extends React.Component {
                     }
                 }
 
+                if (this.props.onMoveColumn) {
+                    cell = <RowTableColumnMoverCell
+                        onEndAction = {(args) => this.onColumnMove(args, c)}
+                        onTrackingStarted = {(pageX) => 
+                            this.onColumnMoveTrackingStarted(pageX, c)}
+                        onTrackingMoved = {this.onColumnMoveTrackingMoved}
+                        onTrackingStopped = {this.onColumnMoveTrackingStopped}
+                        defaultFocusRef = {this._bodyRef}
+                    >
+                        {cell}
+                    </RowTableColumnMoverCell>;
+                }
+
                 if (this.props.onSetColumnWidth && ((c + 1) < columns.length)) {
-                    cell = <RowTableResizerCell
-                        onResize = {(delta) => this.onColumnResize(delta, c)}
+                    cell = <RowTableColumnResizerCell
+                        onEndAction = {({delta}) => this.onColumnResize(delta, c)}
                         onTrackingStarted = {this.onColumnResizeTrackingStarted}
                         onTrackingMoved = {this.onColumnResizeTrackingMoved}
                         onTrackingStopped = {this.onColumnResizeTrackingStopped}
                         defaultFocusRef = {this._bodyRef}
                     >
                         {cell}
-                    </RowTableResizerCell>;
+                    </RowTableColumnResizerCell>;
                 }
 
                 let style;
@@ -1288,8 +1485,12 @@ export class RowTable extends React.Component {
                 ref = sizeRenderRefs.columnRefs[colIndex].bodyCellRef;
             }
 
+            if (this.props.onMoveColumn) {
+                cell = <RowTableColumnMoverCell>{cell}</RowTableColumnMoverCell>;
+            }
+
             if (this.props.onSetColumnWidth && ((colIndex + 1) < columns.length)) {
-                cell = <RowTableResizerCell>{cell}</RowTableResizerCell>;
+                cell = <RowTableColumnResizerCell>{cell}</RowTableColumnResizerCell>;
             }
 
             cell = <div className = {cellClassName}
@@ -1446,9 +1647,14 @@ export class RowTable extends React.Component {
             className += ' ' + classExtras;
         }
 
-        const trackingBar = <RowTableResizerTracker
-            pageX = {this.state.pageX}
-            show = {this.state.isColumnResizeTracking}
+
+        const { state } = this;
+
+        const trackingBar = <RowTableColumnDraggerTracker
+            classExtras = {state.trackingClassExtras}
+            width = {state.trackingWidth}
+            pageX = {state.pageX}
+            show = {state.isColumnResizeTracking || state.isColumnMoveTracking}
         />;
 
         return <div className = {className}
@@ -1646,6 +1852,18 @@ export class RowTable extends React.Component {
  */
 
 /**
+ * @typedef {object} RowTable~onMoveColumnArgs
+ * @property {number} originalColumnIndex
+ * @property {number} newColumnIndex
+ * @property {RowTable~Column}  column
+ */
+
+/**
+ * @callback RowTable~onMoveColumn
+ * @param {RowTable~onMoveColumnArgs} args
+ */
+
+/**
  * @typedef {object} RowTable~onOpenActiveRowArgs
  * @property {number}   rowIndex
  * @property {number}   [columnIndex=undefined] The index of the column that was 
@@ -1731,6 +1949,7 @@ RowTable.propTypes = {
     requestedVisibleRowIndex: PropTypes.number,
 
     onSetColumnWidth: PropTypes.func,
+    onMoveColumn: PropTypes.func,
 
     rowHeight: PropTypes.number,
     headerHeight: PropTypes.number,

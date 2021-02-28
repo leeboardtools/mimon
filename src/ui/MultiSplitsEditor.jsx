@@ -232,10 +232,10 @@ export class MultiSplitsEditor extends React.Component {
             projectSettingsPath: projectSettingsPath,
         });
 
-        const columns = createDefaultColumns(accountDataItem.type);
+        const allColumns = createDefaultColumns(accountDataItem.type);
 
         this.state = {
-            columns: columns,
+            allColumns: allColumns,
             rowEntries: [],
             activeRowIndex: 0,
             accountType: accountDataItem.type,

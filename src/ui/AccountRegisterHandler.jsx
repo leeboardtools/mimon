@@ -183,9 +183,9 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             const { accessor } = this.props;
             accountType = accessor.getTypeOfAccountId(state.accountId);
 
-            const { columns } = state;
+            const { allColumns } = state;
             const columnsByName = new Map();
-            columns.forEach((column) => columnsByName.set(column.key, column));
+            allColumns.forEach((column) => columnsByName.set(column.key, column));
 
             optionalColumns.push(columnsByName.get('refNum'));
             optionalColumns.push(columnsByName.get('reconcile'));
@@ -292,7 +292,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
 
         const projectSettingsId = 'AccountRegisterHandler-' + accountDataItem.type;
         let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
-        const columns = createDefaultColumns(accountDataItem.type);
+        const allColumns = createDefaultColumns(accountDataItem.type);
 
         const tabEntry = {
             tabId: tabId,
@@ -304,7 +304,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             getUndoRedoInfo: getUndoRedoInfo,
             openArgs: openArgs,
             projectSettingsId: projectSettingsId,
-            columns: columns,
+            allColumns: allColumns,
         };
 
         this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);

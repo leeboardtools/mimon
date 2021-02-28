@@ -378,39 +378,61 @@ that's on the same line */
     overflow: hidden;
 }
 
-.RowTableResizerCell {
+.RowTableColumnResizerCell {
     display: flex;
     justify-content: space-between;
     height: 100%;
 }
 
-.RowTableHeaderCell .RowTableResizerCell .RowTableResizer {
+.RowTableHeaderCell .RowTableColumnResizerCell .RowTableColumnResizer {
     border-color:rgba(0, 0, 0, .15);
     border-width: 1px;
     border-right-style: solid;
     border-left-style: solid;
 }
 
-.RowTableResizerCell-cell {
+.RowTableColumnResizerCell-cell {
     width: 100%;
 }
 
-.RowTableResizer {
+.RowTableColumnResizer {
     margin-left: 4px;
     padding-left: 1px;
     padding-right: 0px;
     text-align: right;
 }
 
-.RowTableResizer.enabled:hover {
-    cursor: ew-resize;
+.RowTableColumnResizer.enabled:hover {
+    cursor: col-resize;
     border-color: #007bff;
     border-style: solid;
     background-color: #007bff;
 }
 
-.RowTableResizerTracker {
+.RowTableColumnResizerTracker {
     background-color: #007bff;
+    margin-left: 0px;
+    padding-left: 1px;
+    padding-right: 0px;
+    z-index: 1000;
+}
+
+
+.RowTableColumnMover {
+    width: 100%;
+    height: 100%;
+}
+
+.RowTableColumnMover.enabled:hover {
+    cursor: grab;
+}
+
+.RowTableColumnMover.enabled.tracking:hover {
+    cursor: grabbing;
+}
+
+.RowTableColumnMoverTracker {
+    background-color: #007bff42;
     margin-left: 0px;
     padding-left: 1px;
     padding-right: 0px;

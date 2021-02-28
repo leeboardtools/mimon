@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { RowTable } from '../util-ui/RowTable';
 import deepEqual from 'deep-equal';
-import { columnInfosToColumns, getVisibleColumns } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns } from '../util-ui/ColumnInfo';
 import * as ACE from './AccountingCellEditors';
 import { getCurrencyForAccountId } 
     from '../tools/AccountHelpers';
@@ -309,13 +309,10 @@ export class RemindersList extends React.Component {
         this.onActivateRow = this.onActivateRow.bind(this);
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
 
-        const columns = this.props.columns || createDefaultColumns();
-
 
         this._hiddenReminderIds = new Set();
 
         this.state = {
-            columns: getVisibleColumns(columns),
             rowEntries: [],
         };
 
@@ -391,16 +388,6 @@ export class RemindersList extends React.Component {
 
         if (prevProps.showHiddenReminders !== showHiddenReminders) {
             rowsNeedUpdating = true;
-        }
-
-        if (!deepEqual(prevProps.columns, this.props.columns)) {
-            const { columns } = this.props;
-            if (columns) {
-                const visibleColumns = getVisibleColumns(columns);
-                this.setState({
-                    columns: visibleColumns,
-                });
-            }
         }
 
         if (!rowsNeedUpdating) {
@@ -596,7 +583,7 @@ export class RemindersList extends React.Component {
             isActive: args.rowIndex === this.state.activeRowIndex,
         });
 
-        const { columnInfo } = this.state.columns[args.columnIndex];
+        const { columnInfo } = this.props.columns[args.columnIndex];
         const { renderDisplayCell } = columnInfo;
         if (renderDisplayCell) {
             const value = columnInfo.getCellValue(args);
@@ -637,7 +624,7 @@ export class RemindersList extends React.Component {
 
         return <div className="RowTableContainer RemindersList">
             <RowTable
-                columns = { state.columns }
+                columns = { props.columns }
                 rowCount = { rowEntries.length }
                 getRowKey = { this.getRowKey }
 

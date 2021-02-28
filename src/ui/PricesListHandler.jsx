@@ -139,7 +139,7 @@ export class PricesListHandler extends MainWindowHandlerBase {
         const projectSettingsId = 'PricesListHandler-' + pricedItemDataItem.type;
         let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
 
-        const columns = createDefaultColumns(pricedItemDataItem.type);
+        const allColumns = createDefaultColumns(pricedItemDataItem.type);
         const tabEntry = {
             tabId: tabId,
             title: pricedItemDataItem.name,
@@ -150,7 +150,7 @@ export class PricesListHandler extends MainWindowHandlerBase {
             getUndoRedoInfo: getUndoRedoInfo,
             openArgs: openArgs,
             projectSettingsId: projectSettingsId,
-            columns: columns,
+            allColumns: allColumns,
         };
 
         this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);

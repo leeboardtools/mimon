@@ -368,10 +368,10 @@ export class LotsSelectionEditor extends React.Component {
             projectSettingsPath: projectSettingsPath,
         });
 
-        const columns = createDefaultColumns();
+        const allColumns = createDefaultColumns();
 
         this.state = {
-            columns: columns,
+            allColumns: allColumns,
             rowEntries: [],
             activeRowIndex: 0,
         };

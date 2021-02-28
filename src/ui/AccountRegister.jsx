@@ -8,7 +8,7 @@ import * as T from '../engine/Transactions';
 import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';
 import * as AH from '../tools/AccountHelpers';
-import { columnInfosToColumns, getVisibleColumns, } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns, } from '../util-ui/ColumnInfo';
 import deepEqual from 'deep-equal';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor';
@@ -685,7 +685,7 @@ export class AccountRegister extends React.Component {
         this._cellEditorsManager = new CellEditorsManager({
             getRowEntry: this.getRowEntry,
             getColumnInfo: (columnIndex) => 
-                this.state.columns[columnIndex].columnInfo,
+                this.props.columns[columnIndex].columnInfo,
             setManagerState: (state) => this.setState({
                 managerState: state,
             }),
@@ -717,11 +717,8 @@ export class AccountRegister extends React.Component {
                 T.ReconcileState.RECONCILED.description],
         ];
 
-        const columns = this.props.columns || createDefaultColumns(accountType);
-
         this.state = {
             accountType: A.getAccountTypeName(accountType),
-            columns: getVisibleColumns(columns),
             rowEntries: [],
             rowEntriesByTransactionId: new Map(),
             currency: pricedItemDataItem.currency,
@@ -913,16 +910,6 @@ export class AccountRegister extends React.Component {
 
         if (prevProps.showHiddenTransactions !== showHiddenTransactions) {
             rowsNeedUpdating = true;
-        }
-
-        if (!deepEqual(prevProps.columns, this.props.columns)) {
-            const { columns } = this.props;
-            if (columns) {
-                const visibleColumns = getVisibleColumns(columns);
-                this.setState({
-                    columns: visibleColumns,
-                });
-            }
         }
 
         if (rowsNeedUpdating) {
@@ -1794,7 +1781,7 @@ export class AccountRegister extends React.Component {
 
 
     render() {
-        const { state } = this;
+        const { props, state } = this;
 
         const { modal } = state;
 
@@ -1807,7 +1794,7 @@ export class AccountRegister extends React.Component {
 
         const table = <div className = {registerClassName}>
             <EditableRowTable
-                columns = {state.columns}
+                columns = {props.columns}
 
                 rowCount = {state.rowEntries.length}
                 getRowKey = {this.getRowKey}

@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { EditableRowTable } from '../util-ui/EditableRowTable';
-import { columnInfosToColumns, getVisibleColumns } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns, } from '../util-ui/ColumnInfo';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import * as PI from '../engine/PricedItems';
 import * as ACE from './AccountingCellEditors';
@@ -376,7 +376,7 @@ export class PricesList extends React.Component {
 
         this._cellEditorsManager = new CellEditorsManager({
             getRowEntry: this.getRowEntry,
-            getColumnInfo: (columnIndex) => this.state.columns[columnIndex].columnInfo,
+            getColumnInfo: (columnIndex) => this.props.columns[columnIndex].columnInfo,
             setManagerState: (state) => this.setState({
                 managerState: state,
             }),
@@ -393,14 +393,9 @@ export class PricesList extends React.Component {
         this._modalRef = React.createRef();
 
         const { pricedItemId, accessor } = this.props;
-        const pricedItemDataItem = accessor.getPricedItemDataItemWithId(pricedItemId);
-        const pricedItemType = PI.getPricedItemType(pricedItemDataItem.type);
-
-        const columns = this.props.columns || createDefaultColumns(pricedItemType);
 
         this.state = {
             rowEntries: [],
-            columns: getVisibleColumns(columns),
             priceQuantityDefinition: accessor.getPriceQuantityDefinitionForPricedItem(
                 pricedItemId),
             countQuantityDefinition: getDecimalDefinition(0),
@@ -438,15 +433,6 @@ export class PricesList extends React.Component {
 
     
     componentDidUpdate(prevProps, prevState) {
-        if (!deepEqual(prevProps.columns, this.props.columns)) {
-            const { columns } = this.props;
-            if (columns) {
-                const visibleColumns = getVisibleColumns(columns);
-                this.setState({
-                    columns: visibleColumns,
-                });
-            }
-        }
     }
 
 
@@ -801,7 +787,7 @@ export class PricesList extends React.Component {
 
 
     render() {
-        const { state } = this;
+        const { props, state } = this;
 
         const { modal } = state;
 
@@ -814,7 +800,7 @@ export class PricesList extends React.Component {
 
         const table = <div className = {registerClassName}>
             <EditableRowTable
-                columns = {state.columns}
+                columns = {props.columns}
 
                 rowCount = {state.rowEntries.length}
                 getRowKey = {this.getRowKey}

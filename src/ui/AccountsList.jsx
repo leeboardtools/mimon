@@ -10,8 +10,7 @@ import { getDecimalDefinition, getQuantityDefinitionName } from '../util/Quantit
 import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';
 import * as GH from '../tools/GainHelpers';
-import { columnInfosToColumns, getColumnWithKey,
-    getVisibleColumns } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns, getColumnWithKey, } from '../util-ui/ColumnInfo';
 import { YMDDate } from '../util/YMDDate';
 
 
@@ -83,10 +82,7 @@ export class AccountsList extends React.Component {
 
         const { accessor, collapsedAccountIds } = this.props;
 
-        const columns = this.props.columns || createDefaultColumns();
-
         this.state = {
-            columns: getVisibleColumns(columns),
             topLevelAccountIds: [
                 accessor.getRootAssetAccountId(),
                 accessor.getRootLiabilityAccountId(),
@@ -208,16 +204,6 @@ export class AccountsList extends React.Component {
             this.props.collapsedAccountIds)) {
             this._collapsedRowIds = new Set(this.props.collapsedAccountIds);
             rowsNeedUpdating = true;
-        }
-
-        if (!deepEqual(prevProps.columns, this.props.columns)) {
-            const { columns } = this.props;
-            if (columns) {
-                const visibleColumns = getVisibleColumns(columns);
-                this.setState({
-                    columns: visibleColumns,
-                });
-            }
         }
 
         if (rowsNeedUpdating) {
@@ -613,7 +599,7 @@ export class AccountsList extends React.Component {
     onRenderCell({ rowInfo, columnIndex, isSizeRender, }) {
         let { accountDataItem } = rowInfo;
         
-        const { columnInfo } = this.state.columns[columnIndex];
+        const { columnInfo } = this.props.columns[columnIndex];
 
         let accountState;
         let quantityDefinition;
@@ -689,17 +675,18 @@ export class AccountsList extends React.Component {
 
 
     render() {
-        const { state } = this;
+        const { props, state } = this;
 
         return <div className="RowTableContainer AccountsList">
             <CollapsibleRowTable
-                columns = {state.columns}
+                columns = {props.columns}
                 rowInfos = {state.rowInfos}
                 onExpandCollapseRow = {this.onExpandCollapseRow}
 
                 onRenderCell = {this.onRenderCell}
 
                 onSetColumnWidth = {this.props.onSetColumnWidth}
+                onMoveColumn = {this.props.onMoveColumn}
 
                 activeRowKey = {state.activeRowKey}
                 onActivateRow = {this.onActivateRow}
@@ -743,6 +730,7 @@ AccountsList.propTypes = {
     onChooseContextMenuItem: PropTypes.func,
     columns: PropTypes.arrayOf(PropTypes.object),
     onSetColumnWidth: PropTypes.func,
+    onMoveColumn: PropTypes.func,
     hiddenRootAccountTypes: PropTypes.arrayOf(PropTypes.string),
     hiddenAccountIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenAccounts: PropTypes.bool,

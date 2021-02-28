@@ -241,7 +241,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const { activePricedItemId, pricedItemTypeName, 
             hiddenPricedItemIds, showHiddenPricedItems,
             showHiddenAccounts,
-            columns,
+            allColumns,
         } = state;
 
         const showPricedItemLabelId 
@@ -251,21 +251,21 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
         const optionalColumns = [];
         if (PI.getPricedItemType(pricedItemTypeName).hasTickerSymbol) {
-            optionalColumns.push(getColumnWithKey(columns, 'totalMarketValue'));
-            optionalColumns.push(getColumnWithKey(columns, 'totalShares'));
-            optionalColumns.push(getColumnWithKey(columns, 'totalCostBasis'));
-            optionalColumns.push(getColumnWithKey(columns, 'totalCashIn'));
-            optionalColumns.push(getColumnWithKey(columns, 'totalGain'));
-            optionalColumns.push(getColumnWithKey(columns, 'totalCashInGain'));
-            optionalColumns.push(getColumnWithKey(columns, 'totalPercentGain'));
-            optionalColumns.push(getColumnWithKey(columns, 'totalCashInPercentGain'));
-            optionalColumns.push(getColumnWithKey(columns, 'totalAnnualPercentGain'));
+            optionalColumns.push(getColumnWithKey(allColumns, 'totalMarketValue'));
+            optionalColumns.push(getColumnWithKey(allColumns, 'totalShares'));
+            optionalColumns.push(getColumnWithKey(allColumns, 'totalCostBasis'));
+            optionalColumns.push(getColumnWithKey(allColumns, 'totalCashIn'));
+            optionalColumns.push(getColumnWithKey(allColumns, 'totalGain'));
+            optionalColumns.push(getColumnWithKey(allColumns, 'totalCashInGain'));
+            optionalColumns.push(getColumnWithKey(allColumns, 'totalPercentGain'));
+            optionalColumns.push(getColumnWithKey(allColumns, 'totalCashInPercentGain'));
+            optionalColumns.push(getColumnWithKey(allColumns, 'totalAnnualPercentGain'));
             optionalColumns.push(
-                getColumnWithKey(columns, 'totalAnnualCashInPercentGain'));
-            optionalColumns.push(getColumnWithKey(columns, 'onlineSource'));
+                getColumnWithKey(allColumns, 'totalAnnualCashInPercentGain'));
+            optionalColumns.push(getColumnWithKey(allColumns, 'onlineSource'));
         }
-        optionalColumns.push(getColumnWithKey(columns, 'currency'));
-        optionalColumns.push(getColumnWithKey(columns, 'quantityDefinition'));
+        optionalColumns.push(getColumnWithKey(allColumns, 'currency'));
+        optionalColumns.push(getColumnWithKey(allColumns, 'quantityDefinition'));
 
         const toggleColumnsSubMenuItems 
             = this._rowTableHandler.createToggleColumnMenuItems(
@@ -328,6 +328,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
             {},
             this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state),
+            this._rowTableHandler.createResetColumnOrderMenuItem(tabId, state),
         ];
 
         return {
@@ -389,7 +390,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     createTabEntry(tabId, pricedItemTypeName) {
         const projectSettingsId = 'PricedItemsListHandler-' + pricedItemTypeName;
         let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
-        const columns = createDefaultColumns(pricedItemTypeName);
+        const allColumns = createDefaultColumns(pricedItemTypeName);
         const showHiddenAccounts = settings.showHiddenAccounts;
         const collapsedPricedItemIds = settings.collapsedPricedItemIds || [];
 
@@ -406,7 +407,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             showHiddenPricedItems: settings.showHiddenPricedItems,
             showHiddenAccounts: showHiddenAccounts,
             collapsedPricedItemIds: collapsedPricedItemIds,
-            columns: columns,
+            allColumns: allColumns,
         };
 
         this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);
@@ -449,6 +450,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                 this.onUpdateCollapsedPricedItemIds(tabEntry.tabId, args)}
             onSetColumnWidth = {(args) =>
                 this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)}
+            onMoveColumn = {(args) =>
+                this._rowTableHandler.onMoveColumn(tabEntry.tabId, args)}
             contextMenuItems = {contextMenuItems}
             id = {tabEntry.tabId}
         />;

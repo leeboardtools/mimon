@@ -643,7 +643,7 @@ export class RemindersListHandler extends MainWindowHandlerBase {
      */
     createTabEntry(tabId) {
         let settings = this.getTabIdProjectSettings(tabId) || {};
-        const columns = createDefaultColumns();
+        const allColumns = createDefaultColumns();
 
         const isRemindersDue = (tabId === 'remindersDueList');
         const titleId = (isRemindersDue)
@@ -659,7 +659,7 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             onCloseTab: this.onCloseTab,
             hiddenReminderIds: [],
             showHiddenReminders: false,
-            columns: columns,
+            allColumns: allColumns,
         };
 
         if (isRemindersDue) {

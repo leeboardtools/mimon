@@ -3,7 +3,17 @@ import * as CI from '../util-ui/ColumnInfo';
 import { dataDeepCopy } from '../util/DataDeepCopy';
 import deepEqual from 'deep-equal';
 
-
+//
+// Called from:
+// _setupNewStateFromSettings():
+//      updateColumnsFromColumnStates(allColumns, settings.columnStates,
+//                newState.defaultColumnStates);
+//
+// _onProjectSettingsModified()
+//      updateColumnsFromColumnStates(newState.allColumns, 
+//                projectSettings.columnStates,
+//                state.defaultColumnStates);
+//
 function updateColumnsFromColumnStates(columns, columnStates, defaultColumnStates) {
     columns.forEach((column) => {
         const { key } = column;
@@ -12,20 +22,102 @@ function updateColumnsFromColumnStates(columns, columnStates, defaultColumnState
         if (columnState) {
             column.isVisible = columnState.isVisible;
             column.width = columnState.width;
+            column.columnIndex = columnState.columnIndex;
         }
     });
+
+    cleanupColumnIndices(columns);
 }
 
 
-function columnStatesFromColumns(columns) {
-    const columnStates = {};
+//
+// Called from:
+// _onToggleColumn(stateId, columnName)
+//      const columnStates = columnStatesFromColumns(allColumns);
+//
+// _onResetColumnStateProperty(stateId)
+//      const columnStates = columnStatesFromColumns(state.allColumns);
+//
+// _setupNewStateFromSettings(newState, settings)
+//      newState.defaultColumnStates = columnStatesFromColumns(allColumns);
+//
+// onSetColumnWidth(stateId, args)
+//      const columnStates = columnStatesFromColumns(state.allColumns);
+//      columnStatesFromColumns(columns, columnStates);
+function columnStatesFromColumns(columns, columnStates) {
+    columnStates = columnStates || {};
+    
     columns.forEach((column) => {
         columnStates[column.key] = {
             isVisible: column.isVisible,
             width: column.width,
+            columnIndex: column.columnIndex,
         };
     });
     return columnStates;
+}
+
+
+//
+// Updates the columnIndex properties of the columns in allColumns as necessary
+// to ensure they have unique values in the range from 0 to allColumns.length - 1.
+function cleanupColumnIndices(allColumns) {
+    let sortedColumns = [];
+    const noIndexColumns = [];
+    allColumns.forEach((column) => {
+        const { columnIndex } = column;
+        if ((typeof columnIndex === 'number')
+         && (columnIndex >= 0)) {
+            // Presume we don't have a lot of columns so a sequential search is OK...
+            let i = sortedColumns.length - 1;
+            for (; i >= 0; --i) {
+                if (sortedColumns[i].columnIndex <= columnIndex) {
+                    break;
+                }
+            }
+            sortedColumns.splice(i + 1, 0, column);
+        }
+        else {
+            noIndexColumns.push(column);
+        }
+    });
+
+    sortedColumns = sortedColumns.concat(noIndexColumns);
+
+    for (let i = 0; i < sortedColumns.length; ++i) {
+        sortedColumns[i].columnIndex = i;
+    }
+
+    return sortedColumns;
+}
+
+
+//
+// This updates state.columns from state.allColumns
+// state.columns contains only the visible columns, with the
+// ordering based on the columnIndex properties of the columns
+// in allColumns.
+//
+// Called from:
+// _onToggleColumn(stateId, columnName)
+//      updateStateColumns(newState);
+//
+// _setupNewStateFromSettings(newState, settings)
+//      updateStateColumns(newState);
+//
+// _onProjectSettingsModified(stateId, projectSettingsId, 
+//      updateStateColumns(newState);
+function updateStateColumns(state) {
+    const sortedColumns = cleanupColumnIndices(state.allColumns);
+
+    const columns = [];
+    sortedColumns.forEach((column) => {
+        if (column.isVisible) {
+            columns.push(column);
+        }
+    });
+
+    state.columns = columns;
 }
 
 
@@ -94,6 +186,7 @@ export class RowTableHandler {
             = this._onProjectSettingsModified.bind(this);
 
         this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
+        this.onMoveColumn = this.onMoveColumn.bind(this);
     }
 
 
@@ -123,27 +216,28 @@ export class RowTableHandler {
     _onToggleColumn(stateId, columnName) {
         const state = this.getState(stateId);
 
-        const columns = Array.from(state.columns);
+        const allColumns = Array.from(state.allColumns);
 
-        const index = CI.getIndexOfColumnWithKey(columns, columnName);
+        const index = CI.getIndexOfColumnWithKey(allColumns, columnName);
         if (index >= 0) {
-            const column = Object.assign({}, columns[index]);
+            const column = Object.assign({}, allColumns[index]);
             column.isVisible = !column.isVisible;
-            columns[index] = column;
+            allColumns[index] = column;
 
             const newState = Object.assign({}, state, {
-                columns: columns,
+                allColumns: allColumns,
             });
+            updateStateColumns(newState);
 
             this.setState(stateId, newState);
 
-            const columnStates = columnStatesFromColumns(columns);
+            const columnStates = columnStatesFromColumns(allColumns);
 
             let actionNameId = (column.isVisible)
                 ? 'RowTableHandler-action_showColumn'
                 : 'RowTableHandler-action_hideColumn';
             const actionName = userMsg(actionNameId,
-                this.getColumnLabel(columns, columnName)
+                this.getColumnLabel(allColumns, columnName)
             );
 
             const projectSettingsId = state.projectSettingsId || stateId;
@@ -184,6 +278,39 @@ export class RowTableHandler {
     }
 
 
+    _onResetColumnStateProperty(stateId, propName, actionName) {
+        const state = this.getState(stateId);
+
+        const columnStates = columnStatesFromColumns(state.allColumns);
+        const { defaultColumnStates } = state;
+
+        if (defaultColumnStates) {
+            for (const name in columnStates) {
+                const columnState = columnStates[name];
+                const defColumnState = defaultColumnStates[name];
+                if (defColumnState) {
+                    columnState[propName] = defColumnState[propName];
+                }
+                else {
+                    delete columnState[propName];
+                }
+            }
+        }
+        else {
+            for (const name in columnStates) {
+                delete columnStates[name][propName];
+            }
+        }
+
+        const projectSettingsId = state.projectSettingsId || stateId;
+        this.setProjectSettings(projectSettingsId, 
+            {
+                columnStates: columnStates,
+            },
+            actionName);
+    }
+
+
     /**
      * Creates a menu item for resetting all the column widths.
      * @param {string} stateId 
@@ -191,10 +318,10 @@ export class RowTableHandler {
      */
     createResetColumnWidthsMenuItem(stateId, state) {
         let disabled = true;
-        const { columns, defaultColumnStates } = state;
-        if (columns) {
-            for (let i = 0; i < columns.length; ++i) {
-                const column = columns[i];
+        const { allColumns, defaultColumnStates } = state;
+        if (allColumns) {
+            for (let i = 0; i < allColumns.length; ++i) {
+                const column = allColumns[i];
                 if (column.width !== undefined) {
                     if (defaultColumnStates && defaultColumnStates[column.key]) {
                         if (defaultColumnStates[column.key].width === column.width) {
@@ -212,70 +339,60 @@ export class RowTableHandler {
             id: 'resetColumnWidths',
             label: userMsg('RowTableHandler-resetColumnWidth'),
             disabled: disabled,
-            onChooseItem: () => this._onResetColumnWidths(
-                stateId),
+            onChooseItem: () => this._onResetColumnStateProperty(
+                stateId,
+                'width',
+                userMsg('RowTableHandler-action_resetColumnWidth')),
         };
     }
 
-    _onResetColumnWidths(stateId) {
-        const state = this.getState(stateId);
 
-        const columns = Array.from(state.columns);
 
-        const { defaultColumnStates } = state;
-
-        for (let i = 0; i < columns.length; ++i) {
-            let column = columns[i];
-
-            const { key } = column;
-            let defaultWidth;
-            if (defaultColumnStates && defaultColumnStates[key]) {
-                defaultWidth = defaultColumnStates[key].width;
+    /**
+     * Creates a menu item for resetting the ordering of the columns.
+     * @param {string} stateId 
+     * @returns {MenuList~Item}
+     */
+    createResetColumnOrderMenuItem(stateId, state) {
+        let disabled = true;
+        const { allColumns, columns } = state;
+        if (allColumns) {
+            const visibleColumns = CI.getVisibleColumns(allColumns);
+            if (visibleColumns.length !== columns.length) {
+                disabled = false;
             }
-
-            if (defaultWidth !== column.width) {
-                column = Object.assign({}, column);
-                if (defaultWidth !== undefined) {
-                    column.width = defaultWidth;
+            else {
+                for (let i = 0; i < columns.length; ++i) {
+                    if (columns[i].key !== visibleColumns[i].key) {
+                        disabled = false;
+                        break;
+                    }
                 }
-                else {
-                    delete column.width;
-                }
-
-                columns[i] = column;
             }
         }
-
-        const newState = Object.assign({}, state, {
-            columns: columns,
-        });
-
-
-        this.setState(stateId, newState);
-
-        const columnStates = columnStatesFromColumns(columns);
-
-        const actionName = userMsg('RowTableHandler-action_resetColumnWidth');
-
-        const projectSettingsId = state.projectSettingsId || stateId;
-        this.setProjectSettings(projectSettingsId, 
-            {
-                columnStates: columnStates,
-            },
-            actionName);
+        
+        return {
+            id: 'resetColumnOrder',
+            label: userMsg('RowTableHandler-resetColumnOrder'),
+            disabled: disabled,
+            onChooseItem: () => this._onResetColumnStateProperty(
+                stateId,
+                'columnIndex',
+                userMsg('RowTableHandler-action_resetColumnOrder')),
+        };
     }
 
 
-
     _setupNewStateFromSettings(newState, settings) {
-        const { columns } = newState;
+        const { allColumns } = newState;
 
-        newState.defaultColumnStates = columnStatesFromColumns(columns);
+        newState.defaultColumnStates = columnStatesFromColumns(allColumns);
         if (settings.columnStates) {
-            updateColumnsFromColumnStates(columns, settings.columnStates,
+            updateColumnsFromColumnStates(allColumns, settings.columnStates,
                 newState.defaultColumnStates);
         }
 
+        updateStateColumns(newState);
         return newState;
     }
 
@@ -293,11 +410,15 @@ export class RowTableHandler {
         let newState;
         if (projectSettings.columnStates || originalChanges.columnStates) {
             newState = Object.assign({}, state);
-            newState.columns = dataDeepCopy(newState.columns);
+            newState.allColumns = dataDeepCopy(newState.allColumns);
 
-            updateColumnsFromColumnStates(newState.columns, 
+            updateColumnsFromColumnStates(newState.allColumns, 
                 projectSettings.columnStates,
                 state.defaultColumnStates);
+
+            console.log({
+                projectSettingsColumnStates: projectSettings.columnStates,
+            });
         }
         else {
             newState = Object.assign({}, state, projectSettings);
@@ -308,6 +429,7 @@ export class RowTableHandler {
             updateStateFromModifiedProjectSettings(stateId, newState, projectSettings);
         }
 
+        updateStateColumns(newState);
         this.setState(stateId, newState);
     }
 
@@ -330,16 +452,73 @@ export class RowTableHandler {
         });
         columns[columnIndex] = newColumn;
 
-        const newState = Object.assign({}, state, {
-            columns: columns,
-        });
-
-        this.setState(stateId, newState);
-
-        const columnStates = columnStatesFromColumns(columns);
+        // First call to columnStatesFromColumns() is so we have the columnStates
+        // for all the columns.
+        // Second call is to update those columnStates based on columns.
+        const columnStates = columnStatesFromColumns(state.allColumns);
+        columnStatesFromColumns(columns, columnStates);
 
         const actionName = userMsg('RowTableHandler-action_setColumnWidth',
             this.getColumnLabel(columns, newColumn.key)
+        );
+
+        const projectSettingsId = state.projectSettingsId || stateId;
+        this.setProjectSettings(projectSettingsId, 
+            {
+                columnStates: columnStates,
+            },
+            actionName);
+    }
+
+
+
+    /**
+     * The {@link RowTable~onMoveColumn} for the {@link RowTable}'s
+     * onMoveColumn property.
+     * @param {string} stateId 
+     * @param {RowTable~onMoveColumnArgs} args 
+     */
+    onMoveColumn(stateId, args) {
+        const state = this.getState(stateId);
+
+        let { originalColumnIndex, newColumnIndex, } = args;
+
+        const columnToMove = state.columns[originalColumnIndex];
+        const columnStates = columnStatesFromColumns(state.allColumns);
+
+        // Need to use all column indices...
+        originalColumnIndex = columnToMove.columnIndex;
+        newColumnIndex = state.columns[newColumnIndex].columnIndex;
+
+        if (originalColumnIndex < newColumnIndex) {
+            for (const name in columnStates) {
+                const columnState = columnStates[name];
+                const { columnIndex } = columnState;
+                if (columnIndex === originalColumnIndex) {
+                    columnState.columnIndex = newColumnIndex;
+                }
+                else if ((columnIndex > originalColumnIndex)
+                 && (columnIndex <= newColumnIndex)) {
+                    --columnState.columnIndex;
+                }
+            }
+        }
+        else {
+            for (const name in columnStates) {
+                const columnState = columnStates[name];
+                const { columnIndex } = columnState;
+                if (columnIndex === originalColumnIndex) {
+                    columnState.columnIndex = newColumnIndex;
+                }
+                else if ((columnIndex < originalColumnIndex)
+                 && (columnIndex >= newColumnIndex)) {
+                    ++columnState.columnIndex;
+                }
+            }
+        }
+
+        const actionName = userMsg('RowTableHandler-action_moveColumn',
+            this.getColumnLabel(state.allColumns, columnToMove.key)
         );
 
         const projectSettingsId = state.projectSettingsId || stateId;
@@ -462,6 +641,8 @@ export class TabIdRowTableHandler extends RowTableHandler {
      * Normally called from the main window handler's createTabEntry after the columns
      * property has been set up with default values, sets up column stuff in a tab 
      * entry from settings.
+     * <p>
+     * The allColumns property of the tabEntry must be set to the columns.
      * @param {*} tabEntry 
      * @param {*} settings 
      */
@@ -634,6 +815,8 @@ export class AccessorRowTableHandler extends RowTableHandler {
 
     /**
      * Call to initialize a state object.
+     * <p>
+     * The columns property of newState must be set up with all the columns.
      * @param {*} stateId Set to <code>untitled</code> if individual state objects are
      * not needed for the handler.
      * @param {*} newState The state object to initialize.

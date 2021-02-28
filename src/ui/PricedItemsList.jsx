@@ -10,8 +10,7 @@ import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';
 import * as AH from '../tools/AccountHelpers';
 import * as GH from '../tools/GainHelpers';
-import { columnInfosToColumns, getVisibleColumns, 
-    getColumnWithKey, } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns, getColumnWithKey, } from '../util-ui/ColumnInfo';
 import { CollapsibleRowTable, ExpandCollapseState,
     findRowInfoWithKey, updateRowInfo } from '../util-ui/CollapsibleRowTable';
 
@@ -191,14 +190,10 @@ export class PricedItemsList extends React.Component {
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
 
         const { pricedItemTypeName, collapsedPricedItemIds } = this.props;
-        const pricedItemType = PI.getPricedItemType(pricedItemTypeName);
 
         this._hiddenPricedItemIds = new Set(this.props.hiddenPricedItemIds);
 
-        const columns = this.props.columns || createDefaultColumns(pricedItemType);
-
         this.state = {
-            columns: getVisibleColumns(columns),
             rowInfos: [],
             rowInfosByKey: new Map(),
             columnKeys: new Set(),
@@ -325,15 +320,12 @@ export class PricedItemsList extends React.Component {
         if (!deepEqual(prevProps.columns, this.props.columns)) {
             const { columns } = this.props;
             if (columns) {
-                const visibleColumns = getVisibleColumns(columns);
-
                 // columnKeys is used to add tooltip info to the name/ticker items
                 // depending on whether a description or name column is showing.
                 const columnKeys = new Set();
-                visibleColumns.forEach((column) => columnKeys.add(column.key));
+                columns.forEach((column) => columnKeys.add(column.key));
 
                 this.setState({
-                    columns: visibleColumns,
                     columnKeys: columnKeys,
                 });
             }
@@ -875,7 +867,7 @@ export class PricedItemsList extends React.Component {
 
     onRenderCell({ rowInfo, columnIndex, isSizeRender }) {
 
-        const { columnInfo } = this.state.columns[columnIndex];
+        const { columnInfo } = this.props.columns[columnIndex];
 
         const args = {
             columnInfo: columnInfo,
@@ -952,16 +944,17 @@ export class PricedItemsList extends React.Component {
 
 
     render() {
-        const { state } = this;
+        const { props, state } = this;
         return <div className="RowTableContainer PricedItemsList">
             <CollapsibleRowTable
-                columns = { state.columns }
+                columns = { props.columns }
                 rowInfos = {state.rowInfos}
                 onExpandCollapseRow = {this.onExpandCollapseRow}
 
                 onRenderCell={this.onRenderCell}
 
-                onSetColumnWidth = { this.props.onSetColumnWidth }
+                onSetColumnWidth = {this.props.onSetColumnWidth}
+                onMoveColumn = {this.props.onMoveColumn}
 
                 activeRowKey = {state.activeRowKey}
                 onActivateRow = {this.onActivateRow}
@@ -1012,6 +1005,7 @@ PricedItemsList.propTypes = {
     onChooseContextMenuItem: PropTypes.func,
     columns: PropTypes.arrayOf(PropTypes.object),
     onSetColumnWidth: PropTypes.func,
+    onMoveColumn: PropTypes.func,
     hiddenPricedItemIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenPricedItems: PropTypes.bool,
     showHiddenAccounts: PropTypes.bool,

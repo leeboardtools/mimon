@@ -459,8 +459,12 @@
     "RowTableHandler-action_hideColumn": ["Hide '", "' Column"],
     "RowTableHandler-action_setColumnWidth": ["'", "' Column Width Change"],
     "RowTableHandler-action_resetColumnWidth": "Reset Column Widths",
+    "RowTableHandler-action_moveColumn": ["'", "' Move"],
+    "RowTableHandler-action_resetColumnOrder": "Reset Column Ordering",
 
     "RowTableHandler-resetColumnWidth": "Reset Column Widths",
+    "RowTableHandler-resetColumnOrder": "Reset Column Ordering",
+    
 
     "": ""
 }
