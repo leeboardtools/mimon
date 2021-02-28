@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { getPositionedAncestor } from '../util/ElementUtils';
+import { getPositionedAncestor, getParentClipBounds } from '../util/ElementUtils';
 
 
 const HALIGN = {
@@ -120,11 +120,12 @@ export class Popup extends React.Component {
             const containerWidth = containerRect.width;
             const containerHeight = containerRect.height;
 
-            const { innerWidth, innerHeight } = window;
-            const minLeft = 2;
-            const minTop = 2;
-            const maxRight = innerWidth - 2;
-            const maxBottom = innerHeight - 2;
+            const boundsRect = getParentClipBounds(this._popupRef.current);
+            const minLeft = boundsRect.left + 2;
+            const minTop = boundsRect.top + 2;
+            const maxRight = boundsRect.right - 2;
+            const maxBottom = boundsRect.bottom - 2;
+
 
             let left = this.props.x;
             let top = this.props.y;
@@ -317,7 +318,7 @@ export class Popup extends React.Component {
  * @property {string} [hAlignPopup='left'] Where on the popup to align with the parent
  * hAlignParent alignment point, one of 'left', 'center', or 'right'.
  * @property {string} [vAlignParent='top'] Where on the parent to align vertically, 
- * 'top', 'center', or 'bottmo'
+ * 'top', 'center', or 'bottom'
  * @property {string} [vAlignPopup='top'] Where on the popup to align with the parent
  * vAlignParent alignment point, one of 'top', 'center', or 'bottom'.
  * @property {boolean} [show]
