@@ -178,13 +178,10 @@ that's on the same line */
     z-index: 1000;
     float: left;
     min-width: 10rem;
-    /*padding: .5rem 0;
-    /*padding: .5rem 0;*/
     padding-top: .5rem;
     margin-top: .5rem;
     margin-bottom: .5rem;
     padding-bottom: .5rem;
-    /*margin: .125rem 0;*/
     font-size: 1rem;
     color: #212529;
     text-align: left;
@@ -308,6 +305,53 @@ that's on the same line */
     margin: .125rem 0 0;*/
 }
 
+.Popup-pointer {
+    position: absolute;
+    height: 0px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent;
+}
+
+.Popup-pointer.left {
+    right: 100%;
+    border-right-color: #555;
+}
+
+.Popup-pointer.right {
+    left: 100%;
+    border-left-color: #555;
+}
+
+.Popup-pointer.top {
+    bottom: 100%;
+    border-bottom-color: #555;
+}
+
+.Popup-pointer.bottom {
+    top: 100%;
+    border-top-color: #555;
+}
+
+.Popup-pointerContainer {
+    display: flex;
+}
+
+.Popup-pointerContainer.left {
+    flex-direction: row;
+}
+
+.Popup-pointerContainer.right {
+    flex-direction: row;
+}
+
+.Popup-pointerContainer.top {
+    flex-direction: column;
+}
+
+.Popup-pointerContainer.bottom {
+    flex-direction: column;
+}
 
 
 .RowTable {
@@ -498,42 +542,32 @@ that's on the same line */
 
 
 .Tooltip {
-  position: relative;
-  display: inline-block;
+    position: relative;
+    display: inline-block;
 }
 
-.Tooltip .Tooltiptext {
-  visibility: hidden;
-  background-color: #555;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px;
-  position: absolute;
-  z-index: 1;
-  opacity: 0;
-  transition: opacity 0.3s;
-  transition-timing-function: ease-in;
-  transition-delay: 1s;
-  margin-left: 0px;
-  margin-right: 0px;
+.Tooltip-popup {
+    /* Need hidden to avoid hover on the popup */
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease-in 1s;
 }
 
-/* This is the little arrow... */
-.Tooltip .Tooltiptext::after {
-  content: "";
-  position: absolute;
-  bottom: 100%;
-  right: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent transparent #555 transparent;
+.Tooltip-detector:hover + .Tooltip-popup {
+    visibility: visible;
+    opacity: 1;
 }
 
-.Tooltip:hover .Tooltiptext {
-  visibility: visible;
-  opacity: 1;
+.Tooltip-content {
+    padding: 5px;
+    margin: 0;
+
+    font-size: 1rem;
+    color: #fff;
+    text-align: center;
+
+    background-color: #555;
+    border-radius: 6px;
 }
 
 

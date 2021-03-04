@@ -41,6 +41,7 @@ function calcAlignment({ refArgs, popupArgs, minLowerValue, maxUpperValue, }) {
 
     let lowerValue = popupArgs.lowerValue + refAlignPoint - popupAlignPoint;
     let upperValue = lowerValue + popupArgs.upperValue - popupArgs.lowerValue;
+    let isFlipped;
 
     if (minLowerValue !== undefined) {
         const span = upperValue - lowerValue;
@@ -52,6 +53,7 @@ function calcAlignment({ refArgs, popupArgs, minLowerValue, maxUpperValue, }) {
                     // We're good to adjust...
                     lowerValue = refArgs.upperValue;
                     upperValue = lowerValue + span;
+                    isFlipped = true;
                 }
             }
             if (lowerValue < minLowerValue) {
@@ -65,6 +67,7 @@ function calcAlignment({ refArgs, popupArgs, minLowerValue, maxUpperValue, }) {
                 if (refArgs.lowerValue - span >= minLowerValue) {
                     lowerValue = refArgs.lowerValue - span;
                     upperValue = refArgs.lowerValue;
+                    isFlipped = true;
                 }
             }
             if (upperValue > maxUpperValue) {
@@ -74,23 +77,67 @@ function calcAlignment({ refArgs, popupArgs, minLowerValue, maxUpperValue, }) {
         }
     }
 
+    let pointerValue;
+
+    // Cases:
+    //       l    ref    u
+    //  l A u
+    //  l  B  u
+    //  l          C          u
+    //         l  D  u
+    //         l  E           u
+    //                    l F u
+    if (lowerValue < refArgs.lowerValue) {
+        // Cases A, B, C
+        if (upperValue >= refArgs.lowerValue) {
+            // Cases B, C
+            if (upperValue > refArgs.upperValue) {
+                // Case C
+                pointerValue = (refArgs.lowerValue + refArgs.upperValue) / 2;
+            }
+            else {
+                // Case B
+                pointerValue = (refArgs.lowerValue + upperValue) / 2;
+            }
+        }
+        else {
+            // Case A
+            pointerValue = upperValue;
+        }
+    }
+    else if (lowerValue < refArgs.upperValue) {
+        // Cases D, E
+        if (upperValue < refArgs.upperValue) {
+            // Case D
+            pointerValue = (lowerValue + upperValue) / 2;
+        }
+        else {
+            // Case E
+            pointerValue = (lowerValue + refArgs.upperValue) / 2;
+        }
+    }
+    else {
+        // Case F
+        pointerValue = upperValue;
+    }
+
+    const pointerMargin = 5;
+    pointerValue = Math.min(
+        Math.max(pointerValue, lowerValue + pointerMargin), 
+        upperValue - pointerMargin);
+
     return {
         lowerValue: lowerValue,
         upperValue: upperValue,
+        pointerValue: pointerValue - lowerValue,
+        isFlipped: isFlipped,
     };
 }
 
 
 /**
- * React component that pops up. Serious work in progress,
- * used by {@link DropdownSelector}.
- * <p>
- * TODO:
- * Improve positioning, want to be able to say where the popup
- * should be positioned relative to the reference component, 
- * ie left, left-bottom, bottom-left, bottom, bottom-right, right-bottom,
- * right, right-top, top-right, top, top-left, left-top
- * Need to update position if window size changes or scrolls
+ * React component that pops up. Used by {@link DropdownSelector}, {@link MenuList},
+ * and {@link Tooltip}.
  */
 export class Popup extends React.Component {
     constructor(props) {
@@ -114,7 +161,8 @@ export class Popup extends React.Component {
 
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.props.show && this._containerRef.current) {
+        const { props } = this;
+        if (props.show && this._containerRef.current) {
             const container = this._containerRef.current;
             const containerRect = container.getBoundingClientRect();
             const containerWidth = containerRect.width;
@@ -127,8 +175,8 @@ export class Popup extends React.Component {
             const maxBottom = boundsRect.bottom - 2;
 
 
-            let left = this.props.x;
-            let top = this.props.y;
+            let left = props.x;
+            let top = props.y;
 
             let refElement;
             const { parentElement } = this._popupRef.current;
@@ -150,19 +198,31 @@ export class Popup extends React.Component {
             let right;
             let bottom;
 
+            let pointerLocation;
+            let pointerX;
+            let pointerY;
+
             const refRect = (refElement) ? refElement.getBoundingClientRect() 
                 : undefined;
             if (refRect) {
+
+                let hAlignParent = props.hAlignParent || 'left';
+                let hAlignPopup = props.hAlignPopup || 'left';
+                let vAlignParent = props.vAlignParent || 'bottom';
+                let vAlignPopup = props.vAlignPopup || 'top';
+                let isXFlipped;
+                let isYFlipped;
+
                 if (left === undefined) {
                     const result = calcAlignment({
                         refArgs: {
-                            align: this.props.hAlignParent || 'left',
+                            align: hAlignParent,
                             alignEnum: HALIGN,
                             lowerValue: refRect.left,
                             upperValue: refRect.right,
                         },
                         popupArgs: {
-                            align: this.props.hAlignPopup || 'left',
+                            align: hAlignPopup,
                             alignEnum: HALIGN,
                             lowerValue: 0,
                             upperValue: containerWidth,
@@ -173,18 +233,20 @@ export class Popup extends React.Component {
 
                     left = result.lowerValue;
                     right = result.upperValue;
+                    pointerX = result.pointerValue;
+                    isXFlipped = result.isFlipped;
                 }
 
                 if (top === undefined) {
                     const result = calcAlignment({
                         refArgs: {
-                            align: this.props.vAlignParent || 'bottom',
+                            align: vAlignParent,
                             alignEnum: VALIGN,
                             lowerValue: refRect.top,
                             upperValue: refRect.bottom,
                         },
                         popupArgs: {
-                            align: this.props.vAlignPopup || 'top',
+                            align: vAlignPopup,
                             alignEnum: VALIGN,
                             lowerValue: 0,
                             upperValue: containerHeight,
@@ -195,7 +257,45 @@ export class Popup extends React.Component {
 
                     top = result.lowerValue;
                     bottom = result.upperValue;
+                    pointerY = result.pointerValue;
+                    isYFlipped = result.isFlipped;
                 }
+
+
+                switch (vAlignParent) {
+                case 'top' :
+                    if (vAlignPopup === 'bottom') {
+                        pointerLocation = (isYFlipped)
+                            ? 'top' : 'bottom';
+                    }
+                    break;
+                
+                case 'bottom' :
+                    if (vAlignPopup === 'top') {
+                        pointerLocation = (isYFlipped)
+                            ? 'bottom' : 'top';
+                    }
+                    break;
+                }
+
+                if (!pointerLocation) {
+                    switch (hAlignParent) {
+                    case 'left' :
+                        if (hAlignPopup === 'right') {
+                            pointerLocation = (isXFlipped)
+                                ? 'left' : 'right';
+                        }
+                        break;
+                    
+                    case 'right' :
+                        if (hAlignPopup === 'left') {
+                            pointerLocation = (isXFlipped)
+                                ? 'right' : 'left';
+                        }
+                        break;
+                    }
+                }
+
             }
 
             if (right === undefined) {
@@ -216,22 +316,35 @@ export class Popup extends React.Component {
             const width = right - left;
             const height = bottom - top;
 
-            left += window.scrollX;
-            top += window.scrollY;
-            right += window.scrollX;
-            bottom += window.scrollY;
+            let xAdjust = window.scrollX;
+            let yAdjust = window.scrollY;
 
             const positionedAncestor = getPositionedAncestor(this._popupRef.current);
             if (positionedAncestor) {
                 const frameRect = positionedAncestor.getBoundingClientRect();
-                left -= frameRect.left;
-                right -= frameRect.left;
-                top -= frameRect.top;
-                bottom -= frameRect.top;
+                xAdjust -= frameRect.left;
+                yAdjust -= frameRect.top;
             }
 
-            if ((this.state.left !== left) || (this.state.top !== top)
-             || (this.state.right !== right) || (this.state.bottom !== bottom)) {
+            left += xAdjust;
+            top += yAdjust;
+            right += xAdjust;
+            bottom += yAdjust;
+
+            /*
+            if (pointerX !== undefined) {
+                pointerX += xAdjust;
+            }
+            if (pointerY !== undefined) {
+                pointerY += yAdjust;
+            }
+            */
+
+            const { state } = this;
+            if ((state.left !== left) || (state.top !== top)
+             || (state.right !== right) || (state.bottom !== bottom)
+             || (state.pointerX !== pointerX) || (state.pointerY !== pointerY)
+             || (state.pointerLocation !== pointerLocation)) {
                 this.setState({
                     left: left,
                     top: top,
@@ -239,6 +352,9 @@ export class Popup extends React.Component {
                     bottom: bottom,
                     width: width,
                     height: height,
+                    pointerX: pointerX,
+                    pointerY: pointerY,
+                    pointerLocation: pointerLocation,
                 });
             }
         }
@@ -270,14 +386,16 @@ export class Popup extends React.Component {
 
 
     render() {
-        const { show, children, classExtras, tabIndex } = this.props;
+        const { show, children, classExtras, tabIndex,
+            isPointer } = this.props;
+        const { state } = this;
 
         const style = {
             position: 'absolute',
-            top: this.state.top,
-            left: this.state.left,
-            width: this.state.width,
-            height: this.state.height,
+            top: state.top,
+            left: state.left,
+            width: state.width,
+            height: state.height,
         };
 
         let className = 'Popup';
@@ -288,17 +406,79 @@ export class Popup extends React.Component {
             className += ' ' + classExtras;
         }
 
+        let contents = <div className = "Popup-container"
+            ref = {this._containerRef}
+        >
+            {children}
+        </div>;
+
+        let pointer;
+        if (isPointer && show && state.height && state.pointerLocation) {
+            let pointerClassName = 'Popup-pointer ' + state.pointerLocation;
+            const { pointerClassExtras } = this.props;
+            if (pointerClassExtras) {
+                pointerClassName += ' ' + pointerClassExtras;
+            }
+
+            const pointerStyle = {};
+            switch (state.pointerLocation) {
+            case 'left' :
+            case 'right' :
+                pointerStyle.top = state.pointerY;
+                pointerStyle.height = 0;
+                break;
+
+            case 'top' :
+            case 'bottom' :
+                pointerStyle.left = state.pointerX;
+                pointerStyle.width = 0;
+                break;
+            }
+
+            pointer = <div className = {pointerClassName}
+                style = {pointerStyle}
+            />;
+
+            const pointerContainerClassName = 'Popup-pointerContainer '
+                + state.pointerLocation;
+            switch (state.pointerLocation) {
+            case 'left' :
+                contents = <div className = {pointerContainerClassName}>
+                    {pointer}
+                    {contents}
+                </div>;
+                break;
+            
+            case 'right' :
+                contents = <div className = {pointerContainerClassName}>
+                    {contents}
+                    {pointer}
+                </div>;
+                break;
+
+            case 'top' :
+                contents = <div className = {pointerContainerClassName}>
+                    {pointer}
+                    {contents}
+                </div>;
+                break;
+            
+            case 'bottom' :
+                contents = <div className = {pointerContainerClassName}>
+                    {contents}
+                    {pointer}
+                </div>;
+                break;
+            }
+        }
+
         return <div className = {className}
             style = {style}
             onKeyDown = {this.onKeyDown}
             tabIndex = {tabIndex}
             ref = {this._popupRef}
         >
-            <div className = "Popup-container"
-                ref = {this._containerRef}
-            >
-                {children}
-            </div>
+            {contents}
         </div>;
     }
 }
@@ -325,6 +505,8 @@ export class Popup extends React.Component {
  * @property {Popup~onClose} [onClose]
  * @property {number} [tabIndex]
  * @property {string} [classExtras]
+ * @property {string} [pointerClassExtras]
+ * @property {boolean} [isPointer]
  */
 Popup.propTypes = {
     x: PropTypes.number,
@@ -337,5 +519,7 @@ Popup.propTypes = {
     onClose: PropTypes.func,
     tabIndex: PropTypes.number,
     classExtras: PropTypes.string,
+    pointerClassExtras: PropTypes.string,
+    isPointer: PropTypes.bool,
     children: PropTypes.any,
 };
