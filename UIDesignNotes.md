@@ -375,7 +375,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 - Get Sub-menus working in MenuList, etc.
-    - View Columns menus.
     - Add zoom in/out to main menu.
 
     - Context menu loses focus if tooltip is displayed elsewhere.
@@ -441,3 +440,7 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 - Immediate TODO:
+    - Fix menu not always going away issues.
+    - Add column sorting to RowTable.
+
+

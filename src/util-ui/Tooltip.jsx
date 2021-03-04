@@ -5,7 +5,7 @@ import { Popup } from './Popup';
 /**
  * React container component that supports an optional simple tooltip, its children
  * are what normally get displayed.
- * @param {*} props 
+ * @class
  */
 export function Tooltip(props) {
     let { tooltip, children } = props;
@@ -26,17 +26,57 @@ export function Tooltip(props) {
     }
     
     if (tooltip) {
+        let { side } = props;
+        let hAlignParent;
+        let hAlignPopup;
+        let vAlignParent;
+        let vAlignPopup;
+
+        switch (side) {
+        case 'left' :
+            hAlignParent = 'left';
+            hAlignPopup = 'right';
+            vAlignParent = 'center';
+            vAlignPopup = 'center';
+            break;
+        
+        case 'right' :
+            hAlignParent = 'right';
+            hAlignPopup = 'left';
+            vAlignParent = 'center';
+            vAlignPopup = 'center';
+            break;
+        
+        case 'top' :
+            hAlignParent = 'center';
+            hAlignPopup = 'center';
+            vAlignParent = 'top';
+            vAlignPopup = 'bottom';
+            break;
+        
+        case 'bottom' :
+        default :
+            hAlignParent = 'center';
+            hAlignPopup = 'center';
+            vAlignParent = 'bottom';
+            vAlignPopup = 'top';
+            break;
+        }
+
         return <div className = "Tooltip">
-            {children}
+            <div className = "Tooltip-detector">
+                {children}
+            </div>
             <Popup
-                classExtras = ""
-                hAlignParent = "center"
-                hAlignPopup = "center"
-                vAlignParent = "bottom"
-                vAlignPopup = "top"
+                classExtras = "Tooltip-popup"
+                hAlignParent = {hAlignParent}
+                hAlignPopup = {hAlignPopup}
+                vAlignParent = {vAlignParent}
+                vAlignPopup = {vAlignPopup}
+                isPointer = {true}
                 show = {true}
             >
-                <div className = "Tooltiptext">
+                <div className = "Tooltip-content">
                     {tooltip}
                 </div>
             </Popup>        
@@ -46,10 +86,20 @@ export function Tooltip(props) {
     return children;
 }
 
+/**
+ * @typedef {object} Tooltip~propTypes
+ * @property {string|object|string[]} [tooltip] The contents of the tooltip, if
+ * <code>undefined</code> children is rendered directly.
+ * @property {side} [side='left'] Optional side of the main element to which the tooltip
+ * is to appear.
+ * @property {*} [children] The element(s) to which the tooltip is associated.
+ */
 Tooltip.propTypes = {
     tooltip: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object,
         PropTypes.array,
     ]),
+    side: PropTypes.oneOf(['left', 'top', 'right', 'bottom']),
+    children: PropTypes.any,
 };
