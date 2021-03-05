@@ -331,15 +331,6 @@ export class Popup extends React.Component {
             right += xAdjust;
             bottom += yAdjust;
 
-            /*
-            if (pointerX !== undefined) {
-                pointerX += xAdjust;
-            }
-            if (pointerY !== undefined) {
-                pointerY += yAdjust;
-            }
-            */
-
             const { state } = this;
             if ((state.left !== left) || (state.top !== top)
              || (state.right !== right) || (state.bottom !== bottom)
