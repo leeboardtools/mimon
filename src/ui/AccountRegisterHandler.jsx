@@ -253,6 +253,7 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
 
             {},
             this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state),
+            this._rowTableHandler.createResetColumnOrderMenuItem(tabId, state),
         ];
         return {
             items: menuItems,
@@ -359,6 +360,8 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             columns = {tabEntry.columns}
             onSetColumnWidth = {(args) =>
                 this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)} 
+            onMoveColumn = {(args) =>
+                this._rowTableHandler.onMoveColumn(tabEntry.tabId, args)}
 
             contextMenuItems={contextMenuItems}
             refreshUndoMenu = {this.refreshUndoMenu}

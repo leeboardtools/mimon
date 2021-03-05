@@ -1802,6 +1802,7 @@ export class AccountRegister extends React.Component {
                 onLoadRows = {this.onLoadRows}
 
                 onSetColumnWidth = {this.props.onSetColumnWidth}
+                onMoveColumn = {this.props.onMoveColumn}
 
                 contextMenuItems = {this.props.contextMenuItems}
                 onChooseContextMenuItem = {this.props.onChooseContextMenuItem}
@@ -1850,6 +1851,7 @@ AccountRegister.propTypes = {
     refreshUndoMenu: PropTypes.func,
     columns: PropTypes.arrayOf(PropTypes.object),
     onSetColumnWidth: PropTypes.func,
+    onMoveColumn: PropTypes.func,
     hiddenTransactionIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenTransactions: PropTypes.bool,
     showTransactionIds: PropTypes.bool,
