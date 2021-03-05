@@ -549,6 +549,7 @@ that's on the same line */
 .Tooltip-popup {
     /* Need hidden to avoid hover on the popup */
     visibility: hidden;
+    margin: 0;
     opacity: 0;
     transition: opacity 0.3s ease-in 1s;
 }
@@ -559,6 +560,8 @@ that's on the same line */
 }
 
 .Tooltip-content {
+    width: max-content;
+
     padding: 5px;
     margin: 0;
 

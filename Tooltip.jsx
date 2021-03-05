@@ -9,6 +9,7 @@ import { Popup } from './Popup';
  */
 export function Tooltip(props) {
     let { tooltip, children } = props;
+    
     if (Array.isArray(tooltip)) {
         if (!tooltip.length) {
             tooltip = undefined;
@@ -68,6 +69,7 @@ export function Tooltip(props) {
                 {children}
             </div>
             <Popup
+                id = {props.id}
                 classExtras = "Tooltip-popup"
                 hAlignParent = {hAlignParent}
                 hAlignPopup = {hAlignPopup}
@@ -95,6 +97,7 @@ export function Tooltip(props) {
  * @property {*} [children] The element(s) to which the tooltip is associated.
  */
 Tooltip.propTypes = {
+    id: PropTypes.any,
     tooltip: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object,

@@ -3,6 +3,17 @@ import PropTypes from 'prop-types';
 import { getPositionedAncestor, getParentClipBounds } from '../util/ElementUtils';
 
 
+function pixelsEqual(a, b) {
+    if (a === b) {
+        return true;
+    }
+    else if ((a === undefined) || (b === undefined)) {
+        return false;
+    }
+    return Math.round(a) === Math.round(b);
+}
+
+
 const HALIGN = {
     left: 'min',
     center: 'center',
@@ -262,38 +273,44 @@ export class Popup extends React.Component {
                 }
 
 
-                switch (vAlignParent) {
-                case 'top' :
-                    if (vAlignPopup === 'bottom') {
-                        pointerLocation = (isYFlipped)
-                            ? 'top' : 'bottom';
-                    }
-                    break;
-                
-                case 'bottom' :
-                    if (vAlignPopup === 'top') {
-                        pointerLocation = (isYFlipped)
-                            ? 'bottom' : 'top';
-                    }
-                    break;
-                }
-
-                if (!pointerLocation) {
-                    switch (hAlignParent) {
-                    case 'left' :
-                        if (hAlignPopup === 'right') {
-                            pointerLocation = (isXFlipped)
-                                ? 'left' : 'right';
+                if (props.isPointer) {
+                    switch (vAlignParent) {
+                    case 'top' :
+                        if (vAlignPopup === 'bottom') {
+                            pointerLocation = (isYFlipped)
+                                ? 'top' : 'bottom';
                         }
                         break;
                     
-                    case 'right' :
-                        if (hAlignPopup === 'left') {
-                            pointerLocation = (isXFlipped)
-                                ? 'right' : 'left';
+                    case 'bottom' :
+                        if (vAlignPopup === 'top') {
+                            pointerLocation = (isYFlipped)
+                                ? 'bottom' : 'top';
                         }
                         break;
                     }
+
+                    if (!pointerLocation) {
+                        switch (hAlignParent) {
+                        case 'left' :
+                            if (hAlignPopup === 'right') {
+                                pointerLocation = (isXFlipped)
+                                    ? 'left' : 'right';
+                            }
+                            break;
+                        
+                        case 'right' :
+                            if (hAlignPopup === 'left') {
+                                pointerLocation = (isXFlipped)
+                                    ? 'right' : 'left';
+                            }
+                            break;
+                        }
+                    }
+                }
+                else {
+                    pointerX = undefined;
+                    pointerY = undefined;
                 }
 
             }
@@ -328,19 +345,16 @@ export class Popup extends React.Component {
 
             left += xAdjust;
             top += yAdjust;
-            right += xAdjust;
-            bottom += yAdjust;
 
             const { state } = this;
-            if ((state.left !== left) || (state.top !== top)
-             || (state.right !== right) || (state.bottom !== bottom)
-             || (state.pointerX !== pointerX) || (state.pointerY !== pointerY)
+            if (!pixelsEqual(state.left, left) || !pixelsEqual(state.top, top)
+             || !pixelsEqual(state.width, width) || !pixelsEqual(state.height, height)
+             || !pixelsEqual(state.pointerX, pointerX) 
+             || !pixelsEqual(state.pointerY, pointerY)
              || (state.pointerLocation !== pointerLocation)) {
                 this.setState({
                     left: left,
                     top: top,
-                    right: right,
-                    bottom: bottom,
                     width: width,
                     height: height,
                     pointerX: pointerX,
@@ -500,6 +514,7 @@ export class Popup extends React.Component {
  * @property {boolean} [isPointer]
  */
 Popup.propTypes = {
+    id: PropTypes.any,
     x: PropTypes.number,
     y: PropTypes.number,
     hAlignParent: PropTypes.string,
