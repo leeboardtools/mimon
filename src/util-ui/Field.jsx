@@ -58,7 +58,9 @@ export function Field(props) {
         editorClassName += ' Field-input-form-control';
     }
 
-    let inputComponent = onRenderEditor(editorClassName);
+    let inputComponent = (onRenderEditor)
+        ? onRenderEditor(editorClassName)
+        : props.children;
     if (prepend || append) {
         let inputClassName = 'input-group';
         if (errorMsg) {
@@ -108,7 +110,8 @@ Field.propTypes = {
     errorMsg: PropTypes.string,
     fieldClassExtras: PropTypes.string,
     editorClassExtras: PropTypes.string,
-    onRenderEditor: PropTypes.func.isRequired,
+    onRenderEditor: PropTypes.func,
+    children: PropTypes.any,
     prependComponent: PropTypes.oneOfType([
         PropTypes.object,
         PropTypes.string,
