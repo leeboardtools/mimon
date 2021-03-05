@@ -441,3 +441,5 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Lot selection editor
         - Add summary info.
+
+    - Slow rendering of RowTable, can see sizing stuff displayed.
