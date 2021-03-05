@@ -295,6 +295,10 @@ export class Reconciler extends EventEmitter {
      * @returns {boolean}
      */
     async asyncCanApplyReconcile() {
+        if (!this.isReconcileStarted()) {
+            return false;
+        }
+        
         const currentBalanceBaseValue 
             = await this.asyncGetMarkedReconciledBalanceBaseValue();
         return currentBalanceBaseValue === this._closingInfo.closingBalanceBaseValue;
@@ -474,6 +478,9 @@ export class Reconciler extends EventEmitter {
         });
 
         let accountState = this._accessor.getCurrentAccountStateDataItem(this._accountId);
+        if (!accountState) {
+            return 0;
+        }
 
         const dateRange = await this._accessor.asyncGetTransactionDateRange(
             this._accountId);

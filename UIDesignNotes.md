@@ -282,12 +282,9 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
     - Accounts List
-        - Ability to show/hide columns, reorder them.
         - Custom Account Lists
         - Listen on prices for market value updates.
         - Summary rows
-
-        - Move hidden account state to AccountDataItem.
 
 
     - Account Register
@@ -333,20 +330,12 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Priced Item List
         - Custom Priced Item Lists
-        - Redo so it is more report-like rather than info for the priced items. 'Positions' style,
-            - Have priced item (security)
-                - Summary of the priced item
-                    - Quantity, Price, Price Change, Market Value, Day Change, Cost Basis, Gain/Loss...
-                    - Collapsible accounts of those priced items
-
 
 
     - Priced Item Editor
 
 
     - Securites/Mutual Fund List
-        - Ability to show/hide columns, reorder them.
-        - Clean up column titles alignment (center numeric ones?)
 
 
     - Prices List
@@ -359,8 +348,8 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
     - Reconciler
-        - Last reconciled date not updated after reconcile
         - Add column width support.
+
 
     - Reminders Editor
 
@@ -368,17 +357,14 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Reminders List
         - Clicking enabled button does nothing.
         - Add Apply now command.
-    
+
+
     - Printing
         - Only print contents of active tab, not full window.
         - Somehow fit to page so it doesn't get clipped.
 
 
-- Get Sub-menus working in MenuList, etc.
-    - Add zoom in/out to main menu.
-
-    - Context menu loses focus if tooltip is displayed elsewhere.
-
+- Add zoom in/out to main menu.
 
 
 - RowTable To Do:
@@ -426,7 +412,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 - Tooltips
-    - Need to re-align arrow when tooltip Popup is shifted. Maybe move the arrow to Popup...
 
 
 - Need means of formatting negative numbers:
@@ -440,7 +425,19 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 - Immediate TODO:
-    - Fix menu not always going away issues.
     - Add column sorting to RowTable.
+    - Set default interest, dividends, fees accounts in account editing.
 
+    - Prices List
+        - Changing column width of prices list then undoing/redoing does not
+        properly resize other open tabs that are not active.
 
+    - Reminders List
+        - Clicking enabled button does nothing.
+        - Add Apply now command.
+
+    - Reconciler
+        - Add column width support.
+
+    - Lot selection editor
+        - Add summary info.

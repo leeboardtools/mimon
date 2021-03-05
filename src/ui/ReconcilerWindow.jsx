@@ -305,6 +305,11 @@ export class ReconcilingWindow extends React.Component {
     loadSplitInfos() {
         process.nextTick(async () => {
             const { accessor, reconciler } = this.props;
+            if (!reconciler.isReconcileStarted()) {
+                // Presume we're shutting down...
+                return;
+            }
+            
             const newState = {
                 inflowSplitInfos: [],
                 outflowSplitInfos: [],
@@ -510,7 +515,11 @@ export class ReconcilingWindow extends React.Component {
 
     render() {
         const { onCancel, onSetup, onFinishLater, onReconcile, title, 
-            classExtras } = this.props;
+            classExtras, reconciler } = this.props;
+        
+        if (!reconciler.isReconcileStarted()) {
+            return null;
+        }
 
         const doneDisabled = !this.state.canApplyReconcile;
 
@@ -751,9 +760,16 @@ export class ReconcilerSetupWindow extends React.Component {
         let lastReconcileDate;
         if (lastClosingInfo.closingYMDDate) {
             lastReconcileDate = <CellDateDisplay
+                inputClassExtras = "ReconcilerWindow-setup_date_editor"
                 value = {getYMDDateString(lastClosingInfo.closingYMDDate)}
                 dateFormat = {dateFormat}
             />;
+            lastReconcileDate = <Field
+                id = {'ReconcilerWindow_' + accountId + '_lastReconcileDate'}
+                label = {userMsg('ReconcilerWindow-lastReconcileDate_label')}
+            >
+                {lastReconcileDate}
+            </Field>;
         }
 
         // Statement closing date
@@ -1006,7 +1022,7 @@ export class ReconcilerWindow extends React.Component {
             reconciler = {reconciler}
             lastClosingInfo = {lastClosingInfo}
             closingInfo = {closingInfo}
-            onReconcile = {this.onApplyReconcile}
+            onReconcile = {() => this.onApplyReconcile()}
             onFinishLater = {() => this.onApplyReconcile(true)}
             onSetup = {this.onSetup}
             onCancel = {this.onCancelReconcile}

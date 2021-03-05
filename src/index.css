@@ -12,6 +12,12 @@ body {
   display: flex;
 }
 
+/* Less margin bottom than Bootstrap */
+label {
+  display: inline-block;
+  margin-bottom: 0.25rem;
+}
+
 
 /* Make this a little darker than Bootstrap's */
 .dropdown-item:hover {
