@@ -68,6 +68,9 @@ const createWindow = () => {
         webPreferences: {
             nodeIntegration: true,
             defaultFontSize: 14,
+            enableRemoteModule: true,
+            worldSafeExecuteJavaScript: true,
+            //contextIsolation: true,
         }
     });
 
