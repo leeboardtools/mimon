@@ -98,6 +98,7 @@ export class MenuList extends React.Component {
         this.setState({
             openSubMenu: item,
         });
+        this._isSubMenuClose = false;
     }
 
     closeSubMenu() {
@@ -106,14 +107,30 @@ export class MenuList extends React.Component {
         });
     }
 
-    onCloseSubMenu(chosenId) {
-        this.closeSubMenu();
+    onCloseSubMenu(subMenuItem, chosenId) {
+        if (subMenuItem === this.state.openSubMenu) {
+            this.closeSubMenu();
+        }
+        else {
+            this._isSubMenuClose = true;
+        }
+
         if (chosenId !== undefined) {
             this.closeMenu();
         }
         else {
             window.requestAnimationFrame(() => this.focus());
         }
+    }
+
+
+    onBlur(e) {
+        if (!e.currentTarget.contains(e.relatedTarget)
+         && !this._isSubMenuClose) {
+            // Focus leaving self...
+            this.closeMenu();
+        }
+        this._isSubMenuClose = false;
     }
 
 
@@ -229,17 +246,6 @@ export class MenuList extends React.Component {
     }
 
 
-    onBlur(e) {
-        if (e.relatedTarget) {
-            let topRef = this.props.parentRef || this._containerRef;
-            if (!EU.isElementAncestor(topRef.current, e.relatedTarget)
-             && (topRef.current !== e.relatedTarget)) {
-                this.closeMenu();
-            }
-        }
-    }
-
-
     onChooseItem(item) {
         this.closeMenu(item);
 
@@ -322,8 +328,11 @@ export class MenuList extends React.Component {
                     >
                         {itemComponent}</a>
                     <MenuList 
+                        id = {item.id}
                         items = {item.subMenuItems}
-                        onMenuClose = {this.onCloseSubMenu}
+                        onMenuClose = {(chosenItem) => this.onCloseSubMenu(
+                            item, chosenItem
+                        )}
                         show = {showSubMenu}
                         parentRef = {parentRef}
                         ref = {subMenuRef}
@@ -448,5 +457,6 @@ MenuList.propTypes = {
     onMenuClose: PropTypes.func,
     alwaysFocus: PropTypes.bool,
     parentRef: PropTypes.object,
+    id: PropTypes.any,
 };
 
