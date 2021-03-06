@@ -498,8 +498,6 @@ export class RowTable extends React.Component {
 
         this.state.isSizeRender = this.state.isAutoSize;
         this.state.clientWidth = this.state.clientHeight = 0;
-
-        this._renderCount = 0;
     }
 
 
@@ -560,41 +558,44 @@ export class RowTable extends React.Component {
 
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.props.requestedVisibleRowIndex !== prevProps.requestedVisibleRowIndex) {
+        const { props, state } = this;
+        if (props.requestedVisibleRowIndex !== prevProps.requestedVisibleRowIndex) {
             this.setState({
                 visibleRowIndex: this.props.requestedVisibleRowIndex
             });
         }
 
-        if (!deepEqual(prevProps.columns, this.props.columns)) {
+        if (props.activeRowIndex !== prevProps.activeRowIndex) {
+            this.makeRowRangeVisible(props.activeRowIndex);
+        }
+
+        if (!deepEqual(prevProps.columns, props.columns)) {
             this.setState(this.getStateUpdateFromColumns(),
                 () => this.updateLayout(true));
         }
 
-        let visibleRowIndex = (this.state.visibleRowIndex === undefined)
-            ? prevState.visibleRowIndex : this.state.visibleRowIndex;
+        if ((props.rowCount !== prevProps.rowCount)
+         && !state.nextLayoutState) {
+            this.updateVisibleRows();
+        }
 
-        if (this.props.activeRowIndex !== prevProps.activeRowIndex) {
-            if (this.makeRowRangeVisible(this.props.activeRowIndex)) {
-                // updateVisibleRows() would have been called...
-                return;
+        if (state.nextLayoutState !== prevState.nextLayoutState) {
+            switch (state.nextLayoutState) {
+            case 'updateFromClientSize' :
+                this.updateFromClientSize();
+                break;
+            
+            case 'updateWidthsFromSizeRender' :
+                this.updateWidthsFromSizeRender();
+                break;
+            
+            case 'updateVisibleRows' :
+                this.updateVisibleRows();
+                break;
             }
         }
 
-        if ((this.state.bodyHeight !== prevState.bodyHeight)
-         || (this.state.bodyRowHeight !== prevState.bodyRowHeight)
-         || (this.props.rowCount !== prevProps.rowCount)
-         || (visibleRowIndex !== prevState.visibleRowIndex)) {
-            this.updateVisibleRows();
-            return;
-        }
-
-        if ((this.state.clientWidth !== prevState.clientWidth)
-         || (this.state.clientHeight !== prevState.clientHeight)) {
-            this.updateFromClientSize();
-        }
-
-        if (!this.state.isOnScroll && this._bodyRef.current) {
+        if (!state.isOnScroll && this._bodyRef.current) {
             const { current } = this._bodyRef;
             const { scrollTop } = this.state;
             if ((current.scrollTop !== scrollTop)
@@ -603,13 +604,14 @@ export class RowTable extends React.Component {
             }
         }
 
-        if (this.state.wantFocusAfterRender) {
+        if (state.wantFocusAfterRender) {
             this.setState({
                 wantFocusAfterRender: undefined,
             });
             setFocus(this._bodyRef.current);
         }
     }
+
 
 
     getRefClientSize(ref, definedHeight) {
@@ -645,6 +647,48 @@ export class RowTable extends React.Component {
             clientWidth: clientWidth,
             clientHeight: clientHeight,
         };
+    }
+
+
+    updateLayout(forceUpdate) {
+        const { clientWidth, clientHeight } = this.getAdjustedMainRefSize();
+        if ((clientWidth <= 0) || (clientHeight <= 0)) {
+            return;
+        }
+
+        const { state } = this;
+        const { isAutoSize } = state;
+
+        if (isAutoSize) {
+            if (forceUpdate || (clientWidth !== state.clientWidth)) {
+                const { columns } = this.props;
+                const sizeRenderRefs = {
+                    //bodyRowRef: React.createRef(),
+                    columnRefs: columns.map((column) => {
+                        return {
+                            headerCellRef: React.createRef(),
+                            bodyCellRef: React.createRef(),
+                            footerCellRef: React.createRef(),
+                        };
+                    }),
+                };
+    
+                this.setState({
+                    nextLayoutState: 'updateFromClientSize',
+
+                    sizeRenderRefs: sizeRenderRefs,
+                    isSizeRender: true,
+    
+                    clientWidth: clientWidth,
+                    clientHeight: clientHeight,
+                });
+
+                // Gotta wait for next render now...
+                return;
+            }
+        }
+        
+        this.updateFromClientSize();
     }
 
 
@@ -706,70 +750,16 @@ export class RowTable extends React.Component {
 
             clientHeight: clientHeight,
 
+            nextLayoutState: 'updateWidthsFromSizeRender',
+
             sizeRenderRefs: undefined,
             isSizeRender: false,
         });
     }
 
 
-    updateLayout(forceUpdate) {
-        if (!this._mainRef.current) {
-            return;
-        }
-
-        const { clientWidth, clientHeight } = this.getAdjustedMainRefSize();
-        if ((clientWidth <= 0) || (clientHeight <= 0)) {
-            return;
-        }
-
-        const { state } = this;
-        if ((clientWidth === state.clientWidth)
-         && (clientHeight === state.clientHeight)
-         && !forceUpdate) {
-            if (state.isSizeRender) {
-                this.updateFromClientSize();
-            }
-        }
-        else {
-            const { isAutoSize } = state;
-            if (isAutoSize) {
-                if (!forceUpdate && (clientWidth === state.clientWidth)) {
-                    this.updateFromClientSize();
-                    this.updateVisibleRows();
-                }
-                else {
-                    const { columns } = this.props;
-                    const sizeRenderRefs = {
-                        //bodyRowRef: React.createRef(),
-                        columnRefs: columns.map((column) => {
-                            return {
-                                headerCellRef: React.createRef(),
-                                bodyCellRef: React.createRef(),
-                                footerCellRef: React.createRef(),
-                            };
-                        }),
-                    };
-        
-                    this.setState({
-                        sizeRenderRefs: sizeRenderRefs,
-                        isSizeRender: true,
-        
-                        clientWidth: clientWidth,
-                        clientHeight: clientHeight,
-                    });
-
-                    // Gotta wait for next render now...
-                    return;
-                }
-            }
-            else {
-                this.updateFromClientSize();
-            }
-        }
-
-
-        if (this._rowsContainerRef.current
-         && !this.state.isSizeRender) {
+    updateWidthsFromSizeRender() {
+        if (this._rowsContainerRef.current) {
             const rect = this._rowsContainerRef.current.getBoundingClientRect();
             const rowContainerWidth = rect.width;
             const rowContainerHeight = rect.height;
@@ -780,9 +770,12 @@ export class RowTable extends React.Component {
                     footerBlockWidth: rowContainerWidth,
                     rowContainerWidth: rowContainerWidth,
                     rowContainerHeight: rowContainerHeight,
+                    nextLayoutState: 'updateVisibleRows',
                 });
             }
         }
+
+        this.updateVisibleRows();
     }
 
 
@@ -858,7 +851,7 @@ export class RowTable extends React.Component {
                 // At the maximum scroll position, we want the last row to be at the
                 // bottom edge of the body.
                 const scrollTopMax = rowCount * bodyRowHeight - bodyHeight;
-                scrollTop = Math.round(Math.min(scrollTop, scrollTopMax));
+                scrollTop = Math.max(Math.round(Math.min(scrollTop, scrollTopMax)), 0);
                 if (scrollTop >= scrollTopMax) {
                     // We need to enforce our scrollTopMax, otherwise the body div, which
                     // has the scroll bar, thinks the scroll range is twice as large 
@@ -896,8 +889,13 @@ export class RowTable extends React.Component {
                 visibleRows.visibleRowIndex = undefined;
                 visibleRows.isOnScroll = isOnScroll;
 
+                visibleRows.nextLayoutState = undefined;
+
                 return visibleRows;
             }
+            return {
+                nextLayoutState: undefined,
+            };
         },
         () => {
             if ((this.state.topVisibleRow !== originalTopVisibleRow)
@@ -1614,17 +1612,7 @@ export class RowTable extends React.Component {
         else {
             bodyClassName += ' Visibility-hidden';
         }
-
-        /*
-        console.log({
-            renderCount: ++this._renderCount,
-            isSizeRender: isSizeRender,
-            topVisibleRow: topVisibleRow,
-            bottomVisibleRow: bottomVisibleRow,
-            rowCount: this.props.rowCount,
-        })
-        */
-
+        
         return <div className = {bodyClassName}
             style = {bodyStyle}
             onScroll = {this.onScroll}
