@@ -24,8 +24,49 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 ipcMain.on('sync-get-main-setup', (event, arg) => {
     event.returnValue = {
         isDevMode: isDevMode,
+        zoomFactor: mainWindow.webContents.getZoomFactor(),
+        zoomLevel: mainWindow.webContents.getZoomLevel(),
     };
 });
+
+ipcMain.on('sync-isDevToolsOpened', (event, arg) => {
+    event.returnValue = mainWindow.webContents.isDevToolsOpened();
+});
+
+ipcMain.handle('async-openDevTools', (event, arg) => {
+    mainWindow.webContents.openDevTools(arg);
+});
+
+ipcMain.handle('async-closeDevTools', (event, arg) => {
+    mainWindow.webContents.closeDevTools();
+});
+
+
+ipcMain.on('sync-getZoomFactor', (event, arg) => {
+    event.returnValue = mainWindow.webContents.getZoomFactor();
+});
+
+ipcMain.handle('async-setZoomFactor', (event, arg) => {
+    mainWindow.webContents.setZoomFactor(arg);
+});
+
+ipcMain.on('sync-getZoomLevel', (event, arg) => {
+    event.returnValue = mainWindow.webContents.getZoomLevel();
+});
+
+ipcMain.handle('async-setZoomLevel', (event, arg) => {
+    mainWindow.webContents.setZoomLevel(arg);
+});
+
+ipcMain.on('sync-isFullScreen', (event, arg) => {
+    event.returnValue = mainWindow.isFullScreen();
+});
+
+ipcMain.handle('async-setFullScreen', (event, arg) => {
+    mainWindow.setFullScreen(arg);
+});
+
+
 
 
 

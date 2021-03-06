@@ -227,6 +227,19 @@ export default class App extends React.Component {
 
         this.onImportProjectCreateFile = this.onImportProjectCreateFile.bind(this);
 
+        
+        this.getZoomMenuItems = this.getZoomMenuItems.bind(this);
+        this.onActualSize = this.onActualSize.bind(this);
+        this.onZoomIn = this.onZoomIn.bind(this);
+        this.onZoomOut = this.onZoomOut.bind(this);
+        this.onToggleFullScreen = this.onToggleFullScreen.bind(this);
+
+
+        this.getDevMenuItems = this.getDevMenuItems.bind(this);
+        this.onForceReload = this.onForceReload.bind(this);
+        this.onOpenDevTools = this.onOpenDevTools.bind(this);
+
+
         this.statusCallback = this.statusCallback.bind(this);
 
         this.onStatusCancel = this.onStatusCancel.bind(this);
@@ -239,14 +252,36 @@ export default class App extends React.Component {
         this._accessor = new EngineAccessor();
         this._frameManager = new FM.FrameManager();
 
+        this._zoomFactors = [ 0.5, 0.625, 0.75, 0.875, 1., 
+            1.125, 1.25, 1.375, 1.5, 1.625, 1.75, ];
+        this._actualSizeZoomFactorIndex = this._zoomFactors.indexOf(1);
+        this.state.zoomFactorIndex = this._actualSizeZoomFactorIndex;
+
         process.nextTick(async () => { this.asyncInitialize(); });
     }
 
 
     async asyncInitialize() {
-        // mainSetup is stuff like 'isDevMode'
+        // mainSetup is stuff like 'isDevMode', 'zoomLevel', 'zoomFactor'
         const mainSetup = ipcRenderer.sendSync('sync-get-main-setup');
         this.setState({ mainSetup: mainSetup, });
+
+        const { zoomFactor } = mainSetup;
+        if (zoomFactor) {
+            let closestIndex = 0;
+            let closestDistance = Math.abs(zoomFactor - this._zoomFactors[0]);
+            for (let i = 1; i < this._zoomFactors.length; ++i) {
+                const delta = Math.abs(zoomFactor - this._zoomFactors[i]);
+                if (delta < closestDistance) {
+                    closestDistance = delta;
+                    closestIndex = i;
+                }
+            }
+
+            this.setState({
+                zoomFactorIndex: closestIndex,
+            });
+        }
 
         const settingsPathName = path.join(app.getPath('appData'), 
             app.name, 'user.json');
@@ -300,6 +335,11 @@ export default class App extends React.Component {
 
 
     componentWillUnmount() {
+    }
+
+
+    componentDidUpdate(prevProps, prevState) {
+        
     }
 
 
@@ -713,6 +753,107 @@ export default class App extends React.Component {
     }
 
 
+
+    getZoomMenuItems() {
+        return [
+            { id: 'zoomSubMenu',
+                label: userMsg('App-zoomSubMenu'),
+                subMenuItems: [
+                    { id: 'actualSize',
+                        label: userMsg('App-actualSize'),
+                        onChooseItem: this.onActualSize,
+                        disabled:
+                            this.state.zoomFactorIndex 
+                                === this._actualSizeZoomFactorIndex,
+                    },
+                    { id: 'zoomIn',
+                        label: userMsg('App-zoomIn'),
+                        onChooseItem: this.onZoomIn,
+                        disabled: 
+                            (this.state.zoomFactorIndex + 1) >= this._zoomFactors.length,
+                    },
+                    { id: 'zoomOut',
+                        label: userMsg('App-zoomOut'),
+                        onChooseItem: this.onZoomOut,
+                        disabled:
+                            !this.state.zoomFactorIndex,
+                    },
+                    /*
+                    { id: 'toggleFullScreen',
+                        label: userMsg('App-toggleFullScreen'),
+                        onChooseItem: this.onToggleFullScreen,
+                    },
+                    */
+                ],
+            }
+        ];
+    }
+
+    _setZoomFactorIndex(index) {
+        if ((index !== this.state.zoomFactorIndex)
+         && (index >= 0) && (index < this._zoomFactors.length)) {
+            this.setState({
+                zoomFactorIndex: index,
+            },
+            () => {
+                ipcRenderer.invoke('async-setZoomFactor', 
+                    this._zoomFactors[this.state.zoomFactorIndex])
+                    .then(() => this.forceUpdate());
+            });
+        }
+    }
+
+
+    onActualSize() {
+        this._setZoomFactorIndex(this._actualSizeZoomFactorIndex);
+    }
+
+    onZoomIn() {
+        this._setZoomFactorIndex(this.state.zoomFactorIndex + 1);
+    }
+
+    onZoomOut() {
+        this._setZoomFactorIndex(this.state.zoomFactorIndex - 1);
+    }
+
+    onToggleFullScreen() {
+
+    }
+
+
+    getDevMenuItems() {
+        const { mainSetup } = this.state;
+        if (!mainSetup || !mainSetup.isDevMode) {
+            return;
+        }
+
+        return [{ id: 'developersSubMenu',
+            label: userMsg('App-devSubMenu'),
+            subMenuItems: [
+                { id: 'forceReload',
+                    label: userMsg('App-forceReload'),
+                    onChooseItem: this.onForceReload,
+                },
+                { id: 'openDevTools',
+                    label: userMsg('App-openDevTools'),
+                    onChooseItem: this.onOpenDevTools,
+                }
+            ],
+        }
+        ];
+    }
+
+
+    onForceReload() {
+        document.location.reload();
+    }
+
+
+    onOpenDevTools() {
+        ipcRenderer.invoke('async-openDevTools');
+    }
+
+
     render() {
         let mainComponent;
         const { appState, mruPathNames, errorMsg, currentDir,
@@ -816,11 +957,12 @@ export default class App extends React.Component {
         case 'mainWindow' :
             return <MainWindow
                 accessor = {this._accessor}
-                mainSetup = {this.state.mainSetup}
                 onClose = {this.onCancel}
-                onRevertFile={this.onRevertFile}
-                onCloseFile={this.onCloseFile}
-                onExit={this.onExit}
+                onRevertFile = {this.onRevertFile}
+                onCloseFile = {this.onCloseFile}
+                onExit = {this.onExit}
+                getZoomMenuItems = {this.getZoomMenuItems}
+                getDevMenuItems = {this.getDevMenuItems}
             />;
         
         default :

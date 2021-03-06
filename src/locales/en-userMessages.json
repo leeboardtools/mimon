@@ -21,7 +21,6 @@
     "MainWindow-closeFile": "Close Project",
 
     "MainWindow-exit": "Exit",
-    "MainWindow-forceReload": "Force Reload",
 
     "MainWindow-action_modify_project_settings": "Modify Project Settings",
 
@@ -45,6 +44,18 @@
     "App-confirm_import_cancel": ["Are you sure you want to cancel importing '", "'?"],
     "App-cancelling_import": "Cancelling import...",
     "App-importWarnings_title": ["Importing '", "' generated the following warnings:"],
+
+
+    "App-zoomSubMenu": "Zoom",
+    "App-actualSize": "Actual Size",
+    "App-zoomIn": "Zoom In",
+    "App-zoomOut": "Zoom Out",
+    "App-toggleFullScreen": "Toggle Full Screen",
+
+
+    "App-devSubMenu": "Developers",
+    "App-forceReload": "Force Reload",
+    "App-openDevTools": "Open Developer's Tools",
 
 
     "AppOpeningScreen-title_main": "MiMoN",

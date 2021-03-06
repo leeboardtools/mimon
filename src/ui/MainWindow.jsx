@@ -47,8 +47,6 @@ export class MainWindow extends React.Component {
 
         this.onModifyProjectSettings = this.onModifyProjectSettings.bind(this);
 
-        this.onForceReload = this.onForceReload.bind(this);
-
 
         this.onCheckReminders = this.onCheckReminders.bind(this);
         this.onUpdatePrices = this.onUpdatePrices.bind(this);
@@ -415,11 +413,6 @@ export class MainWindow extends React.Component {
 
     onUpdatePrices() {
         this.openPriceRetrieverWindow();
-    }
-
-
-    onForceReload() {
-        document.location.reload(true);
     }
 
 
@@ -976,37 +969,45 @@ export class MainWindow extends React.Component {
                 label: userMsg('MainWindow-viewPropertiesList'),
                 onChooseItem: () => this.onOpenTab('propertiesList'),
             },
-            {},
-            {
-                id: 'print',
-                label: userMsg('MainWindow-print'),
-                onChooseItem: this.onPrint,
-            },
-            {},
-            { id: 'revertChanges',
-                label: userMsg('MainWindow-revertChanges'),
-                disabled: !accessor.isAccountingFileModified(),
-                onChooseItem: this.props.onRevertFile,
-            },
-            { id: 'closeFile',
-                label: userMsg('MainWindow-closeFile'),
-                onChooseItem: this.props.onCloseFile,
-            },
-            {},
-            { id: 'exit',
-                label: userMsg('MainWindow-exit'),
-                onChooseItem: this.props.onExit,
-            },
         ];
 
-        const { mainSetup } = this.props;
-        if (mainSetup.isDevMode) {
-            mainMenuItems.push({}),
-            mainMenuItems.push({
-                id: 'forceReload',
-                label: userMsg('MainWindow-forceReload'),
-                onClick: this.onForceReload,
-            });
+        const { getZoomMenuItems } = this.props;
+        if (getZoomMenuItems) {
+            const zoomMenuItems = getZoomMenuItems();
+            if (zoomMenuItems) {
+                mainMenuItems.push({});
+                zoomMenuItems.forEach((menuItem) => mainMenuItems.push(menuItem));
+            }
+        }
+
+        mainMenuItems.push({});
+        mainMenuItems.push({ id: 'print',
+            label: userMsg('MainWindow-print'),
+            onChooseItem: this.onPrint,
+        });
+        mainMenuItems.push({});
+        mainMenuItems.push({ id: 'revertChanges',
+            label: userMsg('MainWindow-revertChanges'),
+            disabled: !accessor.isAccountingFileModified(),
+            onChooseItem: this.props.onRevertFile,
+        });
+        mainMenuItems.push({ id: 'closeFile',
+            label: userMsg('MainWindow-closeFile'),
+            onChooseItem: this.props.onCloseFile,
+        });
+        mainMenuItems.push({});
+        mainMenuItems.push({ id: 'exit',
+            label: userMsg('MainWindow-exit'),
+            onChooseItem: this.props.onExit,
+        });
+
+        const { getDevMenuItems } = this.props;
+        if (getDevMenuItems) {
+            const devMenu = getDevMenuItems();
+            if (devMenu) {
+                mainMenuItems.push({});
+                devMenu.forEach((menuItem) => mainMenuItems.push(menuItem));
+            }
         }
 
         const mainMenu = <DropdownMenu
@@ -1084,15 +1085,15 @@ export class MainWindow extends React.Component {
 /**
  * @typedef {object} MainWindow~propTypes
  * @property {EngineAccessor}   accessor
- * @property {App~MainSetup}    [mainSetup]
  * @property {MainWindow~onRevertFile}  [onRevertFile]  Called to revert the file.
  * @property {MainWindow~onCloseFile}   [onCloseFile]   Called to close the file.
  * @property {MainWindow~onExit}    [onExit]    Called to exit.
  */
 MainWindow.propTypes = {
     accessor: PropTypes.object.isRequired,
-    mainSetup: PropTypes.object,
     onRevertFile: PropTypes.func,
     onCloseFile: PropTypes.func,
     onExit: PropTypes.func,
+    getZoomMenuItems: PropTypes.func,
+    getDevMenuItems: PropTypes.func,
 };
