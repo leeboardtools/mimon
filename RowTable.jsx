@@ -101,6 +101,7 @@ export const FOOTER_ROW_INDEX = -2;
 
 /**
  * React component for the column resizer bar that is dragged.
+ * @private
  */
 class RowTableColumnDragger extends React.Component {
     constructor(props) {
@@ -341,6 +342,7 @@ RowTableColumnDragger.propTypes = {
 /**
  * React component for the bars used to highlight column resizing and dragging,
  * this is used to highlight the full column in the table.
+ * @private
  */
 class RowTableColumnDraggerTracker extends React.Component {
     constructor(props) {
@@ -585,6 +587,11 @@ export class RowTable extends React.Component {
          || (visibleRowIndex !== prevState.visibleRowIndex)) {
             this.updateVisibleRows();
             return;
+        }
+
+        if ((this.state.clientWidth !== prevState.clientWidth)
+         || (this.state.clientHeight !== prevState.clientHeight)) {
+            this.updateFromClientSize();
         }
 
         if (!this.state.isOnScroll && this._bodyRef.current) {
