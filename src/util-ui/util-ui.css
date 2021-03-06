@@ -574,6 +574,9 @@ that's on the same line */
 }
 
 
+.Visibility-hidden {
+    visibility: hidden !important;
+}
 
 .w-10 {
     width: 10%;

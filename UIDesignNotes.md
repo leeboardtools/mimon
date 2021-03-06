@@ -426,7 +426,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 - Immediate TODO:
     - Add column sorting to RowTable.
-    - Set default interest, dividends, fees accounts in account editing.
 
     - Prices List
         - Changing column width of prices list then undoing/redoing does not
@@ -442,4 +441,3 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Lot selection editor
         - Add summary info.
 
-    - Slow rendering of RowTable, can see sizing stuff displayed.
