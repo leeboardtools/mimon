@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import deepEqual from 'deep-equal';
 import { ContextMenu } from './ContextMenu';
@@ -450,7 +450,6 @@ export class RowTable extends React.Component {
     constructor(props) {
         super(props);
 
-        this.watcher = this.watcher.bind(this);
         this.onKeyDown = this.onKeyDown.bind(this);
         this.onBodyFocus = this.onBodyFocus.bind(this);
         this.onBodyBlur = this.onBodyBlur.bind(this);
@@ -497,6 +496,8 @@ export class RowTable extends React.Component {
 
         this.state.isSizeRender = this.state.isAutoSize;
         this.state.clientWidth = this.state.clientHeight = 0;
+
+        this._renderCount = 0;
     }
 
 
@@ -543,29 +544,16 @@ export class RowTable extends React.Component {
     }
 
 
-    watcher() {
-        if (!this._isUnmounted) {
-            process.nextTick(() => {
-                // Using nextTick() so we don't take too long in 
-                // requestAnimationFrame()...
-                this.updateLayout();
-                window.requestAnimationFrame(this.watcher);
-            });
-        }
-    }
-
-
     componentDidMount() {
-        if (!this._isUnmounted) {
-            this.updateLayout();
-        }
+        this._resizeObserver = new ResizeObserver(() => this.updateLayout());
+        this._resizeObserver.observe(this._mainRef.current);
 
-        window.requestAnimationFrame(this.watcher);
+        process.nextTick(() => this.updateLayout());
     }
 
 
     componentWillUnmount() {
-        this._isUnmounted = true;
+        this._resizeObserver.disconnect();
     }
 
 
@@ -574,10 +562,6 @@ export class RowTable extends React.Component {
             this.setState({
                 visibleRowIndex: this.props.requestedVisibleRowIndex
             });
-        }
-
-        if (this.state.isUpdateHeights && !prevState.isUpdateHeights) {
-            this.updateHeights();
         }
 
         if (!deepEqual(prevProps.columns, this.props.columns)) {
@@ -600,11 +584,6 @@ export class RowTable extends React.Component {
          || (this.props.rowCount !== prevProps.rowCount)
          || (visibleRowIndex !== prevState.visibleRowIndex)) {
             this.updateVisibleRows();
-            return;
-        }
-        if ((this.state.topVisibleRow !== prevState.topVisibleRow)
-         || (this.state.bottomVisibleRow !== prevState.bottomVisibleRow)) {
-            this.loadRows();
             return;
         }
 
@@ -662,8 +641,10 @@ export class RowTable extends React.Component {
     }
 
 
-    updateHeights() {
-        const { clientHeight } = this.getAdjustedMainRefSize();
+    updateFromClientSize() {
+        const { clientWidth, clientHeight, } = this.getAdjustedMainRefSize();
+
+        let { columnWidths } = this.state;
 
         let {
             headerHeight,
@@ -671,39 +652,6 @@ export class RowTable extends React.Component {
             rowHeight,
         } = this.props;
 
-        const { isSizeRender } = this.state;
-        if (isSizeRender) {
-            // We've rendered the sizes, we can now grab the various sizes needed.
-            headerHeight = this.getRefClientSize(this._headerRowRef, 
-                headerHeight).height;
-
-            footerHeight = this.getRefClientSize(this._footerRowRef,
-                footerHeight).height;
-
-            rowHeight = this.getRefClientSize(this._bodyRowRef,
-                rowHeight).height;
-        }
-
-        this.setState({
-            headerBlockHeight: headerHeight,
-            footerBlockHeight: footerHeight,
-            bodyRowHeight: rowHeight,
-
-            bodyHeight: clientHeight - headerHeight - footerHeight,
-
-            clientHeight: clientHeight,
-
-            sizeRenderRefs: undefined,
-            isSizeRender: false,
-            isUpdateHeights: false,
-        });
-    }
-
-
-    updateFromClientSize() {
-        const { clientWidth } = this.getAdjustedMainRefSize();
-
-        let { columnWidths } = this.state;
         const { isSizeRender, sizeRenderRefs } = this.state;
         if (isSizeRender && sizeRenderRefs) {
             // Figure out the column widths...
@@ -718,6 +666,24 @@ export class RowTable extends React.Component {
                 }
                 columnWidths[i] = width;
             }
+
+            // We've rendered the sizes, we can now grab the various sizes needed.
+            headerHeight = this.getRefClientSize(this._headerRowRef, 
+                headerHeight).height;
+
+            footerHeight = this.getRefClientSize(this._footerRowRef,
+                footerHeight).height;
+
+            rowHeight = this.getRefClientSize(this._bodyRowRef,
+                rowHeight).height;
+        }
+        else {
+            headerHeight = (headerHeight === undefined) 
+                ? this.state.headerBlockHeight : headerHeight;
+            footerHeight = (footerHeight === undefined)
+                ? this.state.footerBlockHeight : footerHeight;
+            rowHeight = (rowHeight === undefined)
+                ? this.state.bodyRowHeight : rowHeight;
         }
 
         this.setState({
@@ -725,7 +691,16 @@ export class RowTable extends React.Component {
             bodyWidth: clientWidth,
             clientWidth: clientWidth,
 
-            isUpdateHeights: true,
+            headerBlockHeight: headerHeight,
+            footerBlockHeight: footerHeight,
+            bodyRowHeight: rowHeight,
+
+            bodyHeight: clientHeight - headerHeight - footerHeight,
+
+            clientHeight: clientHeight,
+
+            sizeRenderRefs: undefined,
+            isSizeRender: false,
         });
     }
 
@@ -740,38 +715,45 @@ export class RowTable extends React.Component {
             return;
         }
 
-        if ((clientWidth === this.state.clientWidth)
-         && (clientHeight === this.state.clientHeight)
+        const { state } = this;
+        if ((clientWidth === state.clientWidth)
+         && (clientHeight === state.clientHeight)
          && !forceUpdate) {
-            if (this.state.isSizeRender) {
+            if (state.isSizeRender) {
                 this.updateFromClientSize();
             }
         }
         else {
-            const { isAutoSize } = this.state;
+            const { isAutoSize } = state;
             if (isAutoSize) {
-                const { columns } = this.props;
-                const sizeRenderRefs = {
-                    //bodyRowRef: React.createRef(),
-                    columnRefs: columns.map((column) => {
-                        return {
-                            headerCellRef: React.createRef(),
-                            bodyCellRef: React.createRef(),
-                            footerCellRef: React.createRef(),
-                        };
-                    }),
-                };
-    
-                this.setState({
-                    sizeRenderRefs: sizeRenderRefs,
-                    isSizeRender: true,
-    
-                    clientWidth: clientWidth,
-                    clientHeight: clientHeight,
-                });
-                
-                // Gotta wait for next render now...
-                return;
+                if (!forceUpdate && (clientWidth === state.clientWidth)) {
+                    this.updateFromClientSize();
+                    this.updateVisibleRows();
+                }
+                else {
+                    const { columns } = this.props;
+                    const sizeRenderRefs = {
+                        //bodyRowRef: React.createRef(),
+                        columnRefs: columns.map((column) => {
+                            return {
+                                headerCellRef: React.createRef(),
+                                bodyCellRef: React.createRef(),
+                                footerCellRef: React.createRef(),
+                            };
+                        }),
+                    };
+        
+                    this.setState({
+                        sizeRenderRefs: sizeRenderRefs,
+                        isSizeRender: true,
+        
+                        clientWidth: clientWidth,
+                        clientHeight: clientHeight,
+                    });
+
+                    // Gotta wait for next render now...
+                    return;
+                }
             }
             else {
                 this.updateFromClientSize();
@@ -843,6 +825,9 @@ export class RowTable extends React.Component {
 
 
     updateVisibleRows(scrollTop) {
+        let originalTopVisibleRow;
+        let originalBottomVisibleRow;
+
         this.setState((state) => {
             const { bodyHeight, bodyRowHeight, } = state;
             if ((bodyRowHeight !== undefined) && (bodyRowHeight > 0)
@@ -856,8 +841,11 @@ export class RowTable extends React.Component {
                 if (scrollTop === undefined) {
                     scrollTop = (state.scrollTop !== undefined)
                         ? state.scrollTop
-                        : this.state.topVisibleRow * bodyRowHeight;
+                        : state.topVisibleRow * bodyRowHeight;
                 }
+
+                originalTopVisibleRow = state.topVisibleRow;
+                originalBottomVisibleRow = state.bottomVisibleRow;
 
 
                 // At the maximum scroll position, we want the last row to be at the
@@ -902,6 +890,12 @@ export class RowTable extends React.Component {
                 visibleRows.isOnScroll = isOnScroll;
 
                 return visibleRows;
+            }
+        },
+        () => {
+            if ((this.state.topVisibleRow !== originalTopVisibleRow)
+             || (this.state.bottomVisibleRow !== originalBottomVisibleRow)) {
+                this.loadRows();
             }
         });
     }
@@ -1372,6 +1366,10 @@ export class RowTable extends React.Component {
                 rowClassName += ' ' + rowClassExtras;
             }
 
+            if (isSizeRender) {
+                rowClassName += ' Visibility-hidden';
+            }
+
             let style = {};
             if ((height !== undefined) || (blockWidth !== undefined)) {
                 if (height !== undefined) {
@@ -1515,6 +1513,9 @@ export class RowTable extends React.Component {
         if (rowClassExtras) {
             rowClassName += ' ' + rowClassExtras;
         }
+        if (isSizeRender) {
+            rowClassName += ' ' + 'Visibility-hidden';
+        }
 
         let style;
         let ref;
@@ -1603,6 +1604,19 @@ export class RowTable extends React.Component {
 
             bodyRef = this._bodyRef;
         }
+        else {
+            bodyClassName += ' Visibility-hidden';
+        }
+
+        /*
+        console.log({
+            renderCount: ++this._renderCount,
+            isSizeRender: isSizeRender,
+            topVisibleRow: topVisibleRow,
+            bottomVisibleRow: bottomVisibleRow,
+            rowCount: this.props.rowCount,
+        })
+        */
 
         return <div className = {bodyClassName}
             style = {bodyStyle}
