@@ -751,7 +751,6 @@ export class LotsSelectionEditor extends React.Component {
 
     renderTotalShares(labelId, sharesBaseValue) {
         if (typeof sharesBaseValue === 'number') {
-            console.log('rendering ' + sharesBaseValue);
             const label = userMsg(labelId);
             return <div className = "col">
                 <Field
