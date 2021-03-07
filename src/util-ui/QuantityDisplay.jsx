@@ -18,10 +18,12 @@ export function QuantityDisplay(props) {
         if (classExtras) {
             className += classExtras;
         }
+        
         let text = quantityDefinition.baseValueToValueText(quantityBaseValue);
         return <div 
-            className={className}
-            aria-label={ariaLabel}
+            className = {className}
+            aria-label = {ariaLabel}
+            id = {props.id}
         >
             {text}
         </div>;
@@ -34,6 +36,7 @@ export function QuantityDisplay(props) {
  * @property {string|QuantityDefinition}    [quantityDefinition]
  * @property {string}   [ariaLabel]
  * @property {string}   [classExtras]   Extra classes to add to the component.
+ * @property {*} [id]
  */
 QuantityDisplay.propTypes = {
     quantityBaseValue: PropTypes.number,
@@ -43,4 +46,5 @@ QuantityDisplay.propTypes = {
     ]),
     ariaLabel: PropTypes.string,
     classExtras: PropTypes.string,
+    id: PropTypes.any,
 };
