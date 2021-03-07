@@ -4,6 +4,136 @@
 }
 
 
+.Btn {
+    display: inline-block;
+    font-weight: 400;
+    color: #212529;
+    text-align: center;
+    vertical-align: middle;
+    user-select: none;
+    background-color: transparent;
+    border: transparent;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: .25rem;
+    transition: color .15s 
+        ease-in-out,background-color .15s
+        ease-in-out,border-color .15s
+        ease-in-out,box-shadow .15s
+        eas-in-out;
+}
+
+.Btn.disabled, .Btn:disabled {
+    opacity: .65;
+}
+
+.Btn-block {
+    display: block;
+    width: 100%;
+}
+
+.Btn-group {
+    position: relative;
+    display: -ms-inline-flexbox;
+    display: inline-flex;
+    vertical-align: middle;
+}
+
+.Btn-outline-primary {
+    color: #007bff;
+    border-color: #007bff;
+}
+
+.Btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.Btn-primary {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.Btn-primary:disabled {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.Btn-sm {
+    padding: .25rem .5rem;
+    font-size: .875rem;
+    line-height: 1.5;
+    border-radius: .2rem;
+}
+
+
+/* BS container, container-fluid */
+.Container, .Container-fluid {
+    width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+/* BS col */
+.Col {
+    -ms-flex-preferred-size: 0;
+    flex-basis: 0;
+    -ms-flex-positive: 1;
+    flex-grow: 1;
+    max-width: 100%;
+}
+
+/* BS row */
+.Row {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    margin-right: -15px;
+    margin-left: -15px;
+}
+
+/* BS no-gutters */
+.No-gutters {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* BS dropdown-menu-right */
+.Dropdown-menu-right {
+    right: 0;
+    left: auto;
+}
+
+/* BS form-row */
+.Form-row {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    margin-left: -5px;
+    margin-right: -5px;
+}
+
+/* BS justify-content-center */
+.Justify-content-center {
+    -ms-flex-pack: center!important;
+    justify-content: center!important;
+}
+
+/* BS table */
+.Table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+}
+
+
 .CellButton {
     margin: 0px;
     padding: 0px 0px;
@@ -159,6 +289,7 @@ that's on the same line */
     padding-left: .25rem;
     padding-right: .25rem;
 }
+
 
 
 .InfoReporter-body {
