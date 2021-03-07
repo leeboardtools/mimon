@@ -31,6 +31,12 @@ export class ContentFramer extends React.Component {
     componentDidMount() {
         this._resizeObserver = new ResizeObserver(this.checkLayout);
         this._resizeObserver.observe(this._containerRef.current);
+        if (this._headerRef.current) {
+            this._resizeObserver.observe(this._headerRef.current);
+        }
+        if (this._footerRef.current) {
+            this._resizeObserver.observe(this._footerRef.current);
+        }
     }
 
     componentWillUnmount() {
@@ -71,7 +77,8 @@ export class ContentFramer extends React.Component {
                     {header}
                 </div>;
             }
-            else {
+            else if (this._headerRef.current) {
+                this._resizeObserver.unobserve(this._headerRef.current);
                 this._headerRef.current = undefined;
             }
         }
@@ -88,7 +95,8 @@ export class ContentFramer extends React.Component {
                     {footer}
                 </div>;
             }
-            else {
+            else if (this._footerRef.current) {
+                this._resizeObserver.unobserve(this._footerRef.current);
                 this._footerRef.current = undefined;
             }
         }
