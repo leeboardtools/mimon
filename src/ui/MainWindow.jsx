@@ -1015,7 +1015,7 @@ export class MainWindow extends React.Component {
             items={mainMenuItems}
             topClassExtras="mt-2 ml-2"
             noArrow
-            menuClassExtras="dropdown-menu-right"
+            menuClassExtras="Dropdown-menu-right"
         />;
 
         return <div className="btn-group btn-group-sm" role="group">
