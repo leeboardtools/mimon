@@ -29,11 +29,12 @@ export class ContentFramer extends React.Component {
     }
 
     componentDidMount() {
-        window.requestAnimationFrame(this.checkLayout);        
+        this._resizeObserver = new ResizeObserver(this.checkLayout);
+        this._resizeObserver.observe(this._containerRef.current);
     }
 
     componentWillUnmount() {
-        this._willUnmount = true;
+        this._resizeObserver.disconnect();
     }
 
 
@@ -42,15 +43,10 @@ export class ContentFramer extends React.Component {
             return 0;
         }
 
-        //return ref.current.clientHeight;
         return ref.current.getBoundingClientRect().height;
     }
 
     checkLayout() {
-        if (this._willUnmount) {
-            return;
-        }
-
         const containerHeight = this._getRefHeight(this._containerRef);
         const headerHeight = this._getRefHeight(this._headerRef);
         const footerHeight = this._getRefHeight(this._footerRef);
@@ -61,8 +57,6 @@ export class ContentFramer extends React.Component {
                 contentHeight: contentHeight
             });
         }
-
-        window.requestAnimationFrame(this.checkLayout);        
     }
 
 
