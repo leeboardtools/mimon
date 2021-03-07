@@ -19,6 +19,7 @@ import * as path from 'path';
 import * as electron from 'electron';
 import * as process from 'process';
 import { InfoReporter } from '../util-ui/InfoReporter';
+import { RowColContainer, Row, Col } from '../util-ui/RowCols';
 
 const { app } = electron.remote;
 const { ipcRenderer } = electron;
@@ -85,7 +86,7 @@ class AppOpenScreen extends React.Component {
 
     render() {
         const { props } = this;
-        let buttonClassName = 'btn btn-outline-primary btn-md btn-block';
+        let buttonClassName = 'btn btn-outline-primary btn-block';
         let mruComponent;
         let importButton;
         const { validPathNames } = this.state;
@@ -111,15 +112,15 @@ class AppOpenScreen extends React.Component {
             );
 
             mruComponent = <div className="mb-4">
-                <div className="row justify-content-md-center mb-2">
+                <Row classExtras = "justify-content-md-center mb-2">
                     <span>{userMsg('AppOpeningScreen-mru_title')}</span>
-                </div>
-                <div className="row justify-content-md-center">
+                </Row>
+                <Row classExtras = "justify-content-md-center">
                     {namesItem}
-                </div>
-                <div className="row justify-content-md-center">
+                </Row>
+                <Row classExtras = "justify-content-md-center">
                     &nbsp;
-                </div>
+                </Row>
             </div>;
 
             buttonClassName = 'btn btn-outline-secondary btn-sm btn-block';
@@ -147,10 +148,10 @@ class AppOpenScreen extends React.Component {
                         {userMsg('AppOpeningScreen-title_from')}
                     </h5>
                 </div>
-                <div className="container">
-                    <div className="row">
-                        <div className="col"> </div>
-                        <div className="col-8">
+                <RowColContainer>
+                    <Row>
+                        <Col/>
+                        <Col classExtras="col-8">
                             {mruComponent}
                             <button className={buttonClassName}
                                 onClick={props.onNewClick}
@@ -163,22 +164,22 @@ class AppOpenScreen extends React.Component {
                                 {userMsg('AppOpeningScreen-open_file')}
                             </button>
                             {importButton}
-                        </div>
-                        <div className="col"> </div>
-                    </div>
-                </div>
-                <div className="container mt-auto">
-                    <div className="row">
-                        <div className="col"></div>
-                        <div className="col">
+                        </Col>
+                        <Col/>
+                    </Row>
+                </RowColContainer>
+                <RowColContainer classExtras="mt-auto">
+                    <Row>
+                        <Col/>
+                        <Col>
                             <button className="btn btn-secondary btn-sm btn-block mb-4"
                                 onClick={props.onExitClick}
                                 aria-label="Exit">
                                 {userMsg('AppOpeningScreen-exit')}</button>
-                        </div>
-                        <div className="col"></div>
-                    </div>
-                </div>
+                        </Col>
+                        <Col/>
+                    </Row>
+                </RowColContainer>
             </div>
         );
     }
@@ -976,9 +977,9 @@ export default class App extends React.Component {
             break;
         }
 
-        return <div className="container-fluid">
+        return <RowColContainer>
             {mainComponent}
-        </div>;
+        </RowColContainer>;
     }
 }
 

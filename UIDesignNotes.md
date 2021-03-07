@@ -438,11 +438,12 @@ Bootstarp classes in ui:
     - btn-block: App
     - btn-group: MainWindow, NewFileConfigurator
     - btn-group-sm: MainWindow, NewFileConfigurator
-    - btn-md: App
     - btn-outline-primary: App
     - btn-outline-secondary: AccountEditor, App, FileCreator, ReconcilerWindow
+
     - btn-primary: PriceRetrieverWindow
     - btn-secondary: App, LotSelectionEditor, MultiSplitsEditor, PriceRetrieverWindow, ReconcilerWindow
+
     - btn-sm: App, ReconcilerWindow
 
     - close: App
@@ -458,7 +459,6 @@ Bootstarp classes in ui:
     - d-flex: App, MainWindow, NewFileConfigurator, PriceRetrieverWindow
     - d-none: AccountRegister, PricesList
     - disabled: MainWindow, NewFileConfigurator, TickerSelector
-    - dropdown-menu-right: MainWindow, NewFileConfigurator, NewFileConfigurator
 
     - flex-column: App
     - flex-grow-1: MainWindow, NewFileConfigurator, PriceRetrieverWindow
@@ -542,7 +542,7 @@ Bootstrap classes in use in util-ui:
     - col-11: ModalPage
     - col-form-label: FieldPrefix, FieldSuffix
     - container
-    - container-fluid: ContentFramer, ErrorReporter, FileSelector
+    - container-fluid: ContentFramer, ErrorReporter, FileSelector, Page
 
     - d-flex: ContentFramer, DropdownSelector
     - d-none: SequentialPages, TabbedPages

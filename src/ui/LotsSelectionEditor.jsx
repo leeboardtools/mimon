@@ -4,6 +4,7 @@ import { userMsg, userError } from '../util/UserMessages';
 import { columnInfosToColumns, } from '../util-ui/ColumnInfo';
 import { ModalPage } from '../util-ui/ModalPage';
 import { ContentFramer } from '../util-ui/ContentFramer';
+import { RowColContainer, Row, Col } from '../util-ui/RowCols';
 import { EditableRowTable } from '../util-ui/EditableRowTable';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import { CellButton } from '../util-ui/CellButton';
@@ -752,7 +753,7 @@ export class LotsSelectionEditor extends React.Component {
     renderTotalShares(labelId, sharesBaseValue) {
         if (typeof sharesBaseValue === 'number') {
             const label = userMsg(labelId);
-            return <div className = "col">
+            return <Col>
                 <Field
                     id = {labelId}
                     prependComponent = {label}
@@ -764,7 +765,7 @@ export class LotsSelectionEditor extends React.Component {
                         classExtras = "col-form-label"
                     />
                 </Field>
-            </div>;
+            </Col>;
         }
     }
 
@@ -788,15 +789,13 @@ export class LotsSelectionEditor extends React.Component {
             totalSelectedSharesBaseValue,
         );
 
-        const rowClassName = 'form-row justify-content-center '
-            + 'LotsSelectionEditor-summary';
-
-        return <div className = "container">
-            <div className = {rowClassName}>
+        return <RowColContainer>
+            <Row noGutters 
+                classExtras = "justify-content-center LotsSelectionEditor-summary">
                 {totalAvailableShares}
                 {totalSelectedShares}
-            </div>
-        </div>;
+            </Row>
+        </RowColContainer>;
     }
 
 

@@ -18,6 +18,7 @@ import { createTestTransactions, createTestReminders }
 import * as path from 'path';
 import * as os from 'os';
 import { promises as fsPromises } from 'fs';
+import { Page } from '../util-ui/Page';
 
 
 /**
@@ -132,7 +133,7 @@ class NewFileName extends React.Component {
         const fileTypeSelector = this.renderFileTypeSelector();
         const projectNameEditor = this.renderProjectNameEditor();
 
-        return <div className = "container-fluid mt-auto mb-auto">
+        return <Page classExtras = "mt-auto mb-auto">
             <PageTitle>
                 {userMsg('NewFileName-heading')}
             </PageTitle>
@@ -141,7 +142,7 @@ class NewFileName extends React.Component {
                 {projectNameEditor}
                 {fileTypeSelector}
             </PageBody>
-        </div>;
+        </Page>;
     }
 }
 
@@ -302,7 +303,7 @@ class GeneralSettingsEditor extends React.Component {
         const defaultCurrency = this.renderDefaultCurrency();
         const options = this.renderOptions();
 
-        return <div className = "container-fluid mt-auto mb-auto">
+        return <Page classExtras = "mt-auto mb-auto">
             <PageTitle>
                 {userMsg('GeneraSettingsEditor-heading')}
             </PageTitle>
@@ -311,7 +312,7 @@ class GeneralSettingsEditor extends React.Component {
                 {defaultCurrency}
                 {options}
             </PageBody>
-        </div>;
+        </Page>;
     }
 }
 

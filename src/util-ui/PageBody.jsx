@@ -10,7 +10,7 @@ PageBody.propTypes = {
 
 /**
  * React component for page bodies, for common formatting.
- * Use with {@link PageTitle}.
+ * Use with {@link PageTitle}. Normally use as a child of {@link Page}.
  * @name PageBody
  * @class
  */
