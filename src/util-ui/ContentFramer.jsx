@@ -103,19 +103,24 @@ export class ContentFramer extends React.Component {
     }
 
     renderContent() {
-        const { onRenderContent } = this.props;
-        if (onRenderContent) {
+        const { onRenderContent, children } = this.props;
+        if (onRenderContent || children) {
+            let content;
             let style;
-            const { contentHeight } = this.state;
-            if (contentHeight !== undefined) {
-                style = {
+            if (onRenderContent) {
+                const { contentHeight } = this.state;
+                if (contentHeight !== undefined) {
+                    style = {
+                        height: contentHeight
+                    };
+                }
+
+                content = onRenderContent({
                     height: contentHeight
-                };
+                });
             }
 
-            const content = onRenderContent({
-                height: contentHeight
-            });
+            content = content || children;
 
             return <div className = "container-fluid pl-0 pr-0 ContentFramer-content"
                 style = {style}
@@ -163,4 +168,5 @@ ContentFramer.propTypes = {
     onRenderContent: PropTypes.func,
     onRenderFooter: PropTypes.func,
     classExtras: PropTypes.string,
+    children: PropTypes.any,
 };
