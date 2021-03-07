@@ -285,6 +285,7 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Custom Account Lists
         - Listen on prices for market value updates.
         - Summary rows
+        - Menu options for moving a child account up or down in its sibling list.
 
 
     - Account Register
@@ -364,7 +365,8 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Somehow fit to page so it doesn't get clipped.
 
 
-- Add zoom in/out to main menu.
+- Menus
+    - Scroll menu vertically if it doesn't fit.
 
 
 - RowTable To Do:
@@ -424,6 +426,208 @@ Are the lists really two separate styles? Or can they be combined into one?
 - Add rounding option for accounts (specific accounts might round up or down).
 
 
+Bootstarp classes in ui:
+    - active: TickerSelector
+    - alert: App
+    - alert-primary: App
+    - align-items-center: PriceRetrieverWindow
+    - align-items-end: ReminderEditor
+    - align-middle: PriceRetrieverWindow
+
+    - btn: AccountEditor, App, FileCreator, PriceRetrieverWindow, ReconcilerWindow
+    - btn-block: App
+    - btn-group: MainWindow, NewFileConfigurator
+    - btn-group-sm: MainWindow, NewFileConfigurator
+    - btn-md: App
+    - btn-outline-primary: App
+    - btn-outline-secondary: AccountEditor, App, FileCreator, ReconcilerWindow
+    - btn-primary: PriceRetrieverWindow
+    - btn-secondary: App, LotSelectionEditor, MultiSplitsEditor, PriceRetrieverWindow, ReconcilerWindow
+    - btn-sm: App, ReconcilerWindow
+
+    - close: App
+    - col: AccountEditor, AccountingCellEditors, AccountRegister, App, LotSelectionEditor, PricedItemEditor, ReconcilerWindow, ReminderEditor, TickerSelector
+    - col-6: PricedItemEditor
+    - col-8: App
+    - col-auto: ReminderEditor
+    - col-form-label: LotSelectionEditor
+    - col-sm-auto: AccountingCellEditors, AccountRegister
+    - container: App, LotSelectionEditor
+    - container-fluid: App, FileCreator
+
+    - d-flex: App, MainWindow, NewFileConfigurator, PriceRetrieverWindow
+    - d-none: AccountRegister, PricesList
+    - disabled: MainWindow, NewFileConfigurator, TickerSelector
+    - dropdown-menu-right: MainWindow, NewFileConfigurator, NewFileConfigurator
+
+    - flex-column: App
+    - flex-grow-1: MainWindow, NewFileConfigurator, PriceRetrieverWindow
+    - flex-row: PriceRetrieverWindow
+    - form-check-input: TickerSelector
+    - form-control: FileCreator
+    - form-group: FileCreator
+    - form-row: LotSelectionEditor
+
+    - h-100: AccountRegister, App, PriceRetrieverWindow, PricesList
+
+    - input-group: FileCreator
+    - input-group-append: FileCreator
+    - invalid-feedback: FileCreator
+    - is-invalid: FileCreator
+
+    - justify-content-between: ReconcilerWindow
+    - justify-content-center: LotSelectionEditor, PriceRetrieverWindow, ReconcilerWindow
+    - justify-content-md-center: App
+
+    - m-0: PricedItemsList, RemindersList
+    - m-1: PriceRetrieverWindow
+    - m-4: PriceRetrieverWindow
+    - mb-auto: FileCreator
+    - mb-0: FileCreator
+    - mb-2: App
+    - mb-4: App
+    - ml-1: ReconcilerWindow
+    - ml-2: MainWindow, NewFileConfigurator
+    - ml-3: App
+    - mr-1: ReconcilerWindow
+    - mr-4: ReminderEditor
+    - mt-auto: App, FileCreator
+    - mt-1: PriceRetrieverWindow
+    - mt-2: LotSelectionEditor, MainWindow, NewFileConfigurator
+    - mt-4: App
+    - mx-auto: App
+
+    - nav: MainWindow, NewFileConfigurator
+    - nav-link: MainWindow, NewFileConfigurator
+
+    - p-1: App
+    - pb-2: PriceRetrieverWindow
+    - pl-1: ReconcilerWindow
+    - pl-2: MainWindow, NewFileConfigurator
+    - pl-3: PriceRetrieverWindow
+    - pr-1: ReconcilerWindow
+    - pr-2: MainWindow, NewFileConfigurator
+    - pt-2: PriceRetrieverWindow
+    
+    - row: AccountEditor, AccountingCellEditors, AccountRegister, App, PricedItemEditor, PriceRetrieverWindow, ReconcilerWindow, ReminderEditor, TickerSelector
+
+    - table-striped: AccountRegister, LotSelectionEditor, MultiSplitsEditor, PricesList
+    - text-center: App, PricedItemsList, ReconcilerWindow, RemindersList
+    - text-left: AccountingCellEditors, AccountRegister, FileCreator, PricedItemsList, PriceRetrieverWindow, RemindersList
+    - text-right: AccountingCellEditors, AccountRegister, PriceRetrieverWindow, RemindersList
+
+    - w-100: AccountRegister, App, PriceRetrieverWindow, PricesList
+    - w-40: PricedItemsList
+    - w-50: ReconcilerWindow
+
+
+Bootstrap classes in use in util-ui:
+    - active: DropdownSelector, FileSelector, MenuList, RowTable, TabbedPages
+    - alert: ErrorReporter
+    - alert-dismissible: ErrorReporter
+    - alert-error: ErrorReporter
+
+    - bg-light: TabbedPages
+    - border: DropdownSelector
+    - border-bottom: FileSelector, ModalPage, PageTitle
+    - btn: DropdownSelector, FileSelector, ModalPage, QuestionPrompter
+    - btn-block: DropdownSelector
+    - btn-outline-secondary: FileSelector
+    - btn-primary: FileSelector, ModalPage, QuestionPrompter
+    - btn-secondary: ModalPage, QuestionPrompter
+    - btn-sm: FileSelector
+
+    - close: ErrorReporter, FileSelector, ModalPage, QuestionPrompter, TabbedPages
+    - col: ModalPage, Tooltip
+    - col-11: ModalPage
+    - col-form-label: FieldPrefix, FieldSuffix
+    - container
+    - container-fluid: ContentFramer, ErrorReporter, FileSelector
+
+    - d-flex: ContentFramer, DropdownSelector
+    - d-none: SequentialPages, TabbedPages
+    - disabled: DropdownSelector, MenuList
+    - dropdown: DropdownMenu
+    - dropdown-item: DropdownSelector
+    - dropdown-toggle: DropdownMenu, MenuList, TabbedPages
+
+    - enabled: RowTable
+
+    - fade: ErrorReporter
+    - flex-column: ContentFramer
+    - form-control: CellButton, CellDateDisplay, CellDateEditor, CellSelectDisplay, CellSelectEditor, CellToggleSelectEditor, CellTextDisplay, CellTextEditor, CurrencySelector, Field
+    - form-group: Field
+
+    - h-100: ContentFramer, SequentialPages, TabbedPages
+
+    - input-group: CellButton, CellToggleSelectEditor, CellTextDisplay, CellTextEditor, Checkbox, CurrencySelector, Field
+    - input-group-prepend: Field
+    - input-group-append: Field
+    - invalid-feedback: CellButton, CellDateEditor, CellSelectEditor, CellToggleSelectEditor, CellTextEditor, Field
+    - is-invalid: CellButton, CellDateEditor, CellSelectEditor, CellToggleSelectEditor, CellTextEditor, Field
+
+    - justify-content-between: DropdownSelector, ModalPage
+
+    - list-group-item: FileSelector, InfoReporter
+    - list-group-item-action: FileSelector, InfoReporter
+
+    - m-2: FileSelector, ModalPage
+    - mb-0: CellButton, CellToggleSelectEditor, CellTextDisplay, CellTextEditor, CurrencySelector
+    - mb-4: PageTitle
+    - media: FileSelector
+    - media-body: FileSelector
+    - modal-body: FileSelector, QuestionPrompter
+    - modal-content: FileSelector, QuestionPrompter
+    - modal-dialog: FileSelector, QuestionPrompter
+    - modal-dialog-scrollable: FileSelector
+    - modal-header: FileSelector, QuestionPrompter
+    - modal-footer: FileSelector, QuestionPrompter
+    - modal-title: FileSelector, QuestionPrompter
+    - mr-1: FileSelector
+    - mr-4: ModalPage
+    - mt-2: ModalPage
+    - mt-5: ErrorReporter
+    - mt-auto: ModalPage
+
+    - nav: TabbedPages
+    - nav-item: TabbedPages
+    - nav-link: TabbedPages
+    - nav-tabs: TabbedPages
+    - no-gutters: Tooltip
+
+    - overflow-hidden: ContentFramer, TabbedPages
+
+    - p-0: ContentFramer
+    - p-2: FileSelector, ModalPage
+    - pb-3: PageTitle
+    - pl-0: ContentFramer
+    - pl-2: FieldPrefix, DropdownSelector
+    - pr-0: ContentFramer
+    - pr-2: FieldSuffix
+    - pt-3: PageTitle
+
+    - row: ModalPage, Tooltip
+
+    - show: ErrorReporter, Popup
+
+    - table: RowTable
+    - table-active: RowTable
+    - text-left: FileSelector, ModalPage, PageBody, QuestionPrompter
+    - text-center: ModalPage, ProgressReporter
+    - text-right: DropdownSelector, ModalPage
+
+    - tracking: RowTable
+
+Notes:
+Column sorting in RowTable:
+    - Column may or may not be sortable.
+    - If sortable, can be in one of these states:
+        - Not sorted
+        - Sorted ascending
+        - Sorted descending
+        - ??? Filter ???
+
+
 - Immediate TODO:
     - Add column sorting to RowTable.
 
@@ -440,4 +644,4 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Lot selection editor
         - Add summary info.
-
+    
