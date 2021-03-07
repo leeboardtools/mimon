@@ -9,7 +9,7 @@ PageTitle.propTypes = {
 
 /**
  * React component for page titles, for common formatting.
- * Use with {@link PageBody}
+ * Use with {@link PageBody} Normally use as a child of {@link Page}.
  * @name PageTitle
  * @class
  */
