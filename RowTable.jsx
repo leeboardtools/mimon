@@ -498,6 +498,8 @@ export class RowTable extends React.Component {
 
         this.state.isSizeRender = this.state.isAutoSize;
         this.state.clientWidth = this.state.clientHeight = 0;
+
+        this._renderCount = 0;
     }
 
 
@@ -583,6 +585,10 @@ export class RowTable extends React.Component {
             switch (state.nextLayoutState) {
             case 'updateFromClientSize' :
                 this.updateFromClientSize();
+                break;
+            
+            case 'updateHeightsFromClientSize' :
+                this.updateHeightsFromClientSize();
                 break;
             
             case 'updateWidthsFromSizeRender' :
@@ -693,9 +699,43 @@ export class RowTable extends React.Component {
 
 
     updateFromClientSize() {
-        const { clientWidth, clientHeight, } = this.getAdjustedMainRefSize();
+        const { clientWidth, } = this.getAdjustedMainRefSize();
 
         let { columnWidths } = this.state;
+
+        const { isSizeRender, sizeRenderRefs } = this.state;
+        if (isSizeRender && sizeRenderRefs) {
+            // Figure out the column widths...
+            const { columns } = this.props;
+            const { columnRefs } = sizeRenderRefs;
+            columnWidths = [];
+            for (let i = 0; i < columns.length; ++i) {
+                // We use bodyCellRef and not headerCellRef because the body
+                // is what counts...
+                const { bodyCellRef } = columnRefs[i];
+                let width = 0;
+                if (bodyCellRef.current) {
+                    width = bodyCellRef.current.getBoundingClientRect().width;
+                }
+                columnWidths[i] = width;
+            }
+
+            this.setState({
+                columnWidths: columnWidths,
+                bodyWidth: clientWidth,
+                clientWidth: clientWidth,
+
+                nextLayoutState: 'updateHeightsFromClientSize',
+            });
+        }
+        else {
+            this.updateHeightsFromClientSize();
+        }
+    }
+
+
+    updateHeightsFromClientSize() {
+        const { clientHeight, } = this.getAdjustedMainRefSize();
 
         let {
             headerHeight,
@@ -705,19 +745,6 @@ export class RowTable extends React.Component {
 
         const { isSizeRender, sizeRenderRefs } = this.state;
         if (isSizeRender && sizeRenderRefs) {
-            // Figure out the column widths...
-            const { columns } = this.props;
-            const { columnRefs } = sizeRenderRefs;
-            columnWidths = [];
-            for (let i = 0; i < columns.length; ++i) {
-                const { bodyCellRef } = columnRefs[i];
-                let width = 0;
-                if (bodyCellRef.current) {
-                    width = bodyCellRef.current.getBoundingClientRect().width;
-                }
-                columnWidths[i] = width;
-            }
-
             // We've rendered the sizes, we can now grab the various sizes needed.
             headerHeight = this.getRefClientSize(this._headerRowRef, 
                 headerHeight).height;
@@ -727,6 +754,14 @@ export class RowTable extends React.Component {
 
             rowHeight = this.getRefClientSize(this._bodyRowRef,
                 rowHeight).height;
+            
+            // TEST!!!
+            const { columnRefs } = sizeRenderRefs;
+            const heights = [];
+            for (let i = 0; i < columnRefs.length; ++i) {
+                const { headerCellRef } = columnRefs[i];
+                heights.push(headerCellRef.current.getBoundingClientRect().height);
+            }
         }
         else {
             headerHeight = (headerHeight === undefined) 
@@ -738,10 +773,6 @@ export class RowTable extends React.Component {
         }
 
         this.setState({
-            columnWidths: columnWidths,
-            bodyWidth: clientWidth,
-            clientWidth: clientWidth,
-
             headerBlockHeight: headerHeight,
             footerBlockHeight: footerHeight,
             bodyRowHeight: rowHeight,
@@ -1656,7 +1687,6 @@ export class RowTable extends React.Component {
             className += ' ' + classExtras;
         }
 
-
         const { state } = this;
 
         const trackingBar = <RowTableColumnDraggerTracker
@@ -1665,6 +1695,14 @@ export class RowTable extends React.Component {
             pageX = {state.pageX}
             show = {state.isColumnResizeTracking || state.isColumnMoveTracking}
         />;
+
+        /*
+        console.log({
+            me: 'render',
+            renderCount: ++this._renderCount,
+            isSizeRender: state.isSizeRender,
+        });
+        */
 
         return <div className = {className}
             style = {style}

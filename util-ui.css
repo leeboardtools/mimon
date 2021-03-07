@@ -377,10 +377,11 @@ that's on the same line */
     flex-wrap: nowrap;
 }
 
-/*
+
 .RowTableHeaderCell {
+    height: max-content;
 }
-*/
+
 
 .RowTableBody {
     vertical-align: middle;
@@ -421,6 +422,12 @@ that's on the same line */
     vertical-align: middle;
     overflow: hidden;
 }
+
+
+.RowTableFooterCell {
+    height: max-content;
+}
+
 
 .RowTableColumnResizerCell {
     display: flex;
