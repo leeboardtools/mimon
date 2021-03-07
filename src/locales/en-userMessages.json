@@ -280,7 +280,9 @@
     "LotsSelectionEditor-none_button": "None",
 
     "LotsSelectionEditor-shares_lt_zero": "The number of shares must be >= 0.",
-    "LotsSelectionEditor-shares_gt_available": ["The number of shares must be <= ", ""],
+
+    "LotsSelectionEditor-totalAvailableShares_label": "Total Available Shares:",
+    "LotsSelectionEditor-totalSelectedShares_label": "Total Selected Shares:",
 
     "LotsSelectionEditor-title": "Select Lots To Sell",
     "LotsSelectionEditor-select_all": "Select All",

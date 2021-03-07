@@ -3,9 +3,12 @@ import PropTypes from 'prop-types';
 import { userMsg, userError } from '../util/UserMessages';
 import { columnInfosToColumns, } from '../util-ui/ColumnInfo';
 import { ModalPage } from '../util-ui/ModalPage';
+import { ContentFramer } from '../util-ui/ContentFramer';
 import { EditableRowTable } from '../util-ui/EditableRowTable';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import { CellButton } from '../util-ui/CellButton';
+import { QuantityDisplay } from '../util-ui/QuantityDisplay';
+import { Field } from '../util-ui/Field';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
 import * as ACE from './AccountingCellEditors';
 import { getQuantityDefinition } from '../util/Quantities';
@@ -167,13 +170,12 @@ function getSharesCellValue(args, name) {
 function saveSelectedSharesCellValue(args) {
     const { cellEditBuffer, saveBuffer, rowEntry } = args;
     if (saveBuffer && cellEditBuffer) {
-        const { quantityBaseValue } = cellEditBuffer.value;
+        let { quantityBaseValue } = cellEditBuffer.value;
         if (quantityBaseValue < 0) {
             throw userError('LotsSelectionEditor-shares_lt_zero');
         }
         if (quantityBaseValue > rowEntry.availableSharesBaseValue) {
-            throw userError('LotsSelectionEditor-shares_gt_available',
-                rowEntry.sharesQuantityDefinition.baseValueToNumber(quantityBaseValue));
+            quantityBaseValue = rowEntry.availableSharesBaseValue;
         }
         saveBuffer.selectedSharesBaseValue = quantityBaseValue;
     }
@@ -338,6 +340,9 @@ export class LotsSelectionEditor extends React.Component {
 
         this.onUndo = this.onUndo.bind(this);
         this.onRedo = this.onRedo.bind(this);
+
+        this.renderLotsTable = this.renderLotsTable.bind(this);
+        this.renderSummary = this.renderSummary.bind(this);
 
         this.onActiveRowChanged = this.onActiveRowChanged.bind(this);
 
@@ -515,6 +520,8 @@ export class LotsSelectionEditor extends React.Component {
                 rowEntries: newRowEntries,
                 availableSharesBaseValue: availableSharesBaseValue,
                 futureLIFOSharesBaseValue: futureLIFOSharesBaseValue,
+                sharesQuantityDefinition: sharesQuantityDefinition,
+                currencyQuantityDefinition: currencyQuantityDefinition,
             }, 
             this.newRowEntriesState(newRowEntries));
 
@@ -524,12 +531,15 @@ export class LotsSelectionEditor extends React.Component {
 
 
     newRowEntriesState(newRowEntries) {
+        let totalAvailableSharesBaseValue = 0;
         let totalSelectedSharesBaseValue = 0;
         newRowEntries.forEach((rowEntry) => {
+            totalAvailableSharesBaseValue += rowEntry.availableSharesBaseValue;
             totalSelectedSharesBaseValue += rowEntry.selectedSharesBaseValue;
         });
         return {
             rowEntries: newRowEntries,
+            totalAvailableSharesBaseValue: totalAvailableSharesBaseValue,
             totalSelectedSharesBaseValue: totalSelectedSharesBaseValue,
         };
     }
@@ -739,6 +749,26 @@ export class LotsSelectionEditor extends React.Component {
     }
 
 
+    renderTotalShares(labelId, sharesBaseValue) {
+        if (typeof sharesBaseValue === 'number') {
+            console.log('rendering ' + sharesBaseValue);
+            const label = userMsg(labelId);
+            return <div className = "col">
+                <Field
+                    id = {labelId}
+                    prependComponent = {label}
+                >
+                    <QuantityDisplay
+                        ariaLabel = {label}
+                        quantityBaseValue = {sharesBaseValue}
+                        quantityDefinition = {this.state.sharesQuantityDefinition}
+                        classExtras = "col-form-label"
+                    />
+                </Field>
+            </div>;
+        }
+    }
+
     renderSummary() {
         // Summary has:
         // Availabe shares
@@ -746,12 +776,33 @@ export class LotsSelectionEditor extends React.Component {
         // Optional:
         //  Price:
         //  Market value of selected shares
+        const { totalAvailableSharesBaseValue, 
+            totalSelectedSharesBaseValue,
+        } = this.state;
+
+        let totalAvailableShares = this.renderTotalShares(
+            'LotsSelectionEditor-totalAvailableShares_label',
+            totalAvailableSharesBaseValue,
+        );
+        let totalSelectedShares = this.renderTotalShares(
+            'LotsSelectionEditor-totalSelectedShares_label',
+            totalSelectedSharesBaseValue,
+        );
+
+        const rowClassName = 'form-row justify-content-center '
+            + 'LotsSelectionEditor-summary';
+
+        return <div className = "container">
+            <div className = {rowClassName}>
+                {totalAvailableShares}
+                {totalSelectedShares}
+            </div>
+        </div>;
     }
 
 
-    renderLotsTable() {
+    renderLotsTable(args) {
         const { state } = this;
-
         return <div className = "RowTableContainer mt-2">
             <EditableRowTable
                 columns = {state.columns}
@@ -818,8 +869,11 @@ export class LotsSelectionEditor extends React.Component {
             doneDisabled = {doneDisabled}
             onCancel = {this.props.onCancel}
         >
-            {this.renderSummary()}
-            {this.renderLotsTable()}
+            <ContentFramer
+                onRenderContent = {this.renderLotsTable}
+                onRenderFooter = {this.renderSummary}
+                isDebug = {true}
+            />
         </ModalPage>;        
     }
 }
