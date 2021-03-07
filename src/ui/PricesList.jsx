@@ -163,7 +163,7 @@ function getPriceItemTypeColumnInfo() {
             label: userMsg('PricesList-label_type'),
             classExtras: 'RowTable-header-base PriceItemType-base PriceItemType-header',
         },
-        inputClassExtras: 'PriceItemType-base priceItemType-input',
+        inputClassExtras: 'PriceItemType-base PriceItemType-input',
         cellClassName: 'RowTable-cell-base PriceItemType-base PriceItemType-cell',
 
         getCellValue: getPriceItemTypeCellValue,
@@ -280,7 +280,7 @@ function getPriceValueColumnInfo(name, multiplierName, countSuffix) {
             ariaLabel: name,
             classExtras: 'RowTable-header-base Monetary-base Monetary-header',
         },
-        inputClassExtras: 'Monetary-base monetary-input',
+        inputClassExtras: 'Monetary-base Monetary-input',
         cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell',
 
         getCellValue: (args) => 

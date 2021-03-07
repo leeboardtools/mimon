@@ -209,9 +209,9 @@ export function getRefNumColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-refNum'),
             ariaLabel: 'Reference Number',
-            classExtras: 'RowTable-header-base RefNum-base refNum-header',
+            classExtras: 'RowTable-header-base RefNum-base RefNum-header',
         },
-        inputClassExtras: 'RefNum-base refNum-input',
+        inputClassExtras: 'RefNum-base RefNum-input',
         cellClassName: 'RowTable-cell-base RefNum-base RefNum-cell',
 
         renderDisplayCell: renderRefNumDisplay,
@@ -281,9 +281,9 @@ export function getNameColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-name'),
             ariaLabel: 'Name',
-            classExtras: 'RowTable-header-base Name-base name-header',
+            classExtras: 'RowTable-header-base Name-base Name-header',
         },
-        inputClassExtras: 'Name-base name-input',
+        inputClassExtras: 'Name-base Name-input',
         cellClassName: 'RowTable-cell-base Name-base Name-cell',
 
         renderDisplayCell: renderNameDisplay,
@@ -353,7 +353,7 @@ export function getDescriptionColumnInfo(args) {
             ariaLabel: 'Description',
             classExtras: 'RowTable-header-base Description-base Description-header',
         },
-        inputClassExtras: 'Description-base description-input',
+        inputClassExtras: 'Description-base Description-input',
         cellClassName: 'RowTable-cell-base Description-base Description-cell',
 
         renderDisplayCell: renderDescriptionDisplay,
@@ -449,7 +449,7 @@ export function getDateColumnInfo(args) {
             ariaLabel: 'Date',
             classExtras: 'RowTable-header-base Date-base date-header',
         },
-        inputClassExtras: 'Date-base date-input',
+        inputClassExtras: 'Date-base Date-input',
         cellClassName: 'RowTable-cell-base Date-base Date-cell',
 
         renderDisplayCell: renderDateDisplay,
@@ -565,9 +565,9 @@ export function getAccountTypeColumnInfo(args) {
     return Object.assign({ key: 'accountType',
         header: {
             label: userMsg('AccountingCellEditors-accountType'),
-            classExtras: 'RowTable-header-base AccountType-base accountType-header',
+            classExtras: 'RowTable-header-base AccountType-base AccountType-header',
         },
-        inputClassExtras: 'AccountType-base accountType-input',
+        inputClassExtras: 'AccountType-base AccountType-input',
         cellClassName: 'RowTable-cell-base AccountType-base AccountType-cell',
 
         renderDisplayCell: renderAccountTypeDisplay,
@@ -703,7 +703,7 @@ export function getAccountIdColumnInfo(args) {
             label: userMsg('AccountingCellEditors-accountId'),
             classExtras: 'RowTable-header-base AccountId-base AccountId-header',
         },
-        inputClassExtras: 'AccountId-base accountId-input',
+        inputClassExtras: 'AccountId-base AccountId-input',
         cellClassName: 'RowTable-cell-base AccountId-base AccountId-cell',
 
         renderDisplayCell: renderAccountIdDisplay,
@@ -816,9 +816,9 @@ export function getReconcileStateColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-reconcile'),
             ariaLabel: 'Reconcile',
-            classExtras: 'RowTable-header-base Reconcile-base reconcile-header',
+            classExtras: 'RowTable-header-base Reconcile-base Reconcile-header',
         },
-        inputClassExtras: 'Reconcile-base reconcile-input',
+        inputClassExtras: 'Reconcile-base Reconcile-input',
         cellClassName: 'RowTable-cell-base Reconcile-base Reconcile-cell',
 
         renderDisplayCell: renderReconcileStateDisplay,
@@ -1054,12 +1054,12 @@ export function getBalanceColumnInfo(args) {
             label: userMsg('AccountingCellEditors-balance'),
             ariaLabel: 'Balance',
             classExtras: 'RowTable-header-base Monetary-base Monetary-header '
-                + 'balance-base balance-header',
+                + 'Balance-base Balance-header',
         },
-        inputClassExtras: 'Monetary-base monetary-input '
-            + 'balance-base balance-input',
+        inputClassExtras: 'Monetary-base Monetary-input '
+            + 'Balance-base Balance-input',
         cellClassName: 'RowTable-cell-base Monetary-base Monetary-cell '
-            + 'balance-base balance-cell',
+            + 'Balance-base Balance-cell',
 
         renderDisplayCell: renderBalanceDisplay,
         renderEditCell: renderBalanceEditor,
@@ -1365,7 +1365,7 @@ export function getSplitQuantityColumnInfo(args, type, label) {
             label: label,
             classExtras: 'RowTable-header-base SplitQuantity-base SplitQuantity-header',
         },
-        inputClassExtras: 'SplitQuantity-base splitQuantity-input',
+        inputClassExtras: 'SplitQuantity-base SplitQuantity-input',
         cellClassName: 'RowTable-cell-base SplitQuantity-base SplitQuantity-cell',
 
         renderDisplayCell: renderSplitQuantityDisplay,

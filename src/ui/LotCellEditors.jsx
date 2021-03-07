@@ -2036,7 +2036,7 @@ export function getTotalSimplePercentGainColumnInfo(args) {
             ariaLabel: 'Total Percent Gain',
             classExtras: 'RowTable-header-base Percent-base Percent-header',
         },
-        inputClassExtras: 'Percent-base percent-input',
+        inputClassExtras: 'Percent-base Percent-input',
         cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
     },
     args);
@@ -2108,7 +2108,7 @@ export function getTotalCashInPercentGainColumnInfo(args) {
             ariaLabel: 'Total Cash In Percent Gain',
             classExtras: 'RowTable-header-base Percent-base Percent-header',
         },
-        inputClassExtras: 'Percent-base percent-input',
+        inputClassExtras: 'Percent-base Percent-input',
         cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
     },
     args);
@@ -2144,7 +2144,7 @@ export function getTotalAnnualPercentGainColumnInfo(args) {
             ariaLabel: 'Total Annual Percent Gain',
             classExtras: 'RowTable-header-base Percent-base Percent-header',
         },
-        inputClassExtras: 'Percent-base percent-input',
+        inputClassExtras: 'Percent-base Percent-input',
         cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
     },
     args);
@@ -2214,7 +2214,7 @@ export function getTotalAnnualCashInPercentGainColumnInfo(args) {
             ariaLabel: 'Total Annual Cash-In Percent Gain',
             classExtras: 'RowTable-header-base Percent-base Percent-header',
         },
-        inputClassExtras: 'Percent-base percent-input',
+        inputClassExtras: 'Percent-base Percent-input',
         cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
     },
     args);

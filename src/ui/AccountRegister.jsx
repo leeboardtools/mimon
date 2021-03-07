@@ -584,7 +584,7 @@ function getAccountRegisterColumnInfoDefs(accountType) {
                     label: userMsg('AccountRegister-split'),
                     classExtras: 'RowTable-header-base Splits-base Splits-header',
                 },
-                inputClassExtras: 'Splits-base splits-input',
+                inputClassExtras: 'Splits-base Splits-input',
                 cellClassName: 'RowTable-cell-base Splits-base Splits-cell',
 
                 propertyName: 'splits',

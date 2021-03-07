@@ -204,7 +204,8 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
                     ariaLabel: 'Enabled',
                     classExtras: 'text-center',
                 },
-                cellClassName: cellClassName + ' CheckboxCell RemindersList-checkbox-cell',
+                cellClassName: cellClassName 
+                    + ' CheckboxCell RemindersList-checkbox-cell',
                 getCellValue: getEnabledCellValue,
                 renderDisplayCell: renderEnabledCell,
             },
