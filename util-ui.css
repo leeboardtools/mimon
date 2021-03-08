@@ -104,6 +104,11 @@
     margin-right: 0;
 }
 
+/* BS d-none */
+.D-none {
+    display: none!important;
+}
+
 /* BS dropdown-menu-right */
 .Dropdown-menu-right {
     right: 0;

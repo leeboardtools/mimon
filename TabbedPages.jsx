@@ -132,7 +132,7 @@ export class TabbedPages extends React.Component {
         this.props.tabEntries.forEach((tabEntry) => {
             const isActive = (tabEntry.tabId === this.state.activeTabId);
             const page = this.props.onRenderPage(tabEntry, isActive);
-            const className = (isActive ? pageClassExtras : 'd-none');
+            const className = (isActive ? pageClassExtras : 'D-none');
             pages.push((
                 <div className={className} key={tabEntry.tabId}>{page}</div>
             ));
