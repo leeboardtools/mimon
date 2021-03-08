@@ -2,7 +2,7 @@ import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { DropdownMenu } from './DropdownMenu';
 import { ContentFramer } from './ContentFramer';
-
+import { CloseButton } from './CloseButton';
 
 
 /**
@@ -62,13 +62,11 @@ export class TabbedPages extends React.Component {
 
             let closeButton;
             if (tabEntry.hasClose && this.props.onCloseTab) {
-                closeButton = <button type="button" 
-                    className="close TabCloseButton" 
-                    data-dismiss="modal" 
-                    aria-label="Close Tab" 
-                    onClick={() => this.props.onCloseTab(tabEntry.tabId)}>
-                    <span aria-hidden="true">&times;</span>
-                </button>;
+                closeButton = <CloseButton
+                    classExtras = "TabCloseButton" 
+                    ariaLabel = "Close Tab" 
+                    onClick={() => this.props.onCloseTab(tabEntry.tabId)}
+                />;
             }
             
             const { dropdownInfo } = tabEntry;

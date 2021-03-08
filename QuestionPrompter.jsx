@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
+import { CloseButton } from './CloseButton';
 
 
 /**
@@ -15,13 +16,9 @@ export function QuestionPrompter(props) {
         let titleButton;
         for (let i = 0; i < buttons.length; ++i) {
             if (buttons[i].id === 'cancel') {
-                titleButton = <button type="button" 
-                    className="close" 
-                    aria-label="Close"
+                titleButton = <CloseButton
                     onClick={() => onButton(buttons[i].id)}
-                >
-                    <span aria-hidden="true">&times;</span>
-                </button>;
+                />;
             }
         }
         titleComponent = <div className="modal-header">
