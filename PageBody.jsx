@@ -15,7 +15,7 @@ PageBody.propTypes = {
  * @class
  */
 export function PageBody(props) {
-    let className = 'H-inherit text-left PageBody';
+    let className = 'H-inherit Text-left PageBody';
     const { classExtras } = props;
     if (classExtras) {
         className += ' ' + classExtras;

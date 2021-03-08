@@ -233,7 +233,7 @@ export class FileSelector extends React.Component {
                 {currentDirComponents}
             </div>
             <div className="modal-body">
-                <div className="container-fluid text-left">
+                <div className="container-fluid Text-left">
                     {entityComponents}
                 </div>
             </div>

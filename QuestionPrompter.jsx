@@ -67,7 +67,7 @@ export function QuestionPrompter(props) {
     return <div className="modal-dialog" role="document">
         <div className="modal-content">
             {titleComponent}
-            <div className="modal-body text-left">
+            <div className="modal-body Text-left">
                 {messageComponent}
             </div>
             <div className="modal-footer">
