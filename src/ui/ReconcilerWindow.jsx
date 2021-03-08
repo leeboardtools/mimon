@@ -16,6 +16,7 @@ import { ContentFramer } from '../util-ui/ContentFramer';
 import * as ACE from './AccountingCellEditors';
 import deepEqual from 'deep-equal';
 import { Checkbox } from '../util-ui/Checkbox';
+import { Row, Col } from '../util-ui/RowCols';
 
 
 function getDateCellValue(args) {
@@ -421,15 +422,15 @@ export class ReconcilingWindow extends React.Component {
                 inputClassExtras = "ReconcilingWindow-splitInfoTotal_value"
             />);
         const totalRow = <div className = "ReconcilingWindow-splitInfos-total">
-            <div className = "row justify-content-between">
-                <div className = "col">
+            <Row classExtras = "justify-content-between">
+                <Col>
                     {selectAll}
                     {clearAll}
-                </div>
-                <div className = "col">
+                </Col>
+                <Col>
                     {total}
-                </div>
-            </div>
+                </Col>
+            </Row>
         </div>;
 
         return <ContentFramer 
@@ -458,14 +459,14 @@ export class ReconcilingWindow extends React.Component {
 
 
     renderSummaryRow(labelId, valueComponent) {
-        return <div className = "row ReconcilingWindow-summary_row">
-            <div className = "col ReconcilingWindow-summary_label">
+        return <Row classExtras = "ReconcilingWindow-summary_row">
+            <Col classExtras = "ReconcilingWindow-summary_label">
                 {userMsg(labelId)}
-            </div>
-            <div className = "col ReconcilingWindow-summary_value">
+            </Col>
+            <Col classExtras = "ReconcilingWindow-summary_value">
                 {valueComponent}
-            </div>
-        </div>;
+            </Col>
+        </Row>;
     }
 
     renderSummaryValueRow(labelId, valueBaseValue) {
@@ -553,14 +554,14 @@ export class ReconcilingWindow extends React.Component {
         const splitInfosContainer = <div 
             className = "ReconcilingWindow-splitInfosContainer"
         >
-            <div className = "row H-inherit">
-                <div className = "col H-inherit w-50 pr-1">
+            <Row classExtras = "H-inherit">
+                <Col classExtras = "H-inherit w-50 pr-1">
                     {inflows}
-                </div>
-                <div className = "col H-inherit w-50 pl-1">
+                </Col>
+                <Col classExtras = "H-inherit w-50 pl-1">
                     {outflows}
-                </div>
-            </div>
+                </Col>
+            </Row>
         </div>;
 
 
@@ -803,34 +804,34 @@ export class ReconcilerSetupWindow extends React.Component {
             classExtras = {className}
         >
             <div className = "ModalPage-inner_rows_container justify-content-center">
-                <div className = "row">
-                    <div className = "col"></div>
-                    <div className = "col">
+                <Row>
+                    <Col></Col>
+                    <Col>
                         {lastReconcileDate}
-                    </div>
-                    <div className = "col"></div>
-                </div>
-                <div className = "row">
-                    <div className = "col"></div>
-                    <div className = "col">
+                    </Col>
+                    <Col></Col>
+                </Row>
+                <Row>
+                    <Col></Col>
+                    <Col>
                         {statementClosingDate}
-                    </div>
-                    <div className = "col"></div>
-                </div>
-                <div className = "row">
-                    <div className = "col"></div>
-                    <div className = "col">
+                    </Col>
+                    <Col></Col>
+                </Row>
+                <Row>
+                    <Col></Col>
+                    <Col>
                         {openingBalance}
-                    </div>
-                    <div className = "col"></div>
-                </div>
-                <div className = "row">
-                    <div className = "col"></div>
-                    <div className = "col">
+                    </Col>
+                    <Col></Col>
+                </Row>
+                <Row>
+                    <Col></Col>
+                    <Col>
                         {closingBalance}
-                    </div>
-                    <div className = "col"></div>
-                </div>
+                    </Col>
+                    <Col></Col>
+                </Row>
             </div>
         </ModalPage>;
     }

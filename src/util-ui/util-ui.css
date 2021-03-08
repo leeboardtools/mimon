@@ -115,6 +115,11 @@
     left: auto;
 }
 
+/* BS flex-row */
+.Flex-row {
+    flex-direction: row!important;
+}
+
 /* BS form-row */
 .Form-row {
     display: -ms-flexbox;

@@ -13,6 +13,7 @@ import { CurrencyPricedItemSelector } from './CurrencyPricedItemSelector';
 import { DropdownField } from '../util-ui/DropdownField';
 import { getDecimalDefinition, getQuantityDefinitionName } from '../util/Quantities';
 import { QuantityDefinitionField } from '../util-ui/QuantityDefinitionField';
+import { Row, Col } from '../util-ui/RowCols';
 
 
 /**
@@ -384,29 +385,29 @@ export class PricedItemEditor extends React.Component {
 
         let tickerRow;
         if (tickerEditor) {
-            tickerRow = <div className="row">
-                <div className="col">
+            tickerRow = <Row>
+                <Col>
                     {tickerEditor}
-                </div>
-                <div className="col">
+                </Col>
+                <Col>
                     {onlineTypeEditor}
-                </div>
-            </div>;
+                </Col>
+            </Row>;
         }
 
         return <PageBody classExtras = "Editor-body PricedItemEditor-body">
             {tickerRow}
-            <div className="row">
-                <div className="col-6">
+            <Row>
+                <Col classExtras = "col-6">
                     {nameEditor}
-                </div>
-                <div className="col">
+                </Col>
+                <Col>
                     {quantityDefinitionEditor}
-                </div>
-                <div className="col">
+                </Col>
+                <Col>
                     {currencyEditor}
-                </div>
-            </div>
+                </Col>
+            </Row>
             {descriptionEditor}
         </PageBody>;
     }

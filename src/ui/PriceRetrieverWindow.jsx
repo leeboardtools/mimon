@@ -10,6 +10,7 @@ import { asyncGetUpdatedPricedItemPrices } from '../engine/PriceRetriever';
 import deepEqual from 'deep-equal';
 import { setFocus } from '../util/ElementUtils';
 import { PageTitle } from '../util-ui/PageTitle';
+import { Row, Col } from '../util-ui/RowCols';
 
 
 function equalBool(a, b) {
@@ -412,7 +413,7 @@ export class PriceRetrieverWindow extends React.Component {
             };
         }
 
-        return <div className = "row align-items-center w-100 h-100" style = {style}>
+        return <div className = "align-items-center w-100 h-100" style = {style}>
             <div className = "d-flex flex-row W-inherit H-inherit m-1">
                 <div className = "flex-row flex-grow-1 pl-3 pb-2 H-inherit">
                     <TickerSelector
@@ -425,18 +426,18 @@ export class PriceRetrieverWindow extends React.Component {
                     />
                 </div>
                 <div className = "flex-row m-4">
-                    <div className = "row">
+                    <Row>
                         {this.renderTickerButton('PriceRetrieverWindow-select_all',
                             this.onSelectAllTickers)}
-                    </div>
-                    <div className = "row">
+                    </Row>
+                    <Row>
                         {this.renderTickerButton('PriceRetrieverWindow-select_none',
                             this.onSelectNoTickers)}
-                    </div>
-                    <div className = "row">
+                    </Row>
+                    <Row>
                         {this.renderTickerButton('PriceRetrieverWindow-select_defaults',
                             this.onSelectDefaultTickers)}
-                    </div>
+                    </Row>
                 </div>
             </div>
         </div>;
@@ -460,16 +461,16 @@ export class PriceRetrieverWindow extends React.Component {
             disabled = {this.state.isRetrieving}
         />;
 
-        return <div className = "row">
-            <div className = "col text-right align-middle">
+        return <Row>
+            <Col classExtras = "text-right align-middle">
                 <label htmlFor = {id} className = "mt-1">
                     {label}
                 </label>
-            </div>
-            <div className = "col text-left align-middle">
+            </Col>
+            <Col classExtras = "text-left align-middle">
                 {dateEditor}
-            </div>
-        </div>;
+            </Col>
+        </Row>;
     }
 
 
@@ -515,28 +516,28 @@ export class PriceRetrieverWindow extends React.Component {
             'PriceRetrieverWindow-from_date',
             'ymdDateTo');
 
-        const controlsClassName = 'row pt-2 pb-2 justify-content-center '
+        const controlsClassName = 'pt-2 pb-2 justify-content-center '
             + ' PriceRetrieverWindow-controls';
         const header = <div>
-            <div className = "row">
-                <div className = "col">
+            <Row>
+                <Col>
                     <PageTitle>
                         {userMsg('PriceRetrieverWindow-title')}
                     </PageTitle>
-                </div>
-            </div>
-            <div className = {controlsClassName} 
+                </Col>
+            </Row>
+            <Row classExtras = {controlsClassName} 
             >
-                <div className = "col PriceRetrieverWindow-retrieveButton">
+                <Col classExtras = "PriceRetrieverWindow-retrieveButton">
                     {button}
-                </div>
-                <div className = "col PriceRetrieverWindow-dateControl">
+                </Col>
+                <Col classExtras = "PriceRetrieverWindow-dateControl">
                     {fromDate}
-                </div>
-                <div className = "col PriceRetrieverWindow-dateControl">
+                </Col>
+                <Col classExtras = "PriceRetrieverWindow-dateControl">
                     {toDate}
-                </div>
-            </div>
+                </Col>
+            </Row>
         </div>;
         return <ContentFramer
             onRenderHeader = {() => header}
