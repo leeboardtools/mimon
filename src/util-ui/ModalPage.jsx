@@ -40,7 +40,7 @@ export function ModalPage(props) {
         titleComponent = <div className = "border-bottom p-2 ModalPage-title"
         >
             <div className = "row justify-content-between">
-                <div className = "col-11 text-center">
+                <div className = "col-11 Text-center">
                     <h4 className = "">{title}</h4>
                 </div>
                 <div className = "col">
@@ -83,10 +83,10 @@ export function ModalPage(props) {
 
     const buttonBar = <div className = "mt-auto ModalPage-buttonBar">
         <div className = "row border-top m-2">
-            <div className = "col text-left mt-2">
+            <div className = "col Text-left mt-2">
                 {cancelBtn}
             </div>
-            <div className = "col text-right mt-2">
+            <div className = "col Text-right mt-2">
                 {buttons}
             </div>
         </div>

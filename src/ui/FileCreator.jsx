@@ -62,7 +62,7 @@ class NewFileName extends React.Component {
         const label = userMsg('NewFileName-baseDir_selector_label');
         const browseText = userMsg('NewFileName-browse_btn');
 
-        return <div className = "form-group text-left">
+        return <div className = "form-group Text-left">
             <label className = "mb-0" htmlFor = "NewFileName-baseDir">
                 {label}
             </label>
@@ -110,7 +110,7 @@ class NewFileName extends React.Component {
             </div>;
         }
 
-        return <div className = "form-group text-left">
+        return <div className = "form-group Text-left">
             <label className = "mb-0" htmlFor = "NewFileName-projectName">
                 {label}
             </label>

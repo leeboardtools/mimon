@@ -20,7 +20,7 @@ let columnInfoDefs;
 function getPricedItemsListColumnInfoDefs() {
     if (!columnInfoDefs) {
         const cellClassName = 'm-0';
-        const inputClassExtras = 'text-center';
+        const inputClassExtras = 'Text-center';
 
         columnInfoDefs = {
             ticker: { key: 'ticker',
@@ -29,7 +29,7 @@ function getPricedItemsListColumnInfoDefs() {
                     ariaLabel: 'Ticker Symbol',
                 },
                 propertyName: 'ticker',
-                cellClassName: cellClassName + ' text-left',
+                cellClassName: cellClassName + ' Text-left',
                 inputClassExtras: inputClassExtras,
                 inputSize: -6,
             },
@@ -37,16 +37,16 @@ function getPricedItemsListColumnInfoDefs() {
                 header: {
                     label: userMsg('PricedItemsList-name'),
                     ariaLabel: 'Name',
-                    classExtras: 'text-left',
+                    classExtras: 'Text-left',
                 },
                 propertyName: 'name',
-                cellClassName: cellClassName + ' text-left w-40',
+                cellClassName: cellClassName + ' Text-left w-40',
             },
             description: { key: 'description',
                 header: {
                     label: userMsg('PricedItemsList-description'),
                     ariaLabel: 'Description',
-                    classExtras: 'text-left',
+                    classExtras: 'Text-left',
                 },
                 propertyName: 'description',
                 cellClassName: cellClassName,

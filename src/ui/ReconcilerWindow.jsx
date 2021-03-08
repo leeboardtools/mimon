@@ -108,7 +108,7 @@ class ReconcileSplitInfosSelector extends React.Component {
                 header: {
                     label: userMsg('ReconcilingWindow-reconcile_heading'),
                 },
-                cellClassExtras: 'text-center CheckboxCell',
+                cellClassExtras: 'Text-center CheckboxCell',
                 getCellValue: getReconcileCellValue,
                 renderDisplayCell: renderReconcileCell,
             },

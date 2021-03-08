@@ -195,14 +195,14 @@ let dueColumnInfoDefs;
 function getRemindersListColumnInfoDefs(dueEntriesById) {
     if (!columnInfoDefs) {
         const cellClassName = 'm-0';
-        const inputClassExtras = 'text-center';
+        const inputClassExtras = 'Text-center';
 
         columnInfoDefs = {
             enabled: { key: 'enabled',
                 header: {
                     label: userMsg('RemindersList-enabled_heading'),
                     ariaLabel: 'Enabled',
-                    classExtras: 'text-center',
+                    classExtras: 'Text-center',
                 },
                 cellClassName: cellClassName 
                     + ' CheckboxCell RemindersList-checkbox-cell',
@@ -216,7 +216,7 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
                 header: {
                     label: userMsg('RemindersList-accountName_heading'),
                     ariaLabel: 'Account Name',
-                    classExtras: 'text-left Name-cell',
+                    classExtras: 'Text-left Name-cell',
                 },
                 cellClassName: cellClassName,
                 getCellValue: getAccountNameCellValue,
@@ -226,10 +226,10 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
                 header: {
                     label: userMsg('RemindersList-amount_heading'),
                     ariaLabel: 'Amount',
-                    classExtras: 'text-right',
+                    classExtras: 'Text-right',
                 },
                 cellClassName: cellClassName,
-                inputClassExtras: 'text-right',
+                inputClassExtras: 'Text-right',
                 getCellValue: getAmountCellValue,
                 renderDisplayCell: ACE.renderTextDisplay,
             },
@@ -237,7 +237,7 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
                 header: {
                     label: userMsg('RemindersList-lastDate_heading'),
                     ariaLabel: 'Last Date',
-                    classExtras: 'text-center',
+                    classExtras: 'Text-center',
                 },
                 cellClassName: cellClassName,
                 inputClassExtras: inputClassExtras,
@@ -248,7 +248,7 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
                 header: {
                     label: userMsg('RemindersList-nextDate_heading'),
                     ariaLabel: 'Next Date',
-                    classExtras: 'text-center',
+                    classExtras: 'Text-center',
                 },
                 cellClassName: cellClassName,
                 inputClassExtras: inputClassExtras,
@@ -262,7 +262,7 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
                 header: {
                     label: userMsg('RemindersList-dueStatus_heading'),
                     ariaLabel: 'Status',
-                    classExtras: 'text-center',
+                    classExtras: 'Text-center',
                 },
                 cellClassName: cellClassName,
                 getCellValue: getDueStatusCellValue,

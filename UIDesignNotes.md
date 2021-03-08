@@ -430,9 +430,8 @@ Bootstarp classes in ui:
     - active: TickerSelector
     - alert: App
     - alert-primary: App
-    - align-items-center: PriceRetrieverWindow
-    - align-items-end: ReminderEditor
-    - align-middle: PriceRetrieverWindow
+    - align-items-center (flex-box): PriceRetrieverWindow
+    - align-items-end (flex-box): ReminderEditor
 
     - btn: AccountEditor, App, FileCreator, PriceRetrieverWindow, ReconcilerWindow
     - btn-block: App
@@ -446,14 +445,11 @@ Bootstarp classes in ui:
 
     - btn-sm: App, ReconcilerWindow
 
-    - col: AccountingCellEditors
     - col-6: PricedItemEditor
     - col-8: App
     - col-auto: ReminderEditor
     - col-form-label: LotSelectionEditor
     - col-sm-auto: AccountingCellEditors, AccountRegister
-    - container: App, LotSelectionEditor
-    - container-fluid: App, FileCreator
 
     - d-flex: App, MainWindow, NewFileConfigurator, PriceRetrieverWindow
     - disabled: MainWindow, NewFileConfigurator, TickerSelector
@@ -507,12 +503,7 @@ Bootstarp classes in ui:
     - pr-2: MainWindow, NewFileConfigurator
     - pt-2: PriceRetrieverWindow
     
-    - row: AccountingCellEditors
-
     - table-striped: AccountRegister, LotSelectionEditor, MultiSplitsEditor, PricesList
-    - text-center: App, PricedItemsList, ReconcilerWindow, RemindersList
-    - text-left: AccountingCellEditors, AccountRegister, FileCreator, PricedItemsList, PriceRetrieverWindow, RemindersList
-    - text-right: AccountingCellEditors, AccountRegister, PriceRetrieverWindow, RemindersList
 
     - w-100: AccountRegister, App, PriceRetrieverWindow, PricesList
     - w-40: PricedItemsList
@@ -609,9 +600,6 @@ Bootstrap classes in use in util-ui:
 
     - table: RowTable
     - table-active: RowTable
-    - text-left: FileSelector, ModalPage, PageBody, QuestionPrompter
-    - text-center: ModalPage, ProgressReporter
-    - text-right: DropdownSelector, ModalPage
 
     - tracking: RowTable
 

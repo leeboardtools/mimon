@@ -722,6 +722,70 @@ that's on the same line */
 }
 
 
+/* text-align helpers */
+.Text-center {
+    text-align: center!important;
+}
+
+.Text-justify {
+    text-align: justify!important;
+}
+
+.Text-justify-all {
+    text-align: justify-all!important;
+}
+
+.Text-left {
+    text-align: left!important;
+}
+
+.Text-right {
+    text-align: right!important;
+}
+
+.Text-start {
+    text-align: start!important;
+}
+
+.Text-end {
+    text-align: end!important;
+}
+
+
+/* vertical-align helpers */
+.VAlign-baseline {
+    vertical-align: baseline!important;
+}
+
+.VAlign-bottom {
+    vertical-align: bottom!important;
+}
+
+.VAlign-middle {
+    vertical-align: middle!important;
+}
+
+.VAlign-sub {
+    vertical-align: sub!important;
+}
+
+.VAlign-super {
+    vertical-align: super!important;
+}
+
+.VAlign-text-bottom {
+    vertical-align: text-bottom!important;
+}
+
+.VAlign-text-top {
+    vertical-align: text-top!important;
+}
+
+.VAlign-top {
+    vertical-align: top!important;
+}
+
+
 .Visibility-hidden {
     visibility: hidden !important;
 }

@@ -240,8 +240,8 @@ function renderSplitItemTooltip(caller, splits, index, aleCreditSign) {
         .baseValueToValueText(split.quantityBaseValue * creditSign);
 
     return <Row key = {index}>
-        <Col classExtras = "col-sm-auto text-left">{splitAccountDataItem.name}</Col>
-        <Col classExtras = "text-right">{value}</Col>
+        <Col classExtras = "col-sm-auto Text-left">{splitAccountDataItem.name}</Col>
+        <Col classExtras = "Text-right">{value}</Col>
     </Row>;
 }
 

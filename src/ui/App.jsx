@@ -135,13 +135,13 @@ class AppOpenScreen extends React.Component {
         return (
             <div className="d-flex w-100 h-100 p-1 mx-auto flex-column">
                 <div className="mb-4 mt-4">
-                    <h2 className="text-center">
+                    <h2 className="Text-center">
                         {userMsg('AppOpeningScreen-title_main')}
                     </h2>
-                    <h4 className="text-center">
+                    <h4 className="Text-center">
                         {userMsg('AppOpeningScreen-title_secondary')}
                     </h4>
-                    <h5 className="text-center">
+                    <h5 className="Text-center">
                         {userMsg('AppOpeningScreen-title_from')}
                     </h5>
                 </div>

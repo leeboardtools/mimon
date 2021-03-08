@@ -273,7 +273,7 @@ export class DropdownSelector extends React.Component {
         >
             <div className = "d-flex justify-content-between">
                 <span>{valueText}</span>
-                <span className = "text-right pl-2">&#x25BE;</span>
+                <span className = "Text-right pl-2">&#x25BE;</span>
             </div>
         </button>;
 

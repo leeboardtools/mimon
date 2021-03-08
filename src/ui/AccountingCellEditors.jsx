@@ -13,6 +13,7 @@ import * as PI from '../engine/PricedItems';
 import * as AH from '../tools/AccountHelpers';
 import { ReconcileState, getReconcileStateName } from '../engine/Transactions';
 import { getCurrency } from '../util/Currency';
+import { Row, Col } from '../util-ui/RowCols';
 
 
 /*
@@ -1333,14 +1334,15 @@ export function renderSplitQuantityDisplay(args) {
                         pricedItemDataItem.quantityDefinition);
                     const value = quantityDefinition.baseValueToValueText(
                         lotChange.quantityBaseValue * sign);
-                    lotTooltipEntries.push(<div className = "row" key = {i}>
-                        <div className = "col col-sm-auto text-left">
-                            {lotDataItem.description}
-                        </div>
-                        <div className = "col text-right">
-                            {value}
-                        </div>
-                    </div>);
+                    lotTooltipEntries.push(
+                        <Row key = {i}>
+                            <Col classExtras = "col-sm-auto Text-left">
+                                {lotDataItem.description}
+                            </Col>
+                            <Col classExtras = "Text-right">
+                                {value}
+                            </Col>
+                        </Row>);
                 }
             }
         }

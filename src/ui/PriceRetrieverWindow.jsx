@@ -462,12 +462,12 @@ export class PriceRetrieverWindow extends React.Component {
         />;
 
         return <Row>
-            <Col classExtras = "text-right align-middle">
+            <Col classExtras = "Text-right VAlign-middle">
                 <label htmlFor = {id} className = "mt-1">
                     {label}
                 </label>
             </Col>
-            <Col classExtras = "text-left align-middle">
+            <Col classExtras = "Text-left VAlign-middle">
                 {dateEditor}
             </Col>
         </Row>;
