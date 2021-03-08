@@ -446,7 +446,7 @@ Bootstarp classes in ui:
 
     - btn-sm: App, ReconcilerWindow
 
-    - col: AccountingCellEditors, ReminderEditor, TickerSelector
+    - col: AccountingCellEditors
     - col-6: PricedItemEditor
     - col-8: App
     - col-auto: ReminderEditor
@@ -507,7 +507,7 @@ Bootstarp classes in ui:
     - pr-2: MainWindow, NewFileConfigurator
     - pt-2: PriceRetrieverWindow
     
-    - row: AccountingCellEditors, ReminderEditor, TickerSelector
+    - row: AccountingCellEditors
 
     - table-striped: AccountRegister, LotSelectionEditor, MultiSplitsEditor, PricesList
     - text-center: App, PricedItemsList, ReconcilerWindow, RemindersList

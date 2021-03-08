@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { getQuantityDefinition } from '../util/Quantities';
 import { Tooltip } from '../util-ui/Tooltip';
 import { MultiColumnList } from '../util-ui/MultiColumnList';
+import { Row, Col } from '../util-ui/RowCols';
 
 
 /**
@@ -101,7 +102,7 @@ export class TickerSelector extends React.Component {
                 className += ' active';
             }
 
-            let tickerClassName = 'col Ticker-base';
+            let tickerClassName = 'Ticker-base';
 
             let tickerComponent = ticker;
             if (!noTickerTooltips && pricedItemDataItem && pricedItemDataItem.name) {
@@ -120,7 +121,7 @@ export class TickerSelector extends React.Component {
             </label>;
 
 
-            let statusClassName = 'col Monetary-base';
+            let statusClassName = 'Monetary-base';
             let statusMsg;
             if (errorMsg) {
                 statusMsg = errorMsg;
@@ -152,14 +153,14 @@ export class TickerSelector extends React.Component {
                 tabIndex = {-1} // We don't want each item tab-able...
                 ref = {ref}
             >
-                <div className = "row">
-                    <div className = {tickerClassName}>
+                <Row>
+                    <Col classExtras = {tickerClassName}>
                         {tickerComponent}
-                    </div>
-                    <div className = {statusClassName}>
+                    </Col>
+                    <Col classExtras = {statusClassName}>
                         {statusMsg}
-                    </div>
-                </div>
+                    </Col>
+                </Row>
             </li>;
         }
     }

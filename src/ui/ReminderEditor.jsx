@@ -22,6 +22,7 @@ import { QuantityField, getValidQuantityBaseValue }
     from '../util-ui/QuantityField';
 import { YMDDate, getYMDDate } from '../util/YMDDate';
 import { formatDate } from '../util-ui/CellDateEditor';
+import { Row, Col } from '../util-ui/RowCols';
 
 
 /**
@@ -779,37 +780,37 @@ export class ReminderEditor extends React.Component {
         const lastStateEditor = this.renderLastOccurrenceStateEditor();
 
         return <PageBody classExtras = "Editor-body ReminderEditor-body">
-            <div className = "row align-items-end">
-                <div className = "col">
+            <Row classExtras = "align-items-end">
+                <Col>
                     {descriptionEditor}
-                </div>
-                <div className = "col-auto mr-4">
+                </Col>
+                <Col classExtras = "col-auto mr-4">
                     {enabledEditor}
-                </div>
-            </div>
+                </Col>
+            </Row>
             <SeparatorBar/>
             <div className = "ReminderEditor-section_label">
                 {userMsg('ReminderEditor-transactionTemplate_heading')}
             </div>
-            <div className = "row">
-                <div className = "col">
+            <Row>
+                <Col>
                     {transactionTemplateEditor}
-                </div>
-            </div>
+                </Col>
+            </Row>
             <SeparatorBar/>
             <div className = "ReminderEditor-section_label">
                 {userMsg('ReminderEditor-occurrenceDefinition_heading')}
             </div>
-            <div className = "row">
-                <div className = "col">
+            <Row>
+                <Col>
                     {dateOccurrenceEditor}
-                </div>
-            </div>
-            <div className = "row">
-                <div className = "col">
+                </Col>
+            </Row>
+            <Row>
+                <Col>
                     {lastStateEditor}
-                </div>
-            </div>
+                </Col>
+            </Row>
         </PageBody>;
     }
 
