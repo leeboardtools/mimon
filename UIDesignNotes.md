@@ -446,7 +446,6 @@ Bootstarp classes in ui:
 
     - btn-sm: App, ReconcilerWindow
 
-    - close: App
     - col: AccountEditor, AccountingCellEditors, AccountRegister, App, LotSelectionEditor, PricedItemEditor, ReconcilerWindow, ReminderEditor, TickerSelector
     - col-6: PricedItemEditor
     - col-8: App
@@ -537,7 +536,7 @@ Bootstrap classes in use in util-ui:
     - btn-secondary: ModalPage, QuestionPrompter
     - btn-sm: FileSelector
 
-    - close: ErrorReporter, FileSelector, ModalPage, QuestionPrompter, TabbedPages
+    - close: CloseButton
     - col: ModalPage, Tooltip
     - col-11: ModalPage
     - col-form-label: FieldPrefix, FieldSuffix

@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { ContentFramer } from './ContentFramer';
+import { CloseButton } from './CloseButton';
 
 
 
@@ -33,13 +34,7 @@ export function ModalPage(props) {
     if (title) {
         let titleCloseBtn;
         if (cancelBtn) {
-            titleCloseBtn = <button type = "button" 
-                className = "close" 
-                aria-label = "Close"
-                onClick = {onCancel}
-            >
-                <span aria-hidden = "true">&times;</span>
-            </button>;
+            titleCloseBtn = <CloseButton onClick = {onCancel}/>;
         }
 
         titleComponent = <div className = "border-bottom p-2 ModalPage-title"

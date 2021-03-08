@@ -5,6 +5,7 @@ import { asyncDirExists, splitDirs } from '../util/Files';
 import folder from '../images/folder.png';
 import * as path from 'path';
 import { promises as fsPromises } from 'fs';
+import { CloseButton } from './CloseButton';
 
 
 /**
@@ -155,13 +156,9 @@ export class FileSelector extends React.Component {
 
         return <React.Fragment>
             {titleComponent}
-            <button type="button" 
-                className="close" 
-                onClick={this.props.onCancel}
-                aria-label="Close"
-            >
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <CloseButton
+                onClick = {this.props.onCancel}
+            />
         </React.Fragment>;
     }
 

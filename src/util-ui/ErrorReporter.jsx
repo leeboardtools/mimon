@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { CloseButton } from './CloseButton';
 
 /**
  * @callback ErrorReporter~onClose
@@ -27,12 +28,7 @@ export function ErrorReporter(props) {
     return <div className="container-fluid mt-5">
         <div className="alert alert-error alert-dismissible fade show" role="alert">
             {props.message.toString()}
-            <button type="button" 
-                className="close" 
-                aria-label="Close"
-                onClick={props.onClose}>
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <CloseButton onClick={props.onClose}/>
         </div>
     </div>;
 }

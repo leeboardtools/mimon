@@ -80,7 +80,6 @@ export class DropdownMenu extends React.Component {
 
         return <div className={topClassName}>
             <a className={buttonClassName}
-                //data-toggle="dropdown"
                 href="#"
                 role="button"
                 aria-label={props.ariaLabel}

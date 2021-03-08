@@ -20,6 +20,7 @@ import * as electron from 'electron';
 import * as process from 'process';
 import { InfoReporter } from '../util-ui/InfoReporter';
 import { RowColContainer, Row, Col } from '../util-ui/RowCols';
+import { CloseButton } from '../util-ui/CloseButton';
 
 const { app } = electron.remote;
 const { ipcRenderer } = electron;
@@ -97,17 +98,13 @@ class AppOpenScreen extends React.Component {
                     className= {className}
                     onClick={() => props.onRecentClick(pathName)}>
                     <span>{pathName}</span>
-                    <button
-                        type="button"
-                        className="close ml-3"
-                        data-dismiss="modal"
-                        aria-label="Remove Path Name"
-                        onClick={(event) => { 
+                    <CloseButton
+                        classExtras = "ml-3"
+                        ariaLabel = "Remove Path Name"
+                        onClick = {(event) => { 
                             props.onRemoveRecentClick(pathName); event.stopPropagation(); 
                         }}
-                    >
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    />
                 </div>
             );
 
