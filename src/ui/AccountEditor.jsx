@@ -14,6 +14,7 @@ import { ModalPage } from '../util-ui/ModalPage';
 import { PageBody } from '../util-ui/PageBody';
 import { ErrorBoundary } from '../util-ui/ErrorBoundary';
 import * as AH from '../tools/AccountHelpers';
+import { Row, Col } from '../util-ui/RowCols';
 
 
 /**
@@ -576,15 +577,15 @@ export class AccountEditor extends React.Component {
         case A.AccountCategory.ASSET :
         case A.AccountCategory.LIABILITY :
             return <React.Fragment>
-                <div className="row">
-                    <div className="col">
+                <Row>
+                    <Col>
                         {this.renderDefaultSplitAccountEditor(
                             AH.DefaultSplitAccountType.FEES_EXPENSE)}
-                    </div>
-                    <div className="col">
+                    </Col>
+                    <Col>
                         {dividendsEditor}
-                    </div>
-                </div>
+                    </Col>
+                </Row>
             </React.Fragment>;
         }
     }
@@ -600,22 +601,22 @@ export class AccountEditor extends React.Component {
         const defaultSplitAccountEditors = this.renderDefaultSplitAccountEditors();
 
         return <PageBody classExtras = "Editor-body AccountEditor-body">
-            <div className="row">
-                <div className="col">
+            <Row>
+                <Col>
                     {parentEditor}
-                </div>
-                <div className="col">
+                </Col>
+                <Col>
                     {typeEditor}
-                </div>
-            </div>
-            <div className="row">
-                <div className="col">
+                </Col>
+            </Row>
+            <Row>
+                <Col>
                     {nameEditor}
-                </div>
-                <div className="col">
+                </Col>
+                <Col>
                     {refIdEditor}
-                </div>
-            </div>
+                </Col>
+            </Row>
             {descriptionEditor}
             {pricedItemEditor}
             {defaultSplitAccountEditors}

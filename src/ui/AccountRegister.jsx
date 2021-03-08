@@ -17,6 +17,7 @@ import { getDefaultAccountIdForNewSplit,
     MultiSplitsEditor } from './MultiSplitsEditor';
 import { YMDDate } from '../util/YMDDate';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
+import { Row, Col } from '../util-ui/RowCols';
 
 
 const allColumnInfoDefs = {};
@@ -238,10 +239,10 @@ function renderSplitItemTooltip(caller, splits, index, aleCreditSign) {
     const value = currency.getQuantityDefinition()
         .baseValueToValueText(split.quantityBaseValue * creditSign);
 
-    return <div className = "row" key = {index}>
-        <div className = "col col-sm-auto text-left">{splitAccountDataItem.name}</div>
-        <div className = "col text-right">{value}</div>
-    </div>;
+    return <Row key = {index}>
+        <Col classExtras = "col-sm-auto text-left">{splitAccountDataItem.name}</Col>
+        <Col classExtras = "text-right">{value}</Col>
+    </Row>;
 }
 
 
@@ -1789,7 +1790,7 @@ export class AccountRegister extends React.Component {
         let registerClassName = 'RowTableContainer AccountRegister';
         if (modal) {
             modalComponent = modal(this._modalRef);
-            registerClassName += ' d-none';
+            registerClassName += ' D-none';
         }
 
         const table = <div className = {registerClassName}>

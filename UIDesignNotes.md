@@ -446,7 +446,7 @@ Bootstarp classes in ui:
 
     - btn-sm: App, ReconcilerWindow
 
-    - col: AccountEditor, AccountingCellEditors, AccountRegister, App, LotSelectionEditor, PricedItemEditor, ReconcilerWindow, ReminderEditor, TickerSelector
+    - col: AccountingCellEditors, App, LotSelectionEditor, PricedItemEditor, ReconcilerWindow, ReminderEditor, TickerSelector
     - col-6: PricedItemEditor
     - col-8: App
     - col-auto: ReminderEditor
@@ -456,7 +456,6 @@ Bootstarp classes in ui:
     - container-fluid: App, FileCreator
 
     - d-flex: App, MainWindow, NewFileConfigurator, PriceRetrieverWindow
-    - d-none: AccountRegister, PricesList
     - disabled: MainWindow, NewFileConfigurator, TickerSelector
 
     - flex-column: App
@@ -508,7 +507,7 @@ Bootstarp classes in ui:
     - pr-2: MainWindow, NewFileConfigurator
     - pt-2: PriceRetrieverWindow
     
-    - row: AccountEditor, AccountingCellEditors, AccountRegister, App, PricedItemEditor, PriceRetrieverWindow, ReconcilerWindow, ReminderEditor, TickerSelector
+    - row: AccountingCellEditors, App, PricedItemEditor, PriceRetrieverWindow, ReconcilerWindow, ReminderEditor, TickerSelector
 
     - table-striped: AccountRegister, LotSelectionEditor, MultiSplitsEditor, PricesList
     - text-center: App, PricedItemsList, ReconcilerWindow, RemindersList
@@ -544,7 +543,6 @@ Bootstrap classes in use in util-ui:
     - container-fluid: ContentFramer, ErrorReporter, FileSelector, Page
 
     - d-flex: ContentFramer, DropdownSelector
-    - d-none: SequentialPages, TabbedPages
     - disabled: DropdownSelector, MenuList
     - dropdown: DropdownMenu
     - dropdown-item: DropdownSelector
