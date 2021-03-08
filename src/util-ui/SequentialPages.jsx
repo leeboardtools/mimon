@@ -60,7 +60,7 @@ export class SequentialPages extends React.Component {
         for (let i = 0; i < pageCount; ++i) {
             const isActive = (i === activePageIndex);
             const pageComponent = this.props.onRenderPage(i, isActive);
-            const className = 'h-100 SequentialPages-page ' + (isActive ? '' : 'd-none');
+            const className = 'h-100 SequentialPages-page ' + (isActive ? '' : 'D-none');
             pages.push((
                 <div className = {className} key = {i}>{pageComponent}</div>
             ));

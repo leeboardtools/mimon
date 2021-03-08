@@ -795,7 +795,7 @@ export class PricesList extends React.Component {
         let registerClassName = 'RowTableContainer PricesList';
         if (modal) {
             modalComponent = modal(this._modalRef);
-            registerClassName += ' d-none';
+            registerClassName += ' D-none';
         }
 
         const table = <div className = {registerClassName}>
