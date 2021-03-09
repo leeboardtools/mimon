@@ -414,8 +414,8 @@ export class PriceRetrieverWindow extends React.Component {
         }
 
         return <div className = "w-100 h-100" style = {style}>
-            <div className = "d-flex flex-row W-inherit H-inherit m-1">
-                <div className = "flex-row flex-grow-1 pl-3 pb-2 H-inherit">
+            <div className = "FlexC FlexC-row W-inherit H-inherit m-1">
+                <div className = "FlexI-grow-1 pl-3 pb-2 H-inherit">
                     <TickerSelector
                         accessor = { this.props.accessor }
                         tickerEntries = {tickerEntries}
@@ -425,7 +425,7 @@ export class PriceRetrieverWindow extends React.Component {
                         ref = {this._tickerSelectorRef}
                     />
                 </div>
-                <div className = "flex-row m-4">
+                <div className = "m-4">
                     <Row>
                         {this.renderTickerButton('PriceRetrieverWindow-select_all',
                             this.onSelectAllTickers)}

@@ -281,8 +281,8 @@ export class NewFileConfigurator extends React.Component {
 
     onPostRenderTabs(tabs) {
         const menu = this.renderMenu();
-        return <div className = "d-flex">
-            <div className = "flex-grow-1">
+        return <div className = "FlexC">
+            <div className = "FlexI-grow-1">
                 {tabs}
             </div>
             {menu}

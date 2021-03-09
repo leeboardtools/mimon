@@ -427,50 +427,60 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 BS flexbox:
 Flex container:
-    - d-flex
-        - flex-direction:
-            - flex-row
-            - flex-row-reverse
-            - flex-column
-            - flex-column-reverse
+- d-flex: OK
+    - flex-direction: OK
+        - flex-row
+        - flex-row-reverse
+        - flex-column
+        - flex-column-reverse
 
-        - justify-content:
-            - justify-content-start
-            - justify-content-end
-            - justify-content-center
-            - justify-content-between
-            - justify-content-around
+    - justify-content:
+        - justify-content-start
+        - justify-content-end
+        - justify-content-center
+        - justify-content-between
+        - justify-content-around
 
-        - align-items:
-            -align-items-start
-            -align-items-end
-            -align-items-center
-            -align-items-baseline
-            -align-items-stretch
-        
-        - align-self:
-            - align-self-start
-            - align-self-end
-            - align-self-center
-            - align-self-baseline
-            - align-self-stretch
-        
-        - flex-wrap:
-            - flex-wrap
-            - flex-nowrap
-            - flex-wrap-reverse
-        
-        - align-content:
-            - align-content-start
-            - align-content-end
-            - align-content-center
-            - align-content-around
-            - align-content-stretch
+    - align-items: OK
+        -align-items-start
+        -align-items-end
+        -align-items-center
+        -align-items-baseline
+        -align-items-stretch
+    
+    - flex-wrap:
+        - flex-wrap
+        - flex-nowrap
+        - flex-wrap-reverse
+    
+    - align-content:
+        - align-content-start
+        - align-content-end
+        - align-content-center
+        - align-content-around
+        - align-content-stretch
 
 Flex items:
     - order-0
     ...
     - order-12
+
+    - align-self:
+        - align-self-start
+        - align-self-end
+        - align-self-center
+        - align-self-baseline
+        - align-self-stretch
+    
+    - flex-grow: OK
+        - flex-grow-0
+        - flex-grow-1
+
+    - flex-shrink: OK
+        - flex-shrink-0
+        - flex-shrink-1
+
+    - flex-fill
 
 Bootstarp classes in ui:
     - active: TickerSelector
@@ -491,12 +501,9 @@ Bootstarp classes in ui:
 
     - col-form-label: LotSelectionEditor
 
-    - d-flex: App, MainWindow, NewFileConfigurator, PriceRetrieverWindow
     - disabled: MainWindow, NewFileConfigurator, TickerSelector
 
-    - flex-column: App
     - flex-grow-1: MainWindow, NewFileConfigurator, PriceRetrieverWindow
-    - flex-row: PriceRetrieverWindow
     - form-check-input: TickerSelector
     - form-control: FileCreator
     - form-group: FileCreator
@@ -573,7 +580,6 @@ Bootstrap classes in use in util-ui:
     - container
     - container-fluid: ContentFramer, ErrorReporter, FileSelector, Page
 
-    - d-flex: ContentFramer, DropdownSelector
     - disabled: DropdownSelector, MenuList
     - dropdown: DropdownMenu
     - dropdown-item: DropdownSelector
@@ -582,7 +588,6 @@ Bootstrap classes in use in util-ui:
     - enabled: RowTable
 
     - fade: ErrorReporter
-    - flex-column: ContentFramer
     - form-control: CellButton, CellDateDisplay, CellDateEditor, CellSelectDisplay, CellSelectEditor, CellToggleSelectEditor, CellTextDisplay, CellTextEditor, CurrencySelector, Field
     - form-group: Field
 
