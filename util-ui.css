@@ -185,9 +185,43 @@
     align-items: center!important;
 }
 
+
+/* FlexC are applied to the flex container */
 /* Flexbox container */
 .FlexC {
     display: flex!important;
+}
+
+.FlexC-column {
+    flex-direction: column!important;
+}
+.FlexC-column-reverse {
+    flex-direction: column-reverse!important;
+}
+.FlexC-row {
+    flex-direction: row!important;
+}
+.FlexC-row-reverse {
+    flex-direction: row-reverse!important;
+}
+
+
+/* FlexI are for items in a flex container */
+.FlexI-grow-0 {
+    flex-grow: 0!important;
+}
+.FlexI-grow-1 {
+    flex-grow: 1!important;
+}
+.FlexI-grow-2 {
+    flex-grow: 2!important;
+}
+
+.FlexI-shrink-0 {
+    flex-shrink: 0!important;
+}
+.FlexI-shrink-1 {
+    flex-shrink: 1!important;
 }
 
 
