@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { ContentFramer } from './ContentFramer';
 import { CloseButton } from './CloseButton';
+import { Row, Col } from './RowCols';
 
 
 
@@ -39,14 +40,14 @@ export function ModalPage(props) {
 
         titleComponent = <div className = "border-bottom p-2 ModalPage-title"
         >
-            <div className = "row justify-content-between">
-                <div className = "col-11 Text-center">
+            <Row classExtras = "justify-content-between">
+                <Col classExtras = "Text-center">
                     <h4 className = "">{title}</h4>
-                </div>
-                <div className = "col">
+                </Col>
+                <Col classExtras = "Col-auto">
                     {titleCloseBtn}
-                </div>
-            </div>
+                </Col>
+            </Row>
         </div>;
     }
 
@@ -82,14 +83,14 @@ export function ModalPage(props) {
     }
 
     const buttonBar = <div className = "mt-auto ModalPage-buttonBar">
-        <div className = "row border-top m-2">
-            <div className = "col Text-left mt-2">
+        <Row classExtras = "border-top m-2">
+            <Col classExtras = "Text-left mt-2">
                 {cancelBtn}
-            </div>
-            <div className = "col Text-right mt-2">
+            </Col>
+            <Col classExtras = "Text-right mt-2">
                 {buttons}
-            </div>
-        </div>
+            </Col>
+        </Row>
     </div>;
 
 
