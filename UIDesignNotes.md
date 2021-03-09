@@ -425,13 +425,57 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 - Add rounding option for accounts (specific accounts might round up or down).
 
+BS flexbox:
+Flex container:
+    - d-flex
+        - flex-direction:
+            - flex-row
+            - flex-row-reverse
+            - flex-column
+            - flex-column-reverse
+
+        - justify-content:
+            - justify-content-start
+            - justify-content-end
+            - justify-content-center
+            - justify-content-between
+            - justify-content-around
+
+        - align-items:
+            -align-items-start
+            -align-items-end
+            -align-items-center
+            -align-items-baseline
+            -align-items-stretch
+        
+        - align-self:
+            - align-self-start
+            - align-self-end
+            - align-self-center
+            - align-self-baseline
+            - align-self-stretch
+        
+        - flex-wrap:
+            - flex-wrap
+            - flex-nowrap
+            - flex-wrap-reverse
+        
+        - align-content:
+            - align-content-start
+            - align-content-end
+            - align-content-center
+            - align-content-around
+            - align-content-stretch
+
+Flex items:
+    - order-0
+    ...
+    - order-12
 
 Bootstarp classes in ui:
     - active: TickerSelector
     - alert: App
     - alert-primary: App
-    - align-items-center (flex-box): PriceRetrieverWindow
-    - align-items-end (flex-box): ReminderEditor
 
     - btn: AccountEditor, App, FileCreator, PriceRetrieverWindow, ReconcilerWindow
     - btn-block: App
@@ -445,11 +489,7 @@ Bootstarp classes in ui:
 
     - btn-sm: App, ReconcilerWindow
 
-    - col-6: PricedItemEditor
-    - col-8: App
-    - col-auto: ReminderEditor
     - col-form-label: LotSelectionEditor
-    - col-sm-auto: AccountingCellEditors, AccountRegister
 
     - d-flex: App, MainWindow, NewFileConfigurator, PriceRetrieverWindow
     - disabled: MainWindow, NewFileConfigurator, TickerSelector

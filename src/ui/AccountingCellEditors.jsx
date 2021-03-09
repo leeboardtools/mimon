@@ -1336,7 +1336,7 @@ export function renderSplitQuantityDisplay(args) {
                         lotChange.quantityBaseValue * sign);
                     lotTooltipEntries.push(
                         <Row key = {i}>
-                            <Col classExtras = "col-sm-auto Text-left">
+                            <Col classExtras = "Col-auto Text-left">
                                 {lotDataItem.description}
                             </Col>
                             <Col classExtras = "Text-right">

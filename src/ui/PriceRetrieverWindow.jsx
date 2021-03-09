@@ -413,7 +413,7 @@ export class PriceRetrieverWindow extends React.Component {
             };
         }
 
-        return <div className = "align-items-center w-100 h-100" style = {style}>
+        return <div className = "w-100 h-100" style = {style}>
             <div className = "d-flex flex-row W-inherit H-inherit m-1">
                 <div className = "flex-row flex-grow-1 pl-3 pb-2 H-inherit">
                     <TickerSelector

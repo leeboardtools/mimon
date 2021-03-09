@@ -780,11 +780,11 @@ export class ReminderEditor extends React.Component {
         const lastStateEditor = this.renderLastOccurrenceStateEditor();
 
         return <PageBody classExtras = "Editor-body ReminderEditor-body">
-            <Row classExtras = "align-items-end">
+            <Row classExtras = "Row-align-items-end">
                 <Col>
                     {descriptionEditor}
                 </Col>
-                <Col classExtras = "col-auto mr-4">
+                <Col classExtras = "Col-auto mr-4">
                     {enabledEditor}
                 </Col>
             </Row>

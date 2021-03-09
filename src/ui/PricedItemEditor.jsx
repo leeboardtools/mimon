@@ -398,7 +398,7 @@ export class PricedItemEditor extends React.Component {
         return <PageBody classExtras = "Editor-body PricedItemEditor-body">
             {tickerRow}
             <Row>
-                <Col classExtras = "col-6">
+                <Col classExtras = "Col-6">
                     {nameEditor}
                 </Col>
                 <Col>
