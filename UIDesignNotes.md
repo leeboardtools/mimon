@@ -466,8 +466,8 @@ Flex items:
     - order-12
 
     - align-self:
-        - align-self-start
-        - align-self-end
+        - align-self-start: OK (flex)
+        - align-self-end: OK (flex)
         - align-self-center
         - align-self-baseline
         - align-self-stretch
@@ -503,7 +503,6 @@ Bootstarp classes in ui:
 
     - disabled: MainWindow, NewFileConfigurator, TickerSelector
 
-    - flex-grow-1: MainWindow, NewFileConfigurator, PriceRetrieverWindow
     - form-check-input: TickerSelector
     - form-control: FileCreator
     - form-group: FileCreator
@@ -550,8 +549,6 @@ Bootstarp classes in ui:
     - pr-2: MainWindow, NewFileConfigurator
     - pt-2: PriceRetrieverWindow
     
-    - table-striped: AccountRegister, LotSelectionEditor, MultiSplitsEditor, PricesList
-
     - w-100: AccountRegister, App, PriceRetrieverWindow, PricesList
     - w-40: PricedItemsList
     - w-50: ReconcilerWindow
@@ -642,9 +639,6 @@ Bootstrap classes in use in util-ui:
     - row: ModalPage, Tooltip
 
     - show: ErrorReporter, Popup
-
-    - table: RowTable
-    - table-active: RowTable
 
     - tracking: RowTable
 

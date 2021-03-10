@@ -812,7 +812,7 @@ export class PricesList extends React.Component {
                 contextMenuItems = {this.props.contextMenuItems}
                 onChooseContextMenuItem = {this.props.onChooseContextMenuItem}
 
-                classExtras = "table-striped"
+                classExtras = "RowTable-striped"
 
                 //
                 // EditableRowTable methods
