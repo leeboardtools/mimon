@@ -168,21 +168,66 @@
     margin-left: -15px;
 }
 
+/* Alignment along the cross axis for all direct children as a group */
+.Row-align-items-start, .FlexC-align-items-start {
+    -ms-flex-align: start!important;
+    align-items: flex-start!important;
+}
 .Row-align-items-end, .FlexC-align-items-end {
     -ms-flex-align: end!important;
     align-items: flex-end!important;
 }
-.Row-align-items-start, .FlexC-align-items-start {
-    -ms-flex-align: start!important;
-    align-items: flex-start!important;
+.Row-align-items-center, .FlexC-align-items-center {
+    -ms-flex-align: center!important;
+    align-items: center!important;
 }
 .Row-align-items-stretch, .FlexC-align-items-stretch {
     -ms-flex-align: stretch!important;
     align-items: stretch!important;
 }
-.Row-align-items-center, .FlexC-align-items-center {
-    -ms-flex-align: center!important;
-    align-items: center!important;
+
+
+/* Alignment along the main axis */
+.Row-justify-content-start, 
+.FlexC-justify-content-start {
+    -ms-flex-pack: start!important;
+    justify-content: flex-start!important;
+}
+
+.Row-justify-content-end, 
+.FlexC-justify-content-end {
+    -ms-flex-pack: end!important;
+    justify-content: flex-end!important;
+}
+
+.Row-justify-content-center, 
+.FlexC-justify-content-center {
+    -ms-flex-pack: center!important;
+    justify-content: center!important;
+}
+
+.Row-justify-content-stretch, 
+.FlexC-justify-content-stretch {
+    -ms-flex-pack: stretch!important;
+    justify-content: stretch!important;
+}
+
+.Row-justify-content-between, 
+.FlexC-justify-content-between {
+    -ms-flex-pack: justify!important;
+    justify-content: space-between!important;
+}
+
+.Row-justify-content-around, 
+.FlexC-justify-content-around {
+    -ms-flex-pack: distribute!important;
+    justify-content: space-around!important;
+}
+
+.Row-justify-content-evenly, 
+.FlexC-justify-content-evenly {
+    -ms-flex-pack: distribute!important;
+    justify-content: space-evenly!important;
 }
 
 
@@ -192,6 +237,7 @@
     display: flex!important;
 }
 
+/* Flow direction */
 .FlexC-column {
     flex-direction: column!important;
 }
@@ -203,6 +249,48 @@
 }
 .FlexC-row-reverse {
     flex-direction: row-reverse!important;
+}
+
+/* Wrap onto multiple lines */
+.FlexC-wrap {
+    flex-wrap: wrap!important;
+}
+.FlexC-nowrap {
+    flex-wrap: nowrap!important;
+}
+.FlexC-wrap-reverse {
+    flex-wrap: wrap-reverse!important;
+}
+
+
+/* Cross-axis alignment */
+.FlexC-cross-align-content-start {
+    -ms-flex-line-pack: start!important;
+    align-content: flex-start!important;
+}
+.FlexC-cross-align-content-end {
+    -ms-flex-line-pack: end!important;
+    align-content: flex-end!important;
+}
+.FlexC-cross-align-content-center {
+    -ms-flex-line-pack: center!important;
+    align-content: center!important;
+}
+.FlexC-cross-align-content-stretch {
+    -ms-flex-line-pack: stretch!important;
+    align-content: stretch!important;
+}
+.FlexC-cross-align-content-between {
+    -ms-flex-line-pack: justify!important;
+    align-content: space-between!important;
+}
+.FlexC-cross-align-content-around {
+    -ms-flex-line-pack: distribute!important;
+    align-content: space-around!important;
+}
+.FlexC-cross-align-content-evenly {
+    -ms-flex-line-pack: distribute!important;
+    align-content: space-evenly!important;
 }
 
 
@@ -278,6 +366,67 @@
     color: #212529;
 }
 
+
+.Cell {
+    display: block;
+    width: 100%;
+    height: calc(1.5em + .75rem + 2px);
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    transition: border-color .15s
+        ease-in-out,box-shadow .15s
+        ease-in-out;
+}
+
+
+.input-group>.custom-file,
+.input-group>.custom-select,
+.input-group>.Cell {
+    position: relative;
+    -ms-flx: 1 1 auto;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+
+.Cell:disabled, .Cell[readonly] {
+    background-color: #e9ecef;
+    opacity: 1;
+}
+
+.Cell.is-invalid, .was-validated .Cell:invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + .75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(.375em + .1875rem) center;
+    background-size: calc(.75em + .375rem)
+        calc(.75em + .375rem);
+}
+
+.is-invalid-.invalid-feedback,
+.is-invalid-.invalid-tooltip,
+.was-validated:invalid-.invalid-feedback,
+.was-validated:invalid-.invalid-tooltip {
+    display: block;
+}
+
+.invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: .25rem;
+    font-size: 80%;
+    color: #dc3545;
+}
 
 .CellButton {
     margin: 0px;
@@ -1034,6 +1183,19 @@ that's on the same line */
     transition: border-color .15s
         ease-in-out,box-shadow .15s
         ease-in-out;
+}
+*/
+/*
+.input-group>.custom-file,
+.input-group>.custom-select,
+.input-group>.form-control,
+.input-group>.form-control-plaintext {
+    position: relative;
+    -ms-flx: 1 1 auto;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+    margin-bottom: 0;
 }
 */
 /*

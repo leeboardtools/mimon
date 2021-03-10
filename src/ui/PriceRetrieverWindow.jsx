@@ -516,7 +516,7 @@ export class PriceRetrieverWindow extends React.Component {
             'PriceRetrieverWindow-from_date',
             'ymdDateTo');
 
-        const controlsClassName = 'pt-2 pb-2 justify-content-center '
+        const controlsClassName = 'pt-2 pb-2 Row-justify-content-center '
             + ' PriceRetrieverWindow-controls';
         const header = <div>
             <Row>

@@ -11,7 +11,7 @@ export function CurrencySelector(props) {
     const { id, value, onChange, ariaLabel, classExtras, disabled } = props;
 
     const divClassName = 'input-group mb-0 ';
-    let className = 'form-control CellSelectEditor-select ' + classExtras;
+    let className = 'Cell CellSelectEditor-select ' + classExtras;
 
     let optionComponents = [];
     optionComponents.push(

@@ -109,13 +109,13 @@ class AppOpenScreen extends React.Component {
             );
 
             mruComponent = <div className="mb-4">
-                <Row classExtras = "justify-content-center mb-2">
+                <Row classExtras = "Row-justify-content-center mb-2">
                     <span>{userMsg('AppOpeningScreen-mru_title')}</span>
                 </Row>
-                <Row classExtras = "justify-content-center">
+                <Row classExtras = "Row-justify-content-center">
                     {namesItem}
                 </Row>
-                <Row classExtras = "justify-content-center">
+                <Row classExtras = "Row-justify-content-center">
                     &nbsp;
                 </Row>
             </div>;

@@ -40,7 +40,7 @@ export function ModalPage(props) {
 
         titleComponent = <div className = "border-bottom p-2 ModalPage-title"
         >
-            <Row classExtras = "justify-content-between">
+            <Row classExtras = "Row-justify-content-between">
                 <Col classExtras = "Text-center">
                     <h4 className = "">{title}</h4>
                 </Col>

@@ -791,7 +791,7 @@ export class LotsSelectionEditor extends React.Component {
 
         return <RowColContainer>
             <Row noGutters 
-                classExtras = "justify-content-center LotsSelectionEditor-summary">
+                classExtras = "Row-justify-content-center LotsSelectionEditor-summary">
                 {totalAvailableShares}
                 {totalSelectedShares}
             </Row>

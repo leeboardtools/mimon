@@ -422,7 +422,7 @@ export class ReconcilingWindow extends React.Component {
                 inputClassExtras = "ReconcilingWindow-splitInfoTotal_value"
             />);
         const totalRow = <div className = "ReconcilingWindow-splitInfos-total">
-            <Row classExtras = "justify-content-between">
+            <Row classExtras = "Row-justify-content-between">
                 <Col>
                     {selectAll}
                     {clearAll}
@@ -803,7 +803,7 @@ export class ReconcilerSetupWindow extends React.Component {
             title = {title}
             classExtras = {className}
         >
-            <div className = "ModalPage-inner_rows_container justify-content-center">
+            <div className = "ModalPage-inner_rows_container Row-justify-content-center">
                 <Row>
                     <Col></Col>
                     <Col>
@@ -1047,7 +1047,7 @@ export class ReconcilerWindow extends React.Component {
             title = {this.getTitle('ReconcilerWindow-reconciling_title')}
             classExtras = "ReconcilerWindow ReconcilerWindow-reconciling"
         >
-            <div className = "ModalPage-inner_rows_container justify-content-center">
+            <div className = "ModalPage-inner_rows_container Row-justify-content-center">
                 {userMsg('ReconcilerWindow-noTransactions')}
             </div>
         </ModalPage>;

@@ -434,7 +434,7 @@ Flex container:
         - flex-column
         - flex-column-reverse
 
-    - justify-content:
+    - justify-content: OK
         - justify-content-start
         - justify-content-end
         - justify-content-center
@@ -448,12 +448,12 @@ Flex container:
         -align-items-baseline
         -align-items-stretch
     
-    - flex-wrap:
+    - flex-wrap: OK
         - flex-wrap
         - flex-nowrap
         - flex-wrap-reverse
     
-    - align-content:
+    - align-content: OK
         - align-content-start
         - align-content-end
         - align-content-center
@@ -482,7 +482,7 @@ Flex items:
 
     - flex-fill
 
-Bootstarp classes in ui:
+Bootstrap classes in ui:
     - active: TickerSelector
     - alert: App
     - alert-primary: App
@@ -669,3 +669,4 @@ Column sorting in RowTable:
     - Lot selection editor
         - Add summary info.
     
+    - Selecting currency in New Security generates Maximum depth exceeded error.
