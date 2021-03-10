@@ -1544,7 +1544,7 @@ export class RowTable extends React.Component {
 
         let rowClassName = 'RowTableRow';
         if (rowIndex === activeRowIndex) {
-            rowClassName += ' table-active';
+            rowClassName += ' RowTable-active';
         }
         if (rowClassExtras) {
             rowClassName += ' ' + rowClassExtras;
