@@ -13,7 +13,7 @@ export const CellButton = React.forwardRef(
             onClick, onFocus, onBlur, disabled } = props;
 
         const divClassName = 'input-group mb-0 ';
-        let className = 'form-control CellButton ' + classExtras;
+        let className = 'Cell CellButton ' + classExtras;
 
         let errorMsgComponent;
         if (errorMsg) {

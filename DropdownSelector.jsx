@@ -271,7 +271,7 @@ export class DropdownSelector extends React.Component {
             disabled={disabled}
             ref = {this._buttonRef}
         >
-            <div className = "FlexC justify-content-between">
+            <div className = "FlexC FlexC-justify-content-between">
                 <span>{valueText}</span>
                 <span className = "Text-right pl-2">&#x25BE;</span>
             </div>

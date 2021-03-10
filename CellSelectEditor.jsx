@@ -14,7 +14,7 @@ export const CellSelectEditor = React.forwardRef(
             onChange, onFocus, onBlur, disabled } = props;
 
         const divClassName = 'input-group mb-0 ';
-        let className = 'form-control CellSelectEditor-select ' + classExtras;
+        let className = 'Cell CellSelectEditor-select ' + classExtras;
 
         let optionComponents;
         if (items.length && (typeof items[0] === 'string')) {
@@ -99,7 +99,7 @@ export function CellSelectDisplay(props) {
     const { selectedValue, ariaLabel, classExtras, size, } = props;
 
     const divClassName = 'input-group mb-0 ';
-    const className = 'form-control CellTextEditor-textInput CellTextEditor-textDisplay ' 
+    const className = 'Cell CellTextEditor-textInput CellTextEditor-textDisplay ' 
         + classExtras;
 
     return <Tooltip tooltip = {props.tooltip}>
@@ -148,7 +148,7 @@ export const CellToggleSelectEditor = React.forwardRef(
             onChange, onFocus, onBlur, disabled } = props;
 
         const divClassName = 'input-group mb-0 ';
-        let className = 'form-control CellButton CellToggleSelectEditor-button ' 
+        let className = 'Cell CellButton CellToggleSelectEditor-button ' 
             + classExtras;
 
         let value = selectedValue;
