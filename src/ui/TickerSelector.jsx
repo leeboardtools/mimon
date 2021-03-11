@@ -4,6 +4,7 @@ import { getQuantityDefinition } from '../util/Quantities';
 import { Tooltip } from '../util-ui/Tooltip';
 import { MultiColumnList } from '../util-ui/MultiColumnList';
 import { Row, Col } from '../util-ui/RowCols';
+import { Checkbox } from '../util-ui/Checkbox';
 
 
 /**
@@ -111,15 +112,15 @@ export class TickerSelector extends React.Component {
                 </Tooltip>;
             }
 
-            tickerComponent = <label className = "">
-                <input className = "form-check-input" type="checkbox"
-                    checked = {isSelected}
-                    readOnly
-                    tabIndex = {-1}
-                />
-                {tickerComponent}
-            </label>;
-
+            tickerComponent = <Checkbox 
+                value = {isSelected}
+                readOnly
+                tabIndex = {-1}
+            >
+                <div className = "Checkbox-label">
+                    {tickerComponent}
+                </div>
+            </Checkbox>;
 
             let statusClassName = 'Monetary-base';
             let statusMsg;
