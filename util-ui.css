@@ -367,6 +367,7 @@
 }
 
 
+/* Originally from BS form-control */
 .Cell {
     display: block;
     width: 100%;
@@ -572,7 +573,7 @@ that's on the same line */
     padding-right: 1rem;
 }
 
-/** For a container of Field components on the same line **/
+/** For a container of Field components on the same line */
 .FieldContainer-inline {
     display: flex !important;
 }
@@ -584,6 +585,15 @@ that's on the same line */
     padding-right: .25rem;
 }
 
+/** For text in a field that's on the same line,
+from BS col-form-label */
+.Field-inline-text {
+    padding-top: calc(.375rem + 1px);
+    padding-bottom: calc(.375rem + 1px);
+    margin-bottom: 0;
+    font-size: inherit;
+    line-height: 1.5;
+}
 
 
 .InfoReporter-body {
@@ -1132,13 +1142,6 @@ that's on the same line */
 
 /* TEMP STUFF !!! From BS */
 /*
-.col-form-label {
-    padding-top: calc(.375rem + 1px);
-    padding-bottom: calc(.375rem + 1px);
-    margin-bottom: 0;
-    font-size: inherit;
-    line-height: 1.5;
-}
 
 .input-group-append {
     margin-left: -1px;
@@ -1229,11 +1232,6 @@ that's on the same line */
     color: #dc3545;
 }
 
-.form-check-input {
-    position: absolute;
-    margin-top: .3rem;
-    margin-left: -1.25rem;
-}
 
 .nav {
     display: -ms-flexbox;
