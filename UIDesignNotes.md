@@ -279,7 +279,7 @@ Are the lists really two separate styles? Or can they be combined into one?
     
 
     - Account Editor
-
+        - Canceling makes arbitrary tab active, not previously selected tab.
 
     - Accounts List
         - Custom Account Lists
@@ -499,14 +499,10 @@ Bootstrap classes in ui:
 
     - btn-sm: App, ReconcilerWindow
 
-    - col-form-label: LotSelectionEditor
-
     - disabled: MainWindow, NewFileConfigurator, TickerSelector
 
-    - form-check-input: TickerSelector
     - form-control: FileCreator
     - form-group: FileCreator
-    - form-row: LotSelectionEditor
 
     - h-100: AccountRegister, App, PriceRetrieverWindow, PricesList
 
@@ -514,10 +510,6 @@ Bootstrap classes in ui:
     - input-group-append: FileCreator
     - invalid-feedback: FileCreator
     - is-invalid: FileCreator
-
-    - justify-content-between: ReconcilerWindow
-    - justify-content-center: LotSelectionEditor, PriceRetrieverWindow, ReconcilerWindow
-    - justify-content-md-center: App
 
     - m-0: PricedItemsList, RemindersList
     - m-1: PriceRetrieverWindow
@@ -573,8 +565,6 @@ Bootstrap classes in use in util-ui:
     - close: CloseButton
     - col: ModalPage, Tooltip
     - col-11: ModalPage
-    - col-form-label: FieldPrefix, FieldSuffix
-    - container
     - container-fluid: ContentFramer, ErrorReporter, FileSelector, Page
 
     - disabled: DropdownSelector, MenuList
@@ -585,7 +575,7 @@ Bootstrap classes in use in util-ui:
     - enabled: RowTable
 
     - fade: ErrorReporter
-    - form-control: CellButton, CellDateDisplay, CellDateEditor, CellSelectDisplay, CellSelectEditor, CellToggleSelectEditor, CellTextDisplay, CellTextEditor, CurrencySelector, Field
+    - form-control: Field
     - form-group: Field
 
     - h-100: ContentFramer, SequentialPages, TabbedPages

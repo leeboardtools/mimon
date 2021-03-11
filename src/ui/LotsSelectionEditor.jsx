@@ -762,7 +762,7 @@ export class LotsSelectionEditor extends React.Component {
                         ariaLabel = {label}
                         quantityBaseValue = {sharesBaseValue}
                         quantityDefinition = {this.state.sharesQuantityDefinition}
-                        classExtras = "col-form-label"
+                        classExtras = "Field-inline-text"
                     />
                 </Field>
             </Col>;
