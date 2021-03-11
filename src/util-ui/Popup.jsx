@@ -330,8 +330,8 @@ export class Popup extends React.Component {
                 }
             }
 
-            const width = right - left;
-            const height = bottom - top;
+            let width = right - left;
+            let height = bottom - top;
 
             let xAdjust = window.scrollX;
             let yAdjust = window.scrollY;
@@ -347,6 +347,19 @@ export class Popup extends React.Component {
             top += yAdjust;
 
             const { state } = this;
+
+            // Prevent flipping back and forth between two sizes.
+            if ((pixelsEqual(state.left, left) || pixelsEqual(state.prevLeft, left))
+             && (pixelsEqual(state.top, top) || pixelsEqual(state.prevTop, top))
+             && (pixelsEqual(state.width, width) || pixelsEqual(state.prevWidth, width))
+             && (pixelsEqual(state.height, height)
+              || pixelsEqual(state.prevHeight, height))) {
+                left = state.left;
+                top = state.top;
+                width = state.width;
+                height = state.height;
+            }
+
             if (!pixelsEqual(state.left, left) || !pixelsEqual(state.top, top)
              || !pixelsEqual(state.width, width) || !pixelsEqual(state.height, height)
              || !pixelsEqual(state.pointerX, pointerX) 
@@ -357,6 +370,10 @@ export class Popup extends React.Component {
                     top: top,
                     width: width,
                     height: height,
+                    prevLeft: state.left,
+                    prevTop: state.top,
+                    prevWidth: state.width,
+                    prevHeight: state.height,
                     pointerX: pointerX,
                     pointerY: pointerY,
                     pointerLocation: pointerLocation,
