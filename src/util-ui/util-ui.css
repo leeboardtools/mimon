@@ -436,6 +436,33 @@ button.Close {
 }
 
 
+.form-control.Is-invalid,
+.Was-validated .form-control:invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + .75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(.375em + .1875rem) center;
+    background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+}
+
+
+.Is-invalid~.Invalid-feedback,
+.Is-invalid~.Invalid-tooltip,
+.Was-validated:invalid~.Invalid-feedback,
+.Was-validated:invalid~.Invalid-tooltip {
+    display: block;
+}
+
+.Invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: .25rem;
+    font-size: 80%;
+    color: #dc3545;
+}
+
+
 .Input-group {
     position: relative;
     display: -ms-flexbox;
@@ -508,7 +535,7 @@ button.Close {
     opacity: 1;
 }
 
-.Cell.is-invalid, .was-validated .Cell:invalid {
+.Cell.Is-invalid, .Was-validated .Cell:invalid {
     border-color: #dc3545;
     padding-right: calc(1.5em + .75rem);
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
@@ -516,21 +543,6 @@ button.Close {
     background-position: right calc(.375em + .1875rem) center;
     background-size: calc(.75em + .375rem)
         calc(.75em + .375rem);
-}
-
-.is-invalid-.invalid-feedback,
-.is-invalid-.invalid-tooltip,
-.was-validated:invalid-.invalid-feedback,
-.was-validated:invalid-.invalid-tooltip {
-    display: block;
-}
-
-.invalid-feedback {
-    display: none;
-    width: 100%;
-    margin-top: .25rem;
-    font-size: 80%;
-    color: #dc3545;
 }
 
 .CellButton {
@@ -1039,7 +1051,7 @@ from BS col-form-label */
 */
 
 
-.RowTableCell .invalid-feedback {
+.RowTableCell .Invalid-feedback {
   opacity: 1.0;
   background-color: white;
   z-index: 1000;

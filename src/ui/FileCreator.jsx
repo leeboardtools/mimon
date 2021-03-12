@@ -104,8 +104,8 @@ class NewFileName extends React.Component {
         let inputClassName = 'form-control';
         let errorMsgComponent;
         if (projectNameErrorMsg) {
-            inputClassName += ' is-invalid';
-            errorMsgComponent = <div className = "invalid-feedback">
+            inputClassName += ' Is-invalid';
+            errorMsgComponent = <div className = "Invalid-feedback">
                 {projectNameErrorMsg}
             </div>;
         }

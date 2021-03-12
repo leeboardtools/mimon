@@ -494,9 +494,6 @@ Bootstrap classes in ui:
 
     - h-100: AccountRegister, App, PriceRetrieverWindow, PricesList
 
-    - invalid-feedback: FileCreator
-    - is-invalid: FileCreator
-
     - m-0: PricedItemsList, RemindersList
     - m-1: PriceRetrieverWindow
     - m-4: PriceRetrieverWindow
@@ -558,9 +555,6 @@ Bootstrap classes in use in util-ui:
     - form-group: Field
 
     - h-100: ContentFramer, SequentialPages, TabbedPages
-
-    - invalid-feedback: CellButton, CellDateEditor, CellSelectEditor, CellToggleSelectEditor, CellTextEditor, Field
-    - is-invalid: CellButton, CellDateEditor, CellSelectEditor, CellToggleSelectEditor, CellTextEditor, Field
 
     - justify-content-between: DropdownSelector, ModalPage
 

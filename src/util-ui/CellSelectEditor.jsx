@@ -28,8 +28,8 @@ export const CellSelectEditor = React.forwardRef(
 
         let errorMsgComponent;
         if (errorMsg) {
-            className += ' is-invalid';
-            errorMsgComponent = <div className = "invalid-feedback">
+            className += ' Is-invalid';
+            errorMsgComponent = <div className = "Invalid-feedback">
                 {errorMsg}
             </div>;
         }
@@ -175,8 +175,8 @@ export const CellToggleSelectEditor = React.forwardRef(
 
         let errorMsgComponent;
         if (errorMsg) {
-            className += ' is-invalid';
-            errorMsgComponent = <div className = "invalid-feedback">
+            className += ' Is-invalid';
+            errorMsgComponent = <div className = "Invalid-feedback">
                 {errorMsg}
             </div>;
         }
