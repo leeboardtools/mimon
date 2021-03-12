@@ -494,8 +494,6 @@ Bootstrap classes in ui:
 
     - h-100: AccountRegister, App, PriceRetrieverWindow, PricesList
 
-    - input-group: FileCreator
-    - input-group-append: FileCreator
     - invalid-feedback: FileCreator
     - is-invalid: FileCreator
 
@@ -562,9 +560,6 @@ Bootstrap classes in use in util-ui:
 
     - h-100: ContentFramer, SequentialPages, TabbedPages
 
-    - input-group: CellButton, CellToggleSelectEditor, CellTextDisplay, CellTextEditor, Checkbox, CurrencySelector, Field
-    - input-group-prepend: Field
-    - input-group-append: Field
     - invalid-feedback: CellButton, CellDateEditor, CellSelectEditor, CellToggleSelectEditor, CellTextEditor, Field
     - is-invalid: CellButton, CellDateEditor, CellSelectEditor, CellToggleSelectEditor, CellTextEditor, Field
 

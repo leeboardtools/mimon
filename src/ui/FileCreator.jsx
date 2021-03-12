@@ -67,14 +67,14 @@ class NewFileName extends React.Component {
             <label className = "mb-0" htmlFor = "NewFileName-baseDir">
                 {label}
             </label>
-            <div className = "input-group mb-0">
+            <div className = "Input-group mb-0">
                 <input type = "text"
                     id = "NewFileName-baseDir"
                     className = "form-control"
                     readOnly
                     aria-label = "Base Folder"
                     value = {this.props.baseDirName}/>
-                <div className = "input-group-append">
+                <div className = "Input-group-append">
                     <Button classExtras = "Btn-outline-secondary" 
                         id = "browse_btn"
                         aria-label = "Browse Base Folder"
@@ -114,7 +114,7 @@ class NewFileName extends React.Component {
             <label className = "mb-0" htmlFor = "NewFileName-projectName">
                 {label}
             </label>
-            <div className = "input-group mb-0">
+            <div className = "Input-group mb-0">
                 <input type = "text"
                     id = "NewFileName-projectName"
                     className = {inputClassName}

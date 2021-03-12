@@ -34,7 +34,7 @@ export function Checkbox(props) {
         return button;
     }
 
-    let containerClassName = 'input-group';
+    let containerClassName = 'Input-group';
     if (classExtras) {
         containerClassName += ' ' + classExtras;
     }
