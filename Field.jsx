@@ -26,8 +26,8 @@ export function Field(props) {
 
     let errorMsgComponent;
     if (errorMsg) {
-        editorClassName += ' is-invalid';
-        errorMsgComponent = <div className="invalid-feedback">
+        editorClassName += ' Is-invalid';
+        errorMsgComponent = <div className="Invalid-feedback">
             {errorMsg}
         </div>;
     }

@@ -109,8 +109,8 @@ export const CellDateEditor = React.forwardRef(
 
         let errorMsgComponent;
         if (errorMsg) {
-            className += ' is-invalid';
-            errorMsgComponent = <div className="invalid-feedback">
+            className += ' Is-invalid';
+            errorMsgComponent = <div className="Invalid-feedback">
                 {errorMsg}
             </div>;
         }
