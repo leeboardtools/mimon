@@ -690,13 +690,13 @@ export class MultiSplitsEditor extends React.Component {
                 label: userMsg('MultiSplitsEditor-delete'),
                 onClick: this.onDeleteSplit,
                 disabled: (activeRowIndex < 1) || (activeRowIndex >= rowEntries.length),
-                classExtras: 'btn-secondary',
+                classExtras: 'Btn-secondary',
             },
             {
                 label: userMsg('MultiSplitsEditor-delete_all'),
                 onClick: this.onDeleteAll,
                 disabled: rowEntries.length <= 2,
-                classExtras: 'btn-secondary',
+                classExtras: 'Btn-secondary',
             },
         ];
 

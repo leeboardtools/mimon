@@ -15,6 +15,7 @@ import { PageBody } from '../util-ui/PageBody';
 import { ErrorBoundary } from '../util-ui/ErrorBoundary';
 import * as AH from '../tools/AccountHelpers';
 import { Row, Col } from '../util-ui/RowCols';
+import { Button } from '../util-ui/Button';
 
 
 /**
@@ -443,13 +444,12 @@ export class AccountEditor extends React.Component {
         let button;
         if (pricedItemType !== PI.PricedItemType.CURRENCY) {
             const buttonLabel = userMsg('AccountEditor-newPricedItem_label', description);
-            button = <button className="btn btn-outline-secondary"
-                aria-label={'New ' + pricedItemTypeName}
-                type="button"
-                onClick={this.onNewPricedItem}
+            button = <Button classExtras = "Btn-outline-secondary"
+                aria-label = {'New ' + pricedItemTypeName}
+                onClick = {this.onNewPricedItem}
             >
                 {buttonLabel}
-            </button>;
+            </Button>;
         }
 
         return <PricedItemSelector

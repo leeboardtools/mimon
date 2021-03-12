@@ -21,6 +21,7 @@ import * as process from 'process';
 import { InfoReporter } from '../util-ui/InfoReporter';
 import { RowColContainer, Row, Col } from '../util-ui/RowCols';
 import { CloseButton } from '../util-ui/CloseButton';
+import { Button } from '../util-ui/Button';
 
 const { app } = electron.remote;
 const { ipcRenderer } = electron;
@@ -87,7 +88,7 @@ class AppOpenScreen extends React.Component {
 
     render() {
         const { props } = this;
-        let buttonClassName = 'btn btn-outline-primary btn-block';
+        let buttonClassName = 'Btn Btn-outline-primary Btn-block';
         let mruComponent;
         let importButton;
         const { validPathNames } = this.state;
@@ -95,7 +96,7 @@ class AppOpenScreen extends React.Component {
             const className = buttonClassName;
             const namesItem = validPathNames.map((pathName) =>
                 <div key={pathName} 
-                    className= {className}
+                    className = {className}
                     onClick={() => props.onRecentClick(pathName)}>
                     <span>{pathName}</span>
                     <CloseButton
@@ -120,16 +121,16 @@ class AppOpenScreen extends React.Component {
                 </Row>
             </div>;
 
-            buttonClassName = 'btn btn-outline-secondary btn-sm btn-block';
+            buttonClassName = 'Btn-outline-secondary Btn-sm Btn-block';
         }
 
         const { onImportClick } = props;
         if (onImportClick) {
-            importButton = <button className={buttonClassName}
+            importButton = <Button classExtras = {buttonClassName}
                 onClick={onImportClick}
-                aria-label="Import File">
+                ariaLabel="Import File">
                 {userMsg('AppOpeningScreen-import_file')}
-            </button>;
+            </Button>;
         }
 
         return (
@@ -148,18 +149,18 @@ class AppOpenScreen extends React.Component {
                 <RowColContainer>
                     <Row>
                         <Col/>
-                        <Col classExtras="Col-8">
+                        <Col classExtras = "Col-8">
                             {mruComponent}
-                            <button className={buttonClassName}
+                            <Button classExtras = {buttonClassName}
                                 onClick={props.onNewClick}
-                                aria-label="New File">
+                                aria-label = "New File">
                                 {userMsg('AppOpeningScreen-new_file')}
-                            </button>
-                            <button className={buttonClassName}
+                            </Button>
+                            <Button classExtras = {buttonClassName}
                                 onClick={props.onOpenClick}
-                                aria-label="Open File">
+                                aria-label = "Open File">
                                 {userMsg('AppOpeningScreen-open_file')}
-                            </button>
+                            </Button>
                             {importButton}
                         </Col>
                         <Col/>
@@ -169,10 +170,12 @@ class AppOpenScreen extends React.Component {
                     <Row>
                         <Col/>
                         <Col>
-                            <button className="btn btn-secondary btn-sm btn-block mb-4"
+                            <Button 
+                                classExtras = "Btn-secondary Btn-sm Btn-block mb-4"
                                 onClick={props.onExitClick}
                                 aria-label="Exit">
-                                {userMsg('AppOpeningScreen-exit')}</button>
+                                {userMsg('AppOpeningScreen-exit')}
+                            </Button>
                         </Col>
                         <Col/>
                     </Row>

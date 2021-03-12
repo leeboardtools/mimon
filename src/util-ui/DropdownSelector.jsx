@@ -262,7 +262,7 @@ export class DropdownSelector extends React.Component {
 
         const { isDropdownListShown } = this.state;
 
-        let buttonClassName = 'btn btn-block border DropdownSelector-button';
+        let buttonClassName = 'Btn Btn-block border DropdownSelector-button';
         const button = <button className = {buttonClassName} 
             type = "button"
             aria-haspopup = "true"

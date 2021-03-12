@@ -847,13 +847,13 @@ export class LotsSelectionEditor extends React.Component {
                 label: userMsg('LotsSelectionEditor-select_all'),
                 onClick: this.onSelectAll,
                 disabled: false,
-                classExtras: 'btn-secondary',
+                classExtras: 'Btn-secondary',
             },
             {
                 label: userMsg('LotsSelectionEditor-clear_all'),
                 onClick: this.onClearAll,
                 disabled: false,
-                classExtras: 'btn-secondary',
+                classExtras: 'Btn-secondary',
             },
         ];
 

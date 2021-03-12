@@ -47,12 +47,12 @@ export function QuestionPrompter(props) {
     const buttonsComponents = [];
     for (let i = buttons.length - 1; i >= 0; --i) {
         const button = buttons[i];
-        let className = 'btn ';
+        let className = 'Btn ';
         if (i === 0) {
-            className += ' btn-primary';
+            className += ' Btn-primary';
         }
         else {
-            className += ' btn-secondary';
+            className += ' Btn-secondary';
         }
         const component = <button type="button"
             className={className}

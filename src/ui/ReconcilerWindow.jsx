@@ -17,6 +17,7 @@ import * as ACE from './AccountingCellEditors';
 import deepEqual from 'deep-equal';
 import { Checkbox } from '../util-ui/Checkbox';
 import { Row, Col } from '../util-ui/RowCols';
+import { Button } from '../util-ui/Button';
 
 
 function getDateCellValue(args) {
@@ -397,18 +398,18 @@ export class ReconcilingWindow extends React.Component {
         reconciledBaseValue *= signMultiplier;
 
 
-        const selectAll = <button type = "button"
-            className = "btn btn-outline-secondary btn-sm mr-1"
+        const selectAll = <Button
+            classExtras = "Btn-outline-secondary Btn-sm mr-1"
             onClick = {() => this.onSelectAllNone(splitInfos, true)}
         >
             {userMsg('ReconcilingWindow-selectAll_button')}
-        </button>;
-        const clearAll = <button type = "button"
-            className = "btn btn-outline-secondary btn-sm ml-1"
+        </Button>;
+        const clearAll = <Button
+            classExtras = "Btn-outline-secondary Btn-sm ml-1"
             onClick = {() => this.onSelectAllNone(splitInfos, false)}
         >
             {userMsg('ReconcilingWindow-clearAll_button')}
-        </button>;
+        </Button>;
 
         const currency = getCurrencyForAccountId(
             accessor,
@@ -529,7 +530,7 @@ export class ReconcilingWindow extends React.Component {
             buttons.push({
                 label: userMsg('ReconcilerWindow-setup_button'),
                 onClick: onSetup,
-                classExtras: 'btn-secondary',
+                classExtras: 'Btn-secondary',
             });
         }
 
@@ -537,7 +538,7 @@ export class ReconcilingWindow extends React.Component {
             buttons.push({
                 label: userMsg('ReconcilerWindow-finish_later_button'),
                 onClick: onFinishLater,
-                classExtras: 'btn-secondary',
+                classExtras: 'Btn-secondary',
             });
         }
 

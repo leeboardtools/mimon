@@ -353,7 +353,7 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
     - Reminders Editor
-
+        - Remove border around 'Deposit'/'Withdrawal' control.
 
     - Reminders List
         - Clicking enabled button does nothing.
@@ -487,18 +487,6 @@ Bootstrap classes in ui:
     - alert: App
     - alert-primary: App
 
-    - btn: AccountEditor, App, FileCreator, PriceRetrieverWindow, ReconcilerWindow
-    - btn-block: App
-    - btn-group: MainWindow, NewFileConfigurator
-    - btn-group-sm: MainWindow, NewFileConfigurator
-    - btn-outline-primary: App
-    - btn-outline-secondary: AccountEditor, App, FileCreator, ReconcilerWindow
-
-    - btn-primary: PriceRetrieverWindow
-    - btn-secondary: App, LotSelectionEditor, MultiSplitsEditor, PriceRetrieverWindow, ReconcilerWindow
-
-    - btn-sm: App, ReconcilerWindow
-
     - disabled: MainWindow, NewFileConfigurator, TickerSelector
 
     - form-control: FileCreator
@@ -555,12 +543,6 @@ Bootstrap classes in use in util-ui:
     - bg-light: TabbedPages
     - border: DropdownSelector
     - border-bottom: FileSelector, ModalPage, PageTitle
-    - btn: DropdownSelector, FileSelector, ModalPage, QuestionPrompter
-    - btn-block: DropdownSelector
-    - btn-outline-secondary: FileSelector
-    - btn-primary: FileSelector, ModalPage, QuestionPrompter
-    - btn-secondary: ModalPage, QuestionPrompter
-    - btn-sm: FileSelector
 
     - close: CloseButton
     - col: ModalPage, Tooltip
@@ -659,4 +641,4 @@ Column sorting in RowTable:
     - Lot selection editor
         - Add summary info.
     
-    - Selecting currency in New Security generates Maximum depth exceeded error.
+    - Open Prices from Securities list on security with children doesn't work.

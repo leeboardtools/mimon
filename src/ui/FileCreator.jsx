@@ -19,6 +19,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { promises as fsPromises } from 'fs';
 import { Page } from '../util-ui/Page';
+import { Button } from '../util-ui/Button';
 
 
 /**
@@ -74,13 +75,12 @@ class NewFileName extends React.Component {
                     aria-label = "Base Folder"
                     value = {this.props.baseDirName}/>
                 <div className = "input-group-append">
-                    <button className = "btn btn-outline-secondary" 
-                        type = "button"
+                    <Button classExtras = "Btn-outline-secondary" 
                         id = "browse_btn"
                         aria-label = "Browse Base Folder"
                         onClick = {this.onBrowse}>
                         {browseText}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>;

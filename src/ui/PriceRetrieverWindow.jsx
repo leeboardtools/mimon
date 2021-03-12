@@ -11,6 +11,7 @@ import deepEqual from 'deep-equal';
 import { setFocus } from '../util/ElementUtils';
 import { PageTitle } from '../util-ui/PageTitle';
 import { Row, Col } from '../util-ui/RowCols';
+import { Button } from '../util-ui/Button';
 
 
 function equalBool(a, b) {
@@ -383,14 +384,14 @@ export class PriceRetrieverWindow extends React.Component {
 
     renderTickerButton(labelId, onClick) {
         const label = userMsg(labelId);
-        return <button type="button" 
-            className = "btn btn-secondary PriceRetrieverWindow-ticker-select-button"
+        return <Button
+            classExtras = "Btn-secondary PriceRetrieverWindow-ticker-select-button"
             aria-label = {label}
             onClick = {onClick}
             disabled = {this.state.isRetrieving}
         >
             {label}
-        </button>;
+        </Button>;
     }
 
 
@@ -480,12 +481,12 @@ export class PriceRetrieverWindow extends React.Component {
 
         let button;
         if (state.isRetrieving) {
-            button = <button type="button" 
-                className = "btn btn-primary"
+            button = <Button
+                classExtras = "Btn-primary"
                 aria-label = "Cancel"
                 onClick = {() => this.onCancel()}>
                 {userMsg('PriceRetrieverWindow-cancel_button')}
-            </button>;
+            </Button>;
         }
         else {
             const { tickerEntriesByTicker } = state;
@@ -496,15 +497,15 @@ export class PriceRetrieverWindow extends React.Component {
                     break;
                 }
             }
-            button = <button type = "button" 
-                className = "btn btn-primary"
+            button = <Button
+                classExtras = "Btn-primary"
                 aria-label = "Retrieve Prices"
                 onClick = {() => this.onRetrievePrices()}
                 disabled = {!anyTickerSelected}
                 ref = {this._retrieveRef}
             >
                 {userMsg('PriceRetrieverWindow-retrieve_button')}
-            </button>;
+            </Button>;
         }
 
 

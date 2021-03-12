@@ -271,7 +271,7 @@ export class NewFileConfigurator extends React.Component {
             menuClassExtras = "Dropdown-menu-right"
         />;
 
-        return <div className = "btn-group btn-group-sm" role = "group">
+        return <div className = "Btn-group Btn-group-sm" role = "group">
             {undo}
             {redo}
             {mainMenu}
