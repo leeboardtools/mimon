@@ -542,7 +542,6 @@ Bootstrap classes in use in util-ui:
     - border: DropdownSelector
     - border-bottom: FileSelector, ModalPage, PageTitle
 
-    - close: CloseButton
     - col: ModalPage, Tooltip
     - col-11: ModalPage
     - container-fluid: ContentFramer, ErrorReporter, FileSelector, Page
