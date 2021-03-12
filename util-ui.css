@@ -4,6 +4,7 @@
 }
 
 
+/* BS btn */
 .Btn {
     display: inline-block;
     font-weight: 400;
@@ -97,6 +98,24 @@
     font-size: .875rem;
     line-height: 1.5;
     border-radius: .2rem;
+}
+
+
+/* BS close */
+.Close {
+    float: right;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #000;
+    text-shadow: 0 1px 0 #fff;
+    opacity: .5;
+}
+
+button.Close {
+    padding: 0;
+    background-color: transparent;
+    border: 0;
 }
 
 

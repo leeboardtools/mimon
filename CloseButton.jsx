@@ -9,7 +9,7 @@ import PropTypes from 'prop-types';
 export function CloseButton(props) {
     const { classExtras, ariaLabel, onClick } = props;
 
-    let className = 'close';
+    let className = 'Close';
     if (classExtras) {
         className += ' ' + classExtras;
     }
