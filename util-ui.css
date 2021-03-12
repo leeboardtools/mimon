@@ -417,9 +417,32 @@
 }
 
 
-.input-group>.custom-file,
-.input-group>.custom-select,
-.input-group>.Cell {
+.Input-group {
+    position: relative;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    -ms-flex-align: stretch;
+    align-items: stretch;
+    width: 100%;
+}
+
+.Input-group-append {
+    margin-left: -1px;
+}
+
+.Input-group-prepend {
+    margin-right: -1px;
+}
+
+.Input-group-append, 
+.Input-group-prepend {
+    display: -ms-flexbox;
+    display: flex;
+}
+
+.Input-group>.Cell {
     position: relative;
     -ms-flx: 1 1 auto;
     flex: 1 1 auto;
@@ -428,23 +451,37 @@
     margin-bottom: 0;
 }
 
-
-.input-group>.input-group-prepend>.Btn {
+.Input-group>.Input-group-prepend>.Btn {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
 }
 
-
-.input-group>.input-group-append>.Btn {
+.Input-group>.Input-group-append>.Btn {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
 }
 
-.input-group-append .Btn,
-.input-group-prepend .Btn {
+.Input-group-append .Btn,
+.Input-group-prepend .Btn {
     position: relative;
     z-index: 2;
 }
+
+.Input-group:not(.has-validation)>.form-control:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.Input-group>.form-control,
+.Input-group>.form-control-plaintext {
+    position: relative;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+    margin-bottom: 0;
+}
+
 
 
 .Cell:disabled, .Cell[readonly] {

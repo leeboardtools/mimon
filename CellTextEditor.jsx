@@ -11,7 +11,7 @@ export const CellTextEditor = React.forwardRef(
         const { ariaLabel, value, inputClassExtras, errorMsg, size,
             onChange, onFocus, onBlur, disabled, placeholder } = props;
 
-        const divClassName = 'input-group mb-0 ';
+        const divClassName = 'Input-group mb-0 ';
         let className = 'Cell CellTextEditor-textInput ' 
             + (inputClassExtras || '');
 
@@ -93,7 +93,7 @@ export function CellTextDisplay(props) {
         }
     }
 
-    const divClassName = 'input-group mb-0 ';
+    const divClassName = 'Input-group mb-0 ';
     const className = 'Cell CellTextEditor-textInput CellTextEditor-textDisplay ' 
         + (inputClassExtras || '');
 

@@ -38,7 +38,7 @@ export function Field(props) {
         if (typeof prependComponent === 'string') {
             prependComponent = <FieldPrefix>{prependComponent}</FieldPrefix>;
         }
-        prepend = <div className="input-group-prepend">
+        prepend = <div className="Input-group-prepend">
             {prependComponent}
         </div>;
     }
@@ -49,7 +49,7 @@ export function Field(props) {
         if (typeof appendComponent === 'string') {
             appendComponent = <FieldSuffix>{appendComponent}</FieldSuffix>;
         }
-        append = <div className="input-group-append">
+        append = <div className="Input-group-append">
             {appendComponent}
         </div>;
     }
@@ -62,7 +62,7 @@ export function Field(props) {
         ? onRenderEditor(editorClassName)
         : props.children;
     if (prepend || append) {
-        let inputClassName = 'input-group';
+        let inputClassName = 'Input-group';
         if (errorMsg) {
             inputClassName += ' is-invalid';
         }
