@@ -63,14 +63,14 @@ class NewFileName extends React.Component {
         const label = userMsg('NewFileName-baseDir_selector_label');
         const browseText = userMsg('NewFileName-browse_btn');
 
-        return <div className = "form-group Text-left">
+        return <div className = "Form-group Text-left">
             <label className = "mb-0" htmlFor = "NewFileName-baseDir">
                 {label}
             </label>
             <div className = "Input-group mb-0">
                 <input type = "text"
                     id = "NewFileName-baseDir"
-                    className = "form-control"
+                    className = "Form-control"
                     readOnly
                     aria-label = "Base Folder"
                     value = {this.props.baseDirName}/>
@@ -101,7 +101,7 @@ class NewFileName extends React.Component {
 
         let projectName = this.props.projectName || '';
 
-        let inputClassName = 'form-control';
+        let inputClassName = 'Form-control';
         let errorMsgComponent;
         if (projectNameErrorMsg) {
             inputClassName += ' Is-invalid';
@@ -110,7 +110,7 @@ class NewFileName extends React.Component {
             </div>;
         }
 
-        return <div className = "form-group Text-left">
+        return <div className = "Form-group Text-left">
             <label className = "mb-0" htmlFor = "NewFileName-projectName">
                 {label}
             </label>
@@ -184,7 +184,7 @@ class GeneralSettingsEditor extends React.Component {
 
     renderOpeningBalancesDateEditor() {
         const label = userMsg('GeneraSettingsEditor-openingBalancesDate_label');
-        const inputClassName = 'form-control';
+        const inputClassName = 'Form-control';
 
         return <Field
             id = "GeneralSettingsEditor-openingBalancesDate"

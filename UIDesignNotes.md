@@ -489,9 +489,6 @@ Bootstrap classes in ui:
 
     - disabled: MainWindow, NewFileConfigurator, TickerSelector
 
-    - form-control: FileCreator
-    - form-group: FileCreator
-
     - h-100: AccountRegister, App, PriceRetrieverWindow, PricesList
 
     - m-0: PricedItemsList, RemindersList
@@ -512,9 +509,6 @@ Bootstrap classes in ui:
     - mt-4: App
     - mx-auto: App
 
-    - nav: MainWindow, NewFileConfigurator
-    - nav-link: MainWindow, NewFileConfigurator
-
     - p-1: App
     - pb-2: PriceRetrieverWindow
     - pl-1: ReconcilerWindow
@@ -524,9 +518,6 @@ Bootstrap classes in ui:
     - pr-2: MainWindow, NewFileConfigurator
     - pt-2: PriceRetrieverWindow
     
-    - w-100: AccountRegister, App, PriceRetrieverWindow, PricesList
-    - w-40: PricedItemsList
-    - w-50: ReconcilerWindow
 
 
 Bootstrap classes in use in util-ui:
@@ -551,8 +542,6 @@ Bootstrap classes in use in util-ui:
     - enabled: RowTable
 
     - fade: ErrorReporter
-    - form-control: Field
-    - form-group: Field
 
     - h-100: ContentFramer, SequentialPages, TabbedPages
 
@@ -579,10 +568,6 @@ Bootstrap classes in use in util-ui:
     - mt-5: ErrorReporter
     - mt-auto: ModalPage
 
-    - nav: TabbedPages
-    - nav-item: TabbedPages
-    - nav-link: TabbedPages
-    - nav-tabs: TabbedPages
     - no-gutters: Tooltip
 
     - overflow-hidden: ContentFramer, TabbedPages

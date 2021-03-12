@@ -51,7 +51,7 @@ export class TabbedPages extends React.Component {
         const items = this.props.tabEntries.map((tabEntry) => {
             const ariaLabel = tabEntry.title + ' Tab';
 
-            let className = 'nav-item nav-link tabText';
+            let className = 'Nav-item Nav-link tabText';
             let tabComponent;
             let isActive;
             if (tabEntry.tabId === this.state.activeTabId) {
@@ -111,7 +111,7 @@ export class TabbedPages extends React.Component {
             );
         });
 
-        let className = this.props.tabClassName || 'nav nav-tabs bg-light';
+        let className = this.props.tabClassName || 'Nav Nav-tabs bg-light';
         if (this.props.tabClassExtras) {
             className += ' ' + this.props.tabClassExtras;
         }

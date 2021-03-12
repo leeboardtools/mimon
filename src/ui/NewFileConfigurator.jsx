@@ -208,7 +208,7 @@ export class NewFileConfigurator extends React.Component {
         }
 
         // Have the undo/redo buttons...
-        const baseClassName = 'nav nav-link pl-2 pr-2';
+        const baseClassName = 'Nav Nav-link pl-2 pr-2';
 
         let undoClassName = baseClassName + ' Undo-tooltip';
         let undoLabel;

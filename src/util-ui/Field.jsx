@@ -12,7 +12,7 @@ export function Field(props) {
     const { label, id, errorMsg, fieldClassExtras,
         editorClassExtras, onRenderEditor } = props;
 
-    let divClassName = 'form-group';
+    let divClassName = 'Form-group';
     if (fieldClassExtras) {
         divClassName = divClassName + ' ' + fieldClassExtras;
     }
@@ -22,7 +22,7 @@ export function Field(props) {
         labelComponent = <label htmlFor={id}>{label}</label>;
     }
 
-    let editorClassName = 'form-control ' + (editorClassExtras || '');
+    let editorClassName = 'Form-control ' + (editorClassExtras || '');
 
     let errorMsgComponent;
     if (errorMsg) {

@@ -657,7 +657,7 @@ export class ReminderEditor extends React.Component {
         const { reminderDataItem } = this.state;
         return <Checkbox 
             value = {reminderDataItem.isEnabled}
-            classExtras = "form-group pb-1"
+            classExtras = "Form-group pb-1"
             label = {userMsg('ReminderEditor-enabled_label')}
             onChange = {this.onEnabledChanged}
         />;

@@ -436,99 +436,6 @@ button.Close {
 }
 
 
-.form-control.Is-invalid,
-.Was-validated .form-control:invalid {
-    border-color: #dc3545;
-    padding-right: calc(1.5em + .75rem);
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right calc(.375em + .1875rem) center;
-    background-size: calc(.75em + .375rem) calc(.75em + .375rem);
-}
-
-
-.Is-invalid~.Invalid-feedback,
-.Is-invalid~.Invalid-tooltip,
-.Was-validated:invalid~.Invalid-feedback,
-.Was-validated:invalid~.Invalid-tooltip {
-    display: block;
-}
-
-.Invalid-feedback {
-    display: none;
-    width: 100%;
-    margin-top: .25rem;
-    font-size: 80%;
-    color: #dc3545;
-}
-
-
-.Input-group {
-    position: relative;
-    display: -ms-flexbox;
-    display: flex;
-    -ms-flex-wrap: wrap;
-    flex-wrap: wrap;
-    -ms-flex-align: stretch;
-    align-items: stretch;
-    width: 100%;
-}
-
-.Input-group-append {
-    margin-left: -1px;
-}
-
-.Input-group-prepend {
-    margin-right: -1px;
-}
-
-.Input-group-append, 
-.Input-group-prepend {
-    display: -ms-flexbox;
-    display: flex;
-}
-
-.Input-group>.Cell {
-    position: relative;
-    -ms-flx: 1 1 auto;
-    flex: 1 1 auto;
-    width: 1%;
-    min-width: 0;
-    margin-bottom: 0;
-}
-
-.Input-group>.Input-group-prepend>.Btn {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-}
-
-.Input-group>.Input-group-append>.Btn {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-}
-
-.Input-group-append .Btn,
-.Input-group-prepend .Btn {
-    position: relative;
-    z-index: 2;
-}
-
-.Input-group:not(.has-validation)>.form-control:not(:last-child) {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-}
-
-.Input-group>.form-control,
-.Input-group>.form-control-plaintext {
-    position: relative;
-    -ms-flex: 1 1 auto;
-    flex: 1 1 auto;
-    width: 1%;
-    min-width: 0;
-    margin-bottom: 0;
-}
-
-
 
 .Cell:disabled, .Cell[readonly] {
     background-color: #e9ecef;
@@ -712,6 +619,140 @@ from BS col-form-label */
 }
 
 
+/** From BS form-group */
+.Form-group {
+    margin-bottom: 1rem;
+}
+
+/** From BS form-control */
+.Form-control {
+    display: block;
+    width: 100%;
+    height: calc(1.5em + .75rem + 2px);
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    transition: border-color .15s
+        ease-in-out,box-shadow .15s
+        ease-in-out;
+}
+
+.Form-control:disabled, .Form-control[readonly] {
+    background-color: #e9ecef;
+    opacity: 1;
+}
+
+.Form-control.is-invalid, .was-validated .Form-control:invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + .75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(.375em + .1875rem) center;
+    background-size: calc(.75em + .375rem)
+        calc(.75em + .375rem);
+}
+
+.Form-control.Is-invalid,
+.Was-validated .Form-control:invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + .75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(.375em + .1875rem) center;
+    background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+}
+
+
+/** From BS invalid-feedback, etc. */
+.Is-invalid~.Invalid-feedback,
+.Is-invalid~.Invalid-tooltip,
+.Was-validated:invalid~.Invalid-feedback,
+.Was-validated:invalid~.Invalid-tooltip {
+    display: block;
+}
+
+.Invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: .25rem;
+    font-size: 80%;
+    color: #dc3545;
+}
+
+
+/** From BS input-group */
+.Input-group {
+    position: relative;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    -ms-flex-align: stretch;
+    align-items: stretch;
+    width: 100%;
+}
+
+.Input-group-append {
+    margin-left: -1px;
+}
+
+.Input-group-prepend {
+    margin-right: -1px;
+}
+
+.Input-group-append, 
+.Input-group-prepend {
+    display: -ms-flexbox;
+    display: flex;
+}
+
+.Input-group>.Cell {
+    position: relative;
+    -ms-flx: 1 1 auto;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.Input-group>.Input-group-prepend>.Btn {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.Input-group>.Input-group-append>.Btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.Input-group-append .Btn,
+.Input-group-prepend .Btn {
+    position: relative;
+    z-index: 2;
+}
+
+.Input-group:not(.has-validation)>.Form-control:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.Input-group>.Form-control,
+.Input-group>.Form-control-plaintext {
+    position: relative;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+
 .InfoReporter-body {
     margin-left: 2rem;
     margin-right: 2rem;
@@ -827,6 +868,49 @@ from BS col-form-label */
     border-style: solid;
     border-width: 1px;
     border-color: darkgrey;
+}
+
+
+
+/* From BS nav, etc. */
+.Nav {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+}
+
+.Nav-tabs {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.Nav-link {
+    display: block;
+    padding: .5rem 1rem;
+}
+
+.Nav-link:disabled,
+.Nav-link.disabled {
+    color: #6c757d;
+    pointer-events: none;
+    cursor: default;
+}
+
+.Nav-tabs .Nav-link {
+    margin-bottom: -1px;
+    border: 1px solid transparent;
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+}
+
+.Nav-tabs .Nav-item.show .Nav-link, 
+.Nav-tabs .Nav-link.active {
+    color: #495057;
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
 }
 
 
@@ -1258,96 +1342,6 @@ from BS col-form-label */
 
 /* TEMP STUFF !!! From BS */
 /*
-
-.input-group-append {
-    margin-left: -1px;
-}
-.input-group-prepend {
-    margin-right: -1px;
-}
-.input-group-append, .input-group-prepend {
-    display: -ms-flexbox;
-    display: flex;
-}
-
-.input-group {
-    position: relative;
-    display: -ms-flexbox;
-    display: flex;
-    -ms-flex-wrap: wrap;
-    flex-wrap: wrap;
-    -ms-flex-align: stretch;
-    align-items: stretch;
-    width: 100%;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-*/
-/*
-.form-control {
-    display: block;
-    width: 100%;
-    height: calc(1.5em + .75rem + 2px);
-    padding: .375rem .75rem;
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: #495057;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid #ced4da;
-    border-radius: .25rem;
-    transition: border-color .15s
-        ease-in-out,box-shadow .15s
-        ease-in-out;
-}
-*/
-/*
-.input-group>.custom-file,
-.input-group>.custom-select,
-.input-group>.form-control,
-.input-group>.form-control-plaintext {
-    position: relative;
-    -ms-flx: 1 1 auto;
-    flex: 1 1 auto;
-    width: 1%;
-    min-width: 0;
-    margin-bottom: 0;
-}
-*/
-/*
-.form-control:disabled, .form-control[readonly] {
-    background-color: #e9ecef;
-    opacity: 1;
-}
-
-.form-control.is-invalid, .was-validated .form-control:invalid {
-    border-color: #dc3545;
-    padding-right: calc(1.5em + .75rem);
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right calc(.375em + .1875rem) center;
-    background-size: calc(.75em + .375rem)
-        calc(.75em + .375rem);
-}
-
-.is-invalid-.invalid-feedback,
-.is-invalid-.invalid-tooltip,
-.was-validated:invalid-.invalid-feedback,
-.was-validated:invalid-.invalid-tooltip {
-    display: block;
-}
-
-.invalid-feedback {
-    display: none;
-    width: 100%;
-    margin-top: .25rem;
-    font-size: 80%;
-    color: #dc3545;
-}
-
 
 .nav {
     display: -ms-flexbox;

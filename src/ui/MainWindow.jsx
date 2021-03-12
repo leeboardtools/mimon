@@ -878,7 +878,7 @@ export class MainWindow extends React.Component {
 
     renderMainMenu() {
         // Have the undo/redo buttons...
-        const baseClassName = 'nav nav-link pl-2 pr-2';
+        const baseClassName = 'Nav Nav-link pl-2 pr-2';
         const { accessor } = this.props;
 
         const activeTabItem = this._tabItemsById.get(this.state.activeTabId);
