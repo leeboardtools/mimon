@@ -172,7 +172,7 @@ export class FileSelector extends React.Component {
         for (let i = 0; i < currentDirParts.length; ++i) {
             const part = currentDirParts[i];
             const myDir = path.join(builtDir, part);
-            let className = 'btn btn-outline-secondary btn-sm';
+            let className = 'Btn Btn-outline-secondary Btn-sm';
             if ((i + 1) === currentDirParts.length) {
                 className += ' active';
             }
@@ -254,7 +254,7 @@ export class FileSelector extends React.Component {
             onGetPreFileListComponent, onGetPostFileListComponent } = this.props;
         okButtonText = okButtonText || userMsg('FileSelector-open');
 
-        const btnClassName = 'btn btn-primary m-2';
+        const btnClassName = 'Btn Btn-primary m-2';
 
         let preFileListComponent = (onGetPreFileListComponent)
             ? onGetPreFileListComponent() : undefined;

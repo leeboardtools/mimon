@@ -23,7 +23,7 @@ export function ModalPage(props) {
     let cancelBtn;
     if (onCancel) {
         const cancelLabel = props.cancelLabel || userMsg('cancel');
-        cancelBtn = <button className = "btn btn-secondary m-2 mr-4"
+        cancelBtn = <button className = "Btn Btn-secondary m-2 mr-4"
             onClick = {onCancel}
             disabled = {cancelDisabled}
         >
@@ -53,7 +53,7 @@ export function ModalPage(props) {
 
 
     let buttons = [];
-    const btnClassName = 'btn btn-primary m-2';
+    const btnClassName = 'Btn Btn-primary m-2';
     if (actionButtons) {
         buttons = [];
         for (let i = 0; i < actionButtons.length; ++i) {
