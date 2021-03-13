@@ -38,7 +38,7 @@ export function ModalPage(props) {
             titleCloseBtn = <CloseButton onClick = {onCancel}/>;
         }
 
-        titleComponent = <div className = "border-bottom P-2 ModalPage-title"
+        titleComponent = <div className = "Border-bottom P-2 ModalPage-title"
         >
             <Row classExtras = "Row-justify-content-between">
                 <Col classExtras = "Text-center">
@@ -83,7 +83,7 @@ export function ModalPage(props) {
     }
 
     const buttonBar = <div className = "Mt-auto ModalPage-buttonBar">
-        <Row classExtras = "border-top M-2">
+        <Row classExtras = "Border-top M-2">
             <Col classExtras = "Text-left Mt-2">
                 {cancelBtn}
             </Col>

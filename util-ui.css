@@ -4,7 +4,7 @@
 }
 
 
-/* BS alert, etc. */
+/* Originally from BS alert, etc. */
 .Alert {
     position: relative;
     padding: .75rem 1.25rem;
@@ -53,12 +53,36 @@
     padding-right: 4rem;
 }
 
+
+/** Originally from BS fade */
 .Fade {
     transition: opacity .15s linear;
 }
 
 
-/* BS btn */
+/** Originally from BS bg-light */
+.Bg-light {
+    background-color: #f8f9fa!important;
+}
+
+/** Originally from BS border... */
+.Border {
+    border: 1px solid #dee2e6!important;
+}
+.Border-bottom {
+    border-bottom: 1px solid #dee2e6!important;
+}
+.Border-top {
+    border-top: 1px solid #dee2e6!important;
+}
+.Border-left {
+    border-left: 1px solid #dee2e6!important;
+}
+.Border-right {
+    border-right: 1px solid #dee2e6!important;
+}
+
+/* Originally from BS btn */
 .Btn {
     display: inline-block;
     font-weight: 400;
@@ -155,7 +179,7 @@
 }
 
 
-/* BS close */
+/* Originally from BS close */
 .Close {
     float: right;
     font-size: 1.5rem;
@@ -173,7 +197,7 @@ button.Close {
 }
 
 
-/* BS container, container-fluid */
+/* Originally from BS container, container-fluid */
 .Container, .Container-fluid {
     width: 100%;
     padding-right: 15px;
@@ -182,7 +206,7 @@ button.Close {
     margin-left: auto;
 }
 
-/* BS col */
+/* Originally from BS col */
 .Col {
     -ms-flex-preferred-size: 0;
     flex-basis: 0;
@@ -191,7 +215,7 @@ button.Close {
     max-width: 100%;
 }
 
-/* BS col-auto */
+/* Originally from BS col-auto */
 .Col-auto {
     -ms-flex: 0 0 auto;
     flex: 0 0 auto;
@@ -261,7 +285,7 @@ button.Close {
 }
 
 
-/* BS row */
+/* Originally from BS row */
 .Row {
     display: -ms-flexbox;
     display: flex;
@@ -424,29 +448,29 @@ button.Close {
 
 
 
-/* BS no-gutters */
+/* Originally from BS no-gutters */
 .No-gutters {
     margin-left: 0;
     margin-right: 0;
 }
 
-/* BS d-none */
+/* Originally from BS d-none */
 .D-none {
     display: none!important;
 }
 
-/* BS dropdown-menu-right */
+/* Originally from BS dropdown-menu-right */
 .Dropdown-menu-right {
     right: 0;
     left: auto;
 }
 
-/* BS flex-row */
+/* Originally from BS flex-row */
 .Flex-row {
     flex-direction: row!important;
 }
 
-/* BS form-row */
+/* Originally from BS form-row */
 .Form-row {
     display: -ms-flexbox;
     display: flex;
@@ -456,13 +480,13 @@ button.Close {
     margin-right: -5px;
 }
 
-/* BS justify-content-center */
+/* Originally from BS justify-content-center */
 .Justify-content-center {
     -ms-flex-pack: center!important;
     justify-content: center!important;
 }
 
-/* BS table */
+/* Originally from BS table */
 .Table {
     width: 100%;
     margin-bottom: 1rem;
@@ -673,12 +697,12 @@ from BS col-form-label */
 }
 
 
-/** From BS form-group */
+/** Originally from BS form-group */
 .Form-group {
     margin-bottom: 1rem;
 }
 
-/** From BS form-control */
+/** Originally from BS form-control */
 .Form-control {
     display: block;
     width: 100%;
@@ -723,7 +747,7 @@ from BS col-form-label */
 }
 
 
-/** From BS invalid-feedback, etc. */
+/** Originally from BS invalid-feedback, etc. */
 .Is-invalid~.Invalid-feedback,
 .Is-invalid~.Invalid-tooltip,
 .Was-validated:invalid~.Invalid-feedback,
@@ -740,7 +764,7 @@ from BS col-form-label */
 }
 
 
-/** From BS input-group */
+/** Originally from BS input-group */
 .Input-group {
     position: relative;
     display: -ms-flexbox;
@@ -926,7 +950,7 @@ from BS col-form-label */
 
 
 
-/* From BS nav, etc. */
+/** Originally from BS nav, etc. */
 .Nav {
     display: -ms-flexbox;
     display: flex;
@@ -1342,6 +1366,7 @@ from BS col-form-label */
 }
 
 
+/** Originally from BS m?-auto, m?-# */
 .M-auto {
     margin: auto!important;
 }
@@ -1463,6 +1488,7 @@ from BS col-form-label */
 }
 
 
+/** Originally from BS p?-auto, p?-# */
 .P-auto {
     padding: auto!important;
 }
@@ -1645,7 +1671,4 @@ from BS col-form-label */
     position: relative;
 }
 
-.bg-light {
-    background-color: #f8f9fa!important;
-}
 */

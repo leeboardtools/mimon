@@ -111,7 +111,7 @@ export class TabbedPages extends React.Component {
             );
         });
 
-        let className = this.props.tabClassName || 'Nav Nav-tabs bg-light';
+        let className = this.props.tabClassName || 'Nav Nav-tabs Bg-light';
         if (this.props.tabClassExtras) {
             className += ' ' + this.props.tabClassExtras;
         }

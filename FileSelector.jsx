@@ -229,7 +229,7 @@ export class FileSelector extends React.Component {
 
 
         return <React.Fragment>
-            <div className="P-2 border-bottom">
+            <div className="P-2 Border-bottom">
                 {currentDirComponents}
             </div>
             <div className="modal-body">
