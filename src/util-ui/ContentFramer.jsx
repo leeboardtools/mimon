@@ -136,7 +136,7 @@ export class ContentFramer extends React.Component {
         const { classExtras } = this.props;
 
         let className = 'container-fluid p-0'
-            + ' FlexC FlexC-column h-100 overflow-hidden ContentFramer-container';
+            + ' FlexC FlexC-column H-100 overflow-hidden ContentFramer-container';
         if (classExtras) {
             className += ' ' + classExtras;
         }

@@ -40,7 +40,7 @@ function getPricedItemsListColumnInfoDefs() {
                     classExtras: 'Text-left',
                 },
                 propertyName: 'name',
-                cellClassName: cellClassName + ' Text-left w-40',
+                cellClassName: cellClassName + ' Text-left W-40',
             },
             description: { key: 'description',
                 header: {

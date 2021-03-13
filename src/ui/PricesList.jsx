@@ -833,7 +833,7 @@ export class PricesList extends React.Component {
             {this.props.children}
         </div>;
 
-        return <div className="w-100 h-100">
+        return <div className="W-100 H-100">
             {modalComponent}
             {table}
         </div>;

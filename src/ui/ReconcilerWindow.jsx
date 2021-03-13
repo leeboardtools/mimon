@@ -556,10 +556,10 @@ export class ReconcilingWindow extends React.Component {
             className = "ReconcilingWindow-splitInfosContainer"
         >
             <Row classExtras = "H-inherit">
-                <Col classExtras = "H-inherit w-50 pr-1">
+                <Col classExtras = "H-inherit W-50 pr-1">
                     {inflows}
                 </Col>
-                <Col classExtras = "H-inherit w-50 pl-1">
+                <Col classExtras = "H-inherit W-50 pl-1">
                     {outflows}
                 </Col>
             </Row>

@@ -134,7 +134,7 @@ class AppOpenScreen extends React.Component {
         }
 
         return (
-            <div className="FlexC w-100 h-100 p-1 mx-auto FlexC-column">
+            <div className="FlexC W-100 H-100 p-1 mx-auto FlexC-column">
                 <div className="mb-4 mt-4">
                     <h2 className="Text-center">
                         {userMsg('AppOpeningScreen-title_main')}
