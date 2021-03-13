@@ -40,10 +40,10 @@ export function InfoReporter(props) {
     }
     const components = [];
     for (let i = 0; i < message.length; ++i) {
-        components.push(<li className="list-group-item"
+        components.push(<li className="List-group-item"
             key={i}>{message[i]}</li>);
     }
-    const messageComponent = <ul className="list-group">
+    const messageComponent = <ul className="List-group">
         {components}
     </ul>;
 

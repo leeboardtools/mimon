@@ -149,7 +149,7 @@ export class FileSelector extends React.Component {
         const { title } = this.props;
         let titleComponent;
         if (title) {
-            titleComponent = <h4 className="modal-title">
+            titleComponent = <h4 className="Modal-title">
                 {title}
             </h4>;
         }
@@ -191,7 +191,7 @@ export class FileSelector extends React.Component {
         dirs.forEach((dir) => {
             const { name } = dir;
             const pathName = path.join(currentDirPath, name);
-            let className = 'list-group-item list-group-item-action';
+            let className = 'List-group-item List-group-item-action';
             if (pathName === activePathName) {
                 className += ' active';
             }
@@ -213,7 +213,7 @@ export class FileSelector extends React.Component {
         files.forEach((file) => {
             const { name } = file;
             const pathName = path.join(currentDirPath, name);
-            let className = 'list-group-item list-group-item-action';
+            let className = 'List-group-item List-group-item-action';
             if (pathName === activePathName) {
                 className += ' active';
             }
@@ -232,7 +232,7 @@ export class FileSelector extends React.Component {
             <div className="P-2 Border-bottom">
                 {currentDirComponents}
             </div>
-            <div className="modal-body">
+            <div className="Modal-body">
                 <div className="container-fluid Text-left">
                     {entityComponents}
                 </div>
@@ -261,16 +261,16 @@ export class FileSelector extends React.Component {
         let postFileListComponent = (onGetPostFileListComponent)
             ? onGetPostFileListComponent() : undefined;
 
-        return <div className="modal-dialog modal-dialog-scrollable Modal-full-height" 
+        return <div className="Modal-dialog Modal-dialog-scrollable Modal-full-height" 
             role="document">
-            <div className="modal-content">
-                <div className="modal-header">
+            <div className="Modal-content">
+                <div className="Modal-header">
                     {header}
                 </div>
                 {preFileListComponent}
                 {body}
                 {postFileListComponent}
-                <div className="modal-footer">
+                <div className="Modal-footer">
                     {filter}
                     <button className={btnClassName} type="button"
                         onClick={this.props.onCancel}

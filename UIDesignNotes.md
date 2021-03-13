@@ -502,20 +502,8 @@ Bootstrap classes in use in util-ui:
     - enabled: RowTable
 
 
-    - list-group-item: FileSelector, InfoReporter
-    - list-group-item-action: FileSelector, InfoReporter
-
-
     - media: FileSelector
     - media-body: FileSelector
-
-    - modal-body: FileSelector, QuestionPrompter
-    - modal-content: FileSelector, QuestionPrompter
-    - modal-dialog: FileSelector, QuestionPrompter
-    - modal-dialog-scrollable: FileSelector
-    - modal-header: FileSelector, QuestionPrompter
-    - modal-footer: FileSelector, QuestionPrompter
-    - modal-title: FileSelector, QuestionPrompter
 
     - overflow-hidden: ContentFramer, TabbedPages
 

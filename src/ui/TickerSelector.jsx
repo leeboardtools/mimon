@@ -95,7 +95,6 @@ export class TickerSelector extends React.Component {
             const { ticker, isSelected, retrievedPrice, errorMsg,
                 pricedItemDataItem } = tickerEntry;
             let className = 'TickerSelector-item';
-            //className = 'list-group-item';
             if (disabled) {
                 className += ' disabled';
             }
