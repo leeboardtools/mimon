@@ -493,12 +493,6 @@ Bootstrap classes in ui:
 Bootstrap classes in use in util-ui:
     - active: DropdownSelector, FileSelector, MenuList, RowTable, TabbedPages
 
-    - bg-light: TabbedPages
-    - border: DropdownSelector
-    - border-bottom: FileSelector, ModalPage, PageTitle
-
-    - col: ModalPage, Tooltip
-    - col-11: ModalPage
     - container-fluid: ContentFramer, ErrorReporter, FileSelector, Page
 
     - disabled: DropdownSelector, MenuList
@@ -522,8 +516,6 @@ Bootstrap classes in use in util-ui:
     - modal-header: FileSelector, QuestionPrompter
     - modal-footer: FileSelector, QuestionPrompter
     - modal-title: FileSelector, QuestionPrompter
-
-    - no-gutters: Tooltip
 
     - overflow-hidden: ContentFramer, TabbedPages
 

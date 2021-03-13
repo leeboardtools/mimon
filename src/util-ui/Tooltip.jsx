@@ -18,7 +18,7 @@ export function Tooltip(props) {
             if (typeof tooltip[0] === 'string') {
                 // Want to format this as a list.
                 for (let i = 0; i < tooltip.length; ++i) {
-                    tooltip[i] = <div className = "Row no-gutters" key = {i}>
+                    tooltip[i] = <div className = "Row No-gutters" key = {i}>
                         <div className="col">{tooltip[i]}</div>
                     </div>;
                 }

@@ -41,9 +41,9 @@ RowColContainer.propTypes = {
 export function Row(props) {
     const { classExtras, noGutters, form, children } = props;
 
-    let className = (form) ? 'form-row' : 'row';
+    let className = (form) ? 'Form-row' : 'Row';
     if (noGutters) {
-        className += ' no-gutters';
+        className += ' No-gutters';
     }
     if (classExtras) {
         className += ' ' + classExtras;
