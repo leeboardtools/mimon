@@ -204,7 +204,7 @@ export class DropdownSelector extends React.Component {
                 };
             }
 
-            let className = 'dropdown-item ';
+            let className = 'Dropdown-item ';
             if (activeIndexValue === value) {
                 className += 'active ';
                 valueText = text;
