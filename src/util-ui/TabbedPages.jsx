@@ -85,7 +85,7 @@ export class TabbedPages extends React.Component {
                 }
                 else {
                     tabComponent = <a href="#" 
-                        className="dropdown-toggle"
+                        className="Dropdown-toggle"
                         onClick={() => this.handleTabClick(tabEntry)}
                         aria-label={ariaLabel}
                     >

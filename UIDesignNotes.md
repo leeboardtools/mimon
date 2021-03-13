@@ -482,6 +482,7 @@ Flex items:
 
     - flex-fill
 
+
 Bootstrap classes in ui:
     - active: TickerSelector
 
@@ -496,19 +497,18 @@ Bootstrap classes in use in util-ui:
     - container-fluid: ContentFramer, ErrorReporter, FileSelector, Page
 
     - disabled: DropdownSelector, MenuList
-    - dropdown: DropdownMenu
-    - dropdown-item: DropdownSelector
-    - dropdown-toggle: DropdownMenu, MenuList, TabbedPages
+
 
     - enabled: RowTable
 
-    - justify-content-between: DropdownSelector, ModalPage
 
     - list-group-item: FileSelector, InfoReporter
     - list-group-item-action: FileSelector, InfoReporter
 
+
     - media: FileSelector
     - media-body: FileSelector
+
     - modal-body: FileSelector, QuestionPrompter
     - modal-content: FileSelector, QuestionPrompter
     - modal-dialog: FileSelector, QuestionPrompter

@@ -301,8 +301,8 @@ export class MenuList extends React.Component {
             }
 
             if (item.subMenuItems) {
-                // dropdown-toggle displays the arrow...
-                className += ' dropdown-toggle';
+                // Dropdown-toggle displays the arrow...
+                className += ' Dropdown-toggle';
 
                 let subMenuRef;
                 let showSubMenu;

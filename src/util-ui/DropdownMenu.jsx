@@ -66,13 +66,13 @@ export class DropdownMenu extends React.Component {
     render() {
         const { props } = this;
 
-        let topClassName = 'dropdown';
+        let topClassName = 'Dropdown';
         const { topClassExtras } = props;
         if (topClassExtras) {
             topClassName += ' ' + topClassExtras;
         }
         
-        let buttonClassName = (props.noArrow) ? '' : 'dropdown-toggle ';
+        let buttonClassName = (props.noArrow) ? '' : 'Dropdown-toggle ';
         const { buttonClassExtras } = props;
         if (buttonClassExtras) {
             buttonClassName += ' ' + buttonClassExtras;

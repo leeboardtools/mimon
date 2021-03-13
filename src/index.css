@@ -23,6 +23,9 @@ label {
 .dropdown-item:hover {
   background-color: rgba(0,0,0,0.075);
 }
+.Dropdown-item:hover {
+  background-color: rgba(0,0,0,0.075);
+}
 
 
 .Undo-tooltip {
