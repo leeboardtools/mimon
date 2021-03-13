@@ -484,8 +484,6 @@ Flex items:
 
 Bootstrap classes in ui:
     - active: TickerSelector
-    - alert: App
-    - alert-primary: App
 
     - disabled: MainWindow, NewFileConfigurator, TickerSelector
 
@@ -494,9 +492,6 @@ Bootstrap classes in ui:
 
 Bootstrap classes in use in util-ui:
     - active: DropdownSelector, FileSelector, MenuList, RowTable, TabbedPages
-    - alert: ErrorReporter
-    - alert-dismissible: ErrorReporter
-    - alert-error: ErrorReporter
 
     - bg-light: TabbedPages
     - border: DropdownSelector
@@ -513,16 +508,11 @@ Bootstrap classes in use in util-ui:
 
     - enabled: RowTable
 
-    - fade: ErrorReporter
-
     - justify-content-between: DropdownSelector, ModalPage
 
     - list-group-item: FileSelector, InfoReporter
     - list-group-item-action: FileSelector, InfoReporter
 
-    - m-2: FileSelector, ModalPage
-    - mb-0: CellButton, CellToggleSelectEditor, CellTextDisplay, CellTextEditor, CurrencySelector
-    - mb-4: PageTitle
     - media: FileSelector
     - media-body: FileSelector
     - modal-body: FileSelector, QuestionPrompter
@@ -536,8 +526,6 @@ Bootstrap classes in use in util-ui:
     - no-gutters: Tooltip
 
     - overflow-hidden: ContentFramer, TabbedPages
-
-    - row: ModalPage, Tooltip
 
     - show: ErrorReporter, Popup
 
