@@ -64,10 +64,10 @@ class NewFileName extends React.Component {
         const browseText = userMsg('NewFileName-browse_btn');
 
         return <div className = "Form-group Text-left">
-            <label className = "mb-0" htmlFor = "NewFileName-baseDir">
+            <label className = "Mb-0" htmlFor = "NewFileName-baseDir">
                 {label}
             </label>
-            <div className = "Input-group mb-0">
+            <div className = "Input-group Mb-0">
                 <input type = "text"
                     id = "NewFileName-baseDir"
                     className = "Form-control"
@@ -111,10 +111,10 @@ class NewFileName extends React.Component {
         }
 
         return <div className = "Form-group Text-left">
-            <label className = "mb-0" htmlFor = "NewFileName-projectName">
+            <label className = "Mb-0" htmlFor = "NewFileName-projectName">
                 {label}
             </label>
-            <div className = "Input-group mb-0">
+            <div className = "Input-group Mb-0">
                 <input type = "text"
                     id = "NewFileName-projectName"
                     className = {inputClassName}
@@ -133,7 +133,7 @@ class NewFileName extends React.Component {
         const fileTypeSelector = this.renderFileTypeSelector();
         const projectNameEditor = this.renderProjectNameEditor();
 
-        return <Page classExtras = "mt-auto mb-auto">
+        return <Page classExtras = "Mt-auto Mb-auto">
             <PageTitle>
                 {userMsg('NewFileName-heading')}
             </PageTitle>
@@ -190,7 +190,7 @@ class GeneralSettingsEditor extends React.Component {
             id = "GeneralSettingsEditor-openingBalancesDate"
             label = {label}
             onRenderEditor = {() =>                 
-                <div className = "mb-0">
+                <div className = "Mb-0">
                     <input type = "date"
                         id = "GeneralSettingsEditor-openingBalancesDate"
                         className = {inputClassName}
@@ -210,7 +210,7 @@ class GeneralSettingsEditor extends React.Component {
             id = "GeneralSettingsEditor-defaultCurrency"
             label = {label}
             onRenderEditor = {() =>
-                <div className = "mb-0">
+                <div className = "Mb-0">
                     <CurrencySelector
                         id = "GeneralSettingsEditor-defaultCurrency"
                         onChange = {this.props.onSetDefaultCurrency}
@@ -303,7 +303,7 @@ class GeneralSettingsEditor extends React.Component {
         const defaultCurrency = this.renderDefaultCurrency();
         const options = this.renderOptions();
 
-        return <Page classExtras = "mt-auto mb-auto">
+        return <Page classExtras = "Mt-auto Mb-auto">
             <PageTitle>
                 {userMsg('GeneraSettingsEditor-heading')}
             </PageTitle>

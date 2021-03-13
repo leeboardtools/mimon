@@ -415,8 +415,8 @@ export class PriceRetrieverWindow extends React.Component {
         }
 
         return <div className = "W-100 H-100" style = {style}>
-            <div className = "FlexC FlexC-row W-inherit H-inherit m-1">
-                <div className = "FlexI-grow-1 pl-3 pb-2 H-inherit">
+            <div className = "FlexC FlexC-row W-inherit H-inherit M-1">
+                <div className = "FlexI-grow-1 Pl-3 Pb-2 H-inherit">
                     <TickerSelector
                         accessor = { this.props.accessor }
                         tickerEntries = {tickerEntries}
@@ -426,7 +426,7 @@ export class PriceRetrieverWindow extends React.Component {
                         ref = {this._tickerSelectorRef}
                     />
                 </div>
-                <div className = "m-4">
+                <div className = "M-4">
                     <Row>
                         {this.renderTickerButton('PriceRetrieverWindow-select_all',
                             this.onSelectAllTickers)}
@@ -464,7 +464,7 @@ export class PriceRetrieverWindow extends React.Component {
 
         return <Row>
             <Col classExtras = "Text-right VAlign-middle">
-                <label htmlFor = {id} className = "mt-1">
+                <label htmlFor = {id} className = "Mt-1">
                     {label}
                 </label>
             </Col>
@@ -517,7 +517,7 @@ export class PriceRetrieverWindow extends React.Component {
             'PriceRetrieverWindow-from_date',
             'ymdDateTo');
 
-        const controlsClassName = 'pt-2 pb-2 Row-justify-content-center '
+        const controlsClassName = 'Py-2 Row-justify-content-center '
             + ' PriceRetrieverWindow-controls';
         const header = <div>
             <Row>

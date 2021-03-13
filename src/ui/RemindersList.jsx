@@ -194,7 +194,7 @@ let dueColumnInfoDefs;
 
 function getRemindersListColumnInfoDefs(dueEntriesById) {
     if (!columnInfoDefs) {
-        const cellClassName = 'm-0';
+        const cellClassName = 'M-0';
         const inputClassExtras = 'Text-center';
 
         columnInfoDefs = {

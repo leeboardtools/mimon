@@ -100,7 +100,7 @@ class AppOpenScreen extends React.Component {
                     onClick={() => props.onRecentClick(pathName)}>
                     <span>{pathName}</span>
                     <CloseButton
-                        classExtras = "ml-3"
+                        classExtras = "Ml-3"
                         ariaLabel = "Remove Path Name"
                         onClick = {(event) => { 
                             props.onRemoveRecentClick(pathName); event.stopPropagation(); 
@@ -109,8 +109,8 @@ class AppOpenScreen extends React.Component {
                 </div>
             );
 
-            mruComponent = <div className="mb-4">
-                <Row classExtras = "Row-justify-content-center mb-2">
+            mruComponent = <div className="Mb-4">
+                <Row classExtras = "Row-justify-content-center Mb-2">
                     <span>{userMsg('AppOpeningScreen-mru_title')}</span>
                 </Row>
                 <Row classExtras = "Row-justify-content-center">
@@ -134,8 +134,8 @@ class AppOpenScreen extends React.Component {
         }
 
         return (
-            <div className="FlexC W-100 H-100 p-1 mx-auto FlexC-column">
-                <div className="mb-4 mt-4">
+            <div className="FlexC W-100 H-100 P-1 Mx-auto FlexC-column">
+                <div className="Mb-4 Mt-4">
                     <h2 className="Text-center">
                         {userMsg('AppOpeningScreen-title_main')}
                     </h2>
@@ -166,12 +166,12 @@ class AppOpenScreen extends React.Component {
                         <Col/>
                     </Row>
                 </RowColContainer>
-                <RowColContainer classExtras="mt-auto">
+                <RowColContainer classExtras="Mt-auto">
                     <Row>
                         <Col/>
                         <Col>
                             <Button 
-                                classExtras = "Btn-secondary Btn-sm Btn-block mb-4"
+                                classExtras = "Btn-secondary Btn-sm Btn-block Mb-4"
                                 onClick={props.onExitClick}
                                 aria-label="Exit">
                                 {userMsg('AppOpeningScreen-exit')}

@@ -25,7 +25,7 @@ ErrorReporter.propTypes = {
  * @class
  */
 export function ErrorReporter(props) {
-    return <div className="container-fluid mt-5">
+    return <div className="container-fluid Mt-5">
         <div className="alert alert-error alert-dismissible fade show" role="alert">
             {props.message.toString()}
             <CloseButton onClick={props.onClose}/>

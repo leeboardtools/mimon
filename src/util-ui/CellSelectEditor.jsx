@@ -13,7 +13,7 @@ export const CellSelectEditor = React.forwardRef(
             size,
             onChange, onFocus, onBlur, disabled } = props;
 
-        const divClassName = 'Input-group mb-0 ';
+        const divClassName = 'Input-group Mb-0 ';
         let className = 'Cell CellSelectEditor-select ' + classExtras;
 
         let optionComponents;
@@ -98,7 +98,7 @@ CellSelectEditor.propTypes = {
 export function CellSelectDisplay(props) {
     const { selectedValue, ariaLabel, classExtras, size, } = props;
 
-    const divClassName = 'Input-group mb-0 ';
+    const divClassName = 'Input-group Mb-0 ';
     const className = 'Cell CellTextEditor-textInput CellTextEditor-textDisplay ' 
         + classExtras;
 
@@ -147,7 +147,7 @@ export const CellToggleSelectEditor = React.forwardRef(
         const { selectedValue, items, errorMsg, ariaLabel, classExtras, 
             onChange, onFocus, onBlur, disabled } = props;
 
-        const divClassName = 'Input-group mb-0 ';
+        const divClassName = 'Input-group Mb-0 ';
         let className = 'Cell CellButton CellToggleSelectEditor-button ' 
             + classExtras;
 

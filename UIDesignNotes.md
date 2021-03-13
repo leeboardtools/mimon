@@ -489,34 +489,6 @@ Bootstrap classes in ui:
 
     - disabled: MainWindow, NewFileConfigurator, TickerSelector
 
-    - h-100: AccountRegister, App, PriceRetrieverWindow, PricesList
-
-    - m-0: PricedItemsList, RemindersList
-    - m-1: PriceRetrieverWindow
-    - m-4: PriceRetrieverWindow
-    - mb-auto: FileCreator
-    - mb-0: FileCreator
-    - mb-2: App
-    - mb-4: App
-    - ml-1: ReconcilerWindow
-    - ml-2: MainWindow, NewFileConfigurator
-    - ml-3: App
-    - mr-1: ReconcilerWindow
-    - mr-4: ReminderEditor
-    - mt-auto: App, FileCreator
-    - mt-1: PriceRetrieverWindow
-    - mt-2: LotSelectionEditor, MainWindow, NewFileConfigurator
-    - mt-4: App
-    - mx-auto: App
-
-    - p-1: App
-    - pb-2: PriceRetrieverWindow
-    - pl-1: ReconcilerWindow
-    - pl-2: MainWindow, NewFileConfigurator
-    - pl-3: PriceRetrieverWindow
-    - pr-1: ReconcilerWindow
-    - pr-2: MainWindow, NewFileConfigurator
-    - pt-2: PriceRetrieverWindow
     
 
 
@@ -543,8 +515,6 @@ Bootstrap classes in use in util-ui:
 
     - fade: ErrorReporter
 
-    - h-100: ContentFramer, SequentialPages, TabbedPages
-
     - justify-content-between: DropdownSelector, ModalPage
 
     - list-group-item: FileSelector, InfoReporter
@@ -562,24 +532,10 @@ Bootstrap classes in use in util-ui:
     - modal-header: FileSelector, QuestionPrompter
     - modal-footer: FileSelector, QuestionPrompter
     - modal-title: FileSelector, QuestionPrompter
-    - mr-1: FileSelector
-    - mr-4: ModalPage
-    - mt-2: ModalPage
-    - mt-5: ErrorReporter
-    - mt-auto: ModalPage
 
     - no-gutters: Tooltip
 
     - overflow-hidden: ContentFramer, TabbedPages
-
-    - p-0: ContentFramer
-    - p-2: FileSelector, ModalPage
-    - pb-3: PageTitle
-    - pl-0: ContentFramer
-    - pl-2: FieldPrefix, DropdownSelector
-    - pr-0: ContentFramer
-    - pr-2: FieldSuffix
-    - pt-3: PageTitle
 
     - row: ModalPage, Tooltip
 

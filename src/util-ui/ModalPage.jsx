@@ -23,7 +23,7 @@ export function ModalPage(props) {
     let cancelBtn;
     if (onCancel) {
         const cancelLabel = props.cancelLabel || userMsg('cancel');
-        cancelBtn = <button className = "Btn Btn-secondary m-2 mr-4"
+        cancelBtn = <button className = "Btn Btn-secondary M-2 Mr-4"
             onClick = {onCancel}
             disabled = {cancelDisabled}
         >
@@ -38,7 +38,7 @@ export function ModalPage(props) {
             titleCloseBtn = <CloseButton onClick = {onCancel}/>;
         }
 
-        titleComponent = <div className = "border-bottom p-2 ModalPage-title"
+        titleComponent = <div className = "border-bottom P-2 ModalPage-title"
         >
             <Row classExtras = "Row-justify-content-between">
                 <Col classExtras = "Text-center">
@@ -53,7 +53,7 @@ export function ModalPage(props) {
 
 
     let buttons = [];
-    const btnClassName = 'Btn Btn-primary m-2';
+    const btnClassName = 'Btn Btn-primary M-2';
     if (actionButtons) {
         buttons = [];
         for (let i = 0; i < actionButtons.length; ++i) {
@@ -82,12 +82,12 @@ export function ModalPage(props) {
         );
     }
 
-    const buttonBar = <div className = "mt-auto ModalPage-buttonBar">
-        <Row classExtras = "border-top m-2">
-            <Col classExtras = "Text-left mt-2">
+    const buttonBar = <div className = "Mt-auto ModalPage-buttonBar">
+        <Row classExtras = "border-top M-2">
+            <Col classExtras = "Text-left Mt-2">
                 {cancelBtn}
             </Col>
-            <Col classExtras = "Text-right mt-2">
+            <Col classExtras = "Text-right Mt-2">
                 {buttons}
             </Col>
         </Row>

@@ -14,7 +14,7 @@ PageTitle.propTypes = {
  * @class
  */
 export function PageTitle(props) {
-    let className = 'pt-3 pb-3 mb-4 border-bottom PageTitle';
+    let className = 'Pt-3 Pb-3 Mb-4 border-bottom PageTitle';
     const { classExtras } = props;
     if (classExtras) {
         className += ' ' + classExtras;

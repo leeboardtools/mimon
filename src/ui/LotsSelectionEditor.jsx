@@ -801,7 +801,7 @@ export class LotsSelectionEditor extends React.Component {
 
     renderLotsTable(args) {
         const { state } = this;
-        return <div className = "RowTableContainer mt-2">
+        return <div className = "RowTableContainer Mt-2">
             <EditableRowTable
                 columns = {state.columns}
 

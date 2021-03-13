@@ -122,7 +122,7 @@ export class ContentFramer extends React.Component {
 
             content = content || children;
 
-            return <div className = "container-fluid pl-0 pr-0 ContentFramer-content"
+            return <div className = "container-fluid Pl-0 Pr-0 ContentFramer-content"
                 style = {style}
                 ref = {this._contentRef}
             >
@@ -135,7 +135,7 @@ export class ContentFramer extends React.Component {
     render() {
         const { classExtras } = this.props;
 
-        let className = 'container-fluid p-0'
+        let className = 'container-fluid P-0'
             + ' FlexC FlexC-column H-100 overflow-hidden ContentFramer-container';
         if (classExtras) {
             className += ' ' + classExtras;

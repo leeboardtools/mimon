@@ -399,13 +399,13 @@ export class ReconcilingWindow extends React.Component {
 
 
         const selectAll = <Button
-            classExtras = "Btn-outline-secondary Btn-sm mr-1"
+            classExtras = "Btn-outline-secondary Btn-sm Mr-1"
             onClick = {() => this.onSelectAllNone(splitInfos, true)}
         >
             {userMsg('ReconcilingWindow-selectAll_button')}
         </Button>;
         const clearAll = <Button
-            classExtras = "Btn-outline-secondary Btn-sm ml-1"
+            classExtras = "Btn-outline-secondary Btn-sm Ml-1"
             onClick = {() => this.onSelectAllNone(splitInfos, false)}
         >
             {userMsg('ReconcilingWindow-clearAll_button')}
@@ -556,10 +556,10 @@ export class ReconcilingWindow extends React.Component {
             className = "ReconcilingWindow-splitInfosContainer"
         >
             <Row classExtras = "H-inherit">
-                <Col classExtras = "H-inherit W-50 pr-1">
+                <Col classExtras = "H-inherit W-50 Pr-1">
                     {inflows}
                 </Col>
-                <Col classExtras = "H-inherit W-50 pl-1">
+                <Col classExtras = "H-inherit W-50 Pl-1">
                     {outflows}
                 </Col>
             </Row>

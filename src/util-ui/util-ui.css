@@ -1288,6 +1288,257 @@ from BS col-form-label */
 }
 
 
+.M-auto {
+    margin: auto!important;
+}
+.Ml-auto,
+.Mx-auto {
+    margin-left: auto!important;
+}
+.Mr-auto,
+.Mx-auto {
+    margin-right: auto!important;
+}
+.Mt-auto,
+.My-auto {
+    margin-top: auto!important;
+}
+.Mb-auto,
+.My-auto {
+    margin-bottom: auto!important;
+}
+
+.M-0 {
+    margin: 0!important;
+}
+.Ml-0,
+.Mx-0 {
+    margin-left: 0!important;
+}
+.Mr-0,
+.Mx-0 {
+    margin-right: 0!important;
+}
+.Mt-0,
+.My-0 {
+    margin-top: 0!important;
+}
+.Mb-0,
+.My-0 {
+    margin-bottom: 0!important;
+}
+
+.M-1 {
+    margin: .25rem!important;
+}
+.Ml-1,
+.Mx-1 {
+    margin-left: .25rem!important;
+}
+.Mr-1,
+.Mx-1 {
+    margin-right: .25rem!important;
+}
+.Mt-1,
+.My-1 {
+    margin-top: .25rem!important;
+}
+.Mb-1,
+.My-1 {
+    margin-bottom: .25rem!important;
+}
+
+.M-2 {
+    margin: .5rem!important;
+}
+.Ml-2,
+.Mx-2 {
+    margin-left: .5rem!important;
+}
+.Mr-2,
+.Mx-2 {
+    margin-right: .5rem!important;
+}
+.Mt-2,
+.My-2 {
+    margin-top: .5rem!important;
+}
+.Mb-2,
+.My-2 {
+    margin-bottom: .5rem!important;
+}
+
+.M-3 {
+    margin: 1rem!important;
+}
+.Ml-3,
+.Mx-3 {
+    margin-left: 1rem!important;
+}
+.Mr-3,
+.Mx-3 {
+    margin-right: 1rem!important;
+}
+.Mt-3,
+.My-3 {
+    margin-top: 1rem!important;
+}
+.Mb-3,
+.My-3 {
+    margin-bottom: 1rem!important;
+}
+
+.M-4 {
+    margin: 1.5rem!important;
+}
+.Ml-4,
+.Mx-4 {
+    margin-left: 1.5rem!important;
+}
+.Mr-4,
+.Mx-4 {
+    margin-right: 1.5rem!important;
+}
+.Mt-4,
+.My-4 {
+    margin-top: 1.5rem!important;
+}
+.Mb-4,
+.My-4 {
+    margin-bottom: 1.5rem!important;
+}
+
+
+.P-auto {
+    padding: auto!important;
+}
+.Pl-auto,
+.Px-auto {
+    padding-left: auto!important;
+}
+.Pr-auto,
+.Px-auto {
+    padding-right: auto!important;
+}
+.Pt-auto,
+.Py-auto {
+    padding-top: auto!important;
+}
+.Pb-auto,
+.Py-auto {
+    padding-bottom: auto!important;
+}
+
+.P-0 {
+    padding: 0!important;
+}
+.Pl-0,
+.Px-0 {
+    padding-left: 0!important;
+}
+.Pr-0,
+.Px-0 {
+    padding-right: 0!important;
+}
+.Pt-0,
+.Py-0 {
+    padding-top: 0!important;
+}
+.Pb-0,
+.Py-0 {
+    padding-bottom: 0!important;
+}
+
+.P-1 {
+    padding: .25rem!important;
+}
+.Pl-1,
+.Px-1 {
+    padding-left: .25rem!important;
+}
+.Pr-1,
+.Px-1 {
+    padding-right: .25rem!important;
+}
+.Pt-1,
+.Py-1 {
+    padding-top: .25rem!important;
+}
+.Pb-1,
+.Py-1 {
+    padding-bottom: .25rem!important;
+}
+
+.P-2 {
+    padding: .5rem!important;
+}
+.Pl-2,
+.Px-2 {
+    padding-left: .5rem!important;
+}
+.Pr-2,
+.Px-2 {
+    padding-right: .5rem!important;
+}
+.Pt-2,
+.Py-2 {
+    padding-top: .5rem!important;
+}
+.Pb-2,
+.Py-2 {
+    padding-bottom: .5rem!important;
+}
+
+.P-3 {
+    padding: 1rem!important;
+}
+.Pl-3,
+.Px-3 {
+    padding-left: 1rem!important;
+}
+.Pr-3,
+.Px-3 {
+    padding-right: 1rem!important;
+}
+.Pt-3,
+.Py-3 {
+    padding-top: 1rem!important;
+}
+.Pb-3,
+.Py-3 {
+    padding-bottom: 1rem!important;
+}
+
+.P-4 {
+    padding: 1.5rem!important;
+}
+.Pl-4,
+.Px-4 {
+    padding-left: 1.5rem!important;
+}
+.Pr-4,
+.Px-4 {
+    padding-right: 1.5rem!important;
+}
+.Pt-4,
+.Py-4 {
+    padding-top: 1.5rem!important;
+}
+.Pb-4,
+.Py-4 {
+    padding-bottom: 1.5rem!important;
+}
+
+
+.H-25 {
+    height: 25%;
+}
+.H-50 {
+    height: 50%;
+}
+.H-75 {
+    height: 75%;
+}
 .H-100 {
     height: 100%;
 }
@@ -1295,51 +1546,39 @@ from BS col-form-label */
 .W-10 {
     width: 10%;
 }
-
 .W-15 {
     width: 15%;
 }
-
 .W-20 {
     width: 20%;
 }
-
 .W-25 {
     width: 25%;
 }
-
 .W-30 {
     width: 30%;
 }
-
 .W-40 {
     width: 40%;
 }
-
 .W-50 {
     width: 50%;
 }
-
 .W-60 {
     width: 60%;
 }
-
 .W-70 {
     width: 70%;
 }
-
 .W-75 {
     width: 75%;
 }
-
 .W-80 {
     width: 80%;
 }
-
 .W-90 {
     width: 90%;
 }
-
 .W-100 {
     width: 100%;
 }

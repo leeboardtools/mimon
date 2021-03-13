@@ -127,7 +127,7 @@ export function FieldPrefix(props) {
     if (!props.children) {
         return null;
     }
-    return <div className = "Field-inline-text pr-2">
+    return <div className = "Field-inline-text Pr-2">
         {props.children}
     </div>;
 }
@@ -141,7 +141,7 @@ export function FieldSuffix(props) {
     if (!props.children) {
         return null;
     }
-    return <div className = "Field-inline-text pl-2">
+    return <div className = "Field-inline-text Pl-2">
         {props.children}
     </div>;
 }
