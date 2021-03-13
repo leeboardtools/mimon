@@ -10,7 +10,7 @@ import { Currencies, USD, EUR } from '../util/Currency';
 export function CurrencySelector(props) {
     const { id, value, onChange, ariaLabel, classExtras, disabled } = props;
 
-    const divClassName = 'Input-group mb-0 ';
+    const divClassName = 'Input-group Mb-0 ';
     let className = 'Cell CellSelectEditor-select ' + classExtras;
 
     let optionComponents = [];

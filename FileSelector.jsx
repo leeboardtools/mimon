@@ -201,7 +201,7 @@ export class FileSelector extends React.Component {
                 onDoubleClick={(event) => this.onDoubleClickDir(event, pathName)}
             >
                 <div className="media">
-                    <img src={folder} className="mr-1"></img>
+                    <img src={folder} className="Mr-1"></img>
                     <div className="media-body">
                         {name}
                     </div>
@@ -229,7 +229,7 @@ export class FileSelector extends React.Component {
 
 
         return <React.Fragment>
-            <div className="p-2 border-bottom">
+            <div className="P-2 border-bottom">
                 {currentDirComponents}
             </div>
             <div className="modal-body">
@@ -254,7 +254,7 @@ export class FileSelector extends React.Component {
             onGetPreFileListComponent, onGetPostFileListComponent } = this.props;
         okButtonText = okButtonText || userMsg('FileSelector-open');
 
-        const btnClassName = 'Btn Btn-primary m-2';
+        const btnClassName = 'Btn Btn-primary M-2';
 
         let preFileListComponent = (onGetPreFileListComponent)
             ? onGetPreFileListComponent() : undefined;
