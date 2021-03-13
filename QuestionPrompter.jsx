@@ -21,8 +21,8 @@ export function QuestionPrompter(props) {
                 />;
             }
         }
-        titleComponent = <div className="modal-header">
-            <h5 className="modal-title">{title}</h5>
+        titleComponent = <div className="Modal-header">
+            <h5 className="Modal-title">{title}</h5>
             {titleButton}
         </div>;
     }
@@ -64,13 +64,13 @@ export function QuestionPrompter(props) {
         buttonsComponents.push(component);
     }
 
-    return <div className="modal-dialog" role="document">
-        <div className="modal-content">
+    return <div className="Modal-dialog" role="document">
+        <div className="Modal-content">
             {titleComponent}
-            <div className="modal-body Text-left">
+            <div className="Modal-body Text-left">
                 {messageComponent}
             </div>
-            <div className="modal-footer">
+            <div className="Modal-footer">
                 {buttonsComponents}
             </div>
         </div>
