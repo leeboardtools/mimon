@@ -206,6 +206,7 @@ button.Close {
     margin-left: auto;
 }
 
+
 /* Originally from BS col */
 .Col {
     -ms-flex-preferred-size: 0;
@@ -918,6 +919,22 @@ from BS col-form-label */
     border-top-width: 0;
 }
 
+
+/** Originally from BS media-? */
+.Media {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-align: start;
+    align-items: flex-start;
+}
+
+.Media-body {
+    -ms-flex: 1;
+    flex: 1;
+}
+
+
+
 /*
 .MenuList {
 }
@@ -1476,6 +1493,24 @@ from BS col-form-label */
 
     background-color: #555;
     border-radius: 6px;
+}
+
+
+/* overflow helpers */
+.Overflow-auto {
+    overflow: auto!important;
+}
+.Overflow-clip {
+    overflow: clip!important;
+}
+.Overflow-hidden {
+    overflow: hidden!important;
+}
+.Overflow-scroll {
+    overflow: scroll!important;
+}
+.Overflow-visible {
+    overflow: visible!important;
 }
 
 

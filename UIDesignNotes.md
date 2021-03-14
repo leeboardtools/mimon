@@ -494,18 +494,12 @@ Bootstrap classes in ui:
 Bootstrap classes in use in util-ui:
     - active: DropdownSelector, FileSelector, MenuList, RowTable, TabbedPages
 
-    - container-fluid: ContentFramer, ErrorReporter, FileSelector, Page
-
     - disabled: DropdownSelector, MenuList
-
 
     - enabled: RowTable
 
-
     - media: FileSelector
     - media-body: FileSelector
-
-    - overflow-hidden: ContentFramer, TabbedPages
 
     - show: ErrorReporter, Popup
 
