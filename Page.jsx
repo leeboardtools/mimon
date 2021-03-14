@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 export function Page(props) {
     const { classExtras, children } = props;
 
-    let className = 'container-fluid';
+    let className = 'Container-fluid';
     if (classExtras) {
         className += ' ' + classExtras;
     }

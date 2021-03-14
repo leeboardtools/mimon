@@ -200,9 +200,9 @@ export class FileSelector extends React.Component {
                 onClick={() => this.onSelectDir(pathName)}
                 onDoubleClick={(event) => this.onDoubleClickDir(event, pathName)}
             >
-                <div className="media">
+                <div className="Media">
                     <img src={folder} className="Mr-1"></img>
-                    <div className="media-body">
+                    <div className="Media-body">
                         {name}
                     </div>
                 </div>
@@ -233,7 +233,7 @@ export class FileSelector extends React.Component {
                 {currentDirComponents}
             </div>
             <div className="Modal-body">
-                <div className="container-fluid Text-left">
+                <div className="Container-fluid Text-left">
                     {entityComponents}
                 </div>
             </div>
