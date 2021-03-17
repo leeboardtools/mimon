@@ -456,3 +456,4 @@ Column sorting in RowTable:
         - Add summary info.
     
     - Open Prices from Securities list on security with children doesn't work.
+

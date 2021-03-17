@@ -179,12 +179,36 @@ export class Popup extends React.Component {
             const containerWidth = containerRect.width;
             const containerHeight = containerRect.height;
 
-            const boundsRect = getParentClipBounds(this._popupRef.current);
-            const minLeft = boundsRect.left + 2;
-            const minTop = boundsRect.top + 2;
-            const maxRight = boundsRect.right - 2;
-            const maxBottom = boundsRect.bottom - 2;
+            const popupStyle = window.getComputedStyle(this._popupRef.current);
+            const isFixedPosition = popupStyle.getPropertyValue('position') === 'fixed';
 
+            const { state } = this;
+
+            let minLeft;
+            let minTop;
+            let maxRight;
+            let maxBottom;
+
+            let isDocSizeChange;
+
+            const { clientWidth : docWidth, clientHeight: docHeight } 
+                = document.documentElement;
+            if (isFixedPosition) {
+                minLeft = 2;
+                minTop = 2;
+                maxRight = docWidth - 2;
+                maxBottom = docHeight - 2;
+
+                isDocSizeChange = (docWidth !== state.docWidth)
+                    || (docHeight !== state.docHeight);
+            }
+            else {
+                const boundsRect = getParentClipBounds(this._popupRef.current);
+                minLeft = boundsRect.left + 2;
+                minTop = boundsRect.top + 2;
+                maxRight = boundsRect.right - 2;
+                maxBottom = boundsRect.bottom - 2;
+            }
 
             let left = props.x;
             let top = props.y;
@@ -216,7 +240,6 @@ export class Popup extends React.Component {
             const refRect = (refElement) ? refElement.getBoundingClientRect() 
                 : undefined;
             if (refRect) {
-
                 let hAlignParent = props.hAlignParent || 'left';
                 let hAlignPopup = props.hAlignPopup || 'left';
                 let vAlignParent = props.vAlignParent || 'bottom';
@@ -333,23 +356,24 @@ export class Popup extends React.Component {
             let width = right - left;
             let height = bottom - top;
 
-            let xAdjust = window.scrollX;
-            let yAdjust = window.scrollY;
+            if (!isFixedPosition) {
+                let xAdjust = window.scrollX;
+                let yAdjust = window.scrollY;
 
-            const positionedAncestor = getPositionedAncestor(this._popupRef.current);
-            if (positionedAncestor) {
-                const frameRect = positionedAncestor.getBoundingClientRect();
-                xAdjust -= frameRect.left;
-                yAdjust -= frameRect.top;
+                const positionedAncestor = getPositionedAncestor(this._popupRef.current);
+                if (positionedAncestor) {
+                    const frameRect = positionedAncestor.getBoundingClientRect();
+                    xAdjust -= frameRect.left;
+                    yAdjust -= frameRect.top;
+                }
+
+                left += xAdjust;
+                top += yAdjust;
             }
 
-            left += xAdjust;
-            top += yAdjust;
-
-            const { state } = this;
-
             // Prevent flipping back and forth between two sizes.
-            if ((pixelsEqual(state.left, left) || pixelsEqual(state.prevLeft, left))
+            if (!isDocSizeChange
+             && (pixelsEqual(state.left, left) || pixelsEqual(state.prevLeft, left))
              && (pixelsEqual(state.top, top) || pixelsEqual(state.prevTop, top))
              && (pixelsEqual(state.width, width) || pixelsEqual(state.prevWidth, width))
              && (pixelsEqual(state.height, height)
@@ -377,6 +401,8 @@ export class Popup extends React.Component {
                     pointerX: pointerX,
                     pointerY: pointerY,
                     pointerLocation: pointerLocation,
+                    docWidth: docWidth,
+                    docHeight: docHeight,
                 });
             }
         }
@@ -413,7 +439,6 @@ export class Popup extends React.Component {
         const { state } = this;
 
         const style = {
-            position: 'absolute',
             top: state.top,
             left: state.left,
             width: state.width,
@@ -528,7 +553,8 @@ export class Popup extends React.Component {
  * @property {number} [tabIndex]
  * @property {string} [classExtras]
  * @property {string} [pointerClassExtras]
- * @property {boolean} [isPointer]
+ * @property {boolean} [isPointer] If truthy a pointer is drawn along the edge towards
+ * the parent, normally used for the tooltip pointer.
  */
 Popup.propTypes = {
     id: PropTypes.any,

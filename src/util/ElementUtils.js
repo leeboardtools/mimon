@@ -60,6 +60,14 @@ export function getPositionedAncestor(element, elementChain) {
 
 
 /**
+ * Callback used to skip checking an element to see if it is clipping.
+ * @callback getParentClipBounds~skipElementCallback
+ * @param {Element} element 
+ * @returns {boolean} Truthy if element should not be checked for the clipping element.
+ */
+
+
+/**
  * @typedef {object} getParentClipBoundsResult
  * @property {number} left
  * @property {number} top
@@ -71,9 +79,10 @@ export function getPositionedAncestor(element, elementChain) {
  * Walks up the ancestors of an element to determine where the element will
  * be clipped, currently presumes the element will be positioned absolutely.
  * @param {Element} element 
+ * @param {getParentClipBounds~skipElementCallback} skipElementCallback
  * @returns {getParentClipBoundsResult}
  */
-export function getParentClipBounds(element) {
+export function getParentClipBounds(element, skipElementCallback) {
     let parentElement = element.parentElement;
     let isOverflowX;
     let isOverflowY;
@@ -84,7 +93,13 @@ export function getParentClipBounds(element) {
     let maxRight = clientWidth;
     let maxBottom = clientHeight;
 
-    while (parentElement) {
+    skipElementCallback = skipElementCallback || (() => {});
+
+    for (; parentElement; parentElement = parentElement.parentElement) {
+        if (skipElementCallback(parentElement)) {
+            continue;
+        }
+
         const style = window.getComputedStyle(parentElement);
         let overflow = style.getPropertyValue('overflow-y');
         if (overflow === 'auto') {
@@ -117,8 +132,6 @@ export function getParentClipBounds(element) {
         if (isOverflowX && isOverflowY) {
             break;
         }
-
-        parentElement = parentElement.parentElement;
     }
 
     return {
