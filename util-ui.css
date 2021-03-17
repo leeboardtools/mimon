@@ -946,11 +946,6 @@ from BS col-form-label */
 
 
 
-/*
-.MenuList {
-}
-*/
-
 .MenuList-itemsContainer {
     height: auto;
     left: 0;
@@ -1211,10 +1206,16 @@ from BS col-form-label */
 .Popup {
     display: none;
     height: auto;
+    position: absolute;
 }
 
 .Popup.show {
     display: block;
+}
+
+.Popup.MenuList {
+    position: fixed;
+    z-index: 100;
 }
 
 .Popup-container {
@@ -1449,7 +1450,8 @@ from BS col-form-label */
 }
 
 
-.Scrollable-menu {
+.Scrollable-menu,
+.MenuList-itemsContainer {
     height: auto;
     max-height: 90vh;
     overflow-x: hidden;
