@@ -337,7 +337,11 @@ export class PricedItemsList extends React.Component {
             this.setState(result);
 
             if (prevActiveRowKey !== result.activeRowKey) {
-                this.onSelectItem(result.activeRowEntry);
+                let activeRowInfo;
+                if (result.activeRowKey) {
+                    activeRowInfo = result.rowInfosByKey.get(result.activeRowKey);
+                }
+                this.onSelectItem(activeRowInfo);
             }
         }
 

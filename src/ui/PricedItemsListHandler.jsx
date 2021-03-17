@@ -123,8 +123,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     }
 
 
-    onOpenPricesList(tabId, pricedItemId, pricedItemTypeName) {
-        this.openTab('pricesList', { pricedItemId: pricedItemId, });
+    onOpenPricesList(tabId) {
+        const { activePricedItemId, } = this.getTabIdState(tabId);
+        this.openTab('pricesList', { pricedItemId: activePricedItemId, });
     }
 
 
@@ -278,8 +279,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             { id: 'openPricesList',
                 label: userMsg('PricedItemsListHandler-openPricesList', 
                     typeDescription),
-                onChooseItem: () => this.onOpenPricesList(tabId, 
-                    activePricedItemId, pricedItemTypeName),
+                disabled: !activePricedItemId,
+                onChooseItem: () => this.onOpenPricesList(tabId),
             },
             {},
             { id: 'newPricedItem',

@@ -455,5 +455,4 @@ Column sorting in RowTable:
     - Lot selection editor
         - Add summary info.
     
-    - Open Prices from Securities list on security with children doesn't work.
 
