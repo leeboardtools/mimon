@@ -41,7 +41,24 @@ export function createTestTransactions(newFileContents, options) {
     };
 
     transactions.push({
-        ymdDate: '2020-01-03',
+        ymdDate: '2010-01-30',
+        description: 'Opening Balance',
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Checking Account',
+                quantityBaseValue: 500000,
+            },
+            { 
+                accountId: 'EQUITY-Opening Balances',
+                quantityBaseValue: 500000,
+            },
+        ] 
+    });
+
+
+
+    transactions.push({
+        ymdDate: '2015-01-03',
         description: 'Paycheck',
         splits: [
             { 
@@ -83,7 +100,7 @@ export function createTestTransactions(newFileContents, options) {
     });
 
     transactions.push({
-        ymdDate: '2020-01-03',
+        ymdDate: '2015-01-03',
         description: 'Cash',
         splits: [
             { 
@@ -99,7 +116,7 @@ export function createTestTransactions(newFileContents, options) {
     });
 
     transactions.push({
-        ymdDate: '2020-01-10',
+        ymdDate: '2015-01-10',
         description: 'Phone Bill',
         splits: [
             { 
@@ -115,7 +132,7 @@ export function createTestTransactions(newFileContents, options) {
     });
 
     transactions.push({
-        ymdDate: '2020-01-05',
+        ymdDate: '2015-01-05',
         description: 'Lunch',
         splits: [
             { 
@@ -131,7 +148,7 @@ export function createTestTransactions(newFileContents, options) {
     });
 
     transactions.push({
-        ymdDate: '2020-01-17',
+        ymdDate: '2015-01-17',
         description: 'Paycheck',
         splits: [
             { 
@@ -162,7 +179,7 @@ export function createTestTransactions(newFileContents, options) {
     });
 
     transactions.push({
-        ymdDate: '2020-01-30',
+        ymdDate: '2015-01-30',
         description: 'Rent',
         splits: [
             { 
@@ -178,7 +195,7 @@ export function createTestTransactions(newFileContents, options) {
     });
 
     transactions.push({
-        ymdDate: '2020-01-24',
+        ymdDate: '2015-01-24',
         description: 'Power Bill',
         splits: [
             { 
@@ -193,7 +210,7 @@ export function createTestTransactions(newFileContents, options) {
     });
 
     transactions.push({
-        ymdDate: '2020-01-24',
+        ymdDate: '2015-01-24',
         description: 'Gas Bill',
         splits: [
             { 
@@ -208,7 +225,7 @@ export function createTestTransactions(newFileContents, options) {
     });
 
     for (let i = 1; i <= 29; ++i) {
-        let date = '2020-02-';
+        let date = '2015-02-';
         if (i < 10) {
             date += '0';
         }
@@ -229,6 +246,45 @@ export function createTestTransactions(newFileContents, options) {
             ] 
         });
     }
+
+    transactions.push({
+        ymdDate: '2015-06-30',
+        description: 'House Mortgage',
+        splits: [
+            { 
+                accountId: 'ASSET-Fixed Assets-House',
+                quantityBaseValue: 40000000,
+            },
+            { 
+                accountId: 'LIABILITY-Loans-Home Mortgage',
+                quantityBaseValue: 40000000,
+            },
+        ] 
+    });
+
+
+    transactions.push({
+        ymdDate: '2015-07-30',
+        description: 'Mortgage',
+        splits: [
+            { 
+                accountId: 'ASSET-Current Assets-Checking Account',
+                quantityBaseValue: -100000,
+            },
+            { 
+                accountId: 'LIABILITY-Loans-Home Mortgage',
+                quantityBaseValue: -20000,
+            },
+            { 
+                accountId: 'EXPENSE-Interest-Mortgage Interest',
+                quantityBaseValue: 70000,
+            },
+            { 
+                accountId: 'ASSET-Other-Mortgage Escrow',
+                quantityBaseValue: 10000,
+            },
+        ] 
+    });
 
 
     //

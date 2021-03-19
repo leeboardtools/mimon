@@ -281,15 +281,21 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Account Editor
         - Canceling makes arbitrary tab active, not previously selected tab.
 
+
     - Accounts List
         - Custom Account Lists
         - Listen on prices for market value updates.
         - Summary rows
+            - Set by level?
+            - Set from active row?
+                - Here would summarize active account and all its siblings.
+
         - Menu options for moving a child account up or down in its sibling list.
 
 
     - Account Register
         - Auto-complete for description
+        
         - Copy, Paste, Duplicate transaction actions
         - Actually add row to the clipboard when Copy Transaction is chosen.
             - Both HTML and text.
@@ -452,7 +458,6 @@ Column sorting in RowTable:
     - Reconciler
         - Add column width support.
 
-    - Lot selection editor
-        - Add summary info.
-    
+    - Account Register Tasks
+        - Auto complete
 

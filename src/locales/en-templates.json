@@ -53,6 +53,16 @@
                 },
                 {
                     "type": "ASSET",
+                    "name": "Other",
+                    "childAccounts": [
+                        {
+                            "type": "ASSET",
+                            "name": "Mortgage Escrow"
+                        }
+                    ]
+                },
+                {
+                    "type": "ASSET",
                     "name": "Fixed Assets",
                     "childAccounts": [
                         {

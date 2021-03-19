@@ -14,10 +14,9 @@ import { getTagString } from './StandardTags';
  * @property {string}   name    The identifying name of the account class.
  * @property {string}   description The user description of the account class.
  * @property {number}   creditSign  Either -1 or 1, a credit value is multiplied 
- * by this before the value is added to
+ * by this before the value is added to the account balance.
  * @property {boolean}  isAle   <code>true</code> if the category is an asset, 
  * liability, or equity.
- * the account balance.
  * @property {AccountType}  rootAccountType The account type of the root account
  * for the account category.
  */
@@ -127,12 +126,12 @@ export const AccountType = {
     REAL_ESTATE: { name: 'REAL_ESTATE', 
         category: AccountCategory.ASSET, 
         pricedItemType: PricedItemType.REAL_ESTATE, 
-        hasLots: true, 
+        //hasLots: true, 
     },
     PROPERTY: { name: 'PROPERTY', 
         category: AccountCategory.ASSET, 
         pricedItemType: PricedItemType.PROPERTY, 
-        hasLots: true, 
+        //hasLots: true, 
     },
 
     LIABILITY: { name: 'LIABILITY', 
