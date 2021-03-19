@@ -494,6 +494,7 @@ are necessary to max out the width */
 
 .TransactionTemplateEditor-debitCreditEditor {
   text-align: right;
+  width: inherit;
   max-width: 10rem;
 }
 
