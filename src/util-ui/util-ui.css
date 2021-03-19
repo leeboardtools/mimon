@@ -949,7 +949,7 @@ from BS col-form-label */
 .MenuList-itemsContainer {
     height: auto;
     left: 0;
-    z-index: 1000;
+    z-index: 2000;
     float: left;
     min-width: 10rem;
     padding-top: .5rem;
@@ -1487,6 +1487,7 @@ from BS col-form-label */
     visibility: hidden;
     margin: 0;
     opacity: 0;
+    z-index: 5000;
     transition: opacity 0.3s ease-in 1s;
 }
 
@@ -1498,7 +1499,7 @@ from BS col-form-label */
 .Tooltip-content {
     width: max-content;
 
-    padding: 5px;
+    padding: .5rem;
     margin: 0;
 
     font-size: 1rem;

@@ -77,6 +77,7 @@ export function Tooltip(props) {
                 vAlignPopup = {vAlignPopup}
                 isPointer = {true}
                 show = {true}
+                isDebug = {props.isDebug}
             >
                 <div className = "Tooltip-content">
                     {tooltip}
@@ -105,4 +106,5 @@ Tooltip.propTypes = {
     ]),
     side: PropTypes.oneOf(['left', 'top', 'right', 'bottom']),
     children: PropTypes.any,
+    isDebug: PropTypes.bool,
 };

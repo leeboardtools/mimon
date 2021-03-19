@@ -167,11 +167,17 @@ export class Popup extends React.Component {
 
 
     componentDidMount() {
+        this.updateLayout();
         this._popupRef.current.focus();
     }
 
 
     componentDidUpdate(prevProps, prevState) {
+        this.updateLayout();
+    }
+
+
+    updateLayout() {
         const { props } = this;
         if (props.show && this._containerRef.current) {
             const container = this._containerRef.current;
@@ -389,6 +395,14 @@ export class Popup extends React.Component {
              || !pixelsEqual(state.pointerX, pointerX) 
              || !pixelsEqual(state.pointerY, pointerY)
              || (state.pointerLocation !== pointerLocation)) {
+                if (props.isDebug) {
+                    console.log({
+                        width: width,
+                        height: height,
+                        pointerLocation: pointerLocation,
+                    });
+                }
+
                 this.setState({
                     left: left,
                     top: top,
@@ -571,4 +585,5 @@ Popup.propTypes = {
     pointerClassExtras: PropTypes.string,
     isPointer: PropTypes.bool,
     children: PropTypes.any,
+    isDebug: PropTypes.bool,
 };
