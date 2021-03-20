@@ -87,6 +87,11 @@ label {
 }
 
 
+.AppOpeningScreen-force_reload {
+    max-width: 10rem;
+    margin: auto;
+}
+
 /*
 .AccountRegister {
 }
@@ -120,6 +125,9 @@ label {
 .AccountsList {
 }
 */
+
+
+
 
 
 .RowTable-header-base  {

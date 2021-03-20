@@ -133,6 +133,21 @@ class AppOpenScreen extends React.Component {
             </Button>;
         }
 
+        let forceReloadComponent;
+        if (props.onForceReload) {
+            forceReloadComponent = <Row>
+                <Col>
+                    <Button 
+                        classExtras = {'Btn-secondary Btn-sm Btn-block Mb-4'
+                            + ' AppOpeningScreen-force_reload'}
+                        onClick={props.onForceReload}
+                        aria-label="Force Reload">
+                        {userMsg('AppOpeningScreen-force_reload')}
+                    </Button>
+                </Col>
+            </Row>;
+        }
+
         return (
             <div className="FlexC W-100 H-100 P-1 Mx-auto FlexC-column">
                 <div className="Mb-4 Mt-4">
@@ -179,6 +194,7 @@ class AppOpenScreen extends React.Component {
                         </Col>
                         <Col/>
                     </Row>
+                    {forceReloadComponent}
                 </RowColContainer>
             </div>
         );
@@ -192,6 +208,7 @@ AppOpenScreen.propTypes = {
     onImportClick: PropTypes.func,
     onRecentClick: PropTypes.func.isRequired,
     onRemoveRecentClick: PropTypes.func.isRequired,
+    onForceReload: PropTypes.func,
     onExitClick: PropTypes.func.isRequired,
 };
 
@@ -858,7 +875,8 @@ export default class App extends React.Component {
     render() {
         let mainComponent;
         const { appState, mruPathNames, errorMsg, currentDir,
-            isOpenFileEnabled, isImportFileEnabled, modalRenderer } = this.state;
+            isOpenFileEnabled, isImportFileEnabled, modalRenderer,
+            mainSetup } = this.state;
         if (errorMsg) {
             return <ErrorReporter message={errorMsg} 
                 onClose={this.onCancel}
@@ -869,6 +887,10 @@ export default class App extends React.Component {
             return modalRenderer();
         }
 
+        let onForceReload = (mainSetup && mainSetup.isDevMode)
+            ? this.onForceReload
+            : undefined;
+
         switch (appState) {
         case 'openingScreen' :
             return <AppOpenScreen
@@ -878,13 +900,14 @@ export default class App extends React.Component {
                 onImportClick = {this.onImportClick}
                 onRecentClick = {this.onRecentClick}
                 onRemoveRecentClick = {this.onRemoveRecentClick}
+                onForceReload = {onForceReload}
                 onExitClick = {this.onExit}
             />;
         
         case 'newFile': 
             return <FileCreator
                 accessor = {this._accessor}
-                mainSetup = {this.state.mainSetup}
+                mainSetup = {mainSetup}
                 frameManager = {this._frameManager}
                 onFileCreated = {this.onFileCreated}
                 onCancel = {this.onCancel}
@@ -919,7 +942,7 @@ export default class App extends React.Component {
         case 'importFileNewFile' :
             return <FileCreator
                 accessor = {this._accessor}
-                mainSetup = {this.state.mainSetup}
+                mainSetup = {mainSetup}
                 isImport = {true}
                 frameManager = {this._frameManager}
                 onCreateFile = {this.onImportProjectCreateFile}

@@ -65,6 +65,7 @@
     "AppOpeningScreen-new_file": "Create a New Accounting Project...",
     "AppOpeningScreen-open_file": "Open an Existing Accounting Project...",
     "AppOpeningScreen-import_file": "Import a jGnash XML Accounting Project...",
+    "AppOpeningScreen-force_reload": "Force Reload",
     "AppOpeningScreen-exit":"Exit MiMoN",
 
 
