@@ -430,8 +430,19 @@ async function asyncLoadAccountsForRoot(setupInfo, rootAccountId) {
         return;
     }
 
+    let existingAccountCheck;
+    if (rootCategory === A.AccountCategory.EQUITY) {
+        const openingBalancesAccountDataItem 
+            = accountManager.getOpeningBalancesAccountDataItem();
+        existingAccountCheck = {
+            accountDataItem: openingBalancesAccountDataItem,
+            name: openingBalancesAccountDataItem.name,
+        };
+    }
+
     for (let i = 0; i < accounts.length; ++i) {
-        await asyncLoadAccount(setupInfo, rootAccountId, accounts[i], rootCategory.name);
+        await asyncLoadAccount(setupInfo, rootAccountId, accounts[i], rootCategory.name,
+            existingAccountCheck);
     }
 }
 
@@ -439,7 +450,9 @@ async function asyncLoadAccountsForRoot(setupInfo, rootAccountId) {
 //
 //---------------------------------------------------------
 //
-async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
+async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName,
+    existingAccountCheck) {
+
     const { accountManager, accountMapping, accountNameMapping, pricedItemManager,
         defaultSplitAccountsByAccountId, accessor, warnings } = setupInfo;
 
@@ -480,8 +493,17 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName) {
         }
 
 
-        const accountDataItem = (await accountManager.asyncAddAccount(accountSettings))
-            .newAccountDataItem;
+        let accountDataItem;
+        if (existingAccountCheck) {
+            if (accountSettings.name === existingAccountCheck.name) {
+                accountDataItem = existingAccountCheck.accountDataItem;
+            }
+        }
+
+        if (!accountDataItem) {
+            accountDataItem = (await accountManager.asyncAddAccount(accountSettings))
+                .newAccountDataItem;
+        }
 
         accountMapping.set(item.id, accountDataItem);
 
