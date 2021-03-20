@@ -267,7 +267,7 @@ function renderSplitItemTooltip(splitRenderInfo, valueClassExtras) {
     if (code) {
         outerValueClassExtras += ' AccountRegister-tooltip-value-withCode';
         codeCol = <Col classExtras = "AccountRegister-tooltip-code">
-            {'(' + code + ')'}
+            {code}
         </Col>;
     }
     
@@ -346,8 +346,6 @@ function generateMultiSplitTooltips(args, value) {
             splitRenderInfo.creditSign = 1;
             splitRenderInfo.aleCreditSign = 1;
         });
-
-        baseSplitRenderInfo.code = '*';
 
         baseSplitRenderInfo = undefined;
     }
