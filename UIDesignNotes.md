@@ -292,6 +292,8 @@ Are the lists really two separate styles? Or can they be combined into one?
 
         - Menu options for moving a child account up or down in its sibling list.
 
+        - Add option to sort child accounts alphabetically
+
 
     - Account Register
         - Auto-complete for description
@@ -459,3 +461,8 @@ Column sorting in RowTable:
     - Account Register Tasks
         - Auto complete
 
+    - Account Editor
+        - Add Account Disabled? Closed? Inactive? flag.
+
+    - Add dev Force Reload button to opening window.
+    

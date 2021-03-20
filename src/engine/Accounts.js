@@ -540,7 +540,7 @@ export class AccountManager extends EventEmitter {
                 type: AccountType.EXPENSE,
                 pricedItemId: currencyPricedItemId, 
                 name: userMsg('Account-Root_Expenses_name'),
-                description: userMsg('Account-Root_Expense_desc'),
+                description: userMsg('Account-Root_Expenses_desc'),
             })).newAccountDataItem;
             this._rootExpenseAccountId = account.id;
         }

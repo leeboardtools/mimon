@@ -24,6 +24,7 @@ function getAccountsListColumnInfoDefs() {
     if (!columnInfoDefs) {
         columnInfoDefs = [
             ACE.getNameColumnInfo({}),
+            ACE.getDescriptionColumnInfo({}),
             ACE.getAccountTypeColumnInfo({}),
             ACE.getBalanceColumnInfo({}),
             LCE.getTotalSharesColumnInfo({}),
@@ -611,6 +612,15 @@ export class AccountsList extends React.Component {
         switch (columnInfo.key) {
         case 'name' :
             return ACE.renderNameDisplay({
+                columnInfo: columnInfo,
+                value: {
+                    name: accountDataItem.name,
+                    description: accountDataItem.description,
+                }
+            });
+        
+        case 'description' :
+            return ACE.renderDescriptionDisplay({
                 columnInfo: columnInfo,
                 value: {
                     name: accountDataItem.name,
