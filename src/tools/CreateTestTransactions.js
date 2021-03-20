@@ -72,9 +72,8 @@ export function createTestTransactions(newFileContents, options) {
                 quantityBaseValue: 100000,
             },
             {
-                accountId: 'INCOME-Bonus',
-                quantityBaseValue: 20000,
-                description: 'A bonus',
+                accountId: 'EXPENSE-Taxes-Social Security',
+                quantityBaseValue: 7000,
             },
             {
                 accountId: 'ASSET-Investments-401(k) Account',
@@ -89,12 +88,13 @@ export function createTestTransactions(newFileContents, options) {
                 quantityBaseValue: 10000,
             },
             {
-                accountId: 'EXPENSE-Taxes-Social Security',
-                quantityBaseValue: 7000,
-            },
-            {
                 accountId: 'EXPENSE-Taxes-Medicare',
                 quantityBaseValue: 3000,
+            },
+            {
+                accountId: 'INCOME-Bonus',
+                quantityBaseValue: 20000,
+                description: 'A bonus',
             },
         ]
     });

@@ -102,7 +102,9 @@ export function CellSelectDisplay(props) {
     const className = 'Cell CellTextEditor-textInput CellTextEditor-textDisplay ' 
         + classExtras;
 
-    return <Tooltip tooltip = {props.tooltip}>
+    return <Tooltip tooltip = {props.tooltip}
+        isDebug = {props.isTooltipDebug}
+    >
         <div className = {divClassName}>
             <input type = "text"
                 className = {className}
@@ -133,6 +135,7 @@ CellSelectDisplay.propTypes = {
         PropTypes.object,
         PropTypes.array,
     ]),
+    isTooltipDebug: PropTypes.bool,
 };
 
 

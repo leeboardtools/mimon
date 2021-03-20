@@ -15,7 +15,7 @@ import { getTagString } from './StandardTags';
  * @property {string}   description The user description of the account class.
  * @property {number}   creditSign  Either -1 or 1, a credit value is multiplied 
  * by this before the value is added to the account balance.
- * @property {boolean}  isAle   <code>true</code> if the category is an asset, 
+ * @property {boolean}  isALE   <code>true</code> if the category is an asset, 
  * liability, or equity.
  * @property {AccountType}  rootAccountType The account type of the root account
  * for the account category.
@@ -255,12 +255,15 @@ AccountCategory.EQUITY.rootAccountType = AccountType.EQUITY;
 
 export function loadAccountsUserMessages() {
     for (const accountClass of Object.values(AccountCategory)) {
-        accountClass.description = userMsg('AccountCategory-' + accountClass.name);
+        const baseLabelId = 'AccountCategory-' + accountClass.name;
+        accountClass.description = userMsg(baseLabelId);
+        accountClass.code = userMsg(baseLabelId + '_code');
     }
     for (const type of Object.values(AccountType)) {
-        type.description = userMsg('AccountType-' + type.name);
-        type.debitLabel = userMsg('AccountType-' + type.name + '_debit_label');
-        type.creditLabel = userMsg('AccountType-' + type.name + '_credit_label');
+        const baseLabelId = 'AccountType-' + type.name;
+        type.description = userMsg(baseLabelId);
+        type.debitLabel = userMsg(baseLabelId + '_debit_label');
+        type.creditLabel = userMsg(baseLabelId + '_credit_label');
     }
 }
 

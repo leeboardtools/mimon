@@ -303,8 +303,6 @@ Are the lists really two separate styles? Or can they be combined into one?
             
         - Multi-row support?
 
-        - Multi-split tooltip with securities shows same sign for buy and sell (sell shows positive, should be negative)
-
 
     - Account Selector
         - Add a search box.

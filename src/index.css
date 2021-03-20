@@ -87,6 +87,29 @@ label {
 }
 */
 
+.AccountRegister-tooltip-row {
+    margin-left: -10px;
+    margin-right: -10px;
+}
+
+.AccountRegister-tooltip-code {
+    -ms-flex: 0 0 auto;
+    flex: 0 0 auto;
+    width: 2.5rem;
+    max-width: 100%;
+    text-align: center;
+    padding-left: 0;
+    padding-right: 5px;
+}
+
+.AccountRegister-tooltip-value {
+    text-align: right;
+}
+
+.AccountRegister-tooltip-value-withCode {
+    padding-right: 0;
+}
+
 /*
 .AccountsList {
 }

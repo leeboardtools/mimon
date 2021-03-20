@@ -218,31 +218,158 @@ function saveSplitsListCellValue(args) {
     }
 }
 
-function renderSplitItemTooltip(caller, splits, index, aleCreditSign) {
-    const split = splits[index];
+
+function getSplitRenderInfo(caller, split, splitIndex) {
     const { accessor } = caller.props;
-    const splitAccountDataItem 
+    const accountDataItem 
         = accessor.getAccountDataItemWithId(split.accountId);
-    if (!splitAccountDataItem) {
+    if (!accountDataItem) {
         return;
     }
 
-    const category = A.getAccountType(splitAccountDataItem.type).category;
-    let creditSign = category.creditSign;
+    const category = A.getAccountType(accountDataItem.type).category;
+    const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
+        accountDataItem.pricedItemId);
+    const currency = getCurrency(pricedItemDataItem.currency);
+
+    return {
+        split: split,
+        splitIndex: splitIndex,
+        accountDataItem: accountDataItem,
+        category: category,
+        creditSign: category.creditSign,
+        currency: currency,
+        quantityBaseValue: split.quantityBaseValue,
+        aleCreditSign: 1,
+    };
+}
+
+
+function compareSplitRenderInfo(a, b) {
+    return Math.abs(b.quantityBaseValue) - Math.abs(a.quantityBaseValue);
+}
+
+
+function renderSplitItemTooltip(splitRenderInfo, valueClassExtras) {
+    const { accountDataItem, category, currency, quantityBaseValue,
+        aleCreditSign, splitIndex, code } = splitRenderInfo;
+    if (!accountDataItem) {
+        return;
+    }
+
+    let { creditSign } = splitRenderInfo;
     if (category.isALE) {
         creditSign *= aleCreditSign;
     }
-    
-    const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
-        splitAccountDataItem.pricedItemId);
-    const currency = getCurrency(pricedItemDataItem.currency);
-    const value = currency.getQuantityDefinition()
-        .baseValueToValueText(split.quantityBaseValue * creditSign);
 
-    return <Row key = {index}>
-        <Col classExtras = "Col-auto Text-left">{splitAccountDataItem.name}</Col>
-        <Col classExtras = "Text-right">{value}</Col>
+    let outerValueClassExtras = 'AccountRegister-tooltip-value';
+    let codeCol;
+    if (code) {
+        outerValueClassExtras += ' AccountRegister-tooltip-value-withCode';
+        codeCol = <Col classExtras = "AccountRegister-tooltip-code">
+            {'(' + code + ')'}
+        </Col>;
+    }
+    
+    const value = currency.getQuantityDefinition()
+        .baseValueToValueText(quantityBaseValue * creditSign);
+
+    return <Row key = {splitIndex} classExtras = "AccountRegister-tooltip-row">
+        <Col classExtras = "Col-auto Text-left">{accountDataItem.name}</Col>
+        <Col classExtras = {outerValueClassExtras}>
+            <div className = {valueClassExtras}>{value}</div>
+        </Col>
+        {codeCol}
     </Row>;
+}
+
+
+function generateMultiSplitTooltips(args, value) {
+    const { rowEntry } = args;
+    const { caller } = rowEntry;
+
+    const { splits } = value;
+    const { splitIndex } = getTransactionInfo(args);
+
+    const splitRenderInfos = [];
+    for (let i = 0; i < splits.length; ++i) {
+        splitRenderInfos.push(getSplitRenderInfo(caller, splits[i], i));
+    }
+
+    const nonBaseSplitRenderInfos = [];
+    for (let i = 0; i < splitIndex; ++i) {
+        nonBaseSplitRenderInfos.push(splitRenderInfos[i]);
+    }
+    for (let i = splitIndex + 1; i < splitRenderInfos.length; ++i) {
+        nonBaseSplitRenderInfos.push(splitRenderInfos[i]);
+    }
+
+    let baseSplitRenderInfo = splitRenderInfos[splitIndex];
+    const baseCategory = baseSplitRenderInfo.category;
+
+    let isIncomeBased;
+    if (baseCategory === A.AccountCategory.ASSET) {
+        for (let i = 0; i < nonBaseSplitRenderInfos.length; ++i) {
+            if (nonBaseSplitRenderInfos[i].category === A.AccountCategory.INCOME) {
+                isIncomeBased = true;
+                break;
+            }
+        }
+    }
+
+    let baseClassExtras;
+    
+
+    const prioritySplitRenderInfos = [];
+    let remainingSplitRenderInfos = [];
+    if (isIncomeBased) {
+        baseSplitRenderInfo.aleCreditSign = baseSplitRenderInfo.category.creditSign;
+
+        const baseCreditSign = -baseCategory.creditSign;
+        nonBaseSplitRenderInfos.forEach((splitRenderInfo) => {
+            if (splitRenderInfo.category === A.AccountCategory.INCOME) {
+                prioritySplitRenderInfos.push(splitRenderInfo);
+            }
+            else {
+                remainingSplitRenderInfos.push(splitRenderInfo);
+            }
+            splitRenderInfo.aleCreditSign = baseCreditSign;
+        });
+
+        baseClassExtras = 'Border-top';
+    }
+    else {
+        remainingSplitRenderInfos = splitRenderInfos;
+
+        remainingSplitRenderInfos.forEach((splitRenderInfo) => {
+            splitRenderInfo.code = splitRenderInfo.category.code;
+            splitRenderInfo.creditSign = 1;
+            splitRenderInfo.aleCreditSign = 1;
+        });
+
+        baseSplitRenderInfo.code = '*';
+
+        baseSplitRenderInfo = undefined;
+    }
+
+    prioritySplitRenderInfos.sort(compareSplitRenderInfo);
+    remainingSplitRenderInfos.sort(compareSplitRenderInfo);
+    
+
+    const tooltips = [];
+
+    prioritySplitRenderInfos.forEach((entry) => {
+        tooltips.push(renderSplitItemTooltip(entry));
+    });
+    remainingSplitRenderInfos.forEach((entry) => {
+        tooltips.push(renderSplitItemTooltip(entry));
+    });
+
+    if (baseSplitRenderInfo) {
+        tooltips.push(renderSplitItemTooltip(baseSplitRenderInfo, baseClassExtras));
+    }
+
+    return tooltips;
 }
 
 
@@ -278,31 +405,14 @@ function renderSplitsListDisplay(args) {
         else {
             text = userMsg('AccountRegister-multi_splits');
 
-            const accountDataItem = accessor.getAccountDataItemWithId(
-                caller.props.accountId
-            );
-
-            const baseSplit = splits[splitIndex];
-            const category = A.getAccountType(accountDataItem.type).category;
-            let baseCreditSign = -category.creditSign;
-            if (baseSplit.quantityBaseValue < 0) {
-                baseCreditSign *= -1;
-            }
-
-            tooltip = [];
-            for (let i = 0; i < splits.length; ++i) {
-                const aleCreditSign = (i === splitIndex)
-                    ? -1 : baseCreditSign;
-                tooltip.push(renderSplitItemTooltip(caller, splits, i,
-                    aleCreditSign));
-            }
+            tooltip = generateMultiSplitTooltips(args, value);
         }
 
         return <CellSelectDisplay
             selectedValue = {text}
             ariaLabel = {ariaLabel}
             classExtras = {classExtras}
-            size = {inputSize}
+            size = {inputSize}p
             tooltip = {tooltip}
         />;
     }

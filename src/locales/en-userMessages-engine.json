@@ -2,10 +2,15 @@
     "AccountingSystem-invalid_currency_code": ["'", "' is not a valid 3 digit currency code."],
 
     "AccountCategory-ASSET": "Asset",
+    "AccountCategory-ASSET_code": "A",
     "AccountCategory-LIABILITY": "Liability",
+    "AccountCategory-LIABILITY_code": "L",
     "AccountCategory-INCOME": "Income",
+    "AccountCategory-INCOME_code": "I",
     "AccountCategory-EXPENSE": "Expense",
+    "AccountCategory-EXPENSE_code": "E",
     "AccountCategory-EQUITY": "Equity",
+    "AccountCategory-EQUITY_code": "Q",
 
     "AccountType-ASSET": "Asset",
     "AccountType-ASSET_debit_label": "Increase",
