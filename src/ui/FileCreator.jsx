@@ -170,10 +170,13 @@ class GeneralSettingsEditor extends React.Component {
         this.onOpeningBalancesDateChange 
             = this.onOpeningBalancesDateChange.bind(this);
         
+
+        this._securityPrefixMarksInactive = '_';
         
         this.state = {
             addTestTransactions: false,
             addTestReminders: false,
+            securityPrefixMarksInactive: this._securityPrefixMarksInactive,
         };
     }
 
@@ -184,7 +187,7 @@ class GeneralSettingsEditor extends React.Component {
 
 
     renderOpeningBalancesDateEditor() {
-        const label = userMsg('GeneraSettingsEditor-openingBalancesDate_label');
+        const label = userMsg('GeneralSettingsEditor-openingBalancesDate_label');
         const inputClassName = 'Form-control';
 
         return <Field
@@ -205,7 +208,7 @@ class GeneralSettingsEditor extends React.Component {
 
     
     renderDefaultCurrency() {
-        const label = userMsg('GeneraSettingsEditor-defaultCurrency_label');
+        const label = userMsg('GeneralSettingsEditor-defaultCurrency_label');
 
         return <Field
             id = "GeneralSettingsEditor-defaultCurrency"
@@ -265,9 +268,11 @@ class GeneralSettingsEditor extends React.Component {
                 id = "GeneralSettingsEditor-securityPrefixMarksInactive"
                 key = "GeneralSettingsEditor-securityPrefixMarksInactive"
                 label = {userMsg(
-                    'GeneraSettingsEditor-securityPrefixMarksInactive_label')}
+                    'GeneralSettingsEditor-securityPrefixMarksInactive_label',
+                    this._securityPrefixMarksInactive)}
                 value = {this.state.securityPrefixMarksInactive}
                 onChange = {(value) => {
+                    value = (value) ? this._securityPrefixMarksInactive : undefined,
                     onSetSecurityPrefixMarksInactive(value);
                     this.setState({
                         securityPrefixMarksInactive: value,
@@ -277,12 +282,12 @@ class GeneralSettingsEditor extends React.Component {
         }
 
         
-        const { onSetIsLog, onSetIsWriteIntermediateJSON } = this.props;
+        const { onSetIsLog } = this.props;
         if (onSetIsLog) {
             components.push(<Checkbox 
                 id = "GeneralSettingsEditor-isLogCheckbox"
                 key = "GeneralSettingsEditor-isLogCheckbox"
-                label = "Record Log File"
+                label = {userMsg('GeneralSettingsEditor-recordLogFile_label')}
                 value = {this.state.isLog}
                 onChange = {(value) => {
                     onSetIsLog(value);
@@ -293,7 +298,9 @@ class GeneralSettingsEditor extends React.Component {
             />);
         }
 
-        if (onSetIsLog) {
+
+        const { onSetIsWriteIntermediateJSON } = this.props;
+        if (onSetIsWriteIntermediateJSON) {
             components.push(<Checkbox 
                 id = "GeneralSettingsEditor-isWriteJSONCheckbox"
                 key = "GeneralSettingsEditor-isWriteJSONCheckbox"
@@ -323,7 +330,7 @@ class GeneralSettingsEditor extends React.Component {
 
         return <Page classExtras = "Mt-auto Mb-auto">
             <PageTitle>
-                {userMsg('GeneraSettingsEditor-heading')}
+                {userMsg('GeneralSettingsEditor-heading')}
             </PageTitle>
             <PageBody>
                 {openingBalancesDateEditor}
@@ -343,9 +350,9 @@ GeneralSettingsEditor.propTypes = {
     onSetAddTestReminders: PropTypes.func,
 
     onSetSecurityPrefixMarksInactive: PropTypes.func,
+    onSetIsLog: PropTypes.func,
 
     // TEMP!!!
-    onSetIsLog: PropTypes.func,
     onSetIsWriteIntermediateJSON: PropTypes.func,
 };
 
@@ -399,9 +406,9 @@ export class FileCreator extends React.Component {
 
         this.onSetSecurityPrefixMarksInactive 
             = this.onSetSecurityPrefixMarksInactive.bind(this);
+        this.onSetIsLog = this.onSetIsLog.bind(this);
 
         // TEMP!
-        this.onSetIsLog = this.onSetIsLog.bind(this);
         this.onSetIsWriteIntermediateJSON = this.onSetIsWriteIntermediateJSON.bind(this);
 
         this.onUpdateFileContents = this.onUpdateFileContents.bind(this);
@@ -521,15 +528,13 @@ export class FileCreator extends React.Component {
         this.setState((state) => {
             return {
                 options: Object.assign({}, state.options, {
-                    securityPrefixMarksInactive: (value)
-                        ? '_' : false,
+                    securityPrefixMarksInactive: value,
                 }),
             };
         });
     }
 
 
-    // TEMP!!!
     onSetIsLog(value) {
         this.setState((state) => {
             return {

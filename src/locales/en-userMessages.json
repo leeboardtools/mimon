@@ -80,10 +80,11 @@
     "NewFileName-browse_btn": "Browse",
     "NewFileName-dir_projectName_label": "Project Folder Name",
 
-    "GeneraSettingsEditor-heading": "General Settings",
-    "GeneraSettingsEditor-openingBalancesDate_label": "Opening Balances Date",
-    "GeneraSettingsEditor-defaultCurrency_label": "Default Currency",
-    "GeneraSettingsEditor-securityPrefixMarksInactive_label": "Mark securities with tickers starting with '_' as inactive",
+    "GeneralSettingsEditor-heading": "General Settings",
+    "GeneralSettingsEditor-openingBalancesDate_label": "Opening Balances Date",
+    "GeneralSettingsEditor-defaultCurrency_label": "Default Currency",
+    "GeneralSettingsEditor-securityPrefixMarksInactive_label": ["Mark securities with tickers starting with '", "' as inactive"],
+    "GeneralSettingsEditor-recordLogFile_label": "Record log file",
 
     "NewFileConfigurator-heading": "Account Setup",
     "NewFileConfigurator-assets_tab": "Assets",

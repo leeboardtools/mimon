@@ -313,6 +313,7 @@ Are the lists really two separate styles? Or can they be combined into one?
     - File import
         - Will not bother importing Reminders
         - Finish the Jest testing.
+        - Delete created file if cancelled.
 
 
     - Lots List
@@ -462,3 +463,8 @@ Column sorting in RowTable:
     - Account Register Tasks
         - Auto complete
 
+    - Securities List:
+        - Option to not display accounts
+
+    - Account list
+        - Sort alphabetically
