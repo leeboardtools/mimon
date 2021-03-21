@@ -317,10 +317,15 @@ export function collapsibleRowTable(WrappedTable) {
                 }
 
                 cell = <div className = "CollapsibleRowTable-expand-collapse-container">
-                    <div style = {buttonStyle}>
+                    <div 
+                        className = "CollapsibleRowTable-expand-collapse-button-container"
+                        style = {buttonStyle}
+                    >
                         {button}
                     </div>
-                    <div style = {cellStyle}>
+                    <div className = "CollapsibleRowTable-expand-collapse-cell-container" 
+                        style = {cellStyle}
+                    >
                         {cell}
                     </div>
                 </div>;
