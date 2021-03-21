@@ -257,6 +257,28 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onToggleSortAlphabetically(tabId) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, {
+            sortAlphabetically: !state.sortAlphabetically,
+        });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = (newState.sortAlphabetically)
+            ? 'AccountsListHandler-action_enableSortAlphabetically'
+            : 'AccountsListHandler-action_disableSortAlphabetically';
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(tabId, 
+            {
+                sortAlphabetically: newState.sortAlphabetically,
+            },
+            userMsg(actionNameId));
+    }
+
+
     onUpdateCollapsedAccountIds(tabId, 
         { accountId, expandCollapseState, collapsedAccountIds}) {
 
@@ -295,7 +317,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
 
         const { hiddenRootAccountTypes, hiddenAccountIds, showHiddenAccounts,
-            showInactiveAccounts, allColumns }
+            showInactiveAccounts, allColumns, sortAlphabetically }
             = state;
 
         const showAccountLabelId = (hiddenAccountIds.indexOf(activeAccountId) >= 0)
@@ -399,6 +421,13 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                         onChooseItem: () => this.onToggleShowInactiveAccounts(
                             tabId),
                     },
+                    {},
+                    { id: 'toggleDisplayAlphabetically',
+                        label: userMsg('AccountsListHandler-displayAlphabetically'),
+                        checked: sortAlphabetically,
+                        onChooseItem: () => this.onToggleSortAlphabetically(
+                            tabId),
+                    }
                 ],
             },
             
@@ -463,6 +492,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const hiddenRootAccountTypes = settings.hiddenRootAccountTypes || [];
         const hiddenAccountIds = settings.hiddenAccountIds || [];
         const collapsedAccountIds = settings.collapsedAccountIds || [];
+        const sortAlphabetically = settings.sortAlphabetically || true;
 
         const tabEntry = {
             tabId: tabId,
@@ -473,6 +503,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             showHiddenAccounts: showHiddenAccounts,
             showInactiveAccounts: showInactiveAccounts,
             collapsedAccountIds: collapsedAccountIds,
+            sortAlphabetically: sortAlphabetically,
             allColumns: allColumns,
         };
 
@@ -511,9 +542,12 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             hiddenAccountIds = {tabEntry.hiddenAccountIds}
             showHiddenAccounts = {tabEntry.showHiddenAccounts}
             showInactiveAccounts = {tabEntry.showInactiveAccounts}
+            sortAlphabetically = {tabEntry.sortAlphabetically}
+
             collapsedAccountIds = {collapsedAccountIds}
             onUpdateCollapsedAccountIds = {(args) =>
                 this.onUpdateCollapsedAccountIds(tabEntry.tabId, args)}
+
             onSetColumnWidth = {(args) =>
                 this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)}
             onMoveColumn = {(args) =>

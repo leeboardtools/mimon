@@ -186,7 +186,9 @@ export class AccountsList extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         const { hiddenRootAccountTypes, hiddenAccountIds, 
             showHiddenAccounts,
-            showInactiveAccounts } = this.props;
+            showInactiveAccounts,
+            sortAlphabetically,
+        } = this.props;
         let rowsNeedUpdating = false;
         if (!deepEqual(prevProps.hiddenRootAccountTypes, hiddenRootAccountTypes)) {
             this._hiddenRootAccountTypes = new Set(hiddenRootAccountTypes);
@@ -198,12 +200,9 @@ export class AccountsList extends React.Component {
             rowsNeedUpdating = true;
         }
 
-        if (prevProps.showHiddenAccounts !== showHiddenAccounts) {
-            rowsNeedUpdating = true;
-        }
-        if (prevProps.showInactiveAccounts !== showInactiveAccounts) {
-            rowsNeedUpdating = true;
-        }
+        rowsNeedUpdating |= (prevProps.showHiddenAccounts !== showHiddenAccounts);
+        rowsNeedUpdating |= (prevProps.showInactiveAccounts !== showInactiveAccounts);
+        rowsNeedUpdating |= (prevProps.sortAlphabetically !== sortAlphabetically);
 
         if (!deepEqual(prevProps.collapsedAccountIds, 
             this.props.collapsedAccountIds)) {
@@ -307,11 +306,9 @@ export class AccountsList extends React.Component {
 
         const key = accountDataItem.id;
         const isCollapsed = this._collapsedRowIds.has(key);
-        const index = rowInfos.length;
 
         const rowInfo = {
             key: key,
-            index: index,
             expandCollapseState: (childAccountIds && childAccountIds.length)
                 ? ((isCollapsed) 
                     ? ExpandCollapseState.COLLAPSED
@@ -328,6 +325,11 @@ export class AccountsList extends React.Component {
                 this.addAccountIdToRowEntries(rowInfo.childRowInfos, 
                     childId, rowInfosByAccountId);
             });
+
+            if (this.props.sortAlphabetically) {
+                rowInfo.childRowInfos.sort((a, b) => 
+                    a.accountDataItem.name.localeCompare(b.accountDataItem.name));
+            }
         }
 
     }
@@ -756,6 +758,7 @@ AccountsList.propTypes = {
     showAccountIds: PropTypes.bool,
     collapsedAccountIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedAccountIds: PropTypes.func,
+    sortAlphabetically: PropTypes.bool,
     children: PropTypes.any,
     id: PropTypes.string,
 };

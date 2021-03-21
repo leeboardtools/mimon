@@ -131,6 +131,7 @@
     "AccountsListHandler-hideAccount": "Hide Account",
     "AccountsListHandler-showHiddenAccounts": "Show Hidden Accounts",
     "AccountsListHandler-showInactiveAccounts": "Show Inactive Accounts",
+    "AccountsListHandler-displayAlphabetically": "Display Alphabetically",
     "AccountsListHandler-columns_subMenu": "Columns",
     "AccountsListHandler-col_name": "Name",
     "AccountsListHandler-col_accountType": "Account Type",
@@ -160,6 +161,8 @@
     "AccountsListHandler-action_hideHiddenAccounts": "Hide Hidden Accounts",
     "AccountsListHandler-action_showInactiveAccounts": "Show Inactive Accounts",
     "AccountsListHandler-action_hideInactiveAccounts": "Hide Inactive Accounts",
+    "AccountsListHandler-action_enableSortAlphabetically": "Enable Sort Alphabetically",
+    "AccountsListHandler-action_disableSortAlphabetically": "Disable Sort Alphabetically",
     "AccountsListHandler-action_expandAccount": ["Expand Child Accounts of ", ""],
     "AccountsListHandler-action_collapseAccount": ["Collapse Child Accounts of ", ""],
 
