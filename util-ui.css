@@ -1448,7 +1448,14 @@ from BS col-form-label */
 .CollapsibleRowTable-expand-collapse-container {
     display: flex;
     flex-direction: row;
+    justify-content: stretch!important;
 }
+
+/*
+.CollapsibleRowTable-expand-collapse-cell-container {
+
+}
+*/
 
 .CollapsibleRowTable-expand-collapse-button {
     border: none;
@@ -1497,6 +1504,7 @@ from BS col-form-label */
 .Tooltip {
     position: relative;
     display: inline-block;
+    width: 100%;
 }
 
 .Tooltip-popup {
