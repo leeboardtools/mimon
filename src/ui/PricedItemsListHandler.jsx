@@ -206,6 +206,28 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onToggleShowAccounts(tabId) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, {
+            showAccounts: !state.showAccounts,
+        });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = (newState.showAccounts)
+            ? 'PricedItemsListHandler-action_showAccounts'
+            : 'PricedItemsListHandler-action_hideAccounts';
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(state.projectSettingsId, 
+            {
+                showAccounts: newState.showAccounts,
+            },
+            userMsg(actionNameId));
+    }
+
+
     onToggleShowHiddenAccounts(tabId) {
         const state = this.getTabIdState(tabId);
 
@@ -306,7 +328,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const { activePricedItemId, pricedItemTypeName, 
             hiddenPricedItemIds, 
             showHiddenPricedItems, showInactivePricedItems,
-            showHiddenAccounts, showInactiveAccounts,
+            showAccounts, showHiddenAccounts, showInactiveAccounts,
             sortAlphabetically,
             allColumns,
         } = state;
@@ -367,47 +389,66 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                 onChooseItem: () => this.onRemovePricedItem(tabId, pricedItemTypeName),
             },
             {},
-            { id: 'togglePricedItemVisible',
-                label: userMsg(showPricedItemLabelId, 
+            { id: 'pricedItemsVisibilitySubMenu',
+                label: userMsg('PricedItemsListHandler-visibility_subMenu',
                     typeDescription),
-                disabled: !activePricedItemId,
-                onChooseItem: () => this.onTogglePricedItemVisible(
-                    tabId, activePricedItemId, pricedItemTypeName),
+                subMenuItems: [
+                    { id: 'togglePricedItemVisible',
+                        label: userMsg(showPricedItemLabelId, 
+                            typeDescription),
+                        disabled: !activePricedItemId,
+                        onChooseItem: () => this.onTogglePricedItemVisible(
+                            tabId, activePricedItemId, pricedItemTypeName),
+                    },
+                    { id: 'toggleShowHiddenPricedItems',
+                        label: userMsg('PricedItemsListHandler-showHiddenPricedItems', 
+                            pluralTypeDescription),
+                        checked: showHiddenPricedItems,
+                        onChooseItem: () => this.onToggleShowHiddenPricedItems(
+                            tabId, pricedItemTypeName),
+                    },
+                    { id: 'toggleShowInactivePricedItems',
+                        label: userMsg('PricedItemsListHandler-showInactivePricedItems', 
+                            pluralTypeDescription),
+                        checked: showInactivePricedItems,
+                        onChooseItem: () => this.onToggleShowInactivePricedItems(
+                            tabId, pricedItemTypeName),
+                    },
+                    {},
+                    { id: 'toggleSortAlphabetically',
+                        label: userMsg('PricedItemsListHandler-sortAlphabetically', 
+                            pluralTypeDescription),
+                        checked: sortAlphabetically,
+                        onChooseItem: () => this.onToggleSortAlphabetically(
+                            tabId, pricedItemTypeName),
+                    },
+                ],
             },
-            { id: 'toggleShowHiddenPricedItems',
-                label: userMsg('PricedItemsListHandler-showHiddenPricedItems', 
-                    pluralTypeDescription),
-                checked: showHiddenPricedItems,
-                onChooseItem: () => this.onToggleShowHiddenPricedItems(
-                    tabId, pricedItemTypeName),
-            },
-            { id: 'toggleShowHiddenPricedItemAccounts',
-                label: userMsg('PricedItemsListHandler-showHiddenPricedItemAccounts'),
-                checked: showHiddenAccounts,
-                onChooseItem: () => this.onToggleShowHiddenAccounts(
-                    tabId),
-            },
-            {},
-            { id: 'toggleShowInactivePricedItems',
-                label: userMsg('PricedItemsListHandler-showInactivePricedItems', 
-                    pluralTypeDescription),
-                checked: showInactivePricedItems,
-                onChooseItem: () => this.onToggleShowInactivePricedItems(
-                    tabId, pricedItemTypeName),
-            },
-            { id: 'toggleShowInactivePricedItemAccounts',
-                label: userMsg('PricedItemsListHandler-showInactivePricedItemAccounts'),
-                checked: showInactiveAccounts,
-                onChooseItem: () => this.onToggleShowInactiveAccounts(
-                    tabId),
-            },
-            {},
-            { id: 'toggleSortAlphabetically',
-                label: userMsg('PricedItemsListHandler-sortAlphabetically', 
-                    pluralTypeDescription),
-                checked: sortAlphabetically,
-                onChooseItem: () => this.onToggleSortAlphabetically(
-                    tabId, pricedItemTypeName),
+            { id: 'pricedItemsAccountsSubMenu',
+                label: userMsg('PricedItemsListHandler-accounts_subMenu'),
+                subMenuItems: [
+                    { id: 'toggleShowPricedItemAccounts',
+                        label: userMsg(
+                            'PricedItemsListHandler-showPricedItemAccounts'),
+                        checked: showAccounts,
+                        onChooseItem: () => this.onToggleShowAccounts(
+                            tabId),
+                    },
+                    { id: 'toggleShowHiddenPricedItemAccounts',
+                        label: userMsg(
+                            'PricedItemsListHandler-showHiddenPricedItemAccounts'),
+                        checked: showHiddenAccounts,
+                        onChooseItem: () => this.onToggleShowHiddenAccounts(
+                            tabId),
+                    },
+                    { id: 'toggleShowInactivePricedItemAccounts',
+                        label: userMsg(
+                            'PricedItemsListHandler-showInactivePricedItemAccounts'),
+                        checked: showInactiveAccounts,
+                        onChooseItem: () => this.onToggleShowInactiveAccounts(
+                            tabId),
+                    },
+                ],
             },
             {},
             
@@ -482,6 +523,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
         const allColumns = createDefaultColumns(pricedItemTypeName);
         const collapsedPricedItemIds = settings.collapsedPricedItemIds || [];
+        const showAccounts = (settings.showAccounts === undefined)
+            ? true
+            : settings.showAccounts;
         const sortAlphabetically = (settings.sortAlphabetically === undefined)
             ? true
             : settings.sortAlphabetically;
@@ -497,8 +541,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             projectSettingsId: projectSettingsId,
             hiddenPricedItemIds: settings.hiddenPricedItemIds || [],
             showHiddenPricedItems: settings.showHiddenPricedItems,
-            showHiddenAccounts: settings.showHiddenAccounts,
             showInactivePricedItems: settings.showInactivePricedItems,
+            showAccounts: showAccounts,
+            showHiddenAccounts: settings.showHiddenAccounts,
             showInactiveAccounts: settings.showInactiveAccounts,
             sortAlphabetically: sortAlphabetically,
             collapsedPricedItemIds: collapsedPricedItemIds,
@@ -539,9 +584,12 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             columns = {tabEntry.columns}
             hiddenPricedItemIds = {tabEntry.hiddenPricedItemIds}
             showHiddenPricedItems = {tabEntry.showHiddenPricedItems}
-            showHiddenAccounts = {tabEntry.showHiddenAccounts}
             showInactivePricedItems = {tabEntry.showInactivePricedItems}
+
+            showAccounts = {tabEntry.showAccounts}
+            showHiddenAccounts = {tabEntry.showHiddenAccounts}
             showInactiveAccounts = {tabEntry.showInactiveAccounts}
+
             sortAlphabetically = {tabEntry.sortAlphabetically}
 
             collapsedPricedItemIds = {collapsedPricedItemIds}

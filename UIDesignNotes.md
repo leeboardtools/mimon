@@ -303,7 +303,7 @@ Are the lists really two separate styles? Or can they be combined into one?
             - Both HTML and text.
             - For HTML include the split drop down???
             
-        - Multi-row support?
+        - Filtering transactions
 
 
     - Account Selector
@@ -345,7 +345,7 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
     - Securites/Mutual Fund List
-
+        - Add % of total column (also to AccountsList)
 
     - Prices List
         - Changing column width of prices list then undoing/redoing does not
@@ -404,10 +404,6 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Double click needs to open priced item editor???
     
 
-- Splits List:
-    - Need to test appropriate sign with mortgages, etc.
-
-
 - Add an Imbalance account?
     - Root Imbalance account for the default currency.
     - Additional imbalance accounts as needed for other currencies.
@@ -419,6 +415,7 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 - Set default interest, dividends, fees accounts in account editing.
+    - Still need default interest in checking
 
 
 - Tooltips
@@ -462,7 +459,4 @@ Column sorting in RowTable:
 
     - Account Register Tasks
         - Auto complete
-
-    - Securities List:
-        - Option to not display accounts
-
+        - Filter transactions

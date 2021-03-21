@@ -184,11 +184,12 @@ export class AccountsList extends React.Component {
 
 
     componentDidUpdate(prevProps, prevState) {
+        const { props } = this;
         const { hiddenRootAccountTypes, hiddenAccountIds, 
             showHiddenAccounts,
             showInactiveAccounts,
             sortAlphabetically,
-        } = this.props;
+        } = props;
         let rowsNeedUpdating = false;
         if (!deepEqual(prevProps.hiddenRootAccountTypes, hiddenRootAccountTypes)) {
             this._hiddenRootAccountTypes = new Set(hiddenRootAccountTypes);
@@ -205,8 +206,8 @@ export class AccountsList extends React.Component {
         rowsNeedUpdating |= (prevProps.sortAlphabetically !== sortAlphabetically);
 
         if (!deepEqual(prevProps.collapsedAccountIds, 
-            this.props.collapsedAccountIds)) {
-            this._collapsedRowIds = new Set(this.props.collapsedAccountIds);
+            props.collapsedAccountIds)) {
+            this._collapsedRowIds = new Set(props.collapsedAccountIds);
             rowsNeedUpdating = true;
         }
 
@@ -217,7 +218,7 @@ export class AccountsList extends React.Component {
             this.setState(result);
 
             if (prevActiveRowKey !== result.activeRowKey) {
-                const { onSelectAccount } = this.props;
+                const { onSelectAccount } = props;
                 if (onSelectAccount) {
                     onSelectAccount(result.activeRowKey);
                 }

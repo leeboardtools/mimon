@@ -30,7 +30,6 @@ function getPricedItemsListColumnInfoDefs() {
                 },
                 propertyName: 'ticker',
                 cellClassName: cellClassName + ' Text-left',
-                inputClassExtras: inputClassExtras,
                 inputSize: -6,
             },
             name: { key: 'name',
@@ -292,9 +291,10 @@ export class PricedItemsList extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         let { rowsNeedUpdating } = this.state;
+        const { props } = this;
         const { hiddenPricedItemIds, 
             showHiddenPricedItems,
-            showInactivePricedItems } = this.props;
+            showInactivePricedItems } = props;
 
         if (!deepEqual(prevProps.hiddenPricedItemIds, hiddenPricedItemIds)) {
             this._hiddenPricedItemIds = new Set(hiddenPricedItemIds);
@@ -306,12 +306,14 @@ export class PricedItemsList extends React.Component {
             |= (prevProps.showInactivePricedItems !== showInactivePricedItems);
 
         rowsNeedUpdating
-            |= (prevProps.showHiddenAccounts !== this.props.showHiddenAccounts);
+            |= (prevProps.showAccounts !== props.showAccounts);
         rowsNeedUpdating
-            |= (prevProps.showInactiveAccounts !== this.props.showInactiveAccounts);
+            |= (prevProps.showHiddenAccounts !== props.showHiddenAccounts);
+        rowsNeedUpdating
+            |= (prevProps.showInactiveAccounts !== props.showInactiveAccounts);
 
         rowsNeedUpdating
-            |= (prevProps.sortAlphabetically !== this.props.sortAlphabetically);
+            |= (prevProps.sortAlphabetically !== props.sortAlphabetically);
 
         if (!rowsNeedUpdating) {
             if (!deepEqual(prevState.accountIdsByPricedItemId,
@@ -321,13 +323,13 @@ export class PricedItemsList extends React.Component {
         }
 
         if (!deepEqual(prevProps.collapsedPricedItemIds, 
-            this.props.collapsedPricedItemIds)) {
-            this._collapsedRowIds = new Set(this.props.collapsedPricedItemIds);
+            props.collapsedPricedItemIds)) {
+            this._collapsedRowIds = new Set(props.collapsedPricedItemIds);
             rowsNeedUpdating = true;
         }
 
-        if (!deepEqual(prevProps.columns, this.props.columns)) {
-            const { columns } = this.props;
+        if (!deepEqual(prevProps.columns, props.columns)) {
+            const { columns } = props;
             if (columns) {
                 // columnKeys is used to add tooltip info to the name/ticker items
                 // depending on whether a description or name column is showing.
@@ -464,7 +466,7 @@ export class PricedItemsList extends React.Component {
             return;
         }
 
-        const { accessor } = this.props;
+        const { accessor, showAccounts } = this.props;
         const pricedItemDataItem = accessor.getPricedItemDataItemWithId(pricedItemId);
 
         const key = pricedItemDataItem.id;
@@ -472,7 +474,9 @@ export class PricedItemsList extends React.Component {
 
         const { accountIdsByPricedItemId } = this.state;
         let expandCollapseState = ExpandCollapseState.NO_EXPAND_COLLAPSE;
-        const accountIds = accountIdsByPricedItemId.get(pricedItemId);
+        const accountIds = (showAccounts)
+            ? accountIdsByPricedItemId.get(pricedItemId)
+            : undefined;
         if (accountIds && accountIds.length) {
             expandCollapseState = (isCollapsed)
                 ? ExpandCollapseState.COLLAPSED
@@ -656,14 +660,25 @@ export class PricedItemsList extends React.Component {
     renderName(columnInfo, rowInfo) {
         const { pricedItemDataItem } = rowInfo;
         if (pricedItemDataItem) {
+            let value = pricedItemDataItem.name;
+            if (this.state.columnKeys.has('description')) {
+                value = pricedItemDataItem.name;
+            }
+            else {
+                let { name, description } = pricedItemDataItem;
+                if (!name) {
+                    value = description;
+                }
+                else {
+                    value = {
+                        name: name,
+                        description: description,
+                    };
+                }
+            }
             return ACE.renderNameDisplay({
                 columnInfo: columnInfo,
-                value: (this.state.columnKeys.has('description'))
-                    ? pricedItemDataItem.name
-                    : {
-                        name: pricedItemDataItem.name,
-                        description: pricedItemDataItem.description,
-                    },
+                value: value,
             });
         }
 
@@ -1076,11 +1091,14 @@ PricedItemsList.propTypes = {
     onMoveColumn: PropTypes.func,
     hiddenPricedItemIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenPricedItems: PropTypes.bool,
-    showHiddenAccounts: PropTypes.bool,
     showInactivePricedItems: PropTypes.bool,
-    showInactiveAccounts: PropTypes.bool,
     showPricedItemIds: PropTypes.bool,
     sortAlphabetically: PropTypes.bool,
+
+    showAccounts: PropTypes.bool,
+    showHiddenAccounts: PropTypes.bool,
+    showInactiveAccounts: PropTypes.bool,
+
     collapsedPricedItemIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedPricedItemIds: PropTypes.func,
     id: PropTypes.string,
