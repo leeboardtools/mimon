@@ -492,7 +492,9 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const hiddenRootAccountTypes = settings.hiddenRootAccountTypes || [];
         const hiddenAccountIds = settings.hiddenAccountIds || [];
         const collapsedAccountIds = settings.collapsedAccountIds || [];
-        const sortAlphabetically = settings.sortAlphabetically || true;
+        const sortAlphabetically = (settings.sortAlphabetically === undefined)
+            ? true
+            : settings.sortAlphabetically;
 
         const tabEntry = {
             tabId: tabId,

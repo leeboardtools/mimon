@@ -301,19 +301,17 @@ export class PricedItemsList extends React.Component {
             rowsNeedUpdating = true;
         }
 
-        if (prevProps.showHiddenPricedItems !== showHiddenPricedItems) {
-            rowsNeedUpdating = true;
-        }        
-        if (prevProps.showInactivePricedItems !== showInactivePricedItems) {
-            rowsNeedUpdating = true;
-        }
+        rowsNeedUpdating |= (prevProps.showHiddenPricedItems !== showHiddenPricedItems);
+        rowsNeedUpdating 
+            |= (prevProps.showInactivePricedItems !== showInactivePricedItems);
 
-        if (prevProps.showHiddenAccounts !== this.props.showHiddenAccounts) {
-            rowsNeedUpdating = true;
-        }
-        if (prevProps.showInactiveAccounts !== this.props.showInactiveAccounts) {
-            rowsNeedUpdating = true;
-        }
+        rowsNeedUpdating
+            |= (prevProps.showHiddenAccounts !== this.props.showHiddenAccounts);
+        rowsNeedUpdating
+            |= (prevProps.showInactiveAccounts !== this.props.showInactiveAccounts);
+
+        rowsNeedUpdating
+            |= (prevProps.sortAlphabetically !== this.props.sortAlphabetically);
 
         if (!rowsNeedUpdating) {
             if (!deepEqual(prevState.accountIdsByPricedItemId,
@@ -383,16 +381,31 @@ export class PricedItemsList extends React.Component {
 
     buildRowInfos() {
         const rowInfos = [];
-        const { accessor, pricedItemTypeName } = this.props;
-        const pricedItemIds = accessor.getPricedItemIdsForType(pricedItemTypeName);
+        const { accessor, pricedItemTypeName, 
+            sortAlphabetically, 
+        } = this.props;
+        let pricedItemIds = accessor.getPricedItemIdsForType(pricedItemTypeName);
+
+        if (sortAlphabetically) {
+            const pricedItemDataItems = pricedItemIds.map((id) => 
+                accessor.getPricedItemDataItemWithId(id));
+            
+            const sorter = (PI.PricedItemType[pricedItemTypeName].hasTickerSymbol)
+                ? (a, b) => (a.ticker || a.name).localeCompare(b.ticker || b.name)
+                : (a, b) => (a.name || '').localeCompare(b.name || '');
+            pricedItemDataItems.sort(sorter);
+
+            pricedItemIds = pricedItemDataItems.map((pricedItemDataItem) => 
+                pricedItemDataItem.id);
+        }
 
         pricedItemIds.forEach((id) => {
             this.addPricedItemIdToRowEntries(rowInfos, id);
         });
 
+
         rowInfos.push({
             key: '_SUMMARY_',
-            index: rowInfos.length,
             expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
         });
 
@@ -456,7 +469,6 @@ export class PricedItemsList extends React.Component {
 
         const key = pricedItemDataItem.id;
         const isCollapsed = this._collapsedRowIds.has(key);
-        const index = rowInfos.length;
 
         const { accountIdsByPricedItemId } = this.state;
         let expandCollapseState = ExpandCollapseState.NO_EXPAND_COLLAPSE;
@@ -469,7 +481,6 @@ export class PricedItemsList extends React.Component {
 
         const rowInfo = {
             key: key,
-            index: index,
             expandCollapseState: expandCollapseState,
             pricedItemDataItem: pricedItemDataItem,
         };
@@ -487,11 +498,15 @@ export class PricedItemsList extends React.Component {
 
                 childRowInfos.push({
                     key: 'AccountId_' + accountId,
-                    index: childRowInfos.length,
                     expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
                     accountDataItem: accountDataItem,
                 });
             });
+
+            if (this.props.sortAlphabetically) {
+                childRowInfos.sort((a, b) =>
+                    a.accountDataItem.name.localeCompare(b.accountDataItem.name));
+            }
         }
     }
 
@@ -1065,6 +1080,7 @@ PricedItemsList.propTypes = {
     showInactivePricedItems: PropTypes.bool,
     showInactiveAccounts: PropTypes.bool,
     showPricedItemIds: PropTypes.bool,
+    sortAlphabetically: PropTypes.bool,
     collapsedPricedItemIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedPricedItemIds: PropTypes.func,
     id: PropTypes.string,

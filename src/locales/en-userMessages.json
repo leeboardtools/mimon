@@ -83,7 +83,7 @@
     "GeneralSettingsEditor-heading": "General Settings",
     "GeneralSettingsEditor-openingBalancesDate_label": "Opening Balances Date",
     "GeneralSettingsEditor-defaultCurrency_label": "Default Currency",
-    "GeneralSettingsEditor-securityPrefixMarksInactive_label": ["Mark securities with tickers starting with '", "' as inactive"],
+    "GeneralSettingsEditor-securityPrefixMarksInactive_label": ["Mark securities with ticker symbols starting with '", "' as inactive"],
     "GeneralSettingsEditor-recordLogFile_label": "Record log file",
 
     "NewFileConfigurator-heading": "Account Setup",
@@ -345,6 +345,7 @@
     "PricedItemsListHandler-showHiddenPricedItemAccounts": "Show Hidden Accounts",
     "PricedItemsListHandler-showInactivePricedItems": ["Show Inactive ", ""],
     "PricedItemsListHandler-showInactivePricedItemAccounts": "Show Inactive Accounts",
+    "PricedItemsListHandler-sortAlphabetically": "Sort Alphabetically",
     "PricedItemsListHandler-columns_subMenu": "Columns",
     "PricedItemsListHandler-title": ["", " List"],
 
@@ -354,6 +355,8 @@
     "PricedItemsListHandler-action_toggleShowInactivePricedItems": ["Toggle Show Inactive ", ""],
     "PricedItemsListHandler-action_showInactiveAccounts": "Show Inactive Accounts",
     "PricedItemsListHandler-action_hideInactiveAccounts": "Hide Inactive Accounts",
+    "PricedItemsListHandler-action_enableSortAlphabeticall": "Enable Sort Alphabetically",
+    "PricedItemsListHandler-action_disableSortAlphabetically": "Disable Sort Alphabetically",
     "PricedItemsListHandler-action_expandPricedItem": ["Show Accounts of ", ""],
     "PricedItemsListHandler-action_collapsePricedItem": ["Hide Accounts of ", ""],
 

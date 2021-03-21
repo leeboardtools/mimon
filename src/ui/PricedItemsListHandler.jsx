@@ -21,14 +21,6 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         this.onModifyPricedItem = this.onModifyPricedItem.bind(this);
         this.onRemovePricedItem = this.onRemovePricedItem.bind(this);
 
-        this.onTogglePricedItemVisible = this.onTogglePricedItemVisible.bind(this);
-        this.onToggleShowHiddenPricedItems 
-            = this.onToggleShowHiddenPricedItems.bind(this);
-        this.onToggleShowInactivePricedItems 
-            = this.onToggleShowInactivePricedItems.bind(this);
-        
-        this.onToggleShowHiddenAccounts = this.onToggleShowHiddenAccounts.bind(this);
-        this.onToggleShowInactiveAccounts = this.onToggleShowInactiveAccounts.bind(this);
 
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
         this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
@@ -258,6 +250,28 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onToggleSortAlphabetically(tabId) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, {
+            sortAlphabetically: !state.sortAlphabetically,
+        });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = (newState.sortAlphabetically)
+            ? 'PricedItemsListHandler-action_enableSortAlphabetically'
+            : 'PricedItemsListHandler-action_disableSortAlphabetically';
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(state.projectSettingsId, 
+            {
+                sortAlphabetically: newState.sortAlphabetically,
+            },
+            userMsg(actionNameId));
+    }
+
+
     onUpdateCollapsedPricedItemIds(tabId, 
         { pricedItemId, expandCollapseState, collapsedPricedItemIds}) {
         const state = this.getTabIdState(tabId);
@@ -293,6 +307,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             hiddenPricedItemIds, 
             showHiddenPricedItems, showInactivePricedItems,
             showHiddenAccounts, showInactiveAccounts,
+            sortAlphabetically,
             allColumns,
         } = state;
 
@@ -387,6 +402,14 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                     tabId),
             },
             {},
+            { id: 'toggleSortAlphabetically',
+                label: userMsg('PricedItemsListHandler-sortAlphabetically', 
+                    pluralTypeDescription),
+                checked: sortAlphabetically,
+                onChooseItem: () => this.onToggleSortAlphabetically(
+                    tabId, pricedItemTypeName),
+            },
+            {},
             
             { id: 'columnsSubMenu',
                 label: userMsg('PricedItemsListHandler-columns_subMenu'),
@@ -459,6 +482,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
         const allColumns = createDefaultColumns(pricedItemTypeName);
         const collapsedPricedItemIds = settings.collapsedPricedItemIds || [];
+        const sortAlphabetically = (settings.sortAlphabetically === undefined)
+            ? true
+            : settings.sortAlphabetically;
 
         const typeDescription = PI.getPricedItemType(pricedItemTypeName).description;
         const tabEntry = {
@@ -474,6 +500,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             showHiddenAccounts: settings.showHiddenAccounts,
             showInactivePricedItems: settings.showInactivePricedItems,
             showInactiveAccounts: settings.showInactiveAccounts,
+            sortAlphabetically: sortAlphabetically,
             collapsedPricedItemIds: collapsedPricedItemIds,
             allColumns: allColumns,
         };
@@ -515,6 +542,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             showHiddenAccounts = {tabEntry.showHiddenAccounts}
             showInactivePricedItems = {tabEntry.showInactivePricedItems}
             showInactiveAccounts = {tabEntry.showInactiveAccounts}
+            sortAlphabetically = {tabEntry.sortAlphabetically}
+
             collapsedPricedItemIds = {collapsedPricedItemIds}
             onUpdateCollapsedPricedItemIds = {(args) =>
                 this.onUpdateCollapsedPricedItemIds(tabEntry.tabId, args)}

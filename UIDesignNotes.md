@@ -466,5 +466,3 @@ Column sorting in RowTable:
     - Securities List:
         - Option to not display accounts
 
-    - Account list
-        - Sort alphabetically
