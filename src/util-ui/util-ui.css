@@ -849,7 +849,7 @@ from BS col-form-label */
     position: relative;
     -ms-flx: 1 1 auto;
     flex: 1 1 auto;
-    width: 1%;
+    width: 100%;
     min-width: 0;
     margin-bottom: 0;
 }
@@ -1460,6 +1460,10 @@ from BS col-form-label */
     opacity: 0.5;
     line-height: 1.5rem;
     padding: 0;
+}
+
+.CollapsibleRowTable-expand-collapse-cell-container {
+    flex-grow: 1!important;
 }
 
 
