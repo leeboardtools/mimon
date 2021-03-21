@@ -586,11 +586,17 @@ button.Close {
     border-radius: 0;
 }
 
+.CellSelectEditor-select>select:focus {
+    outline: none;
+}
+
 .CellSelectEditor-display {
     border: none;
     background-color: inherit;
     border-radius: 0;
 }
+
+
 /*
 .CellToggleSelectEditor-button {
     margin: 0px;
@@ -672,6 +678,14 @@ button.Close {
     background-color: transparent;
     border: 0;
 }
+
+.Dropdown-item.active, 
+.Dropdown-item:active {
+    color: #fff;
+    text-decoration: none;
+    background-color: #007bff;
+}
+
 
 /* Dropdown-toggle is just the down pointing arrow */
 .Dropdown-toggle {
@@ -774,6 +788,15 @@ from BS col-form-label */
         ease-in-out;
 }
 
+.Form-control:focus,
+.Cell:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
 .Form-control:disabled, 
 .Form-control[readonly] {
     background-color: #e9ecef;
@@ -847,11 +870,16 @@ from BS col-form-label */
 
 .Input-group>.Cell {
     position: relative;
-    -ms-flx: 1 1 auto;
+    -ms-flex: 1 1 auto;
     flex: 1 1 auto;
     width: 100%;
     min-width: 0;
     margin-bottom: 0;
+}
+
+
+.Input-group>.Form-control:focus {
+    z-index: 3;
 }
 
 .Input-group>.Input-group-prepend>.Btn {
@@ -1385,6 +1413,10 @@ from BS col-form-label */
 
 .RowTableColumnResizerCell-cell {
     width: 100%;
+}
+
+.RowTableColumnDragger:focus {
+    outline: none;
 }
 
 .RowTableColumnResizer {
