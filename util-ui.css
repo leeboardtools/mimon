@@ -1286,6 +1286,11 @@ from BS col-form-label */
 }
 
 
+.ProgressReporter-body {
+    margin: 1rem;
+}
+
+
 .RowTable {
     width: 100%;
     height: 100%;
@@ -1725,6 +1730,26 @@ from BS col-form-label */
 .Mb-4,
 .My-4 {
     margin-bottom: 1.5rem!important;
+}
+
+.M-5 {
+    margin: 2rem!important;
+}
+.Ml-5,
+.Mx-5 {
+    margin-left: 2rem!important;
+}
+.Mr-5,
+.Mx-5 {
+    margin-right: 2rem!important;
+}
+.Mt-5,
+.My-5 {
+    margin-top: 2rem!important;
+}
+.Mb-5,
+.My-5 {
+    margin-bottom: 2rem!important;
 }
 
 
