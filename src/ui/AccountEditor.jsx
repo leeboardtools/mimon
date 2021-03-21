@@ -16,6 +16,7 @@ import { ErrorBoundary } from '../util-ui/ErrorBoundary';
 import * as AH from '../tools/AccountHelpers';
 import { Row, Col } from '../util-ui/RowCols';
 import { Button } from '../util-ui/Button';
+import { Checkbox } from '../util-ui/Checkbox';
 
 
 /**
@@ -43,6 +44,9 @@ export class AccountEditor extends React.Component {
         this.onRefIdChange = this.onRefIdChange.bind(this);
 
         this.onDefaultAccountChange = this.onDefaultAccountChange.bind(this);
+
+        this.onIsInactiveChange = this.onIsInactiveChange.bind(this);
+        this.onIsHiddenChange = this.onIsHiddenChange.bind(this);
 
         this.onRenderPage = this.onRenderPage.bind(this);
 
@@ -591,6 +595,47 @@ export class AccountEditor extends React.Component {
     }
 
 
+    onIsInactiveChange(isCheck) {
+        this.updateAccountDataItem({
+            isInactive: isCheck,
+        });
+    }
+
+    onIsHiddenChange(isCheck) {
+        this.updateAccountDataItem({
+            isHidden: isCheck,
+        });
+    }
+
+    renderOptionsEditor() {
+        const { accountDataItem } = this.state;
+        return <React.Fragment>
+            <Row>
+                <Col>
+                    <Checkbox
+                        ariaLabel = "Is Inactive"
+                        value = {accountDataItem.isInactive}
+                        label = {userMsg('AccountEditor-isInactive_label')}
+                        onChange = {this.onIsInactiveChange}
+                        tabIndex = {0}
+                    />
+                </Col>
+            </Row>
+            <Row>
+                <Col>
+                    <Checkbox
+                        ariaLabel = "Is Hidden"
+                        value = {accountDataItem.isHidden}
+                        label = {userMsg('AccountEditor-isHidden_label')}
+                        onChange = {this.onIsHiddenChange}
+                        tabIndex = {0}
+                    />
+                </Col>
+            </Row>
+        </React.Fragment>;
+    }
+
+
     onRenderPage() {
         const parentEditor = this.renderParentEditor();
         const typeEditor = this.renderTypeEditor();
@@ -599,6 +644,7 @@ export class AccountEditor extends React.Component {
         const pricedItemEditor = this.renderPricedItemEditor();
         const refIdEditor = this.renderRefIdEditor();
         const defaultSplitAccountEditors = this.renderDefaultSplitAccountEditors();
+        const optionsEditor = this.renderOptionsEditor();
 
         return <PageBody classExtras = "Editor-body AccountEditor-body">
             <Row>
@@ -620,6 +666,7 @@ export class AccountEditor extends React.Component {
             {descriptionEditor}
             {pricedItemEditor}
             {defaultSplitAccountEditors}
+            {optionsEditor}
         </PageBody>;
     }
 

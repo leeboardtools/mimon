@@ -52,7 +52,7 @@ class TransactionTemplateEditor extends React.Component {
     componentDidMount() {
         const { accessor } = this.props;
         accessor.on('accountAdd', this.updateAccountEntries);
-        accessor.on('accountModify', this.updateAccountEntries);
+        accessor.on('accountsModify', this.updateAccountEntries);
         accessor.on('accountRemove', this.updateAccountEntries);
 
         this.updateAccountEntries();
@@ -85,7 +85,7 @@ class TransactionTemplateEditor extends React.Component {
     componentWillUnmount() {
         const { accessor } = this.props;
         accessor.off('accountAdd', this.updateAccountEntries);
-        accessor.off('accountModify', this.updateAccountEntries);
+        accessor.off('accountsModify', this.updateAccountEntries);
         accessor.off('accountRemove', this.updateAccountEntries);
     }
 

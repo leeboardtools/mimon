@@ -528,7 +528,7 @@ class AccountDefinitionProcessor extends AccountProcessor {
         };
 
         if (tag.attributes.VISIBLE === 'false') {
-            this.account.isHidden = true;
+            this.account.isInactive = true;
         }
         if (tag.attributes.LOCKED === 'true') {
             this.account.isLocked = true;
@@ -1353,6 +1353,14 @@ class XMLFileImporterImpl {
         
         if (pricedItem.type === PI.PricedItemType.SECURITY.name) {
             this.securitiesById.set(pricedItem.id, pricedItem);
+
+            const { securityPrefixMarksInactive } = this.options;
+            if (securityPrefixMarksInactive) {
+                const { ticker } = pricedItem;
+                if (ticker && (ticker.charAt(0) === securityPrefixMarksInactive)) {
+                    pricedItem.isInactive = true;
+                }
+            }
         }
 
         this.newFileContents.pricedItems.pricedItems.push(pricedItem);
@@ -1481,6 +1489,9 @@ class XMLFileImporterImpl {
         };
         if (xmlAccount.isHidden) {
             account.isHidden = true;
+        }
+        if (xmlAccount.isInactive) {
+            account.isInactive = true;
         }
         if (xmlAccount.isLocked) {
             account.isLocked = true;

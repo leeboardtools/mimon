@@ -185,7 +185,8 @@ export class AccountsList extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         const { hiddenRootAccountTypes, hiddenAccountIds, 
-            showHiddenAccounts } = this.props;
+            showHiddenAccounts,
+            showInactiveAccounts } = this.props;
         let rowsNeedUpdating = false;
         if (!deepEqual(prevProps.hiddenRootAccountTypes, hiddenRootAccountTypes)) {
             this._hiddenRootAccountTypes = new Set(hiddenRootAccountTypes);
@@ -198,6 +199,9 @@ export class AccountsList extends React.Component {
         }
 
         if (prevProps.showHiddenAccounts !== showHiddenAccounts) {
+            rowsNeedUpdating = true;
+        }
+        if (prevProps.showInactiveAccounts !== showInactiveAccounts) {
             rowsNeedUpdating = true;
         }
 
@@ -330,7 +334,7 @@ export class AccountsList extends React.Component {
 
 
     isAccountIdDisplayed(accountId) {
-        const { showHiddenAccounts } = this.props;
+        const { showHiddenAccounts, showInactiveAccounts } = this.props;
         if (!showHiddenAccounts && this._hiddenAccountIds.has(accountId)) {
             return false;
         }
@@ -342,6 +346,10 @@ export class AccountsList extends React.Component {
         }
 
         if (!showHiddenAccounts && accountDataItem.isHidden) {
+            return false;
+        }
+
+        if (!showInactiveAccounts && accountDataItem.isInactive) {
             return false;
         }
 
@@ -744,6 +752,7 @@ AccountsList.propTypes = {
     hiddenRootAccountTypes: PropTypes.arrayOf(PropTypes.string),
     hiddenAccountIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenAccounts: PropTypes.bool,
+    showInactiveAccounts: PropTypes.bool,
     showAccountIds: PropTypes.bool,
     collapsedAccountIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedAccountIds: PropTypes.func,

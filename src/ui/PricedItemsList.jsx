@@ -181,7 +181,7 @@ export class PricedItemsList extends React.Component {
 
         this.accountIdsUpdated = this.accountIdsUpdated.bind(this);
         this.onAccountAdd = this.accountIdsUpdated;
-        this.onAccountModify = this.accountIdsUpdated;
+        this.onAccountsModify = this.onAccountsModify.bind(this);
         this.onAccountRemove = this.accountIdsUpdated;
 
         this.onExpandCollapseRow = this.onExpandCollapseRow.bind(this);
@@ -271,7 +271,7 @@ export class PricedItemsList extends React.Component {
         this.props.accessor.on('pricedItemRemove', this.onPricedItemRemove);
 
         this.props.accessor.on('accountAdd', this.onAccountAdd);
-        this.props.accessor.on('accountModify', this.onAccountModify);
+        this.props.accessor.on('accountsModify', this.onAccountsModify);
         this.props.accessor.on('accountRemove', this.onAccountRemove);
 
         this.accountIdsUpdated();
@@ -281,7 +281,7 @@ export class PricedItemsList extends React.Component {
 
     componentWillUnmount() {
         this.props.accessor.off('accountAdd', this.onAccountAdd);
-        this.props.accessor.off('accountModify', this.onAccountModify);
+        this.props.accessor.off('accountsModify', this.onAccountsModify);
         this.props.accessor.off('accountRemove', this.onAccountRemove);
 
         this.props.accessor.off('pricedItemAdd', this.onPricedItemAdd);
@@ -291,9 +291,10 @@ export class PricedItemsList extends React.Component {
 
 
     componentDidUpdate(prevProps, prevState) {
-        let rowsNeedUpdating = false;
+        let { rowsNeedUpdating } = this.state;
         const { hiddenPricedItemIds, 
-            showHiddenPricedItems } = this.props;
+            showHiddenPricedItems,
+            showInactivePricedItems } = this.props;
 
         if (!deepEqual(prevProps.hiddenPricedItemIds, hiddenPricedItemIds)) {
             this._hiddenPricedItemIds = new Set(hiddenPricedItemIds);
@@ -301,6 +302,16 @@ export class PricedItemsList extends React.Component {
         }
 
         if (prevProps.showHiddenPricedItems !== showHiddenPricedItems) {
+            rowsNeedUpdating = true;
+        }        
+        if (prevProps.showInactivePricedItems !== showInactivePricedItems) {
+            rowsNeedUpdating = true;
+        }
+
+        if (prevProps.showHiddenAccounts !== this.props.showHiddenAccounts) {
+            rowsNeedUpdating = true;
+        }
+        if (prevProps.showInactiveAccounts !== this.props.showInactiveAccounts) {
             rowsNeedUpdating = true;
         }
 
@@ -331,9 +342,15 @@ export class PricedItemsList extends React.Component {
             }
         }
 
+        if (!rowsNeedUpdating) {
+            rowsNeedUpdating = !deepEqual(this.state.accountIdsByPricedItemId,
+                prevState.accountIdsByPricedItemId);
+        }
+
         if (rowsNeedUpdating) {
             const { prevActiveRowKey } = this.state;
             const result = this.buildRowInfos();
+            result.rowsNeedUpdating = false;
             this.setState(result);
 
             if (prevActiveRowKey !== result.activeRowKey) {
@@ -352,6 +369,14 @@ export class PricedItemsList extends React.Component {
         this.setState({
             accountIdsByPricedItemId: 
                 AH.getAccountIdsByPricedItemId(this.props.accessor),
+        });
+    }
+
+
+    onAccountsModify(result) {
+        this.accountIdsUpdated();
+        this.setState({
+            rowsNeedUpdating: true,
         });
     }
 
@@ -399,6 +424,28 @@ export class PricedItemsList extends React.Component {
     }
 
 
+    isIncludeAccountDataItem(accountDataItem) {
+        const { showHiddenAccounts, showInactiveAccounts } = this.props;
+        if (showHiddenAccounts && showInactiveAccounts) {
+            return true;
+        }
+
+        while (accountDataItem) {
+            if (accountDataItem.isHidden && !showHiddenAccounts) {
+                return;
+            }
+            if (accountDataItem.isInactive && !showInactiveAccounts) {
+                return;
+            }
+
+            accountDataItem = this.props.accessor.getAccountDataItemWithId(
+                accountDataItem.parentAccountId);
+        }
+
+        return true;
+    }
+
+
     addPricedItemIdToRowEntries(rowInfos, pricedItemId) {
         if (!this.isPricedItemIdDisplayed(pricedItemId)) {
             return;
@@ -432,10 +479,9 @@ export class PricedItemsList extends React.Component {
             rowInfo.childRowInfos = [];
             const { childRowInfos } = rowInfo;
 
-            const { showHiddenAccounts } = this.props;
             accountIds.forEach((accountId) => {
                 const accountDataItem = accessor.getAccountDataItemWithId(accountId);
-                if (!showHiddenAccounts && accountDataItem.isHidden) {
+                if (!this.isIncludeAccountDataItem(accountDataItem)) {
                     return;
                 }
 
@@ -451,7 +497,7 @@ export class PricedItemsList extends React.Component {
 
 
     isPricedItemIdDisplayed(pricedItemId) {
-        const { showHiddenPricedItems } = this.props;
+        const { showHiddenPricedItems, showInactivePricedItems } = this.props;
         if (!showHiddenPricedItems && this._hiddenPricedItemIds.has(pricedItemId)) {
             return false;
         }
@@ -463,6 +509,10 @@ export class PricedItemsList extends React.Component {
         }
 
         if (pricedItemDataItem.isStandardCurrency) {
+            return false;
+        }
+
+        if (!showInactivePricedItems && pricedItemDataItem.isInactive) {
             return false;
         }
 
@@ -736,12 +786,11 @@ export class PricedItemsList extends React.Component {
 
         if (accountIds) {
             accountIds.forEach((accountId) => {
-                if (!this.props.showHiddenAccounts) {
-                    const accountDataItem = accessor.getAccountDataItemWithId(accountId);
-                    if (accountDataItem.isHidden) {
-                        return;
-                    }
+                const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+                if (!this.isIncludeAccountDataItem(accountDataItem)) {
+                    return;
                 }
+
 
                 const workingAccountState = accessor.getCurrentAccountStateDataItem(
                     accountId);
@@ -1013,6 +1062,8 @@ PricedItemsList.propTypes = {
     hiddenPricedItemIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenPricedItems: PropTypes.bool,
     showHiddenAccounts: PropTypes.bool,
+    showInactivePricedItems: PropTypes.bool,
+    showInactiveAccounts: PropTypes.bool,
     showPricedItemIds: PropTypes.bool,
     collapsedPricedItemIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedPricedItemIds: PropTypes.func,

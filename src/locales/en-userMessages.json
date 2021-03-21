@@ -83,6 +83,7 @@
     "GeneraSettingsEditor-heading": "General Settings",
     "GeneraSettingsEditor-openingBalancesDate_label": "Opening Balances Date",
     "GeneraSettingsEditor-defaultCurrency_label": "Default Currency",
+    "GeneraSettingsEditor-securityPrefixMarksInactive_label": "Mark securities with tickers starting with '_' as inactive",
 
     "NewFileConfigurator-heading": "Account Setup",
     "NewFileConfigurator-assets_tab": "Assets",
@@ -128,6 +129,7 @@
     "AccountsListHandler-showAccount": "Show Account",
     "AccountsListHandler-hideAccount": "Hide Account",
     "AccountsListHandler-showHiddenAccounts": "Show Hidden Accounts",
+    "AccountsListHandler-showInactiveAccounts": "Show Inactive Accounts",
     "AccountsListHandler-columns_subMenu": "Columns",
     "AccountsListHandler-col_name": "Name",
     "AccountsListHandler-col_accountType": "Account Type",
@@ -155,6 +157,8 @@
     "AccountsListHandler-action_hideAccount": ["Hide ", ""],
     "AccountsListHandler-action_showHiddenAccounts": "Show Hidden Accounts",
     "AccountsListHandler-action_hideHiddenAccounts": "Hide Hidden Accounts",
+    "AccountsListHandler-action_showInactiveAccounts": "Show Inactive Accounts",
+    "AccountsListHandler-action_hideInactiveAccounts": "Hide Inactive Accounts",
     "AccountsListHandler-action_expandAccount": ["Expand Child Accounts of ", ""],
     "AccountsListHandler-action_collapseAccount": ["Collapse Child Accounts of ", ""],
 
@@ -182,7 +186,8 @@
     "AccountEditor-default_split_account_label_FEES_EXPENSE_FEES": "Account for fee expenses",
     "AccountEditor-default_split_account_label_FEES_EXPENSE_BANK_FEES": "Account for bank fee expenses",
     "AccountEditor-default_split_account_label_FEES_EXPENSE_BROKERAGE_COMMISSIONS": "Account for commission/fee expenses",
-
+    "AccountEditor-isInactive_label": "Is inactive",
+    "AccountEditor-isHidden_label": "Is always hidden",
 
     "AccountSelector-disabled_root": "--Root--",
 
@@ -309,6 +314,8 @@
     "PricedItemEditor-ticker_required": "Please enter a ticker symbol.",
     "PricedItemEditor-ticker_duplicate": "There is already an item with this ticker symbol.",
     "PricedItemEditor-onlineUpdate_label": "Online Updating",
+    "PricedItemEditor-isInactive_label": "Is inactive",
+    "PricedItemEditor-isHidden_label": "Is hidden",
 
     "PricedItemEditorHandler-newPricedItem_title": ["New ", ""],
     "PricedItemEditorHandler-modifyPricedItem_title": ["Edit '", "'"],
@@ -332,12 +339,17 @@
     "PricedItemsListHandler-removePricedItem": ["Delete ", ""],
     "PricedItemsListHandler-showHiddenPricedItems": ["Show Hidden ", ""],
     "PricedItemsListHandler-showHiddenPricedItemAccounts": "Show Hidden Accounts",
+    "PricedItemsListHandler-showInactivePricedItems": ["Show Inactive ", ""],
+    "PricedItemsListHandler-showInactivePricedItemAccounts": "Show Inactive Accounts",
     "PricedItemsListHandler-columns_subMenu": "Columns",
     "PricedItemsListHandler-title": ["", " List"],
 
     "PricedItemsListHandler-action_toggleShowHiddenPricedItems": ["Toggle Show Hidden ", ""],
     "PricedItemsListHandler-action_showHiddenAccounts": "Show Hidden Accounts",
     "PricedItemsListHandler-action_hideHiddenAccounts": "Hide Hidden Accounts",
+    "PricedItemsListHandler-action_toggleShowInactivePricedItems": ["Toggle Show Inactive ", ""],
+    "PricedItemsListHandler-action_showInactiveAccounts": "Show Inactive Accounts",
+    "PricedItemsListHandler-action_hideInactiveAccounts": "Hide Inactive Accounts",
     "PricedItemsListHandler-action_expandPricedItem": ["Show Accounts of ", ""],
     "PricedItemsListHandler-action_collapsePricedItem": ["Hide Accounts of ", ""],
 

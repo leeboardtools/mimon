@@ -235,6 +235,28 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onToggleShowInactiveAccounts(tabId) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, {
+            showInactiveAccounts: !state.showInactiveAccounts,
+        });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = (newState.showInactiveAccounts)
+            ? 'AccountsListHandler-action_showInactiveAccounts'
+            : 'AccountsListHandler-action_hideInactiveAccounts';
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(tabId, 
+            {
+                showInactiveAccounts: newState.showInactiveAccounts,
+            },
+            userMsg(actionNameId));
+    }
+
+
     onUpdateCollapsedAccountIds(tabId, 
         { accountId, expandCollapseState, collapsedAccountIds}) {
 
@@ -273,7 +295,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
 
         const { hiddenRootAccountTypes, hiddenAccountIds, showHiddenAccounts,
-            allColumns }
+            showInactiveAccounts, allColumns }
             = state;
 
         const showAccountLabelId = (hiddenAccountIds.indexOf(activeAccountId) >= 0)
@@ -370,6 +392,13 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                         onChooseItem: () => this.onToggleShowHiddenAccounts(
                             tabId),
                     },
+                    {},
+                    { id: 'toggleShowInactiveAccounts',
+                        label: userMsg('AccountsListHandler-showInactiveAccounts'),
+                        checked: showInactiveAccounts,
+                        onChooseItem: () => this.onToggleShowInactiveAccounts(
+                            tabId),
+                    },
                 ],
             },
             
@@ -430,6 +459,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         let settings = this.getTabIdProjectSettings(tabId) || {};
         const allColumns = createDefaultColumns();
         const showHiddenAccounts = settings.showHiddenAccounts;
+        const showInactiveAccounts = settings.showInactiveAccounts;
         const hiddenRootAccountTypes = settings.hiddenRootAccountTypes || [];
         const hiddenAccountIds = settings.hiddenAccountIds || [];
         const collapsedAccountIds = settings.collapsedAccountIds || [];
@@ -441,6 +471,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             hiddenRootAccountTypes: hiddenRootAccountTypes,
             hiddenAccountIds: hiddenAccountIds,
             showHiddenAccounts: showHiddenAccounts,
+            showInactiveAccounts: showInactiveAccounts,
             collapsedAccountIds: collapsedAccountIds,
             allColumns: allColumns,
         };
@@ -479,6 +510,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             hiddenRootAccountTypes = {tabEntry.hiddenRootAccountTypes}
             hiddenAccountIds = {tabEntry.hiddenAccountIds}
             showHiddenAccounts = {tabEntry.showHiddenAccounts}
+            showInactiveAccounts = {tabEntry.showInactiveAccounts}
             collapsedAccountIds = {collapsedAccountIds}
             onUpdateCollapsedAccountIds = {(args) =>
                 this.onUpdateCollapsedAccountIds(tabEntry.tabId, args)}

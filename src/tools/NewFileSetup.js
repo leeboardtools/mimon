@@ -245,6 +245,9 @@ async function asyncLoadPricedItems(setupInfo) {
             if (item.onlineUpdateType) {
                 settings.onlineUpdateType = item.onlineUpdateType;
             }
+            if (item.isInactive) {
+                settings.isInactive = true;
+            }
 
             const pricedItemDataItem = (await pricedItemManager.asyncAddPricedItem(
                 settings)).newPricedItemDataItem;

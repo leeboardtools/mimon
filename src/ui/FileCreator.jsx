@@ -170,6 +170,7 @@ class GeneralSettingsEditor extends React.Component {
         this.onOpeningBalancesDateChange 
             = this.onOpeningBalancesDateChange.bind(this);
         
+        
         this.state = {
             addTestTransactions: false,
             addTestReminders: false,
@@ -257,7 +258,25 @@ class GeneralSettingsEditor extends React.Component {
             />);
         }
 
-        // TEMP!!!
+
+        const { onSetSecurityPrefixMarksInactive } = this.props;
+        if (onSetSecurityPrefixMarksInactive) {
+            components.push(<Checkbox 
+                id = "GeneralSettingsEditor-securityPrefixMarksInactive"
+                key = "GeneralSettingsEditor-securityPrefixMarksInactive"
+                label = {userMsg(
+                    'GeneraSettingsEditor-securityPrefixMarksInactive_label')}
+                value = {this.state.securityPrefixMarksInactive}
+                onChange = {(value) => {
+                    onSetSecurityPrefixMarksInactive(value);
+                    this.setState({
+                        securityPrefixMarksInactive: value,
+                    });
+                }}
+            />);
+        }
+
+        
         const { onSetIsLog, onSetIsWriteIntermediateJSON } = this.props;
         if (onSetIsLog) {
             components.push(<Checkbox 
@@ -271,7 +290,6 @@ class GeneralSettingsEditor extends React.Component {
                         isLog: value,
                     });
                 }}
-
             />);
         }
 
@@ -323,6 +341,8 @@ GeneralSettingsEditor.propTypes = {
     onSetDefaultCurrency: PropTypes.func.isRequired,
     onSetAddTestTransactions: PropTypes.func,
     onSetAddTestReminders: PropTypes.func,
+
+    onSetSecurityPrefixMarksInactive: PropTypes.func,
 
     // TEMP!!!
     onSetIsLog: PropTypes.func,
@@ -376,6 +396,9 @@ export class FileCreator extends React.Component {
         this.onSetDefaultCurrency = this.onSetDefaultCurrency.bind(this);
         this.onSetAddTestTransactions = this.onSetAddTestTransactions.bind(this);
         this.onSetAddTestReminders = this.onSetAddTestReminders.bind(this);
+
+        this.onSetSecurityPrefixMarksInactive 
+            = this.onSetSecurityPrefixMarksInactive.bind(this);
 
         // TEMP!
         this.onSetIsLog = this.onSetIsLog.bind(this);
@@ -494,6 +517,18 @@ export class FileCreator extends React.Component {
     }
 
 
+    onSetSecurityPrefixMarksInactive(value) {
+        this.setState((state) => {
+            return {
+                options: Object.assign({}, state.options, {
+                    securityPrefixMarksInactive: (value)
+                        ? '_' : false,
+                }),
+            };
+        });
+    }
+
+
     // TEMP!!!
     onSetIsLog(value) {
         this.setState((state) => {
@@ -569,6 +604,9 @@ export class FileCreator extends React.Component {
                 const onSetAddTestReminders = (isDevMode)
                     ? this.onSetAddTestReminders
                     : undefined;
+                const onSetSecurityPrefixMarksInactive = (isImport)
+                    ? this.onSetSecurityPrefixMarksInactive
+                    : undefined;
                 const onSetIsLog = (isImport)
                     ? this.onSetIsLog 
                     : undefined;
@@ -582,6 +620,8 @@ export class FileCreator extends React.Component {
                     onSetDefaultCurrency = {this.onSetDefaultCurrency}
                     onSetAddTestTransactions = {onSetAddTestTransactions}
                     onSetAddTestReminders = {onSetAddTestReminders}
+                    onSetSecurityPrefixMarksInactive 
+                        = {onSetSecurityPrefixMarksInactive}
                     onSetIsLog = {onSetIsLog}
                     onSetIsWriteIntermediateJSON = {onSetIsWriteIntermediateJSON}
                 />;

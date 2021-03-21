@@ -298,6 +298,7 @@ export function loadAccountsUserMessages() {
  * @property {DefaultSplitAccountIds}   [defaultSplitAccountIds]    Optional object
  * containing account ids for default accounts for different splits.
  * @property {boolean}  [isHidden]
+ * @property {boolean}  [isInactive]
  * @property {boolean}  [isLocked]
  */
 
@@ -324,6 +325,7 @@ export function loadAccountsUserMessages() {
  * @property {DefaultSplitAccountIds}   [defaultSplitAccountIds]    Optional object
  * containing account ids for default accounts for different splits.
  * @property {boolean}  [isHidden]
+ * @property {boolean}  [isInactive]
  * @property {boolean}  [isLocked]
  */
 

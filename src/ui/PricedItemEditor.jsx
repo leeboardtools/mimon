@@ -14,6 +14,7 @@ import { DropdownField } from '../util-ui/DropdownField';
 import { getDecimalDefinition, getQuantityDefinitionName } from '../util/Quantities';
 import { QuantityDefinitionField } from '../util-ui/QuantityDefinitionField';
 import { Row, Col } from '../util-ui/RowCols';
+import { Checkbox } from '../util-ui/Checkbox';
 
 
 /**
@@ -35,6 +36,9 @@ export class PricedItemEditor extends React.Component {
         this.onQuanitytDefinitionChange = this.onQuanitytDefinitionChange.bind(this);
         this.onTickerChange = this.onTickerChange.bind(this);
         this.onOnlineTypeChange = this.onOnlineTypeChange.bind(this);
+
+        this.onIsInactiveChange = this.onIsInactiveChange.bind(this);
+        this.onIsHiddenChange = this.onIsHiddenChange.bind(this);
 
         this.onRenderPage = this.onRenderPage.bind(this);
 
@@ -374,6 +378,47 @@ export class PricedItemEditor extends React.Component {
     }
 
 
+    onIsInactiveChange(isCheck) {
+        this.updatePricedItemDataItem({
+            isInactive: isCheck,
+        });
+    }
+
+    onIsHiddenChange(isCheck) {
+        this.updatePricedItemDataItem({
+            isHidden: isCheck,
+        });
+    }
+
+    renderOptionsEditor() {
+        const { pricedItemDataItem } = this.state;
+        return <React.Fragment>
+            <Row>
+                <Col>
+                    <Checkbox
+                        ariaLabel = "Is Inactive"
+                        value = {pricedItemDataItem.isInactive}
+                        label = {userMsg('PricedItemEditor-isInactive_label')}
+                        onChange = {this.onIsInactiveChange}
+                        tabIndex = {0}
+                    />
+                </Col>
+            </Row>
+            <Row>
+                <Col>
+                    <Checkbox
+                        ariaLabel = "Is Hidden"
+                        value = {pricedItemDataItem.isHidden}
+                        label = {userMsg('PricedItemEditor-isHidden_label')}
+                        onChange = {this.onIsHiddenChange}
+                        tabIndex = {0}
+                    />
+                </Col>
+            </Row>
+        </React.Fragment>;
+    }
+
+
     onRenderPage() {
         const nameEditor = this.renderNameEditor();
         const descriptionEditor = this.renderDescriptionEditor();
@@ -382,6 +427,7 @@ export class PricedItemEditor extends React.Component {
         const quantityDefinitionEditor = this.renderQuantityDefinitionEditor();
         const tickerEditor = this.renderTickerEditor();
         const onlineTypeEditor = this.renderOnlineTypeEditor();
+        const optionsEditor = this.renderOptionsEditor();
 
         let tickerRow;
         if (tickerEditor) {
@@ -409,6 +455,7 @@ export class PricedItemEditor extends React.Component {
                 </Col>
             </Row>
             {descriptionEditor}
+            {optionsEditor}
         </PageBody>;
     }
 

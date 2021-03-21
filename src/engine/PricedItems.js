@@ -171,6 +171,7 @@ export function getPricedItemOnlineUpdateTypeName(type) {
  * that have hasTickerSymbol.
  * @property {string}   [onlineUpdateType]  The online update type, only for 
  * priced item types that have hasTickerSymbol.
+ * @property {boolean}  [isInactive]
  */
 
 /**
@@ -192,6 +193,7 @@ export function getPricedItemOnlineUpdateTypeName(type) {
  * that have hasTickerSymbol.
  * @property {PricedItemOnlineUpdateType}   [onlineUpdateType]  The online update 
  * type, only for priced item types that have hasTickerSymbol.
+ * @property {boolean}  [isInactive]
  */
 
 /**

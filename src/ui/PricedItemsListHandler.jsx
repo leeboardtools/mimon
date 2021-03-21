@@ -24,6 +24,11 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         this.onTogglePricedItemVisible = this.onTogglePricedItemVisible.bind(this);
         this.onToggleShowHiddenPricedItems 
             = this.onToggleShowHiddenPricedItems.bind(this);
+        this.onToggleShowInactivePricedItems 
+            = this.onToggleShowInactivePricedItems.bind(this);
+        
+        this.onToggleShowHiddenAccounts = this.onToggleShowHiddenAccounts.bind(this);
+        this.onToggleShowInactiveAccounts = this.onToggleShowInactiveAccounts.bind(this);
 
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
         this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
@@ -186,6 +191,29 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onToggleShowInactivePricedItems(tabId, pricedItemTypeName) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, {
+            showInactivePricedItems: !state.showInactivePricedItems,
+        });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+
+
+        this.setTabIdState(tabId, newState);
+
+        const pluralTypeDescription 
+            = PI.getPricedItemType(pricedItemTypeName).pluralDescription;
+        this.setTabIdProjectSettings(state.projectSettingsId, 
+            {
+                showInactivePricedItems: newState.showInactivePricedItems,
+            },
+            userMsg('PricedItemsListHandler-action_toggleShowInactivePricedItems',
+                pluralTypeDescription
+            ));
+    }
+
+
     onToggleShowHiddenAccounts(tabId) {
         const state = this.getTabIdState(tabId);
 
@@ -203,6 +231,28 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         this.setTabIdProjectSettings(state.projectSettingsId, 
             {
                 showHiddenAccounts: newState.showHiddenAccounts,
+            },
+            userMsg(actionNameId));
+    }
+
+
+    onToggleShowInactiveAccounts(tabId) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, {
+            showInactiveAccounts: !state.showInactiveAccounts,
+        });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = (newState.showInactiveAccounts)
+            ? 'PricedItemsListHandler-action_showInactiveAccounts'
+            : 'PricedItemsListHandler-action_hideInactiveAccounts';
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(state.projectSettingsId, 
+            {
+                showInactiveAccounts: newState.showInactiveAccounts,
             },
             userMsg(actionNameId));
     }
@@ -240,8 +290,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     
     getTabDropdownInfo(tabId, state) {
         const { activePricedItemId, pricedItemTypeName, 
-            hiddenPricedItemIds, showHiddenPricedItems,
-            showHiddenAccounts,
+            hiddenPricedItemIds, 
+            showHiddenPricedItems, showInactivePricedItems,
+            showHiddenAccounts, showInactiveAccounts,
             allColumns,
         } = state;
 
@@ -321,6 +372,21 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                 onChooseItem: () => this.onToggleShowHiddenAccounts(
                     tabId),
             },
+            {},
+            { id: 'toggleShowInactivePricedItems',
+                label: userMsg('PricedItemsListHandler-showInactivePricedItems', 
+                    pluralTypeDescription),
+                checked: showInactivePricedItems,
+                onChooseItem: () => this.onToggleShowInactivePricedItems(
+                    tabId, pricedItemTypeName),
+            },
+            { id: 'toggleShowInactivePricedItemAccounts',
+                label: userMsg('PricedItemsListHandler-showInactivePricedItemAccounts'),
+                checked: showInactiveAccounts,
+                onChooseItem: () => this.onToggleShowInactiveAccounts(
+                    tabId),
+            },
+            {},
             
             { id: 'columnsSubMenu',
                 label: userMsg('PricedItemsListHandler-columns_subMenu'),
@@ -392,7 +458,6 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const projectSettingsId = 'PricedItemsListHandler-' + pricedItemTypeName;
         let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
         const allColumns = createDefaultColumns(pricedItemTypeName);
-        const showHiddenAccounts = settings.showHiddenAccounts;
         const collapsedPricedItemIds = settings.collapsedPricedItemIds || [];
 
         const typeDescription = PI.getPricedItemType(pricedItemTypeName).description;
@@ -406,7 +471,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             projectSettingsId: projectSettingsId,
             hiddenPricedItemIds: settings.hiddenPricedItemIds || [],
             showHiddenPricedItems: settings.showHiddenPricedItems,
-            showHiddenAccounts: showHiddenAccounts,
+            showHiddenAccounts: settings.showHiddenAccounts,
+            showInactivePricedItems: settings.showInactivePricedItems,
+            showInactiveAccounts: settings.showInactiveAccounts,
             collapsedPricedItemIds: collapsedPricedItemIds,
             allColumns: allColumns,
         };
@@ -446,6 +513,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             hiddenPricedItemIds = {tabEntry.hiddenPricedItemIds}
             showHiddenPricedItems = {tabEntry.showHiddenPricedItems}
             showHiddenAccounts = {tabEntry.showHiddenAccounts}
+            showInactivePricedItems = {tabEntry.showInactivePricedItems}
+            showInactiveAccounts = {tabEntry.showInactiveAccounts}
             collapsedPricedItemIds = {collapsedPricedItemIds}
             onUpdateCollapsedPricedItemIds = {(args) =>
                 this.onUpdateCollapsedPricedItemIds(tabEntry.tabId, args)}

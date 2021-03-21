@@ -337,6 +337,7 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Priced Item List
         - Custom Priced Item Lists
+        - If Account Name is shortened, add tooltip with full name.
 
 
     - Priced Item Editor
@@ -461,8 +462,3 @@ Column sorting in RowTable:
     - Account Register Tasks
         - Auto complete
 
-    - Account Editor
-        - Add Account Disabled? Closed? Inactive? flag.
-
-    - Add dev Force Reload button to opening window.
-    
