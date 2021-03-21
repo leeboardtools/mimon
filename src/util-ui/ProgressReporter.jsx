@@ -82,7 +82,7 @@ export function ProgressReporter(props) {
         onCancel = {onCancel}
         cancelDisabled = {props.cancelDisabled}
     >
-        <PageBody classExtras = "Text-center">
+        <PageBody classExtras = "Text-center ProgressReporter-body">
             {entryComponents}
         </PageBody>
     </ModalPage>;
