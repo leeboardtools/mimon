@@ -181,6 +181,14 @@ class GeneralSettingsEditor extends React.Component {
     }
 
 
+    componentDidMount() {
+        const { onSetSecurityPrefixMarksInactive } = this.props;
+        if (onSetSecurityPrefixMarksInactive) {
+            onSetSecurityPrefixMarksInactive(this.state.securityPrefixMarksInactive);
+        }
+    }
+
+
     onOpeningBalancesDateChange(event) {
         this.props.onSetOpeningBalancesDate(event.target.value);
     }
