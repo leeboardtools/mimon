@@ -70,7 +70,7 @@ export function getAccountAncestorNames(accessor, id, options) {
 
 /**
  * Constructs a possibly shortened version of {@link getAccountAncestorName}. The
- * name is shortened if there are more than three accounts in the ancestor tree,
+ * name is shortened if there are more than four accounts in the ancestor tree,
  * in which case only the root and the last two accounts are included.
  * @param {EngineAccessor} accessor 
  * @param {number} id 
@@ -82,12 +82,13 @@ export function getShortAccountAncestorNames(accessor, id, options) {
     const separator = options.separator || ':';
 
     const accountDataItems = getAncestorAccountDataItems(accessor, id);
-    if (accountDataItems.length <= 3) {
+    if (accountDataItems.length <= 4) {
         return buildAncestorNames(accountDataItems, separator);
     }
 
     const placeholder = options.placeholder || ':[...]:';
     return accountDataItems[accountDataItems.length - 1].name 
+        + placeholder + accountDataItems[accountDataItems.length - 2].name 
         + placeholder + accountDataItems[1].name
         + separator + accountDataItems[0].name;
 }
