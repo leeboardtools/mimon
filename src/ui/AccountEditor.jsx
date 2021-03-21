@@ -576,6 +576,11 @@ export class AccountEditor extends React.Component {
                 AH.DefaultSplitAccountType.DIVIDENDS_INCOME
             );
         }
+        else {
+            dividendsEditor = this.renderDefaultSplitAccountEditor(
+                AH.DefaultSplitAccountType.INTEREST_INCOME
+            );
+        }
 
         switch (category) {
         case A.AccountCategory.ASSET :

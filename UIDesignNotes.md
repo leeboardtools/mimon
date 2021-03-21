@@ -290,9 +290,8 @@ Are the lists really two separate styles? Or can they be combined into one?
             - Set from active row?
                 - Here would summarize active account and all its siblings.
 
-        - Menu options for moving a child account up or down in its sibling list.
-
-        - Add option to sort child accounts alphabetically
+        - Menu actions for moving a child account up or down in its sibling list.
+            - Not enabled if displayed alphabetically
 
 
     - Account Register
@@ -347,6 +346,7 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Securites/Mutual Fund List
         - Add % of total column (also to AccountsList)
 
+
     - Prices List
         - Changing column width of prices list then undoing/redoing does not
         properly resize other open tabs that are not active.
@@ -363,6 +363,7 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Reminders Editor
         - Remove border around 'Deposit'/'Withdrawal' control.
 
+
     - Reminders List
         - Clicking enabled button does nothing.
         - Add Apply now command.
@@ -374,7 +375,7 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 - Menus
-    - Scroll menu vertically if it doesn't fit.
+
 
 
 - RowTable To Do:
@@ -409,11 +410,6 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Additional imbalance accounts as needed for other currencies.
 
 
-- Should we be able to disable lots?
-    - By this mean if you turn off lots, then buying and selling securities
-    does not use lots.
-
-
 - Set default interest, dividends, fees accounts in account editing.
     - Still need default interest in checking
 
@@ -421,16 +417,18 @@ Are the lists really two separate styles? Or can they be combined into one?
 - Tooltips
 
 
-- Need means of formatting negative numbers:
-    - Red
-    - Enclose in parenthesis
-    - Italicized?
-    - Which one is user option, should be able to use CSS classes.
+- Options:
+    - Add rounding option for accounts (specific accounts might round up or down).
 
+    - Need means of formatting negative numbers:
+        - Red
+        - Enclose in parenthesis
+        - Italicized?
+        - Which one is user option, should be able to use CSS classes.
 
-- Add rounding option for accounts (specific accounts might round up or down).
-
-
+    - Should we be able to disable lots?
+        - By this mean if you turn off lots, then buying and selling securities
+        does not use lots.
 
 
 Notes:
