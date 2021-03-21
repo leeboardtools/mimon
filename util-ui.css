@@ -81,6 +81,10 @@
 .Border-right {
     border-right: 1px solid #dee2e6!important;
 }
+.Border-none {
+    border: none!important;
+}
+
 
 /* Originally from BS btn */
 .Btn {
@@ -629,6 +633,10 @@ button.Close {
 
 .CheckboxField-editor {
     padding-top: 0.5rem;
+    border: none;
+}
+
+.CheckboxField-editor.Form-control {
     border: none;
 }
 
