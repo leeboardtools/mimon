@@ -429,6 +429,8 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Should we be able to disable lots?
         - By this mean if you turn off lots, then buying and selling securities
         does not use lots.
+    
+    - Auto Save
 
 
 Notes:
@@ -458,3 +460,12 @@ Column sorting in RowTable:
     - Account Register Tasks
         - Auto complete
         - Filter transactions
+
+    - Account List
+        - Totals/Subtotals
+        - Options for:
+            - Top level sub-totals (A/L/E/I/Q)
+            - At each account with child accounts, have setting
+            for sub-totals
+        
+        - Collapsed accounts should show subtotals?

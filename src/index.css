@@ -126,6 +126,13 @@ label {
 }
 */
 
+.AccountsList-subtotal {
+    font-weight: bold;
+}
+
+.AccountsList-subtotal-value {
+    border-top: 1px solid;
+}
 
 
 

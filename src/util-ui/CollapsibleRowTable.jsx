@@ -277,7 +277,7 @@ export function collapsibleRowTable(WrappedTable) {
             if (!args.columnIndex) {
                 const buttonStyle = {
                     width: this.state.maxDepth + 'rem',
-                    paddingLeft: rowEntry.depth + 'rem',
+                    paddingLeft: args.depth + 'rem',
                 };
 
                 const cellStyle = {

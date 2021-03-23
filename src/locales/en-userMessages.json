@@ -112,6 +112,7 @@
     "AccountsList-name": "Name",
     "AccountsList-dummy_name": "Sample Account Name This is a much longer name",
     "AccountsList-percentSuffix": "%",
+    "AccountsList-subtotalName": ["Subtotal: ", ""],
 
     "AccountsListHandler-masterAccountList_title": "Accounts",
     "AccountsListHandler-reconcileAccount": "Reconcile Account",
@@ -132,6 +133,16 @@
     "AccountsListHandler-showHiddenAccounts": "Show Hidden Accounts",
     "AccountsListHandler-showInactiveAccounts": "Show Inactive Accounts",
     "AccountsListHandler-displayAlphabetically": "Display Alphabetically",
+
+    "AccountsListHandler-subtotals_subMenu": "Subtotals",
+    "AccountsListHandler-subtotals_none": "None",
+    "AccountsListHandler-subtotals_all": "All Levels",
+    "AccountsListHandler-subtotals_1": "Top Level",
+    "AccountsListHandler-subtotals_2": "Top 2 Levels",
+    "AccountsListHandler-subtotals_3": "Top 3 Levels",
+    "AccountsListHandler-showAccountSubtotals": "Show Subtotals for Account",
+    "AccountsListHandler-hideAccountSubtotals": "Hide Subtotals for Account",
+
     "AccountsListHandler-columns_subMenu": "Columns",
     "AccountsListHandler-col_name": "Name",
     "AccountsListHandler-col_accountType": "Account Type",
@@ -165,6 +176,13 @@
     "AccountsListHandler-action_disableSortAlphabetically": "Disable Sort Alphabetically",
     "AccountsListHandler-action_expandAccount": ["Expand Child Accounts of ", ""],
     "AccountsListHandler-action_collapseAccount": ["Collapse Child Accounts of ", ""],
+    "AccountsListHandler-action_subtotals_none": "No Automatic Subtotals",
+    "AccountsListHandler-action_subtotals_all": "Subtotal All Levels",
+    "AccountsListHandler-action_subtotals_1": "Subtotal Top Level",
+    "AccountsListHandler-action_subtotals_2": "Subtotal 2 Levels",
+    "AccountsListHandler-action_subtotals_3": "Subtotal 3 Levels",
+    "AccountsListHandler-action_showAccountSubtotals": ["Show Subtotals for ", ""],
+    "AccountsListHandler-action_hideAccountSubtotals": ["Hide Subtotals for ", ""],
 
 
     "AccountEditorHandler-newAccount_title": "New Account",

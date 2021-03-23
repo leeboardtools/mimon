@@ -37,14 +37,14 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
     onReconcileAccount(tabId) {
         const { activeAccountId} = this.getTabIdState(tabId);
-        if (activeAccountId) {
+        if (this.props.accessor.getAccountDataItemWithId(activeAccountId)) {
             this.openTab('reconciler', { accountId: activeAccountId, });
         }
     }
 
 
     openAccountRegister(accountId) {
-        if (accountId) {
+        if (this.props.accessor.getAccountDataItemWithId(accountId)) {
             this.openTab('accountRegister', { accountId: accountId, });
         }
     }
@@ -99,7 +99,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
     onModifyAccount(tabId) {
         const { activeAccountId} = this.getTabIdState(tabId);
-        if (activeAccountId) {
+        if (this.props.accessor.getAccountDataItemWithId(activeAccountId)) {
             this.openTab('accountEditor', { accountId: activeAccountId, });
         }
     }
@@ -204,12 +204,13 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         const accountDataItem = this.props.accessor.getAccountDataItemWithId(
             accountId);
-
-        this.setTabIdProjectSettings(tabId, 
-            {
-                hiddenAccountIds: hiddenAccountIds,
-            },
-            userMsg(actionNameId, accountDataItem.name));
+        if (accountDataItem) {
+            this.setTabIdProjectSettings(tabId, 
+                {
+                    hiddenAccountIds: hiddenAccountIds,
+                },
+                userMsg(actionNameId, accountDataItem.name));
+        }
     }
 
 
@@ -292,7 +293,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         const accountDataItem = this.props.accessor.getAccountDataItemWithId(
             accountId);
-        
+
         let actionName;
         if (accountDataItem) {
             actionName = userMsg(actionNameId, accountDataItem.name);
@@ -306,6 +307,35 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onSetSubtotalsLevel(tabId, level) {
+        this.setTabIdState(tabId, {
+            subtotalsLevel: level,
+        });
+
+        let actionNameId;
+        switch (level) {
+        case Number.MAX_VALUE :
+            actionNameId = 'AccountsListHandler-action_subtotals_all';
+            break;
+        
+        default :
+            actionNameId = 'AccountsListHandler-action_subtotals_none';
+            break;
+        
+        case 1 :
+        case 2 :
+        case 3 :
+            actionNameId = 'AccountsListHandler-action_subtotals_' + level;
+            break;
+        }
+
+        this.setTabIdProjectSettings(tabId, 
+            {
+                subtotalsLevel: level,
+            },
+            userMsg(actionNameId));    
+    }
+
 
     getTabDropdownInfo(tabId, state, activeAccountId) {
         if (!activeAccountId) {
@@ -317,7 +347,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
 
         const { hiddenRootAccountTypes, hiddenAccountIds, showHiddenAccounts,
-            showInactiveAccounts, allColumns, sortAlphabetically }
+            showInactiveAccounts, allColumns, sortAlphabetically,
+            subtotalsLevel }
             = state;
 
         const showAccountLabelId = (hiddenAccountIds.indexOf(activeAccountId) >= 0)
@@ -327,7 +358,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const { accessor } = this.props;
 
         const accountType = accessor.getTypeOfAccountId(activeAccountId) || {};
-
+        const activeAccountDataItem = accessor.getAccountDataItemWithId(activeAccountId);
 
         const toggleColumnsSubMenuItems 
             = this._rowTableHandler.createToggleColumnMenuItems(
@@ -337,12 +368,12 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const menuItems = [
             { id: 'reconciler',
                 label: userMsg('AccountsListHandler-reconcileAccount'),
-                disabled: !activeAccountId,
+                disabled: !activeAccountDataItem,
                 onChooseItem: () => this.onReconcileAccount(tabId),
             },
             { id: 'openAccountRegister',
                 label: userMsg('AccountsListHandler-openAccountRegister'),
-                disabled: !activeAccountId,
+                disabled: !activeAccountDataItem,
                 onChooseItem: () => this.onOpenAccountRegister(tabId),
             },
             { id: 'openPricesList',
@@ -357,12 +388,12 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             },                        
             { id: 'modifyAccount',
                 label: userMsg('AccountsListHandler-modifyAccount'),
-                disabled: !activeAccountId,
+                disabled: !activeAccountDataItem,
                 onChooseItem: () => this.onModifyAccount(tabId),
             },                        
             { id: 'removeAccount',
                 label: userMsg('AccountsListHandler-removeAccount'),
-                disabled: !activeAccountId,
+                disabled: !activeAccountDataItem,
                 onChooseItem: () => this.onRemoveAccount(tabId),
             },
 
@@ -404,7 +435,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                     {},
                     { id: 'toggleAccountVisible',
                         label: userMsg(showAccountLabelId),
-                        disabled: !activeAccountId,
+                        disabled: !activeAccountDataItem,
                         onChooseItem: () => this.onToggleAccountVisible(
                             tabId, activeAccountId),
                     },
@@ -428,6 +459,38 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                         onChooseItem: () => this.onToggleSortAlphabetically(
                             tabId),
                     }
+                ],
+            },
+
+            { id: 'subtotalsSubMenu',
+                label: userMsg('AccountsListHandler-subtotals_subMenu'),
+                subMenuItems: [
+                    { id: 'displaySubtotalsForNone',
+                        label: userMsg('AccountsListHandler-subtotals_none'),
+                        checked: subtotalsLevel <= 0,
+                        onChooseItem: () => this.onSetSubtotalsLevel(tabId, 0),
+                    },
+                    { id: 'displaySubtotalsForAll',
+                        label: userMsg('AccountsListHandler-subtotals_all'),
+                        checked: (subtotalsLevel === Number.MAX_VALUE),
+                        onChooseItem: () => 
+                            this.onSetSubtotalsLevel(tabId, Number.MAX_VALUE),
+                    },
+                    { id: 'displaySubtotalsForTopLevel',
+                        label: userMsg('AccountsListHandler-subtotals_1'),
+                        checked: (subtotalsLevel === 1),
+                        onChooseItem: () => this.onSetSubtotalsLevel(tabId, 1),
+                    },
+                    { id: 'displaySubtotalsForLevel2',
+                        label: userMsg('AccountsListHandler-subtotals_2'),
+                        checked: (subtotalsLevel === 2),
+                        onChooseItem: () => this.onSetSubtotalsLevel(tabId, 2),
+                    },
+                    { id: 'displaySubtotalsForLevel3',
+                        label: userMsg('AccountsListHandler-subtotals_3'),
+                        checked: (subtotalsLevel === 3),
+                        onChooseItem: () => this.onSetSubtotalsLevel(tabId, 3),
+                    },
                 ],
             },
             
@@ -495,6 +558,10 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const sortAlphabetically = (settings.sortAlphabetically === undefined)
             ? true
             : settings.sortAlphabetically;
+        const subtotalsLevel = (settings.subtotalsLevel === undefined)
+            ? 3
+            : settings.subtotalsLevel;
+        const subtotalAccountIds = settings.subtotalAccountIds || [];
 
         const tabEntry = {
             tabId: tabId,
@@ -506,6 +573,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             showInactiveAccounts: showInactiveAccounts,
             collapsedAccountIds: collapsedAccountIds,
             sortAlphabetically: sortAlphabetically,
+            subtotalsLevel: subtotalsLevel,
+            subtotalAccountIds: subtotalAccountIds,
             allColumns: allColumns,
         };
 
@@ -549,6 +618,9 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             collapsedAccountIds = {collapsedAccountIds}
             onUpdateCollapsedAccountIds = {(args) =>
                 this.onUpdateCollapsedAccountIds(tabEntry.tabId, args)}
+            
+            subtotalsLevel = {tabEntry.subtotalsLevel}
+            subtotalAccountIds = {tabEntry.subtotalAccountIds}
 
             onSetColumnWidth = {(args) =>
                 this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)}
