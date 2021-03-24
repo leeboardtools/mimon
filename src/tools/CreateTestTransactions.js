@@ -444,427 +444,370 @@ export function createTestTransactions(newFileContents, options) {
     if (brokerageAccount) {
         const childAccounts = brokerageAccount.childAccounts || [];
         brokerageAccount.childAccounts = childAccounts;
-        childAccounts.push({
-            type: 'SECURITY',
-            name: 'AAPL',
-            pricedItemId: 'AAPL'
-        });
-        const accountId = 'ASSET-Investments-Brokerage Account-AAPL';
 
-
-        const baseArgs = {
-            accountId: accountId,
-            lots: lots,
-            transactions: transactions,
-            pricedItemId: 'AAPL',
-            otherAccountId: brokerageAccountId,
-        };
-
-        //
-        // A: Buy 50 sh for lot A
-        //  { ymdDate: '2005-02-18', close: 1.55, },
-        const lotA = 'Lot A';
-        let aaplQuantityBaseValueA = 500000;
-        addLotTransaction(baseArgs,
-            {
-                ymdDate: '2005-02-18',
-                lotTransactionType: T.LotTransactionType.BUY_SELL,
-                lotId: lotA,
-                commissionBaseValue: 495,
-                lotBaseValue: aaplQuantityBaseValueA,
-                priceBaseValue: 155,
-                splitRatio: 2 * 7 * 4,
+        {
+            // AAPL
+            childAccounts.push({
+                type: 'SECURITY',
+                name: 'AAPL',
+                pricedItemId: 'AAPL'
             });
+            const accountId = 'ASSET-Investments-Brokerage Account-AAPL';
 
-        // On 2005-02-18 have
-        // A: 2005-02-18: 50.0000
 
-        // 2 for 1 split
-        // '2005-02-28'
-        const aaplChangeSplit2005_02_28 = { 
-            lotId: lotA, 
-            quantityBaseValue: 1 * (aaplQuantityBaseValueA), 
-        };
-        transactions.push({
-            ymdDate: '2005-02-28',
-            description: '2 for 1 split',
-            splits: [
+            const baseArgs = {
+                accountId: accountId,
+                lots: lots,
+                transactions: transactions,
+                pricedItemId: 'AAPL',
+                otherAccountId: brokerageAccountId,
+            };
+
+            //
+            // A: Buy 50 sh for lot A
+            //  { ymdDate: '2005-02-18', close: 1.55, },
+            const lotA = 'Lot A';
+            let aaplQuantityBaseValueA = 500000;
+            addLotTransaction(baseArgs,
                 {
-                    accountId: accountId,
-                    quantityBaseValue: 0,
-                    lotTransactionType: T.LotTransactionType.SPLIT,
-                    lotChanges: [ aaplChangeSplit2005_02_28 ],
-                }
-            ],
-        });
-        aaplQuantityBaseValueA *= 2;
+                    ymdDate: '2005-02-18',
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
+                    lotId: lotA,
+                    commissionBaseValue: 495,
+                    lotBaseValue: aaplQuantityBaseValueA,
+                    priceBaseValue: 155,
+                    splitRatio: 2 * 7 * 4,
+                });
 
-        // On 2005-02-28 have
-        // A: 2005-02-28: 100.0000
-        
+            // On 2005-02-18 have
+            // A: 2005-02-18: 50.0000
 
-        // Buy 200 shares for lotC
-        // { ymdDate: '2005-03-11', close: 1.44, },
-        const lotC = 'Lot C';
-        const aaplQuantityBaseValueC = 2000000;
-        addLotTransaction(baseArgs,
-            {
-                ymdDate: '2005-03-11',
-                lotTransactionType: T.LotTransactionType.BUY_SELL,
-                lotId: lotC,
-                commissionBaseValue: 495,
-                lotBaseValue: aaplQuantityBaseValueC,
-                priceBaseValue: 144,
-                splitRatio: 7 * 4,
-            });
-        
-        // On 2014-03-11 have
-        // A: 2005-02-18: 100.0000
-        // C: 2005-03-11: 200.0000
-
-        // Sell 50 shares LIFO
-        // { ymdDate: '2014-05-19', close: 21.59, },
-        const aaplQuantityBaseValueD = -500000;
-        addLotTransaction(baseArgs,
-            {
-                ymdDate: '2014-05-19',
-                lotTransactionType: T.LotTransactionType.BUY_SELL,
-                commissionBaseValue: 495,
-                autoLotType: T.AutoLotType.LIFO,
-                lotBaseValue: aaplQuantityBaseValueD,
-                priceBaseValue: 2159,
-                splitRatio: 7 * 4,
-            });
-        
-        // On 2014-05-19 have
-        // A: 2005-02-18: 100.0000
-        // C: 2005-03-11: 150.0000
-
-
-        // 7 for 1 split
-        //  { ymdDate: '2014-06-09', close: 23.42, },
-        const aaplChangeSplit2014_06_09_LotA = { 
-            lotId: lotA, 
-            quantityBaseValue: 6 * (aaplQuantityBaseValueA), 
-        };
-        const aaplChangeSplit2014_06_09_LotC = { 
-            lotId: lotC, 
-            quantityBaseValue: 6 * (aaplQuantityBaseValueC
-                + aaplQuantityBaseValueD), 
-        };
-        transactions.push({
-            ymdDate: '2014-06-09',
-            description: '7 for 1 split',
-            splits: [
-                {
-                    accountId: accountId,
-                    quantityBaseValue: 0,
-                    lotTransactionType: T.LotTransactionType.SPLIT,
-                    lotChanges: [ 
-                        aaplChangeSplit2014_06_09_LotA,
-                        aaplChangeSplit2014_06_09_LotC,
-                    ],
-                }
-            ],
-        });
-        
-        // On 2014-06-09 have
-        // A: 2005-02-18: 700.0000
-        // C: 2005-03-11: 1050.0000
-
-
-        // Buy 100 shares for lotB
-        // { ymdDate: '2014-06-10', close: 23.56, },
-        const lotB = 'Lot B';
-        const aaplQuantityBaseValueB = 1000000;
-        addLotTransaction(baseArgs,
-            {
-                ymdDate: '2014-06-10',
-                lotTransactionType: T.LotTransactionType.BUY_SELL,
-                lotId: lotB,
-                //commissionBaseValue: 495,
-                lotBaseValue: aaplQuantityBaseValueB,
-                priceBaseValue: 2356,
-                splitRatio: 4,
-            });
-        
-        // On 2014-06-10 have
-        // A: 2005-02-18: 700.0000
-        // C: 2005-03-11: 1050.0000
-        // B: 2014-06-10: 100.0000
-
-        // Sell 15 shares FIFO
-        //  { ymdDate: '2014-06-20', close: 22.73, },
-        addLotTransaction(baseArgs,
-            {
-                ymdDate: '2014-06-20',
-                lotTransactionType: T.LotTransactionType.BUY_SELL,
-                //commissionBaseValue: 495,
-                autoLotType: T.AutoLotType.FIFO,
-                lotBaseValue: -150000,
-                priceBaseValue: 2273,
-                splitRatio: 4,
-            });
-        
-        // On 2014-06-20 have
-        // A: 2005-02-18: 685.0000
-        // C: 2005-03-11: 1050.0000
-        // B: 2014-06-13: 100.0000
-
-
-        // Reinvested Dividends
-        // Dividend paid $0.1175
-        // 1485 sh * 0.1175 = $174.49
-        // { ymdDate: '2014-08-14', close: 24.38, },
-        const lotE = 'Lot E';
-        const aaplQuantityBaseValueE = 71571;
-        addLotTransaction(baseArgs,
-            {
-                otherAccountId: 'INCOME-Dividends',
-                ymdDate: '2014-08-14',
-                lotTransactionType: T.LotTransactionType.REINVESTED_DIVIDEND,
-                lotId: lotE,
-                lotBaseValue: aaplQuantityBaseValueE,
-                priceBaseValue: 2438,
-                splitRatio: 4,
-            });
-        
-        // On 2014-08-14 have
-        // A: 2005-02-18: 685.0000
-        // C: 2005-03-11: 1050.0000
-        // B: 2014-06-13: 100.0000
-        // E: 2014-08-14: 7.1571
-
-        
-        //
-        // Add 100 sh for lotF
-        // { ymdDate: '2014-08-18', close: 24.79, },
-        
-        const lotF = 'Lot F';
-        const aaplQuantityBaseValueF = 1000000;
-        addLotTransaction(baseArgs,
-            {
-                otherAccountId: 'EQUITY',
-                costBasisSign: 1,
-                ymdDate: '2014-08-18',
-                lotTransactionType: T.LotTransactionType.BUY_SELL,
-                lotId: lotF,
-                //commissionBaseValue: 495,
-                lotBaseValue: aaplQuantityBaseValueF,
-                priceBaseValue: 2479,
-                splitRatio: 4,
-            });
-
-        
-        // On 2014-08-18 have
-        // A: 2005-02-18: 685.0000
-        // C: 2005-03-11: 1050.0000
-        // B: 2014-06-13: 100.0000
-        // E: 2014-08-14: 7.1571
-        // F: 2014-08-18: 100.0000
-
-
-        //
-        // Remove 25 sh of lotF
-        // { ymdDate: '2015-03-12', close: 30.92, },
-        addLotTransaction(baseArgs,
-            {
-                otherAccountId: 'EQUITY',
-                costBasisSign: 1,
-                ymdDate: '2015-03-12',
-                lotTransactionType: T.LotTransactionType.BUY_SELL,
-                lotsToSell: [
-                    {
-                        lotId: lotF,
-                        quantityBaseValue: -250000,
-                    },
-                ],
-                //commissionBaseValue: 495,
-                priceBaseValue: 3092,
-                splitRatio: 4,
-            });
-        
-        
-        // On 2015-03-12 have
-        // A: 2005-02-18: 685.0000
-        // C: 2005-03-11: 1050.0000
-        // B: 2014-06-13: 100.0000
-        // E: 2014-08-14: 7.1571
-        // F: 2014-08-18: 75.0000
-
-
-        //
-        // Remove the rest of lotF via LIFO
-        //  { ymdDate: '2019-11-12', close: 65.49, },
-        addLotTransaction(baseArgs,
-            {
-                otherAccountId: 'EQUITY',
-                costBasisSign: 1,
-                ymdDate: '2019-11-12',
-                lotTransactionType: T.LotTransactionType.BUY_SELL,
-                //commissionBaseValue: 495,
-                autoLotType: T.AutoLotType.LIFO,
-                lotBaseValue: -750000,
-                priceBaseValue: 6549,
-                splitRatio: 4,
-            });
-
-        // On 2019-11-12 have
-        // A: 2005-02-18: 685.0000
-        // C: 2005-03-11: 1050.0000
-        // B: 2014-06-13: 100.0000
-        // E: 2014-08-14: 7.1571
-
-
-
-        // Sell 10 shares from lotB, 20 shares from lotA
-        // on { ymdDate: '2020-01-24', close: 79.58, },
-        addLotTransaction(baseArgs,
-            {
-                ymdDate: '2020-01-24',
-                lotTransactionType: T.LotTransactionType.BUY_SELL,
-                lotsToSell: [
-                    {
-                        lotId: lotB,
-                        quantityBaseValue: -100000,
-                    },
-                    {
-                        lotId: lotA,
-                        quantityBaseValue: -200000,
-                    }
-                ],
-                //commissionBaseValue: 495,
-                priceBaseValue: 7958,
-                splitRatio: 4,
-            });
-
-        
-        // On 2020-01-24 have
-        // A: 2005-02-18: 665.0000
-        // C: 2005-03-11: 1050.0000
-        // B: 2014-06-13: 90.0000
-        // E: 2014-08-14: 7.1571
-
-
-        // Sell all of lotB
-        //  { ymdDate: '2020-01-31', close: 77.38, }
-        addLotTransaction(baseArgs,
-            {
-                ymdDate: '2020-01-31',
-                lotTransactionType: T.LotTransactionType.BUY_SELL,
-                lotsToSell: [
-                    {
-                        lotId: lotB,
-                        quantityBaseValue: -900000,
-                    },
-                ],
-                //commissionBaseValue: 495,
-                priceBaseValue: 7738,
-                splitRatio: 4,
-            });
-        
-        // On 2020-01-31 have
-        // A: 2005-02-18: 665.0000
-        // C: 2005-03-11: 1050.0000
-        // E: 2014-08-14: 7.1571
-
-        // Remove 15 sh FIFO
-        //  { ymdDate: '2020-02-04', close: 79.71, },
-        addLotTransaction(baseArgs,
-            {
-                otherAccountId: 'EQUITY',
-                costBasisSign: 1,
-                ymdDate: '2020-02-04',
-                lotTransactionType: T.LotTransactionType.BUY_SELL,
-                //commissionBaseValue: 495,
-                autoLotType: T.AutoLotType.FIFO,
-                lotBaseValue: -150000,
-                priceBaseValue: 7971,
-                splitRatio: 4,
-            });
-
-        // On 2020-02-04 have
-        // A: 2005-02-18: 650.0000
-        // C: 2005-03-11: 1050.0000
-        // E: 2014-08-14: 7.1571
-
-
-        
-        // 4 for 1 split
-        const aaplChangeSplit2020_08_31_LotA = { 
-            lotId: lotA, 
-            quantityBaseValue: 3 * 6500000, 
-        };
-        const aaplChangeSplit2020_08_31_LotC = { 
-            lotId: lotC, 
-            quantityBaseValue: 3 * 10500000, 
-        };
-        const aaplChangeSplit2020_08_31_LotE = { 
-            lotId: lotE, 
-            quantityBaseValue: 3 * 71571, 
-        };
-        transactions.push({
-            ymdDate: '2020-08-31',
-            description: '4 for 1 split',
-            splits: [
-                {
-                    accountId: accountId,
-                    quantityBaseValue: 0,
-                    lotTransactionType: T.LotTransactionType.SPLIT,
-                    lotChanges: [ 
-                        aaplChangeSplit2020_08_31_LotA,
-                        aaplChangeSplit2020_08_31_LotC,
-                        aaplChangeSplit2020_08_31_LotE,
-                    ],
-                }
-            ],
-        });
-
-        //}
-        
-        // On 2020-08-31 have
-        // A: 2005-02-18: 2600.0000, cb: 4034.59
-        // C: 2005-03-11: 4200.0000, cb: 6051.71
-        // E: 2014-08-14: 28.6284, cb: 697.96
-
-
-        //
-        // The following are pure test transactions with no grounding in reality...
-        if (options.includeReverseSplit) {
-            // Reverse split
-            // '2020-09-15'
-            const aaplChangeReverseSplit2020_08_31_LotA = { 
+            // 2 for 1 split
+            // '2005-02-28'
+            const aaplChangeSplit2005_02_28 = { 
                 lotId: lotA, 
-                quantityBaseValue: -3 * 6500000, 
-            };
-            const aaplChangeReverseSplit2020_08_31_LotC = { 
-                lotId: lotC, 
-                quantityBaseValue: -3 * 10500000, 
-            };
-            const aaplChangeReverseSplit2020_08_31_LotE = { 
-                lotId: lotE, 
-                quantityBaseValue: -3 * 71571, 
+                quantityBaseValue: 1 * (aaplQuantityBaseValueA), 
             };
             transactions.push({
-                ymdDate: '2020-09-15',
-                description: '1 for 4 reverse split',
+                ymdDate: '2005-02-28',
+                description: '2 for 1 split',
+                splits: [
+                    {
+                        accountId: accountId,
+                        quantityBaseValue: 0,
+                        lotTransactionType: T.LotTransactionType.SPLIT,
+                        lotChanges: [ aaplChangeSplit2005_02_28 ],
+                    }
+                ],
+            });
+            aaplQuantityBaseValueA *= 2;
+
+            // On 2005-02-28 have
+            // A: 2005-02-28: 100.0000
+            
+
+            // Buy 200 shares for lotC
+            // { ymdDate: '2005-03-11', close: 1.44, },
+            const lotC = 'Lot C';
+            const aaplQuantityBaseValueC = 2000000;
+            addLotTransaction(baseArgs,
+                {
+                    ymdDate: '2005-03-11',
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
+                    lotId: lotC,
+                    commissionBaseValue: 495,
+                    lotBaseValue: aaplQuantityBaseValueC,
+                    priceBaseValue: 144,
+                    splitRatio: 7 * 4,
+                });
+            
+            // On 2014-03-11 have
+            // A: 2005-02-18: 100.0000
+            // C: 2005-03-11: 200.0000
+
+            // Sell 50 shares LIFO
+            // { ymdDate: '2014-05-19', close: 21.59, },
+            const aaplQuantityBaseValueD = -500000;
+            addLotTransaction(baseArgs,
+                {
+                    ymdDate: '2014-05-19',
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
+                    commissionBaseValue: 495,
+                    autoLotType: T.AutoLotType.LIFO,
+                    lotBaseValue: aaplQuantityBaseValueD,
+                    priceBaseValue: 2159,
+                    splitRatio: 7 * 4,
+                });
+            
+            // On 2014-05-19 have
+            // A: 2005-02-18: 100.0000
+            // C: 2005-03-11: 150.0000
+
+
+            // 7 for 1 split
+            //  { ymdDate: '2014-06-09', close: 23.42, },
+            const aaplChangeSplit2014_06_09_LotA = { 
+                lotId: lotA, 
+                quantityBaseValue: 6 * (aaplQuantityBaseValueA), 
+            };
+            const aaplChangeSplit2014_06_09_LotC = { 
+                lotId: lotC, 
+                quantityBaseValue: 6 * (aaplQuantityBaseValueC
+                    + aaplQuantityBaseValueD), 
+            };
+            transactions.push({
+                ymdDate: '2014-06-09',
+                description: '7 for 1 split',
                 splits: [
                     {
                         accountId: accountId,
                         quantityBaseValue: 0,
                         lotTransactionType: T.LotTransactionType.SPLIT,
                         lotChanges: [ 
-                            aaplChangeReverseSplit2020_08_31_LotA,
-                            aaplChangeReverseSplit2020_08_31_LotC,
-                            aaplChangeReverseSplit2020_08_31_LotE,
+                            aaplChangeSplit2014_06_09_LotA,
+                            aaplChangeSplit2014_06_09_LotC,
                         ],
                     }
                 ],
             });
+            
+            // On 2014-06-09 have
+            // A: 2005-02-18: 700.0000
+            // C: 2005-03-11: 1050.0000
 
-            // Put back the split...
+
+            // Buy 100 shares for lotB
+            // { ymdDate: '2014-06-10', close: 23.56, },
+            const lotB = 'Lot B';
+            const aaplQuantityBaseValueB = 1000000;
+            addLotTransaction(baseArgs,
+                {
+                    ymdDate: '2014-06-10',
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
+                    lotId: lotB,
+                    //commissionBaseValue: 495,
+                    lotBaseValue: aaplQuantityBaseValueB,
+                    priceBaseValue: 2356,
+                    splitRatio: 4,
+                });
+            
+            // On 2014-06-10 have
+            // A: 2005-02-18: 700.0000
+            // C: 2005-03-11: 1050.0000
+            // B: 2014-06-10: 100.0000
+
+            // Sell 15 shares FIFO
+            //  { ymdDate: '2014-06-20', close: 22.73, },
+            addLotTransaction(baseArgs,
+                {
+                    ymdDate: '2014-06-20',
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
+                    //commissionBaseValue: 495,
+                    autoLotType: T.AutoLotType.FIFO,
+                    lotBaseValue: -150000,
+                    priceBaseValue: 2273,
+                    splitRatio: 4,
+                });
+            
+            // On 2014-06-20 have
+            // A: 2005-02-18: 685.0000
+            // C: 2005-03-11: 1050.0000
+            // B: 2014-06-13: 100.0000
+
+
+            // Reinvested Dividends
+            // Dividend paid $0.1175
+            // 1485 sh * 0.1175 = $174.49
+            // { ymdDate: '2014-08-14', close: 24.38, },
+            const lotE = 'Lot E';
+            const aaplQuantityBaseValueE = 71571;
+            addLotTransaction(baseArgs,
+                {
+                    otherAccountId: 'INCOME-Dividends',
+                    ymdDate: '2014-08-14',
+                    lotTransactionType: T.LotTransactionType.REINVESTED_DIVIDEND,
+                    lotId: lotE,
+                    lotBaseValue: aaplQuantityBaseValueE,
+                    priceBaseValue: 2438,
+                    splitRatio: 4,
+                });
+            
+            // On 2014-08-14 have
+            // A: 2005-02-18: 685.0000
+            // C: 2005-03-11: 1050.0000
+            // B: 2014-06-13: 100.0000
+            // E: 2014-08-14: 7.1571
+
+            
+            //
+            // Add 100 sh for lotF
+            // { ymdDate: '2014-08-18', close: 24.79, },
+            
+            const lotF = 'Lot F';
+            const aaplQuantityBaseValueF = 1000000;
+            addLotTransaction(baseArgs,
+                {
+                    otherAccountId: 'EQUITY',
+                    costBasisSign: 1,
+                    ymdDate: '2014-08-18',
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
+                    lotId: lotF,
+                    //commissionBaseValue: 495,
+                    lotBaseValue: aaplQuantityBaseValueF,
+                    priceBaseValue: 2479,
+                    splitRatio: 4,
+                });
+
+            
+            // On 2014-08-18 have
+            // A: 2005-02-18: 685.0000
+            // C: 2005-03-11: 1050.0000
+            // B: 2014-06-13: 100.0000
+            // E: 2014-08-14: 7.1571
+            // F: 2014-08-18: 100.0000
+
+
+            //
+            // Remove 25 sh of lotF
+            // { ymdDate: '2015-03-12', close: 30.92, },
+            addLotTransaction(baseArgs,
+                {
+                    otherAccountId: 'EQUITY',
+                    costBasisSign: 1,
+                    ymdDate: '2015-03-12',
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
+                    lotsToSell: [
+                        {
+                            lotId: lotF,
+                            quantityBaseValue: -250000,
+                        },
+                    ],
+                    //commissionBaseValue: 495,
+                    priceBaseValue: 3092,
+                    splitRatio: 4,
+                });
+            
+            
+            // On 2015-03-12 have
+            // A: 2005-02-18: 685.0000
+            // C: 2005-03-11: 1050.0000
+            // B: 2014-06-13: 100.0000
+            // E: 2014-08-14: 7.1571
+            // F: 2014-08-18: 75.0000
+
+
+            //
+            // Remove the rest of lotF via LIFO
+            //  { ymdDate: '2019-11-12', close: 65.49, },
+            addLotTransaction(baseArgs,
+                {
+                    otherAccountId: 'EQUITY',
+                    costBasisSign: 1,
+                    ymdDate: '2019-11-12',
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
+                    //commissionBaseValue: 495,
+                    autoLotType: T.AutoLotType.LIFO,
+                    lotBaseValue: -750000,
+                    priceBaseValue: 6549,
+                    splitRatio: 4,
+                });
+
+            // On 2019-11-12 have
+            // A: 2005-02-18: 685.0000
+            // C: 2005-03-11: 1050.0000
+            // B: 2014-06-13: 100.0000
+            // E: 2014-08-14: 7.1571
+
+
+
+            // Sell 10 shares from lotB, 20 shares from lotA
+            // on { ymdDate: '2020-01-24', close: 79.58, },
+            addLotTransaction(baseArgs,
+                {
+                    ymdDate: '2020-01-24',
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
+                    lotsToSell: [
+                        {
+                            lotId: lotB,
+                            quantityBaseValue: -100000,
+                        },
+                        {
+                            lotId: lotA,
+                            quantityBaseValue: -200000,
+                        }
+                    ],
+                    //commissionBaseValue: 495,
+                    priceBaseValue: 7958,
+                    splitRatio: 4,
+                });
+
+            
+            // On 2020-01-24 have
+            // A: 2005-02-18: 665.0000
+            // C: 2005-03-11: 1050.0000
+            // B: 2014-06-13: 90.0000
+            // E: 2014-08-14: 7.1571
+
+
+            // Sell all of lotB
+            //  { ymdDate: '2020-01-31', close: 77.38, }
+            addLotTransaction(baseArgs,
+                {
+                    ymdDate: '2020-01-31',
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
+                    lotsToSell: [
+                        {
+                            lotId: lotB,
+                            quantityBaseValue: -900000,
+                        },
+                    ],
+                    //commissionBaseValue: 495,
+                    priceBaseValue: 7738,
+                    splitRatio: 4,
+                });
+            
+            // On 2020-01-31 have
+            // A: 2005-02-18: 665.0000
+            // C: 2005-03-11: 1050.0000
+            // E: 2014-08-14: 7.1571
+
+            // Remove 15 sh FIFO
+            //  { ymdDate: '2020-02-04', close: 79.71, },
+            addLotTransaction(baseArgs,
+                {
+                    otherAccountId: 'EQUITY',
+                    costBasisSign: 1,
+                    ymdDate: '2020-02-04',
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
+                    //commissionBaseValue: 495,
+                    autoLotType: T.AutoLotType.FIFO,
+                    lotBaseValue: -150000,
+                    priceBaseValue: 7971,
+                    splitRatio: 4,
+                });
+
+            // On 2020-02-04 have
+            // A: 2005-02-18: 650.0000
+            // C: 2005-03-11: 1050.0000
+            // E: 2014-08-14: 7.1571
+
+
+            
+            // 4 for 1 split
+            const aaplChangeSplit2020_08_31_LotA = { 
+                lotId: lotA, 
+                quantityBaseValue: 3 * 6500000, 
+            };
+            const aaplChangeSplit2020_08_31_LotC = { 
+                lotId: lotC, 
+                quantityBaseValue: 3 * 10500000, 
+            };
+            const aaplChangeSplit2020_08_31_LotE = { 
+                lotId: lotE, 
+                quantityBaseValue: 3 * 71571, 
+            };
             transactions.push({
-                ymdDate: '2020-09-20',
+                ymdDate: '2020-08-31',
                 description: '4 for 1 split',
                 splits: [
                     {
@@ -879,35 +822,131 @@ export function createTestTransactions(newFileContents, options) {
                     }
                 ],
             });
-        }
+
+            //}
+            
+            // On 2020-08-31 have
+            // A: 2005-02-18: 2600.0000, cb: 4034.59
+            // C: 2005-03-11: 4200.0000, cb: 6051.71
+            // E: 2014-08-14: 28.6284, cb: 697.96
 
 
-        if (options.includeReturnOfCapital) {
-            transactions.push({
-                ymdDate: '2020-10-01',
-                description: 'Return of Capital No Capital Gains',
-                splits: [
-                    {
-                        accountId: accountId,
-                        lotTransactionType: T.LotTransactionType.RETURN_OF_CAPITAL,
-                        lotChanges: [
-                            {
-                                lotId: lotA,
-                                costBasisBaseValue: -190375,
-                            },
-                            {
-                                lotId: lotC,
-                                costBasisBaseValue: -307529,
-                            },
-                            {
-                                lotId: lotE,
-                                costBasisBaseValue: -2096,
-                            },
-                        ],
-                        quantityBaseValue: 0,
-                    },
-                ],
+            //
+            // The following are pure test transactions with no grounding in reality...
+            if (options.includeReverseSplit) {
+                // Reverse split
+                // '2020-09-15'
+                const aaplChangeReverseSplit2020_08_31_LotA = { 
+                    lotId: lotA, 
+                    quantityBaseValue: -3 * 6500000, 
+                };
+                const aaplChangeReverseSplit2020_08_31_LotC = { 
+                    lotId: lotC, 
+                    quantityBaseValue: -3 * 10500000, 
+                };
+                const aaplChangeReverseSplit2020_08_31_LotE = { 
+                    lotId: lotE, 
+                    quantityBaseValue: -3 * 71571, 
+                };
+                transactions.push({
+                    ymdDate: '2020-09-15',
+                    description: '1 for 4 reverse split',
+                    splits: [
+                        {
+                            accountId: accountId,
+                            quantityBaseValue: 0,
+                            lotTransactionType: T.LotTransactionType.SPLIT,
+                            lotChanges: [ 
+                                aaplChangeReverseSplit2020_08_31_LotA,
+                                aaplChangeReverseSplit2020_08_31_LotC,
+                                aaplChangeReverseSplit2020_08_31_LotE,
+                            ],
+                        }
+                    ],
+                });
+
+                // Put back the split...
+                transactions.push({
+                    ymdDate: '2020-09-20',
+                    description: '4 for 1 split',
+                    splits: [
+                        {
+                            accountId: accountId,
+                            quantityBaseValue: 0,
+                            lotTransactionType: T.LotTransactionType.SPLIT,
+                            lotChanges: [ 
+                                aaplChangeSplit2020_08_31_LotA,
+                                aaplChangeSplit2020_08_31_LotC,
+                                aaplChangeSplit2020_08_31_LotE,
+                            ],
+                        }
+                    ],
+                });
+            }
+
+
+            if (options.includeReturnOfCapital) {
+                transactions.push({
+                    ymdDate: '2020-10-01',
+                    description: 'Return of Capital No Capital Gains',
+                    splits: [
+                        {
+                            accountId: accountId,
+                            lotTransactionType: T.LotTransactionType.RETURN_OF_CAPITAL,
+                            lotChanges: [
+                                {
+                                    lotId: lotA,
+                                    costBasisBaseValue: -190375,
+                                },
+                                {
+                                    lotId: lotC,
+                                    costBasisBaseValue: -307529,
+                                },
+                                {
+                                    lotId: lotE,
+                                    costBasisBaseValue: -2096,
+                                },
+                            ],
+                            quantityBaseValue: 0,
+                        },
+                    ],
+                });
+            }
+        }   // End AAPL
+
+        {
+            // MSFT
+            childAccounts.push({
+                type: 'SECURITY',
+                name: 'MSFT',
+                pricedItemId: 'MSFT'
             });
+            const accountId = 'ASSET-Investments-Brokerage Account-MSFT';
+
+
+            const baseArgs = {
+                accountId: accountId,
+                lots: lots,
+                transactions: transactions,
+                pricedItemId: 'MSFT',
+                otherAccountId: brokerageAccountId,
+            };
+
+            //
+            // A: Buy 50 sh for lot A
+            //  { ymdDate: '2005-02-18', close: 1.55, },
+            const lotA = 'Lot A';
+            let msftQuantityBaseValueA = 1000000;
+            addLotTransaction(baseArgs,
+                {
+                    ymdDate: '2005-02-18',
+                    lotTransactionType: T.LotTransactionType.BUY_SELL,
+                    lotId: lotA,
+                    commissionBaseValue: 495,
+                    lotBaseValue: msftQuantityBaseValueA,
+                    priceBaseValue: 2548,
+                    splitRatio: 1,
+                });
         }
     }
 
