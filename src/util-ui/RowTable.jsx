@@ -1310,8 +1310,19 @@ export class RowTable extends React.Component {
             } = args;
 
             const {
+                onPreRenderRow,
+                onPostRenderRow,
                 onRenderCell,
             } = this.props;
+
+
+            let rowRenderInfo;
+            if (onPreRenderRow) {
+                rowRenderInfo = onPreRenderRow({
+                    rowIndex: rowIndex,
+                    isSizeRender: isSizeRender,
+                });
+            }
 
             const { columnWidths } = this.state;
 
@@ -1341,6 +1352,7 @@ export class RowTable extends React.Component {
                             columnIndex: c, 
                             column: column,
                             isSizeRender: isSizeRender,
+                            rowRenderInfo: rowRenderInfo,
                         });
                     }
                 }
@@ -1393,6 +1405,14 @@ export class RowTable extends React.Component {
                 >
                     {cell}
                 </div>);
+            }
+
+            if (onPostRenderRow) {
+                onPostRenderRow({
+                    rowIndex: rowIndex,
+                    isSizeRender: isSizeRender,
+                    rowRenderInfo: rowRenderInfo
+                });
             }
 
 
@@ -1471,7 +1491,9 @@ export class RowTable extends React.Component {
     renderRow(rowIndex) {
         const {
             rowClassExtras,
+            onPreRenderRow,
             onRenderCell,
+            onPostRenderRow,
             columns,
             activeRowIndex,
         } = this.props;
@@ -1486,6 +1508,15 @@ export class RowTable extends React.Component {
             ? this.state.defColumnWidths
             : this.state.columnWidths;
 
+
+        let rowRenderInfo;
+        if (onPreRenderRow) {
+            rowRenderInfo = onPreRenderRow({
+                rowIndex: rowIndex,
+                isSizeRender: isSizeRender,
+            });
+        }
+
         const getRowKey = this.props.getRowKey || ((i) => i);
         const cells = [];
         for (let colIndex = 0; colIndex < columns.length; ++colIndex) {
@@ -1495,6 +1526,7 @@ export class RowTable extends React.Component {
                 columnIndex: colIndex, 
                 column: column,
                 isSizeRender: isSizeRender,
+                rowRenderInfo: rowRenderInfo,
             });
 
             let cellClassName = 'RowTableCell RowTableRowCell';
@@ -1541,6 +1573,16 @@ export class RowTable extends React.Component {
 
             cells.push(cell);
         }
+
+
+        if (onPostRenderRow) {
+            onPostRenderRow({
+                rowIndex: rowIndex,
+                isSizeRender: isSizeRender,
+                rowRenderInfo: rowRenderInfo,
+            });
+        }
+
 
         let rowClassName = 'RowTableRow';
         if (rowIndex === activeRowIndex) {
@@ -1860,6 +1902,8 @@ export class RowTable extends React.Component {
  * @property {number}   columnIndex
  * @property {RowTable~Column}  column
  * @property {boolean}  isSizeRender
+ * @property {*} [rowRenderInfo] The result of the {@link RowTable~onPreRenderRow} 
+ * callback, if any.
  */
 
 
@@ -1873,6 +1917,39 @@ export class RowTable extends React.Component {
  * @callback RowTable~onRenderCell
  * @param {RowTable~onRenderCellArgs}   args
  */
+
+
+/**
+ * @typedef {object} RowTable~onPreRenderRowArgs
+ * @property {number} rowIndex
+ * @property {boolean} isSizeRender
+ */
+
+/**
+ * Optional callback called for each row before onRenderCell is called for 
+ * all the cells.
+ * @callback RowTable~onPreRenderRow
+ * @param {RowTable~onPreRenderRowArgs} args
+ * @returns {*} Whatever is returned is passed as the rowRenderInfo property
+ * of the {@link RowTable~onRenderCellArgs} and {@link RowTable~onPostRenderRowArgs}.
+ */
+
+
+/**
+ * @typedef {object} RowTable~onPostRenderRowArgs
+ * @property {number} rowIndex
+ * @property {boolean} isSizeRender
+ * @property {*} [rowRenderInfo] The result of the {@link RowTable~onPreRenderRow} 
+ * callback, if any.
+ */
+
+/**
+ * Optional callback called for each row after onRenderCell has been called for 
+ * all the cells.
+ * @callback RowTable~onPostRenderRow
+ * @param {RowTable~onPostRenderRowArgs} args
+ */
+
 
 /**
  * @callback RowTable~getRowKey
@@ -1992,6 +2069,8 @@ RowTable.propTypes = {
     onLoadRows: PropTypes.func,
 
     onRenderCell: PropTypes.func.isRequired,
+    onPreRenderRow: PropTypes.func,
+    onPostRenderRow: PropTypes.func,
 
     requestedVisibleRowIndex: PropTypes.number,
 
