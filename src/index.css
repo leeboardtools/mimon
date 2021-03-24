@@ -132,6 +132,11 @@ label {
 
 .AccountsList-subtotal-value {
     border-top: 1px solid;
+    text-align: right;
+}
+
+.AccountsList-subtotal-collapsed-value {
+    text-align: right;
 }
 
 

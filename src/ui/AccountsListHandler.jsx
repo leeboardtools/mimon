@@ -307,6 +307,28 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onToggleShowSubtotalsWhenCollapsed(tabId) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, {
+            showSubtotalsWhenCollapsed: !state.showSubtotalsWhenCollapsed,
+        });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = (newState.showSubtotalsWhenCollapsed)
+            ? 'AccountsListHandler-action_showSubtotalsWhenCollapsed'
+            : 'AccountsListHandler-action_showAccountValuesWhenCollapsed';
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(tabId, 
+            {
+                showSubtotalsWhenCollapsed: newState.showSubtotalsWhenCollapsed,
+            },
+            userMsg(actionNameId));
+    }
+
+
     onSetSubtotalsLevel(tabId, level) {
         this.setTabIdState(tabId, {
             subtotalsLevel: level,
@@ -348,7 +370,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         const { hiddenRootAccountTypes, hiddenAccountIds, showHiddenAccounts,
             showInactiveAccounts, allColumns, sortAlphabetically,
-            subtotalsLevel }
+            subtotalsLevel, showSubtotalsWhenCollapsed }
             = state;
 
         const showAccountLabelId = (hiddenAccountIds.indexOf(activeAccountId) >= 0)
@@ -465,6 +487,13 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             { id: 'subtotalsSubMenu',
                 label: userMsg('AccountsListHandler-subtotals_subMenu'),
                 subMenuItems: [
+                    { id: 'toggleShowSubtotalsWhenCollapsed',
+                        label: userMsg('AccountsListHandler-subtotalsWhenCollapsed'),
+                        checked: showSubtotalsWhenCollapsed,
+                        onChooseItem: () => this.onToggleShowSubtotalsWhenCollapsed(
+                            tabId),
+                    },
+                    {},
                     { id: 'displaySubtotalsForNone',
                         label: userMsg('AccountsListHandler-subtotals_none'),
                         checked: subtotalsLevel <= 0,
@@ -558,6 +587,10 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const sortAlphabetically = (settings.sortAlphabetically === undefined)
             ? true
             : settings.sortAlphabetically;
+        const showSubtotalsWhenCollapsed 
+            = (settings.showSubtotalsWhenCollapsed === undefined)
+                ? true
+                : settings.showSubtotalsWhenCollapsed;
         const subtotalsLevel = (settings.subtotalsLevel === undefined)
             ? 3
             : settings.subtotalsLevel;
@@ -573,6 +606,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             showInactiveAccounts: showInactiveAccounts,
             collapsedAccountIds: collapsedAccountIds,
             sortAlphabetically: sortAlphabetically,
+            showSubtotalsWhenCollapsed: showSubtotalsWhenCollapsed,
             subtotalsLevel: subtotalsLevel,
             subtotalAccountIds: subtotalAccountIds,
             allColumns: allColumns,
@@ -618,7 +652,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             collapsedAccountIds = {collapsedAccountIds}
             onUpdateCollapsedAccountIds = {(args) =>
                 this.onUpdateCollapsedAccountIds(tabEntry.tabId, args)}
-            
+
+            showSubtotalsWhenCollapsed = {tabEntry.showSubtotalsWhenCollapsed}
             subtotalsLevel = {tabEntry.subtotalsLevel}
             subtotalAccountIds = {tabEntry.subtotalAccountIds}
 

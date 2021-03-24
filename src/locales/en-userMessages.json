@@ -135,6 +135,7 @@
     "AccountsListHandler-displayAlphabetically": "Display Alphabetically",
 
     "AccountsListHandler-subtotals_subMenu": "Subtotals",
+    "AccountsListHandler-subtotalsWhenCollapsed": "Show Subtotals for Collapsed Accounts",
     "AccountsListHandler-subtotals_none": "None",
     "AccountsListHandler-subtotals_all": "All Levels",
     "AccountsListHandler-subtotals_1": "Top Level",
@@ -176,6 +177,9 @@
     "AccountsListHandler-action_disableSortAlphabetically": "Disable Sort Alphabetically",
     "AccountsListHandler-action_expandAccount": ["Expand Child Accounts of ", ""],
     "AccountsListHandler-action_collapseAccount": ["Collapse Child Accounts of ", ""],
+
+    "AccountsListHandler-action_showSubtotalsWhenCollapsed": "Show Subtotals for Collapsed Accounts",
+    "AccountsListHandler-action_showAccountValuesWhenCollapsed": "Show Account Values for Collapsed Accounts",
     "AccountsListHandler-action_subtotals_none": "No Automatic Subtotals",
     "AccountsListHandler-action_subtotals_all": "Subtotal All Levels",
     "AccountsListHandler-action_subtotals_1": "Subtotal Top Level",

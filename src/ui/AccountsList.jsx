@@ -78,6 +78,7 @@ export class AccountsList extends React.Component {
 
         this.onExpandCollapseRow = this.onExpandCollapseRow.bind(this);
         this.onRenderCell = this.onRenderCell.bind(this);
+        this.onPreRenderRow = this.onPreRenderRow.bind(this);
 
         this.onActivateRow = this.onActivateRow.bind(this);
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
@@ -205,6 +206,9 @@ export class AccountsList extends React.Component {
             |= (prevProps.showInactiveAccounts !== props.showInactiveAccounts);
         rowsNeedUpdating 
             |= (prevProps.sortAlphabetically !== props.sortAlphabetically);
+        rowsNeedUpdating
+            |= (prevProps.showSubtotalsWhenCollapsed 
+                !== props.showSubtotalsWhenCollapsed);
         rowsNeedUpdating 
             |= (prevProps.subtotalsLevel !== props.subtotalsLevel);
 
@@ -576,8 +580,10 @@ export class AccountsList extends React.Component {
         let { columnInfo, rowInfo } = renderArgs;
         if (rowInfo.subtotalAccountDataItem) {
             columnInfo = Object.assign({}, columnInfo);
-            columnInfo.inputClassExtras 
-                += ' AccountsList-subtotal AccountsList-subtotal-value';
+            columnInfo.inputClassExtras = 'AccountsList-subtotal '
+                + ((rowInfo.accountDataItem)
+                    ? 'AccountsList-subtotal-collapsed-value'
+                    : 'AccountsList-subtotal-value');
         }
         return columnInfo;
     }
@@ -809,7 +815,7 @@ export class AccountsList extends React.Component {
                 return;
             }
         }
-        
+
         const quantityValue = calcGainValueCallback({
             accessor: accessor,
             pricedItemId: accountDataItem.pricedItemId,
@@ -826,7 +832,7 @@ export class AccountsList extends React.Component {
 
     
     onRenderCell(args) {
-        const { rowInfo, columnIndex, isSizeRender, } = args;
+        let { rowInfo, columnIndex, isSizeRender, } = args;
         let { accountDataItem } = rowInfo;
         
         const { columnInfo } = this.props.columns[columnIndex];
@@ -838,11 +844,18 @@ export class AccountsList extends React.Component {
             accountState = this._sizingRowInfo.accountState;
             quantityDefinition = this._sizingRowInfo.quantityDefinition;
         }
-        else if (rowInfo.subtotalAccountDataItem) {
-            accountState = this.getAccountStateForSubtotalRowInfo(rowInfo);
-
-            // Line up with the parent which is what we're subtotaling.
-            --args.depth;
+        else {
+            const { rowRenderInfo } = args;
+            if (rowRenderInfo) {
+                accountState = rowRenderInfo.accountState;
+                if (rowRenderInfo.subtotalRowInfo) {
+                    rowInfo = rowRenderInfo.subtotalRowInfo;
+                }
+            }
+            if (rowInfo.subtotalAccountDataItem && !rowInfo.accountDataItem) {
+                // Line up with the parent which is what we're subtotaling.
+                --args.depth;
+            }
         }
 
         const renderArgs = {
@@ -925,6 +938,35 @@ export class AccountsList extends React.Component {
     }
 
 
+    onPreRenderRow(args) {
+        let { rowInfo, isSizeRender, } = args;
+        if (isSizeRender) {
+            return;
+        }
+
+        let isSubtotal = rowInfo.subtotalAccountDataItem;
+        if (!isSubtotal && this.props.showSubtotalsWhenCollapsed
+         && (rowInfo.expandCollapseState === ExpandCollapseState.COLLAPSED)) {
+            const { accountDataItem } = rowInfo;
+            if (accountDataItem && accountDataItem.childAccountIds 
+             && accountDataItem.childAccountIds.length) {
+                isSubtotal = true;
+                rowInfo = Object.assign({}, rowInfo, {
+                    subtotalAccountDataItem: rowInfo.accountDataItem,
+                    subtotaledRowInfo: rowInfo,
+                });
+            }
+        }
+
+        if (isSubtotal) {
+            return {
+                accountState: this.getAccountStateForSubtotalRowInfo(rowInfo),
+                subtotalRowInfo: rowInfo,
+            };
+        }
+    }
+
+
     render() {
         const { props, state } = this;
 
@@ -935,6 +977,7 @@ export class AccountsList extends React.Component {
                 onExpandCollapseRow = {this.onExpandCollapseRow}
 
                 onRenderCell = {this.onRenderCell}
+                onPreRenderRow = {this.onPreRenderRow}
 
                 onSetColumnWidth = {this.props.onSetColumnWidth}
                 onMoveColumn = {this.props.onMoveColumn}
@@ -991,6 +1034,7 @@ AccountsList.propTypes = {
     collapsedAccountIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedAccountIds: PropTypes.func,
 
+    showSubtotalsWhenCollapsed: PropTypes.bool,
     subtotalsLevel: PropTypes.number,
     subtotalAccountIds: PropTypes.arrayOf(PropTypes.number),
 
