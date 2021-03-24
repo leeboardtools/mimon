@@ -159,14 +159,18 @@ export function createAccountStateInfo(args) {
 export function calcLotStateMarketValueBaseValue(
     accountStateInfo, sharesQuantityBaseValue) {
 
+    if (typeof sharesQuantityBaseValue === 'object') {
+        if (typeof sharesQuantityBaseValue.marketValueBaseValue === 'number') {
+            return sharesQuantityBaseValue.marketValueBaseValue;
+        }
+        
+        sharesQuantityBaseValue = sharesQuantityBaseValue.quantityBaseValue;
+    }
+
     const { sharesQuantityDefinition, currencyQuantityDefinition,
         priceDataItem } = accountStateInfo;
     if (!priceDataItem) {
         return;
-    }
-
-    if (typeof sharesQuantityBaseValue === 'object') {
-        sharesQuantityBaseValue = sharesQuantityBaseValue.quantityBaseValue;
     }
 
     const sharesValue = sharesQuantityDefinition.baseValueToNumber(
@@ -421,6 +425,7 @@ export function calcLotStateGain(args, lotStates) {
  * @param {GainHelpers~LotPercentAnnualGainInfo} args 
  * @param {LotStateDataItem[]|AccountStateDataItem}  [lotStates]
  * @returns {GainHelpers~LotStatePercentAnnualGainResult}
+ * @memberof GainHelpers
  */
 export function calcLotStatePercentAnnualGain(args, lotStates) {
     const accountStateInfo = createAccountStateInfo(args);
@@ -517,6 +522,7 @@ export function calcLotStatePercentAnnualGain(args, lotStates) {
  * @param {GainHelpers~LotPercentAnnualGainInfo} args 
  * @param {LotStateDataItem[]|AccountStateDataItem}  [lotStates]
  * @returns {GainHelpers~LotStatePercentAnnualGainResult}
+ * @memberof GainHelpers
  */
 export function calcLotStateCashInPercentAnnualGain(args, lotStates) {
     lotStates = resolveLotStatesFromArgs(args, lotStates);
@@ -537,6 +543,7 @@ export function calcLotStateCashInPercentAnnualGain(args, lotStates) {
  * @returns {LotStateDataItem[]}    Will return lotStates if lotStates
  * does not have any non-cash-in lot states.
  * @throws Error
+ * @memberof GainHelpers
  */
 export function distributeNonCashInLots(accessor, lotStateDataItems) {
     if (lotStateDataItems.length <= 1) {
@@ -613,6 +620,7 @@ export function distributeNonCashInLots(accessor, lotStateDataItems) {
  * @param {number} sharesBaseValue 
  * @param {LotStateDataItem[]} lotStateDataItems The lot states are modified in place.
  * @returns {LotStateDataItem[]} Returns lotStateDataItems
+ * @memberof GainHelpers
  */
 export function distributeSharesToLotStates(sharesBaseValue, lotStateDataItems) {
     let totalSharesBaseValue = 0;
@@ -698,13 +706,28 @@ export function sumLotStatePart(args, lotStates) {
 
 
 /**
+ * @typedef {object} GainHelpers~LotStateDataItemWithMarketValue
+ * A {@link LotStateDataItem} with the following additional properties:
+ * @property {number} marketValueBaseValue
+ */
+
+
+/**
+ * @typedef {object} GainHelpers~getTotalMarketValueBaseValueResult
+ * @property {number} quantityBaseValue
+ * @property {string} quantityDefinition
+ * @property {GainHelpers~LotStateDataItemWithMarketValue[]} lotStatesWithMarketValue
+ */
+
+/**
  * Calculates the market value of an array of {@link LotState}s.
  * @param {GainHelpers~sumLotStatePartArgs} args 
  * @param {LotStateDataItem[]|AccountStateDataItem} [lotStates=undefined]
  * If this is specified then it is the lot state array or account state
  * to sum over, otherwise args is expected to have the lot state array
  * or account state.
- * @returns {number|undefined}
+ * @returns {GainHelpers~getTotalMarketValueBaseValueResult|undefined}
+ * @memberof GainHelpers
  */
 export function getTotalMarketValueBaseValue(args, lotStates) {
     const accountStateInfo = createAccountStateInfo(args);
@@ -714,10 +737,17 @@ export function getTotalMarketValueBaseValue(args, lotStates) {
 
     let sumBaseValue = 0;
 
+    let lotStatesWithMarketValue;
     lotStates = resolveLotStatesFromArgs(args, lotStates);
     if (lotStates) {
+        lotStatesWithMarketValue = [];
+
         lotStates.forEach((lotState) => {
             sumBaseValue += lotState.quantityBaseValue;
+            lotStatesWithMarketValue.push(Object.assign({}, lotState, {
+                marketValueBaseValue: calcLotStateMarketValueBaseValue(
+                    accountStateInfo, lotState.quantityBaseValue),
+            }));
         });
 
         sumBaseValue = calcLotStateMarketValueBaseValue(
@@ -731,6 +761,7 @@ export function getTotalMarketValueBaseValue(args, lotStates) {
     return {
         quantityBaseValue: sumBaseValue,
         quantityDefinition: quantityDefinition,
+        lotStatesWithMarketValue: lotStatesWithMarketValue,
     };
 }
 
@@ -743,6 +774,7 @@ export function getTotalMarketValueBaseValue(args, lotStates) {
  * to sum over, otherwise args is expected to have the lot state array
  * or account state.
  * @returns {number|undefined}
+ * @memberof GainHelpers
  */
 export function getTotalCostBasisBaseValue(args, lotStates) {
     return sumLotStatePart(Object.assign({}, args, {
@@ -760,6 +792,7 @@ export function getTotalCostBasisBaseValue(args, lotStates) {
  * to sum over, otherwise args is expected to have the lot state array
  * or account state.
  * @returns {number|undefined}
+ * @memberof GainHelpers
  */
 export function getTotalCashInBaseValue(args, lotStates) {
     return sumLotStatePart(Object.assign({}, args, {

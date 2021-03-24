@@ -1995,10 +1995,12 @@ function calcGainBalanceValue(args) {
         ));
 
         const { priceDataItem } = accountStateInfo;
-        tooltips.push(userMsg('LotCellEditors-price_date_tooltip',
-            currency.decimalValueToString(priceDataItem.close),
-            accessor.formatDate(priceDataItem.ymdDate)
-        ));
+        if (priceDataItem) {
+            tooltips.push(userMsg('LotCellEditors-price_date_tooltip',
+                currency.decimalValueToString(priceDataItem.close),
+                accessor.formatDate(priceDataItem.ymdDate)
+            ));
+        }
 
         value.tooltip = tooltips;
     }

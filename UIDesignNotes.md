@@ -462,10 +462,12 @@ Column sorting in RowTable:
         - Filter transactions
 
     - Account List
-        - Totals/Subtotals
-        - Options for:
-            - Top level sub-totals (A/L/E/I/Q)
-            - At each account with child accounts, have setting
-            for sub-totals
+        - Option to subtotal collapsed accounts.
+        - Subtotals need to take into account quantity definition
+        - Straighten out lot states.
+        - Enable/disable row borders
         
-        - Collapsed accounts should show subtotals?
+        - Tweak annualGainResultToBalanceValue() in LotCellEditors.jsx to better handle the
+        subtotal case? Maybe not, as already have cash-in values for contributions.
+
+        - Move call to getAccountStateForSubtotalRowInfo() to row render level?

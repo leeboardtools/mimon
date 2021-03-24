@@ -371,28 +371,61 @@ export class AccountsList extends React.Component {
         if (accountDataItem) {
             const rowAccountState = accessor.getCurrentAccountStateDataItem(
                 accountDataItem.id);
+            
             if (rowAccountState) {
+                let quantityBaseValue;
+                let quantityDefinition;
+
                 if (rowAccountState.lotStates) {
                     // Need the price...
                     const priceDataItem = this.state.pricesByPricedItemId.get(
                         accountDataItem.pricedItemId);
                     if (priceDataItem) {
-                        accountState.quantityBaseValue 
-                            += GH.getTotalMarketValueBaseValue({
-                                accessor: accessor,
-                                pricedItemId: accountDataItem.pricedItemId,
-                                accountStateDataItem: rowAccountState,
-                                priceDataItem: priceDataItem,
-                            }).quantityBaseValue;
+                        const result = GH.getTotalMarketValueBaseValue({
+                            accessor: accessor,
+                            pricedItemId: accountDataItem.pricedItemId,
+                            accountStateDataItem: rowAccountState,
+                            priceDataItem: priceDataItem,
+                        });
+
+                        quantityBaseValue = result.quantityBaseValue;
+                        quantityDefinition = result.quantityDefinition;
+
+                        const { lotStatesWithMarketValue } = result;
+                        if (lotStatesWithMarketValue) {
+                            accountState.lotStates = (accountState.lotStates)
+                                ? accountState.lotStates.concat(lotStatesWithMarketValue)
+                                : lotStatesWithMarketValue;
+                        }
                     }
 
-                    if (accountState.lotStates) {
-                        accountState.lotStates = accountState.lotStates.concat(
-                            rowAccountState.lotStates);
-                    }
                 }
                 else {
-                    accountState.quantityBaseValue += rowAccountState.quantityBaseValue;
+                    quantityBaseValue = rowAccountState.quantityBaseValue;
+
+                    const currency = accessor.getCurrencyOfAccountId(accountDataItem.id);
+                    if (currency) {
+                        quantityDefinition = currency.getQuantityDefinition();
+                    }
+                }
+
+                if (quantityBaseValue) {
+                    accountState.quantityDefinition = accountState.quantityDefinition
+                        || quantityDefinition;
+
+                    if (quantityDefinition 
+                        !== accountState.quantityDefinition) {
+                        // FIX ME!!!
+                        // Need to do conversion if quantity definition does not match...
+                        console.log({
+                            msg: 'Quantity definition mismatch',
+                            accountStateQD: accountState.quantityDefinition,
+                            rowQD: quantityDefinition,
+                            hasLotStates: rowAccountState.lotStates !== undefined,
+                        });
+                    }
+
+                    accountState.quantityBaseValue += quantityBaseValue;
                 }
             }
         }
@@ -584,11 +617,7 @@ export class AccountsList extends React.Component {
             }
         }
         else {
-            const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
-                accountDataItem.pricedItemId
-            );
-            const currency = pricedItemDataItem.currency
-                 || accessor.getBaseCurrencyCode();
+            const currency = accessor.getCurrencyOfAccountId(accountDataItem.id);
             if (!currency) {
                 return;
             }
@@ -672,15 +701,19 @@ export class AccountsList extends React.Component {
 
         const { accessor } = this.props;
 
-        const accountType = A.getAccountType(accountDataItem.type);
-        if (!accountType.hasLots) {
-            return;
-        }
-    
         if (!accountState) {
+            const accountType = A.getAccountType(accountDataItem.type);
+            if (!accountType.hasLots) {
+                return;
+            }
+        
             accountState = accessor.getCurrentAccountStateDataItem(
                 accountDataItem.id
             );
+        }
+
+        if (!accountState || !accountState.lotStates) {
+            return;
         }
         
         const quantityValue = GH.getTotalCostBasisBaseValue({
@@ -707,15 +740,19 @@ export class AccountsList extends React.Component {
 
         const { accessor } = this.props;
 
-        const accountType = A.getAccountType(accountDataItem.type);
-        if (!accountType.hasLots) {
-            return;
-        }
-    
         if (!accountState) {
+            const accountType = A.getAccountType(accountDataItem.type);
+            if (!accountType.hasLots) {
+                return;
+            }
+        
             accountState = accessor.getCurrentAccountStateDataItem(
                 accountDataItem.id
             );
+        }
+
+        if (!accountState || !accountState.lotStates) {
+            return;
         }
         
         const quantityValue = GH.getTotalCashInBaseValue({
@@ -742,22 +779,37 @@ export class AccountsList extends React.Component {
 
         const { accessor } = this.props;
 
-        const accountType = A.getAccountType(accountDataItem.type);
-        if (!accountType.hasLots) {
-            return;
-        }
-    
         if (!accountState) {
+            const accountType = A.getAccountType(accountDataItem.type);
+            if (!accountType.hasLots) {
+                return;
+            }
+        
             accountState = accessor.getCurrentAccountStateDataItem(
                 accountDataItem.id
             );
+        }
+
+        if (!accountState || !accountState.lotStates) {
+            return;
         }
         
         const priceDataItem = this.state.pricesByPricedItemId.get(
             accountDataItem.pricedItemId);
         if (!priceDataItem) {
-            return;
+            let isMarketValue;
+            for (let i = 0; i < accountState.lotStates.length; ++i) {
+                if (typeof accountState.lotStates[i].marketValueBaseValue 
+                    === 'number') {
+                    isMarketValue = true;
+                    break;
+                }
+            }
+            if (!isMarketValue) {
+                return;
+            }
         }
+        
         const quantityValue = calcGainValueCallback({
             accessor: accessor,
             pricedItemId: accountDataItem.pricedItemId,
