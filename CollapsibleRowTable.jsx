@@ -126,6 +126,8 @@ export function collapsibleRowTable(WrappedTable) {
             this.onKeyDown = this.onKeyDown.bind(this);
             this.onRenderCell = this.onRenderCell.bind(this);
             this._onRenderCellImpl = this._onRenderCellImpl.bind(this);
+
+            this.onPreRenderRow = this.onPreRenderRow.bind(this);
             
             this.getRowKey = this.getRowKey.bind(this);
 
@@ -340,6 +342,20 @@ export function collapsibleRowTable(WrappedTable) {
         }
 
 
+        onPreRenderRow(args) {
+            const { onPreRenderRow } = this.props;
+            if (onPreRenderRow && (args.rowIndex >= 0)) {
+                args = Object.assign({}, args);
+
+                const rowEntry = this.state.rowEntries[args.rowIndex];
+                args.rowInfo = rowEntry.rowInfo;
+                args.depth = rowEntry.depth;
+
+                return onPreRenderRow(args);
+            }
+        }
+
+
         render() {
             const {
                 onActivateRow,
@@ -357,6 +373,11 @@ export function collapsibleRowTable(WrappedTable) {
                 onOuterRenderCell = this._onRenderCellImpl;
             }
 
+            let onPreRenderRow;
+            if (this.props.onPreRenderRow) {
+                onPreRenderRow = this.onPreRenderRow;
+            }
+
             return <WrappedTable
                 {...passThroughProps}
 
@@ -366,6 +387,7 @@ export function collapsibleRowTable(WrappedTable) {
                 onActivateRow = {this.onActivateRow}
                 onKeyDown = {this.onKeyDown}
                 onRenderCell = {this.onRenderCell}
+                onPreRenderRow = {onPreRenderRow}
                 onOuterRenderCell = {onOuterRenderCell}
                 getRowKey = {this.getRowKey}
             >
@@ -467,6 +489,7 @@ export function collapsibleRowTable(WrappedTable) {
         columns: PropTypes.array.isRequired,
         onRenderCell: PropTypes.func,
         onKeyDown: PropTypes.func,
+        onPreRenderRow: PropTypes.func,
 
     };
 
