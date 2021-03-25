@@ -113,6 +113,8 @@
     "AccountsList-dummy_name": "Sample Account Name This is a much longer name",
     "AccountsList-percentSuffix": "%",
     "AccountsList-subtotalName": ["Subtotal: ", ""],
+    "AccountsList-netWorth_name": "Net Worth",
+    "AccountsList-netIncome_name": "Net Income",
 
     "AccountsListHandler-masterAccountList_title": "Accounts",
     "AccountsListHandler-reconcileAccount": "Reconcile Account",
@@ -136,6 +138,8 @@
 
     "AccountsListHandler-subtotals_subMenu": "Subtotals",
     "AccountsListHandler-subtotalsWhenCollapsed": "Show Subtotals for Collapsed Accounts",
+    "AccountsListHandler-showNetWorth": "Show Net Worth",
+    "AccountsListHandler-showNetIncome": "Show Net Income",
     "AccountsListHandler-subtotals_none": "None",
     "AccountsListHandler-subtotals_all": "All Levels",
     "AccountsListHandler-subtotals_1": "Top Level",
@@ -179,6 +183,10 @@
     "AccountsListHandler-action_collapseAccount": ["Collapse Child Accounts of ", ""],
 
     "AccountsListHandler-action_showSubtotalsWhenCollapsed": "Show Subtotals for Collapsed Accounts",
+    "AccountsListHandler-action_showNetWorth": "Show Net Worth",
+    "AccountsListHandler-action_hideNetWorth": "Hide Net Worth",
+    "AccountsListHandler-action_showNetIncome": "Show Net Income",
+    "AccountsListHandler-action_hideNetIncome": "Hide Net Income",
     "AccountsListHandler-action_showAccountValuesWhenCollapsed": "Show Account Values for Collapsed Accounts",
     "AccountsListHandler-action_subtotals_none": "No Automatic Subtotals",
     "AccountsListHandler-action_subtotals_all": "Subtotal All Levels",

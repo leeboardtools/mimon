@@ -329,6 +329,50 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onToggleShowNetWorth(tabId) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, {
+            showNetWorth: !state.showNetWorth,
+        });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = (newState.showNetWorth)
+            ? 'AccountsListHandler-action_showNetWorth'
+            : 'AccountsListHandler-action_hideNetWorth';
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(tabId, 
+            {
+                showNetWorth: newState.showNetWorth,
+            },
+            userMsg(actionNameId));
+    }
+
+
+    onToggleShowNetIncome(tabId) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, {
+            showNetIncome: !state.showNetIncome,
+        });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = (newState.showNetIncome)
+            ? 'AccountsListHandler-action_showNetIncome'
+            : 'AccountsListHandler-action_hideNetIncome';
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(tabId, 
+            {
+                showNetIncome: newState.showNetIncome,
+            },
+            userMsg(actionNameId));
+    }
+
+
     onSetSubtotalsLevel(tabId, level) {
         this.setTabIdState(tabId, {
             subtotalsLevel: level,
@@ -370,7 +414,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         const { hiddenRootAccountTypes, hiddenAccountIds, showHiddenAccounts,
             showInactiveAccounts, allColumns, sortAlphabetically,
-            subtotalsLevel, showSubtotalsWhenCollapsed }
+            subtotalsLevel, showSubtotalsWhenCollapsed,
+            showNetWorth, showNetIncome }
             = state;
 
         const showAccountLabelId = (hiddenAccountIds.indexOf(activeAccountId) >= 0)
@@ -493,6 +538,22 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                         onChooseItem: () => this.onToggleShowSubtotalsWhenCollapsed(
                             tabId),
                     },
+                    { id: 'toggleShowNetWorth',
+                        label: userMsg('AccountsListHandler-showNetWorth'),
+                        checked: showNetWorth,
+                        // TODO: disable if both root asset and root liability 
+                        // accounts are not displayed.
+                        onChooseItem: () => this.onToggleShowNetWorth(
+                            tabId),
+                    },
+                    { id: 'toggleShowNetIncome',
+                        label: userMsg('AccountsListHandler-showNetIncome'),
+                        checked: showNetIncome,
+                        // TODO: disable if both root income and root expense
+                        // accounts are not displayed.
+                        onChooseItem: () => this.onToggleShowNetIncome(
+                            tabId),
+                    },
                     {},
                     { id: 'displaySubtotalsForNone',
                         label: userMsg('AccountsListHandler-subtotals_none'),
@@ -591,6 +652,12 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             = (settings.showSubtotalsWhenCollapsed === undefined)
                 ? true
                 : settings.showSubtotalsWhenCollapsed;
+        const showNetWorth = (settings.showNetWorth === undefined)
+            ? true
+            : settings.showNetWorth;
+        const showNetIncome = (settings.showNetIncome === undefined)
+            ? true
+            : settings.showNetIncome;
         const subtotalsLevel = (settings.subtotalsLevel === undefined)
             ? 3
             : settings.subtotalsLevel;
@@ -607,6 +674,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             collapsedAccountIds: collapsedAccountIds,
             sortAlphabetically: sortAlphabetically,
             showSubtotalsWhenCollapsed: showSubtotalsWhenCollapsed,
+            showNetWorth: showNetWorth,
+            showNetIncome: showNetIncome,
             subtotalsLevel: subtotalsLevel,
             subtotalAccountIds: subtotalAccountIds,
             allColumns: allColumns,
@@ -654,6 +723,9 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 this.onUpdateCollapsedAccountIds(tabEntry.tabId, args)}
 
             showSubtotalsWhenCollapsed = {tabEntry.showSubtotalsWhenCollapsed}
+            showNetWorth = {tabEntry.showNetWorth}
+            showNetIncome = {tabEntry.showNetIncome}
+
             subtotalsLevel = {tabEntry.subtotalsLevel}
             subtotalAccountIds = {tabEntry.subtotalAccountIds}
 

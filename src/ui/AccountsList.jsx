@@ -209,6 +209,10 @@ export class AccountsList extends React.Component {
         rowsNeedUpdating
             |= (prevProps.showSubtotalsWhenCollapsed 
                 !== props.showSubtotalsWhenCollapsed);
+        rowsNeedUpdating
+            |= (prevProps.showNetWorth !== props.showNetWorth);
+        rowsNeedUpdating
+            |= (prevProps.showNetIncome !== props.showNetIncome);
         rowsNeedUpdating 
             |= (prevProps.subtotalsLevel !== props.subtotalsLevel);
 
@@ -283,9 +287,67 @@ export class AccountsList extends React.Component {
 
         let { activeRowKey } = this.state;
 
+        const { accessor, showNetWorth, showNetIncome } = this.props;
+
+        const rootAssetAccountId = accessor.getRootAssetAccountId();
+        const rootLiabilityAccountId = accessor.getRootLiabilityAccountId();
+        const rootIncomeAccountId = accessor.getRootIncomeAccountId();
+        const rootExpenseAccountId = accessor.getRootExpenseAccountId();
+
+        let rootAssetRowInfo;
+        let rootLiabilityRowInfo;
+        let rootNetWorthAfterRowInfo;
+        let rootIncomeRowInfo;
+        let rootExpenseRowInfo;
+        let rootNetIncomeAfterRowInfo;
+
         topLevelAccountIds.forEach((id) => {
-            this.addAccountIdToRowEntries(rowInfos, id, rowInfosByAccountId, 1);
+            const rowInfo = this.addAccountIdToRowEntries(rowInfos, id, 
+                rowInfosByAccountId, 1);
+            if (rowInfo && rowInfo.accountDataItem 
+             && (rowInfo.accountDataItem.id === id)) {
+                switch (id) {
+                case rootAssetAccountId :
+                    rootAssetRowInfo = rowInfo;
+                    rootNetWorthAfterRowInfo = rowInfo;
+                    break;
+
+                case rootLiabilityAccountId :
+                    rootLiabilityRowInfo = rowInfo;
+                    rootNetWorthAfterRowInfo = rowInfo;
+                    break;
+
+                case rootIncomeAccountId :
+                    rootIncomeRowInfo = rowInfo;
+                    rootNetIncomeAfterRowInfo = rowInfo;
+                    break;
+
+                case rootExpenseAccountId :
+                    rootExpenseRowInfo = rowInfo;
+                    rootNetIncomeAfterRowInfo = rowInfo;
+                    break;
+                }
+            }
         });
+
+        if (showNetWorth && rootAssetRowInfo && rootLiabilityRowInfo) {
+            this.addRootNetRowInfo({
+                rowInfos: rowInfos, 
+                insertAfterRowInfo: rootNetWorthAfterRowInfo,
+                plusRowInfo: rootAssetRowInfo, 
+                minusRowInfo: rootLiabilityRowInfo,
+                name: userMsg('AccountsList-netWorth_name'),
+            });
+        }
+        if (showNetIncome && rootIncomeRowInfo && rootExpenseRowInfo) {
+            this.addRootNetRowInfo({
+                rowInfos: rowInfos, 
+                insertAfterRowInfo: rootNetIncomeAfterRowInfo,
+                plusRowInfo: rootIncomeRowInfo, 
+                minusRowInfo: rootExpenseRowInfo,
+                name: userMsg('AccountsList-netIncome_name'),
+            });
+        }
 
         let newActiveRowKey;
         if (activeRowKey) {
@@ -350,6 +412,7 @@ export class AccountsList extends React.Component {
             }
         }
 
+        return rowInfo;
     }
 
 
@@ -366,6 +429,26 @@ export class AccountsList extends React.Component {
             key: '_EMPTY_' + subtotalAccountDataItem.id,
         };
         childRowInfos.push(emptyRowInfo);
+    }
+
+
+    addRootNetRowInfo({ rowInfos, insertAfterRowInfo, 
+        plusRowInfo, minusRowInfo, name }) {
+
+        const netRowInfo = {
+            key: '_NET_' + name,
+            plusRootRowInfo: plusRowInfo,
+            minusRootRowInfo: minusRowInfo,
+            rootAccountDataItem: plusRowInfo.accountDataItem,
+            rootNetName: name,
+        };
+
+        const emptyRowInfo = {
+            key: '_EMPTY_' + name,
+        };
+
+        const rowIndex = rowInfos.indexOf(insertAfterRowInfo) + 1;
+        rowInfos.splice(rowIndex, 0, netRowInfo, emptyRowInfo);
     }
 
 
@@ -442,17 +525,20 @@ export class AccountsList extends React.Component {
     }
 
 
-    getAccountStateForSubtotalRowInfo(rowInfo) {
+    getAccountStateForSubtotalRowInfo(rowInfo, subtotaledRowInfo) {
         const { subtotalAccountDataItem } = rowInfo;
-        if (!subtotalAccountDataItem) {
-            return;
+
+        let hasLots;
+        if (subtotalAccountDataItem) {
+            const accountType = A.getAccountType(subtotalAccountDataItem.type);
+            hasLots = accountType.hasLots;
         }
 
-        const accountType = A.getAccountType(subtotalAccountDataItem.type);
-        const accountState = AS.getFullAccountStateDataItem({}, accountType.hasLots);
+        const accountState = AS.getFullAccountStateDataItem({}, hasLots);
 
-        this.addRowInfoToAccountState(rowInfo.subtotaledRowInfo, accountState, 
-            accountType.hasLots);
+        subtotaledRowInfo = subtotaledRowInfo || rowInfo.subtotaledRowInfo;
+        this.addRowInfoToAccountState(subtotaledRowInfo, accountState, 
+            hasLots);
         return accountState;
     }
 
@@ -553,16 +639,19 @@ export class AccountsList extends React.Component {
             };
         }
         else {
-            const { subtotalAccountDataItem } = rowInfo;
-            if (subtotalAccountDataItem) {
+            const { subtotalAccountDataItem, rootNetName } = rowInfo;
+            if (subtotalAccountDataItem || rootNetName) {
                 if (subtotalAccountDataItem) {
                     value = userMsg('AccountsList-subtotalName',
                         subtotalAccountDataItem.name);
-
-                    columnInfo = Object.assign({}, columnInfo);
-                    columnInfo.inputClassExtras 
-                        += ' AccountsList-subtotal AccountsList-subtotal-name';
                 }
+                else {
+                    value = rootNetName;
+                }
+
+                columnInfo = Object.assign({}, columnInfo);
+                columnInfo.inputClassExtras 
+                    += ' AccountsList-subtotal AccountsList-subtotal-name';
             }
         }
 
@@ -578,7 +667,7 @@ export class AccountsList extends React.Component {
 
     columnInfoFromRenderArgs(renderArgs) {
         let { columnInfo, rowInfo } = renderArgs;
-        if (rowInfo.subtotalAccountDataItem) {
+        if (rowInfo.subtotalAccountDataItem || rowInfo.rootAccountDataItem) {
             columnInfo = Object.assign({}, columnInfo);
             columnInfo.inputClassExtras = 'AccountsList-subtotal '
                 + ((rowInfo.accountDataItem)
@@ -595,7 +684,8 @@ export class AccountsList extends React.Component {
 
         const { accessor } = this.props;
 
-        accountDataItem = accountDataItem || renderArgs.subtotalAccountDataItem;
+        accountDataItem = accountDataItem || renderArgs.subtotalAccountDataItem
+            || renderArgs.rowInfo.rootAccountDataItem;
         if (!accountDataItem) {
             return;
         }
@@ -964,6 +1054,24 @@ export class AccountsList extends React.Component {
                 subtotalRowInfo: rowInfo,
             };
         }
+
+        const { plusRootRowInfo, minusRootRowInfo } = rowInfo;
+        if (plusRootRowInfo && minusRootRowInfo) {
+            // 
+            const plusAccountState = this.getAccountStateForSubtotalRowInfo(rowInfo,
+                plusRootRowInfo);
+            const minusAccountState = this.getAccountStateForSubtotalRowInfo(rowInfo,
+                minusRootRowInfo);
+            if (plusAccountState && minusAccountState) {
+                // TODO: Handle differing quantity base values...
+                plusAccountState.quantityBaseValue -= minusAccountState.quantityBaseValue;
+            }
+
+            return {
+                accountState: plusAccountState,
+                subtotalRowInfo: rowInfo,
+            };
+        }
     }
 
 
@@ -1035,6 +1143,8 @@ AccountsList.propTypes = {
     onUpdateCollapsedAccountIds: PropTypes.func,
 
     showSubtotalsWhenCollapsed: PropTypes.bool,
+    showNetWorth: PropTypes.bool,
+    showNetIncome: PropTypes.bool,
     subtotalsLevel: PropTypes.number,
     subtotalAccountIds: PropTypes.arrayOf(PropTypes.number),
 

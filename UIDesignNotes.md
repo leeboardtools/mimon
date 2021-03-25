@@ -462,12 +462,17 @@ Column sorting in RowTable:
         - Filter transactions
 
     - Account List
-        - Option to subtotal collapsed accounts.
         - Subtotals need to take into account quantity definition
-        - Straighten out lot states.
-        - Enable/disable row borders
-        
-        - Tweak annualGainResultToBalanceValue() in LotCellEditors.jsx to better handle the
-        subtotal case? Maybe not, as already have cash-in values for contributions.
+            - What about currencies?
+                - Can't add different currencies.
 
-        - Move call to getAccountStateForSubtotalRowInfo() to row render level?
+        - Enable/disable row borders
+
+        - Custom Account Lists:
+            - Save Current Account List
+                - Need name
+            - Manage Custom Account Lists
+                - Rename
+                - Delete
+
+        
