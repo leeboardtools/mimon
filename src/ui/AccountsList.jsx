@@ -294,57 +294,54 @@ export class AccountsList extends React.Component {
         const rootIncomeAccountId = accessor.getRootIncomeAccountId();
         const rootExpenseAccountId = accessor.getRootExpenseAccountId();
 
-        let rootAssetRowInfo;
-        let rootLiabilityRowInfo;
         let rootNetWorthAfterRowInfo;
-        let rootIncomeRowInfo;
-        let rootExpenseRowInfo;
         let rootNetIncomeAfterRowInfo;
 
         topLevelAccountIds.forEach((id) => {
             const rowInfo = this.addAccountIdToRowEntries(rowInfos, id, 
                 rowInfosByAccountId, 1);
+
             if (rowInfo && rowInfo.accountDataItem 
              && (rowInfo.accountDataItem.id === id)) {
                 switch (id) {
                 case rootAssetAccountId :
-                    rootAssetRowInfo = rowInfo;
                     rootNetWorthAfterRowInfo = rowInfo;
                     break;
 
                 case rootLiabilityAccountId :
-                    rootLiabilityRowInfo = rowInfo;
                     rootNetWorthAfterRowInfo = rowInfo;
                     break;
 
                 case rootIncomeAccountId :
-                    rootIncomeRowInfo = rowInfo;
                     rootNetIncomeAfterRowInfo = rowInfo;
                     break;
 
                 case rootExpenseAccountId :
-                    rootExpenseRowInfo = rowInfo;
                     rootNetIncomeAfterRowInfo = rowInfo;
                     break;
                 }
             }
         });
 
-        if (showNetWorth && rootAssetRowInfo && rootLiabilityRowInfo) {
+        if (showNetWorth) {
             this.addRootNetRowInfo({
                 rowInfos: rowInfos, 
                 insertAfterRowInfo: rootNetWorthAfterRowInfo,
-                plusRowInfo: rootAssetRowInfo, 
-                minusRowInfo: rootLiabilityRowInfo,
+                plusRootAccountDataItem: accessor.getAccountDataItemWithId(
+                    rootAssetAccountId), 
+                minusRootAccountDataItem: accessor.getAccountDataItemWithId(
+                    rootLiabilityAccountId),
                 name: userMsg('AccountsList-netWorth_name'),
             });
         }
-        if (showNetIncome && rootIncomeRowInfo && rootExpenseRowInfo) {
+        if (showNetIncome) {
             this.addRootNetRowInfo({
                 rowInfos: rowInfos, 
                 insertAfterRowInfo: rootNetIncomeAfterRowInfo,
-                plusRowInfo: rootIncomeRowInfo, 
-                minusRowInfo: rootExpenseRowInfo,
+                plusRootAccountDataItem: accessor.getAccountDataItemWithId(
+                    rootIncomeAccountId), 
+                minusRootAccountDataItem: accessor.getAccountDataItemWithId(
+                    rootExpenseAccountId),
                 name: userMsg('AccountsList-netIncome_name'),
             });
         }
@@ -433,13 +430,13 @@ export class AccountsList extends React.Component {
 
 
     addRootNetRowInfo({ rowInfos, insertAfterRowInfo, 
-        plusRowInfo, minusRowInfo, name }) {
+        plusRootAccountDataItem, minusRootAccountDataItem, name }) {
 
         const netRowInfo = {
             key: '_NET_' + name,
-            plusRootRowInfo: plusRowInfo,
-            minusRootRowInfo: minusRowInfo,
-            rootAccountDataItem: plusRowInfo.accountDataItem,
+            plusRootAccountDataItem: plusRootAccountDataItem,
+            minusRootAccountDataItem: minusRootAccountDataItem,
+            rootAccountDataItem: plusRootAccountDataItem,
             rootNetName: name,
         };
 
@@ -447,14 +444,21 @@ export class AccountsList extends React.Component {
             key: '_EMPTY_' + name,
         };
 
-        const rowIndex = rowInfos.indexOf(insertAfterRowInfo) + 1;
-        rowInfos.splice(rowIndex, 0, netRowInfo, emptyRowInfo);
+        let rowIndex = rowInfos.indexOf(insertAfterRowInfo);
+        if (rowIndex < 0) {
+            rowIndex = rowInfos.length - 1;
+        }
+        rowInfos.splice(rowIndex + 1, 0, netRowInfo, emptyRowInfo);
     }
 
 
     addRowInfoToAccountState(rowInfo, accountState) {
         const { accessor } = this.props;
-        const { accountDataItem, childRowInfos } = rowInfo;
+        let { accountDataItem, childRowInfos } = rowInfo;
+        if (!accountDataItem && !childRowInfos && rowInfo.id) {
+            accountDataItem = rowInfo;
+        } 
+
         if (accountDataItem) {
             const rowAccountState = accessor.getCurrentAccountStateDataItem(
                 accountDataItem.id);
@@ -521,6 +525,15 @@ export class AccountsList extends React.Component {
             childRowInfos.forEach((rowInfo) => {
                 this.addRowInfoToAccountState(rowInfo, accountState);
             });
+        }
+        else if (rowInfo === accountDataItem) {
+            const { childAccountIds } = accountDataItem;
+            if (childAccountIds) {
+                childAccountIds.forEach((accountId) =>
+                    this.addRowInfoToAccountState(
+                        accessor.getAccountDataItemWithId(accountId),
+                        accountState));
+            }
         }
     }
 
@@ -1055,13 +1068,13 @@ export class AccountsList extends React.Component {
             };
         }
 
-        const { plusRootRowInfo, minusRootRowInfo } = rowInfo;
-        if (plusRootRowInfo && minusRootRowInfo) {
+        const { plusRootAccountDataItem, minusRootAccountDataItem } = rowInfo;
+        if (plusRootAccountDataItem && minusRootAccountDataItem) {
             // 
             const plusAccountState = this.getAccountStateForSubtotalRowInfo(rowInfo,
-                plusRootRowInfo);
+                plusRootAccountDataItem);
             const minusAccountState = this.getAccountStateForSubtotalRowInfo(rowInfo,
-                minusRootRowInfo);
+                minusRootAccountDataItem);
             if (plusAccountState && minusAccountState) {
                 // TODO: Handle differing quantity base values...
                 plusAccountState.quantityBaseValue -= minusAccountState.quantityBaseValue;
