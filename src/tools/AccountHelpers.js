@@ -66,6 +66,8 @@ export function getAccountAncestorNames(accessor, id, options) {
  * @property {string}   [separator = ':'] The string to appear between names.
  * @property {string}   [placeholder = ':[...]:']    The string to appear in place
  * of the names that were left out.
+ * @property {number}   [maxAccounts = 4] The optional maximum number of accounts before
+ * the name is shortened.
  */
 
 /**
@@ -80,17 +82,32 @@ export function getAccountAncestorNames(accessor, id, options) {
 export function getShortAccountAncestorNames(accessor, id, options) {
     options = options || {};
     const separator = options.separator || ':';
+    const maxAccounts = (options.maxAccounts > 1) ? options.maxAccounts : 4;
 
     const accountDataItems = getAncestorAccountDataItems(accessor, id);
-    if (accountDataItems.length <= 4) {
+    if (accountDataItems.length <= maxAccounts) {
         return buildAncestorNames(accountDataItems, separator);
     }
 
     const placeholder = options.placeholder || ':[...]:';
-    return accountDataItems[accountDataItems.length - 1].name 
-        + placeholder + accountDataItems[accountDataItems.length - 2].name 
-        + placeholder + accountDataItems[1].name
-        + separator + accountDataItems[0].name;
+
+    const preCount = Math.floor(maxAccounts / 2);
+    const postCount = maxAccounts - preCount;
+
+    let i = accountDataItems.length - 1;
+    let result = accountDataItems[i].name;
+    let end1 = i - preCount;
+    for (--i; i > end1; --i) {
+        result += separator + accountDataItems[i].name;
+    }
+
+    i = postCount - 1;
+    result += placeholder + accountDataItems[i].name;
+    for (--i; i >= 0; --i) {
+        result += separator + accountDataItems[i].name;
+    }
+
+    return result;
 }
 
 
