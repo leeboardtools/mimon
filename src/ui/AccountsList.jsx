@@ -7,7 +7,8 @@ import * as PI from '../engine/PricedItems';
 import deepEqual from 'deep-equal';
 import { CollapsibleRowTable, ExpandCollapseState,
     findRowInfoWithKey, updateRowInfo } from '../util-ui/CollapsibleRowTable';
-import { getDecimalDefinition, getQuantityDefinitionName } from '../util/Quantities';
+import { getDecimalDefinition, getQuantityDefinitionName,
+    addQuantityBaseValues } from '../util/Quantities';
 import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';
 import * as GH from '../tools/GainHelpers';
@@ -504,19 +505,12 @@ export class AccountsList extends React.Component {
                     accountState.quantityDefinition = accountState.quantityDefinition
                         || quantityDefinition;
 
-                    if (quantityDefinition 
-                        !== accountState.quantityDefinition) {
-                        // FIX ME!!!
-                        // Need to do conversion if quantity definition does not match...
-                        console.log({
-                            msg: 'Quantity definition mismatch',
-                            accountStateQD: accountState.quantityDefinition,
-                            rowQD: quantityDefinition,
-                            hasLotStates: rowAccountState.lotStates !== undefined,
-                        });
-                    }
-
-                    accountState.quantityBaseValue += quantityBaseValue;
+                    accountState.quantityBaseValue = addQuantityBaseValues({
+                        definitionA: accountState.quantityDefinition,
+                        quantityBaseValueA: accountState.quantityBaseValue,
+                        definitionB: quantityDefinition,
+                        quantityBaseValueB: quantityBaseValue,
+                    });
                 }
             }
         }
