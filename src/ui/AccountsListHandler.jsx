@@ -591,6 +591,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
             this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state),
             this._rowTableHandler.createResetColumnOrderMenuItem(tabId, state),
+            this._rowTableHandler.createToggleRowBordersMenuItem(tabId, state),
         ];
 
         return {
@@ -640,6 +641,9 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     createTabEntry(tabId) {
         let settings = this.getTabIdProjectSettings(tabId) || {};
         const allColumns = createDefaultColumns();
+        const showRowBorders = (settings.showRowBorders === undefined)
+            ? true
+            : settings.showRowBorders;
         const showHiddenAccounts = settings.showHiddenAccounts;
         const showInactiveAccounts = settings.showInactiveAccounts;
         const hiddenRootAccountTypes = settings.hiddenRootAccountTypes || [];
@@ -679,6 +683,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             subtotalsLevel: subtotalsLevel,
             subtotalAccountIds: subtotalAccountIds,
             allColumns: allColumns,
+            showRowBorders: showRowBorders,
         };
 
         this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);
@@ -729,6 +734,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             subtotalsLevel = {tabEntry.subtotalsLevel}
             subtotalAccountIds = {tabEntry.subtotalAccountIds}
 
+            showRowBorders = {tabEntry.showRowBorders}
             onSetColumnWidth = {(args) =>
                 this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)}
             onMoveColumn = {(args) =>

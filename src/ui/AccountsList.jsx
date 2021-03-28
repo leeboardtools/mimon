@@ -1091,6 +1091,11 @@ export class AccountsList extends React.Component {
     render() {
         const { props, state } = this;
 
+        let rowClassExtras;
+        if (!props.showRowBorders) {
+            rowClassExtras = 'No-border';
+        }
+
         return <div className="RowTableContainer AccountsList">
             <CollapsibleRowTable
                 columns = {props.columns}
@@ -1110,6 +1115,8 @@ export class AccountsList extends React.Component {
 
                 contextMenuItems = {this.props.contextMenuItems}
                 onChooseContextMenuItem = {this.props.onChooseContextMenuItem}
+
+                rowClassExtras = {rowClassExtras}
 
                 id = {this.props.id}
             />
@@ -1162,6 +1169,8 @@ AccountsList.propTypes = {
     subtotalAccountIds: PropTypes.arrayOf(PropTypes.number),
 
     sortAlphabetically: PropTypes.bool,
+    showRowBorders: PropTypes.bool,
+
     children: PropTypes.any,
     id: PropTypes.string,
 };

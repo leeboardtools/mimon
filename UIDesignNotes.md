@@ -460,13 +460,12 @@ Column sorting in RowTable:
     - Account Register Tasks
         - Auto complete
         - Filter transactions
+        - Simple Math entry
 
     - Account List
         - Subtotals need to take into account quantity definition
             - What about currencies?
                 - Can't add different currencies.
-
-        - Enable/disable row borders
 
         - Custom Account Lists:
             - Save Current Account List
@@ -475,4 +474,15 @@ Column sorting in RowTable:
                 - Rename
                 - Delete
 
-        
+            - Main Menu:
+                - Accounts Lists
+                    - Master Account List
+                    - Create Account List
+                    - ...
+                    - Custom Account Lists
+
+            - Accounts List Menu
+                - Save as New Account List
+                    - (asks for name)
+                - Rename Account List
+                - Delete Account List

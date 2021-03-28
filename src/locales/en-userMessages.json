@@ -532,6 +532,7 @@
 
     "RowTableHandler-resetColumnWidth": "Reset Column Widths",
     "RowTableHandler-resetColumnOrder": "Reset Column Ordering",
+    "RowTableHandler-toggleShowRowBorders": "Show Row Borders",
     
 
     "": ""

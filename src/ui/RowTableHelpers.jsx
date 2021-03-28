@@ -528,6 +528,44 @@ export class RowTableHandler {
             },
             actionName);
     }
+
+
+    /**
+     * Creates a menu item for toggling row borders.
+     * @param {string} stateId 
+     * @returns {MenuList~Item}
+     */
+    createToggleRowBordersMenuItem(stateId, state) {
+        return {
+            id: 'toggleShowRowBorders',
+            label: userMsg('RowTableHandler-toggleShowRowBorders'),
+            checked: state.showRowBorders,
+            onChooseItem: () => this._onToggleShowRowBorders(
+                stateId),
+        };
+    }
+
+
+    _onToggleShowRowBorders(stateId) {
+        const state = this.getState(stateId);
+
+        const newState = Object.assign({}, state, {
+            showRowBorders: !state.showRowBorders,
+        });
+        
+        const actionNameId = (newState.showRowBorders)
+            ? 'RowTableHandler-action_showRowBorders'
+            : 'RowTableHandler-action_hideRowBorders';
+
+        this.setState(stateId, newState);
+
+        const projectSettingsId = state.projectSettingsId || stateId;
+        this.setProjectSettings(projectSettingsId, 
+            {
+                showRowBorders: newState.showRowBorders,
+            },
+            userMsg(actionNameId));
+    }
 }
 
 
