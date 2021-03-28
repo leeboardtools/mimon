@@ -1028,6 +1028,12 @@ export class PricedItemsList extends React.Component {
 
     render() {
         const { props, state } = this;
+        
+        let rowClassExtras;
+        if (!props.showRowBorders) {
+            rowClassExtras = 'No-border';
+        }
+
         return <div className="RowTableContainer PricedItemsList">
             <CollapsibleRowTable
                 columns = { props.columns }
@@ -1036,20 +1042,22 @@ export class PricedItemsList extends React.Component {
 
                 onRenderCell={this.onRenderCell}
 
-                onSetColumnWidth = {this.props.onSetColumnWidth}
-                onMoveColumn = {this.props.onMoveColumn}
+                onSetColumnWidth = {props.onSetColumnWidth}
+                onMoveColumn = {props.onMoveColumn}
 
                 activeRowKey = {state.activeRowKey}
                 onActivateRow = {this.onActivateRow}
 
                 onOpenActiveRow = {this.onOpenActiveRow}
 
-                contextMenuItems={this.props.contextMenuItems}
-                onChooseContextMenuItem={this.props.onChooseContextMenuItem}
+                contextMenuItems = {props.contextMenuItems}
+                onChooseContextMenuItem = {props.onChooseContextMenuItem}
 
-                id = {this.props.id}
+                rowClassExtras = {rowClassExtras}
+
+                id = {props.id}
             />
-            {this.props.children}
+            {props.children}
         </div>;
     }
 }
@@ -1094,6 +1102,7 @@ PricedItemsList.propTypes = {
     showInactivePricedItems: PropTypes.bool,
     showPricedItemIds: PropTypes.bool,
     sortAlphabetically: PropTypes.bool,
+    showRowBorders: PropTypes.bool,
 
     showAccounts: PropTypes.bool,
     showHiddenAccounts: PropTypes.bool,

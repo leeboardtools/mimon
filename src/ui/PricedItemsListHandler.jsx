@@ -460,6 +460,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             {},
             this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state),
             this._rowTableHandler.createResetColumnOrderMenuItem(tabId, state),
+            this._rowTableHandler.createToggleRowBordersMenuItem(tabId, state),
         ];
 
         return {
@@ -522,6 +523,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const projectSettingsId = 'PricedItemsListHandler-' + pricedItemTypeName;
         let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
         const allColumns = createDefaultColumns(pricedItemTypeName);
+        const showRowBorders = (settings.showRowBorders === undefined)
+            ? true
+            : settings.showRowBorders;
         const collapsedPricedItemIds = settings.collapsedPricedItemIds || [];
         const showAccounts = (settings.showAccounts === undefined)
             ? true
@@ -548,6 +552,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             sortAlphabetically: sortAlphabetically,
             collapsedPricedItemIds: collapsedPricedItemIds,
             allColumns: allColumns,
+            showRowBorders: showRowBorders,
         };
 
         this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);
@@ -595,6 +600,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             collapsedPricedItemIds = {collapsedPricedItemIds}
             onUpdateCollapsedPricedItemIds = {(args) =>
                 this.onUpdateCollapsedPricedItemIds(tabEntry.tabId, args)}
+            
+            showRowBorders = {tabEntry.showRowBorders}
             onSetColumnWidth = {(args) =>
                 this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)}
             onMoveColumn = {(args) =>

@@ -1105,22 +1105,22 @@ export class AccountsList extends React.Component {
                 onRenderCell = {this.onRenderCell}
                 onPreRenderRow = {this.onPreRenderRow}
 
-                onSetColumnWidth = {this.props.onSetColumnWidth}
-                onMoveColumn = {this.props.onMoveColumn}
+                onSetColumnWidth = {props.onSetColumnWidth}
+                onMoveColumn = {props.onMoveColumn}
 
                 activeRowKey = {state.activeRowKey}
                 onActivateRow = {this.onActivateRow}
 
                 onOpenActiveRow = {this.onOpenActiveRow}
 
-                contextMenuItems = {this.props.contextMenuItems}
-                onChooseContextMenuItem = {this.props.onChooseContextMenuItem}
+                contextMenuItems = {props.contextMenuItems}
+                onChooseContextMenuItem = {props.onChooseContextMenuItem}
 
                 rowClassExtras = {rowClassExtras}
 
-                id = {this.props.id}
+                id = {props.id}
             />
-            {this.props.children}
+            {props.children}
         </div>;
     }
 }
