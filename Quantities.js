@@ -1078,3 +1078,48 @@ export function getQuantityDefinitionName(definition) {
         ? definition 
         : definition.getName();
 }
+
+
+
+/**
+ * @typedef {object} addQuantityBaseValuesArgs
+ * @property {string|QuantityDefinition} definitionA
+ * @property {number} quantityBaseValueA
+ * @property {string|QuantityDefinition} definitionB
+ * @property {number} quantityBaseValueB
+ */
+
+/**
+ * Adds two quantity base values, possibly with different quantity definitions, returning
+ * the sum in a particular definition.
+ * <p>
+ * If a quantity definition is not defined then the corresponding quantityBaseValue 
+ * is treated as a regular number and added.
+ * @param {addQuantityBaseValuesArgs} args
+ * @returns The sum as a quantity base value of quantity definition definitionA.
+ */
+export function addQuantityBaseValues({
+    definitionA,
+    quantityBaseValueA,
+    definitionB,
+    quantityBaseValueB,
+}) {
+    if (definitionA === definitionB) {
+        return quantityBaseValueA + quantityBaseValueB;
+    }
+
+    definitionA = getQuantityDefinition(definitionA);
+    definitionB = getQuantityDefinition(definitionB);
+
+    if (definitionA === definitionB) {
+        return quantityBaseValueA + quantityBaseValueB;
+    }
+
+    const valueB = (definitionB !== undefined)
+        ? definitionB.baseValueToNumber(quantityBaseValueB)
+        : quantityBaseValueB;
+    quantityBaseValueA += (definitionA)
+        ? definitionA.numberToBaseValue(valueB)
+        : valueB;
+    return quantityBaseValueA;
+}
