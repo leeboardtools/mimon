@@ -132,6 +132,8 @@ label {
 
 .AccountsList-subtotal-value {
     border-top: 1px solid;
+    margin-top: -5px;
+    padding-top: 5px;
     text-align: right;
 }
 

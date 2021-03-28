@@ -1330,7 +1330,7 @@ from BS col-form-label */
 }
 
 .RowTableCell {
-    padding: .3rem; /* or .75 */
+    padding: 4px;
     vertical-align: top;
 }
 
