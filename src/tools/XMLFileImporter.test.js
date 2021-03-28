@@ -198,14 +198,14 @@ test('XMLFileImporter-asyncImportXMLFile', async () => {
             { type: A.AccountType.CREDIT_CARD.name, 
             });
 
-
+        /*
         expectAccount(accessor, accessor.getRootEquityAccountId(), 
             'Retained Earnings', 
             { type: A.AccountType.EQUITY.name,
                 isHidden: true,
                 isLocked: true,
             });
-        
+        */
 
         //
         // DefaultSplitAccountIds...
