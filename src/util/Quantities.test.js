@@ -1,4 +1,5 @@
-import { getDecimalDefinition, Quantity, getQuantityDefinition } from './Quantities';
+import { getDecimalDefinition, Quantity, getQuantityDefinition,
+addQuantityBaseValues, } from './Quantities';
 
 
 function expectToValue(quantity, baseValue, number, valueText) {
@@ -265,7 +266,7 @@ test('QuantityDefinition-singletons', () => {
 });
 
 
-test('QuantityDefinition-displaText', () => {
+test('QuantityDefinition-displayText', () => {
     expect(getDecimalDefinition(1).getDisplayText()).toEqual('x.x');
 
     expect(getDecimalDefinition(2).getDisplayText()).toEqual('x.xx');
@@ -279,4 +280,35 @@ test('QuantityDefinition-displaText', () => {
         groupMark: ','
     });
     expect(defD.getDisplayText()).toEqual('x0,000');
+});
+
+
+test('QuantityDefinition-addQuantityBaseValues', () => {
+    expect(addQuantityBaseValues({
+        definitionA: 'DecimalDefinition_4',
+        quantityBaseValueA: 123456,
+        definitionB: 'DecimalDefinition_3',
+        quantityBaseValueB: 1,
+    })).toEqual(123466);
+
+    expect(addQuantityBaseValues({
+        definitionA: 'DecimalDefinition_4',
+        quantityBaseValueA: 123456,
+        definitionB: 'DecimalDefinition_4',
+        quantityBaseValueB: 1,
+    })).toEqual(123457);
+
+    expect(addQuantityBaseValues({
+        definitionA: 'DecimalDefinition_4',
+        quantityBaseValueA: 123456,
+        //definitionB: 'DecimalDefinition_3',
+        quantityBaseValueB: 1.2,
+    })).toEqual(135456);
+
+    expect(addQuantityBaseValues({
+        //definitionA: 'DecimalDefinition_4',
+        quantityBaseValueA: 1,
+        definitionB: 'DecimalDefinition_3',
+        quantityBaseValueB: 12300,
+    })).toEqual(13.3);
 });
