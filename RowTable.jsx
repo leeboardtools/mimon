@@ -1724,7 +1724,7 @@ export class RowTable extends React.Component {
         const body = this.renderBody();
         const footer = this.renderFooter();
 
-        let className = 'table RowTable';
+        let className = 'Table RowTable';
         if (classExtras) {
             className += ' ' + classExtras;
         }
