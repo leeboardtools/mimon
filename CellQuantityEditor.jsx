@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { userError } from '../util/UserMessages';
 import { getQuantityDefinition } from '../util/Quantities';
 import { CellTextEditor, CellTextDisplay } from './CellTextEditor';
+import * as math from 'mathjs-expression-parser';
 
 
 /**
@@ -66,7 +67,14 @@ export const CellQuantityEditor = React.forwardRef(
         else if (!errorMsg) {
             // Validate the value.
             try {
-                getValidQuantityBaseValue(value, quantityDefinition);
+                value = value.trim();
+                if (props.allowExpression && (typeof value === 'string')
+                  && value) {
+                    math.eval(value);
+                }
+                else {
+                    getValidQuantityBaseValue(value, quantityDefinition);
+                }
             }
             catch (e) {
                 errorMsg = e.toString();
@@ -105,7 +113,9 @@ export const CellQuantityEditor = React.forwardRef(
  * @property {function} [onBlur]    onBlur event handler
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onblur}.
  * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
- * @property {boolean} [disabled]
+ * @property {boolean} [allowEmpty]
+ * @property {boolean} [allowExpresssion] If <code>true</code> simple math expressions are
+ * allowed.
  */
 CellQuantityEditor.propTypes = {
     ariaLabel: PropTypes.string,
@@ -126,6 +136,7 @@ CellQuantityEditor.propTypes = {
     onBlur: PropTypes.func,
     disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
     allowEmpty: PropTypes.bool,
+    allowExpression: PropTypes.bool,
 };
 
 
