@@ -14,6 +14,7 @@ import * as AH from '../tools/AccountHelpers';
 import { ReconcileState, getReconcileStateName } from '../engine/Transactions';
 import { getCurrency } from '../util/Currency';
 import { Row, Col } from '../util-ui/RowCols';
+import * as math from 'mathjs-expression-parser';
 
 
 /*
@@ -1209,7 +1210,17 @@ export function resolveSplitQuantityEditValueToSplitDataItem(args) {
 
     const quantityDefinition = getQuantityDefinition(value.quantityDefinition);
     if (typeof quantityBaseValue === 'string') {
-        const result = quantityDefinition.fromValueText(quantityBaseValue);
+        let result;
+        try {
+            if (quantityBaseValue) {
+                quantityBaseValue = math.eval(quantityBaseValue).toString();
+            }
+            result = quantityDefinition.fromValueText(quantityBaseValue);
+        }
+        catch (e) {
+            //
+        }
+
         if (!result || result.remainingText) {
             throw userError('AccountingCellEditors-invalid_split_quantity', 
                 quantityBaseValue);
@@ -1280,6 +1291,7 @@ export function renderSplitQuantityEditor(args) {
         size = {inputSize}
         onChange = {(e) => onChangeSplitQuantity(e, args)}
         errorMsg = {errorMsg}
+        allowExpression = {true}
     />;
 }
 

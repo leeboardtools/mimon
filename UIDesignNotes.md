@@ -461,6 +461,7 @@ Column sorting in RowTable:
         - Auto complete
         - Filter transactions
         - Simple Math entry
+        - Market value after stock split incorrect
 
     - Account List
         - Subtotals need to take into account quantity definition

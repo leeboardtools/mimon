@@ -23,3 +23,4 @@ This project incorporates the following (I may have missed some projects, especi
 - [React Date Picker](https://github.com/Hacker0x01/react-datepicker) for picking dates.
 - [date-fns](https://date-fns.org/) for formatting dates.
 - [sax-js](https://www.npmjs.com/package/sax) for parsing XML.
+- [mathjs-expression-parser](https://github.com/josdejong/mathjs-expression-parser) for simple math expression evaluation.
