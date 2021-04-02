@@ -1050,9 +1050,7 @@ function cellBalanceValueToQuantityValue(value) {
  * @param {CellQuantityEditorArgs}  args
  */
 export function renderBalanceEditor(args) {
-    const { columnInfo, cellEditBuffer, setCellEditBuffer, errorMsg,
-        refForFocus } = args;
-    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+    let { cellEditBuffer, } = args;
     const value = cellEditBuffer.value;
     if (!value) {
         return;
@@ -1064,28 +1062,17 @@ export function renderBalanceEditor(args) {
         return renderBalanceDisplay(args);
     }
 
-    const quantitytValue = cellBalanceValueToQuantityValue(value);
-    const { quantityBaseValue, quantityDefinition } = quantitytValue;
+    cellEditBuffer = Object.assign({}, args.cellEditBuffer);
+    const cellEditBuffers = Array.from(args.cellEditBuffers);
+    cellEditBuffers[args.columnIndex] = cellEditBuffer;
+    args = Object.assign({}, args, {
+        cellEditBuffer: cellEditBuffer,
+        cellEditBuffers: cellEditBuffers,
+    });
 
-    return <CellQuantityEditor
-        ariaLabel = {ariaLabel}
-        ref = {refForFocus}
-        value = {quantityBaseValue}
-        quantityDefinition = {quantityDefinition}
-        inputClassExtras = {inputClassExtras}
-        size = {inputSize}
-        onChange = {(e) => {
-            setCellEditBuffer(
-                args.columnIndex,
-                {
-                    value: Object.assign({}, value, {
-                        quantityBaseValue: e.target.value,
-                    }),
-                    isEdited: true,
-                });
-        }}
-        errorMsg = {errorMsg}
-    />;
+    const quantityValue = cellBalanceValueToQuantityValue(value);
+    cellEditBuffer.value = Object.assign({}, cellEditBuffer.value, quantityValue);
+    return renderQuantityEditor(args);
 }
 
 

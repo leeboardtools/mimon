@@ -11,6 +11,7 @@ import * as C from '../util/Currency';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
 import * as ACE from './AccountingCellEditors';
 import { columnInfosToColumns, } from '../util-ui/ColumnInfo';
+import { evalExpression } from '../tools/EngineAccess';
 
 
 const EditableCollapsibleRowTable = collapsibleRowTable(EditableRowTable);
@@ -88,6 +89,7 @@ function getOpeningBalanceCellValue(args) {
         let value = accountDataItem.openingBalance;
         if (typeof value !== 'object') {
             return {
+                accessor: rowEntry.accessor,
                 quantityBaseValue: (value === undefined) ? 0 : value,
                 currency: rowEntry.baseCurrency,
             };
@@ -154,6 +156,11 @@ export class NewFileAccountsEditor extends React.Component {
             getSaveBuffer: this.getSaveBuffer,
             asyncSaveBuffer: this.asyncSaveBuffer,
         });
+
+
+        this.accessor = {
+            evalExpression: evalExpression,
+        };
 
 
         this._tableRef = React.createRef();
@@ -264,6 +271,7 @@ export class NewFileAccountsEditor extends React.Component {
                 : ExpandCollapseState.NO_EXPAND_COLLAPSE,
             accountDataItem: accountDataItem,
             baseCurrency: this.props.baseCurrency,
+            accessor: this.accessor,
         };
         rowInfos.push(rowInfo);
 
