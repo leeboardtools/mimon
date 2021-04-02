@@ -1955,3 +1955,15 @@ export class EngineAccessor extends EventEmitter {
  * @returns {number}
  * @throws Error
  */
+
+
+/**
+ * Static general expression evaluator, evaluating a string into a number.
+ * Throws an exception if the string was not successfully evaluated.
+ * @memberof EngineAccessor
+ * @function evalExpression
+ * @param {string} expression
+ * @returns {number}
+ * @throws Error
+ */
+export const evalExpression = math.eval;
