@@ -4,16 +4,29 @@ import { userError } from '../util/UserMessages';
 import { getQuantityDefinition } from '../util/Quantities';
 import { TextField } from './TextField';
 
+/**
+ * General expression evaluation callback. If 'expression' does not evaluate
+ * to a number, this should throw an exception.
+ * @callback EvalExpressionCallback
+ * @param {string} expression
+ * @returns {number}
+ * @throws Error
+ */
+
 
 /**
  * Retrieves the quantity base value of a value from a quantity cell editor.
  * @param {number|string|undefined} value 
  * @param {QuantityDefinition} quantityDefinition 
+ * @param {EvalExpressionCallback} [evalExpression] If specified the value is
+ * passed to this if it is a string.
  * @returns {number|undefined}  <code>undefined</code> is returned if value is the
  * empty string (after any trimming)
  * @throws {Error}
  */
-export function getValidQuantityBaseValue(value, quantityDefinition) {
+export function getValidQuantityBaseValue(value, quantityDefinition,
+    evalExpression) {
+
     switch (typeof value) {
     case 'number' :
         return quantityDefinition.numberToBaseValue(value);
@@ -21,7 +34,17 @@ export function getValidQuantityBaseValue(value, quantityDefinition) {
     case 'string' :
         value = value.trim();
         if (value !== '') {
-            const result = quantityDefinition.fromValueText(value);
+            let result;
+            try {
+                if (evalExpression) {
+                    value = evalExpression(value).toString();
+                }
+                result = quantityDefinition.fromValueText(value);
+            }
+            catch (e) {
+                //
+            }
+            
             if ((result !== undefined) && !result.remainingText) {
                 return result.quantity.getBaseValue();
             }

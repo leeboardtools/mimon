@@ -1,51 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { userError } from '../util/UserMessages';
 import { getQuantityDefinition } from '../util/Quantities';
 import { CellTextEditor, CellTextDisplay } from './CellTextEditor';
-import * as math from 'mathjs-expression-parser';
+import { getValidQuantityBaseValue } from './QuantityField';
 
-
-/**
- * Retrieves the quantity base value of a value from a quantity cell editor.
- * @param {number|string|undefined} value 
- * @param {QuantityDefinition} quantityDefinition 
- * @returns {number|undefined}  <code>undefined</code> is returned if value is the
- * empty string (after any trimming)
- * @throws {Error}
- */
-export function getValidQuantityBaseValue(value, quantityDefinition, math) {
-    switch (typeof value) {
-    case 'number' :
-        return quantityDefinition.numberToBaseValue(value);
-
-    case 'string' :
-        value = value.trim();
-        if (value !== '') {
-            let result;
-            try {
-                if (math) {
-                    value = math.eval(value).toString();
-                }
-                result = quantityDefinition.fromValueText(value);
-            }
-            catch (e) {
-                //
-            }
-            
-            if ((result !== undefined) && !result.remainingText) {
-                return result.quantity.getBaseValue();
-            }
-        }
-        else {
-            return;
-        }
-        break;
-    }
-
-    throw userError('CellQuantityEditor-invalid_value', 
-        quantityDefinition.getDisplayText());
-}
 
 /**
  * React component for editing a quantity in a table cell.
@@ -78,9 +36,9 @@ export const CellQuantityEditor = React.forwardRef(
             // Validate the value.
             try {
                 value = value.trim();
-                if (props.allowExpression && (typeof value === 'string')
+                if (props.evalExpression && (typeof value === 'string')
                   && value) {
-                    math.eval(value);
+                    props.evalExpression(value);
                 }
                 else {
                     getValidQuantityBaseValue(value, quantityDefinition);
@@ -146,7 +104,7 @@ CellQuantityEditor.propTypes = {
     onBlur: PropTypes.func,
     disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
     allowEmpty: PropTypes.bool,
-    allowExpression: PropTypes.bool,
+    evalExpression: PropTypes.func,
 };
 
 
