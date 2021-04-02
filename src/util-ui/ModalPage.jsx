@@ -18,13 +18,18 @@ export function ModalPage(props) {
     </div>;
 
     const { title, onCancel, cancelDisabled, onDone, doneDisabled,
-        actionButtons, classExtras } = props;
+        actionButtons, classExtras, onButtonFocus } = props;
 
     let cancelBtn;
     if (onCancel) {
         const cancelLabel = props.cancelLabel || userMsg('cancel');
+        let onFocus;
+        if (onButtonFocus) {
+            onFocus = (e) => onButtonFocus(e, 'cancel');
+        }
         cancelBtn = <button className = "Btn Btn-secondary M-2 Mr-4"
             onClick = {onCancel}
+            onFocus = {onFocus}
             disabled = {cancelDisabled}
         >
             {cancelLabel}
@@ -58,10 +63,15 @@ export function ModalPage(props) {
         buttons = [];
         for (let i = 0; i < actionButtons.length; ++i) {
             const actionButton = actionButtons[i];
+            let onFocus;
+            if (onButtonFocus) {
+                onFocus = (e) => onButtonFocus(e, actionButton.id);
+            }
             buttons.push(<button 
                 className = {btnClassName + ' ' + actionButton.classExtras}
                 key = {i}
                 onClick = {actionButton.onClick}
+                onFocus = {onFocus}
                 disabled = {actionButton.disabled}
             >
                 {actionButton.label}
@@ -71,10 +81,15 @@ export function ModalPage(props) {
 
     if (onDone) {
         const doneLabel = props.doneLabel || userMsg('done');
+        let onFocus;
+        if (onButtonFocus) {
+            onFocus = (e) => onButtonFocus(e, 'done');
+        }
         buttons.push(<button
             className = {btnClassName}
             key = {-1}
             onClick = {onDone}
+            onFocus = {onFocus}
             disabled = {doneDisabled}
         >
             {doneLabel}
@@ -116,11 +131,20 @@ export function ModalPage(props) {
  */
 
 /**
+ * @callback ModalPage~onButtonFocus
+ * @param {Event} event
+ * @param {*} id The id, for the cancel button this is 'cancel', for the
+ * done button this is 'done', for the action buttons it is the id property
+ * of the {@link ModelPage~ButtonInfo}
+ */
+
+/**
  * @typedef {object}    ModelPage~ButtonInfo
  * @property {string}   label   The button's label.
  * @property {ModalPage~onDone} onClick Callback for when the button is chosen.
  * @property {string}   [classExtras]
  * @property {boolean}  [disabled]
+ * @property {*} [id] Optional id passed to onButtonFocus if given.
  */
 
 /**
@@ -137,6 +161,7 @@ export function ModalPage(props) {
  * @property {string}   [cancelLabel]
  * @property {boolean}  [cancelDisabled]
  * @property {string}   [title] Optional title.
+ * @property {ModalPage~onButtonFocus} [onButtonFocus]
  * @property {*}    [children]  The form's components
  */
 ModalPage.propTypes = {
@@ -149,5 +174,6 @@ ModalPage.propTypes = {
     cancelDisabled: PropTypes.bool,
     title: PropTypes.string,
     classExtras: PropTypes.string,
+    onButtonFocus: PropTypes.func,
     children: PropTypes.any,
 };
