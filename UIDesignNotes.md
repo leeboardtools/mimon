@@ -514,9 +514,5 @@ Column sorting in RowTable:
 
         - renderSplitQuantityEditor: OK
 
-        - renderBalanceEditor - ReconcilerWindow.jsx - 
+        - renderBalanceEditor - ReconcilerWindow.jsx - OK
 
-    - Add support to EditableRowTable for monitoring which cell has focus, and triggering an
-    optional onBlur function in the column when the currently focused cell loses focus to another
-    cell, but only to another cell.
-    

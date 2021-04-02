@@ -638,6 +638,25 @@ export class ReconcilerSetupWindow extends React.Component {
     }
 
 
+    onFocus(who) {
+        const { activeFocus } = this.state;
+        if (who === activeFocus) {
+            return;
+        }
+
+        switch (activeFocus) {
+        case 'lastClosingInfo' :
+        case 'closingInfo' :
+            this.exitBalanceEditorEdit(activeFocus);
+            break;
+        }
+
+        this.setState({
+            activeFocus: who,
+        });
+    }
+
+
     onClosingDateChange(ymdDate) {
         this.setState((state) => {
             const closingInfo = Object.assign({}, state.closingInfo, {
@@ -674,12 +693,49 @@ export class ReconcilerSetupWindow extends React.Component {
             value = {getYMDDateString(closingYMDDate || new YMDDate())}
             inputClassExtras = {className}
             onChange = {(e) => this.onClosingDateChange(e)}
+            onFocus = {(e) => this.onFocus('closingDate')}
             dateFormat = {accessor.getDateFormat()}
             tabIndex = {0}
         />;
     }
 
 
+    exitBalanceEditorEdit(closingInfoName) {
+        let closingInfo = this.state[closingInfoName];
+        let { isEdited, enteredText, closingBalanceBaseValue } = closingInfo;
+        if (!isEdited || !enteredText) {
+            return;
+        }
+
+        try {
+            const { accessor, reconciler } = this.props;
+            const quantityDefinition = getQuantityDefinitionForAccountId(
+                accessor,
+                reconciler.getAccountId());
+            if (getValidQuantityBaseValue(enteredText, quantityDefinition, 
+                accessor.evalExpression)
+             !== closingBalanceBaseValue) {
+                return;
+            }
+            enteredText = quantityDefinition.baseValueToValueText(
+                closingBalanceBaseValue);
+            if (enteredText !== closingInfo.enteredText) {
+                this.setState((state) => {
+                    const closingInfo = Object.assign({},
+                        state[closingInfoName],
+                        {
+                            enteredText: enteredText,
+                        });
+                    const changes = {};
+                    changes[closingInfoName] = closingInfo;
+                    return changes;
+                });
+            }
+        }
+        catch (e) {
+            // Do nothing...
+        }
+    }
 
     onBalanceEditorChange(e, closingInfoName) {
         const { accessor, reconciler } = this.props;
@@ -687,13 +743,15 @@ export class ReconcilerSetupWindow extends React.Component {
             accessor,
             reconciler.getAccountId());
 
-        let quantityBaseValue = e.target.value.trim();
+        const enteredText = e.target.value.trim();
+        let quantityBaseValue = enteredText;
         let errorMsg = undefined;
         let { isEdited } = this.state[closingInfoName];
         try {
             quantityBaseValue = getValidQuantityBaseValue(
                 quantityBaseValue,
-                quantityDefinition
+                quantityDefinition,
+                accessor.evalExpression,
             );
             isEdited = true;
         }
@@ -706,6 +764,7 @@ export class ReconcilerSetupWindow extends React.Component {
                 state[closingInfoName],
                 {
                     closingBalanceBaseValue: quantityBaseValue,
+                    enteredText: enteredText,
                     isEdited: isEdited,
                     errorMsg: errorMsg,
                 });
@@ -723,13 +782,29 @@ export class ReconcilerSetupWindow extends React.Component {
             accessor,
             reconciler.getAccountId());
 
+        let { enteredText, closingBalanceBaseValue } = closingInfo;
+        if (enteredText && (enteredText !== closingBalanceBaseValue)) {
+            try {
+                if (getValidQuantityBaseValue(enteredText, quantityDefinition,
+                    accessor.evalExpression)
+                 === closingBalanceBaseValue) {
+                    closingBalanceBaseValue = enteredText;
+                }
+            }
+            catch (e) {
+                //
+            }
+        }
+
         return <CellQuantityEditor
             ariaLabel = {ariaLabel}
-            value = {closingInfo.closingBalanceBaseValue}
+            value = {closingBalanceBaseValue}
             quantityDefinition = {quantityDefinition}
             inputClassExtras = {className}
             onChange = {(e) => this.onBalanceEditorChange(e, closingInfoName)}
+            onFocus = {() => this.onFocus(closingInfoName)}
             errorMsg = {closingInfo.errorMsg}
+            evalExpression = {accessor.evalExpression}
         />;
     }
 
@@ -802,6 +877,7 @@ export class ReconcilerSetupWindow extends React.Component {
             onDone = {this.onDone}
             doneLabel = {userMsg('continue')}
             onCancel = {onCancel}
+            onButtonFocus = {(e) => this.onFocus('button')}
             title = {title}
             classExtras = {className}
         >
