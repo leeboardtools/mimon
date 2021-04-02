@@ -31,6 +31,8 @@ export class CellEditorsManager {
         this.onStartRowEdit = this.onStartRowEdit.bind(this);
         this.asyncOnSaveRowEdit = this.asyncOnSaveRowEdit.bind(this);
         this.onCancelRowEdit = this.onCancelRowEdit.bind(this);
+        this.onEnterCellEdit = this.onEnterCellEdit.bind(this);
+        this.onExitCellEdit = this.onExitCellEdit.bind(this);
 
         this.onRenderDisplayCell = this.onRenderDisplayCell.bind(this);
         this.onRenderEditCell = this.onRenderEditCell.bind(this);
@@ -98,17 +100,10 @@ export class CellEditorsManager {
             return;
         }
 
-        const { cellEditBuffers,
-            setRowEditBuffer, } = args;
-
-        return {
-            rowIndex: args.rowIndex,
+        return Object.assign({}, args, {
             rowEntry: rowEntry,
-            cellEditBuffers: cellEditBuffers,
-            rowEditBuffer: args.rowEditBuffer,
-            setRowEditBuffer: setRowEditBuffer,
             isEdit: true,
-        };
+        });
     }
 
 
@@ -131,10 +126,11 @@ export class CellEditorsManager {
                     if (!deepEqual(newValue, cellEditBuffers[i].value)) {
                         // Need to specify the index because setCellEditBuffer
                         // was set up to use the column index in the original args.
-                        setCellEditBuffer({
-                            value: newValue,
-                        },
-                        i);
+                        setCellEditBuffer(
+                            i,
+                            {
+                                value: newValue,
+                            });
                     }
                 }
             }
@@ -295,6 +291,33 @@ export class CellEditorsManager {
     }
 
 
+    _handleEnterExitCellEdit(args, callbackName) {
+        const { columnIndex } = args;
+        const columnInfo = this.props.getColumnInfo(columnIndex);
+        const callback = columnInfo[callbackName];
+        if (callback) {
+            const cellBufferArgs = this._makeCellBufferArgs(args);
+            if (!cellBufferArgs) {
+                return;
+            }
+
+            cellBufferArgs.columnIndex = columnIndex;
+            cellBufferArgs.columnInfo = columnInfo;
+            cellBufferArgs.cellEditBuffer = args.cellEditBuffers[columnIndex];
+            callback(cellBufferArgs);
+        }
+    }
+
+
+    onEnterCellEdit(args) {
+        return this._handleEnterExitCellEdit(args, 'enterCellEdit');
+    }
+
+    onExitCellEdit(args) {
+        return this._handleEnterExitCellEdit(args, 'exitCellEdit');
+    }
+
+
     setErrorMsg(key, msg) {
         this._setManagerState({
             errorMsgs: {
@@ -336,10 +359,11 @@ export class CellEditorsManager {
                 rowEntry: rowEntry,
                 setRowEditBuffer: (state.editInfo)
                     ? state.editInfo.setRowEditBuffer : undefined,
-                setCellEditBuffer: (value, index) => {
+                setCellEditBuffer: (index, value) => {
                     if (state.editInfo && state.editInfo.setCellEditBuffer) {
                         state.editInfo.setCellEditBuffer(
-                            (index === undefined) ? columnIndex : index, value);
+                            (index === undefined) ? columnIndex : index, 
+                            value);
                     }
                 },
                 errorMsg: state.errorMsgs[columnInfo.key],
