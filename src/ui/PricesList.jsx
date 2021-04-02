@@ -189,6 +189,7 @@ function getPriceValueCellValue(args, priceName, multiplierName) {
                         .numberToBaseValue(value);
                 }
                 return {
+                    accessor: caller.props.accessor,
                     quantityBaseValue: quantityBaseValue,
                     quantityDefinition: priceQuantityDefinition,
                 };
@@ -204,6 +205,7 @@ function getPriceValueCellValue(args, priceName, multiplierName) {
                         .numberToBaseValue(value);
                 }
                 return {
+                    accessor: caller.props.accessor,
                     quantityBaseValue: quantityBaseValue,
                     quantityDefinition: countQuantityDefinition,
                 };
@@ -291,6 +293,7 @@ function getPriceValueColumnInfo(name, multiplierName, countSuffix) {
             renderPriceValueCellDisplay(args, name, multiplierName, countSuffix),
         renderEditCell: (args) =>
             renderPriceValueCellEditor(args, name, multiplierName, countSuffix),
+        exitCellEdit: ACE.exitQuantityEditorCellEdit,
     };
 }
 

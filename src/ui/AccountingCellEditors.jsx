@@ -1368,6 +1368,9 @@ export function renderSplitQuantityEditor(args) {
         quantityBaseValue = '';
     }
 
+    const evalExpression = (value.accessor) 
+        ? value.accessor.evalExpression : undefined;
+
     return <CellQuantityEditor
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
@@ -1377,7 +1380,7 @@ export function renderSplitQuantityEditor(args) {
         size = {inputSize}
         onChange = {(e) => onChangeSplitQuantity(e, args)}
         errorMsg = {errorMsg}
-        evalExpression = {value.accessor.evalExpression}
+        evalExpression = {evalExpression}
     />;
 }
 

@@ -498,11 +498,11 @@ Column sorting in RowTable:
                 - getSharesColumnInfo() - OK
                     - Overloads getQuantityEditorColumnInfo()
 
-            - LotSelectionEditor.jsx
+            - LotSelectionEditor.jsx - OK
                 - selectedShares column
                     - Uses saveSelectedSharesCellValue()
             
-            - PricesList.jsx
+            - PricesList.jsx - OK
                 - getPriceValueColumnInfo()
                     - Uses savePriceValueCellValue()
 

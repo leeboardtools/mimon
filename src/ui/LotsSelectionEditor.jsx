@@ -162,6 +162,7 @@ function getCellValue(args, name) {
 function getSharesCellValue(args, name) {
     const { rowEntry } = args;
     return {
+        accessor: rowEntry.accessor,
         quantityBaseValue: getCellValue(args, name),
         quantityDefinition: rowEntry.sharesQuantityDefinition,
     };
@@ -193,6 +194,7 @@ function renderButton(args, title, onClick) {
         classExtras = {inputClassExtras}
         size = {inputSize}
         onClick = {(e) => onClick(e, args)}
+        ref = {args.refForFocus}
     />;
 }
 
@@ -516,6 +518,8 @@ export class LotsSelectionEditor extends React.Component {
                     });
                 });
             }
+
+            newRowEntries.forEach((rowEntry) => rowEntry.accessor = accessor);
 
             const newState = Object.assign({
                 activeRowIndex: activeRowIndex,
