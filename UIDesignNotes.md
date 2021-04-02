@@ -460,11 +460,10 @@ Column sorting in RowTable:
     - Account Register Tasks
         - Auto complete
         - Filter transactions
-        - Simple Math entry
         - Market value after stock split incorrect
 
     - Account List
-        - Subtotals need to take into account quantity definition
+        - Subtotals:
             - What about currencies?
                 - Can't add different currencies.
 
@@ -487,3 +486,41 @@ Column sorting in RowTable:
                     - (asks for name)
                 - Rename Account List
                 - Delete Account List
+    
+    - Simple Math Entry
+        - Add to shares editor, what else?
+    
+
+        - renderQuantityEditor:
+            - LotCellEditors.jsx:
+                - getQuantityEditorColumnInfo()
+                    - Uses saveQuantityEditorCellValue() - Does nothing.
+                    - renderQuantityEditor()/ACE.renderQuantityEditor() - Need to resolve value on Enter key
+
+                - getSharesColumnInfo()
+                    - renderSharesEditor()
+                        - renderQuantityEditor()/ACE.renderQuantityEditor() - Need to resolve value on Enter key
+                    - Uses saveQuantityEditorCellValue() - Does nothing.
+
+            - LotSelectionEditor.jsx
+                - selectedShares column
+                    - Uses saveSelectedSharesCellValue()
+            
+            - PricesList.jsx
+                - getPriceValueColumnInfo()
+                    - Uses savePriceValueCellValue()
+
+        - renderBalanceEditor:
+            - getBalanceColumnInfo()
+            - NewFileAccountsEditor.jsx:
+                - Uses saveOpeningBalanceCellValue()
+
+
+        - renderSplitQuantityEditor: OK
+
+        - renderBalanceEditor - ReconcilerWindow.jsx
+
+    - Add support to EditableRowTable for monitoring which cell has focus, and triggering an
+    optional onBlur function in the column when the currently focused cell loses focus to another
+    cell, but only to another cell.
+    

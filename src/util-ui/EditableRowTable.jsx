@@ -3,10 +3,16 @@ import PropTypes from 'prop-types';
 import { RowTable } from './RowTable';
 import { setFocus } from '../util/ElementUtils';
 
+let id = 1;
+
 export function editableRowTable(WrappedTable) {
     class _EditableRowTable extends React.Component {
         constructor(props) {
             super(props);
+
+            this.id = id++;
+
+            this.monitorActiveColumn = this.monitorActiveColumn.bind(this);
 
             this.asyncEndRowEdit = this.asyncEndRowEdit.bind(this);
             this.cancelRowEdit = this.cancelRowEdit.bind(this);
@@ -23,6 +29,90 @@ export function editableRowTable(WrappedTable) {
             this.state = {
                 activeRowIndex: this.props.requestedActiveRowIndex || 0,
             };
+        }
+
+
+        componentWillUnmount() {
+            this._isUnmounting = true;
+        }
+
+
+        monitorActiveColumn() {
+            if (this._isUnmounting) {
+                return;
+            }
+        
+            const { activeEditInfo } = this.state;
+            if (!activeEditInfo) {
+                return;
+            }
+
+            let { activeColumnIndex, refsForFocus } = activeEditInfo;
+            if (!refsForFocus) {
+                return;
+            }
+
+            let activeColumnElement;
+            if (activeColumnIndex >= 0) {
+                activeColumnElement = refsForFocus[activeColumnIndex].current;
+            }
+
+            const { activeElement } = document;
+
+            // We only care if the active column changes to another column.
+            if (activeElement) {
+                if (!activeColumnElement 
+                 || !activeColumnElement.contains(activeElement)) {
+                    // Look for the new active element, if any.
+                    let newActiveColumnIndex = activeColumnIndex;
+                    for (let i = 0; i < refsForFocus.length; ++i) {
+                        const ref = refsForFocus[i];
+                        if (!ref) {
+                            continue;
+                        }
+
+                        const { current } = ref;
+                        if (!current || (typeof current.contains !== 'function')) {
+                            continue;
+                        }
+
+                        if (current.contains(activeElement)) {
+                            newActiveColumnIndex = i;
+                            break;
+                        }
+                    }
+
+                    if ((newActiveColumnIndex !== activeColumnIndex)
+                     && (newActiveColumnIndex >= 0)) {
+                        const args = {
+                            rowIndex: activeEditInfo.rowIndex,
+                            columnIndex: activeColumnIndex,
+                            rowEditBuffer: activeEditInfo.rowEditBuffer,
+                            cellEditBuffers: activeEditInfo.cellEditBuffers,
+                            asyncEndRowEdit: this.asyncEndRowEdit,
+                            cancelRowEdit: this.cancelRowEdit,
+                            setRowEditBuffer: this.setRowEditBuffer,
+                            setCellEditBuffer: this.setCellEditBuffer,
+                        };
+                        const { onEnterCellEdit, onExitCellEdit } = this.props;
+                        if (onExitCellEdit && (activeColumnIndex >= 0)) {
+                            onExitCellEdit(args);
+                        }
+
+
+                        if (onEnterCellEdit) {
+                            args.columnIndex = newActiveColumnIndex;
+                            onEnterCellEdit(args);
+                        }
+
+                        this.setActiveEditInfo({
+                            activeColumnIndex: newActiveColumnIndex,
+                        });
+                    }
+                }
+            }
+
+            window.requestAnimationFrame(this.monitorActiveColumn);
         }
 
 
@@ -162,6 +252,11 @@ export function editableRowTable(WrappedTable) {
                 }
                 
                 this.focusToRef(refForFocus);
+
+                if (this.props.onEnterCellEdit
+                 || this.props.onExitCellEdit) {
+                    window.requestAnimationFrame(this.monitorActiveColumn);
+                }
             }
         }
 
@@ -192,6 +287,7 @@ export function editableRowTable(WrappedTable) {
                         rowEditBuffer: newRowEditBuffer,
                         cellEditBuffers:    newCellEditBuffers,
                         refsForFocus: columns.map(() => React.createRef()),
+                        activeColumnIndex: -1,
                     });
 
                     process.nextTick(() => this.updateForNewEdit());
@@ -666,6 +762,22 @@ export function editableRowTable(WrappedTable) {
      * @param {EditableRowTable~onCancelRowEditArgs}    args
      */
 
+    /**
+     * @typedef {object}    EditableRowTable~onEnterExitCellEditArgs
+     * The same as {@link EditableRowTable~onStartRowEditArgs}, with columnIndex
+     * appropriately set.
+     */
+
+    /**
+     * @callback EditableRowTable~onEnterCellEdit
+     * @param {EditableRowTable~onEnterExitCellEditArgs}    args
+     */
+
+    /**
+     * @callback EditableRowTable~onExitCellEdit
+     * @param {EditableRowTable~onEnterExitCellEditArgs}    args
+     */
+
 
     /**
      * @typedef {object}    EditableRowTable~propTypes
@@ -685,6 +797,11 @@ export function editableRowTable(WrappedTable) {
      * for when editing of a row should be completed, saving the contents.
      * @property {EditableRowTable~onCancelRowEdit} onCancelRowEdit Callback
      * for when editing of a row should be canceled and no changes made.
+     * @property {EditableRowTable~onEnterCellEdit} [onEnterCellEdit] Optional callback
+     * when a cell receives focus. This is not guaranteed to be called.
+     * @property {EditableRowTable~onEnterCellEdit} [onExitCellEdit] Optional callback
+     * when a cell that had focus gives up focus to another cell. This is not guaranteed
+     * to be called.
      * @property {EditableRowTable~onOuterRenderCell}    [onOuterRenderCell] Optional
      * special callback used to encapsulate the editable row table's onRenderCell.
      */
@@ -703,6 +820,9 @@ export function editableRowTable(WrappedTable) {
         onStartRowEdit: PropTypes.func,
         asyncOnSaveRowEdit: PropTypes.func,
         onCancelRowEdit: PropTypes.func,
+
+        onEnterCellEdit: PropTypes.func,
+        onExitCellEdit: PropTypes.func,
 
         onOuterRenderCell: PropTypes.func,
     };

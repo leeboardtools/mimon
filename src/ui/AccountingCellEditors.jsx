@@ -1,5 +1,5 @@
 import React from 'react';
-import { userMsg, userError } from '../util/UserMessages';
+import { userMsg } from '../util/UserMessages';
 import { CellTextDisplay, CellTextEditor } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay, CellSelectEditor,
     CellToggleSelectDisplay, CellToggleSelectEditor, } from '../util-ui/CellSelectEditor';
@@ -90,10 +90,12 @@ export function renderTextEditor(args) {
         inputClassExtras = {inputClassExtras}
         size = {inputSize}
         onChange = {(e) => {
-            setCellEditBuffer({
-                value: e.target.value,
-                isEdited: true,
-            });
+            setCellEditBuffer(
+                args.columnIndex, 
+                {
+                    value: e.target.value,
+                    isEdited: true,
+                });
         }}
         errorMsg = {errorMsg}
     />;
@@ -126,17 +128,21 @@ function renderTextEditorWithTooltips(args, valueProperty) {
             if (typeof originalValue === 'object') {
                 const newValue = Object.assign({}, originalValue);
                 newValue[valueProperty] = e.target.value;
-                setCellEditBuffer({
-                    value: newValue,
-                    isEdited: true,
-                });
+                setCellEditBuffer(
+                    args.columnIndex,
+                    {
+                        value: newValue,
+                        isEdited: true,
+                    });
 
             }
             else {
-                setCellEditBuffer({
-                    value: e.target.value,
-                    isEdited: true,
-                });
+                setCellEditBuffer(
+                    args.columnIndex,
+                    {
+                        value: e.target.value,
+                        isEdited: true,
+                    });
             }
         }}
         errorMsg = {errorMsg}
@@ -396,12 +402,14 @@ export function renderDateEditor(args) {
         value = {value.ymdDate}
         inputClassExtras = {inputClassExtras}
         onChange = {(ymdDate) => {
-            setCellEditBuffer({
-                value: Object.assign({}, cellEditBuffer.value, {
-                    ymdDate: ymdDate,
-                }),
-                isEdited: true,
-            });
+            setCellEditBuffer(
+                args.columnIndex,
+                {
+                    value: Object.assign({}, cellEditBuffer.value, {
+                        ymdDate: ymdDate,
+                    }),
+                    isEdited: true,
+                });
         }}
         ref = {refForFocus}
         tabIndex = {0}
@@ -524,12 +532,14 @@ export function renderAccountTypeEditor(args) {
         classExtras = {inputClassExtras}
         size = {inputSize}
         onChange = {(e) => {
-            setCellEditBuffer({
-                value: Object.assign({}, value, {
-                    accountType: e.target.value,
-                }),
-                isEdited: true,
-            });
+            setCellEditBuffer(
+                args.columnIndex,
+                {
+                    value: Object.assign({}, value, {
+                        accountType: e.target.value,
+                    }),
+                    isEdited: true,
+                });
         }}
         errorMsg = {errorMsg}
     />;
@@ -622,12 +632,14 @@ function addAccountIdsToItems(accessor, items, accountId, filter) {
 function onAccountIdChange(e, args) {
     const value = parseInt(e.target.value);
     const { cellEditBuffer, setCellEditBuffer, } = args;
-    setCellEditBuffer({
-        value: Object.assign({}, cellEditBuffer.value, {
-            accountId: value,
-        }),
-        isEdited: true,
-    });
+    setCellEditBuffer(
+        args.columnIndex,
+        {
+            value: Object.assign({}, cellEditBuffer.value, {
+                accountId: value,
+            }),
+            isEdited: true,
+        });
 }
 
 /**
@@ -769,12 +781,14 @@ export function renderReconcileStateEditor(args) {
         classExtras = {inputClassExtras}
         size = {inputSize}
         onChange = {(e) => {
-            setCellEditBuffer({
-                value: Object.assign({}, value, {
-                    reconcileState: e.target.value,
-                }),
-                isEdited: true,
-            });
+            setCellEditBuffer(
+                args.columnIndex,
+                {
+                    value: Object.assign({}, value, {
+                        reconcileState: e.target.value,
+                    }),
+                    isEdited: true,
+                });
         }}
         errorMsg = {errorMsg}
     />;
@@ -854,7 +868,7 @@ export function getReconcileStateColumnInfo(args) {
  * @param {CellQuantityEditorArgs} args 
  */
 export function renderQuantityEditor(args) {
-    const { columnInfo, cellEditBuffer, setCellEditBuffer,
+    const { columnInfo, cellEditBuffer, 
         refForFocus } = args;
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
     const value = cellEditBuffer.value;
@@ -877,7 +891,7 @@ export function renderQuantityEditor(args) {
         try {
             // Use the text that was entered if it represents the
             // quantity base value.
-            if (getValidQuantityBaseValue(enteredText, quantityDefinition)
+            if (getValidQuantityBaseValue(enteredText, quantityDefinition, math)
              === quantityBaseValue) {
                 quantityBaseValue = enteredText;
             }
@@ -894,31 +908,78 @@ export function renderQuantityEditor(args) {
         quantityDefinition = {quantityDefinition}
         inputClassExtras = {inputClassExtras}
         size = {inputSize}
-        onChange = {(e) => {
-            let quantityBaseValue = e.target.value.trim();
-            let errorMsg = args.errorMsg;
-            try {
-                quantityBaseValue = getValidQuantityBaseValue(
-                    quantityBaseValue,
-                    quantityDefinition
-                );
-            }
-            catch (e) {
-                errorMsg = e.toString();
-            }
-            setCellEditBuffer({
-                value: Object.assign({}, value, {
-                    quantityBaseValue: quantityBaseValue,
-                    quantityDefinition: quantityDefinition,
-                    enteredText: e.target.value.trim(),
-                }),
-                errorMsg: errorMsg,
-                isEdited: true,
-            });
-        }}
+        onChange = {(e) => quantityEditorOnChange(e, args)}
         errorMsg = {errorMsg}
+        allowExpression
     />;
 }
+
+
+function quantityEditorOnChange(e, args) {
+    let quantityBaseValue = e.target.value.trim();
+    const { cellEditBuffer, setCellEditBuffer, } = args;
+    const { value } = cellEditBuffer;
+    let { quantityDefinition, } = value;
+    let { errorMsg } = args;
+    try {
+        quantityBaseValue = getValidQuantityBaseValue(
+            quantityBaseValue,
+            quantityDefinition,
+            math,
+        );
+    }
+    catch (e) {
+        errorMsg = e.toString();
+    }
+    setCellEditBuffer(
+        args.columnIndex,
+        {
+            value: Object.assign({}, value, {
+                quantityBaseValue: quantityBaseValue,
+                quantityDefinition: quantityDefinition,
+                enteredText: e.target.value.trim(),
+            }),
+            errorMsg: errorMsg,
+            isEdited: true,
+        });
+}
+
+
+/**
+ * Optional {@link EditableRowTable~onExitCellEdit} for quantity display.
+ * @param {EditableRowTable~onEnterExitCellEditArgs} args 
+ */
+export function exitQuantityEditorCellEdit(args) {
+    const { cellEditBuffer, setCellEditBuffer, } = args;
+    const { value } = cellEditBuffer;
+    let { quantityBaseValue, enteredText } = value;
+
+    try {
+        const quantityDefinition = getQuantityDefinition(value.quantityDefinition);
+        if (getValidQuantityBaseValue(enteredText, quantityDefinition, math)
+         !== quantityBaseValue) {
+            return;
+        }
+
+        enteredText = quantityDefinition.baseValueToValueText(quantityBaseValue);
+        if (enteredText !== value.enteredText) {
+            setCellEditBuffer(
+                args.columnIndex,
+                {
+                    value: Object.assign({}, value, {
+                        quantityBaseValue: quantityBaseValue,
+                        quantityDefinition: quantityDefinition,
+                        enteredText: enteredText,
+                    }),
+                    isEdited: true,
+                });
+        }
+    }
+    catch (e) {
+        //
+    }
+}
+
 
 /**
  * The core display renderer for {@link QuantityDefinition} based
@@ -1013,12 +1074,14 @@ export function renderBalanceEditor(args) {
         inputClassExtras = {inputClassExtras}
         size = {inputSize}
         onChange = {(e) => {
-            setCellEditBuffer({
-                value: Object.assign({}, value, {
-                    quantityBaseValue: e.target.value,
-                }),
-                isEdited: true,
-            });
+            setCellEditBuffer(
+                args.columnIndex,
+                {
+                    value: Object.assign({}, value, {
+                        quantityBaseValue: e.target.value,
+                    }),
+                    isEdited: true,
+                });
         }}
         errorMsg = {errorMsg}
     />;
@@ -1147,6 +1210,8 @@ function getSplitQuantityInfo(value) {
 
 
 function setSplitQuantityValue(args, quantityValue, index) {
+    const isExit = (index === undefined);
+    index = (index === undefined) ? args.columnIndex : index;
     const { setCellEditBuffer } = args;
     let cellEditBuffer = (index === undefined) 
         ? args.cellEditBuffer
@@ -1158,11 +1223,12 @@ function setSplitQuantityValue(args, quantityValue, index) {
             quantityBaseValue: quantityValue,
         }),
     });
-    setCellEditBuffer({
-        value: newValue,
-        isEdited: true,
-    },
-    index);
+    setCellEditBuffer(index,
+        {
+            value: newValue,
+            isEdited: true,
+            isExit: isExit,
+        });
 }
 
 
@@ -1206,31 +1272,9 @@ export function resolveSplitQuantityEditValueToSplitDataItem(args) {
         return value.split;
     }
 
-    // TODO: Evaluate any expressions here...
-
     const quantityDefinition = getQuantityDefinition(value.quantityDefinition);
-    if (typeof quantityBaseValue === 'string') {
-        let result;
-        try {
-            if (quantityBaseValue) {
-                quantityBaseValue = math.eval(quantityBaseValue).toString();
-            }
-            result = quantityDefinition.fromValueText(quantityBaseValue);
-        }
-        catch (e) {
-            //
-        }
-
-        if (!result || result.remainingText) {
-            throw userError('AccountingCellEditors-invalid_split_quantity', 
-                quantityBaseValue);
-        }
-        
-        quantityBaseValue = result.quantity.getBaseValue();
-    }
-    else {
-        quantityBaseValue = quantityDefinition.numberToBaseValue(quantityBaseValue);
-    }
+    quantityBaseValue = getValidQuantityBaseValue(quantityBaseValue, 
+        quantityDefinition, math);
     
     return Object.assign({},
         value.split,
@@ -1239,6 +1283,42 @@ export function resolveSplitQuantityEditValueToSplitDataItem(args) {
         });
 }
 
+
+function exitSplitQuantityCellEdit(args) {
+    const { cellEditBuffer, } = args;
+    const { value } = cellEditBuffer;
+
+    const quantityInfo = getSplitQuantityInfo(value);
+    if (!quantityInfo) {
+        return;
+    }
+    let { isLots, quantityBaseValue, } = quantityInfo;
+    if (isLots) {
+        // FIX ME!!!
+        return value.split;
+    }
+
+    try {
+        const quantityDefinition = getQuantityDefinition(value.quantityDefinition);
+        quantityBaseValue = getValidQuantityBaseValue(quantityBaseValue, 
+            quantityDefinition, math);
+        quantityBaseValue = quantityDefinition.baseValueToValueText(quantityBaseValue);
+
+        const newValue = (quantityBaseValue === undefined) 
+            ? '' : quantityBaseValue;
+        let oldValue = value.split.quantityBaseValue;
+        if (oldValue === undefined) {
+            oldValue = '';
+        }
+        
+        if (newValue !== oldValue) {
+            setSplitQuantityValue(args, newValue);
+        }
+    }
+    catch (e) {
+        //
+    }
+}
 
 /**
  * @typedef {object}    CellSplitQuantityEditorArgs
@@ -1249,6 +1329,9 @@ export function resolveSplitQuantityEditValueToSplitDataItem(args) {
 
 /**
  * Editor renderer for bought/sold and credit/debit split entries.
+ * We don't use {@link renderQuantityEditor} because we handle swapping between
+ * credit and debit depending on the sign (handled by
+ * {@link onChangeSplitQuantity})
  * @param {CellSplitQuantityEditorArgs}  args
  */
 export function renderSplitQuantityEditor(args) {
@@ -1291,7 +1374,7 @@ export function renderSplitQuantityEditor(args) {
         size = {inputSize}
         onChange = {(e) => onChangeSplitQuantity(e, args)}
         errorMsg = {errorMsg}
-        allowExpression = {true}
+        allowExpression
     />;
 }
 
@@ -1366,7 +1449,7 @@ export function renderSplitQuantityDisplay(args) {
 }
 
 /**
- * Retrieves a column info for share totals cells.
+ * Retrieves a column info for the credit/debit editors of a split.
  * @param {getColumnInfoArgs} args
  * @param {string}  type
  * @param {string} [label]
@@ -1384,6 +1467,7 @@ export function getSplitQuantityColumnInfo(args, type, label) {
 
         renderDisplayCell: renderSplitQuantityDisplay,
         renderEditCell: renderSplitQuantityEditor,
+        exitCellEdit: exitSplitQuantityCellEdit,
     },
     args);
 }

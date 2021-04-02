@@ -1389,6 +1389,52 @@ function renderQuantityDisplay(editorName, args, columnInfoArgs) {
 //
 //---------------------------------------------------------
 //
+
+function getQuantityEditorSetCellEditBuffer(
+    editorName, args, columnInfoArgs, readOnlyFilter) {
+
+    const { setCellEditBuffer } = args;
+    return (index, cellEditBuffer) => {
+        const { isEdited } = cellEditBuffer;
+        delete cellEditBuffer.isEdited;
+
+        const { value } = cellEditBuffer;
+        let originalSplitInfo = getSplitInfo(args, columnInfoArgs);
+        if (isEdited && originalSplitInfo) {
+            const splitInfo = copySplitInfo(originalSplitInfo);
+
+            const { editStates, nextQuantityEditHit } = splitInfo;
+            const editorState = editStates[editorName];
+            if (typeof value.quantityBaseValue === 'number') {
+                // Valid value, try updating things...
+                if ((editorState.editorBaseValue !== value.quantityBaseValue)
+                 || (editorState.enteredText !== value.enteredText)) {
+                    editorState.editorBaseValue = value.quantityBaseValue;
+                    editorState.enteredText = value.enteredText;
+
+                    editorState.editHit = nextQuantityEditHit;
+                    ++splitInfo.nextQuantityEditHit;
+
+                    updateSplitInfoValues(splitInfo);
+                }
+            }
+            else {
+                // Invalid value, mark editor as potentially getting update.
+                editorState.editHit = -1;
+            }
+
+            if (!deepEqual(splitInfo, originalSplitInfo)) {
+                updateSplitInfo(args, columnInfoArgs, splitInfo);
+            }
+        }
+
+        setCellEditBuffer(index, cellEditBuffer);
+    };
+}
+
+//
+//---------------------------------------------------------
+//
 function renderQuantityEditor(editorName, args, columnInfoArgs, readOnlyFilter) {
     if (readOnlyFilter) {
         if (readOnlyFilter(args, columnInfoArgs)) {
@@ -1396,46 +1442,24 @@ function renderQuantityEditor(editorName, args, columnInfoArgs, readOnlyFilter) 
         }
     }
 
-    const { setCellEditBuffer } = args;
     args = Object.assign({}, args, {
-        setCellEditBuffer: (cellEditBuffer, index) => {
-            const { isEdited } = cellEditBuffer;
-            delete cellEditBuffer.isEdited;
-
-            const { value } = cellEditBuffer;
-            let originalSplitInfo = getSplitInfo(args, columnInfoArgs);
-            if (isEdited && originalSplitInfo) {
-                const splitInfo = copySplitInfo(originalSplitInfo);
-
-                const { editStates, nextQuantityEditHit } = splitInfo;
-                const editorState = editStates[editorName];
-                if (typeof value.quantityBaseValue === 'number') {
-                    // Valid value, try updating things...
-                    if (editorState.editorBaseValue !== value.quantityBaseValue) {
-                        editorState.editorBaseValue = value.quantityBaseValue;
-                        editorState.enteredText = value.enteredText;
-
-                        editorState.editHit = nextQuantityEditHit;
-                        ++splitInfo.nextQuantityEditHit;
-
-                        updateSplitInfoValues(splitInfo);
-                    }
-                }
-                else {
-                    // Invalid value, mark editor as potentially getting update.
-                    editorState.editHit = -1;
-                }
-
-                if (!deepEqual(splitInfo, originalSplitInfo)) {
-                    updateSplitInfo(args, columnInfoArgs, splitInfo);
-                }
-            }
-
-            setCellEditBuffer(cellEditBuffer, index);
-        }
+        setCellEditBuffer: getQuantityEditorSetCellEditBuffer(
+            editorName, args, columnInfoArgs, readOnlyFilter),
     });
     
     return ACE.renderQuantityEditor(args);
+}
+
+
+//
+//---------------------------------------------------------
+//
+function exitQuantityEditorCellEdit(editorName, args, columnInfoArgs, readOnlyFilter) {
+    args = Object.assign({}, args, {
+        setCellEditBuffer: getQuantityEditorSetCellEditBuffer(
+            editorName, args, columnInfoArgs, readOnlyFilter),
+    });
+    return ACE.exitQuantityEditorCellEdit(args);
 }
 
 
@@ -1481,6 +1505,8 @@ function getQuantityEditorColumnInfo(editorName, args, className, readOnlyFilter
             renderQuantityDisplay(editorName, args, columnInfoArgs),
         renderEditCell: (args) => 
             renderQuantityEditor(editorName, args, columnInfoArgs, readOnlyFilter),
+        exitCellEdit: (args) =>
+            exitQuantityEditorCellEdit(editorName, args, columnInfoArgs, readOnlyFilter),
     },
     args);
 }

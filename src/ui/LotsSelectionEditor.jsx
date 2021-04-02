@@ -830,6 +830,9 @@ export class LotsSelectionEditor extends React.Component {
                 asyncOnSaveRowEdit = {this._cellEditorsManager.asyncOnSaveRowEdit}
                 onCancelRowEdit = {this._cellEditorsManager.onCancelRowEdit}
 
+                onEnterCellEdit = {this._cellEditorsManager.onEnterCellEdit}
+                onExitCellEdit = {this._cellEditorsManager.onExitCellEdit}
+
                 ref = {this._rowTableRef}
             />
         </div>;

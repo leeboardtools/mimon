@@ -14,7 +14,7 @@ import * as math from 'mathjs-expression-parser';
  * empty string (after any trimming)
  * @throws {Error}
  */
-export function getValidQuantityBaseValue(value, quantityDefinition) {
+export function getValidQuantityBaseValue(value, quantityDefinition, math) {
     switch (typeof value) {
     case 'number' :
         return quantityDefinition.numberToBaseValue(value);
@@ -22,7 +22,17 @@ export function getValidQuantityBaseValue(value, quantityDefinition) {
     case 'string' :
         value = value.trim();
         if (value !== '') {
-            const result = quantityDefinition.fromValueText(value);
+            let result;
+            try {
+                if (math) {
+                    value = math.eval(value).toString();
+                }
+                result = quantityDefinition.fromValueText(value);
+            }
+            catch (e) {
+                //
+            }
+            
             if ((result !== undefined) && !result.remainingText) {
                 return result.quantity.getBaseValue();
             }

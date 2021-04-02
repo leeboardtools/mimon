@@ -485,11 +485,13 @@ function onSplitsListChange(e, args) {
     const newSplit = T.getSplitDataItem(splits[1 - splitIndex], true);
     newSplit.accountId = value;
     newSplits[1 - splitIndex] = newSplit;
-    setCellEditBuffer({
-        value: Object.assign({}, cellEditBuffer.value, {
-            splits: newSplits,
-        }),
-    });
+    setCellEditBuffer(
+        args.columnIndex,
+        {
+            value: Object.assign({}, cellEditBuffer.value, {
+                splits: newSplits,
+            }),
+        });
     newSplit.accountId = value;
     
 }
@@ -1931,6 +1933,9 @@ export class AccountRegister extends React.Component {
                 onStartRowEdit = {this._cellEditorsManager.onStartRowEdit}
                 asyncOnSaveRowEdit = {this._cellEditorsManager.asyncOnSaveRowEdit}
                 onCancelRowEdit = {this._cellEditorsManager.onCancelRowEdit}
+
+                onEnterCellEdit = {this._cellEditorsManager.onEnterCellEdit}
+                onExitCellEdit = {this._cellEditorsManager.onExitCellEdit}
 
                 id = {this.props.id}
                 ref = {this._rowTableRef}
