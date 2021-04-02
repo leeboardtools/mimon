@@ -1370,9 +1370,11 @@ export class AccountRegister extends React.Component {
                         pricedItemDataItem.id,
                         transactionDataItem.ymdDate);
                 if (priceDataItem) {
-                    const currency = getCurrency(pricedItemDataItem.currency);
-                    const priceBaseValue = currency.getQuantityDefinition()
-                        .numberToBaseValue(priceDataItem.close);
+                    const priceQuantityDefinition 
+                        = accessor.getPriceQuantityDefinitionForPricedItem(
+                            pricedItemDataItem.id);
+                    const priceBaseValue 
+                        = priceQuantityDefinition.numberToBaseValue(priceDataItem.close);
                     newRowEntry.priceBaseValue = priceBaseValue;
                     newRowEntry.priceYMDDate = priceDataItem.ymdDate;
                 }

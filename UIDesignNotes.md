@@ -460,7 +460,6 @@ Column sorting in RowTable:
     - Account Register Tasks
         - Auto complete
         - Filter transactions
-        - Market value after stock split incorrect
 
     - Account List
         - Subtotals:

@@ -360,7 +360,8 @@ export function createSplitInfo(transactionDataItem, splitIndex, accessor, args)
     }
     const currencyQuantityDefinition = currency.getQuantityDefinition();
 
-    const priceQuantityDefinition = accessor.getPriceQuantityDefinitionForPricedItem();
+    const priceQuantityDefinition = accessor.getPriceQuantityDefinitionForPricedItem(
+        pricedItemDataItem.id);
 
     const splitInfo = Object.assign({}, args, {
         currencyQuantityDefinition: currencyQuantityDefinition,
