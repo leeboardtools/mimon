@@ -13,6 +13,7 @@ import { bSearch } from '../util/BinarySearch';
 import { getCurrency } from '../util/Currency';
 import { promises as fsPromises } from 'fs';
 import * as path from 'path';
+import * as math from 'mathjs-expression-parser';
 
 
 /**
@@ -70,6 +71,9 @@ export class EngineAccessor extends EventEmitter {
         this.asyncUndoLastAppliedAction = this.asyncUndoLastAppliedActions;
         this.asyncReapplyLastUndoneAction = this.asyncReapplyLastUndoneActions;
         this.asyncGetTransactionDataItemWithId = this.asyncGetTransactionDataItemsWithIds;
+
+
+        this.evalExpression = math.eval;
 
 
         this._asyncModifyProjectSettingsActionApplier 
@@ -1934,6 +1938,20 @@ export class EngineAccessor extends EventEmitter {
 
 
     //
+    // Expression evaluation
+    //
+
+
+    //
     // Auto Complete
     //
 }
+
+/**
+ * General expression evaluator, evaluating a string into a number.
+ * Throws an exception if the string was not successfully evaluated.
+ * @function EngineAccessor#evalExpression
+ * @param {string} expression
+ * @returns {number}
+ * @throws Error
+ */

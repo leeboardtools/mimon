@@ -493,14 +493,10 @@ Column sorting in RowTable:
 
         - renderQuantityEditor:
             - LotCellEditors.jsx:
-                - getQuantityEditorColumnInfo()
-                    - Uses saveQuantityEditorCellValue() - Does nothing.
-                    - renderQuantityEditor()/ACE.renderQuantityEditor() - Need to resolve value on Enter key
+                - getQuantityEditorColumnInfo() - OK
 
-                - getSharesColumnInfo()
-                    - renderSharesEditor()
-                        - renderQuantityEditor()/ACE.renderQuantityEditor() - Need to resolve value on Enter key
-                    - Uses saveQuantityEditorCellValue() - Does nothing.
+                - getSharesColumnInfo() - OK
+                    - Overloads getQuantityEditorColumnInfo()
 
             - LotSelectionEditor.jsx
                 - selectedShares column
@@ -518,7 +514,7 @@ Column sorting in RowTable:
 
         - renderSplitQuantityEditor: OK
 
-        - renderBalanceEditor - ReconcilerWindow.jsx
+        - renderBalanceEditor - ReconcilerWindow.jsx - 
 
     - Add support to EditableRowTable for monitoring which cell has focus, and triggering an
     optional onBlur function in the column when the currently focused cell loses focus to another

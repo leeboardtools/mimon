@@ -1362,6 +1362,7 @@ function getQuantityEditorCellValue(editorName, args, columnInfoArgs) {
             if (editorState) {
                 const { editorBaseValue } = editorState;
                 return {
+                    accessor: splitInfo.accessor,
                     quantityBaseValue: (editorBaseValue === undefined)
                         ? '' : editorBaseValue,
                     quantityDefinition: editorState.quantityDefinition,
@@ -1768,6 +1769,7 @@ function getTotalSharesCellValue(args, columnInfoArgs) {
         const { accountStateDataItem } = splitInfo;
         if (accountStateDataItem) {
             return {
+                accessor: splitInfo.accessor,
                 quantityBaseValue: accountStateDataItem.quantityBaseValue,
                 quantityDefinition: splitInfo.sharesQuantityDefinition,
             };
@@ -1847,6 +1849,7 @@ function getTotalMarketValueCellValue(args, columnInfoArgs) {
             }
 
             return {
+                accessor: accessor,
                 quantityBaseValue: currencyQuantityDefinition.numberToBaseValue(
                     marketValue),
                 quantityDefinition: currencyQuantityDefinition,
@@ -1898,6 +1901,7 @@ function getTotalCostBasisCellValue(args, columnInfoArgs) {
                 costBasisBaseValue += lotState.costBasisBaseValue;
             });
             return {
+                accessor: splitInfo.accessor,
                 quantityBaseValue: costBasisBaseValue,
                 quantityDefinition: splitInfo.currencyQuantityDefinition,
             };
@@ -1949,6 +1953,7 @@ function getTotalCashInCellValue(args, columnInfoArgs) {
                 }
             });
             return {
+                accessor: splitInfo.accessor,
                 quantityBaseValue: cashInBaseValue,
                 quantityDefinition: splitInfo.currencyQuantityDefinition,
             };

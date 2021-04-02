@@ -6,8 +6,9 @@ import { getYMDDateString, YMDDate } from '../util/YMDDate';
 import { CellDateDisplay, CellDateEditor } from '../util-ui/CellDateEditor';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { Field } from '../util-ui/Field';
-import { CellQuantityEditor, getValidQuantityBaseValue, } 
+import { CellQuantityEditor } 
     from '../util-ui/CellQuantityEditor';
+import { getValidQuantityBaseValue } from '../util-ui/QuantityField';
 import { CellTextDisplay } from '../util-ui/CellTextEditor';
 import { getQuantityDefinitionForAccountId, getCurrencyForAccountId } 
     from '../tools/AccountHelpers';

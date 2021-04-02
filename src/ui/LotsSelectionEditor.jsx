@@ -271,6 +271,7 @@ function getLotsSelectionEditorColumnInfos() {
             saveCellValue: saveSelectedSharesCellValue,
             renderDisplayCell: ACE.renderQuantityDisplay,
             renderEditCell: ACE.renderQuantityEditor,
+            exitCellEdit: ACE.exitQuantityEditorCellEdit,
         },
 
         // All button

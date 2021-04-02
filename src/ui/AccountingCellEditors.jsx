@@ -4,8 +4,8 @@ import { CellTextDisplay, CellTextEditor } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay, CellSelectEditor,
     CellToggleSelectDisplay, CellToggleSelectEditor, } from '../util-ui/CellSelectEditor';
 import { CellDateDisplay, CellDateEditor } from '../util-ui/CellDateEditor';
-import { CellQuantityDisplay, CellQuantityEditor,
-    getValidQuantityBaseValue } from '../util-ui/CellQuantityEditor';
+import { CellQuantityDisplay, CellQuantityEditor } from '../util-ui/CellQuantityEditor';
+import { getValidQuantityBaseValue } from '../util-ui/QuantityField';
 import { Tooltip } from '../util-ui/Tooltip';
 import { getQuantityDefinition } from '../util/Quantities';
 import * as A from '../engine/Accounts';
@@ -14,7 +14,6 @@ import * as AH from '../tools/AccountHelpers';
 import { ReconcileState, getReconcileStateName } from '../engine/Transactions';
 import { getCurrency } from '../util/Currency';
 import { Row, Col } from '../util-ui/RowCols';
-import * as math from 'mathjs-expression-parser';
 
 
 /*
@@ -891,7 +890,8 @@ export function renderQuantityEditor(args) {
         try {
             // Use the text that was entered if it represents the
             // quantity base value.
-            if (getValidQuantityBaseValue(enteredText, quantityDefinition, math)
+            if (getValidQuantityBaseValue(enteredText, quantityDefinition, 
+                value.accessor.evalExpression)
              === quantityBaseValue) {
                 quantityBaseValue = enteredText;
             }
@@ -910,7 +910,7 @@ export function renderQuantityEditor(args) {
         size = {inputSize}
         onChange = {(e) => quantityEditorOnChange(e, args)}
         errorMsg = {errorMsg}
-        allowExpression
+        evalExpression = {value.accessor.evalExpression}
     />;
 }
 
@@ -925,7 +925,7 @@ function quantityEditorOnChange(e, args) {
         quantityBaseValue = getValidQuantityBaseValue(
             quantityBaseValue,
             quantityDefinition,
-            math,
+            value.accessor.evalExpression,
         );
     }
     catch (e) {
@@ -956,7 +956,8 @@ export function exitQuantityEditorCellEdit(args) {
 
     try {
         const quantityDefinition = getQuantityDefinition(value.quantityDefinition);
-        if (getValidQuantityBaseValue(enteredText, quantityDefinition, math)
+        if (getValidQuantityBaseValue(enteredText, quantityDefinition, 
+            value.accessor.evalExpression)
          !== quantityBaseValue) {
             return;
         }
@@ -1274,7 +1275,8 @@ export function resolveSplitQuantityEditValueToSplitDataItem(args) {
 
     const quantityDefinition = getQuantityDefinition(value.quantityDefinition);
     quantityBaseValue = getValidQuantityBaseValue(quantityBaseValue, 
-        quantityDefinition, math);
+        quantityDefinition, 
+        value.accessor.evalExpression);
     
     return Object.assign({},
         value.split,
@@ -1301,7 +1303,8 @@ function exitSplitQuantityCellEdit(args) {
     try {
         const quantityDefinition = getQuantityDefinition(value.quantityDefinition);
         quantityBaseValue = getValidQuantityBaseValue(quantityBaseValue, 
-            quantityDefinition, math);
+            quantityDefinition, 
+            value.accessor.evalExpression);
         quantityBaseValue = quantityDefinition.baseValueToValueText(quantityBaseValue);
 
         const newValue = (quantityBaseValue === undefined) 
@@ -1374,7 +1377,7 @@ export function renderSplitQuantityEditor(args) {
         size = {inputSize}
         onChange = {(e) => onChangeSplitQuantity(e, args)}
         errorMsg = {errorMsg}
-        allowExpression
+        evalExpression = {value.accessor.evalExpression}
     />;
 }
 

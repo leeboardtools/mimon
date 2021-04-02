@@ -103,6 +103,7 @@ function getAccountStateQuantityCellValue(args) {
         const { quantityDefinition } = caller.state;
         const { quantityBaseValue } = accountStateDataItem;
         return {
+            accessor: caller.props.accessor,
             quantityBaseValue: quantityBaseValue,
             quantityDefinition: quantityDefinition,
         };
@@ -239,6 +240,7 @@ function getSplitRenderInfo(caller, split, splitIndex) {
         category: category,
         creditSign: category.creditSign,
         currency: currency,
+        accessor: accessor,
         quantityBaseValue: split.quantityBaseValue,
         aleCreditSign: 1,
     };
