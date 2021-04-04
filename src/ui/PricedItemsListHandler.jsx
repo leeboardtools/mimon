@@ -16,13 +16,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     constructor(props) {
         super(props);
 
-        //this.onOpenPricedItemRegister = this.onOpenPricedItemRegister.bind(this);
-        this.onNewPricedItem = this.onNewPricedItem.bind(this);
-        this.onModifyPricedItem = this.onModifyPricedItem.bind(this);
-        this.onRemovePricedItem = this.onRemovePricedItem.bind(this);
-
-
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
+
         this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
 
 
@@ -520,7 +515,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
      * @returns {TabbedPages~TabEntry}
      */
     createTabEntry(tabId, pricedItemTypeName) {
-        const projectSettingsId = 'PricedItemsListHandler-' + pricedItemTypeName;
+        const projectSettingsId = tabId;
         let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
         const allColumns = createDefaultColumns(pricedItemTypeName);
         const showRowBorders = (settings.showRowBorders === undefined)
