@@ -86,7 +86,9 @@ test('ActionManager', async () => {
         postApplyCallback: (action, result) => {
             postActionA2 = action;
             return result;
-        }};
+        },
+        postUndoCallback: () => postActionA2 = undefined,
+    };
     result = await manager.asyncApplyAction(actionA2);
     expect(valueA[0]).toEqual(2);
     expect(result).toEqual(2);
@@ -105,7 +107,9 @@ test('ActionManager', async () => {
         postApplyCallback: (action, result) => {
             postActionB1 = action;
             return result;
-        }};
+        },
+        postUndoCallback: () => postActionB1 = undefined,
+    };
     await manager.asyncApplyAction(actionB1);
     expect(valueB[0]).toEqual(10);
     expect(valueA[0]).toEqual(2);
@@ -165,9 +169,14 @@ test('ActionManager', async () => {
     expect(await manager.asyncGetAppliedActionAtIndex(5)).toEqual(actionA3);
     expect(await manager.asyncGetUndoneActionAtIndex(0)).toBeUndefined();
 
+    expect(postActionB1).toBeDefined();
 
     // Undo several actions.
     await manager.asyncUndoLastAppliedActions(4);
+
+    expect(postActionA2).toBeDefined();
+    expect(postActionB1).toBeUndefined();
+    
 
     // Now have:
     // Applied:
