@@ -398,11 +398,9 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 - CollapsibleRowTable
-    - Need to tweak the expand/collapse indenting.
 
 
 - PricedItemsEditor:
-    - Double click needs to open priced item editor???
     
 
 - Add an Imbalance account?
@@ -466,7 +464,7 @@ Column sorting in RowTable:
             - What about currencies?
                 - Can't add different currencies.
 
-        - Custom Account Lists:
+        - Custom Account/PricedItem Lists:
             - Save Current Account List
                 - Need name
             - Manage Custom Account Lists
@@ -487,3 +485,4 @@ Column sorting in RowTable:
                 - Delete Account List
     
 
+    - Save/restore last window settings.

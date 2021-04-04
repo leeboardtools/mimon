@@ -8,6 +8,8 @@ import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
 import { TabIdRowTableHandler } from './RowTableHelpers';
 import { getColumnWithKey } from '../util-ui/ColumnInfo';
 
+const pricedItemsListTagPrefix = 'pricedItemsList_';
+
 /**
  * Handler for {@link PricedItemsList} components and their pages in the 
  * {@link MainWindow}, this manages all the pricedItem related commands.
@@ -508,6 +510,37 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
 
 
+    getMasterTabId(pricedItemTypeName) {
+        return pricedItemsListTagPrefix + pricedItemTypeName;
+    }
+
+    getTabIdBase(pricedItemTypeName) {
+        return pricedItemsListTagPrefix + pricedItemTypeName + '-';
+    }
+
+
+    parsePricedItemsListTabId(tabId) {
+        if (!tabId.startsWith(pricedItemsListTagPrefix)) {
+            return;
+        }
+
+        let pricedItemTypeName = tabId.slice(pricedItemsListTagPrefix.length);
+        const customInstanceStart = pricedItemTypeName.indexOf('-');
+
+        let customInstanceName;
+        if (customInstanceStart >= 0) {
+            customInstanceName = pricedItemTypeName.slice(customInstanceStart + 1);
+            pricedItemTypeName = pricedItemTypeName.slice(0, customInstanceStart);
+        }
+
+        return {
+            tabId: tabId,
+            pricedItemTypeName: pricedItemTypeName,
+            customIntsanceName: customInstanceName,
+        };
+    }
+
+
     /**
      * Called by {@link MainWindow} to create the {@link TabbedPages~TabEntry}
      * object for an pricedItems list page.
@@ -516,7 +549,13 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
      */
     createTabEntry(tabId, pricedItemTypeName) {
         const projectSettingsId = tabId;
+
+        const masterTabId = this.getMasterTabId(pricedItemTypeName);
+
         let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
+        const title = (tabId === masterTabId)
+            ? userMsg('PricedItemsListHandler-title', typeDescription)
+            : settings.title;
         const allColumns = createDefaultColumns(pricedItemTypeName);
         const showRowBorders = (settings.showRowBorders === undefined)
             ? true
@@ -532,8 +571,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const typeDescription = PI.getPricedItemType(pricedItemTypeName).description;
         const tabEntry = {
             tabId: tabId,
-            title: userMsg('PricedItemsListHandler-title', 
-                typeDescription),
+            title: title,
             hasClose: true,
             onRenderTabPage: this.onRenderTabPage,
             pricedItemTypeName: pricedItemTypeName,

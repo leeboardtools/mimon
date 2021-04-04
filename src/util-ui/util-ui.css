@@ -1319,6 +1319,14 @@ from BS col-form-label */
 }
 
 
+.Prompter-body {
+  padding-left: 1rem;
+  /* The 1.1 right side padding seems to be needed to avoid a horizontal scroll
+  under normal circumstances.*/
+  padding-right: 1.1rem;
+}
+
+
 .RowTable {
     width: 100%;
     height: 100%;

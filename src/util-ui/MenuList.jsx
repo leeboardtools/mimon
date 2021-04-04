@@ -430,6 +430,7 @@ export class MenuList extends React.Component {
  * when the item is selected, otherwise the dropdown's onChooseItem is called.
  * @property {MenuList~onRenderItem}    [onRender]  If specified called to render 
  * the item, otherwise the item should have a label property, which is displayed.
+ * @property {MenuList-Item[]} [subMenuItems]
  */
 
 /**

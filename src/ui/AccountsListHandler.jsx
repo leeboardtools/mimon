@@ -635,6 +635,15 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
 
 
+    getMasterTabId() {
+        return 'accountsList';
+    }
+
+    getTabIdBase() {
+        return 'accountsList-';
+    }
+
+
     /**
      * Called by {@link MainWindow} to create the {@link TabbedPages~TabEntry}
      * object for an accounts list page.

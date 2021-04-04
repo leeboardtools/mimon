@@ -6,7 +6,6 @@
     "MainWindow-checkReminders": "Check Reminders",
     "MainWindow-updatePrices": "Retrieve Prices",
 
-    "MainWindow-viewAccountsList": "Accounts List",
     "MainWindow-viewSecuritiesList": "Securities List",
     "MainWindow-viewMutualFundsList": "Mutual Funds List",
     "MainWindow-viewPricesList": "Prices List",
@@ -14,6 +13,42 @@
     "MainWindow-viewCurrenciesList": "Currencies List",
     "MainWindow-viewRealEstateList": "Real Estate List",
     "MainWindow-viewPropertiesList": "Properties List",
+
+
+    "MainWindow-accountsListSubMenu": "Account Lists",
+    "MainWindow-viewAccountsList": "Master Accounts List",
+
+    "MainWindow-CURRENCY_ListSubMenu": "Currencies Lists",
+    "MainWindow-view_CURRENCY_List": "Master Currency List",
+
+    "MainWindow-SECURITY_ListSubMenu": "Securities Lists",
+    "MainWindow-view_SECURITY_List": "Master Securities List",
+
+    "MainWindow-MUTUAL_FUND_ListSubMenu": "Mutual Funds Lists",
+    "MainWindow-view_MUTUAL_FUND_List": "Master Mutual Funds List",
+
+    "MainWindow-REAL_ESTATE_ListSubMenu": "Real Estate Lists",
+    "MainWindow-view_REAL_ESTATE_List": "Master Real Estate List",
+
+    "MainWindow-PROPERTY_ListSubMenu": "Property Lists",
+    "MainWindow-view_PROPERTY_List": "Master Property List",
+
+    "MainWindow-customAccountsList_name": "Account List",
+    "MainWindow-custom_CURRENCY_List_name": "Currencies List",
+    "MainWindow-custom_SECURITY_List_name": "Securities List",
+    "MainWindow-custom_MUTUAL_FUND_List_name": "Mutual Funds List",
+    "MainWindow-custom_REAL_ESTATE_List_name": "Real Estate List",
+    "MainWindow-custom_PROPERTY_List_name": "Property List",
+
+    "MainWindow-createCustomTabName_title": ["Create Custom ", ""],
+    "MainWindow-renameCustomTabName_title": ["Rename Custom ", " '", "'"],
+    "MainWindow-customTabIdName_label": ["Name for the ", ""],
+
+    "CustomTabInstanceManager-openCustomItem_menuLabel": ["", ""],
+    "CustomTabInstanceManager-createCustomItem_menuLabel": ["Create Custom ", ""],
+    "CustomTabInstanceManager-renameCustomItem_menuLabel": ["Rename Custom ", " '", "'"],
+    "CustomTabInstanceManager-deleteCustomItem_menuLabel": ["Delete Custom ", " '", "'"],
+
 
     "MainWindow-print": "Print...",
 

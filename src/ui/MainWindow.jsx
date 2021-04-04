@@ -19,6 +19,9 @@ import { PriceRetrieverWindowHandler } from './PriceRetrieverWindowHandler';
 import { ReconcilerWindowHandler } from './ReconcilerWindowHandler';
 import { ReminderEditorHandler } from './ReminderEditorHandler';
 import { RemindersListHandler } from './RemindersListHandler';
+import { CustomTabInstanceManager, 
+    generateCustomTabId, } from './CustomTabInstanceManager';
+import { StringPrompter } from '../util-ui/StringPrompter';
 
 
 const projectSettingsMainWindow = ['mainWindow'];
@@ -54,21 +57,30 @@ export class MainWindow extends React.Component {
         this.onGetSharedState = this.onGetSharedState.bind(this);
         this.onSetSharedState = this.onSetSharedState.bind(this);
 
+        this.onGetTabIdTitle = this.onGetTabIdTitle.bind(this);
+        this.onCreateCustomTabIdInstance = this.onCreateCustomTabIdInstance.bind(this);
+        this.onRenameCustomTabIdInstance = this.onRenameCustomTabIdInstance.bind(this);
+        this.onDeleteCustomTabIdInstance = this.onDeleteCustomTabIdInstance.bind(this);
+
         this.onGetTabIdsWithType = this.onGetTabIdsWithType.bind(this);
         this.onGetTabIdState = this.onGetTabIdState.bind(this);
         this.onSetTabIdState = this.onSetTabIdState.bind(this);
+        this.onGetTabIdsInProjectSettings = this.onGetTabIdsInProjectSettings.bind(this);
         this.onGetTabIdProjectSettings = this.onGetTabIdProjectSettings.bind(this);
         this.onSetTabIdProjectSettings = this.onSetTabIdProjectSettings.bind(this);
         this.onGetTabIdUserSettings = this.onGetTabIdUserSettings.bind(this);
         this.onSetTabIdUserSettings = this.onSetTabIdUserSettings.bind(this);
         this.onSetErrorMsg = this.onSetErrorMsg.bind(this);
         this.onSetModal = this.onSetModal.bind(this);
+        this.onOpenTabId = this.onOpenTabId.bind(this);
         this.onOpenTab = this.onOpenTab.bind(this);
         this.onRefreshUndoMenu = this.onRefreshUndoMenu.bind(this);
     
         this.onPrint = this.onPrint.bind(this);
 
         this.onPostRenderTabs = this.onPostRenderTabs.bind(this);
+
+        this.promptCustomTabIdName = this.promptCustomTabIdName.bind(this);
 
 
         const handlerArgs = {
@@ -90,7 +102,23 @@ export class MainWindow extends React.Component {
             on: this.on,
             off: this.off,
         };
+
+        const customTabInstanceManagerArgs = {
+            onOpenTabId: this.onOpenTabId,
+            onGetTabIdTitle: this.onGetTabIdTitle,
+            onCreateTabIdInstance: this.onCreateCustomTabIdInstance,
+            onRenameTabIdInstance: this.onRenameCustomTabIdInstance,
+            onDeleteTabIdInstance: this.onDeleteCustomTabIdInstance,
+        };
+
         this._accountsListHandler = new AccountsListHandler(handlerArgs);
+        this._customAccountsListInstanceManager = new CustomTabInstanceManager(
+            Object.assign({}, customTabInstanceManagerArgs, {
+                tabIdBase: this._accountsListHandler.getTabIdBase(),
+                actionIdBase: 'AccountList',
+                labelIdBase: 'MainWindow-customAccountsList',
+            }),
+        );
 
         this._accountRegisterHandler = new AccountRegisterHandler(handlerArgs);
         this._accountRegistersByAccountId = new Map();
@@ -101,11 +129,22 @@ export class MainWindow extends React.Component {
 
         this._pricedItemsListHandler = new PricedItemsListHandler(handlerArgs);
 
-
         this._pricedItemEditorHandler = new PricedItemEditorHandler(handlerArgs);
         this._pricedItemEditorsByPricedItemId = {};
+
+        this._customPricedItemsListInstanceManagers = {};
+
         for (const name in PI.PricedItemType) {
             this._pricedItemEditorsByPricedItemId[name] = new Map();
+            this._customPricedItemsListInstanceManagers[name] 
+                = new CustomTabInstanceManager(            
+                    Object.assign({}, customTabInstanceManagerArgs, {
+                        tabIdBase: this._pricedItemsListHandler.getTabIdBase(
+                            name),
+                        actionIdBase: name + 'List',
+                        labelIdBase: 'MainWindow-custom_' + name + '_List',
+                    }),
+                );
         }
 
 
@@ -163,18 +202,9 @@ export class MainWindow extends React.Component {
                 this._userSettings.tabIdSettings = {};
             }
 
-            const masterAccountsList = this._accountsListHandler.createTabEntry(
-                'masterAccountsList'
-            );
-            this._tabItemsById.set(masterAccountsList.tabId, 
-                [masterAccountsList, 'masterAccountsList']);
+            
+            this.openAccountsListTabId(this._accountsListHandler.getMasterTabId());
 
-            this.setState({
-                tabEntries: [
-                    masterAccountsList,
-                ],
-                activeTabId: masterAccountsList.tabId,
-            });
         });
     }
 
@@ -477,17 +507,40 @@ export class MainWindow extends React.Component {
     }
 
 
+    onGetTabIdsInProjectSettings() {
+        const tabIds = [];
+        if (this._projectSettings && this._projectSettings.tabIdSettings) {
+            for (let name in this._projectSettings.tabIdSettings) {
+                tabIds.push(name);
+            }
+        }
+        return tabIds;
+    }
+
+
     onGetTabIdProjectSettings(tabId) {
         return this._projectSettings.tabIdSettings[tabId];
     }
 
     onSetTabIdProjectSettings(tabId, changes, actionName) {
+        let postApplyCallback;
+        let postUndoCallback;
+        if (typeof tabId === 'object') {
+            changes = tabId.changes;
+            actionName = tabId.actionName;
+            postApplyCallback = tabId.postApplyCallback;
+            postUndoCallback = tabId.postUndoCallback;
+            tabId = tabId.tabId;
+        }
+
         const { accessor } = this.props;
         const action = accessor.createModifyProjectSettingsAction({
             name: actionName || userMsg('MainWindow-action_modify_project_settings'),
             changes: changes,
             changesPath: projectSettingsMainWindow.concat([ 'tabIdSettings', tabId]),
             assignChanges: true,
+            postApplyCallback: postApplyCallback,
+            postUndoCallback: postUndoCallback,
         });
 
         process.nextTick(async () => {
@@ -522,6 +575,8 @@ export class MainWindow extends React.Component {
                 return;
             }
 
+            const oldTabIdSettings = this._projectSettings.tabIdSettings[tabId];
+
             let tabIdSettings = this.props.accessor.getProjectSettings(
                 changesPath
             );
@@ -543,6 +598,13 @@ export class MainWindow extends React.Component {
                         }
                     }
                 }
+            }
+
+            if (oldTabIdSettings && tabIdSettings 
+             && (oldTabIdSettings.title !== tabIdSettings.title)) {
+                this.onSetTabIdState(tabId, {
+                    title: tabIdSettings.title,
+                });
             }
 
             this._eventEmitter.emit('tabIdProjectSettingsModify', 
@@ -586,6 +648,19 @@ export class MainWindow extends React.Component {
     }
 
 
+    openAccountsListTabId(tabId) {
+        if (!this._tabItemsById.has(tabId)) {
+            const tabEntry = this._accountsListHandler.createTabEntry(
+                tabId);
+            this.addTabEntry(tabEntry, this._accountsListHandler.getMasterTabId());
+        }
+
+        this.setState({
+            activeTabId: tabId,
+        });
+    }
+
+
     openAccountRegister(openArgs) {
         const { accountId } = openArgs;
         let tabId = this._accountRegistersByAccountId.get(accountId);
@@ -625,13 +700,17 @@ export class MainWindow extends React.Component {
     }
 
 
+
     openPricedItemsList(pricedItemTypeName) {
-        const tabType = 'pricedItemsList';
-        const tabId = tabType + '_' + pricedItemTypeName;
+        const tabId = this._pricedItemsListHandler.getMasterTabId(pricedItemTypeName);
+        return this.openPricedItemsListTabId(tabId, pricedItemTypeName);
+    }
+
+    openPricedItemsListTabId(tabId, pricedItemTypeName) {
         if (!this._tabItemsById.has(tabId)) {
             const tabEntry = this._pricedItemsListHandler.createTabEntry(
                 tabId, pricedItemTypeName);
-            this.addTabEntry(tabEntry, tabType);
+            this.addTabEntry(tabEntry, 'pricedItemsList');
         }
 
         this.setState({
@@ -771,6 +850,29 @@ export class MainWindow extends React.Component {
     }
 
 
+    onOpenTabId(tabId) {
+        if (tabId.startsWith(this._accountsListHandler.getMasterTabId())) {
+            this.openAccountsListTabId(tabId);
+            return;
+        }
+
+        let result;
+
+        result = this._pricedItemsListHandler.parsePricedItemsListTabId(tabId);
+        if (result) {
+            this.openPricedItemsListTabId(tabId, result.pricedItemTypeName);
+            return;
+        }
+    }
+
+
+    /**
+     * Opens a given 'main' tab. This differs from onOpenTabId() in that
+     * onOpenTabId() works off an existing tab id, parsing the tab id to figure
+     * out which tab to open. onOpenTabId() also provides limited support for tab types.
+     * @param {string} type 
+     * @param  {...any} args 
+     */
     onOpenTab(type, ...args) {
         switch (type) {
         case 'reconciler' :
@@ -785,23 +887,23 @@ export class MainWindow extends React.Component {
             this.openAccountEditor(...args);
             break;
         
-        case 'securitiesList' :
+        case 'SECURITY_List' :
             this.openPricedItemsList(PI.PricedItemType.SECURITY.name);
             break;
         
-        case 'mutualFundsList' :
+        case 'MUTUAL_FUND_List' :
             this.openPricedItemsList(PI.PricedItemType.MUTUAL_FUND.name);
             break;
         
-        case 'currenciesList' :
+        case 'CURRENCY_List' :
             this.openPricedItemsList(PI.PricedItemType.CURRENCY.name);
             break;
 
-        case 'realEstateList' :
+        case 'REAL_ESTATE_List' :
             this.openPricedItemsList(PI.PricedItemType.REAL_ESTATE.name);
             break;
 
-        case 'propertiesList' :
+        case 'PROPERTY_List' :
             this.openPricedItemsList(PI.PricedItemType.PROPERTY.name);
             break;
         
@@ -876,6 +978,162 @@ export class MainWindow extends React.Component {
     }
 
 
+    makeCustomTagId(tabIdBase) {
+        let tabIdsInUse = this.onGetTabIdsInProjectSettings();
+        tabIdsInUse = tabIdsInUse.concat(
+            Array.from(this._tabItemsById.keys())
+        );
+
+        return generateCustomTabId(tabIdBase, tabIdsInUse);
+    }
+
+
+    promptCustomTabIdName({title, basicUserName, callback, currentName, }) {
+        return <StringPrompter 
+            title = {title}
+            label = {userMsg(
+                'MainWindow-customTabIdName_label', basicUserName)}
+            initialValue = {currentName}
+            onDone = {callback}
+            onCancel = {this.onCancel}
+        />;
+    }
+
+
+    onGetTabIdTitle(tabId) {
+        let tabEntry = this.onGetTabIdState(tabId);
+        if (!tabEntry) {
+            tabEntry = this.onGetTabIdProjectSettings(tabId);
+        }
+
+        if (tabEntry) {
+            return tabEntry.title;
+        }
+    }
+
+    onCreateCustomTabIdInstance({ originalTabId, basicUserName, menuLabel, options }) {
+        this.onSetModal(() => this.promptCustomTabIdName({
+            title: userMsg('MainWindow-createCustomTabName_title',
+                basicUserName),
+            basicUserName: basicUserName, 
+            callback: (newName) => {
+                // Close the prompter...
+                this.onCancel();
+
+                const existingProjectSettings = this.onGetTabIdProjectSettings(
+                    originalTabId
+                );
+
+                // We need to generate a new tab id...
+                const newTabId = this.makeCustomTagId(options.tabIdBase);
+
+                this.onSetTabIdProjectSettings({
+                    tabId: newTabId,
+                    changes: Object.assign({}, existingProjectSettings, {
+                        title: newName,
+                    }),
+                    actionName: menuLabel,
+                    postApplyCallback: (result) => {
+                        this.onOpenTabId(newTabId);
+                        return result;
+                    },
+                });
+            },
+        }));
+    }
+
+
+    onRenameCustomTabIdInstance({ tabId, basicUserName, menuLabel, }) {
+        const tabEntry = this.onGetTabIdState(tabId);
+        if (!tabEntry) {
+            return;
+        }
+        
+        this.onSetModal(() => this.promptCustomTabIdName({
+            title: userMsg('MainWindow-renameCustomTabName_title',
+                basicUserName, tabEntry.title),
+            basicUserName: basicUserName, 
+            currentName: tabEntry.title,
+            callback: (newName) => {
+                // Close the prompter...
+                this.onCancel();
+
+                this.onSetTabIdProjectSettings({
+                    tabId: tabId,
+                    changes: {
+                        title: newName,
+                    },
+                    actionName: menuLabel,
+                });
+            },
+        }));
+    }
+
+
+    onDeleteCustomTabIdInstance({ tabId, basicUserName, options, }) {
+        // Delete action.
+    }
+
+
+    getAccountsListSubMenu(allTabIds) {
+        const { activeTabId } = this.state;
+
+        const masterTabId = this._accountsListHandler.getMasterTabId();
+
+        let subMenuItems = [
+            { id: 'viewAccountsList', 
+                label: userMsg('MainWindow-viewAccountsList'),
+                checked: activeTabId === masterTabId,
+                onChooseItem: () => this.onActivateTab(masterTabId)
+            },
+            {},
+        ];
+
+        subMenuItems = subMenuItems.concat(
+            this._customAccountsListInstanceManager.createSubMenuItems({
+                allTabIds: allTabIds,
+                activeTabId: activeTabId,
+                alternateCreateTabId: masterTabId,
+            }),
+        );
+
+        return { id: 'accountsListSubMenu',
+            label: userMsg('MainWindow-accountsListSubMenu'),
+            subMenuItems: subMenuItems,
+        };
+    }
+
+
+    getPricedItemsListSubMenu(pricedItemTypeName, allTabIds) {
+        const { activeTabId } = this.state;
+        const masterTabId 
+            = this._pricedItemsListHandler.getMasterTabId(pricedItemTypeName);
+        const baseLabel = pricedItemTypeName + '_List';
+        let subMenuItems = [
+            { id: 'view_' + baseLabel, 
+                label: userMsg('MainWindow-view_' + baseLabel),
+                checked: activeTabId === masterTabId,
+                onChooseItem: () => this.openPricedItemsList(pricedItemTypeName),
+            },
+            {},
+        ];
+
+        subMenuItems = subMenuItems.concat(
+            this._customPricedItemsListInstanceManagers[pricedItemTypeName]
+                .createSubMenuItems({
+                    allTabIds: allTabIds,
+                    activeTabId: activeTabId,
+                    alternateCreateTabId: masterTabId,
+                }),
+        );
+
+        return { id: baseLabel + 'SubMenu',
+            label: userMsg('MainWindow-' + baseLabel + 'SubMenu'),
+            subMenuItems: subMenuItems,
+        };
+    }
+
+
     renderMainMenu() {
         // Have the undo/redo buttons...
         const baseClassName = 'Nav Nav-link Px-2';
@@ -929,6 +1187,8 @@ export class MainWindow extends React.Component {
         </a>;
 
 
+        const allTabIds = this.onGetTabIdsInProjectSettings();
+
         const mainMenuTitle = <i className="material-icons">menu</i>;
         const mainMenuItems = [
             { id: 'checkReminders', 
@@ -940,35 +1200,18 @@ export class MainWindow extends React.Component {
                 onChooseItem: this.onUpdatePrices,
             },
             {},
-            { id: 'viewAccountsList', 
-                label: userMsg('MainWindow-viewAccountsList'),
-                onChooseItem: () => this.onActivateTab('masterAccountsList')
-            },
+            this.getAccountsListSubMenu(allTabIds),
+
             { id: 'viewRemindersList', 
                 label: userMsg('MainWindow-viewRemindersList'),
                 onChooseItem: () => this.onOpenTab('remindersList'),
             },
             {},
-            { id: 'viewSecuritiesList', 
-                label: userMsg('MainWindow-viewSecuritiesList'),
-                onChooseItem: () => this.onOpenTab('securitiesList'),
-            },
-            { id: 'viewMutualFundsList', 
-                label: userMsg('MainWindow-viewMutualFundsList'),
-                onChooseItem: () => this.onOpenTab('mutualFundsList'),
-            },
-            { id: 'viewCurrenciesList', 
-                label: userMsg('MainWindow-viewCurrenciesList'),
-                onChooseItem: () => this.onOpenTab('currenciesList'),
-            },
-            { id: 'viewRealEstateList', 
-                label: userMsg('MainWindow-viewRealEstateList'),
-                onChooseItem: () => this.onOpenTab('realEstateList'),
-            },
-            { id: 'viewPropertiesList', 
-                label: userMsg('MainWindow-viewPropertiesList'),
-                onChooseItem: () => this.onOpenTab('propertiesList'),
-            },
+            this.getPricedItemsListSubMenu(PI.PricedItemType.SECURITY.name, allTabIds),
+            this.getPricedItemsListSubMenu(PI.PricedItemType.MUTUAL_FUND.name, allTabIds),
+            this.getPricedItemsListSubMenu(PI.PricedItemType.CURRENCY.name, allTabIds),
+            this.getPricedItemsListSubMenu(PI.PricedItemType.REAL_ESTATE.name, allTabIds),
+            this.getPricedItemsListSubMenu(PI.PricedItemType.PROPERTY.name, allTabIds),
         ];
 
         const { getZoomMenuItems } = this.props;
