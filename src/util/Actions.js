@@ -30,10 +30,19 @@ import { bug } from './Bug';
 
 /**
  * Optional callback called after an action has been applied.
- * @function {ActionManager~PostApplyCallback}
+ * @function ActionManager~PostApplyCallback
  * @param {ActionDataItem} action   The action that was applied.
  * @param {*}   result  The result from the action applier
  * @return {*}  The result to return.
+ */
+
+/**
+ * Optional callback called after an action has been undone.
+ * Note that the undo callback can be called at any point after the action
+ * has been undone, if multiple actions are being undone it may be getting
+ * called after all the actions have been undone.
+ * @function ActionManager~PostUndoCallback
+ * @param {ActionDataItem} action   The action that was undone.
  */
 
 /**
@@ -43,6 +52,7 @@ import { bug } from './Bug';
  * @property {string}   name    Simple name for the action.
  * @property {string}   [description]
  * @property {ActionManager~PostApplyCallback} [postApplyCallback]
+ * @property {ActionManager~PostUndoCallback} [postUndoCallback]
  */
 
 
@@ -276,6 +286,12 @@ export class ActionManager extends EventEmitter {
                     = await this._handler.asyncGetAppliedActionEntryAtIndex(index);
                 await this._handler.asyncRemoveLastAppliedActionEntries(1);
                 await this._handler.asyncAddUndoneAction(actionEntry.action);
+
+                const { postUndoCallback } = actionEntry.action;
+                if (postUndoCallback) {
+                    postUndoCallback(actionEntry);
+                }
+
                 lastAction = actionEntry.action;
             }
 
