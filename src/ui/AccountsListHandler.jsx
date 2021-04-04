@@ -171,7 +171,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         this.setTabIdState(tabId, newState);
 
-        this.setTabIdProjectSettings(tabId, 
+        this.setTabIdProjectSettings(state.projectSettingsId, 
             {
                 hiddenRootAccountTypes: hiddenRootAccountTypes,
             },
@@ -205,7 +205,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const accountDataItem = this.props.accessor.getAccountDataItemWithId(
             accountId);
         if (accountDataItem) {
-            this.setTabIdProjectSettings(tabId, 
+            this.setTabIdProjectSettings(state.projectSettingsId, 
                 {
                     hiddenAccountIds: hiddenAccountIds,
                 },
@@ -228,7 +228,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         this.setTabIdState(tabId, newState);
 
-        this.setTabIdProjectSettings(tabId, 
+        this.setTabIdProjectSettings(state.projectSettingsId, 
             {
                 showHiddenAccounts: newState.showHiddenAccounts,
             },
@@ -250,7 +250,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         this.setTabIdState(tabId, newState);
 
-        this.setTabIdProjectSettings(tabId, 
+        this.setTabIdProjectSettings(state.projectSettingsId, 
             {
                 showInactiveAccounts: newState.showInactiveAccounts,
             },
@@ -272,7 +272,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         this.setTabIdState(tabId, newState);
 
-        this.setTabIdProjectSettings(tabId, 
+        this.setTabIdProjectSettings(state.projectSettingsId, 
             {
                 sortAlphabetically: newState.sortAlphabetically,
             },
@@ -282,6 +282,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
     onUpdateCollapsedAccountIds(tabId, 
         { accountId, expandCollapseState, collapsedAccountIds}) {
+
+        const state = this.getTabIdState(tabId);
 
         this.setTabIdState(tabId, {
             collapsedAccountIds: collapsedAccountIds
@@ -299,7 +301,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             actionName = userMsg(actionNameId, accountDataItem.name);
         }
 
-        this.setTabIdProjectSettings(tabId, 
+        this.setTabIdProjectSettings(state.projectSettingsId, 
             {
                 collapsedAccountIds: collapsedAccountIds,
             },
@@ -321,7 +323,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         this.setTabIdState(tabId, newState);
 
-        this.setTabIdProjectSettings(tabId, 
+        this.setTabIdProjectSettings(state.projectSettingsId,
             {
                 showSubtotalsWhenCollapsed: newState.showSubtotalsWhenCollapsed,
             },
@@ -343,7 +345,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         this.setTabIdState(tabId, newState);
 
-        this.setTabIdProjectSettings(tabId, 
+        this.setTabIdProjectSettings(state.projectSettingsId,
             {
                 showNetWorth: newState.showNetWorth,
             },
@@ -365,7 +367,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         this.setTabIdState(tabId, newState);
 
-        this.setTabIdProjectSettings(tabId, 
+        this.setTabIdProjectSettings(state.projectSettingsId,
             {
                 showNetIncome: newState.showNetIncome,
             },
@@ -374,6 +376,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
 
     onSetSubtotalsLevel(tabId, level) {
+        const state = this.getTabIdState(tabId);
         this.setTabIdState(tabId, {
             subtotalsLevel: level,
         });
@@ -395,7 +398,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             break;
         }
 
-        this.setTabIdProjectSettings(tabId, 
+        this.setTabIdProjectSettings(state.projectSettingsId,
             {
                 subtotalsLevel: level,
             },
@@ -639,7 +642,11 @@ export class AccountsListHandler extends MainWindowHandlerBase {
      * @returns {TabbedPages~TabEntry}
      */
     createTabEntry(tabId) {
-        let settings = this.getTabIdProjectSettings(tabId) || {};
+        const projectSettingsId = tabId;
+        let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
+        const title = (tabId === 'accountsList')
+            ? userMsg('AccountsListHandler-masterAccountList_title')
+            : settings.title;
         const allColumns = createDefaultColumns();
         const showRowBorders = (settings.showRowBorders === undefined)
             ? true
@@ -669,8 +676,10 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         const tabEntry = {
             tabId: tabId,
-            title: userMsg('AccountsListHandler-masterAccountList_title'),
+            title: title,
+            hasClose: tabId !== 'accountsList',
             onRenderTabPage: this.onRenderTabPage,
+            projectSettingsId: projectSettingsId,
             hiddenRootAccountTypes: hiddenRootAccountTypes,
             hiddenAccountIds: hiddenAccountIds,
             showHiddenAccounts: showHiddenAccounts,
