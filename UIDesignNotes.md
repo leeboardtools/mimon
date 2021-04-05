@@ -466,8 +466,7 @@ Column sorting in RowTable:
 
         - When showing hidden accounts, indicate the accounts are hidden (italics?)
 
-        - Custom Account/PricedItem Lists:
-    
+        - Export as CSV    
 
     - Save/restore last window settings.
 

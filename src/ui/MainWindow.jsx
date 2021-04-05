@@ -20,7 +20,7 @@ import { ReconcilerWindowHandler } from './ReconcilerWindowHandler';
 import { ReminderEditorHandler } from './ReminderEditorHandler';
 import { RemindersListHandler } from './RemindersListHandler';
 import { CustomTabInstanceManager, 
-    generateCustomTabId, } from './CustomTabInstanceManager';
+    generateCustomTabId, } from '../util-ui/CustomTabInstanceManager';
 import { StringPrompter } from '../util-ui/StringPrompter';
 
 

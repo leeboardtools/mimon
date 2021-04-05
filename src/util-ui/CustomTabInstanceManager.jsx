@@ -35,12 +35,43 @@ export function generateCustomTabId(tabIdBase, tabIdsInUse) {
  */
 
 /**
+ * @callback CustomTabInstanceManager~onCreateTabIdInstance
+ * @param {string} originalTabId The tab id of the tab to use as the template.
+ * @param {string} basicUserName The user string whose id was built from the 
+ * labelIdBase + '_name'
+ * @param {string} menuLabel The label of the create menu
+ * @param {CustomTabInstanceManager~options} options
+ */
+
+/**
+ * @callback CustomTabInstanceManager~onRenameTabIdInstance
+ * @param {string} tabId
+ * @param {string} basicUserName The user string whose id was built from the 
+ * labelIdBase + '_name'
+ * @param {string} menuLabel The label of the create menu
+ * @param {CustomTabInstanceManager~options} options
+ */
+
+/**
+ * @callback CustomTabInstanceManager~onDeleteTabIdInstance
+ * @param {string} tabId
+ * @param {string} basicUserName The user string whose id was built from the 
+ * labelIdBase + '_name'
+ * @param {string} menuLabel The label of the create menu
+ * @param {CustomTabInstanceManager~options} options
+ */
+
+
+/**
  * @typedef {object} CustomTabInstanceManager~options
  * @property {string} tabIdBase All tab ids managed by this start with this string.
  * @property {string} actionIdBase The base string id for the action names.
  * @property {string} labelIdBase The base string id for the menu labels.
  * @property {CustomTabInstanceManager~onOpenTabIdCallback} onOpenTabId
  * @property {CustomTabInstanceManager~onGetTabIdTitleCallback} onGetTabIdTitle
+ * @property {CustomTabInstanceManager~onCreateTabIdInstance} [onCreateTabIdInstance]
+ * @property {CustomTabInstanceManager~onRenameTabIdInstance} [onRenameTabIdInstance]
+ * @property {CustomTabInstanceManager~onDeleteTabIdInstance} [onDeleteTabIdInstance]
  */
 
 
@@ -59,23 +90,12 @@ export class CustomTabInstanceManager {
     }
 
 
-    // What does create need to do?
-    //  - Prompt for a name.
-    //      - The name is just for the user, a tab id must be generated.
-    //  - Duplicate the current tab item's entry in ProjectSettings.
-    //  - Support Undo
-    //
-    // What does delete need to do?
-    //  - Confirm? Or just support undo.
-    //  - Close the tab.
-    //  - Remove the active Tab Id from the ProjectSettings
-    //
-    // Rename:
-    //  - Just prompt for a new name.
-
     /**
      * @typedef CustomTabInstanceManager~createSubMenuItemsArgs
-     * @property {string} activeTabId
+     * @property {string[]} allTabIds Array of tab ids, this is scanned for tab ids
+     * that begin with tabIdBase to build the list of available custom tab instances.
+     * @property {string} [activeTabId] The active tab id, does not have to be one
+     * of the tabs managed by this manager.
      * @property {string} [alternateCreateTabId] If specified and activeTabId is
      * not for this manager but is this then this is used to create a new
      * tab instance.
