@@ -464,25 +464,10 @@ Column sorting in RowTable:
             - What about currencies?
                 - Can't add different currencies.
 
+        - When showing hidden accounts, indicate the accounts are hidden (italics?)
+
         - Custom Account/PricedItem Lists:
-            - Save Current Account List
-                - Need name
-            - Manage Custom Account Lists
-                - Rename
-                - Delete
-
-            - Main Menu:
-                - Accounts Lists
-                    - Master Account List
-                    - Create Account List
-                    - ...
-                    - Custom Account Lists
-
-            - Accounts List Menu
-                - Save as New Account List
-                    - (asks for name)
-                - Rename Account List
-                - Delete Account List
     
 
     - Save/restore last window settings.
+

@@ -158,7 +158,7 @@ export class CustomTabInstanceManager {
             subMenuItems.push({
                 id: 'renameCustom' + actionIdBase,
                 label: menuLabel,
-                disabled: !tabTitle,
+                disabled: !activeTabId,
                 onChooseItem: () => onRenameTabIdInstance({
                     tabId: activeTabId,
                     basicUserName: this.basicUserName,
@@ -177,9 +177,9 @@ export class CustomTabInstanceManager {
             subMenuItems.push({
                 id: 'deleteCustom' + actionIdBase,
                 label: menuLabel,
-                disabled: !tabTitle,
+                disabled: !activeTabId,
                 onChooseItem: () => onDeleteTabIdInstance({
-                    activeTabId: activeTabId, 
+                    tabId: activeTabId, 
                     basicUserName: this.basicUserName,
                     menuLabel: menuLabel,
                     options: this.options,

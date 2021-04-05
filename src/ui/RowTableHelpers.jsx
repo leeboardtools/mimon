@@ -415,10 +415,6 @@ export class RowTableHandler {
             updateColumnsFromColumnStates(newState.allColumns, 
                 projectSettings.columnStates,
                 state.defaultColumnStates);
-
-            console.log({
-                projectSettingsColumnStates: projectSettings.columnStates,
-            });
         }
         else {
             newState = Object.assign({}, state, projectSettings);

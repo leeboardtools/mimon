@@ -1075,8 +1075,18 @@ export class MainWindow extends React.Component {
     }
 
 
-    onDeleteCustomTabIdInstance({ tabId, basicUserName, options, }) {
-        // Delete action.
+    onDeleteCustomTabIdInstance({ tabId, basicUserName, menuLabel, }) {
+        this.onCloseTab(tabId);
+
+        this.onSetTabIdProjectSettings({
+            tabId: tabId,
+            changes: undefined,
+            actionName: menuLabel,
+            postUndoCallback: (result) => {
+                this.onOpenTabId(tabId);
+                return result;
+            },
+        });
     }
 
 
