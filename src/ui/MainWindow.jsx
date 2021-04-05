@@ -607,6 +607,11 @@ export class MainWindow extends React.Component {
                 });
             }
 
+            if (!this._projectSettings.tabIdSettings[tabId]) {
+                this.onCloseTab(tabId);
+                delete this._projectSettings.tabIdSettings[tabId];
+            }
+
             this._eventEmitter.emit('tabIdProjectSettingsModify', 
                 tabId, tabIdSettings, changes);
         }
