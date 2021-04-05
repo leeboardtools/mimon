@@ -232,10 +232,15 @@ export class ActionManager extends EventEmitter {
     /**
      * Applies an action. After application the action is in the applied actions list 
      * at index {@link ActionManager#getAppliedActionCount} - 1.
+     * The undone actions list is cleared.
      * @param {ActionDataItem} action 
      * @fires {ActionManager#actionApply}
      */
     async asyncApplyAction(action) {
+        return this._asyncApplyAction2(action, true);
+    }
+
+    async _asyncApplyAction2(action, clearUndoneList) {
         const undoId = this._undoManager.getNextUndoId();
         const actionEntry = {
             undoId: undoId,
@@ -245,6 +250,10 @@ export class ActionManager extends EventEmitter {
         try {
             const result = await this._asyncApplyAction(action);
             await this._handler.asyncAddAppliedActionEntry(actionEntry);
+
+            if (clearUndoneList) {
+                await this.asyncClearUndoneActions();
+            }
 
             this.emit('actionApply', action, result);
             return result;
@@ -322,7 +331,7 @@ export class ActionManager extends EventEmitter {
                 const action = await this.asyncGetUndoneActionAtIndex(index);
 
                 await this._handler.asyncRemoveLastUndoneActions(1);
-                lastActionResult = await this.asyncApplyAction(action);
+                lastActionResult = await this._asyncApplyAction2(action);
                 lastAction = action;
             }
 
