@@ -2,9 +2,12 @@ import React from 'react';
 import { userMsg } from '../util/UserMessages';
 import { CellTextDisplay, CellTextEditor } from '../util-ui/CellTextEditor';
 import { CellSelectDisplay, CellSelectEditor,
+    renderCellSelectEditorAsText,
     CellToggleSelectDisplay, CellToggleSelectEditor, } from '../util-ui/CellSelectEditor';
 import { CellDateDisplay, CellDateEditor } from '../util-ui/CellDateEditor';
-import { CellQuantityDisplay, CellQuantityEditor } from '../util-ui/CellQuantityEditor';
+import { CellQuantityDisplay, CellQuantityEditor,
+    renderCellQuantityEditorAsText,
+    renderCellQuantityDisplayAsText, } from '../util-ui/CellQuantityEditor';
 import { getValidQuantityBaseValue } from '../util-ui/QuantityField';
 import { Tooltip } from '../util-ui/Tooltip';
 import { getQuantityDefinition } from '../util/Quantities';
@@ -81,6 +84,10 @@ export function renderTextEditor(args) {
 
     value = value || '';
 
+    if (args.renderAsText) {
+        return value;
+    }
+
     return <CellTextEditor
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
@@ -114,6 +121,10 @@ function renderTextEditorWithTooltips(args, valueProperty) {
     }
     if ((value === undefined) || (value === null)) {
         value = '';
+    }
+
+    if (args.renderAsText) {
+        return value;
     }
 
     return <CellTextEditor
@@ -178,6 +189,10 @@ export function renderTextDisplay(args) {
     }
     if ((value === undefined) || (value === null)) {
         value = '';
+    }
+
+    if (args.renderAsText) {
+        return value;
     }
 
     const component = <CellTextDisplay
@@ -396,6 +411,10 @@ export function renderDateEditor(args) {
     const { accessor } = value;
     let dateFormat = (accessor) ? accessor.getDateFormat() : undefined;
 
+    if (args.renderAsText) {
+        return value;
+    }
+
     return <CellDateEditor
         ariaLabel = {ariaLabel}
         value = {value.ymdDate}
@@ -433,6 +452,10 @@ export function renderDateDisplay(args) {
     const value = args.value || {};
     const { accessor } = value;
     let dateFormat = (accessor) ? accessor.getDateFormat() : undefined;
+
+    if (args.renderAsText) {
+        return value;
+    }
 
     return <CellDateDisplay
         ariaLabel = {columnInfo.ariaLabel}
@@ -523,10 +546,18 @@ export function renderAccountTypeEditor(args) {
 
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
 
+    const selectedValue = value.accountType || A.AccountType.ASSET.name;
+    if (args.renderAsText) {
+        return renderCellSelectEditorAsText({
+            items: items,
+            selectedValue: selectedValue,
+        });
+    }
+
     return <CellSelectEditor
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
-        selectedValue = {value.accountType || A.AccountType.ASSET.name}
+        selectedValue = {selectedValue}
         items = {items}
         classExtras = {inputClassExtras}
         size = {inputSize}
@@ -559,6 +590,11 @@ export function renderAccountTypeDisplay(args) {
     const { columnInfo, value } = args;
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
     const accountType = A.AccountType[value.accountType];
+
+    if (args.renderAsText) {
+        return accountType.description;
+    }
+
     return <CellSelectDisplay
         ariaLabel = {ariaLabel}
         selectedValue = {accountType.description}
@@ -664,6 +700,13 @@ export function renderAccountIdEditor(args) {
     const items = [];
     rootAccountIds.forEach((id) => addAccountIdsToItems(accessor, items, 
         id, filter));
+    
+    if (args.renderAsText) {
+        return renderCellSelectEditorAsText({
+            items: items,
+            selectedValue: accountId,
+        });
+    }
 
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
 
@@ -695,6 +738,11 @@ export function renderAccountIdDisplay(args) {
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
     const { accountId, accessor } = value;
     const name = AH.getShortAccountAncestorNames(accessor, accountId);
+
+    if (args.renderAsText) {
+        return name || '';
+    }
+
     if (name) {
         return <CellSelectDisplay
             ariaLabel = {ariaLabel}
@@ -772,6 +820,11 @@ export function renderReconcileStateEditor(args) {
             ]);
         }
     }
+
+    if (args.renderAsText) {
+        return reconcileState.toString();
+    }
+
     return <CellToggleSelectEditor
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
@@ -810,10 +863,15 @@ export function renderReconcileStateDisplay(args) {
     if (value) {
         reconcileState = value.reconcileState;
     }
-    const selectedValue = getReconcileStateName(
+    const selectedName = getReconcileStateName(
         reconcileState || ReconcileState.NOT_RECONCILED);
+    const selectedValue = userMsg('AccountingCellEditors-reconcile_' + selectedName);
+    if (args.renderAsText) {
+        return selectedValue;
+    }
+
     return <CellToggleSelectDisplay
-        selectedValue = {userMsg('AccountingCellEditors-reconcile_' + selectedValue)}
+        selectedValue = {selectedValue}
         ariaLabel = {columnInfo.ariaLabel}
         classExtras = {columnInfo.inputClassExtras}
         size = {columnInfo.inputSize}
@@ -899,6 +957,13 @@ export function renderQuantityEditor(args) {
         catch (e) {
             // Do nothing...
         }
+    }
+
+    if (args.renderAsText) {
+        return renderCellQuantityEditorAsText({
+            quantityDefinition: quantityDefinition,
+            value: quantityBaseValue,
+        });
     }
 
     return <CellQuantityEditor
@@ -991,9 +1056,16 @@ export function renderQuantityDisplay(args) {
     const { columnInfo, value, suffix } = args;
     if (value) {
         const { quantityBaseValue, quantityDefinition, tooltip } = value;
+
+        if (args.renderAsText) {
+            return renderCellQuantityDisplayAsText({
+                quantityDefinition: quantityDefinition,
+                value: quantityBaseValue,
+            });
+        }
         return <CellQuantityDisplay
             quantityDefinition = {quantityDefinition}
-            quantityBaseValue = {quantityBaseValue}
+            value = {quantityBaseValue}
             suffix = {suffix}
             tooltip = {tooltip}
             ariaLabel = {columnInfo.ariaLabel}
@@ -1355,6 +1427,13 @@ export function renderSplitQuantityEditor(args) {
         quantityBaseValue = '';
     }
 
+    if (args.renderAsText) {
+        return renderCellQuantityEditorAsText({
+            quantityDefinition: quantityDefinition,
+            value: quantityBaseValue,
+        });
+    }
+
     const evalExpression = (value.accessor) 
         ? value.accessor.evalExpression : undefined;
 
@@ -1408,6 +1487,10 @@ export function renderSplitQuantityDisplay(args) {
                 quantityDefinition: args.value.quantityDefinition,
             }
         }));
+
+    if (args.renderAsText) {
+        return displayComponent;
+    }
 
     const lotTooltipEntries = [];
     if (isLots) {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { userError, userMsg } from '../util/UserMessages';
-import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor';
+import { CellSelectDisplay, CellSelectEditor, 
+    renderCellSelectEditorAsText } from '../util-ui/CellSelectEditor';
 import * as ACE from './AccountingCellEditors';
 import * as AH from '../tools/AccountHelpers';
 import * as LTH from '../tools/LotTransactionHelpers';
@@ -1266,6 +1267,11 @@ function renderActionDisplay(args, columnInfoArgs) {
         const { ariaLabel, inputSize } = columnInfo;
         let classExtras = columnInfo.inputClassExtras;
         const { actionType } = splitInfo;
+
+        if (args.renderAsText) {
+            return actionType.description;
+        }
+
         return <CellSelectDisplay
             selectedValue = {actionType.description}
             ariaLabel = {ariaLabel}
@@ -1308,6 +1314,13 @@ function renderActionEditor(args, columnInfoArgs) {
         const items = [];
         for (const actionType of Object.values(LotActionType)) {
             items.push([actionType.name, actionType.description]);
+        }
+
+        if (args.renderAsText) {
+            return renderCellSelectEditorAsText({
+                items: items,
+                selectedValue: splitInfo.actionType.name,
+            });
         }
 
         return <CellSelectEditor

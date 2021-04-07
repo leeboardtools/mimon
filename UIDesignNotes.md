@@ -466,7 +466,41 @@ Column sorting in RowTable:
 
         - When showing hidden accounts, indicate the accounts are hidden (italics?)
 
-        - Export as CSV    
+        - Export as CSV
+            - Helper that provides a pseudo interface similar to RowTable, takes:
+                -columns
+                -rowCount
+                -getRowKey
+                -onRenderDisplayCell
+
+            - Will need a separate one for CollapsibleRowTable
+                -columns
+                -rowInfos
+                -onRenderCell
+            
+            - The question is how to trigger the renderAsText, since that has to reside in the React component, while the menu command is most likely in the main window.
+                - Could the AccountsListHandler store a React ref to the component in the tab state?
+                - Have the handler provide a method for rendering as CSV.
+            
+            - Tasks for the handler:
+                - Store a callback in the tabEntry
+                - Create a React ref, assign in onRenderTabPage.
+                - The text renderer ought to be callback driven:
+                    - onStartRender
+                    - onStartHeaderRow
+                    - onRenderHeaderCell
+                    - onEndHeaderRow
+                    - onStartBody
+                    - onStartBodyRow
+                    - onRenderBodyCell
+                    - onEndBodyRow
+                    - onEndBody
+                    - onStartFooterRow
+                    - onRenderFooterCell
+                    - onEndFooterRow
+                    - onEndRender
+
+                
 
     - Save/restore last window settings.
 

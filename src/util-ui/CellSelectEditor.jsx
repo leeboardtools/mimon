@@ -4,6 +4,38 @@ import { Tooltip } from './Tooltip';
 
 
 /**
+ * @typedef {object} renderCellSelectEditorAsTextArgs
+ * @property {string[]|Array[]} items See {@link CellSelectEditor~propTypes}'s
+ * items property.
+ * @property {string} selectedValue
+ */
+
+/**
+ * Renders the equivalent of {@link CellSelectEditor} as user text.
+ * @param {renderCellSelectEditorAsTextArgs} args
+ * @returns {string}
+ */
+export function renderCellSelectEditorAsText({
+    items,
+    selectedValue,
+}) {
+    if (items && items.length) {
+        if (typeof items[0] === 'string') {
+            return selectedValue;
+        }
+        else {
+            for (let i = 0; i < items.length; ++i) {
+                if (items[i][0] === selectedValue) {
+                    return items[i][1];
+                }
+            }
+        }
+    }
+    return '';
+}
+
+
+/**
  * Component for a cell that offers a drop-down list to choose from.
  * @class
  */

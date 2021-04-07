@@ -6,6 +6,81 @@ import { getValidQuantityBaseValue } from './QuantityField';
 
 
 /**
+ * @typedef {object} renderCellQuantityEditorAsTextArgs
+ * @property {string|QuantityDefinition} quantityDefinition
+ * @property {string|number} value
+ */
+
+/**
+ * Renders the equivalent of {@link CellQuantityEditor} as user text.
+ * @param {renderCellQuantityEditorAsTextArgs} args
+ * @returns {string}
+ */
+export function renderCellQuantityEditorAsText({
+    quantityDefinition,
+    value,
+}) {
+    quantityDefinition = getQuantityDefinition(quantityDefinition);
+    if (!quantityDefinition) {
+        return '';
+    }
+
+    if (typeof value === 'number') {
+        value = quantityDefinition.baseValueToValueText(value);
+    }
+    else {
+        try {
+            value = value.trim();
+            getValidQuantityBaseValue(value, quantityDefinition);
+        }
+        catch (e) {
+            return e.toString();
+        }
+    }
+    return value;
+}
+
+
+/**
+ * @typedef {object} renderCellQuantityDisplayAsTextArgs
+ * @property {string|QuantityDefinition} quantityDefinition
+ * @property {string|number} value
+ * @property {string} [suffix]
+ */
+
+
+/**
+ * Renders the equivalent of {@link CellQuantityDisplay} as user text.
+ * @param {renderCellQuantityDisplayAsTextArgs} args
+ * @returns {string}
+ */
+export function renderCellQuantityDisplayAsText({
+    quantityDefinition,
+    value,
+    suffix,
+}) {
+
+    quantityDefinition 
+        = getQuantityDefinition(quantityDefinition);
+
+    if (!quantityDefinition || (value === undefined)) {
+        return '';
+    }
+    else {
+        if (typeof value === 'number') {
+            value = quantityDefinition.baseValueToValueText(value);
+        }
+
+        if (suffix) {
+            value += suffix;
+        }
+
+        return value;
+    }
+}
+
+
+/**
  * React component for editing a quantity in a table cell.
  * Want this to be an editor that attempts to format the value like
  * CellQuantityDisplay, and if it fails and there is no other error
@@ -110,10 +185,10 @@ CellQuantityEditor.propTypes = {
 
 /**
  * React component that's a display representation of {@link CellQuantityEditor}.
- * @param {*} props 
+ * @class
  */
 export function CellQuantityDisplay(props) {
-    const { ariaLabel, quantityBaseValue, 
+    const { ariaLabel, 
         inputClassExtras, tooltip, suffix } = props;
     if (!props.quantityDefinition) {
         return null;
@@ -122,17 +197,14 @@ export function CellQuantityDisplay(props) {
     const quantityDefinition 
         = getQuantityDefinition(props.quantityDefinition);
 
-    let { size } = props;
-    let value;
-    if (!quantityDefinition || (quantityBaseValue === undefined)) {
+    let { size, value } = props;
+
+    if (!quantityDefinition || (value === undefined)) {
         value = '';
     }
     else {
-        if (typeof quantityBaseValue === 'number') {
-            value = quantityDefinition.baseValueToValueText(quantityBaseValue);
-        }
-        else {
-            value = quantityBaseValue;
+        if (typeof value === 'number') {
+            value = quantityDefinition.baseValueToValueText(value);
         }
 
         if (suffix) {
@@ -156,17 +228,20 @@ export function CellQuantityDisplay(props) {
 
 /**
  * @typedef {object} CellQuantityDisplay~propTypes
- * @property {string}   [ariaLabel]
- * @property {string}   [value]
- * @property {string}   [inputClassExtras]  If specified additional CSS
+ * @property {string} [ariaLabel]
+ * @property {string|number} [value]
+ * @property {string|QuantityDefinition} [quantityBaseValue]
+ * @property {string} [inputClassExtras]  If specified additional CSS
  * classes to add to the &lt;input&gt; entity.
- * @property {number}   [size]  If specified and &lt; 0 then this is
+ * @property {number} [size]  If specified and &lt; 0 then this is
  * the default size for the input field and will be enlarged to fit
  * the number of characters in the quantity as needed.
+ * @property {string} [suffix] Optional suffix added after the value
+ * @property {string|string[]} [tooltip]
  */
 CellQuantityDisplay.propTypes = {
     ariaLabel: PropTypes.string,
-    quantityBaseValue: PropTypes.oneOfType([
+    value: PropTypes.oneOfType([
         PropTypes.number,
         PropTypes.string,
     ]),
