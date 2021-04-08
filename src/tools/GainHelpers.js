@@ -216,7 +216,7 @@ export function getLotStateCashInBaseValue(accountStateInfo, lotStateDataItem) {
  */
 
 /**
- * Calculats the gain parts for simple gain, which uses the full cost basis.
+ * Calculates the gain parts for simple gain, which uses the full cost basis.
  * @param {GainHelpers~AccountStateInfo} accountStateInfo 
  * @param {LotStateDataItem} lotStateDataItem 
  * @returns {GainHelpers~GainParts|undefined}
@@ -250,7 +250,7 @@ export function isLotStateCashIn(accessor, lotStateDataItem) {
 
 
 /**
- * Calculats the gain parts for cash-in gain, which only includes lots for which
+ * Calculates the gain parts for cash-in gain, which only includes lots for which
  * {@link GainHelpers.isLotStateCashIn} returns <code>true<.code>.
  * @param {GainHelpers~AccountStateInfo} accountStateInfo 
  * @param {LotStateDataItem} lotStateDataItem 
@@ -267,20 +267,21 @@ export function getLotStateCashInGainParts(accountStateInfo, lotStateDataItem) {
 }
 
 
-function resolveLotStatesFromArgs(args, lotStates) {
+function resolveLotStatesFromArgs(args, lotStates, lotStatesName) {
+    lotStatesName = lotStatesName || 'lotStates';
     if (lotStates) {
-        if (lotStates.lotStates) {
+        if (lotStates[lotStatesName]) {
             // it's an AccountStateDataItem...
-            lotStates = lotStates.lotStates;
+            lotStates = lotStates[lotStatesName];
         }
     }
     else {
-        lotStates = args.lotStates;
+        lotStates = args[lotStatesName];
     }
     if (!lotStates) {
         const { accountStateDataItem } = args;
         if (accountStateDataItem) {
-            lotStates = accountStateDataItem.lotStates;
+            lotStates = accountStateDataItem[lotStatesName];
         }
     }
 
@@ -349,7 +350,7 @@ export function calcLotStateGain(args, lotStates) {
     let inputBaseValue = 0;
     let outputBaseValue = 0;
 
-    lotStates = resolveLotStatesFromArgs(args, lotStates);
+    lotStates = resolveLotStatesFromArgs(args, lotStates, 'gainLotStates');
     if (lotStates) {
 
         lotStates.forEach((lotState) => {
@@ -433,7 +434,7 @@ export function calcLotStatePercentAnnualGain(args, lotStates) {
         return;
     }
 
-    lotStates = resolveLotStatesFromArgs(args, lotStates);
+    lotStates = resolveLotStatesFromArgs(args, lotStates, 'gainLotStates');
     if (!lotStates) {
         return;
     }
@@ -525,7 +526,7 @@ export function calcLotStatePercentAnnualGain(args, lotStates) {
  * @memberof GainHelpers
  */
 export function calcLotStateCashInPercentAnnualGain(args, lotStates) {
-    lotStates = resolveLotStatesFromArgs(args, lotStates);
+    lotStates = resolveLotStatesFromArgs(args, lotStates, 'gainLotStates');
     if (!lotStates) {
         return;
     }

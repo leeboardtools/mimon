@@ -551,6 +551,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const projectSettingsId = tabId;
 
         const masterTabId = this.getMasterTabId(pricedItemTypeName);
+        const typeDescription = PI.getPricedItemType(pricedItemTypeName).description;
 
         let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
         const title = (tabId === masterTabId)
@@ -568,7 +569,6 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             ? true
             : settings.sortAlphabetically;
 
-        const typeDescription = PI.getPricedItemType(pricedItemTypeName).description;
         const tabEntry = {
             tabId: tabId,
             title: title,

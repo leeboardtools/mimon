@@ -468,6 +468,8 @@ export class AccountsList extends React.Component {
                 let quantityBaseValue;
                 let quantityDefinition;
 
+                let gainQuantityBaseValue;
+
                 if (rowAccountState.lotStates) {
                     // Need the price...
                     const priceDataItem = this.state.pricesByPricedItemId.get(
@@ -483,11 +485,22 @@ export class AccountsList extends React.Component {
                         quantityBaseValue = result.quantityBaseValue;
                         quantityDefinition = result.quantityDefinition;
 
+                        if (!accountDataItem.isExcludeFromGain) {
+                            gainQuantityBaseValue = quantityBaseValue;
+                        }
+
                         const { lotStatesWithMarketValue } = result;
                         if (lotStatesWithMarketValue) {
                             accountState.lotStates = (accountState.lotStates)
                                 ? accountState.lotStates.concat(lotStatesWithMarketValue)
                                 : lotStatesWithMarketValue;
+                            
+                            if (!accountDataItem.isExcludeFromGain) {
+                                accountState.gainLotStates = (accountState.gainLotStates)
+                                    ? accountState.gainLotStates.concat(
+                                        lotStatesWithMarketValue)
+                                    : lotStatesWithMarketValue;
+                            }
                         }
                     }
 
@@ -511,6 +524,15 @@ export class AccountsList extends React.Component {
                         definitionB: quantityDefinition,
                         quantityBaseValueB: quantityBaseValue,
                     });
+
+                    if (gainQuantityBaseValue !== undefined) {
+                        accountState.gainQuantityBaseValue = addQuantityBaseValues({
+                            definitionA: accountState.quantityDefinition,
+                            quantityBaseValueA: accountState.gainQuantityBaseValue || 0,
+                            definitionB: quantityDefinition,
+                            quantityBaseValueB: gainQuantityBaseValue,
+                        });
+                    }
                 }
             }
         }
@@ -876,7 +898,7 @@ export class AccountsList extends React.Component {
         let { accountDataItem, accountState, calcGainValueCallback, suffix } = renderArgs;
 
         accountDataItem = accountDataItem || renderArgs.subtotalAccountDataItem;
-        if (!accountDataItem) {
+        if (!accountDataItem || accountDataItem.isExcludeFromGain) {
             return;
         }
 
@@ -917,6 +939,8 @@ export class AccountsList extends React.Component {
             accessor: accessor,
             pricedItemId: accountDataItem.pricedItemId,
             accountStateDataItem: accountState,
+            // accountState.gainLotStates is present for subtotals
+            gainLotStates: accountState.gainLotStates || accountState.lotStates,
             priceDataItem: priceDataItem,
         });
 
@@ -1064,7 +1088,8 @@ export class AccountsList extends React.Component {
 
         const { plusRootAccountDataItem, minusRootAccountDataItem } = rowInfo;
         if (plusRootAccountDataItem && minusRootAccountDataItem) {
-            // 
+            // The net worth/net income rows...
+
             const plusAccountState = this.getAccountStateForSubtotalRowInfo(rowInfo,
                 plusRootAccountDataItem);
             const minusAccountState = this.getAccountStateForSubtotalRowInfo(rowInfo,

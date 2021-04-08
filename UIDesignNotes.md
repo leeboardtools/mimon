@@ -338,6 +338,9 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Priced Item List
         - Custom Priced Item Lists
         - If Account Name is shortened, add tooltip with full name.
+        - Securities:
+            - Option to mark security to exclude from gain calculations
+                - Use to mark account as cash/money market fund
 
 
     - Priced Item Editor
@@ -356,6 +359,13 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Add a new security?
 
 
+    - Printing
+        - Only print contents of active tab, not full window.
+        - Somehow fit to page so it doesn't get clipped.
+        - Print date
+        - Margin setup
+
+
     - Reconciler
         - Add column width support.
 
@@ -367,11 +377,6 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Reminders List
         - Clicking enabled button does nothing.
         - Add Apply now command.
-
-
-    - Printing
-        - Only print contents of active tab, not full window.
-        - Somehow fit to page so it doesn't get clipped.
 
 
 - Menus
@@ -448,23 +453,41 @@ Column sorting in RowTable:
         - Changing column width of prices list then undoing/redoing does not
         properly resize other open tabs that are not active.
 
+
     - Reminders List
         - Clicking enabled button does nothing.
         - Add Apply now command.
 
+
     - Reconciler
         - Add column width support.
+
 
     - Account Register Tasks
         - Auto complete
         - Filter transactions
+    
 
-    - Account List
+    - Accounts List/Priced Items List
+        - Option to flatten hierarchy
+            - When flattened subtotals appear only at bottom
+            - How about combining similar items (i.e. securities)
+
+        - Column for % of value
+
+        - Printing:
+            - Display current date as Date Printed
+
+
+    - Accounts List
         - Subtotals:
             - What about currencies?
                 - Can't add different currencies.
 
         - When showing hidden accounts, indicate the accounts are hidden (italics?)
+
+        - Don't show net income if both income and expenses are hidden.
+        - Don't show net worth if both assets and liabilities are hidden.
 
         - Export as CSV
             - Helper that provides a pseudo interface similar to RowTable, takes:

@@ -47,6 +47,7 @@ export class AccountEditor extends React.Component {
 
         this.onIsInactiveChange = this.onIsInactiveChange.bind(this);
         this.onIsHiddenChange = this.onIsHiddenChange.bind(this);
+        this.onIsExcludeFromGainChange = this.onIsExcludeFromGainChange.bind(this);
 
         this.onRenderPage = this.onRenderPage.bind(this);
 
@@ -612,8 +613,15 @@ export class AccountEditor extends React.Component {
         });
     }
 
+    onIsExcludeFromGainChange(isCheck) {
+        this.updateAccountDataItem({
+            isExcludeFromGain: isCheck,
+        });
+    }
+
     renderOptionsEditor() {
         const { accountDataItem } = this.state;
+
         return <React.Fragment>
             <Row>
                 <Col>
@@ -633,6 +641,17 @@ export class AccountEditor extends React.Component {
                         value = {accountDataItem.isHidden}
                         label = {userMsg('AccountEditor-isHidden_label')}
                         onChange = {this.onIsHiddenChange}
+                        tabIndex = {0}
+                    />
+                </Col>
+            </Row>
+            <Row>
+                <Col>
+                    <Checkbox
+                        ariaLabel = "Is Exclude From Gain"
+                        value = {accountDataItem.isExcludeFromGain}
+                        label = {userMsg('AccountEditor-isExcludeFromGain_label')}
+                        onChange = {this.onIsExcludeFromGainChange}
                         tabIndex = {0}
                     />
                 </Col>

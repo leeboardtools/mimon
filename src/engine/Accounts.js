@@ -300,6 +300,7 @@ export function loadAccountsUserMessages() {
  * @property {boolean}  [isHidden]
  * @property {boolean}  [isInactive]
  * @property {boolean}  [isLocked]
+ * @property {boolean}  [isExcludeFromGain]
  */
 
 /**
@@ -327,6 +328,7 @@ export function loadAccountsUserMessages() {
  * @property {boolean}  [isHidden]
  * @property {boolean}  [isInactive]
  * @property {boolean}  [isLocked]
+ * @property {boolean}  [isExcludeFromGain]
  */
 
 /**

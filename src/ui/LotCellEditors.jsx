@@ -1997,6 +1997,10 @@ export function getTotalGainColumnInfo(args) {
 
 function calcGainBalanceValue(args) {
     const result = GH.calcLotStateGain(args);
+    if (!result) {
+        return;
+    }
+
     const { accountStateInfo } = result;
     const { currencyQuantityDefinition } = accountStateInfo;
     const { accessor } = args;
@@ -2215,6 +2219,9 @@ export function calcAnnualPercentGainBalanceValue(args) {
 //
 function annualGainResultToBalanceValue(args, result) {
     const { accessor, priceDataItem } = args;
+    if (!result) {
+        return;
+    }
 
     const { percentAnnualGainBaseValue, lotPercentAnnualGains } = result;
     if ((typeof percentAnnualGainBaseValue !== 'number')
