@@ -345,8 +345,6 @@ export function collapsibleRowTable(WrappedTable) {
         onPreRenderRow(args) {
             const { onPreRenderRow } = this.props;
             if (onPreRenderRow && (args.rowIndex >= 0)) {
-                args = Object.assign({}, args);
-
                 const rowEntry = this.state.rowEntries[args.rowIndex];
                 args.rowInfo = rowEntry.rowInfo;
                 args.depth = rowEntry.depth;

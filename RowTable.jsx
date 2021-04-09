@@ -1299,10 +1299,12 @@ export class RowTable extends React.Component {
                 isSizeRender,
             } = this.state;
 
+            let { 
+                rowClassExtras,
+            } = args;
             const { 
                 cellClassName, 
                 rowIndex, 
-                rowClassExtras, 
                 height,
                 blockWidth,
                 blockHeight,
@@ -1318,10 +1320,14 @@ export class RowTable extends React.Component {
 
             let rowRenderInfo;
             if (onPreRenderRow) {
-                rowRenderInfo = onPreRenderRow({
+                const args = {
                     rowIndex: rowIndex,
                     isSizeRender: isSizeRender,
-                });
+                    rowClassExtras: rowClassExtras,
+                };
+                rowRenderInfo = onPreRenderRow(args);
+                
+                rowClassExtras = args.rowClassExtras;
             }
 
             const { columnWidths } = this.state;
@@ -1489,8 +1495,8 @@ export class RowTable extends React.Component {
 
 
     renderRow(rowIndex) {
+        let { rowClassExtras } = this.props;
         const {
-            rowClassExtras,
             onPreRenderRow,
             onRenderCell,
             onPostRenderRow,
@@ -1511,10 +1517,15 @@ export class RowTable extends React.Component {
 
         let rowRenderInfo;
         if (onPreRenderRow) {
-            rowRenderInfo = onPreRenderRow({
+            const args = {
                 rowIndex: rowIndex,
                 isSizeRender: isSizeRender,
-            });
+                rowClassExtras: rowClassExtras,
+            };
+
+            rowRenderInfo = onPreRenderRow(args);
+
+            rowClassExtras = args.rowClassExtras;
         }
 
         const getRowKey = this.props.getRowKey || ((i) => i);
@@ -1923,6 +1934,8 @@ export class RowTable extends React.Component {
  * @typedef {object} RowTable~onPreRenderRowArgs
  * @property {number} rowIndex
  * @property {boolean} isSizeRender
+ * @property {string} rowClassExtras Set to the rowClassExtras from the RowTable's
+ * properties, this may be changed in the args object.
  */
 
 /**
