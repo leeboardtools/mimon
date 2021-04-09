@@ -125,6 +125,16 @@ label {
 .AccountsList {
 }
 */
+.AccountList-hidden-account {
+    font-style: italic;
+}
+.AccountList-always-hidden-account {
+    font-style: italic;
+}
+.AccountList-inactive-account {
+    font-weight:lighter;
+    color: #495057a6;
+}
 
 .AccountsList-subtotal {
     font-weight: bold;

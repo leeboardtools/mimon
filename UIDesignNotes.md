@@ -472,6 +472,8 @@ Column sorting in RowTable:
         - Option to flatten hierarchy
             - When flattened subtotals appear only at bottom
             - How about combining similar items (i.e. securities)
+        
+        - Columns for % of total, % of parent
 
         - Column for % of value
 
@@ -484,10 +486,6 @@ Column sorting in RowTable:
             - What about currencies?
                 - Can't add different currencies.
 
-        - When showing hidden accounts, indicate the accounts are hidden (italics?)
-
-        - Don't show net income if both income and expenses are hidden.
-        - Don't show net worth if both assets and liabilities are hidden.
 
         - Export as CSV
             - Helper that provides a pseudo interface similar to RowTable, takes:

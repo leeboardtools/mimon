@@ -255,8 +255,8 @@
     "AccountEditor-default_split_account_label_FEES_EXPENSE_FEES": "Account for fee expenses",
     "AccountEditor-default_split_account_label_FEES_EXPENSE_BANK_FEES": "Account for bank fee expenses",
     "AccountEditor-default_split_account_label_FEES_EXPENSE_BROKERAGE_COMMISSIONS": "Account for commission/fee expenses",
-    "AccountEditor-isInactive_label": "Is inactive",
-    "AccountEditor-isHidden_label": "Is always hidden",
+    "AccountEditor-isInactive_label": "Inactive",
+    "AccountEditor-isHidden_label": "Always hidden",
     "AccountEditor-isExcludeFromGain_label": "Exclude from gains",
 
     "AccountSelector-disabled_root": "--Root--",

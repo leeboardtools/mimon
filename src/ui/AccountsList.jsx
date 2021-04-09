@@ -383,6 +383,8 @@ export class AccountsList extends React.Component {
                     : ExpandCollapseState.EXPANDED)
                 : ExpandCollapseState.NO_EXPAND_COLLAPSE,
             accountDataItem: accountDataItem,
+            isHidden: this.props.showHiddenAccounts 
+                && this._hiddenAccountIds.has(accountDataItem.id),
         };
         rowInfos.push(rowInfo);
         rowInfosByAccountId.set(accountId, rowInfo);
@@ -658,8 +660,48 @@ export class AccountsList extends React.Component {
     }
 
 
-    renderName({ columnInfo, accountDataItem, rowInfo, }) {
+    columnInfoFromRenderArgs(renderArgs) {
+        let { columnInfo, rowInfo } = renderArgs;
+        if (rowInfo.subtotalAccountDataItem || rowInfo.rootAccountDataItem) {
+            columnInfo = Object.assign({}, columnInfo);
+            columnInfo.inputClassExtras = 'AccountsList-subtotal '
+                + ((rowInfo.accountDataItem)
+                    ? 'AccountsList-subtotal-collapsed-value'
+                    : 'AccountsList-subtotal-value');
+        }
+
+        const { accountDataItem } = rowInfo;
+
+        if (accountDataItem && accountDataItem.isHidden) {
+            columnInfo = Object.assign({}, columnInfo, {
+                inputClassExtras: (columnInfo.inputClassExtras || '')
+                    + ' AccountList-always-hidden-account',
+            });
+        }
+        else if (rowInfo.isHidden) {
+            columnInfo = Object.assign({}, columnInfo, {
+                inputClassExtras: (columnInfo.inputClassExtras || '')
+                    + ' AccountList-hidden-account',
+            });
+        }
+
+        if (accountDataItem && accountDataItem.isInactive) {
+            columnInfo = Object.assign({}, columnInfo, {
+                inputClassExtras: (columnInfo.inputClassExtras || '')
+                    + ' AccountList-inactive-account',
+            });
+        }
+
+
+        return columnInfo;
+    }
+
+
+    renderName(args) {
+        const { accountDataItem, rowInfo, } = args;
         let value;
+
+        let columnInfo = this.columnInfoFromRenderArgs(args);
 
         if (accountDataItem) {
             value = {
@@ -690,20 +732,39 @@ export class AccountsList extends React.Component {
                 value: value,
             });
         }
-
     }
 
 
-    columnInfoFromRenderArgs(renderArgs) {
-        let { columnInfo, rowInfo } = renderArgs;
-        if (rowInfo.subtotalAccountDataItem || rowInfo.rootAccountDataItem) {
-            columnInfo = Object.assign({}, columnInfo);
-            columnInfo.inputClassExtras = 'AccountsList-subtotal '
-                + ((rowInfo.accountDataItem)
-                    ? 'AccountsList-subtotal-collapsed-value'
-                    : 'AccountsList-subtotal-value');
+    renderDescription(args) {
+        const { accountDataItem } = args;
+        if (!accountDataItem) {
+            return;
         }
-        return columnInfo;
+
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        return ACE.renderDescriptionDisplay({
+            columnInfo: columnInfo,
+            value: {
+                name: accountDataItem.name,
+                description: accountDataItem.description,
+            }
+        });
+    }
+
+
+    renderAccountType(args) {
+        const { accountDataItem } = args;
+        if (!accountDataItem) {
+            return;
+        }
+
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        return ACE.renderAccountTypeDisplay({
+            columnInfo: columnInfo,
+            value: {
+                accountType: accountDataItem.type,
+            }
+        });
     }
 
 
@@ -993,27 +1054,10 @@ export class AccountsList extends React.Component {
             return this.renderName(renderArgs);
         
         case 'description' :
-            if (!accountDataItem) {
-                return;
-            }
-            return ACE.renderDescriptionDisplay({
-                columnInfo: columnInfo,
-                value: {
-                    name: accountDataItem.name,
-                    description: accountDataItem.description,
-                }
-            });
+            return this.renderDescription(renderArgs);
         
         case 'accountType' :
-            if (!accountDataItem) {
-                return;
-            }
-            return ACE.renderAccountTypeDisplay({
-                columnInfo: columnInfo,
-                value: {
-                    accountType: accountDataItem.type,
-                }
-            });
+            return this.renderAccountType(renderArgs);
         
         case 'balance' :
             return this.renderBalanceDisplay(renderArgs);
@@ -1065,10 +1109,11 @@ export class AccountsList extends React.Component {
             return;
         }
 
+        const { accountDataItem } = rowInfo;
+
         let isSubtotal = rowInfo.subtotalAccountDataItem;
         if (!isSubtotal && this.props.showSubtotalsWhenCollapsed
          && (rowInfo.expandCollapseState === ExpandCollapseState.COLLAPSED)) {
-            const { accountDataItem } = rowInfo;
             if (accountDataItem && accountDataItem.childAccountIds 
              && accountDataItem.childAccountIds.length) {
                 isSubtotal = true;
