@@ -120,6 +120,7 @@ beforeAll(async () => {
         ymdDate: '2020-08-27',
         quantityBaseValue: 12340000,
         lotStates: lotStatesA,
+        gainLotStates: lotStatesA,
     };
     priceA = {
         ymdDate: '2020-08-31',
@@ -488,6 +489,7 @@ test('GainHelpers-calcLotStateGain', () => {
         getGainParts: GH.getLotStateCashInGainParts,
         calcGainFromParts: GH.absoluteGain,
         lotStates: lotStatesA,
+        gainLotStates: lotStatesA,
     });
     result = GH.calcLotStateGain(argsC);
 
@@ -525,6 +527,7 @@ test('GainHelpers-calcLotStateGain', () => {
         calcGainFromParts: GH.percentGain,
         gainQuantityDefinition: getDecimalDefinition(1),
         lotStates: lotStatesA,
+        gainLotStates: lotStatesA,
     });
     result = GH.calcLotStateGain(argsE);
 
@@ -561,6 +564,7 @@ test('GainHelpers-TotalBaseValues', () => {
         calcGainFromParts: GH.percentGain,
         gainQuantityDefinition: getDecimalDefinition(1),
         lotStates: lotStatesA,
+        gainLotStates: lotStatesA,
     });
     result = GH.getTotalCostBasisBaseValue(args);
     expect(result.quantityBaseValue).toEqual(totalCostBasisBaseValue);
