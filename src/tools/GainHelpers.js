@@ -122,21 +122,18 @@ export function createAccountStateInfo(args) {
         pricedItemId = args.pricedItemId;
     }
 
+    let currency = accessor.getBaseCurrencyCode();
+    let sharesQuantityDefinition = accessor.getDefaultSharesQuantityDefinition();
+
     const pricedItemDataItem = accessor.getPricedItemDataItemWithId(pricedItemId);
-    if (!pricedItemDataItem) {
-        return;
+    if (pricedItemDataItem) {
+        sharesQuantityDefinition = getQuantityDefinition(
+            pricedItemDataItem.quantityDefinition);
+        currency = pricedItemDataItem.currency;
     }
-
-    const sharesQuantityDefinition = getQuantityDefinition(
-        pricedItemDataItem.quantityDefinition
-    );
-    if (!sharesQuantityDefinition) {
-        return;
-    }
-
-    let currency = pricedItemDataItem.currency || accessor.getBaseCurrencyCode();
     currency = getCurrency(currency);
-    if (!currency) {
+
+    if (!sharesQuantityDefinition || !currency) {
         return;
     }
 
@@ -145,6 +142,19 @@ export function createAccountStateInfo(args) {
         sharesQuantityDefinition: sharesQuantityDefinition,
         currency: currency,
         currencyQuantityDefinition: currency.getQuantityDefinition(),
+    });
+}
+
+
+/**
+ * Adds the marketValueBaseValue property to an array of lot states.
+ * @param {GainHelpers~AccountStateInfo} accountStateInfo 
+ * @param {LotStateDataItem[]} lotStates 
+ */
+export function addMarketValueBaseValueToLotStates(accountStateInfo, lotStates) {
+    lotStates.forEach((lotState) => {
+        lotState.marketValueBaseValue = calcLotStateMarketValueBaseValue(accountStateInfo,
+            lotState.quantityBaseValue);
     });
 }
 
@@ -159,7 +169,9 @@ export function createAccountStateInfo(args) {
 export function calcLotStateMarketValueBaseValue(
     accountStateInfo, sharesQuantityBaseValue) {
 
+    let lotState;
     if (typeof sharesQuantityBaseValue === 'object') {
+        lotState = sharesQuantityBaseValue;
         if (typeof sharesQuantityBaseValue.marketValueBaseValue === 'number') {
             return sharesQuantityBaseValue.marketValueBaseValue;
         }
@@ -170,7 +182,7 @@ export function calcLotStateMarketValueBaseValue(
     const { sharesQuantityDefinition, currencyQuantityDefinition,
         priceDataItem } = accountStateInfo;
     if (!priceDataItem) {
-        return;
+        return (lotState) ? lotState.costBasisBaseValue : undefined;
     }
 
     const sharesValue = sharesQuantityDefinition.baseValueToNumber(
@@ -349,17 +361,25 @@ export function calcLotStateGain(args, lotStates) {
 
     let inputBaseValue = 0;
     let outputBaseValue = 0;
+    let isGain;
 
     lotStates = resolveLotStatesFromArgs(args, lotStates, 'gainLotStates');
     if (lotStates) {
 
         lotStates.forEach((lotState) => {
             const gainParts = getGainParts(accountStateInfo, lotState);
-            if (gainParts) {
+            if (gainParts 
+             && (gainParts.inputBaseValue !== undefined)
+             && (gainParts.outputBaseValue !== undefined)) {
                 inputBaseValue += gainParts.inputBaseValue;
                 outputBaseValue += gainParts.outputBaseValue;
+                isGain = true;
             }
         });
+    }
+
+    if (!isGain) {
+        return;
     }
 
     const { currencyQuantityDefinition, gainQuantityDefinition } = accountStateInfo;
@@ -493,8 +513,10 @@ export function calcLotStatePercentAnnualGain(args, lotStates) {
             isStraightGain: isStraightGain,
         });
 
-        percentAnnualGain += percentGainValue * lotState.quantityBaseValue
-            / totalSharesBaseValue;
+        if (percentAnnualGain !== undefined) {
+            percentAnnualGain += percentGainValue * lotState.quantityBaseValue
+                / totalSharesBaseValue;
+        }
     }
 
     const percentAnnualGainBaseValue 
@@ -744,15 +766,17 @@ export function getTotalMarketValueBaseValue(args, lotStates) {
         lotStatesWithMarketValue = [];
 
         lotStates.forEach((lotState) => {
-            sumBaseValue += lotState.quantityBaseValue;
+            const marketValueBaseValue = calcLotStateMarketValueBaseValue(
+                accountStateInfo, lotState);
+            if (marketValueBaseValue === undefined) {
+                return;
+            }
+
+            sumBaseValue += marketValueBaseValue;
             lotStatesWithMarketValue.push(Object.assign({}, lotState, {
-                marketValueBaseValue: calcLotStateMarketValueBaseValue(
-                    accountStateInfo, lotState.quantityBaseValue),
+                marketValueBaseValue: marketValueBaseValue,
             }));
         });
-
-        sumBaseValue = calcLotStateMarketValueBaseValue(
-            accountStateInfo, sumBaseValue);
     }
 
     const { sumQuantityDefinition } = args;

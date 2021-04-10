@@ -62,7 +62,7 @@ export class PricedItemEditor extends React.Component {
             if (pricedItemType.hasTickerSymbol) {
                 pricedItemDataItem.onlineUpdateType 
                     = PI.PricedItemOnlineUpdateType.YAHOO_FINANCE.name;
-                quantityDefinition = getDecimalDefinition(4);
+                quantityDefinition = accessor.getDefaultSharesQuantityDefinition();
             }
             pricedItemDataItem.quantityDefinition 
                 = getQuantityDefinitionName(quantityDefinition);

@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { RowTable } from './RowTable';
+import { renderRowTableAsText, RowTable } from './RowTable';
 import deepEqual from 'deep-equal';
 
 
@@ -103,6 +103,75 @@ function addRowInfosToArray(rowInfos, rowInfosArray, keysToIgnore) {
 }
 
 
+
+function addRowInfoToEntries(rowInfo, depth, newRowEntries, newRowIndicesByKey) {
+    const rowEntry = {
+        rowInfo: rowInfo,
+        depth: depth,
+    };
+    const rowIndex = newRowEntries.length;
+    newRowEntries.push(rowEntry);
+    newRowIndicesByKey.set(rowInfo.key, rowIndex);
+
+    if (rowInfo.expandCollapseState === ExpandCollapseState.EXPANDED) {
+        if (rowInfo.childRowInfos) {
+            return addRowInfosToEntries(rowInfo.childRowInfos, depth + 1,
+                newRowEntries, newRowIndicesByKey);
+        }
+    }
+    
+    return depth;
+}
+
+function addRowInfosToEntries(rowInfos, depth, newRowEntries, newRowIndicesByKey) {
+    let maxDepth = 0;
+    rowInfos.forEach((rowInfo) => {
+        const thisDepth = addRowInfoToEntries(rowInfo, depth, 
+            newRowEntries, newRowIndicesByKey);
+        maxDepth = Math.max(maxDepth, thisDepth);
+    });
+    return maxDepth;
+}
+
+
+export function renderCollapsibleRowTableAsText(props) {
+    const { rowInfos, onRenderCell, onPreRenderRow } = props;
+
+    const newRowEntries = [];
+    const newRowIndicesByKey = new Map();
+
+    addRowInfosToEntries(rowInfos, 0, 
+        newRowEntries, newRowIndicesByKey);
+
+    let myOnPreRenderRow;
+    if (onPreRenderRow) {
+        myOnPreRenderRow = (args) => {
+            if (args.rowIndex >= 0) {
+                const rowInfo = newRowEntries[args.rowIndex];
+                args.rowInfo = rowInfo;
+                args.depth = rowInfo.depth;
+                onPreRenderRow(args);
+            }
+        };
+    }
+
+    props = Object.assign({}, props, {
+        rowCount: rowInfos.length,
+        onRenderCell: (args) => {
+            const rowInfo = newRowEntries[args.rowIndex];
+            args = Object.assign({}, args, {
+                rowInfo: rowInfo,
+                depth: rowInfo.depth,
+            });
+            return onRenderCell(args);
+        },
+        onPreRenderRow: myOnPreRenderRow,
+    });
+
+    return renderRowTableAsText(props);
+}
+
+
 /**
  * @readonly
  * @enum {string}
@@ -147,7 +216,7 @@ export function collapsibleRowTable(WrappedTable) {
             const newRowEntries = [];
             const newRowIndicesByKey = new Map();
 
-            const maxDepth = this.addRowInfosToEntries(rowInfos, 0, 
+            const maxDepth = addRowInfosToEntries(rowInfos, 0, 
                 newRowEntries, newRowIndicesByKey);
             
             return {
@@ -164,35 +233,7 @@ export function collapsibleRowTable(WrappedTable) {
         }
 
 
-        addRowInfosToEntries(rowInfos, depth, newRowEntries, newRowIndicesByKey) {
-            let maxDepth = 0;
-            rowInfos.forEach((rowInfo) => {
-                const thisDepth = this.addRowInfoToEntries(rowInfo, depth, 
-                    newRowEntries, newRowIndicesByKey);
-                maxDepth = Math.max(maxDepth, thisDepth);
-            });
-            return maxDepth;
-        }
-
-
-        addRowInfoToEntries(rowInfo, depth, newRowEntries, newRowIndicesByKey) {
-            const rowEntry = {
-                rowInfo: rowInfo,
-                depth: depth,
-            };
-            const rowIndex = newRowEntries.length;
-            newRowEntries.push(rowEntry);
-            newRowIndicesByKey.set(rowInfo.key, rowIndex);
-
-            if (rowInfo.expandCollapseState === ExpandCollapseState.EXPANDED) {
-                if (rowInfo.childRowInfos) {
-                    return this.addRowInfosToEntries(rowInfo.childRowInfos, depth + 1,
-                        newRowEntries, newRowIndicesByKey);
-                }
-            }
-            
-            return depth;
-        }
+        
 
 
         getRowKey(rowIndex) {
@@ -345,6 +386,7 @@ export function collapsibleRowTable(WrappedTable) {
         onPreRenderRow(args) {
             const { onPreRenderRow } = this.props;
             if (onPreRenderRow && (args.rowIndex >= 0)) {
+                // Don't copy args, it's writable...
                 const rowEntry = this.state.rowEntries[args.rowIndex];
                 args.rowInfo = rowEntry.rowInfo;
                 args.depth = rowEntry.depth;

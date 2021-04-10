@@ -283,7 +283,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
     - Accounts List
-        - Custom Account Lists
         - Listen on prices for market value updates.
         - Summary rows
             - Set by level?
@@ -292,6 +291,11 @@ Are the lists really two separate styles? Or can they be combined into one?
 
         - Menu actions for moving a child account up or down in its sibling list.
             - Not enabled if displayed alphabetically
+        
+        - Add a balances as-of date, which could be one of the various date options such as:
+            - specific date
+            - last month
+            - last year
 
 
     - Account Register
@@ -525,3 +529,32 @@ Column sorting in RowTable:
 
     - Save/restore last window settings.
 
+
+- Gain calculations:
+    - calcGainValueCallback is passed:
+        - accessor
+        - pricedItemId (undefined for summary)
+        - accountStateDataItem (undefined for summary?)
+        - priceDataItem (undefined for summary?)
+
+    - calcGainValueCallback:
+        - totalGain: 
+            - LCE.calcSimpleGainBalanceValue()
+        - totalCashInGain: 
+            - LCE.calcCashInGainBalanceValue()
+        - totalPercentGain:
+            - LCE.calcSimplePercentGainBalanceValue()
+        - totalCashInPercentGain:
+            - LCE.calcCashInPercentGainBalanceValue()
+        - totalAnnualPercentGain:
+            - LCE.calcAnnualPercentGainBalanceValue()
+        - totalAnnualCashInPercentGain:
+            - LCE.calcAnnualCashInPercentGainBalanceValue()
+
+- renderTotalMarketValue():
+    - GH.getTotalMarketValueBaseValue() is passed:
+        - accessor
+        - pricedItemId (undefined for summary)
+        - accountStateDataItem (includes all lot states for summary)
+    - GH.getTotalMarketValueBaseValue() calls for each lot state:
+        - calcLotStateMarketValueBaseValue()

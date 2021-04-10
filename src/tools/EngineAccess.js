@@ -110,6 +110,7 @@ export class EngineAccessor extends EventEmitter {
         this._locale = 'en';
 
         this._percentGainQuantityDefinition = getDecimalDefinition(1);
+        this._defaultSharesQuantityDefinition = getDecimalDefinition(4);
 
         this._projectSettings = {};
     }
@@ -1129,6 +1130,15 @@ export class EngineAccessor extends EventEmitter {
             return;
         }
         return result.quantity.getBaseValue();
+    }
+
+
+    /**
+     * @returns {QuantityDefinition} The default quantity definition used for share 
+     * quantities.
+     */
+    getDefaultSharesQuantityDefinition() {
+        return this._defaultSharesQuantityDefinition;
     }
 
 

@@ -136,18 +136,21 @@ label {
     color: #495057a6;
 }
 
-.AccountsList-subtotal {
+.AccountsList-subtotal, 
+.PricedItemsList-subtotal {
     font-weight: bold;
 }
 
-.AccountsList-subtotal-value {
+.AccountsList-subtotal-value, 
+.PricedItemsList-subtotal-value {
     border-top: 1px solid;
     margin-top: -5px;
     padding-top: 5px;
     text-align: right;
 }
 
-.AccountsList-subtotal-collapsed-value {
+.AccountsList-subtotal-collapsed-value, 
+.PricedItemsList-subtotal-collapsed-value {
     text-align: right;
 }
 

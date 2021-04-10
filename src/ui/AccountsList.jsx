@@ -1025,7 +1025,7 @@ export class AccountsList extends React.Component {
             let isMarketValue;
             for (let i = 0; i < accountState.lotStates.length; ++i) {
                 if (typeof accountState.lotStates[i].marketValueBaseValue 
-                    === 'number') {
+                 === 'number') {
                     isMarketValue = true;
                     break;
                 }
