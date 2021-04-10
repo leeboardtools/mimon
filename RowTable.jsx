@@ -38,7 +38,7 @@ export const FOOTER_ROW_INDEX = -2;
 //  <div containerStyle: {width: 100%  height: 100%  overflow: hidden}
 //      >>> ref = _mainRef <<<
 //      <div>
-//          <div "table RowTable">
+//          <div "Table RowTable">
 //              <div "RowTableHeader">
 //                  ...header...
 //              </div>  // RowTableHeader
@@ -2115,3 +2115,325 @@ RowTable.propTypes = {
 
     id: PropTypes.string,
 };
+
+
+function startRenderRowAsText(props, rowIndex) {
+    const { recorder } = props;
+    if (recorder) {
+        const { onStartRow } = recorder;
+        if (onStartRow) {
+            onStartRow(rowIndex);
+        }
+    }
+}
+
+function recordCellText(props, rowIndex, columnIndex, text) {
+    const { recorder } = props;
+    if (recorder) {
+        const { onRecordCell } = recorder;
+        if (onRecordCell) {
+            onRecordCell(rowIndex, columnIndex, text);
+        }
+    }
+}
+
+function endRenderRowAsText(props, rowIndex) {
+    const { recorder } = props;
+    if (recorder) {
+        const { onEndRow } = recorder;
+        if (onEndRow) {
+            onEndRow(rowIndex);
+        }
+    }
+}
+
+function renderRowAsText(props, rowIndex) {
+    const { columns, 
+        onRenderCell,
+        onPreRenderRow, onPostRenderRow,
+    } = props;
+
+    startRenderRowAsText(props, rowIndex);
+
+    let rowRenderInfo;
+    if (onPreRenderRow) {
+        rowRenderInfo = onPreRenderRow({
+            rowIndex: rowIndex,
+        });
+    }
+
+    for (let c = 0; c < columns.length; ++c) {
+        const column = columns[c];
+        let cellText = onRenderCell({
+            rowIndex: rowIndex,
+            columnIndex: c,
+            column: column,
+            rowRenderInfo: rowRenderInfo,
+            renderAsText: true,
+        });
+
+        if (typeof cellText !== 'string') {
+            cellText = undefined;
+        }
+
+        recordCellText(rowIndex, c, cellText);
+    }
+
+    if (onPostRenderRow) {
+        onPostRenderRow({
+            rowIndex: rowIndex,
+            rowRenderInfo: rowRenderInfo,
+        });
+    }
+
+    endRenderRowAsText(props, rowIndex);
+}
+
+
+function renderHeaderFooterAsText({ props, 
+    getHeaderFooter, rowIndex}) {
+
+    const { columns, 
+        onRenderCell,
+        onPreRenderRow, onPostRenderRow,
+    } = props;
+
+    let isHeaderFooter;
+    for (let i = 0; i < columns.length; ++i) {
+        if (getHeaderFooter(columns[i])) {
+            isHeaderFooter = true;
+            break;
+        }
+    }
+    if (!isHeaderFooter) {
+        return;
+    }
+
+    startRenderRowAsText(props, rowIndex);
+
+    let rowRenderInfo;
+    if (onPreRenderRow) {
+        rowRenderInfo = onPreRenderRow({
+            rowIndex: rowIndex,
+        });
+    }
+
+    for (let c = 0; c < columns.length; ++c) {
+        const column = columns[c];
+        const headerFooter = getHeaderFooter(column);
+
+        let cellText;
+        if (headerFooter) {
+            const { label } = headerFooter;
+            if (label) {
+                cellText = label;
+            }
+            else {
+                cellText = onRenderCell({
+                    rowIndex: rowIndex,
+                    columnIndex: c,
+                    column: column,
+                    rowRenderInfo: rowRenderInfo,
+                    renderAsText: true,
+                });
+            }
+
+            if (typeof cellText !== 'string') {
+                cellText = undefined;
+            }
+        }
+        
+        recordCellText(rowIndex, c, cellText);
+    }
+
+    if (onPostRenderRow) {
+        onPostRenderRow({
+            rowIndex: rowIndex,
+            rowRenderInfo: rowRenderInfo,
+        });
+    }
+
+    endRenderRowAsText(props, rowIndex);
+}
+
+function renderHeaderAsText(props) {
+    return renderHeaderFooterAsText({
+        props: props,
+        getHeaderFooter: (column) => column.header,
+        rowIndex: HEADER_ROW_INDEX,
+    });
+}
+
+function renderFooterAsText(props) {
+    return renderHeaderFooterAsText({
+        props: props,
+        getHeaderFooter: (column) => column.footer,
+        rowIndex: FOOTER_ROW_INDEX,
+    });
+}
+
+function renderBodyRowsAstText(props) {
+    const { rowCount } = props;
+    let { firstRow, lastRow } = props;
+    if (firstRow === undefined) {
+        firstRow = 0;
+    }
+    else {
+        firstRow = Math.max(0, firstRow);
+    }
+
+    if (lastRow === undefined) {
+        lastRow = rowCount - 1;
+    }
+    else {
+        lastRow = Math.min(lastRow, rowCount - 1);
+    }
+
+    for (let rowIndex = firstRow; rowIndex <= lastRow; ++rowIndex) {
+        renderRowAsText(props, rowIndex);
+    }
+}
+
+
+/**
+ * @interface RowTableTextRecorder
+ */
+
+/**
+ * @function
+ * @name RowTableTextRecorder#onStartRecording
+ * @param {renderRowTableAsTextProps} props 
+ */
+
+/**
+ * @function
+ * @name RowTableTextRecorder#onStartRow
+ * @param {number} rowIndex
+ */
+
+/**
+ * @function
+ * @name RowTableTextRecorder#onRecordCellText
+ * @param {number} rowIndex
+ * @param {number} columnIndex
+ * @param {string|undefined} text
+ */
+
+/**
+ * @function
+ * @name RowTableTextRecorder#onEndRow
+ * @param {number} rowIndex
+ */
+
+/**
+ * @function
+ * @name RowTableTextRecorder#onEndRecording
+ * @param {renderRowTableAsTextProps} props 
+ */
+
+/**
+ * @typedef {object} renderRowTableAsTextProps
+ * 
+ * @property {RowTableTextRecorder} recorder
+ * 
+ * @property {RowTable~Column[]} columns Array of the column definitions.
+ * @property {number}   rowCount    The number of rows.
+ * @property {RowTable~onRenderCell}    onRenderCell    Callback for rendering 
+ * individual cells. This callback should support an argument property of
+ * 'renderAsText' being truthy.
+ */
+
+/**
+ * Utility function for rendering what would normally be the contents
+ * passed to a RowTable component as text to a recorder.
+ * @param {renderRowTableAsTextProps} props 
+ * @returns 
+ */
+export function renderRowTableAsText(props) {
+    const { recorder } = props;
+    if (!recorder) {
+        return;
+    }
+
+    const { onStartRecording } = recorder;
+    if (onStartRecording) {
+        onStartRecording(props);
+    }
+
+    renderHeaderAsText(props);
+    renderBodyRowsAstText(props);
+    renderFooterAsText(props);
+
+    const { onEndRecording } = recorder;
+    if (onEndRecording) {
+        onEndRecording(props);
+    }
+}
+
+
+/**
+ * Simple implementation of {@link RowTableTextRecorder} that stores
+ * the table text as sequential rows in an array, where each row is
+ * a row of strings or <code>undefined</code> representing the text
+ * contents of each cell in the row.
+ * @implements {RowTableTextRecorder}
+ */
+export class SimpleRowTableTextRecorder {
+    constructor() {
+        this.onStartRow = this.onStartRow.bind(this);
+        this.onRecordCell = this.onRecordCell.bind(this);
+        this.onEndRow = this.onEndRow.bind(this);
+
+        this.allRows = [];
+        this.headerRows = [];
+        this.bodyRows = [];
+        this.footerRows = [];
+    }
+
+    getHeaderRows() {
+        return this.headerRows;
+    }
+
+    getAllRows() {
+        return this.allRows;
+    }
+
+    getBodyRows() {
+        return this.bodyRows;
+    }
+
+    getFooterRows() {
+        return this.footerRows;
+    }
+
+
+    onStartRow(rowIndex) {
+        this.currentRow = [];
+    }
+
+
+    onRecordCell(rowIndex, columnIndex, text) {
+        this.currentRow[columnIndex] = text;
+    }
+
+
+    onEndRow(rowIndex) {
+        this.rows.push(this.currentRow);
+
+        switch (rowIndex) {
+        case HEADER_ROW_INDEX:
+            this.headerRows.push(this.currentRow);
+            break;
+        
+        case FOOTER_ROW_INDEX:
+            this.footerRows.push(this.currentRow);
+            break;
+        
+        default :
+            this.bodyRows[rowIndex] = this.currentRow;
+            break;
+        }
+
+        this.currentRow = undefined;
+    }
+}
