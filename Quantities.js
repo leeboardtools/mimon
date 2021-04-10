@@ -484,7 +484,9 @@ class QuantityDefinition {
      * @returns {number}
      */
     cleanupNumber(number) {
-        return this.baseValueToNumber(this.numberToBaseValue(number));
+        if (number !== undefined) {
+            return this.baseValueToNumber(this.numberToBaseValue(number));
+        }
     }
 
     /**
