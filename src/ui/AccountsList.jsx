@@ -341,6 +341,7 @@ export class AccountsList extends React.Component {
 
         if (showNetWorth) {
             this.addRootNetRowInfo({
+                state: state,
                 rowInfos: rowInfos, 
                 insertAfterRowInfo: rootNetWorthAfterRowInfo,
                 plusRootAccountDataItem: accessor.getAccountDataItemWithId(
@@ -352,6 +353,7 @@ export class AccountsList extends React.Component {
         }
         if (showNetIncome) {
             this.addRootNetRowInfo({
+                state: state,
                 rowInfos: rowInfos, 
                 insertAfterRowInfo: rootNetIncomeAfterRowInfo,
                 plusRootAccountDataItem: accessor.getAccountDataItemWithId(
@@ -509,7 +511,7 @@ export class AccountsList extends React.Component {
                     childAccountIds: childAccountIds,
                 });
                 rowInfo.accountGainsState = totalAccountGainsState;
-                rowInfo.subtotalAccountDataItem = accountDataItem;
+                rowInfo.subtotalName = accountDataItem.name;
             }
         }
 
@@ -523,8 +525,7 @@ export class AccountsList extends React.Component {
         const subtotalRowInfo = {
             key: '_SUBTOTAL_' + subtotalAccountDataItem.id,
             accountId: subtotalAccountDataItem.id,
-            subtotalAccountDataItem: subtotalAccountDataItem,
-            subtotaledRowInfo: rowInfo,
+            subtotalName: subtotalAccountDataItem.name,
             accountGainsState: rowInfo.totalAccountGainsState,
         };
         childRowInfos.push(subtotalRowInfo);
@@ -536,14 +537,57 @@ export class AccountsList extends React.Component {
     }
 
 
-    addRootNetRowInfo({ rowInfos, insertAfterRowInfo, 
+    buildAccountGainsForRootAccount(state, accountId) {
+        const { accessor } = this.props;
+        const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+
+        const priceDataItem = state.pricesByPricedItemId.get(
+            accountDataItem.pricedItemId);
+
+        const accountState = this.getAccountStateForAccountId(accountId);
+        const accountGainsState = GH.accountStateToAccountGainsState({
+            accessor: accessor,
+            accountId: accountId,
+            accountState: accountState,
+            priceDataItem: priceDataItem,
+            isExcludeFromGain: accountDataItem.isExcludeFromGain,
+            isQuantityShares: A.getAccountType(accountDataItem.type).hasLots,
+        });
+
+        this.addChildAccountIdsToAccountGainsState({
+            state: state,
+            totalAccountGainsState: accountGainsState,
+            childAccountIds: accountDataItem.childAccountIds,
+        });
+
+        return accountGainsState;
+    }
+
+
+    addRootNetRowInfo({ state, rowInfos, insertAfterRowInfo, 
         plusRootAccountDataItem, minusRootAccountDataItem, name }) {
+        
+        const plusAccountGainsState = this.buildAccountGainsForRootAccount(
+            state, plusRootAccountDataItem.id);
+        const minusAccountGainsState = this.buildAccountGainsForRootAccount(
+            state, minusRootAccountDataItem.id);
+        
+        let accountGainsState = GH.cloneAccountGainsState(plusAccountGainsState);
+        accountGainsState.quantityBaseValue 
+            -= minusAccountGainsState.quantityBaseValue;
+        accountGainsState.marketValueBaseValue 
+            -= minusAccountGainsState.marketValueBaseValue;
+
+        delete accountGainsState.costBasisBaseValue;
+        delete accountGainsState.cashInBaseValue;
+        delete accountGainsState.lotStates;
+        delete accountGainsState.cashInLotStates;
 
         const netRowInfo = {
             key: '_NET_' + name,
-            plusRootAccountDataItem: plusRootAccountDataItem,
-            minusRootAccountDataItem: minusRootAccountDataItem,
-            rootAccountDataItem: plusRootAccountDataItem,
+            plusAccountGainsState: plusAccountGainsState,
+            minusAccountGainsState: minusAccountGainsState,
+            accountGainsState: accountGainsState,
             rootNetName: name,
         };
 
@@ -656,7 +700,7 @@ export class AccountsList extends React.Component {
 
     columnInfoFromRenderArgs(renderArgs) {
         let { columnInfo, rowInfo } = renderArgs;
-        if (rowInfo.subtotalAccountDataItem || rowInfo.rootAccountDataItem) {
+        if (rowInfo.subtotalName || rowInfo.rootNetName) {
             columnInfo = Object.assign({}, columnInfo);
             columnInfo.inputClassExtras = 'AccountsList-subtotal '
                 + ((rowInfo.accountDataItem)
@@ -709,27 +753,6 @@ export class AccountsList extends React.Component {
     }
 
 
-    lotsAccountStateFromRenderArgs(renderArgs) {
-        const { accountState } = renderArgs;
-        if (accountState) {
-            return accountState;
-        }
-
-        const { rowInfo } = renderArgs;
-        if (rowInfo && rowInfo.accountState) {
-            return rowInfo.accountState;
-        }
-
-        const { accountDataItem } = renderArgs;
-        if (accountDataItem) {
-            const accountType = A.getAccountType(accountDataItem.type);
-            if (accountType.hasLots) {
-                return this.getAccountStateForAccountId(accountDataItem.id);
-            }
-        }
-    }
-
-
     renderName(args) {
         const { accountDataItem, rowInfo, } = args;
         let value;
@@ -743,11 +766,11 @@ export class AccountsList extends React.Component {
             };
         }
         else {
-            const { subtotalAccountDataItem, rootNetName } = rowInfo;
-            if (subtotalAccountDataItem || rootNetName) {
-                if (subtotalAccountDataItem) {
+            const { subtotalName, rootNetName } = rowInfo;
+            if (subtotalName || rootNetName) {
+                if (subtotalName) {
                     value = userMsg('AccountsList-subtotalName',
-                        subtotalAccountDataItem.name);
+                        subtotalName);
                 }
                 else {
                     value = rootNetName;
@@ -833,37 +856,23 @@ export class AccountsList extends React.Component {
 
     renderSharesDisplay(renderArgs) {
         const columnInfo = this.columnInfoFromRenderArgs(renderArgs);
-        let { accountDataItem, accountState, quantityDefinition } = renderArgs;
-
-        accountDataItem = accountDataItem || renderArgs.subtotalAccountDataItem;
-        if (!accountDataItem) {
-            return;
-        }
-
-        const { accessor } = this.props;
-
-        if (!accountState) {
+        const { rowInfo } = renderArgs;
+        const { accountGainsState, accountDataItem } = rowInfo;
+        if (accountGainsState && accountGainsState.isQuantityShares
+         && accountDataItem) {
+            const { accessor } = this.props;
             const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
                 accountDataItem.pricedItemId
             );
-            
-            if (pricedItemDataItem 
-             && ((pricedItemDataItem.type === PI.PricedItemType.SECURITY.name)
-              || (pricedItemDataItem.type === PI.PricedItemType.MUTUAL_FUND.name))) {
-                accountState = this.getAccountStateForAccountId(
-                    accountDataItem.id);
-                quantityDefinition = pricedItemDataItem.quantityDefinition;
+            if (pricedItemDataItem) {
+                return LCE.renderTotalSharesDisplay({
+                    columnInfo: columnInfo,
+                    value: {
+                        quantityBaseValue: accountGainsState.quantityBaseValue,
+                        quantityDefinition: pricedItemDataItem.quantityDefinition,
+                    }
+                });
             }
-        }
-
-        if (accountState && accountState.quantityBaseValue) {
-            return LCE.renderTotalSharesDisplay({
-                columnInfo: columnInfo,
-                value: {
-                    quantityBaseValue: accountState.quantityBaseValue,
-                    quantityDefinition: quantityDefinition,
-                }
-            });
         }
     }
 
@@ -896,18 +905,18 @@ export class AccountsList extends React.Component {
 
         const { accountGainsState } = rowInfo;
         if (accountGainsState) {
-            const quantityValue = calcGainValueCallback({
+            const value = calcGainValueCallback({
                 accessor: accessor,
                 accountId: rowInfo.accountId,
                 accountGainsState: accountGainsState,
             });
-            if (!quantityValue || (quantityValue.quantityBaseValue === undefined)) {
+            if (!value || (value.quantityBaseValue === undefined)) {
                 return;
             }
 
             return ACE.renderBalanceDisplay({
                 columnInfo: columnInfo,
-                value: quantityValue,
+                value: value,
                 suffix: suffix,
             });
         }
@@ -935,7 +944,7 @@ export class AccountsList extends React.Component {
                     rowInfo = rowRenderInfo.subtotalRowInfo;
                 }
             }
-            if (rowInfo.subtotalAccountDataItem && !rowInfo.accountDataItem) {
+            if (rowInfo.subtotalName && !rowInfo.accountDataItem) {
                 // Line up with the parent which is what we're subtotaling.
                 --args.depth;
             }
@@ -947,7 +956,6 @@ export class AccountsList extends React.Component {
             accountDataItem: accountDataItem,
             accountState: accountState,
             quantityDefinition: quantityDefinition,
-            subtotalAccountDataItem: rowInfo.subtotalAccountDataItem,
         };
 
         switch (columnInfo.key) {

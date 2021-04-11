@@ -347,6 +347,7 @@ Are the lists really two separate styles? Or can they be combined into one?
                 - Use to mark account as cash/money market fund
         - Don't show expand/collapse if not displaying accounts.
         - Indicate hidden securities when displaying hidden securities
+        - Don't build full tooltips for subtotal %gains, list can get too long.
 
 
     - Priced Item Editor

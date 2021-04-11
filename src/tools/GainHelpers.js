@@ -1,6 +1,7 @@
 import { getQuantityDefinition } from '../util/Quantities';
 import { getCurrency } from '../util/Currency';
 import * as AS from '../engine/AccountStates';
+import * as A from '../engine/Accounts';
 import * as L from '../engine/Lots';
 import * as LS from '../engine/LotStates';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
@@ -128,6 +129,7 @@ export function accountStateToAccountGainsState(args) {
     }
 
     accountState = AS.getAccountStateDataItem(accountState, true);
+    accountState.isQuantityShares = A.getAccountType(accountDataItem.type).hasLots;
 
     let { lotStates } = accountState;
     if (lotStates) {
