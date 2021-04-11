@@ -493,6 +493,7 @@ export class PricedItemsList extends React.Component {
             key: key,
             expandCollapseState: expandCollapseState,
             pricedItemDataItem: pricedItemDataItem,
+            pricedItemId: pricedItemId,
         };
         rowInfos.push(rowInfo);
 
@@ -518,6 +519,7 @@ export class PricedItemsList extends React.Component {
                 const accountGainsState = GH.accountStateToAccountGainsState({
                     accessor: accessor,
                     accountId: accountId,
+                    pricedItemId: pricedItemId,
                     accountState: accountState,
                     priceDataItem: priceDataItem,
                     isExcludeFromGain: accountDataItem.isExcludeFromGain,
@@ -809,115 +811,22 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    getDisplayInfo({ columnInfo, rowInfo, }) {
-
-        const { accessor } = this.props;
-        const { accountDataItem } = rowInfo;
-        if (accountDataItem) {
-            return {
-                columnInfo: columnInfo,
-                rowInfo: rowInfo,
-                accountState: accessor.getCurrentAccountStateDataItem(
-                    accountDataItem.id),
-                pricedItemId: accountDataItem.pricedItemId,
-            };
-        }
-
-        const { pricedItemDataItem } = rowInfo;
-        const { accountIdsByPricedItemId } = this.state;
-        let accountIds;
-        let pricedItemId;
-        if (pricedItemDataItem) {
-            accountIds = accountIdsByPricedItemId.get(
-                pricedItemDataItem.id);
-            pricedItemId = pricedItemDataItem.id;
-        }
-        else {
-            // Presume this is the final summary row, 
-            accountIds = [];
-
-            const pricedItemIds = accessor.getPricedItemIds();
-            pricedItemIds.forEach((id) => {
-                const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
-                    id);
-                if (pricedItemDataItem.type !== this.props.pricedItemTypeName) {
-                    return;
-                }
-
-                const workingAccountIds = accountIdsByPricedItemId.get(id);
-                accountIds = accountIds.concat(workingAccountIds);
-            });
-
+    columnInfoFromRenderArgs(renderArgs) {
+        let { columnInfo, rowInfo } = renderArgs;
+        if (!rowInfo.pricedItemId) {
             columnInfo = Object.assign({}, columnInfo);
             columnInfo.inputClassExtras
                 += ' PricedItemsList-subtotal PricedItemsList-subtotal-value';
         }
 
-        const accountState = {
-            quantityBaseValue: 0,
-            lotStates: [],
-        };
-
-        let gainLotStates = [];
-        if (accountIds) {
-            accountIds.forEach((accountId) => {
-                const accountDataItem = accessor.getAccountDataItemWithId(accountId);
-                if (!this.isIncludeAccountDataItem(accountDataItem)) {
-                    return;
-                }
-
-
-                const workingAccountState = accessor.getCurrentAccountStateDataItem(
-                    accountId);
-                
-                // The || 0 handles the quantityBaseValue undefined case
-                accountState.quantityBaseValue 
-                    += (workingAccountState.quantityBaseValue || 0);
-                
-                if (workingAccountState.lotStates) {
-                    const priceDataItem = this.state.pricesByPricedItemId.get(
-                        accountDataItem.pricedItemId);
-                    const accountStateInfo = GH.createAccountStateInfo({
-                        accessor: accessor,
-                        pricedItemId: accountDataItem.pricedItemId,
-                        accountStateDataItem: workingAccountState,
-                        priceDataItem: priceDataItem,
-                    });
-
-                    GH.addMarketValueBaseValueToLotStates(accountStateInfo,
-                        workingAccountState.lotStates);
-
-                    accountState.lotStates
-                        = accountState.lotStates.concat(
-                            workingAccountState.lotStates);
-                    
-                    if (!accountDataItem.isExcludeFromGain) {
-                        gainLotStates = gainLotStates.concat(
-                            workingAccountState.lotStates);
-                    }
-                }
-            });
-        }
-
-        if (gainLotStates.length) {
-            accountState.gainLotStates = gainLotStates;
-        }
-
-        return {
-            columnInfo: columnInfo,
-            rowInfo: rowInfo,
-            accountState: accountState,
-            pricedItemId: pricedItemId,
-        };
+        return columnInfo;
     }
 
 
-
     renderTotalMarketValue(args) {
-        const { columnInfo, rowInfo,
-            pricedItemId } = this.getDisplayInfo(args);
-        
-        const { accountGainsState } = rowInfo;
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        const { rowInfo, } = args;
+        const { accountGainsState, pricedItemId } = rowInfo;
         if (accountGainsState) {
             const quantityValue = {
                 quantityBaseValue: accountGainsState.marketValueBaseValue,
@@ -935,16 +844,18 @@ export class PricedItemsList extends React.Component {
 
 
     renderTotalShares(args) {
-        const { columnInfo, rowInfo,
-            accountState, pricedItemId } = this.getDisplayInfo(args);
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        const { rowInfo, } = args;
+        const { accountGainsState, pricedItemId } = rowInfo;
         let { pricedItemDataItem } = rowInfo;
         pricedItemDataItem = pricedItemDataItem 
             || this.props.accessor.getPricedItemDataItemWithId(pricedItemId);
-        if (pricedItemDataItem) {
+
+        if (pricedItemDataItem && accountGainsState) {
             return LCE.renderTotalSharesDisplay({
                 columnInfo: columnInfo,
                 value: {
-                    quantityBaseValue: accountState.quantityBaseValue,
+                    quantityBaseValue: accountGainsState.quantityBaseValue,
                     quantityDefinition: pricedItemDataItem.quantityDefinition,
                 }
             });
@@ -954,10 +865,9 @@ export class PricedItemsList extends React.Component {
 
 
     renderTotalCostBasis(args) {
-        const { columnInfo, rowInfo,
-            pricedItemId } = this.getDisplayInfo(args);
-        
-        const { accountGainsState } = rowInfo;
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        const { rowInfo, } = args;
+        const { accountGainsState, pricedItemId } = rowInfo;
         if (accountGainsState) {
             const quantityValue = {
                 quantityBaseValue: accountGainsState.costBasisBaseValue,
@@ -975,10 +885,9 @@ export class PricedItemsList extends React.Component {
 
 
     renderTotalCashIn(args) {
-        const { columnInfo, rowInfo,
-            pricedItemId } = this.getDisplayInfo(args);
-        
-        const { accountGainsState } = rowInfo;
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        const { rowInfo, } = args;
+        const { accountGainsState, pricedItemId } = rowInfo;
         if (accountGainsState) {
             const quantityValue = {
                 quantityBaseValue: accountGainsState.cashInBaseValue,
@@ -996,28 +905,29 @@ export class PricedItemsList extends React.Component {
 
 
     renderGainDisplay(args) {
-        const { columnInfo, 
-            accountState, pricedItemId } = this.getDisplayInfo(args);
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        const { rowInfo, } = args;
+        const { accountGainsState, pricedItemId } = rowInfo;
+
         const { calcGainValueCallback, suffix, } = args;
         const { accessor } = this.props;
 
-        const priceDataItem = this.state.pricesByPricedItemId.get(
-            pricedItemId);
-        const quantityValue = calcGainValueCallback({
-            accessor: accessor,
-            pricedItemId: pricedItemId,
-            accountStateDataItem: accountState,
-            priceDataItem: priceDataItem,
-        });
-        if (quantityValue === undefined) {
-            return;
-        }
+        if (accountGainsState) {
+            const quantityValue = calcGainValueCallback({
+                accessor: accessor,
+                pricedItemId: pricedItemId,
+                accountGainsState: accountGainsState,
+            });
+            if (quantityValue === undefined) {
+                return;
+            }
 
-        return ACE.renderBalanceDisplay({
-            columnInfo: columnInfo,
-            value: quantityValue,
-            suffix: suffix,
-        });
+            return ACE.renderBalanceDisplay({
+                columnInfo: columnInfo,
+                value: quantityValue,
+                suffix: suffix,
+            });
+        }
     }
 
 

@@ -225,18 +225,18 @@ export function addAccountGainsState(toAccountGainsState, fromAccountGainsState)
         }
     }
     else {
-        if (fromAccountGainsState.lotStates 
-         && toAccountGainsState.lotStates) {
-            toAccountGainsState.lotStates 
-                = toAccountGainsState.lotStates.concat(
-                    fromAccountGainsState.lotStates);
-        }
+        if (!fromAccountGainsState.isExcludeFromGain) {
+            if (fromAccountGainsState.lotStates) {
+                toAccountGainsState.lotStates 
+                    = (toAccountGainsState.lotStates || []).concat(
+                        fromAccountGainsState.lotStates);
+            }
 
-        if (fromAccountGainsState.cashInLotStates 
-         && toAccountGainsState.cashInLotStates) {
-            toAccountGainsState.cashInLotStates 
-                = toAccountGainsState.cashInLotStates.concat(
-                    fromAccountGainsState.cashInLotStates);
+            if (fromAccountGainsState.cashInLotStates) {
+                toAccountGainsState.cashInLotStates 
+                    = (toAccountGainsState.cashInLotStates || []).concat(
+                        fromAccountGainsState.cashInLotStates);
+            }
         }
 
         if (fromAccountGainsState.quantityBaseValue
@@ -439,12 +439,42 @@ export function getLotStateCashInBaseValue(accountStateInfo, lotStateDataItem) {
  */
 
 /**
+ * Retrieves the gain parts for simple gain from an 
+ * {@link GainHelpers~AccountGainsState}
+ * @param {GainHelpers~AccountGainsState} accountGainsState 
+ * @returns {GainHelpers~GainParts}
+ */
+// KEEP
+export function getAccountGainsStateSimpleGainParts(accountGainsState) {
+    if (accountGainsState) {
+        return {
+            inputBaseValue: accountGainsState.costBasisBaseValue,
+            outputBaseValue: accountGainsState.marketValueBaseValue,
+        };
+    }
+}
+
+/**
+ * Retrieves the lot state array for cash-in gain from an
+ * {@link GainHelpers~AccountGainsState}
+ * @param {GainHelpers~AccountGainsState} accountGainsState 
+ * @returns {LotStateDataItem[]}
+ */
+// KEEP
+export function getAccountGainsStateSimpleGainLotStates(accountGainsState) {
+    if (accountGainsState) {
+        return accountGainsState.lotStates;
+    }
+}
+
+/**
  * Calculates the gain parts for simple gain, which uses the full cost basis.
  * @param {GainHelpers~AccountStateInfo} accountStateInfo 
  * @param {LotStateDataItem} lotStateDataItem 
  * @returns {GainHelpers~GainParts|undefined}
  * @memberof GainHelpers
  */
+// GOES AWAY
 export function getLotStateSimpleGainParts(accountStateInfo, lotStateDataItem) {
     return {
         inputBaseValue: getLotStateCostBasisBaseValue(accountStateInfo,
@@ -462,12 +492,44 @@ export function getLotStateSimpleGainParts(accountStateInfo, lotStateDataItem) {
  * @returns {boolean}
  * @memberof GainHelpers
  */
+// KEEP
 export function isLotStateCashIn(accessor, lotStateDataItem) {
     if (lotStateDataItem) {
         const lotDataItem = accessor.getLotDataItemWithId(lotStateDataItem.lotId);
         if (lotDataItem) {
             return lotDataItem.lotOriginType === L.LotOriginType.CASH_PURCHASE.name;
         }
+    }
+}
+
+
+
+/**
+ * Retrieves the gain parts for cash-in gain from an 
+ * {@link GainHelpers~AccountGainsState}
+ * @param {GainHelpers~AccountGainsState} accountGainsState 
+ * @returns {GainHelpers~GainParts}
+ */
+// KEEP
+export function getAccountGainsStateCashInGainParts(accountGainsState) {
+    if (accountGainsState) {
+        return {
+            inputBaseValue: accountGainsState.cashInBaseValue,
+            outputBaseValue: accountGainsState.marketValueBaseValue,
+        };
+    }
+}
+
+/**
+ * Retrieves the lot state array for cash-in gain from an
+ * {@link GainHelpers~AccountGainsState}
+ * @param {GainHelpers~AccountGainsState} accountGainsState 
+ * @returns {LotStateDataItem[]}
+ */
+// KEEP
+export function getAccountGainsStateCashInLotStates(accountGainsState) {
+    if (accountGainsState) {
+        return accountGainsState.cashInLotStates;
     }
 }
 
@@ -480,6 +542,7 @@ export function isLotStateCashIn(accessor, lotStateDataItem) {
  * @returns {GainHelpers~GainParts}
  * @memberof GainHelpers
  */
+// GOES AWAY
 export function getLotStateCashInGainParts(accountStateInfo, lotStateDataItem) {
     return {
         inputBaseValue: getLotStateCashInBaseValue(accountStateInfo,
@@ -491,6 +554,11 @@ export function getLotStateCashInGainParts(accountStateInfo, lotStateDataItem) {
 
 
 function resolveLotStatesFromArgs(args, lotStates, lotStatesName) {
+    const { accountGainsState } = args;
+    if (accountGainsState) {
+        return accountGainsState[lotStatesName];
+    }
+
     lotStatesName = lotStatesName || 'lotStates';
     if (lotStates) {
         if (lotStates[lotStatesName]) {
@@ -558,14 +626,15 @@ function resolveLotStatesFromArgs(args, lotStates, lotStatesName) {
  * @returns {GainHelpers~LotStateGainResult}
  * @memberof GainHelpers
  */
+// KEEP
 export function calcLotStateGain(args, lotStates) {
     const accountStateInfo = createAccountStateInfo(args);
     if (!accountStateInfo) {
         return;
     }
 
-    const { getGainParts, calcGainFromParts } = args;
-    if (!getGainParts) {
+    const { getGainPartsOfAccountGainsState, getGainParts, calcGainFromParts } = args;
+    if (!getGainPartsOfAccountGainsState && !getGainParts) {
         return;
     }
 
@@ -574,7 +643,25 @@ export function calcLotStateGain(args, lotStates) {
     let outputBaseValue = 0;
     let isGain;
 
-    lotStates = resolveLotStatesFromArgs(args, lotStates, 'gainLotStates');
+    // Clean Up!
+    const { accountGainsState } = args;
+    if (accountGainsState && getGainPartsOfAccountGainsState) {
+        if (accountGainsState.isExcludeFromGain) {
+            return;
+        }
+
+        const result = getGainPartsOfAccountGainsState(accountGainsState);
+        if (!result) {
+            return;
+        }
+
+        inputBaseValue = result.inputBaseValue;
+        outputBaseValue = result.outputBaseValue;
+        isGain = inputBaseValue !== 0;
+    }
+    else {
+        lotStates = resolveLotStatesFromArgs(args, lotStates, 'gainLotStates');
+    }
     if (lotStates) {
 
         lotStates.forEach((lotState) => {
@@ -648,6 +735,98 @@ export function calcLotStateGain(args, lotStates) {
  * @property {number} percentAnnualGainBaseValue
  */
 
+export function calcAccountGainsStatePercentAnnualGain(args) {
+    const accountStateInfo = createAccountStateInfo(args);
+    if (!accountStateInfo) {
+        return;
+    }
+
+    const { accountGainsState, getLotStatesFromAccountGainsState } = args;
+    if (!accountGainsState || !getLotStatesFromAccountGainsState
+     || accountGainsState.isExcludeFromGain) {
+        return;
+    }
+
+    const lotStates = getLotStatesFromAccountGainsState(accountGainsState);
+    if (!lotStates) {
+        return;
+    }
+
+    let { ymdDateRef } = args;
+    if (!ymdDateRef) {
+        ymdDateRef = new YMDDate();
+    }
+    else {
+        ymdDateRef = getYMDDate(ymdDateRef);
+    }
+    const ymdDateYearOld = ymdDateRef.addYears(-1);
+
+    let totalSharesBaseValue = 0;
+    lotStates.forEach((lotState) => totalSharesBaseValue += lotState.quantityBaseValue);
+
+    const lotPercentAnnualGains = [];
+    let percentAnnualGain = 0;
+
+    const percentQuantityDefinition 
+        = accountStateInfo.accessor.getPercentGainQuantityDefinition();
+
+    for (let i = 0; i < lotStates.length; ++i) {
+        const lotState = lotStates[i];
+        const ymdDateCreated = getYMDDate(lotState.ymdDateCreated);
+
+        const { marketValueBaseValue } = lotState;
+
+        let percentGainValue;
+        let isStraightGain;
+        if (YMDDate.compare(ymdDateYearOld, ymdDateCreated) < 0) {
+            // Too soon, just do straight percentage
+            // OK to use base values...
+            percentGainValue = percentGain({
+                inputValue: lotState.costBasisBaseValue,
+                outputValue: marketValueBaseValue,
+            });
+            isStraightGain = true;
+        }
+        else {
+            // Do CAGR
+            percentGainValue = compoundAnnualGrowthRate({
+                inputValue: lotState.costBasisBaseValue,
+                outputValue: marketValueBaseValue,
+                ymdDateInput: lotState.ymdDateCreated,
+                ymdDateOutput: ymdDateRef,
+            }) * 100;
+        }
+
+        percentGainValue = percentQuantityDefinition.cleanupNumber(percentGainValue);
+
+        lotPercentAnnualGains.push({
+            lotState: lotState,
+            percentAnnualGain: percentGainValue,
+            isStraightGain: isStraightGain,
+        });
+
+        if (percentAnnualGain !== undefined) {
+            percentAnnualGain += percentGainValue * lotState.quantityBaseValue
+                / totalSharesBaseValue;
+        }
+    }
+
+    const percentAnnualGainBaseValue 
+        = percentQuantityDefinition.numberToBaseValue(percentAnnualGain);
+    percentAnnualGain = percentQuantityDefinition.baseValueToNumber(
+        percentAnnualGainBaseValue
+    );
+
+    return {
+        accountStateInfo: accountStateInfo,
+        lotPercentAnnualGains: lotPercentAnnualGains,
+        percentAnnualGain: percentAnnualGain,
+        percentAnnualGainBaseValue: percentAnnualGainBaseValue,
+        ymdDateRef: ymdDateRef.toString(),
+    };
+}
+
+
 
 /**
  * Calculates the weighted percent annual gain for lot states.
@@ -659,6 +838,7 @@ export function calcLotStateGain(args, lotStates) {
  * @returns {GainHelpers~LotStatePercentAnnualGainResult}
  * @memberof GainHelpers
  */
+// GOES AWAY
 export function calcLotStatePercentAnnualGain(args, lotStates) {
     const accountStateInfo = createAccountStateInfo(args);
     if (!accountStateInfo) {
@@ -758,6 +938,7 @@ export function calcLotStatePercentAnnualGain(args, lotStates) {
  * @returns {GainHelpers~LotStatePercentAnnualGainResult}
  * @memberof GainHelpers
  */
+// GOES AWAY
 export function calcLotStateCashInPercentAnnualGain(args, lotStates) {
     lotStates = resolveLotStatesFromArgs(args, lotStates, 'gainLotStates');
     if (!lotStates) {
@@ -779,6 +960,7 @@ export function calcLotStateCashInPercentAnnualGain(args, lotStates) {
  * @throws Error
  * @memberof GainHelpers
  */
+// KEEP
 export function distributeNonCashInLots(accessor, lotStateDataItems) {
     if (lotStateDataItems.length <= 1) {
         return lotStateDataItems;
@@ -856,6 +1038,7 @@ export function distributeNonCashInLots(accessor, lotStateDataItems) {
  * @returns {LotStateDataItem[]} Returns lotStateDataItems
  * @memberof GainHelpers
  */
+// KEEP
 export function distributeSharesToLotStates(sharesBaseValue, lotStateDataItems) {
     let totalSharesBaseValue = 0;
     lotStateDataItems.forEach((lotState) => 
@@ -905,6 +1088,7 @@ export function distributeSharesToLotStates(sharesBaseValue, lotStateDataItems) 
  * @returns {number|undefined}
  * @memberof GainHelpers
  */
+// GOES AWAY
 export function sumLotStatePart(args, lotStates) {
     const accountStateInfo = createAccountStateInfo(args);
     if (!accountStateInfo) {
@@ -963,6 +1147,7 @@ export function sumLotStatePart(args, lotStates) {
  * @returns {GainHelpers~getTotalMarketValueBaseValueResult|undefined}
  * @memberof GainHelpers
  */
+// GOES AWAY
 export function getTotalMarketValueBaseValue(args, lotStates) {
     const accountStateInfo = createAccountStateInfo(args);
     if (!accountStateInfo) {
@@ -1012,6 +1197,7 @@ export function getTotalMarketValueBaseValue(args, lotStates) {
  * @returns {number|undefined}
  * @memberof GainHelpers
  */
+// GOES AWAY
 export function getTotalCostBasisBaseValue(args, lotStates) {
     return sumLotStatePart(Object.assign({}, args, {
         getLotStatePart: getLotStateCostBasisBaseValue,
@@ -1030,6 +1216,7 @@ export function getTotalCostBasisBaseValue(args, lotStates) {
  * @returns {number|undefined}
  * @memberof GainHelpers
  */
+// GOES AWAY
 export function getTotalCashInBaseValue(args, lotStates) {
     return sumLotStatePart(Object.assign({}, args, {
         getLotStatePart: getLotStateCashInBaseValue,

@@ -346,6 +346,7 @@ Are the lists really two separate styles? Or can they be combined into one?
             - Option to mark security to exclude from gain calculations
                 - Use to mark account as cash/money market fund
         - Don't show expand/collapse if not displaying accounts.
+        - Indicate hidden securities when displaying hidden securities
 
 
     - Priced Item Editor
@@ -568,7 +569,6 @@ Column sorting in RowTable:
 
 - totalGain:
     - LCE.calcSimpleGainBalanceValue
-    - LCE.calcCashInGainBalanceValue
         - calcGainBalanceValue
             - GH.getLotStateSimpleGainParts
             - GH.absoluteGain
@@ -576,8 +576,9 @@ Column sorting in RowTable:
 - totalCashInGain:
     - LCE.calcCashInGainBalanceValue
         - calcGainBalanceValue
-            - GH.getLotStateCashInGainParts
-            - GH.absoluteGain
+            -> GH.calcLotStateGain()
+                - getGainParts: GH.getLotStateCashInGainParts
+                - calcGainFromParts: GH.absoluteGain
 
 - totalPercentGain:
     - LCE.calcSimplePercentGainBalanceValue

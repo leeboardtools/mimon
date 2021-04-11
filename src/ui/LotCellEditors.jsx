@@ -2066,7 +2066,7 @@ function calcGainBalanceValue(args) {
  */
 export function calcSimpleGainBalanceValue(args) {
     args = Object.assign({}, args, {
-        getGainParts: GH.getLotStateSimpleGainParts,
+        getGainPartsOfAccountGainsState: GH.getAccountGainsStateSimpleGainParts,
         calcGainFromParts: GH.absoluteGain,
         inputMsgId: 'LotCellEditors-costBasis_tooltip',
     });
@@ -2102,7 +2102,7 @@ export function getTotalSimplePercentGainColumnInfo(args) {
  */
 export function calcSimplePercentGainBalanceValue(args) {
     args = Object.assign({}, args, {
-        getGainParts: GH.getLotStateSimpleGainParts,
+        getGainPartsOfAccountGainsState: GH.getAccountGainsStateSimpleGainParts,
         calcGainFromParts: GH.percentGain,
         inputMsgId: 'LotCellEditors-costBasis_tooltip',
     });
@@ -2138,7 +2138,7 @@ export function getTotalCashInGainColumnInfo(args) {
  */
 export function calcCashInGainBalanceValue(args) {
     args = Object.assign({}, args, {
-        getGainParts: GH.getLotStateCashInGainParts,
+        getGainPartsOfAccountGainsState: GH.getAccountGainsStateCashInGainParts,
         calcGainFromParts: GH.absoluteGain,
         inputMsgId: 'LotCellEditors-cashIn_tooltip',
     });
@@ -2174,7 +2174,7 @@ export function getTotalCashInPercentGainColumnInfo(args) {
  */
 export function calcCashInPercentGainBalanceValue(args) {
     args = Object.assign({}, args, {
-        getGainParts: GH.getLotStateCashInGainParts,
+        getGainPartsOfAccountGainsState: GH.getAccountGainsStateCashInGainParts,
         calcGainFromParts: GH.percentGain,
         inputMsgId: 'LotCellEditors-cashIn_tooltip',
     });
@@ -2209,7 +2209,12 @@ export function getTotalAnnualPercentGainColumnInfo(args) {
  * @returns {CellBalanceValue}
  */
 export function calcAnnualPercentGainBalanceValue(args) {
-    const result = GH.calcLotStatePercentAnnualGain(args);
+    args = Object.assign({}, args, {
+        getLotStatesFromAccountGainsState: GH.getAccountGainsStateSimpleGainLotStates,
+        //inputMsgId: 'LotCellEditors-cashIn_tooltip',
+    });
+    const result = GH.calcAccountGainsStatePercentAnnualGain(args);
+//    const result = GH.calcLotStatePercentAnnualGain(args);
     return annualGainResultToBalanceValue(args, result);
 }
 
@@ -2218,7 +2223,7 @@ export function calcAnnualPercentGainBalanceValue(args) {
 //---------------------------------------------------------
 //
 function annualGainResultToBalanceValue(args, result) {
-    const { accessor, priceDataItem } = args;
+    const { accessor } = args;
     if (!result) {
         return;
     }
@@ -2234,8 +2239,7 @@ function annualGainResultToBalanceValue(args, result) {
 
     // Tooltips:
     let tooltips;
-    if (lotPercentAnnualGains && lotPercentAnnualGains.length
-     && priceDataItem) {
+    if (lotPercentAnnualGains && lotPercentAnnualGains.length) {
         tooltips = lotPercentAnnualGains.map((entry) => {
             // Want:CAGR, shares, date
             const { lotState } = entry;
@@ -2282,6 +2286,10 @@ export function getTotalAnnualCashInPercentGainColumnInfo(args) {
  * @returns {CellBalanceValue}
  */
 export function calcAnnualCashInPercentGainBalanceValue(args) {
-    const result = GH.calcLotStateCashInPercentAnnualGain(args);
+    args = Object.assign({}, args, {
+        getLotStatesFromAccountGainsState: GH.getAccountGainsStateCashInLotStates,
+        //inputMsgId: 'LotCellEditors-cashIn_tooltip',
+    });
+    const result = GH.calcAccountGainsStatePercentAnnualGain(args);
     return annualGainResultToBalanceValue(args, result);
 }
