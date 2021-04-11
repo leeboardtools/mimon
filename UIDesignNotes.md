@@ -345,13 +345,15 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Securities:
             - Option to mark security to exclude from gain calculations
                 - Use to mark account as cash/money market fund
+        - Don't show expand/collapse if not displaying accounts.
 
 
     - Priced Item Editor
 
 
     - Securites/Mutual Fund List
-        - Add % of total column (also to AccountsList)
+        - Add % of total market value column (also to AccountsList)
+        - Add % of total cost basis column
 
 
     - Prices List
@@ -489,6 +491,9 @@ Column sorting in RowTable:
         - Subtotals:
             - What about currencies?
                 - Can't add different currencies.
+ 
+        - Hiding a collapsed account hides the parent
+        - Undoing hiding a collapsed account does not restore
 
 
         - Export as CSV
@@ -530,31 +535,68 @@ Column sorting in RowTable:
     - Save/restore last window settings.
 
 
-- Gain calculations:
-    - calcGainValueCallback is passed:
-        - accessor
-        - pricedItemId (undefined for summary)
-        - accountStateDataItem (undefined for summary?)
-        - priceDataItem (undefined for summary?)
+- Rework PricedItemsList to generate the lot states as part of the rowInfo, use different lot states for the different base value/gains:
+    - regular lot states
+    - gain lot states
+    - cashIn lot states
+    - cashIn gain lot states
 
-    - calcGainValueCallback:
-        - totalGain: 
-            - LCE.calcSimpleGainBalanceValue()
-        - totalCashInGain: 
-            - LCE.calcCashInGainBalanceValue()
-        - totalPercentGain:
-            - LCE.calcSimplePercentGainBalanceValue()
-        - totalCashInPercentGain:
-            - LCE.calcCashInPercentGainBalanceValue()
-        - totalAnnualPercentGain:
-            - LCE.calcAnnualPercentGainBalanceValue()
-        - totalAnnualCashInPercentGain:
-            - LCE.calcAnnualCashInPercentGainBalanceValue()
 
-- renderTotalMarketValue():
-    - GH.getTotalMarketValueBaseValue() is passed:
-        - accessor
-        - pricedItemId (undefined for summary)
-        - accountStateDataItem (includes all lot states for summary)
-    - GH.getTotalMarketValueBaseValue() calls for each lot state:
-        - calcLotStateMarketValueBaseValue()
+- New Versions just work off an array of lotStates
+
+- totalShares:
+    - LCE.renderTotalSharesDisplay = ACE.renderQuantityDisplay
+        - Renders accountState.quantityBaseValue
+
+- totalMarketValue:
+    - GH.getTotalMarketValueBaseValue
+        - AccountsList - OK except Net Worth/Net Income
+        - PricedItemsList - OK
+
+- totalCostBasis:
+    - AccountsList - OK
+    - PricedItemsList - 
+
+    - GH.getTotalCostBasisBaseValue
+        - GH.sumLotStateParts
+            - GH.getLotStateCostBasisBaseValue
+
+- totalCashIn:
+    - GH.getTotalCashInBaseValue
+        - GH.sumLotStateParts
+            - GH.getLotStateCashInBaseValue
+
+- totalGain:
+    - LCE.calcSimpleGainBalanceValue
+    - LCE.calcCashInGainBalanceValue
+        - calcGainBalanceValue
+            - GH.getLotStateSimpleGainParts
+            - GH.absoluteGain
+
+- totalCashInGain:
+    - LCE.calcCashInGainBalanceValue
+        - calcGainBalanceValue
+            - GH.getLotStateCashInGainParts
+            - GH.absoluteGain
+
+- totalPercentGain:
+    - LCE.calcSimplePercentGainBalanceValue
+        - calcGainBalanceValue
+            - GH.getLotStateSimpleGainParts
+            - GH.percentGain
+
+- totalCashInPercentGain:
+    - LCE.calcCashInPercentGainBalanceValue
+        - calcGainBalanceValue
+            - GH.getLotStateCashInGainParts
+            - GH.percentGain
+
+- totalAnnualPercentGain:
+    - LCE.calcAnnualPercentGainBalanceValue
+        - GH.calcLotStatePercentAnnualGain
+        - annualGainResultToBalanceValue
+
+- totalAnnualCashInPercentGain
+    - LCE.calcAnnualCashInPercentGainBalanceValue
+        - GH.calcLotStateCashInPercentAnnualGain
+        - annualGainResultToBalanceValue

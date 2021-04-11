@@ -952,17 +952,30 @@ export class EngineAccessor extends EventEmitter {
     /**
      * Retrieves the {@link Currency} associated with a given account id.
      * @param {number} accountId 
-     * @returns {Currency}
+     * @returns {Currency} If accountId is invalid the base currency is returned.
      */
     getCurrencyOfAccountId(accountId) {
-        let currency;
         const accountDataItem = this._accountManager.getCategoryOfAccountId(accountId);
         if (accountDataItem) {
-            const pricedItemDataItem = this.getPricedItemDataItemWithId(
+            return this.getCurrencyOfPricedItemId(
                 accountDataItem.pricedItemId);
-            if (pricedItemDataItem) {
-                currency = getCurrency(pricedItemDataItem.currency);
-            }
+        }
+
+        return getCurrency(this.getBaseCurrencyCode());
+    }
+
+
+    /**
+     * Retrieves the {@link Currency} associated with a given priced item id.
+     * @param {number} pricedItemId 
+     * @returns {Currency} If pricedItemId is invalid the base currency is returned.
+     */
+    getCurrencyOfPricedItemId(pricedItemId) {
+        let currency;        
+        const pricedItemDataItem = this.getPricedItemDataItemWithId(
+            pricedItemId);
+        if (pricedItemDataItem) {
+            currency = getCurrency(pricedItemDataItem.currency);
         }
 
         return (currency)

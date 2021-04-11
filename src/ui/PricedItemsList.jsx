@@ -381,7 +381,9 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    buildRowInfos() {
+    buildRowInfos(state) {
+        state = state || this.state;
+
         const rowInfos = [];
         const { accessor, pricedItemTypeName, 
             sortAlphabetically, 
@@ -402,16 +404,22 @@ export class PricedItemsList extends React.Component {
         }
 
         pricedItemIds.forEach((id) => {
-            this.addPricedItemIdToRowEntries(rowInfos, id);
+            this.addPricedItemIdToRowEntries(state, rowInfos, id);
         });
 
+        let summaryAccountGainsState;
+        rowInfos.forEach((rowInfo) => {
+            summaryAccountGainsState = GH.addAccountGainsState(summaryAccountGainsState,
+                rowInfo.accountGainsState);
+        });
 
         rowInfos.push({
             key: '_SUMMARY_',
             expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
+            accountGainsState: summaryAccountGainsState,
         });
 
-        let { activeRowKey } = this.state;
+        let { activeRowKey } = state;
         let newActiveRowKey;
         if (activeRowKey) {
             // Make sure the active row key is still valid.
@@ -461,7 +469,7 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    addPricedItemIdToRowEntries(rowInfos, pricedItemId) {
+    addPricedItemIdToRowEntries(state, rowInfos, pricedItemId) {
         if (!this.isPricedItemIdDisplayed(pricedItemId)) {
             return;
         }
@@ -472,11 +480,9 @@ export class PricedItemsList extends React.Component {
         const key = pricedItemDataItem.id;
         const isCollapsed = this._collapsedRowIds.has(key);
 
-        const { accountIdsByPricedItemId } = this.state;
+        const { accountIdsByPricedItemId } = state;
         let expandCollapseState = ExpandCollapseState.NO_EXPAND_COLLAPSE;
-        const accountIds = (showAccounts)
-            ? accountIdsByPricedItemId.get(pricedItemId)
-            : undefined;
+        const accountIds = accountIdsByPricedItemId.get(pricedItemId);
         if (accountIds && accountIds.length) {
             expandCollapseState = (isCollapsed)
                 ? ExpandCollapseState.COLLAPSED
@@ -491,8 +497,13 @@ export class PricedItemsList extends React.Component {
         rowInfos.push(rowInfo);
 
         if (accountIds) {
-            rowInfo.childRowInfos = [];
-            const { childRowInfos } = rowInfo;
+            let pricedItemAccountGainsState;
+            let childRowInfos;
+
+            if (showAccounts) {
+                childRowInfos = [];
+                rowInfo.childRowInfos = childRowInfos;
+            }
 
             accountIds.forEach((accountId) => {
                 const accountDataItem = accessor.getAccountDataItemWithId(accountId);
@@ -500,18 +511,46 @@ export class PricedItemsList extends React.Component {
                     return;
                 }
 
-                childRowInfos.push({
-                    key: 'AccountId_' + accountId,
-                    expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
-                    accountDataItem: accountDataItem,
+                const priceDataItem = state.pricesByPricedItemId.get(
+                    accountDataItem.pricedItemId);
+                
+                const accountState = this.getAccountStateForAccountId(accountId);
+                const accountGainsState = GH.accountStateToAccountGainsState({
+                    accessor: accessor,
+                    accountId: accountId,
+                    accountState: accountState,
+                    priceDataItem: priceDataItem,
+                    isExcludeFromGain: accountDataItem.isExcludeFromGain,
                 });
+
+                pricedItemAccountGainsState = GH.addAccountGainsState(
+                    pricedItemAccountGainsState,
+                    accountGainsState);
+
+                if (childRowInfos) {
+                    childRowInfos.push({
+                        key: 'AccountId_' + accountId,
+                        expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
+                        accountDataItem: accountDataItem,
+                        accountGainsState: accountGainsState,
+                    });
+                }
             });
 
-            if (this.props.sortAlphabetically) {
+            if (childRowInfos && this.props.sortAlphabetically) {
                 childRowInfos.sort((a, b) =>
                     a.accountDataItem.name.localeCompare(b.accountDataItem.name));
             }
+
+            rowInfo.accountGainsState = pricedItemAccountGainsState;
         }
+    }
+
+
+    getAccountStateForAccountId(accountId) {
+        // Some day support a date...
+        const { accessor } = this.props;
+        return accessor.getCurrentAccountStateDataItem(accountId);
     }
 
 
@@ -540,7 +579,7 @@ export class PricedItemsList extends React.Component {
 
 
     rebuildRowInfos() {
-        this.setState(this.buildRowInfos());
+        this.setState((state) => this.buildRowInfos(state));
     }
 
 
@@ -567,6 +606,7 @@ export class PricedItemsList extends React.Component {
                 this.setState({
                     pricesByPricedItemId: newPricesByPricedItemId,
                 });
+                this.rebuildRowInfos();
             }
         });
     }
@@ -874,22 +914,23 @@ export class PricedItemsList extends React.Component {
 
 
     renderTotalMarketValue(args) {
-        const { columnInfo,
-            accountState, pricedItemId } = this.getDisplayInfo(args);
-        const priceDataItem = this.state.pricesByPricedItemId.get(
-            pricedItemId);
+        const { columnInfo, rowInfo,
+            pricedItemId } = this.getDisplayInfo(args);
+        
+        const { accountGainsState } = rowInfo;
+        if (accountGainsState) {
+            const quantityValue = {
+                quantityBaseValue: accountGainsState.marketValueBaseValue,
+                quantityDefinition: this.props.accessor.getCurrencyOfPricedItemId(
+                    pricedItemId
+                ).getQuantityDefinition(),
+            };
 
-        const quantityValue = GH.getTotalMarketValueBaseValue({
-            accessor: this.props.accessor,
-            pricedItemId: pricedItemId,
-            accountStateDataItem: accountState,
-            priceDataItem: priceDataItem,
-        });
-
-        return ACE.renderBalanceDisplay({
-            columnInfo: columnInfo,
-            value: quantityValue,
-        });
+            return ACE.renderBalanceDisplay({
+                columnInfo: columnInfo,
+                value: quantityValue,
+            });
+        }
     }
 
 
@@ -913,36 +954,44 @@ export class PricedItemsList extends React.Component {
 
 
     renderTotalCostBasis(args) {
-        const { columnInfo,
-            accountState, pricedItemId } = this.getDisplayInfo(args);
+        const { columnInfo, rowInfo,
+            pricedItemId } = this.getDisplayInfo(args);
         
-        const quantityValue = GH.getTotalCostBasisBaseValue({
-            accessor: this.props.accessor,
-            pricedItemId: pricedItemId,
-            accountStateDataItem: accountState,
-        });
+        const { accountGainsState } = rowInfo;
+        if (accountGainsState) {
+            const quantityValue = {
+                quantityBaseValue: accountGainsState.costBasisBaseValue,
+                quantityDefinition: this.props.accessor.getCurrencyOfPricedItemId(
+                    pricedItemId
+                ).getQuantityDefinition(),
+            };
 
-        return ACE.renderBalanceDisplay({
-            columnInfo: columnInfo,
-            value: quantityValue,
-        });
+            return ACE.renderBalanceDisplay({
+                columnInfo: columnInfo,
+                value: quantityValue,
+            });
+        }
     }
 
 
     renderTotalCashIn(args) {
-        const { columnInfo, 
-            accountState, pricedItemId } = this.getDisplayInfo(args);
+        const { columnInfo, rowInfo,
+            pricedItemId } = this.getDisplayInfo(args);
         
-        const quantityValue = GH.getTotalCashInBaseValue({
-            accessor: this.props.accessor,
-            pricedItemId: pricedItemId,
-            accountStateDataItem: accountState,
-        });
+        const { accountGainsState } = rowInfo;
+        if (accountGainsState) {
+            const quantityValue = {
+                quantityBaseValue: accountGainsState.cashInBaseValue,
+                quantityDefinition: this.props.accessor.getCurrencyOfPricedItemId(
+                    pricedItemId
+                ).getQuantityDefinition(),
+            };
 
-        return ACE.renderBalanceDisplay({
-            columnInfo: columnInfo,
-            value: quantityValue,
-        });
+            return ACE.renderBalanceDisplay({
+                columnInfo: columnInfo,
+                value: quantityValue,
+            });
+        }
     }
 
 

@@ -1,5 +1,6 @@
 import { getQuantityDefinition } from '../util/Quantities';
 import { getCurrency } from '../util/Currency';
+import * as AS from '../engine/AccountStates';
 import * as L from '../engine/Lots';
 import * as LS from '../engine/LotStates';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
@@ -23,6 +24,7 @@ import { userError } from '../util/UserMessages';
  * @returns {number|undefined}
  * @memberof GainHelpers
  */
+// KEEP
 export function absoluteGain({inputValue, outputValue}) {
     if ((typeof inputValue === 'number')
      && (typeof outputValue === 'number')) {
@@ -38,6 +40,7 @@ export function absoluteGain({inputValue, outputValue}) {
  * inputValue is 0.
  * @memberof GainHelpers
  */
+// KEEP
 export function percentGain({inputValue, outputValue}) {
     if ((typeof inputValue === 'number')
      && (typeof outputValue === 'number')) {
@@ -62,6 +65,7 @@ export function percentGain({inputValue, outputValue}) {
  * @returns {number|undefined} Returns <code>undefined</code> if inputValue
  * is 0 or the dates are not valid.
  */
+// KEEP
 export function compoundAnnualGrowthRate(
     {inputValue, ymdDateInput, outputValue, ymdDateOutput }) {
 
@@ -76,6 +80,194 @@ export function compoundAnnualGrowthRate(
         const years = ymdDateInput.fractionalYearsAfterMe(ymdDateOutput);
         return Math.pow(outputValue / inputValue, 1 / years) - 1;
     }
+}
+
+
+/**
+ * @typedef {object} GainHelpers~AccountGainsStateDataItem
+ * {@link AccountStateDataItem} with the following added:
+ * @property {number} marketValueBaseValue
+ * @property {number} costBasisBaseValue
+ * @property {number} cashInBaseValue
+ * @property {LotStateDataItem[]} [cashInLotStates] Only present if lotStates is also
+ * present, the lot states adjusted to reflect the cash-in state.
+ * @property {boolean} isQuantityShares This is true if the quantityBaseValue property
+ * represents shares. This is needed so we can accumulate gain state values into an
+ * outer gain state value that does not necessarily represent shares by concatenating 
+ * the various lotState arrays.
+ * @property {boolean} [isExcludeFromGain=false]
+ */
+
+
+/**
+ * @typedef {object} GainHelpers~convertAccountStateForGainsArgs
+ * @property {EngineAccess} accessor
+ * @property {number} accountId
+ * @property {AccountStateDataItem} accountState,
+ * @property {PriceDataItem} priceDataItem
+ * @property {boolean} [isExcludeFromGain=false]
+ * @returns {GainHelpers~AccountGainsStateDataItem}
+ */
+
+// KEEP
+export function accountStateToAccountGainsState(args) {
+    const { 
+        accessor, 
+        accountId,
+        isExcludeFromGain,
+    } = args;
+
+    let { accountState, } = args;
+    if (!accountState) {
+        return;
+    }
+
+    const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+    if (!accountDataItem) {
+        return;
+    }
+
+    accountState = AS.getAccountStateDataItem(accountState, true);
+
+    let { lotStates } = accountState;
+    if (lotStates) {
+        const accountStateInfo = createAccountStateInfo(args);
+
+        let totalMarketValueBaseValue = 0;
+        let totalCostBasisBaseValue = 0;
+        for (let i = 0; i < lotStates.length; ++i) {
+            const lotState = LS.getLotStateDataItem(lotStates[i], true);
+            lotState.marketValueBaseValue = calcMarketValueBaseValueFromLotState(
+                accountStateInfo, lotState);
+            if (lotState.marketValueBaseValue) {
+                totalMarketValueBaseValue += lotState.marketValueBaseValue;
+            }
+            if (lotState.costBasisBaseValue) {
+                totalCostBasisBaseValue += lotState.costBasisBaseValue;
+            }
+            lotStates[i] = lotState;
+        }
+
+        accountState.lotStates = lotStates;
+
+        const cashInLotStates = distributeNonCashInLots(
+            accessor, lotStates);
+
+        let totalCashInBaseValue = 0;
+        cashInLotStates.forEach((lotState) => {
+            lotState.marketValueBaseValue = calcMarketValueBaseValueFromLotState(
+                accountStateInfo, lotState);
+            if (lotState.costBasisBaseValue) {
+                totalCashInBaseValue += lotState.costBasisBaseValue;
+            }
+        });
+
+        accountState.cashInLotStates = cashInLotStates;
+
+        accountState.marketValueBaseValue = totalMarketValueBaseValue;
+        accountState.costBasisBaseValue = totalCostBasisBaseValue;
+        accountState.cashInBaseValue = totalCashInBaseValue;
+    }
+    else {
+        accountState.marketValueBaseValue 
+            = accountState.quantityBaseValue;
+    }
+
+    accountState.isExcludeFromGain = isExcludeFromGain;
+
+    return accountState;
+}
+
+
+/**
+ * Creates a copy of an account gains state.
+ * @param {GainHelpers~AccountGainsStateDataItem} accountGainsState 
+ * @returns {GainHelpers~AccountGainsStateDataItem}
+ */
+// KEEP!
+export function cloneAccountGainsState(accountGainsState) {
+    const toAccountGainsState = AS.getAccountStateDataItem(accountGainsState, true);
+    if (accountGainsState.lotStates) {
+        toAccountGainsState.lotStates 
+            = Array.from(accountGainsState.lotStates);
+    }
+    if (accountGainsState.cashInLotStates) {
+        toAccountGainsState.cashInLotStates 
+            = Array.from(accountGainsState.cashInLotStates);
+    }
+
+    return toAccountGainsState;
+}
+
+
+/**
+ * Adds the contents of fromAccountGainsState to toAccountGainsState, returning a copy
+ * of fromAccountGainsState if toAccountGainsState is undefined.
+ * @param {GainHelpers~AccountGainsStateDataItem} toAccountGainsState 
+ * @param {GainHelpers~AccountGainsStateDataItem} fromAccountGainsState 
+ * @returns {GainHelpers~AccountGainsStateDataItem}
+ */
+// KEEP!
+export function addAccountGainsState(toAccountGainsState, fromAccountGainsState) {
+    if (!fromAccountGainsState) {
+        return toAccountGainsState;
+    }
+
+    if (!toAccountGainsState) {
+        toAccountGainsState = AS.getAccountStateDataItem(fromAccountGainsState, true);
+        if (fromAccountGainsState.lotStates) {
+            toAccountGainsState.lotStates 
+                = Array.from(fromAccountGainsState.lotStates);
+        }
+        if (fromAccountGainsState.cashInLotStates) {
+            toAccountGainsState.cashInLotStates 
+                = Array.from(fromAccountGainsState.cashInLotStates);
+        }
+    }
+    else {
+        if (fromAccountGainsState.lotStates 
+         && toAccountGainsState.lotStates) {
+            toAccountGainsState.lotStates 
+                = toAccountGainsState.lotStates.concat(
+                    fromAccountGainsState.lotStates);
+        }
+
+        if (fromAccountGainsState.cashInLotStates 
+         && toAccountGainsState.cashInLotStates) {
+            toAccountGainsState.cashInLotStates 
+                = toAccountGainsState.cashInLotStates.concat(
+                    fromAccountGainsState.cashInLotStates);
+        }
+
+        if (fromAccountGainsState.quantityBaseValue
+         && ((!toAccountGainsState.isQuantityShares && !fromAccountGainsState.lotStates)
+          || (toAccountGainsState.isQuantityShares && fromAccountGainsState.lotStates)
+         )) {
+            toAccountGainsState.quantityBaseValue
+                = (toAccountGainsState.quantityBaseValue || 0)
+                    + fromAccountGainsState.quantityBaseValue;
+        }
+
+        if (fromAccountGainsState.marketValueBaseValue) {
+            toAccountGainsState.marketValueBaseValue 
+                = (toAccountGainsState.marketValueBaseValue || 0)
+                    + fromAccountGainsState.marketValueBaseValue;
+        }
+
+        if (fromAccountGainsState.costBasisBaseValue) {
+            toAccountGainsState.costBasisBaseValue
+                = (toAccountGainsState.costBasisBaseValue || 0)
+                    + fromAccountGainsState.costBasisBaseValue;
+        }
+
+        if (fromAccountGainsState.cashInBaseValue) {
+            toAccountGainsState.cashInBaseValue
+                = (toAccountGainsState.cashInBaseValue || 0)
+                    + fromAccountGainsState.cashInBaseValue;
+        }
+    }
+
+    return toAccountGainsState;
 }
 
 
@@ -106,6 +298,7 @@ export function compoundAnnualGrowthRate(
  * @returns {GainHelpers~AccountStateInfo|undefined}
  * @memberof GainHelpers
  */
+// KEEP
 export function createAccountStateInfo(args) {
 
     const {accessor, accountId, } = args;
@@ -143,6 +336,24 @@ export function createAccountStateInfo(args) {
         currency: currency,
         currencyQuantityDefinition: currency.getQuantityDefinition(),
     });
+}
+
+
+// KEEP
+function calcMarketValueBaseValueFromLotState(
+    accountStateInfo, lotStateDataItem) {
+
+    const { sharesQuantityDefinition, currencyQuantityDefinition,
+        priceDataItem } = accountStateInfo;
+    if (!priceDataItem) {
+        return lotStateDataItem.costBasisBaseValue;
+    }
+
+    const sharesValue = sharesQuantityDefinition.baseValueToNumber(
+        lotStateDataItem.quantityBaseValue);
+    const marketValue = sharesValue * priceDataItem.close;
+    return currencyQuantityDefinition.numberToBaseValue(
+        marketValue);
 }
 
 
