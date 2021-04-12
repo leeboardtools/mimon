@@ -483,7 +483,7 @@ export class PricedItemsList extends React.Component {
         const { accountIdsByPricedItemId } = state;
         let expandCollapseState = ExpandCollapseState.NO_EXPAND_COLLAPSE;
         const accountIds = accountIdsByPricedItemId.get(pricedItemId);
-        if (accountIds && accountIds.length) {
+        if (accountIds && accountIds.length && showAccounts) {
             expandCollapseState = (isCollapsed)
                 ? ExpandCollapseState.COLLAPSED
                 : ExpandCollapseState.EXPANDED;
