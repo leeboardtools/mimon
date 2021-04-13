@@ -5,7 +5,8 @@ import { PricedItemsList, createDefaultColumns } from './PricedItemsList';
 import * as PI from '../engine/PricedItems';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
-import { TabIdRowTableHandler } from './RowTableHelpers';
+import { TabIdRowTableHandler, updateStateFromProjectSettings, 
+} from './RowTableHelpers';
 import { getColumnWithKey } from '../util-ui/ColumnInfo';
 
 const pricedItemsListTagPrefix = 'pricedItemsList_';
@@ -18,8 +19,10 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     constructor(props) {
         super(props);
 
-        this.onRenderTabPage = this.onRenderTabPage.bind(this);
+        this.updateStateFromModifiedProjectSettings 
+            = this.updateStateFromModifiedProjectSettings.bind(this);
 
+        this.onRenderTabPage = this.onRenderTabPage.bind(this);
         this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
 
 
@@ -27,6 +30,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         this._rowTableHandler = new TabIdRowTableHandler({
             mainWindowHandler: this,
             userIdBase: 'PricedItemsListHandler',
+            updateStateFromModifiedProjectSettings: 
+                this.updateStateFromModifiedProjectSettings,
         });
     }
 
@@ -114,6 +119,21 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                 }
             });
         }
+    }
+
+
+    updateStateFromModifiedProjectSettings(args) {
+        updateStateFromProjectSettings(args, 'hiddenPricedItemIds');
+
+        updateStateFromProjectSettings(args, 'showHiddenPricedItems');
+        updateStateFromProjectSettings(args, 'showInactivePricedItems');
+
+        updateStateFromProjectSettings(args, 'showAccounts');
+        updateStateFromProjectSettings(args, 'showHiddenAccounts');
+        updateStateFromProjectSettings(args, 'showInactiveAccounts');
+
+        updateStateFromProjectSettings(args, 'sortAlphabetically');
+        updateStateFromProjectSettings(args, 'collapsedPricedItemIds');
     }
 
 

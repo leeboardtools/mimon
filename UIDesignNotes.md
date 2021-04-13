@@ -345,7 +345,6 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Securities:
             - Option to mark security to exclude from gain calculations
                 - Use to mark account as cash/money market fund
-        - Don't show expand/collapse if not displaying accounts.
         - Indicate hidden securities when displaying hidden securities
         - Don't build full tooltips for subtotal %gains, list can get too long.
 
@@ -493,10 +492,11 @@ Column sorting in RowTable:
         - Subtotals:
             - What about currencies?
                 - Can't add different currencies.
- 
-        - Hiding a collapsed account hides the parent
-        - Undoing hiding a collapsed account does not restore
+        
 
+        - Date Range:
+            - Will need to redo retrieval of account states since that is async.
+ 
 
         - Export as CSV
             - Helper that provides a pseudo interface similar to RowTable, takes:
@@ -536,69 +536,3 @@ Column sorting in RowTable:
 
     - Save/restore last window settings.
 
-
-- Rework PricedItemsList to generate the lot states as part of the rowInfo, use different lot states for the different base value/gains:
-    - regular lot states
-    - gain lot states
-    - cashIn lot states
-    - cashIn gain lot states
-
-
-- New Versions just work off an array of lotStates
-
-- totalShares:
-    - LCE.renderTotalSharesDisplay = ACE.renderQuantityDisplay
-        - Renders accountState.quantityBaseValue
-
-- totalMarketValue:
-    - GH.getTotalMarketValueBaseValue
-        - AccountsList - OK except Net Worth/Net Income
-        - PricedItemsList - OK
-
-- totalCostBasis:
-    - AccountsList - OK
-    - PricedItemsList - 
-
-    - GH.getTotalCostBasisBaseValue
-        - GH.sumLotStateParts
-            - GH.getLotStateCostBasisBaseValue
-
-- totalCashIn:
-    - GH.getTotalCashInBaseValue
-        - GH.sumLotStateParts
-            - GH.getLotStateCashInBaseValue
-
-- totalGain:
-    - LCE.calcSimpleGainBalanceValue
-        - calcGainBalanceValue
-            - GH.getLotStateSimpleGainParts
-            - GH.absoluteGain
-
-- totalCashInGain:
-    - LCE.calcCashInGainBalanceValue
-        - calcGainBalanceValue
-            -> GH.calcLotStateGain()
-                - getGainParts: GH.getLotStateCashInGainParts
-                - calcGainFromParts: GH.absoluteGain
-
-- totalPercentGain:
-    - LCE.calcSimplePercentGainBalanceValue
-        - calcGainBalanceValue
-            - GH.getLotStateSimpleGainParts
-            - GH.percentGain
-
-- totalCashInPercentGain:
-    - LCE.calcCashInPercentGainBalanceValue
-        - calcGainBalanceValue
-            - GH.getLotStateCashInGainParts
-            - GH.percentGain
-
-- totalAnnualPercentGain:
-    - LCE.calcAnnualPercentGainBalanceValue
-        - GH.calcLotStatePercentAnnualGain
-        - annualGainResultToBalanceValue
-
-- totalAnnualCashInPercentGain
-    - LCE.calcAnnualCashInPercentGainBalanceValue
-        - GH.calcLotStateCashInPercentAnnualGain
-        - annualGainResultToBalanceValue

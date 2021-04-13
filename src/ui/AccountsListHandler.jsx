@@ -5,7 +5,7 @@ import { AccountsList, createDefaultColumns } from './AccountsList';
 import * as A from '../engine/Accounts';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
-import { TabIdRowTableHandler } from './RowTableHelpers';
+import { TabIdRowTableHandler, updateStateFromProjectSettings } from './RowTableHelpers';
 
 
 /**
@@ -16,8 +16,10 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     constructor(props) {
         super(props);
 
-        this.onRenderTabPage = this.onRenderTabPage.bind(this);
+        this.updateStateFromModifiedProjectSettings 
+            = this.updateStateFromModifiedProjectSettings.bind(this);
 
+        this.onRenderTabPage = this.onRenderTabPage.bind(this);
         this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
 
 
@@ -25,6 +27,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         this._rowTableHandler = new TabIdRowTableHandler({
             mainWindowHandler: this,
             userIdBase: 'AccountsListHandler',
+            updateStateFromModifiedProjectSettings: 
+                this.updateStateFromModifiedProjectSettings,
         });
     }
 
@@ -147,6 +151,25 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 }
             });
         }
+    }
+
+
+    updateStateFromModifiedProjectSettings(args) {
+        updateStateFromProjectSettings(args, 'hiddenRootAccountTypes');
+        updateStateFromProjectSettings(args, 'hiddenAccountIds');
+
+        updateStateFromProjectSettings(args, 'showHiddenAccounts');
+        updateStateFromProjectSettings(args, 'showInactiveAccounts');
+
+        updateStateFromProjectSettings(args, 'sortAlphabetically');
+
+        updateStateFromProjectSettings(args, 'collapsedAccountIds');
+
+        updateStateFromProjectSettings(args, 'showSubtotalsWhenCollapsed');
+        updateStateFromProjectSettings(args, 'showNetWorth');
+        updateStateFromProjectSettings(args, 'showNetIncome');
+
+        updateStateFromProjectSettings(args, 'subtotalsLevel');
     }
 
 
@@ -607,23 +630,11 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const state = this.getTabIdState(tabId);
         const prevActiveAccountId = state.activeAccountId;
 
-        const { accessor } = this.props;
-        const accountType = accessor.getTypeOfAccountId(accountId);
-        const prevAccountType = accessor.getTypeOfAccountId(prevActiveAccountId);
-
-        if ((!prevActiveAccountId && accountId)
-         || (prevActiveAccountId && !accountId)
-         || (accountType !== prevAccountType)) {
+        if (prevActiveAccountId !== accountId) {
             this.setTabIdState(tabId,
                 {
                     activeAccountId: accountId,
                     dropdownInfo: this.getTabDropdownInfo(tabId, state, accountId),
-                });
-        }
-        else {
-            this.setTabIdState(tabId,
-                {
-                    activeAccountId: accountId,
                 });
         }
     }

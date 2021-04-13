@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import * as A from '../engine/Accounts';
-import * as PI from '../engine/PricedItems';
 import deepEqual from 'deep-equal';
 import { CollapsibleRowTable, ExpandCollapseState,
     findRowInfoWithKey, updateRowInfo } from '../util-ui/CollapsibleRowTable';

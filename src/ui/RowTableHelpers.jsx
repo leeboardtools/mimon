@@ -122,6 +122,30 @@ function updateStateColumns(state) {
 
 
 /**
+ * Helper for use with {@link RowTableHandler~updateStateFromModifiedProjectSettings}
+ * that will copy a property if it is in the original changes to the newState object.
+ * @param {RowTableHandler~updateStateFromModifiedProjectSettingsArgs} args
+ * @param {string} propertyName 
+ */
+export function updateStateFromProjectSettings(
+    { newState, projectSettings, originalChanges, }, 
+    propertyName) {
+
+    if (Object.keys(originalChanges).indexOf(propertyName) < 0) {
+        return;
+    }
+
+    const property = projectSettings[propertyName];
+    if (Array.isArray(property)) {
+        newState[propertyName] = Array.from(property);
+    }
+    else {
+        newState[propertyName] = property;
+    }
+}
+
+
+/**
  */
 export class RowTableHandler {
 
@@ -151,12 +175,18 @@ export class RowTableHandler {
      */
 
     /**
+     * @typedef {object} RowTableHandler~updateStateFromModifiedProjectSettingsArgs
+     * @property {string} stateId
+     * @property {object} newState
+     * @property {*} projectSettings
+     * @property {*} originalChanges
+     */
+
+    /**
      * @callback RowTableHandler~updateStateFromModifiedProjectSettings
      * Optional handler method for performing additional state updating
      * when the project settings are modified.
-     * @param {string} stateId
-     * @param {object} newState
-     * @param {*} projectSettings
+     * @param {RowTableHandler~updateStateFromModifiedProjectSettingsArgs} args
      */
 
     /**
@@ -165,7 +195,7 @@ export class RowTableHandler {
      * @property {RowTableHandler~setState} setState
      * @property {RowTableHandler~setProjectSettings} setProjectSettings
      * @property {RowTableHandler~updateStateFromModifiedProjectSettings} 
-     * [setProjectSettings]
+     * [updateStateFromModifiedProjectSettings]
      */
 
 
@@ -422,10 +452,18 @@ export class RowTableHandler {
 
         const { updateStateFromModifiedProjectSettings } = this;
         if (updateStateFromModifiedProjectSettings) {
-            updateStateFromModifiedProjectSettings(stateId, newState, projectSettings);
+            updateStateFromModifiedProjectSettings({
+                stateId: stateId, 
+                newState: newState, 
+                projectSettings: projectSettings,
+                originalChanges: originalChanges,
+            });
         }
 
-        updateStateColumns(newState);
+        if (newState.columns || newState.allColumns) {
+            updateStateColumns(newState);
+        }
+
         this.setState(stateId, newState);
     }
 
