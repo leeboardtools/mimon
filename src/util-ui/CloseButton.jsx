@@ -25,6 +25,7 @@ export function CloseButton(props) {
         aria-label = {ariaLabel || 'Close'}
         onClick = {onClick}
         disabled = {disabled}
+        tabIndex = {props.tabIndex}
     >
         <span aria-hidden="true">&times;</span>
     </button>;
@@ -37,10 +38,12 @@ export function CloseButton(props) {
  * @property {string} [ariaLabel]
  * @property {function} [onClick] If not specified the button is disabled.
  * @property {boolean} [disabled=false]
+ * @property {number} [tabIndex]
  */
 CloseButton.propTypes = {
     classExtras: PropTypes.string,
     ariaLabel: PropTypes.string,
     onClick: PropTypes.func,
     disabled: PropTypes.bool,
+    tabIndex: PropTypes.number,
 };
