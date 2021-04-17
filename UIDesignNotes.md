@@ -318,6 +318,11 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Finish the Jest testing.
         - Delete created file if cancelled.
 
+    
+    - File Selector
+        - Keyboard support
+        - Convert dir/files list to a new ListBox component.
+
 
     - Lots List
         - Hierarchy, by security (priced items)
@@ -535,4 +540,5 @@ Column sorting in RowTable:
                 
 
     - Save/restore last window settings.
+
 

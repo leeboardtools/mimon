@@ -720,6 +720,7 @@ button.Close {
 }
 
 
+
 .Field-input-form-control {
     flex: 1 1 0%;
     width: 100%;
@@ -1985,3 +1986,31 @@ from BS col-form-label */
 }
 
 
+
+
+.FileSelector-dir_button {
+    border-radius: 0;
+}
+
+.FileSelector-dir_button:first-child {
+    border-top-left-radius: .2rem;
+    border-bottom-left-radius: .2rem;
+}
+
+.FileSelector-dir_button:last-child {
+    border-top-right-radius: .2rem;
+    border-bottom-right-radius: .2rem;
+}
+
+.FileSelector-dir_bar {
+    display: flex;
+}
+
+.FileSelector-name_field, 
+.FileSelector-fileFilter_field {
+    margin: 0.5rem;
+}
+
+.FileSelector-dialog {
+    max-width: 800px;
+}

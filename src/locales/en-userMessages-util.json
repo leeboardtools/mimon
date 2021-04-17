@@ -148,6 +148,14 @@
     "FileSelector-readdir_failed": ["Could not read the folder '", "'. ", ""],
     "FileSelector-open": "Open",
     "FileSelector-create": "Create",
+    "FileSelector-fileName_label": "File Name:",
+    "FileSelector-confirmReplace_title": "File Exists",
+    "FileSelector-confirmRelace_message": ["The file '", "' exists. Do you want to replace it? (This cannot be undone.)"],
+
+    "FileFilter-txt_description": "Text Files (.txt)",
+    "FileFilter-csv_description": "Comma Separated Value Files (.csv)",
+    "FileFilter-xml_description": "XML Files (.xml)",
+    "FileFilter-all_description": "All Files",
 
 
     "SequentialPages-next_btn": "Next",
