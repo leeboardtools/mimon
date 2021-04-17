@@ -217,3 +217,22 @@ export function splitDirs(pathName) {
     }
     return [];
 }
+
+
+// Copied from 
+// https://github.com/sindresorhus/filename-reserved-regex/blob/main/index.js...
+// eslint-disable-next-line no-control-regex
+const regExFileNameReserved = /[<>:"/\\|?*\u0000-\u001F]/g;
+
+/**
+ * Simple conversion of a string to a valid file name.
+ * @param {string} fileName 
+ * @param {string} [replacement='_']
+ * @returns {string}
+ */
+export function makeValidFileName(fileName, replacement = '_') {
+    if (fileName) {
+        fileName = fileName.replace(regExFileNameReserved, replacement);
+    }
+    return fileName;
+}
