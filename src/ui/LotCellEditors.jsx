@@ -2214,7 +2214,6 @@ export function calcAnnualPercentGainBalanceValue(args) {
         //inputMsgId: 'LotCellEditors-cashIn_tooltip',
     });
     const result = GH.calcAccountGainsStatePercentAnnualGain(args);
-//    const result = GH.calcLotStatePercentAnnualGain(args);
     return annualGainResultToBalanceValue(args, result);
 }
 
