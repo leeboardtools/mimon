@@ -68,6 +68,7 @@ export async function asyncFileExists(fileName) {
 
 /**
  * Determines if all of a set of file names exist.
+ * @async
  * @param {string[]|string} fileNames The array of file names to check.
  * @returns {boolean}   <code>true</code> if all the files in fileNames exist.
  */
@@ -140,6 +141,7 @@ export async function asyncGetFilesOnlyInDir(dir) {
  * @param {string} dir The directory of interest.
  * @returns {string[]} Array containing the base file names (name.txt) of all the 
  * directories in dir, no files.
+ * @async
  */
 export async function asyncGetDirectoriesOnlyInDir(dir) {
     const dirEnts = await fsPromises.readdir(dir, { withFileTypes: true });
@@ -158,6 +160,7 @@ export async function asyncGetDirectoriesOnlyInDir(dir) {
  * the directories, cleaning up afterward.
  * @param {string} dir The directory of interest.
  * @returns {boolean}   <code>true</code> if dir can be created or already exists.
+ * @async
  */
 export async function asyncCanCreateDir(dir) {
     if (await asyncDirExists(dir)) {
