@@ -2347,7 +2347,6 @@ function renderBodyRowsAstText(props) {
  * Utility function for rendering what would normally be the contents
  * passed to a RowTable component as text to a recorder.
  * @param {renderRowTableAsTextProps} props 
- * @returns 
  */
 export function renderRowTableAsText(props) {
     const { recorder } = props;
