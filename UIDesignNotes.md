@@ -322,9 +322,6 @@ Are the lists really two separate styles? Or can they be combined into one?
     - File Selector
         - Keyboard support
         - Convert dir/files list to a new ListBox component.
-        - Double click on file name does not work right.
-        - Can't go to home directory.
-        - Standard filter items need to be loaded after messages are loaded.
 
 
     - Lots List

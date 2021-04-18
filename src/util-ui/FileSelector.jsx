@@ -1,7 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { asyncDirExists, splitDirs, makeValidFileName, asyncGetAvailableDrives } from '../util/Files';
+import { asyncDirExists, splitDirs, makeValidFileName, 
+    asyncGetAvailableDrives } from '../util/Files';
 import folder from '../images/folder.png';
 import * as path from 'path';
 import { promises as fsPromises } from 'fs';
@@ -59,6 +60,15 @@ export class FileSelector extends React.Component {
 
         const { fileFilters, initialFileFilter } = props;
         if (fileFilters && fileFilters.length) {
+            // Handle delayed loading of the standard filters...
+            fileFilters.forEach((filter) => {
+                const label = filter[1];
+                if ((typeof label === 'object')
+                 && (typeof label.userMsgId === 'string')) {
+                    filter[1] = userMsg(label.userMsgId);
+                }
+            });
+
             this.state.selectedFileFilter = fileFilters[0];
             if (initialFileFilter) {
                 for (let i = 0; i < fileFilters.length; ++i) {
@@ -170,13 +180,16 @@ export class FileSelector extends React.Component {
 
     onOK() {
         const { activePathName, currentDirPath, fileNameEditorValue } = this.state;
-        let fullPathName = activePathName || currentDirPath;
+        let fullPathName;
         if (fileNameEditorValue) {
-            fullPathName = path.join(fullPathName, 
+            fullPathName = path.join(currentDirPath, 
                 makeValidFileName(fileNameEditorValue));
         }
+        else {
+            fullPathName = activePathName || currentDirPath;
+        }
 
-        if (this.isCreateFile && this.isConfirmReplaceFile) {
+        if (this.props.isCreateFile && this.props.isConfirmReplaceFile) {
             // Handle the case of the file existing...
             if (!this._isValidatingFileName) {
                 this._isValidatingFileName = true;
@@ -688,12 +701,15 @@ FileSelector.propTypes = {
     onGetPostFileListComponent: PropTypes.func,
     isCreateFile: PropTypes.bool,
     isConfirmReplaceFile: PropTypes.bool,
-    fileFilters: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)),
+    fileFilters: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.object,
+    ]))),
     initialFileFilter: PropTypes.string,
 };
 
 
-export const TXTFilter = ['txt', userMsg('FileFilter-txt_description')];
-export const CSVFilter = ['csv', userMsg('FileFilter-csv_description')];
-export const XMLFilter = ['xml', userMsg('FileFilter-xml_description')];
-export const AllFilesFilter = ['*', userMsg('FileFilter-all_description')];
+export const TXTFilter = ['txt', { userMsgId: 'FileFilter-txt_description', }];
+export const CSVFilter = ['csv', { userMsgId: 'FileFilter-csv_description', }];
+export const XMLFilter = ['xml', { userMsgId: 'FileFilter-xml_description', }];
+export const AllFilesFilter = ['*', { userMsgId: 'FileFilter-all_description', }];
