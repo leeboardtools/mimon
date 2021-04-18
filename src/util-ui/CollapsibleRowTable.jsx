@@ -156,12 +156,12 @@ export function renderCollapsibleRowTableAsText(props) {
     }
 
     props = Object.assign({}, props, {
-        rowCount: rowInfos.length,
+        rowCount: newRowEntries.length,
         onRenderCell: (args) => {
-            const rowInfo = newRowEntries[args.rowIndex];
+            const rowEntry = newRowEntries[args.rowIndex];
             args = Object.assign({}, args, {
-                rowInfo: rowInfo,
-                depth: rowInfo.depth,
+                rowInfo: rowEntry.rowInfo,
+                depth: rowEntry.depth,
             });
             return onRenderCell(args);
         },

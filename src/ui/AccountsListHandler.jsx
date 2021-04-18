@@ -18,6 +18,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         this.updateStateFromModifiedProjectSettings 
             = this.updateStateFromModifiedProjectSettings.bind(this);
+            
+        this.onExportAsStringTable = this.onExportAsStringTable.bind(this);
 
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
         this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
@@ -429,6 +431,20 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onExportAsStringTable(tabId) {
+        const state = this.getTabIdState(tabId);
+        const { current } = state.pageRef;
+        if (!current) {
+            return;
+        }
+
+        const { renderAsStringTable } = current;
+        if (renderAsStringTable) {
+            return renderAsStringTable();
+        }
+    }
+
+
     getTabDropdownInfo(tabId, state, activeAccountId) {
         if (!activeAccountId) {
             const state = this.getTabIdState(tabId);
@@ -713,6 +729,10 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             subtotalAccountIds: subtotalAccountIds,
             allColumns: allColumns,
             showRowBorders: showRowBorders,
+
+            pageRef: React.createRef(),
+            canExportAsStringTable: () => true,
+            onExportAsStringTable: this.onExportAsStringTable,
         };
 
         this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);
@@ -769,6 +789,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             onMoveColumn = {(args) =>
                 this._rowTableHandler.onMoveColumn(tabEntry.tabId, args)}
             contextMenuItems = {contextMenuItems}
+
+            ref = {tabEntry.pageRef}
 
             id = {tabEntry.tabId}
         />;

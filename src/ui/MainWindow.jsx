@@ -22,6 +22,10 @@ import { RemindersListHandler } from './RemindersListHandler';
 import { CustomTabInstanceManager, 
     generateCustomTabId, } from '../util-ui/CustomTabInstanceManager';
 import { StringPrompter } from '../util-ui/StringPrompter';
+import { AllFilesFilter, CSVFilter, FileSelector } from '../util-ui/FileSelector';
+import { makeValidFileName } from '../util/Files';
+import { stringTableToCSV } from '../util/CSVUtils';
+import { promises as fsPromises } from 'fs';
 
 
 const projectSettingsMainWindow = ['mainWindow'];
@@ -77,6 +81,7 @@ export class MainWindow extends React.Component {
         this.onRefreshUndoMenu = this.onRefreshUndoMenu.bind(this);
     
         this.onPrint = this.onPrint.bind(this);
+        this.onExportAsCSV = this.onExportAsCSV.bind(this);
 
         this.onPostRenderTabs = this.onPostRenderTabs.bind(this);
 
@@ -950,6 +955,77 @@ export class MainWindow extends React.Component {
     }
 
 
+    onExportAsCSV() {
+        const { activeTabId } = this.state;
+        if (!activeTabId) {
+            return;
+        }
+        
+        const tabItem = this._tabItemsById.get(activeTabId);
+        if (!tabItem) {
+            return;
+        }
+
+        const tabEntry = tabItem[0];
+        const { onExportAsStringTable } = tabEntry;
+        if (!onExportAsStringTable) {
+            return;
+        }
+
+        const tabTitle = this.onGetTabIdTitle(activeTabId);
+
+        const title = userMsg('MainWindow-exportAsCSV_title',
+            tabTitle,
+        );
+
+        let initialName = makeValidFileName(tabTitle) + '.csv';
+
+        // Prompt for the file name...
+        this.onSetModal(() => <FileSelector 
+            title = {title}
+            initialName = {initialName}
+            fileFilters = {[
+                CSVFilter,
+                AllFilesFilter,
+            ]}
+            onOK = {(fileName) => this.onDoExportAsCSV(fileName,
+                onExportAsStringTable, activeTabId)}
+            onCancel = {this.onCancel}
+            isCreateFile
+            isConfirmReplaceFile
+        />);
+    }
+
+
+    onDoExportAsCSV(fileName, onExportAsStringTable, activeTabId) {
+        this.onSetModal();
+        try {
+            const stringTable = onExportAsStringTable(activeTabId);
+            const csvString = stringTableToCSV(stringTable);
+
+            process.nextTick(async () => {
+                try {
+                    const fh = await fsPromises.open(fileName, 'w');
+                    try {
+                        await fh.write(csvString);
+                    }
+                    finally {
+                        fh.close();
+                    }
+                }
+                catch (e) {
+                    this.onSetErrorMsg(userMsg('MainWindow-csvWriteFailed',
+                        fileName, e));
+                }
+            });
+        }
+        catch (e) {
+            this.onSetErrorMsg(userMsg('MainWindow-csvWriteFailed',
+                fileName, e));
+        }
+    }
+
+
     onRefreshUndoMenu() {
         this.forceUpdate();
     }
@@ -1239,11 +1315,29 @@ export class MainWindow extends React.Component {
         }
 
         mainMenuItems.push({});
+
         mainMenuItems.push({ id: 'print',
             label: userMsg('MainWindow-print'),
             onChooseItem: this.onPrint,
         });
+
+
+        let exportAsCSVDisabled = true;
+        if (activeTabEntry) {
+            const { canExportAsStringTable } = activeTabEntry;
+            if (canExportAsStringTable) {
+                exportAsCSVDisabled = !(canExportAsStringTable());
+            }
+        }
+        mainMenuItems.push({ id: 'exportAsCSV',
+            label: userMsg('MainWindow-exportAsCSV'),
+            disabled: exportAsCSVDisabled,
+            onChooseItem: this.onExportAsCSV,
+        });
+
+
         mainMenuItems.push({});
+
         mainMenuItems.push({ id: 'revertChanges',
             label: userMsg('MainWindow-revertChanges'),
             disabled: !accessor.isAccountingFileModified(),
@@ -1295,9 +1389,10 @@ export class MainWindow extends React.Component {
 
 
 
-    renderTabbedPages() {
+    renderTabbedPages(classExtras) {
         const { state } = this;
         return <TabbedPages
+            classExtras = {classExtras}
             tabEntries={state.tabEntries}
             activeTabId={state.activeTabId}
             onRenderPage={this.onRenderPage}
@@ -1310,6 +1405,27 @@ export class MainWindow extends React.Component {
 
     render() {
         const { errorMsg, modal } = this.state;
+
+        let errorComponent;
+        let modalComponent;
+        if (errorMsg) {
+            errorComponent = <ErrorReporter message={errorMsg} 
+                onClose={this.onCancel}
+            />;
+        }
+        else if (modal) {
+            modalComponent = modal();
+        }
+
+        if (errorComponent || modalComponent) {
+            return <div>
+                {errorComponent}
+                {modalComponent}
+                {this.renderTabbedPages('D-none')}
+            </div>;
+        }
+        /*
+
         if (errorMsg) {
             return <ErrorReporter message={errorMsg} 
                 onClose={this.onCancel}
@@ -1322,6 +1438,7 @@ export class MainWindow extends React.Component {
                 return modalComponent;
             }
         }
+        */
 
         return this.renderTabbedPages();
     }

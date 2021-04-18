@@ -44,6 +44,8 @@
     "MainWindow-renameCustomTabName_title": ["Rename Custom ", " '", "'"],
     "MainWindow-customTabIdName_label": ["Name for the ", ""],
 
+    "MainWindow-exportAsCSV_title": ["CSV File Name for Exporting '", "'"],
+
     "CustomTabInstanceManager-openCustomItem_menuLabel": ["", ""],
     "CustomTabInstanceManager-createCustomItem_menuLabel": ["Create Custom ", ""],
     "CustomTabInstanceManager-renameCustomItem_menuLabel": ["Rename Custom ", " '", "'"],
@@ -51,6 +53,9 @@
 
 
     "MainWindow-print": "Print...",
+    "MainWindow-exportAsCSV": "Export As CSV...",
+
+    "MainWindow-csvWriteFailed": ["'", "' could not be created. ", ""],
 
     "MainWindow-revertChanges": "Revert Project Changes",
     "MainWindow-closeFile": "Close Project",

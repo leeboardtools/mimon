@@ -2041,6 +2041,8 @@ export class RowTable extends React.Component {
  * 
  * @property {RowTable~onRenderCell}    onRenderCell    Callback for rendering 
  * individual cells.
+ * @property {RowTable~onPreRenderRow} [onPreRenderRow]
+ * @property {RowTable~onPostRenderRow} [onPostRenderRow]
  * 
  * @property {number}   [requestedVisibleRowIndex]   If specified the index of a row to 
  * try to keep visible.
@@ -2176,7 +2178,7 @@ function renderRowAsText(props, rowIndex) {
             cellText = undefined;
         }
 
-        recordCellText(rowIndex, c, cellText);
+        recordCellText(props, rowIndex, c, cellText);
     }
 
     if (onPostRenderRow) {
@@ -2243,7 +2245,7 @@ function renderHeaderFooterAsText({ props,
             }
         }
         
-        recordCellText(rowIndex, c, cellText);
+        recordCellText(props, rowIndex, c, cellText);
     }
 
     if (onPostRenderRow) {
@@ -2272,7 +2274,7 @@ function renderFooterAsText(props) {
     });
 }
 
-function renderBodyRowsAstText(props) {
+function renderBodyRowsAsText(props) {
     const { rowCount } = props;
     let { firstRow, lastRow } = props;
     if (firstRow === undefined) {
@@ -2341,6 +2343,8 @@ function renderBodyRowsAstText(props) {
  * @property {RowTable~onRenderCell}    onRenderCell    Callback for rendering 
  * individual cells. This callback should support an argument property of
  * 'renderAsText' being truthy.
+ * @property {RowTable~onPreRenderRow} [onPreRenderRow]
+ * @property {RowTable~onPostRenderRow} [onPostRenderRow]
  */
 
 /**
@@ -2360,7 +2364,7 @@ export function renderRowTableAsText(props) {
     }
 
     renderHeaderAsText(props);
-    renderBodyRowsAstText(props);
+    renderBodyRowsAsText(props);
     renderFooterAsText(props);
 
     const { onEndRecording } = recorder;
@@ -2393,6 +2397,11 @@ export class SimpleRowTableTextRecorder {
         return this.headerRows;
     }
 
+    /**
+     * Retrieves an array of string arrays representing all the rows.
+     * Compatible with {@link module:CSVUtils#stringTableToCSV}
+     * @returns {string[][]}
+     */
     getAllRows() {
         return this.allRows;
     }
@@ -2417,7 +2426,7 @@ export class SimpleRowTableTextRecorder {
 
 
     onEndRow(rowIndex) {
-        this.rows.push(this.currentRow);
+        this.allRows.push(this.currentRow);
 
         switch (rowIndex) {
         case HEADER_ROW_INDEX:

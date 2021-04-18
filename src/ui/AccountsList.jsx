@@ -4,7 +4,9 @@ import { userMsg } from '../util/UserMessages';
 import * as A from '../engine/Accounts';
 import deepEqual from 'deep-equal';
 import { CollapsibleRowTable, ExpandCollapseState,
-    findRowInfoWithKey, updateRowInfo } from '../util-ui/CollapsibleRowTable';
+    findRowInfoWithKey, updateRowInfo,
+    renderCollapsibleRowTableAsText, } from '../util-ui/CollapsibleRowTable';
+import { SimpleRowTableTextRecorder } from '../util-ui/RowTable';
 import { getDecimalDefinition, getQuantityDefinitionName, } from '../util/Quantities';
 import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';
@@ -80,6 +82,8 @@ export class AccountsList extends React.Component {
 
         this.onActivateRow = this.onActivateRow.bind(this);
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
+
+        this.renderAsStringTable = this.renderAsStringTable.bind(this);
 
         const { accessor, collapsedAccountIds } = this.props;
 
@@ -752,11 +756,29 @@ export class AccountsList extends React.Component {
     }
 
 
-    renderName(args) {
-        const { accountDataItem, rowInfo, } = args;
+    renderAsStringTable() {
+        const { props, state } = this;
+
+        const renderProps = {
+            recorder: new SimpleRowTableTextRecorder(),
+
+            columns: props.columns,
+            rowInfos: state.rowInfos,
+
+            onRenderCell: this.onRenderCell,
+            onPreRenderRow: this.onPreRenderRow,
+        };
+        renderCollapsibleRowTableAsText(renderProps);
+
+        return renderProps.recorder.getAllRows();
+    }
+
+
+    renderName(renderArgs) {
+        const { accountDataItem, rowInfo, } = renderArgs;
         let value;
 
-        let columnInfo = this.columnInfoFromRenderArgs(args);
+        let columnInfo = this.columnInfoFromRenderArgs(renderArgs);
 
         if (accountDataItem) {
             value = {
@@ -785,40 +807,43 @@ export class AccountsList extends React.Component {
             return ACE.renderNameDisplay({
                 columnInfo: columnInfo,
                 value: value,
+                renderAsText: renderArgs.renderAsText,
             });
         }
     }
 
 
-    renderDescription(args) {
-        const { accountDataItem } = args;
+    renderDescription(renderArgs) {
+        const { accountDataItem } = renderArgs;
         if (!accountDataItem) {
             return;
         }
 
-        const columnInfo = this.columnInfoFromRenderArgs(args);
+        const columnInfo = this.columnInfoFromRenderArgs(renderArgs);
         return ACE.renderDescriptionDisplay({
             columnInfo: columnInfo,
             value: {
                 name: accountDataItem.name,
                 description: accountDataItem.description,
-            }
+            },
+            renderAsText: renderArgs.renderAsText,
         });
     }
 
 
-    renderAccountType(args) {
-        const { accountDataItem } = args;
+    renderAccountType(renderArgs) {
+        const { accountDataItem } = renderArgs;
         if (!accountDataItem) {
             return;
         }
 
-        const columnInfo = this.columnInfoFromRenderArgs(args);
+        const columnInfo = this.columnInfoFromRenderArgs(renderArgs);
         return ACE.renderAccountTypeDisplay({
             columnInfo: columnInfo,
             value: {
                 accountType: accountDataItem.type,
-            }
+            },
+            renderAsText: renderArgs.renderAsText,
         });
     }
 
@@ -839,6 +864,7 @@ export class AccountsList extends React.Component {
         return ACE.renderBalanceDisplay({
             columnInfo: columnInfo,
             value: quantityValue,
+            renderAsText: renderArgs.renderAsText,
         });
     }
 
@@ -869,7 +895,8 @@ export class AccountsList extends React.Component {
                     value: {
                         quantityBaseValue: accountGainsState.quantityBaseValue,
                         quantityDefinition: pricedItemDataItem.quantityDefinition,
-                    }
+                    },
+                    renderAsText: renderArgs.renderAsText,
                 });
             }
         }
@@ -917,6 +944,7 @@ export class AccountsList extends React.Component {
                 columnInfo: columnInfo,
                 value: value,
                 suffix: suffix,
+                renderAsText: renderArgs.renderAsText,
             });
         }
     }
@@ -955,6 +983,7 @@ export class AccountsList extends React.Component {
             accountDataItem: accountDataItem,
             accountState: accountState,
             quantityDefinition: quantityDefinition,
+            renderAsText: args.renderAsText,
         };
 
         switch (columnInfo.key) {

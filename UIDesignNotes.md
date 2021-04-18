@@ -322,6 +322,8 @@ Are the lists really two separate styles? Or can they be combined into one?
     - File Selector
         - Keyboard support
         - Convert dir/files list to a new ListBox component.
+        - Double click on file name does not work right.
+        - 
 
 
     - Lots List
