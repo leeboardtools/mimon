@@ -239,3 +239,32 @@ export function makeValidFileName(fileName, replacement = '_') {
     }
     return fileName;
 }
+
+
+const driveLetters = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+
+/**
+ * Retrieves an array containing the available drive letters including the ':'.
+ * If not running on Windows then an empty array is returned.
+ * @returns {string[]}
+ * @async
+ */
+export async function asyncGetAvailableDrives() {
+    const drives = [];
+    if (navigator.appVersion.indexOf('Win') >= 0) {
+        // Possible drives are from C through Z...
+        for (let i = 0; i < driveLetters.length; ++i) {
+            try {
+                const stat = await fsPromises.stat(driveLetters[i] + ':\\');
+                if (stat.isDirectory()) {
+                    drives.push(driveLetters[i] + ':');
+                }
+            }
+            catch (e) {
+                // 
+            }
+        }
+    }
+    return drives;
+}

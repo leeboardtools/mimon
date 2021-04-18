@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { asyncDirExists, splitDirs, makeValidFileName } from '../util/Files';
+import { asyncDirExists, splitDirs, makeValidFileName, asyncGetAvailableDrives } from '../util/Files';
 import folder from '../images/folder.png';
 import * as path from 'path';
 import { promises as fsPromises } from 'fs';
@@ -97,6 +97,29 @@ export class FileSelector extends React.Component {
             const currentDirPath = await fsPromises.realpath(currentDir);
             const entries = await fsPromises.readdir(currentDir, { withFileTypes: true });
 
+            let availableDrives = await asyncGetAvailableDrives();
+            if (availableDrives && !availableDrives.length) {
+                availableDrives = undefined;
+            }
+
+            const currentDirParts = splitDirs(currentDirPath);
+
+            if (currentDirParts && currentDirParts.length) {
+                if (availableDrives) {
+                    // currentDirParts[0] should be the drive letter such as 'C:'
+                }
+                else {
+                    // Need to add the root path...
+                    if ((currentDirParts.length === 1) && !(currentDirParts[0])) {
+                        // currentDirPath is the root...
+                        currentDirParts[0] = path.sep;
+                    }
+                    else {
+                        currentDirParts.splice(0, 0, path.sep);
+                    }
+                }
+            }
+
             const dirs = [];
             const files = [];
             entries.forEach((dirEnt) => {
@@ -130,6 +153,8 @@ export class FileSelector extends React.Component {
                 dirs: dirs,
                 files: files,
                 currentDirPath: currentDirPath,
+                availableDrives: availableDrives,
+                currentDirParts: currentDirParts,
             });
         }
         catch (e) {
@@ -320,28 +345,83 @@ export class FileSelector extends React.Component {
     }
 
 
+    renderDriveComponent(name, dir, isActive) {
+        let className = 'FileSelector-drive_button';
+        if (isActive) {
+            className += ' active';
+        }
+
+        const { availableDrives } = this.state;
+        const driveComponents = [];
+        availableDrives.forEach((drive) => {
+            driveComponents.push(<option 
+                key = {drive}
+                value = {drive}
+            >
+                {drive}
+            </option>);
+        });
+
+        return <select className = {className}
+            value = {name}>
+            {driveComponents}
+        </select>;
+    }
+
+
+    renderCurrentDirComponent(name, dir, isActive) {
+        let className = 'Btn Btn-outline-secondary Btn-sm FileSelector-dir_button';
+        if (isActive) {
+            className += ' active';
+        }
+
+        return <button type="button"
+            key = {dir}
+            className = {className}
+            onClick = {(event) => this.onSelectParentDir(dir)}
+        >
+            {name}
+        </button>;
+    }
+
+
     renderBody() {
         const { isCreateFile } = this.props;
-        const { currentDirPath, dirs, files, fileNameEditorValue } = this.state;
+        const { currentDirPath, dirs, files, fileNameEditorValue,
+            currentDirParts, availableDrives, } = this.state;
 
-        const currentDirParts = splitDirs(currentDirPath);
         const currentDirComponents = [];
-        let builtDir = path.sep;
-        for (let i = 0; i < currentDirParts.length; ++i) {
-            const part = currentDirParts[i];
-            const myDir = path.join(builtDir, part);
-            let className = 'Btn Btn-outline-secondary Btn-sm FileSelector-dir_button';
-            if ((i + 1) === currentDirParts.length) {
-                className += ' active';
+        if (currentDirParts && currentDirParts.length) {
+            if (availableDrives) {
+                currentDirComponents.push(this.renderDriveComponent(
+                    currentDirParts[0], 
+                    currentDirParts[0],
+                    currentDirParts.length === 1,
+                ));
             }
-            builtDir = path.join(builtDir, part);
-            const component = <button type="button"
-                key = {builtDir}
-                className = {className}
-                onClick = {(event) => this.onSelectParentDir(myDir)}
-            >{part}</button>;
-            currentDirComponents.push(component);
+            else {
+                currentDirComponents.push(this.renderCurrentDirComponent(
+                    currentDirParts[0], 
+                    currentDirParts[0],
+                    currentDirParts.length === 1,
+                ));
+            }
+
+            let builtDir = currentDirParts[0];
+            for (let i = 1; i < currentDirParts.length; ++i) {
+                const part = currentDirParts[i];
+                builtDir = path.join(builtDir, part);
+
+                currentDirComponents.push(
+                    this.renderCurrentDirComponent(
+                        part,
+                        builtDir,
+                        (i + 1) === currentDirParts.length,
+                    )
+                );
+            }
         }
+
 
         const { activePathName } = this.state;
 
