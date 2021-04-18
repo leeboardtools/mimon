@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { asyncDirExists, splitDirs } from '../util/Files';
+import { asyncDirExists, splitDirs, makeValidFileName } from '../util/Files';
 import folder from '../images/folder.png';
 import * as path from 'path';
 import { promises as fsPromises } from 'fs';
@@ -146,7 +146,8 @@ export class FileSelector extends React.Component {
         const { activePathName, currentDirPath, fileNameEditorValue } = this.state;
         let fullPathName = activePathName || currentDirPath;
         if (fileNameEditorValue) {
-            fullPathName = path.join(fullPathName, fileNameEditorValue);
+            fullPathName = path.join(fullPathName, 
+                makeValidFileName(fileNameEditorValue));
         }
 
         if (this.isCreateFile && this.isConfirmReplaceFile) {
