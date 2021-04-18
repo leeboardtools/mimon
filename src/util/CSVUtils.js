@@ -88,6 +88,7 @@ export function makeValidCell(cell) {
  * @param {string} text
  */
 
+
 /**
  * @callback WriteCallback
  * @param {string} text
@@ -97,12 +98,22 @@ export function makeValidCell(cell) {
 /**
  * Writes an array of string arrays as CSV.
  * @param {string[][]} rows 
- * @param {module:CSVUtils~WriteStream|module:CSVUtils~WriteCallback} stream 
+ * @param {module:CSVUtils~WriteStream|module:CSVUtils~WriteCallback|undefined} stream 
+ * If stream is not defined then a single string is constructed and returned by 
+ * the function.
+ * @returns {string|undefined}
  */
-export function stringArrayToCSVStream(rows, stream) {
+export function stringTableToCSV(rows, stream) {
+    let result;
     if (typeof stream === 'object') {
-        stream = (string) => stream.write(string);
+        const originalStream = stream;
+        stream = (string) => originalStream.write(string);
     }
+    else if (!stream) {
+        result = '';
+        stream = (string) => result += string;
+    }
+
     rows.forEach((row) => {
         if (row.length) {
             stream(makeValidCell(row[0]));
@@ -114,4 +125,6 @@ export function stringArrayToCSVStream(rows, stream) {
 
         stream('\n');
     });
+
+    return result;
 }
