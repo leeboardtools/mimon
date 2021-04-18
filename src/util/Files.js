@@ -213,8 +213,13 @@ export async function asyncCanCreateDir(dir) {
 export function splitDirs(pathName) {
     if (pathName) {
         let parts = pathName.split(path.sep);
-        if (parts.length && !parts[0]) {
-            parts.splice(0, 1);
+        if (parts.length) {
+            if (!parts[0]) {
+                parts.splice(0, 1);
+            }
+            if (!parts[1]) {
+                parts.splice(1, 1);
+            }
         }
         return parts;
     }

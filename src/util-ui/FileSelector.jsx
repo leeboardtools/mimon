@@ -34,6 +34,7 @@ export class FileSelector extends React.Component {
         this.onDoubleClickFile = this.onDoubleClickFile.bind(this);
         this.onFileNameChange = this.onFileNameChange.bind(this);
         this.onFileFilterChange = this.onFileFilterChange.bind(this);
+        this.onDriveChange = this.onDriveChange.bind(this);
 
         this._firstFocusRef = React.createRef();
 
@@ -345,6 +346,10 @@ export class FileSelector extends React.Component {
     }
 
 
+    onDriveChange(e) {
+        this.onSelectParentDir(e.target.value + '\\');
+    }
+
     renderDriveComponent(name, dir, isActive) {
         let className = 'FileSelector-drive_button';
         if (isActive) {
@@ -363,7 +368,10 @@ export class FileSelector extends React.Component {
         });
 
         return <select className = {className}
-            value = {name}>
+            key = {dir}
+            value = {name}
+            onChange = {this.onDriveChange}
+        >
             {driveComponents}
         </select>;
     }
