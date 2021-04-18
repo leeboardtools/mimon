@@ -1061,6 +1061,7 @@ export function renderQuantityDisplay(args) {
             return renderCellQuantityDisplayAsText({
                 quantityDefinition: quantityDefinition,
                 value: quantityBaseValue,
+                suffix: suffix,
             });
         }
         return <CellQuantityDisplay

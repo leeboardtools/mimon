@@ -23,9 +23,10 @@ import { CustomTabInstanceManager,
     generateCustomTabId, } from '../util-ui/CustomTabInstanceManager';
 import { StringPrompter } from '../util-ui/StringPrompter';
 import { AllFilesFilter, CSVFilter, FileSelector } from '../util-ui/FileSelector';
-import { makeValidFileName } from '../util/Files';
+import { makeValidFileName, asyncDirExists } from '../util/Files';
 import { stringTableToCSV } from '../util/CSVUtils';
 import { promises as fsPromises } from 'fs';
+import * as path from 'path';
 
 
 const projectSettingsMainWindow = ['mainWindow'];
@@ -180,18 +181,26 @@ export class MainWindow extends React.Component {
 
         process.nextTick(async () => {
             const { accessor } = props;
+
+            const pathName = accessor.getAccountingFilePathName();
+            let dirName = pathName;
+            if (!await asyncDirExists(pathName)) {
+                dirName = path.dirname(pathName);
+            }
+            this.setState({
+                projectDir: dirName,
+                currentDir: dirName,
+            });
+
             this._projectSettings = accessor.getProjectSettings(
                 projectSettingsMainWindow);
             if (!this._projectSettings || !this._projectSettings.tabIdSettings) {
-                const action = accessor.createModifyProjectSettingsAction({
-                    name: 'initialize project settings',
+                await accessor.asyncDirectModifyProjectSettings({
                     changes: {
                         tabIdSettings: {},
                     },
                     changesPath: projectSettingsMainWindow,
                 });
-                await accessor.asyncApplyAction(action);
-                await accessor.asyncClearAllActions();
 
                 this._projectSettings = accessor.getProjectSettings(
                     projectSettingsMainWindow
@@ -572,6 +581,13 @@ export class MainWindow extends React.Component {
         if (!changesPath || (changesPath[0] !== projectSettingsMainWindow[0])) {
             // Not our change...
             return;
+        }
+
+        if (changesPath.length === 1) {
+            if (changes) {
+                this._projectSettings = Object.assign({}, this._projectSettings, changes);
+                return;
+            }
         }
 
         if (changesPath[1] === 'tabIdSettings') {
@@ -980,20 +996,30 @@ export class MainWindow extends React.Component {
 
         let initialName = makeValidFileName(tabTitle) + '.csv';
 
-        // Prompt for the file name...
-        this.onSetModal(() => <FileSelector 
-            title = {title}
-            initialName = {initialName}
-            fileFilters = {[
-                CSVFilter,
-                AllFilesFilter,
-            ]}
-            onOK = {(fileName) => this.onDoExportAsCSV(fileName,
-                onExportAsStringTable, activeTabId)}
-            onCancel = {this.onCancel}
-            isCreateFile
-            isConfirmReplaceFile
-        />);
+
+        process.nextTick(async () => {
+            let exportDir = this._projectSettings.exportDir;
+            if (!await asyncDirExists(exportDir)) {
+                // projectDir should always be a valid directory...
+                exportDir = this.state.projectDir;
+            }
+
+            // Prompt for the file name...
+            this.onSetModal(() => <FileSelector 
+                title = {title}
+                initialDir = {exportDir}
+                initialName = {initialName}
+                fileFilters = {[
+                    CSVFilter,
+                    AllFilesFilter,
+                ]}
+                onOK = {(fileName) => this.onDoExportAsCSV(fileName,
+                    onExportAsStringTable, activeTabId)}
+                onCancel = {this.onCancel}
+                isCreateFile
+                isConfirmReplaceFile
+            />);            
+        });
     }
 
 
@@ -1008,6 +1034,14 @@ export class MainWindow extends React.Component {
                     const fh = await fsPromises.open(fileName, 'w');
                     try {
                         await fh.write(csvString);
+
+                        await this.props.accessor.asyncDirectModifyProjectSettings({
+                            changes: {
+                                exportDir: path.dirname(fileName),
+                            },
+                            changesPath: projectSettingsMainWindow,
+                            assignChanges: true,
+                        });
                     }
                     finally {
                         fh.close();

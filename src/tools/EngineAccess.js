@@ -1732,7 +1732,9 @@ export class EngineAccessor extends EventEmitter {
      * to {@link dataChange}
      * @property {EngineAccessor~createModifyProjectSettingsAction} originalAction
      * The action that originally made the change. This event is also fired if
-     * the change is undone.
+     * the change is undone. If the event was fired by 
+     * {@link EngineAccessor#asyncDirectModifyProjectSettings} this will
+     * be the args passed to it.
      */
 
     /**
@@ -1767,8 +1769,22 @@ export class EngineAccessor extends EventEmitter {
         });
     }
 
-    async _asyncModifyProjectSettingsActionApplier(isValidateOnly, action) {
-        const { changes, changesPath, assignChanges } = action;
+
+    /**
+     * Directly modifies the project settings. This should be used with
+     * caution, only settings that aren't modified via 
+     * {@link EngineAccessor#createModifyProjectSettingsAction} should be
+     * modified.
+     * @param {EngineAccessor~createModifyProjectSettingsAction} args
+     * @fires EngineAccessor#modifyProjectSettings
+     */
+    async asyncDirectModifyProjectSettings(args) {
+        return this._asyncModifyProjectSettingsImpl(args);
+    }
+
+
+    async _asyncModifyProjectSettingsImpl(args, callback) {
+        const { changes, changesPath, assignChanges } = args;
 
         let result = dataChange({
             original: this._projectSettings, 
@@ -1776,17 +1792,30 @@ export class EngineAccessor extends EventEmitter {
             changesPath: changesPath,
             assignChanges: assignChanges,
         });
-        
-        if (isValidateOnly) {
-            return;
-        }
 
         const isChanged = (this._projectSettings !== result.updatedObject);
-        if (isChanged) {
-            const newProjectSettings = result.updatedObject;
-            await this._asyncWriteProjectSettings(newProjectSettings);
-            this._projectSettings = dataDeepCopy(newProjectSettings);
+        if (!isChanged) {
+            return;
+        }
+    
+        const newProjectSettings = result.updatedObject;
+        await this._asyncWriteProjectSettings(newProjectSettings);
+        this._projectSettings = dataDeepCopy(newProjectSettings);
 
+        if (callback) {
+            return callback(result);
+        }
+        else {
+            result = {
+                dataChangeResult: result,
+                originalAction: args,
+            };
+            this.emit('modifyProjectSettings', result);
+        }
+    }
+
+    async _asyncModifyProjectSettingsActionApplier(isValidateOnly, action) {
+        return this._asyncModifyProjectSettingsImpl(action, async (result) => {
             const undoManager = this._accountingSystem.getUndoManager();
             const undoId = await undoManager
                 .asyncRegisterUndoDataItem('modifyProjectSettings', 
@@ -1806,7 +1835,7 @@ export class EngineAccessor extends EventEmitter {
                 undoId: undoId,
             };
             this._emitActionEvent(isValidateOnly, action, actionResult);
-        }
+        });
     }
 
 

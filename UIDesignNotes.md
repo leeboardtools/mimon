@@ -324,6 +324,7 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Convert dir/files list to a new ListBox component.
         - Double click on file name does not work right.
         - Can't go to home directory.
+        - Standard filter items need to be loaded after messages are loaded.
 
 
     - Lots List
@@ -506,9 +507,7 @@ Column sorting in RowTable:
  
 
         - Export as CSV
-            - Need to set initial directory.
             - Need to clean up FileSelector.
-            - Some columns not coming out right.
         
 
     - Save/restore last window settings.
