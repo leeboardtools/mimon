@@ -21,6 +21,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
         this.updateStateFromModifiedProjectSettings 
             = this.updateStateFromModifiedProjectSettings.bind(this);
+            
+        this.onExportAsStringTable = this.onExportAsStringTable.bind(this);
 
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
         this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
@@ -340,6 +342,20 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     }
 
 
+
+    onExportAsStringTable(tabId) {
+        const state = this.getTabIdState(tabId);
+        const { current } = state.pageRef;
+        if (!current) {
+            return;
+        }
+
+        const { renderAsStringTable } = current;
+        if (renderAsStringTable) {
+            return renderAsStringTable();
+        }
+    }
+
     
     getTabDropdownInfo(tabId, state) {
         const { activePricedItemId, pricedItemTypeName, 
@@ -606,6 +622,10 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             collapsedPricedItemIds: collapsedPricedItemIds,
             allColumns: allColumns,
             showRowBorders: showRowBorders,
+
+            pageRef: React.createRef(),
+            canExportAsStringTable: () => true,
+            onExportAsStringTable: this.onExportAsStringTable,
         };
 
         this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);
@@ -660,6 +680,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             onMoveColumn = {(args) =>
                 this._rowTableHandler.onMoveColumn(tabEntry.tabId, args)}
             contextMenuItems = {contextMenuItems}
+
+            ref = {tabEntry.pageRef}
+
             id = {tabEntry.tabId}
         />;
     }

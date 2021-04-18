@@ -12,7 +12,9 @@ import * as AH from '../tools/AccountHelpers';
 import * as GH from '../tools/GainHelpers';
 import { columnInfosToColumns, getColumnWithKey, } from '../util-ui/ColumnInfo';
 import { CollapsibleRowTable, ExpandCollapseState,
-    findRowInfoWithKey, updateRowInfo } from '../util-ui/CollapsibleRowTable';
+    findRowInfoWithKey, updateRowInfo,
+    renderCollapsibleRowTableAsText, } from '../util-ui/CollapsibleRowTable';
+import { SimpleRowTableTextRecorder } from '../util-ui/RowTable';
 
 
 let columnInfoDefs;
@@ -187,6 +189,8 @@ export class PricedItemsList extends React.Component {
         this.onRenderCell = this.onRenderCell.bind(this);
         this.onActivateRow = this.onActivateRow.bind(this);
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
+
+        this.renderAsStringTable = this.renderAsStringTable.bind(this);
 
         const { pricedItemTypeName, collapsedPricedItemIds } = this.props;
 
@@ -699,7 +703,25 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    renderName({ columnInfo, rowInfo }) {
+    renderAsStringTable() {
+        const { props, state } = this;
+
+        const renderProps = {
+            recorder: new SimpleRowTableTextRecorder(),
+
+            columns: props.columns,
+            rowInfos: state.rowInfos,
+
+            onRenderCell: this.onRenderCell,
+            onPreRenderRow: this.onPreRenderRow,
+        };
+        renderCollapsibleRowTableAsText(renderProps);
+
+        return renderProps.recorder.getAllRows();
+    }
+
+
+    renderName({ columnInfo, rowInfo, renderAsText }) {
         const { pricedItemDataItem } = rowInfo;
         if (pricedItemDataItem) {
             let value = pricedItemDataItem.name;
@@ -721,6 +743,7 @@ export class PricedItemsList extends React.Component {
             return ACE.renderNameDisplay({
                 columnInfo: columnInfo,
                 value: value,
+                renderAsText: renderAsText,
             });
         }
 
@@ -731,23 +754,25 @@ export class PricedItemsList extends React.Component {
             return ACE.renderNameDisplay({
                 columnInfo: columnInfo,
                 value: name,
+                renderAsText: renderAsText,
             });
         }
     }
 
 
-    renderDescription({ columnInfo, rowInfo }) {
+    renderDescription({ columnInfo, rowInfo, renderAsText }) {
         const { pricedItemDataItem } = rowInfo;
         if (pricedItemDataItem) {
             return ACE.renderDescriptionDisplay({
                 columnInfo: columnInfo,
                 value: pricedItemDataItem.description,
+                renderAsText: renderAsText,
             });
         }
     }
 
 
-    renderCurrency({ columnInfo, rowInfo }) {
+    renderCurrency({ columnInfo, rowInfo, renderAsText }) {
         const { pricedItemDataItem } = rowInfo;
         if (pricedItemDataItem) {
             let { currency } = pricedItemDataItem;
@@ -760,12 +785,13 @@ export class PricedItemsList extends React.Component {
             return ACE.renderTextDisplay({
                 columnInfo: columnInfo, 
                 value: currency,
+                renderAsText: renderAsText,
             });
         }
     }
 
 
-    renderQuantityDefinition({ columnInfo, rowInfo }) {
+    renderQuantityDefinition({ columnInfo, rowInfo, renderAsText }) {
         const { pricedItemDataItem } = rowInfo;
         if (pricedItemDataItem) {
             const quantityDefinition 
@@ -774,13 +800,14 @@ export class PricedItemsList extends React.Component {
                 return ACE.renderTextDisplay({
                     columnInfo: columnInfo, 
                     value: quantityDefinition.getDisplayText(),
+                    renderAsText: renderAsText,
                 });
             }
         }
     }
 
 
-    renderTicker({ columnInfo, rowInfo }) {
+    renderTicker({ columnInfo, rowInfo, renderAsText }) {
         const { pricedItemDataItem } = rowInfo;
         if (pricedItemDataItem) {
             return ACE.renderTextDisplay({
@@ -791,12 +818,13 @@ export class PricedItemsList extends React.Component {
                         value: pricedItemDataItem.ticker,
                         tooltip: pricedItemDataItem.name,
                     },
+                renderAsText: renderAsText,
             });
         }
     }
 
 
-    renderOnlineSource({ columnInfo, rowInfo }) {
+    renderOnlineSource({ columnInfo, rowInfo, renderAsText }) {
         const { pricedItemDataItem } = rowInfo;
         if (pricedItemDataItem) {
             const onlineUpdateType = PI.getPricedItemOnlineUpdateType(
@@ -805,6 +833,7 @@ export class PricedItemsList extends React.Component {
                 return ACE.renderTextDisplay({
                     columnInfo: columnInfo, 
                     value: onlineUpdateType.description,
+                    renderAsText: renderAsText,
                 });
             }
         }
@@ -838,6 +867,7 @@ export class PricedItemsList extends React.Component {
             return ACE.renderBalanceDisplay({
                 columnInfo: columnInfo,
                 value: quantityValue,
+                renderAsText: args.renderAsText,
             });
         }
     }
@@ -857,7 +887,8 @@ export class PricedItemsList extends React.Component {
                 value: {
                     quantityBaseValue: accountGainsState.quantityBaseValue,
                     quantityDefinition: pricedItemDataItem.quantityDefinition,
-                }
+                },
+                renderAsText: args.renderAsText,
             });
         }
 
@@ -879,6 +910,7 @@ export class PricedItemsList extends React.Component {
             return ACE.renderBalanceDisplay({
                 columnInfo: columnInfo,
                 value: quantityValue,
+                renderAsText: args.renderAsText,
             });
         }
     }
@@ -899,6 +931,7 @@ export class PricedItemsList extends React.Component {
             return ACE.renderBalanceDisplay({
                 columnInfo: columnInfo,
                 value: quantityValue,
+                renderAsText: args.renderAsText,
             });
         }
     }
@@ -926,18 +959,20 @@ export class PricedItemsList extends React.Component {
                 columnInfo: columnInfo,
                 value: quantityValue,
                 suffix: suffix,
+                renderAsText: args.renderAsText,
             });
         }
     }
 
 
-    onRenderCell({ rowInfo, columnIndex, isSizeRender }) {
+    onRenderCell({ rowInfo, columnIndex, isSizeRender, renderAsText, }) {
 
         const { columnInfo } = this.props.columns[columnIndex];
 
         const args = {
             columnInfo: columnInfo,
             rowInfo: rowInfo,
+            renderAsText: renderAsText,
         };
 
         if (isSizeRender) {
