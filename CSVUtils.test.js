@@ -1,4 +1,4 @@
-import { encloseInQuotes, makeValidCell, stringArrayToCSVStream,
+import { encloseInQuotes, makeValidCell, stringTableToCSV,
 } from './CSVUtils';
 
 test('encloseInQuotes', () => {
@@ -33,13 +33,21 @@ test('makeValidCell', () => {
 });
 
 
-test('stringArrayToCSVStream', () => {
+test('stringTableToCSV', () => {
     let result = '';
-    stringArrayToCSVStream([
+    stringTableToCSV([
         ['Abc', undefined, 'Def,Ghi'],
         [],
         ['"Jkl"', ],
     ],
     (text) => result += text);
+    expect(result).toEqual('Abc,,"Def,Ghi"\n\n"Jkl"\n');
+
+    // No stream, should generate a string.
+    result = stringTableToCSV([
+        ['Abc', undefined, 'Def,Ghi'],
+        [],
+        ['"Jkl"', ],
+    ]);
     expect(result).toEqual('Abc,,"Def,Ghi"\n\n"Jkl"\n');
 });
