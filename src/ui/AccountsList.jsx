@@ -27,10 +27,10 @@ function getPercentOfRootAccount() {
     };
 }
 
-function getPercentOfParentAccount() {
-    return { key: 'percentOfParentAccount',
+function getPercentOfAccountGroup() {
+    return { key: 'percentOfAccountGroup',
         header: {
-            label: userMsg('AccountsList-percentOfParentAccount_column_label'),
+            label: userMsg('AccountsList-percentOfAccountGroup_column_label'),
             ariaLabel: 'Percent of Parent Account',
             classExtras: 'RowTable-header-base Percent-base Percent-header',
         },
@@ -54,7 +54,7 @@ function getAccountsListColumnInfoDefs() {
             ACE.getAccountTypeColumnInfo({}),
             ACE.getBalanceColumnInfo({}),
             getPercentOfRootAccount(),
-            getPercentOfParentAccount(),
+            getPercentOfAccountGroup(),
             LCE.getTotalSharesColumnInfo({}),
             LCE.getTotalCostBasisColumnInfo({}),
             LCE.getTotalCashInColumnInfo({}),
@@ -83,7 +83,7 @@ export function createDefaultColumns() {
     getColumnWithKey(columns, 'name').isVisible = true;
     getColumnWithKey(columns, 'accountType').isVisible = true;
     getColumnWithKey(columns, 'balance').isVisible = true;
-    getColumnWithKey(columns, 'percentOfParentAccount').isVisible = true;
+    getColumnWithKey(columns, 'percentOfAccountGroup').isVisible = true;
     getColumnWithKey(columns, 'totalShares').isVisible = true;
     getColumnWithKey(columns, 'totalCostBasis').isVisible = true;
     getColumnWithKey(columns, 'totalPercentGain').isVisible = true;
@@ -329,6 +329,9 @@ export class AccountsList extends React.Component {
         let rootNetWorthAfterRowInfo;
         let rootNetIncomeAfterRowInfo;
 
+        const topLevelRowInfos = [];
+        const groupRowInfos = [];
+
         topLevelAccountIds.forEach((id) => {
             let accountTotals;
             const currency = accessor.getCurrencyOfAccountId(id);
@@ -346,9 +349,11 @@ export class AccountsList extends React.Component {
                 rowInfosByAccountId: rowInfosByAccountId, 
                 depth: 1, 
                 accountTotals: accountTotals,
-                topLevelRowInfo: undefined,
-                parentRowInfo: undefined,
+                topLevelRowInfoIndex: topLevelRowInfos.length,
+                groupRowInfos,
             });
+
+            topLevelRowInfos.push(rowInfo);
 
             if (rowInfo && rowInfo.accountDataItem 
              && (rowInfo.accountDataItem.id === id)) {
@@ -409,6 +414,8 @@ export class AccountsList extends React.Component {
             rowInfos: rowInfos,
             rowInfosByAccountId: rowInfosByAccountId,
             activeRowKey: newActiveRowKey,
+            topLevelRowInfos: topLevelRowInfos,
+            groupRowInfos: groupRowInfos,
         };
     }
 
@@ -456,8 +463,9 @@ export class AccountsList extends React.Component {
         accountId, 
         rowInfosByAccountId, 
         depth, 
-        topLevelRowInfo,
-        parentRowInfo,
+        topLevelRowInfoIndex,
+        groupRowInfos,
+        groupRowInfoIndex,
     }) {
         if (!this.isAccountIdDisplayed(accountId)) {
             return;
@@ -496,24 +504,32 @@ export class AccountsList extends React.Component {
                 && this._hiddenAccountIds.has(accountDataItem.id),
             accountGainsState: accountGainsState,
             totalAccountGainsState: accountGainsState,
-            topLevelRowInfo: topLevelRowInfo,
-            parentRowInfo: parentRowInfo,
+            groupRowInfoIndex: groupRowInfoIndex,
         };
 
-        if (!topLevelRowInfo) {
-            topLevelRowInfo = rowInfo;
+        if (groupRowInfoIndex !== undefined) {
+            rowInfo.topLevelRowInfoIndex = topLevelRowInfoIndex;
         }
-        parentRowInfo = rowInfo;
         
         rowInfos.push(rowInfo);
         rowInfosByAccountId.set(accountId, rowInfo);
 
-        if (childAccountIds) {
+        if (childAccountIds && childAccountIds.length) {
+            const myGroupRowInfoIndex = groupRowInfos.length;
+            groupRowInfos.push(rowInfo);
+
             let { totalAccountGainsState } = rowInfo;
             totalAccountGainsState = GH.cloneAccountGainsState(totalAccountGainsState);
             rowInfo.totalAccountGainsState = totalAccountGainsState;
 
             if (!isCollapsed) {
+                // We want to include the market value of this parent
+                // with the children for the percent of parent calculation.
+                // It's OK to refer to ourself because for the total we use
+                // the totalAccountGainsState, while for the portion we use
+                // accountGainsState.
+                rowInfo.groupRowInfoIndex = myGroupRowInfoIndex;
+
                 rowInfo.childRowInfos = [];
                 childAccountIds.forEach((childId) => {
                     const childRowInfo = this.addAccountIdToRowEntries({
@@ -522,8 +538,9 @@ export class AccountsList extends React.Component {
                         accountId: childId, 
                         rowInfosByAccountId: rowInfosByAccountId, 
                         depth: depth + 1,
-                        topLevelRowInfo: topLevelRowInfo,
-                        parentRowInfo: parentRowInfo,
+                        topLevelRowInfoIndex: topLevelRowInfoIndex,
+                        groupRowInfos: groupRowInfos,
+                        groupRowInfoIndex: myGroupRowInfoIndex,
                     });
                     if (childRowInfo) {
                         GH.addAccountGainsState(totalAccountGainsState, 
@@ -543,8 +560,10 @@ export class AccountsList extends React.Component {
 
                 const { subtotalsLevel } = this.props;
                 if ((subtotalsLevel >= 0) && (depth <= subtotalsLevel)) {
-                    this.addSubtotalsRowEntry(rowInfo, 
+                    const subtotalRowInfo = this.addSubtotalsRowEntry(rowInfo, 
                         accountDataItem);
+                    subtotalRowInfo.topLevelRowInfoIndex = topLevelRowInfoIndex;
+                    subtotalRowInfo.groupRowInfoIndex = groupRowInfoIndex;
                 }
             }
             else {
@@ -578,6 +597,8 @@ export class AccountsList extends React.Component {
             key: '_EMPTY_' + subtotalAccountDataItem.id,
         };
         childRowInfos.push(emptyRowInfo);
+
+        return subtotalRowInfo;
     }
 
 
@@ -931,10 +952,6 @@ export class AccountsList extends React.Component {
         if (!accountGainsState || !totalAccountGainsState) {
             return;
         }
-        if (accountGainsState.isQuantityShares 
-         || totalAccountGainsState.isQuantityShares) {
-            return;
-        }
 
         if (!totalAccountGainsState.marketValueBaseValue) {
             return;
@@ -1091,11 +1108,16 @@ export class AccountsList extends React.Component {
             return this.renderBalanceDisplay(renderArgs);
         
         case 'percentOfRootAccount' :
-            renderArgs.totalsRowInfo = rowInfo.topLevelRowInfo;
+            renderArgs.totalsRowInfo = this.state.topLevelRowInfos[
+                rowInfo.topLevelRowInfoIndex];
             return this.renderPercentOfDisplay(renderArgs);
         
-        case 'percentOfParentAccount' :
-            renderArgs.totalsRowInfo = rowInfo.parentRowInfo;
+        case 'percentOfAccountGroup' :
+            renderArgs.totalsRowInfo 
+                = this.state.groupRowInfos[
+                    rowInfo.groupRowInfoIndex]
+                || this.state.topLevelRowInfos[
+                    rowInfo.topLevelRowInfoIndex];
             return this.renderPercentOfDisplay(renderArgs);
         
         case 'totalShares' :

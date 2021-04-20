@@ -485,10 +485,6 @@ Column sorting in RowTable:
             - When flattened subtotals appear only at bottom
             - How about combining similar items (i.e. securities)
         
-        - Columns for % of total, % of parent
-
-        - Column for % of value
-
         - Printing:
             - Display current date as Date Printed
 

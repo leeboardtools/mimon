@@ -83,6 +83,16 @@ function getPricedItemsListColumnInfoDefs() {
                 inputSize: -12,
             },
 
+            percentOfTotal: { key: 'percentOfTotal',
+                header: {
+                    label: userMsg('PricedItemsList-percentOfTotal_column_label'),
+                    ariaLabel: 'Percent of Root Account',
+                    classExtras: 'RowTable-header-base Percent-base Percent-header',
+                },
+                inputClassExtras: 'Percent-base Percent-input',
+                cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
+            },
+
             totalMarketValue: LCE.getTotalMarketValueColumnInfo({}),
 
             totalShares: LCE.getTotalSharesColumnInfo({}),
@@ -137,6 +147,7 @@ export function createDefaultColumns(pricedItemType) {
         columnInfos.push(columnInfoDefs.totalCashInPercentGain);
         columnInfos.push(columnInfoDefs.totalAnnualPercentGain);
         columnInfos.push(columnInfoDefs.totalAnnualCashInPercentGain);        
+        columnInfos.push(columnInfoDefs.percentOfTotal);
 
         columnInfos.push(columnInfoDefs.onlineSource);
         columnInfos.push(columnInfoDefs.currency);
@@ -164,6 +175,7 @@ export function createDefaultColumns(pricedItemType) {
     markColumnVisible(columns, 'totalShares');
     markColumnVisible(columns, 'totalCostBasis');
     markColumnVisible(columns, 'totalGain');
+    markColumnVisible(columns, 'percentOfTotal');
 
     return columns;
 }
@@ -388,6 +400,11 @@ export class PricedItemsList extends React.Component {
     buildRowInfos(state) {
         state = state || this.state;
 
+        const summaryRowInfo = {
+            key: '_SUMMARY_',
+            expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
+        };
+
         const rowInfos = [];
         const { accessor, pricedItemTypeName, 
             sortAlphabetically, 
@@ -415,13 +432,11 @@ export class PricedItemsList extends React.Component {
         rowInfos.forEach((rowInfo) => {
             summaryAccountGainsState = GH.addAccountGainsState(summaryAccountGainsState,
                 rowInfo.accountGainsState);
+            rowInfo.summaryRowInfo = summaryRowInfo;
         });
+        summaryRowInfo.accountGainsState = summaryAccountGainsState;
 
-        rowInfos.push({
-            key: '_SUMMARY_',
-            expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
-            accountGainsState: summaryAccountGainsState,
-        });
+        rowInfos.push(summaryRowInfo);
 
         let { activeRowKey } = state;
         let newActiveRowKey;
@@ -842,7 +857,7 @@ export class PricedItemsList extends React.Component {
 
     columnInfoFromRenderArgs(renderArgs) {
         let { columnInfo, rowInfo } = renderArgs;
-        if (!rowInfo.pricedItemId) {
+        if (!rowInfo.pricedItemId && !rowInfo.accountDataItem) {
             columnInfo = Object.assign({}, columnInfo);
             columnInfo.inputClassExtras
                 += ' PricedItemsList-subtotal PricedItemsList-subtotal-value';
@@ -965,6 +980,53 @@ export class PricedItemsList extends React.Component {
     }
 
 
+    renderPercentOfTotal(args) {
+        const { rowInfo, } = args;
+        const { accountGainsState, summaryRowInfo } = rowInfo;
+        if (!accountGainsState || !summaryRowInfo) {
+            return;
+        }
+
+        const totalAccountGainsState = summaryRowInfo.accountGainsState;
+        if (!totalAccountGainsState) {
+            return;
+        }
+
+        if (!totalAccountGainsState.marketValueBaseValue) {
+            return;
+        }
+
+        const { accessor } = this.props;
+        let totalCurrency = accessor.getCurrencyOfAccountId(
+            accessor.getRootAssetAccountId());
+        let itemCurrency = accessor.getCurrencyOfPricedItemId(rowInfo.pricedItemId);
+        if (totalCurrency !== itemCurrency) {
+            return;
+        }
+
+        const quantityDefinition = totalCurrency.getQuantityDefinition();
+        const totalValue = quantityDefinition.baseValueToNumber(
+            totalAccountGainsState.marketValueBaseValue);
+        const thisValue = quantityDefinition.baseValueToNumber(
+            accountGainsState.marketValueBaseValue);
+        const percent = 100. * thisValue / totalValue;
+        const percentQuantityDefinition = accessor.getPercentGainQuantityDefinition();
+
+        const value = {
+            quantityBaseValue: percentQuantityDefinition.numberToBaseValue(percent),
+            quantityDefinition: percentQuantityDefinition,
+        };
+
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        return ACE.renderBalanceDisplay({
+            columnInfo: columnInfo,
+            value: value,
+            suffix: this._percentSuffix,
+            renderAsText: args.renderAsText,
+        });
+    }
+
+
     onRenderCell({ rowInfo, columnIndex, isSizeRender, renderAsText, }) {
 
         const { columnInfo } = this.props.columns[columnIndex];
@@ -1039,6 +1101,9 @@ export class PricedItemsList extends React.Component {
             args.calcGainValueCallback = LCE.calcAnnualCashInPercentGainBalanceValue;
             args.suffix = this._percentSuffix;
             return this.renderGainDisplay(args);
+        
+        case 'percentOfTotal' :
+            return this.renderPercentOfTotal(args);
 
         }
     }
