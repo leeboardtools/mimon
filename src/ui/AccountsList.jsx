@@ -15,6 +15,31 @@ import { columnInfosToColumns, getColumnWithKey, } from '../util-ui/ColumnInfo';
 import { YMDDate } from '../util/YMDDate';
 
 
+function getPercentOfRootAccount() {
+    return { key: 'percentOfRootAccount',
+        header: {
+            label: userMsg('AccountsList-percentOfRootAccount_column_label'),
+            ariaLabel: 'Percent of Root Account',
+            classExtras: 'RowTable-header-base Percent-base Percent-header',
+        },
+        inputClassExtras: 'Percent-base Percent-input',
+        cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
+    };
+}
+
+function getPercentOfParentAccount() {
+    return { key: 'percentOfParentAccount',
+        header: {
+            label: userMsg('AccountsList-percentOfParentAccount_column_label'),
+            ariaLabel: 'Percent of Parent Account',
+            classExtras: 'RowTable-header-base Percent-base Percent-header',
+        },
+        inputClassExtras: 'Percent-base Percent-input',
+        cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
+    };
+}
+
+
 let columnInfoDefs;
 
 /**
@@ -28,6 +53,8 @@ function getAccountsListColumnInfoDefs() {
             ACE.getDescriptionColumnInfo({}),
             ACE.getAccountTypeColumnInfo({}),
             ACE.getBalanceColumnInfo({}),
+            getPercentOfRootAccount(),
+            getPercentOfParentAccount(),
             LCE.getTotalSharesColumnInfo({}),
             LCE.getTotalCostBasisColumnInfo({}),
             LCE.getTotalCashInColumnInfo({}),
@@ -56,6 +83,7 @@ export function createDefaultColumns() {
     getColumnWithKey(columns, 'name').isVisible = true;
     getColumnWithKey(columns, 'accountType').isVisible = true;
     getColumnWithKey(columns, 'balance').isVisible = true;
+    getColumnWithKey(columns, 'percentOfParentAccount').isVisible = true;
     getColumnWithKey(columns, 'totalShares').isVisible = true;
     getColumnWithKey(columns, 'totalCostBasis').isVisible = true;
     getColumnWithKey(columns, 'totalPercentGain').isVisible = true;
@@ -318,6 +346,8 @@ export class AccountsList extends React.Component {
                 rowInfosByAccountId: rowInfosByAccountId, 
                 depth: 1, 
                 accountTotals: accountTotals,
+                topLevelRowInfo: undefined,
+                parentRowInfo: undefined,
             });
 
             if (rowInfo && rowInfo.accountDataItem 
@@ -426,6 +456,8 @@ export class AccountsList extends React.Component {
         accountId, 
         rowInfosByAccountId, 
         depth, 
+        topLevelRowInfo,
+        parentRowInfo,
     }) {
         if (!this.isAccountIdDisplayed(accountId)) {
             return;
@@ -464,7 +496,14 @@ export class AccountsList extends React.Component {
                 && this._hiddenAccountIds.has(accountDataItem.id),
             accountGainsState: accountGainsState,
             totalAccountGainsState: accountGainsState,
+            topLevelRowInfo: topLevelRowInfo,
+            parentRowInfo: parentRowInfo,
         };
+
+        if (!topLevelRowInfo) {
+            topLevelRowInfo = rowInfo;
+        }
+        parentRowInfo = rowInfo;
         
         rowInfos.push(rowInfo);
         rowInfosByAccountId.set(accountId, rowInfo);
@@ -483,6 +522,8 @@ export class AccountsList extends React.Component {
                         accountId: childId, 
                         rowInfosByAccountId: rowInfosByAccountId, 
                         depth: depth + 1,
+                        topLevelRowInfo: topLevelRowInfo,
+                        parentRowInfo: parentRowInfo,
                     });
                     if (childRowInfo) {
                         GH.addAccountGainsState(totalAccountGainsState, 
@@ -879,6 +920,56 @@ export class AccountsList extends React.Component {
     }
 
 
+    renderPercentOfDisplay(renderArgs) {
+        const { rowInfo, totalsRowInfo, } = renderArgs;
+        if (!totalsRowInfo) {
+            return;
+        }
+
+        const { accountGainsState } = rowInfo;
+        const { totalAccountGainsState } = totalsRowInfo;
+        if (!accountGainsState || !totalAccountGainsState) {
+            return;
+        }
+        if (accountGainsState.isQuantityShares 
+         || totalAccountGainsState.isQuantityShares) {
+            return;
+        }
+
+        if (!totalAccountGainsState.marketValueBaseValue) {
+            return;
+        }
+
+        const { accessor } = this.props;
+        const totalCurrency = accessor.getCurrencyOfAccountId(totalsRowInfo.accountId);
+        const thisCurrency = accessor.getCurrencyOfAccountId(rowInfo.accountId);
+        if (totalCurrency !== thisCurrency) {
+            return;
+        }
+
+        const quantityDefinition = totalCurrency.getQuantityDefinition();
+        const totalValue = quantityDefinition.baseValueToNumber(
+            totalAccountGainsState.marketValueBaseValue);
+        const thisValue = quantityDefinition.baseValueToNumber(
+            accountGainsState.marketValueBaseValue);
+        const percent = 100. * thisValue / totalValue;
+        const percentQuantityDefinition = accessor.getPercentGainQuantityDefinition();
+
+        const value = {
+            quantityBaseValue: percentQuantityDefinition.numberToBaseValue(percent),
+            quantityDefinition: percentQuantityDefinition,
+        };
+
+        const columnInfo = this.columnInfoFromRenderArgs(renderArgs);
+        return ACE.renderBalanceDisplay({
+            columnInfo: columnInfo,
+            value: value,
+            suffix: this._percentSuffix,
+            renderAsText: renderArgs.renderAsText,
+        });
+    }
+
+
     renderSharesDisplay(renderArgs) {
         const columnInfo = this.columnInfoFromRenderArgs(renderArgs);
         const { rowInfo } = renderArgs;
@@ -998,6 +1089,14 @@ export class AccountsList extends React.Component {
         
         case 'balance' :
             return this.renderBalanceDisplay(renderArgs);
+        
+        case 'percentOfRootAccount' :
+            renderArgs.totalsRowInfo = rowInfo.topLevelRowInfo;
+            return this.renderPercentOfDisplay(renderArgs);
+        
+        case 'percentOfParentAccount' :
+            renderArgs.totalsRowInfo = rowInfo.parentRowInfo;
+            return this.renderPercentOfDisplay(renderArgs);
         
         case 'totalShares' :
             return this.renderSharesDisplay(renderArgs);

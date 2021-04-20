@@ -156,6 +156,9 @@
     "AccountsList-netWorth_name": "Net Worth",
     "AccountsList-netIncome_name": "Net Income",
 
+    "AccountsList-percentOfRootAccount_column_label": "% of Root Account",
+    "AccountsList-percentOfParentAccount_column_label": "% of Parent Account",
+
     "AccountsListHandler-masterAccountList_title": "Accounts",
     "AccountsListHandler-reconcileAccount": "Reconcile Account",
     "AccountsListHandler-openAccountRegister": "Open Account Register",
