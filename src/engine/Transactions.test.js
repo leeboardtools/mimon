@@ -1262,6 +1262,20 @@ test('Transactions-openingBalances', async () => {
         { ymdDate: initialYMDDate, 
             quantityBaseValue: sys.cashOBQuantityBaseValue, 
         });
+    
+
+    // Multiple account ids...
+    let result = manager.getCurrentAccountStateDataItem([
+        sys.checkingId,
+        sys.cashId]);
+    expect(result).toEqual([
+        { ymdDate: initialYMDDate, 
+            quantityBaseValue: sys.checkingOBQuantityBaseValue, 
+        },
+        { ymdDate: initialYMDDate, 
+            quantityBaseValue: sys.cashOBQuantityBaseValue, 
+        }
+    ]);
 });
 
 
@@ -1289,6 +1303,8 @@ test('Transactions-accountStateUpdates', async () => {
         ]};
     const checkingQuantityBaseValueA 
         = sys.checkingOBQuantityBaseValue + settingsA.splits[0].quantityBaseValue;
+    const cashQuantityBaseValueA
+        = sys.cashOBQuantityBaseValue + settingsA.splits[1].quantityBaseValue;
 
     const settingsB = { 
         ymdDate: '2010-01-05', 
@@ -1304,6 +1320,8 @@ test('Transactions-accountStateUpdates', async () => {
         ]};
     const checkingQuantityBaseValueB 
         = checkingQuantityBaseValueA + settingsB.splits[1].quantityBaseValue;
+    const cashQuantityBaseValueB
+        = cashQuantityBaseValueA + settingsB.splits[0].quantityBaseValue;
 
     const settingsC = { 
         ymdDate: '2010-01-10', 
@@ -1319,6 +1337,8 @@ test('Transactions-accountStateUpdates', async () => {
         ]};
     const checkingQuantityBaseValueC 
         = checkingQuantityBaseValueB + settingsC.splits[0].quantityBaseValue;
+    const cashQuantityBaseValueC
+        = cashQuantityBaseValueB + settingsC.splits[1].quantityBaseValue;
 
     const settingsD = { 
         ymdDate: '2010-01-15', 
@@ -1334,6 +1354,9 @@ test('Transactions-accountStateUpdates', async () => {
         ]};
     const checkingQuantityBaseValueD 
         = checkingQuantityBaseValueC + settingsD.splits[0].quantityBaseValue;
+    const cashQuantityBaseValueD
+        = cashQuantityBaseValueC + settingsD.splits[1].quantityBaseValue;
+    cashQuantityBaseValueD;
 
     const [transA, transB, transC, transD] 
         = (await transactionManager.asyncAddTransaction(
@@ -1375,6 +1398,27 @@ test('Transactions-accountStateUpdates', async () => {
             quantityBaseValue: sys.checkingOBQuantityBaseValue 
         }]);
     
+
+
+    //
+    // Test multiple account/transaction retrieval
+    expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        [sys.cashId, sys.checkingId], [transD.id, transC.id])).toEqual(
+        [
+            [{ ymdDate: settingsC.ymdDate, quantityBaseValue: cashQuantityBaseValueC }],
+            [{ ymdDate: settingsB.ymdDate, 
+                quantityBaseValue: checkingQuantityBaseValueB }],
+        ]);
+
+    expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
+        [sys.cashId, sys.checkingId], [transC.id, transB.id])).toEqual(
+        [
+            [{ ymdDate: settingsC.ymdDate, quantityBaseValue: cashQuantityBaseValueC }],
+            [{ ymdDate: settingsB.ymdDate, 
+                quantityBaseValue: checkingQuantityBaseValueB }]
+        ]);
+
+
 
     expect(await transactionManager.asyncGetAccountStateAndTransactionDataItems(
         sys.checkingId, transC.id, transA.id)).toEqual(
@@ -1674,6 +1718,7 @@ test('Transactions-accountStateUpdates', async () => {
             { ymdDate: settingsF.ymdDate, 
                 quantityBaseValue: checkingQuantityBaseValueF0 
             }]);
+
 
 });
 

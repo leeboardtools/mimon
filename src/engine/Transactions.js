@@ -1545,13 +1545,17 @@ export class TransactionManager extends EventEmitter {
     /**
      * Retrieves the account state data item immediately after a transaction has 
      * been applied to the account.
-     * @param {number} accountId 
-     * @param {number} transactionId 
-     * @returns {AccountStateDataItem[]}    An array containing the account states 
-     * immediately after a transaction has been applied. Multiple account states are 
-     * returned if there are multiple splits referring to the account. The referring 
-     * split at index closest to zero is at the first index, the last account state 
-     * is the account state after the transaction has been fully applied.
+     * @param {number|number[]} accountId The account id, this may also be an array of 
+     * account ids, in which case the result is whose elements correspond to the 
+     * result that would have been returned if the corresponding account id were 
+     * passed directly. If this is an array then transactionId should also be an array.
+     * @param {number|number[]} transactionId 
+     * @returns {AccountStateDataItem[]|AccountStateDataItem[][]}    
+     * An array containing the account states immediately after a transaction has 
+     * been applied. Multiple account states are returned if there are multiple 
+     * splits referring to the account. The referring split at index closest to 
+     * zero is at the first index, the last account state is the account state 
+     * after the transaction has been fully applied.
      */
     async asyncGetAccountStateDataItemsAfterTransaction(accountId, transactionId) {
         const accountStateDataItems 
@@ -1581,12 +1585,16 @@ export class TransactionManager extends EventEmitter {
     /**
      * Retrieves the account state data item(s) immediately before a transaction has 
      * been applied to the account.
-     * @param {number} accountId 
-     * @param {number} transactionId 
-     * @returns {AccountStateDataItem[]}    An array containing the account states 
-     * immediately before a transaction is applied. Multiple account states are 
-     * returned if there are multiple splits referring to the account. The referring 
-     * split at index closest to zero is at the first index.
+     * @param {number|number[]} accountId The account id, this may also be an array of 
+     * account ids, in which case the result is whose elements correspond to the 
+     * result that would have been returned if the corresponding account id were 
+     * passed directly. If this is an array then transactionId should also be an array.
+     * @param {number|number[]} transactionId 
+     * @returns {AccountStateDataItem[]|AccountStateDataItem[]}    An array 
+     * containing the account states immediately before a transaction is applied. 
+     * Multiple account states are returned if there are multiple splits referring 
+     * to the account. The referring split at index closest to zero is at the 
+     * first index.
      */
     async asyncGetAccountStateDataItemsBeforeTransaction(accountId, transactionId) {
         const result
