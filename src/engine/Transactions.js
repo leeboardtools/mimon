@@ -1241,42 +1241,78 @@ export class TransactionManager extends EventEmitter {
     
 
     async _asyncLoadAccountEntry(accountId) {
-        const accountDataItem = this._accountingSystem.getAccountManager()
-            .getAccountDataItemWithId(accountId);
-        if (!accountDataItem) {
-            throw userError('TransactionManager-account_state_update_account_invalid', 
-                accountId);
-        }
+        const accountIds = Array.isArray(accountId) ? accountId : [accountId];
+        const accountEntries = [];
+        const accountIdsForSortedTransactionKeys = [];
+        const accountIdsForNonReconciledTransactionIds = [];
 
-        let accountEntry = this._accountEntriesByAccountId.get(accountId);
-        if (!accountEntry) {
-            const type = A.getAccountType(accountDataItem.type);
-            accountEntry = {
-                hasLots: type.hasLots,
-                accountStatesByTransactionId: new Map(),
-                accountStatesByOrder: [],
-            };
-            this._accountEntriesByAccountId.set(accountId, accountEntry);
-        }
+        accountIds.forEach((accountId) => {
+            let accountEntry = this._accountEntriesByAccountId.get(accountId);
+            if (!accountEntry) {
+                const accountDataItem = this._accountingSystem.getAccountManager()
+                    .getAccountDataItemWithId(accountId);
+                if (!accountDataItem) {
+                    throw userError(
+                        'TransactionManager-account_state_update_account_invalid', 
+                        accountId);
+                }
 
-        if (!accountEntry.sortedTransactionKeys) {
-            const sortedTransactionKeys 
-                = await this._handler.asyncGetSortedTransactionKeysForAccount(accountId);
-            accountEntry.sortedTransactionKeys = sortedTransactionKeys;
-            const indicesByTransactionId = new Map();
-            for (let i = sortedTransactionKeys.length - 1; i >= 0; --i) {
-                indicesByTransactionId.set(sortedTransactionKeys[i].id, i);
+                const type = A.getAccountType(accountDataItem.type);
+                accountEntry = {
+                    hasLots: type.hasLots,
+                    accountStatesByTransactionId: new Map(),
+                    accountStatesByOrder: [],
+                };
+                this._accountEntriesByAccountId.set(accountId, accountEntry);
             }
-            accountEntry.indicesByTransactionId = indicesByTransactionId;
+
+            accountEntries.push(accountEntry);
+
+            if (!accountEntry.sortedTransactionKeys) {
+                accountIdsForSortedTransactionKeys.push(accountId);
+            }
+            if (!accountEntry.nonReconciledTransactionIds) {
+                accountIdsForNonReconciledTransactionIds.push(accountId);
+            }
+        });
+
+        if (accountIdsForSortedTransactionKeys.length) {
+            const result = await this._handler.asyncGetSortedTransactionKeysForAccount(
+                accountIdsForSortedTransactionKeys);
+            let index = 0;
+            for (let i = 0; i < accountEntries.length; ++i) {
+                const accountEntry = accountEntries[i];
+                if (!accountEntry.sortedTransactionKeys) {
+                    const sortedTransactionKeys = result[index];
+                    ++index;
+
+                    accountEntry.sortedTransactionKeys = sortedTransactionKeys;
+                    const indicesByTransactionId = new Map();
+                    for (let i = sortedTransactionKeys.length - 1; i >= 0; --i) {
+                        indicesByTransactionId.set(sortedTransactionKeys[i].id, i);
+                    }
+                    accountEntry.indicesByTransactionId = indicesByTransactionId;
+                }
+            }
         }
 
-        if (!accountEntry.nonReconciledTransactionIds) {
-            accountEntry.nonReconciledTransactionIds 
-                = Array.from(await this._handler.asyncGetNonReconciledIdsForAccountId(
-                    accountId));
+        if (accountIdsForNonReconciledTransactionIds.length) {
+            const result = await this._handler.asyncGetNonReconciledIdsForAccountId(
+                accountIdsForNonReconciledTransactionIds);
+            
+            let index = 0;
+            for (let i = 0; i < accountEntries.length; ++i) {
+                const accountEntry = accountEntries[i];
+                if (!accountEntry.nonReconciledTransactionIds) {
+                    accountEntry.nonReconciledTransactionIds 
+                        = Array.from(result[index]);
+                    ++index;
+                }
+            }
         }
 
-        return accountEntry;
+        return (accountId === accountIds) 
+            ? accountEntries : accountEntries[0];
     }
 
 
@@ -1344,117 +1380,152 @@ export class TransactionManager extends EventEmitter {
 
 
     async _asyncLoadAccountStateDataItemsForTransactionId(accountId, transactionId) {
-        const accountEntry = await this._asyncLoadAccountEntry(accountId);
-        let accountStateDataItems 
-            = accountEntry.accountStatesByTransactionId.get(transactionId);
-
-        if (!accountStateDataItems) {
-            let workingAccountState = this.getCurrentAccountStateDataItem(accountId);
-
-            if (this.isDebug) {
-                console.log('start: ' + JSON.stringify({
-                    workingAccountState: workingAccountState,
-                    accountEntry: accountEntry,
-                }));
-            }
-
-            const { sortedTransactionKeys, accountStatesByOrder,
-                accountStatesByTransactionId } = accountEntry;
-            
-            let hasLots;
-            if (!accountStatesByOrder.length) {
-                // If we have lots, we need to load everything, otherwise we lose
-                // track of FIFO/LIFO lots.
-                const accountDataItem = this._accountingSystem.getAccountManager()
-                    .getAccountDataItemWithId(accountId);
-                if (accountDataItem) {
-                    const type = A.getAccountType(accountDataItem.type);
-                    if (type.hasLots) {
-                        await this._asyncLoadLotAccountStateDataItems(
-                            accountId, accountEntry);
-                        hasLots = true;
-                    }
-                }
-            }
-
-            for (let i = sortedTransactionKeys.length - 1; i >= 0; --i) {
-                const { id } = sortedTransactionKeys[i];
-                if (accountStatesByOrder[i]) {                    
-                    accountStateDataItems = accountStatesByOrder[i];
-                    workingAccountState = accountStateDataItems[0];
-
-                    if (this.isDebug) {
-                        console.log('cached: ' + JSON.stringify({
-                            i: i,
-                            id: id,
-                            workingAccountState: workingAccountState,
-                        }));
-                    }
-                }
-                else {
-                    if (hasLots) {
-                        throw new BugException(
-                            '_asyncLoadAccountStateDataItemsForTransactionId()'
-                            + ' bug with lots!');
-                    }
-                    let ymdDate = getYMDDateString(sortedTransactionKeys[i].ymdDate);
-                    const transaction 
-                        = await this.asyncGetTransactionDataItemsWithIds(id);
-                    const { splits } = transaction;
-
-                    const newAccountStateDataItems = [ workingAccountState ];
-                    for (let s = splits.length - 1; s >= 0; --s) {
-                        const split = splits[s];
-                        if (split.accountId === accountId) {
-                            workingAccountState 
-                                = AS.removeSplitFromAccountStateDataItem(
-                                    workingAccountState, split, ymdDate,
-                                    workingAccountState.storedLotChanges);
-                            newAccountStateDataItems.push(workingAccountState);
-
-                            if (this.isDebug) {
-                                console.log('remove: ' + JSON.stringify({
-                                    i: i,
-                                    id: id,
-                                    split: split,
-                                    workingAccountState: workingAccountState,
-                                }));
-                            }
-                        }
-                    }
-
-                    newAccountStateDataItems.reverse();
-
-                    if (i > 0) {
-                        newAccountStateDataItems[0].ymdDate 
-                            = getYMDDateString(sortedTransactionKeys[i - 1].ymdDate);
-                    }
-                    else {
-                        delete newAccountStateDataItems[0].ymdDate;
-                    }
-
-                    accountStatesByOrder[i] = newAccountStateDataItems;
-                    accountStateDataItems = newAccountStateDataItems;
-                    accountStatesByTransactionId.set(id, newAccountStateDataItems);
-                }
-
-                if (id === transactionId) {
-                    break;
-                }
-            }
+        if (Array.isArray(accountId) !== Array.isArray(transactionId)) {
+            throw new BugException('_asyncLoadAccountStateDataItemsForTransactionId(): '
+                + 'if either accountId or transactionId is an array then both must '
+                + 'be arrays!');
         }
 
-        return accountStateDataItems;
+        const accountIds = Array.isArray(accountId) 
+            ? accountId : [accountId];
+        const transactionIds = Array.isArray(transactionId) 
+            ? transactionId : [transactionId];
+        const result = [];
+
+        const accountEntries = await this._asyncLoadAccountEntry(accountIds);
+        for (let i = 0; i < accountIds.length; ++i) {
+            const accountId = accountIds[i];
+            const transactionId = transactionIds[i];
+
+            const accountEntry = accountEntries[i];
+            let accountStateDataItems 
+                = accountEntry.accountStatesByTransactionId.get(transactionId);
+
+            if (!accountStateDataItems) {
+                let workingAccountState = this.getCurrentAccountStateDataItem(accountId);
+
+                if (this.isDebug) {
+                    console.log('start: ' + JSON.stringify({
+                        workingAccountState: workingAccountState,
+                        accountEntry: accountEntry,
+                    }));
+                }
+
+                const { sortedTransactionKeys, accountStatesByOrder,
+                    accountStatesByTransactionId } = accountEntry;
+                
+                let hasLots;
+                if (!accountStatesByOrder.length) {
+                    // If we have lots, we need to load everything, otherwise we lose
+                    // track of FIFO/LIFO lots.
+                    const accountDataItem = this._accountingSystem.getAccountManager()
+                        .getAccountDataItemWithId(accountId);
+                    if (accountDataItem) {
+                        const type = A.getAccountType(accountDataItem.type);
+                        if (type.hasLots) {
+                            await this._asyncLoadLotAccountStateDataItems(
+                                accountId, accountEntry);
+                            hasLots = true;
+                        }
+                    }
+                }
+
+                for (let i = sortedTransactionKeys.length - 1; i >= 0; --i) {
+                    const { id } = sortedTransactionKeys[i];
+                    if (accountStatesByOrder[i]) {                    
+                        accountStateDataItems = accountStatesByOrder[i];
+                        workingAccountState = accountStateDataItems[0];
+
+                        if (this.isDebug) {
+                            console.log('cached: ' + JSON.stringify({
+                                i: i,
+                                id: id,
+                                workingAccountState: workingAccountState,
+                            }));
+                        }
+                    }
+                    else {
+                        if (hasLots) {
+                            throw new BugException(
+                                '_asyncLoadAccountStateDataItemsForTransactionId()'
+                                + ' bug with lots!');
+                        }
+                        let ymdDate = getYMDDateString(sortedTransactionKeys[i].ymdDate);
+                        const transaction 
+                            = await this.asyncGetTransactionDataItemsWithIds(id);
+                        const { splits } = transaction;
+
+                        const newAccountStateDataItems = [ workingAccountState ];
+                        for (let s = splits.length - 1; s >= 0; --s) {
+                            const split = splits[s];
+                            if (split.accountId === accountId) {
+                                workingAccountState 
+                                    = AS.removeSplitFromAccountStateDataItem(
+                                        workingAccountState, split, ymdDate,
+                                        workingAccountState.storedLotChanges);
+                                newAccountStateDataItems.push(workingAccountState);
+
+                                if (this.isDebug) {
+                                    console.log('remove: ' + JSON.stringify({
+                                        i: i,
+                                        id: id,
+                                        split: split,
+                                        workingAccountState: workingAccountState,
+                                    }));
+                                }
+                            }
+                        }
+
+                        newAccountStateDataItems.reverse();
+
+                        if (i > 0) {
+                            newAccountStateDataItems[0].ymdDate 
+                                = getYMDDateString(sortedTransactionKeys[i - 1].ymdDate);
+                        }
+                        else {
+                            delete newAccountStateDataItems[0].ymdDate;
+                        }
+
+                        accountStatesByOrder[i] = newAccountStateDataItems;
+                        accountStateDataItems = newAccountStateDataItems;
+                        accountStatesByTransactionId.set(id, newAccountStateDataItems);
+                    }
+
+                    if (id === transactionId) {
+                        break;
+                    }
+                }
+            }
+
+            result.push(accountStateDataItems);
+        }
+
+        return (accountIds === accountId)
+            ? result : result[0];
     }
 
 
     /**
      * Returns the current account state data item for an account. This is the 
      * account state after the newest transaction has been applied.
-     * @param {number} accountId 
-     * @returns {AccountStateDataItem}
+     * @param {number|number[]} accountId The account id, this may also be an array of 
+     * account ids, in which case the result is whose elements correspond to the 
+     * result that would have been returned if the corresponding account id were 
+     * passed directly.
+     * @returns {AccountStateDataItem|AccountStateDataItem}
      */
     getCurrentAccountStateDataItem(accountId) {
+        if (Array.isArray(accountId)) {
+            const result = [];
+            accountId.forEach((id) => result.push(
+                this._getCurrentAccountStateDataItem(id)
+            ));
+            return result;
+        }
+        return this._getCurrentAccountStateDataItem(accountId);
+    }
+
+    _getCurrentAccountStateDataItem(accountId) {
         let accountStateDataItem = this._handler.getCurrentAccountStateDataItem(
             accountId);
         if (!accountStateDataItem) {
@@ -1486,6 +1557,9 @@ export class TransactionManager extends EventEmitter {
         const accountStateDataItems 
             = await this._asyncLoadAccountStateDataItemsForTransactionId(
                 accountId, transactionId);
+        if (Array.isArray(accountId)) {
+            return accountStateDataItems.map((entry) => entry.slice(1));
+        }
         return accountStateDataItems.slice(1);
     }
 
@@ -1515,9 +1589,20 @@ export class TransactionManager extends EventEmitter {
      * split at index closest to zero is at the first index.
      */
     async asyncGetAccountStateDataItemsBeforeTransaction(accountId, transactionId) {
-        const accountStateDataItems 
+        const result
             = await this._asyncLoadAccountStateDataItemsForTransactionId(
                 accountId, transactionId);
+        if (Array.isArray(accountId)) {
+            return result.map((accountStateDataItems) => 
+                this._finalizeGetAccountStateDataItemsBeforeTransactionResult(
+                    accountStateDataItems
+                ));
+        }
+        return this._finalizeGetAccountStateDataItemsBeforeTransactionResult(
+            result);
+    }
+
+    _finalizeGetAccountStateDataItemsBeforeTransactionResult(accountStateDataItems) {
         if (!accountStateDataItems) {
             return [{
                 quantityBaseValue: 0,
@@ -1626,7 +1711,14 @@ export class TransactionManager extends EventEmitter {
      */
     async asyncGetNonReconciledIdsForAccountId(accountId) {
         const accountEntry = await this._asyncLoadAccountEntry(accountId);
-        return Array.from(accountEntry.nonReconciledTransactionIds);
+        const result = Array.from(accountEntry.nonReconciledTransactionIds);
+        if (Array.isArray(accountId)) {
+            // Need to copy the individual arrays.
+            for (let i = 0; i < result.length; ++i) {
+                result[i] = Array.from(result[i]);
+            }
+        }
+        return result;
     }
 
 
@@ -2329,8 +2421,11 @@ export class TransactionsHandler {
 
     /**
      * Retrieves the account state after the most recent transaction has been applied.
-     * @param {number} accountId 
-     * @returns {AccountStateDataItem|undefined}
+     * @param {number|number[]} accountId The account id, this may also be an array of 
+     * account ids, in which case the result is whose elements correspond to the 
+     * result that would have been returned if the corresponding account id were 
+     * passed directly.
+     * @returns {AccountStateDataItem|undefined|AccountStateDataItem[]}
      */
     getCurrentAccountStateDataItem(accountId) {
         // eslint-disable-next-line max-len
@@ -2341,10 +2436,13 @@ export class TransactionsHandler {
     /**
      * Retrieves the earliest and latest date of either all the transactions or all 
      * the transactions that refer to a given account id.
-     * @param {(number|undefined)} accountId The account id, if <code>undefined</code> 
-     * the range of all the transactions is retrieved.
-     * @returns {(YMDDate[]|undefined)} Either a two element array with the first 
-     * element the earliest date and the second element the latest date or 
+     * @param {(number|undefined|number[])} accountId The account id, if 
+     * <code>undefined</code> the range of all the transactions is retrieved. This may
+     * also be an array of account ids, in which
+     * case the result is whose elements correspond to the result that would have been
+     * returned if the corresponding account id were passed directly.
+     * @returns {(YMDDate[]|undefined|YMDDate[][])} Either a two element array with 
+     * the first element the earliest date and the second element the latest date or 
      * <code>undefined</code> if there are no transactions.
      */
     async asyncGetTransactionDateRange(accountId) {
@@ -2354,12 +2452,14 @@ export class TransactionsHandler {
     /**
      * Retrieves the transactions within a date range, optionally only those 
      * referring to a given account.
-     * @param {(number|undefined)} accountId    If defined only transactions that 
-     * refer to the account with this id are retrieved.
+     * @param {(number|undefined|number[])} accountId    If defined only transactions
+     * that refer to the account with this id are retrieved. This may also be an array,
+     * in which case the result is whose elements correspond to the result that 
+     * would have been returned if the corresponding account id were passed directly.
      * @param {YMDDate} ymdDateA    The earlier date of the date range, inclusive.
      * @param {YMDDate} ymdDateB    The later date of the date range, inclusive.
-     * @returns {TransactionDataItem[]} An array containing the transaction data items, 
-     * sorted from earliest to latest date.
+     * @returns {TransactionDataItem[]} An array containing 
+     * the transaction data items, sorted from earliest to latest date.
      */
     async asyncGetTransactionDataItemsInDateRange(accountId, ymdDateA, ymdDateB) {
         // eslint-disable-next-line max-len
@@ -2368,8 +2468,10 @@ export class TransactionsHandler {
 
     /**
      * Retrieves one or more transactions by id.
-     * @param {number[]} ids 
-     * @returns {TransactionDataItem[]}
+     * @param {number[]|number[][]} ids The array of ids. This may also be an array 
+     * of arrays of ids, in which case the result is an array whose elements correspond
+     * to the results that would have been returned for each array of ids.
+     * @returns {TransactionDataItem[]|TransactionDataItem[][]}
      */
     async asyncGetTransactionDataItemsWithIds(ids) {
         // eslint-disable-next-line max-len
@@ -2380,11 +2482,14 @@ export class TransactionsHandler {
     /**
      * Retrieves an array of the {@link TransactionKey}s for an account, sorted from 
      * oldest to newest.
-     * @param {number} accountId 
+     * @param {number|number[]} accountId The account id, this may also be an array of 
+     * account ids, in which case the result is whose elements correspond to the 
+     * result that would have been returned if the corresponding account id were 
+     * passed directly.
      * @param {boolean} [includeSplitCounts=false]  If <code>true</code> then the
      * transaction keys have a splitCount property added that is the number of
      * splits in the transaction that refer to the account.
-     * @return {TransactionKey[]}
+     * @return {TransactionKey[]|TransactionKey[][]}
      */
     async asyncGetSortedTransactionKeysForAccount(accountId, includeSplitCounts) {
         // eslint-disable-next-line max-len
@@ -2395,8 +2500,11 @@ export class TransactionsHandler {
     /**
      * Retrieves an array of the ids of the transactions with a split referring to the 
      * account that is not marked as reconciled.
-     * @param {number} accountId 
-     * @return {number[]}
+     * @param {number|number[]} accountId The account id, this may also be an array of 
+     * account ids, in which case the result is whose elements correspond to the 
+     * result that would have been returned if the corresponding account id were 
+     * passed directly.
+     * @return {number[]|number[][]}
      */
     async asyncGetNonReconciledIdsForAccountId(accountId) {
         // eslint-disable-next-line max-len
@@ -2649,11 +2757,28 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
 
 
     getCurrentAccountStateDataItem(accountId) {
+        if (Array.isArray(accountId)) {
+            const result = [];
+            accountId.forEach((id) =>
+                result.push(this._currentAccountStatesById.get(id)));
+            return result;
+        }
+
         return this._currentAccountStatesById.get(accountId);
     }
 
 
     async asyncGetTransactionDateRange(accountId) {
+        if (Array.isArray(accountId)) {
+            const result = [];
+            accountId.forEach((id) =>
+                result.push(this._getTransactionDateRange(id)));
+            return result;
+        }
+        return this._getTransactionDateRange(accountId);
+    }
+
+    _getTransactionDateRange(accountId) {
         const sortedEntries = (accountId) 
             ? this._sortedEntriesByAccountId.get(accountId) 
             : this._ymdDateSortedEntries;
@@ -2664,7 +2789,20 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         }
     }
 
+
     async asyncGetTransactionDataItemsInDateRange(accountId, ymdDateA, ymdDateB) {
+        if (Array.isArray(accountId)) {
+            const ids = [];
+            accountId.forEach((id) => ids.push(
+                this._getTransactionIdsInDateRange(id, ymdDateA, ymdDateB)));
+            return this.asyncGetTransactionDataItemsWithIds(ids);
+        }
+
+        const ids = this._getTransactionIdsInDateRange(accountId, ymdDateA, ymdDateB);
+        return this.asyncGetTransactionDataItemsWithIds(ids);
+    }
+
+    _getTransactionIdsInDateRange(accountId, ymdDateA, ymdDateB) {
         const sortedEntries = (accountId) 
             ? this._sortedEntriesByAccountId.get(accountId) 
             : this._ymdDateSortedEntries;
@@ -2672,10 +2810,8 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
             const indexA = sortedEntries.indexGE({ ymdDate: ymdDateA, id: 0 });
             const indexB = sortedEntries.indexLE({ ymdDate: ymdDateB, 
                 id: Number.MAX_VALUE });
-            const ids = sortedEntries.getValues().slice(indexA, indexB + 1).map(
+            return sortedEntries.getValues().slice(indexA, indexB + 1).map(
                 (entry) => entry.id);
-            
-            return this.asyncGetTransactionDataItemsWithIds(ids);
         }
 
         return [];
@@ -2707,6 +2843,17 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
 
 
     async asyncGetSortedTransactionKeysForAccount(accountId, includeSplitCounts) {
+        if (Array.isArray(accountId)) {
+            const result = [];
+            accountId.forEach((id) => 
+                result.push(
+                    this._getSortedTransactionKeysForAccount(id, includeSplitCounts)));
+            return result;
+        }
+        return this._getSortedTransactionKeysForAccount(accountId, includeSplitCounts);
+    }
+
+    _getSortedTransactionKeysForAccount(accountId, includeSplitCounts) {
         const splitCounter = (includeSplitCounts)
             ? (key, entry) => {
                 const { accountSplitCounts } = entry;
@@ -2722,7 +2869,19 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
             splitCounter);
     }
 
+
     async asyncGetNonReconciledIdsForAccountId(accountId) {
+        if (Array.isArray(accountId)) {
+            const result = [];
+            accountId.forEach((id) => result.push(
+                this._getNonReconciledIdsForAccountId(id) 
+            ));
+            return result;
+        }
+        return this._getNonReconciledIdsForAccountId(accountId);
+    }
+
+    _getNonReconciledIdsForAccountId(accountId) {
         const sortedIds = this._sortedNonReconciledIdsByAccountId.get(accountId);
         return (sortedIds) ? sortedIds.getValues() : [];
     }
@@ -3107,7 +3266,19 @@ export class InMemoryTransactionsHandler extends TransactionsHandlerImplBase {
         return this._idGeneratorOptions;
     }
 
+
     async asyncGetTransactionDataItemsWithIds(ids) {
+        if (ids.length && Array.isArray(ids[0])) {
+            const result = [];
+            ids.forEach((idsGroup) =>
+                result.push(this._getTransactionDataItemsWithIds(idsGroup)));
+            return result;
+        }
+
+        return this._getTransactionDataItemsWithIds(ids);
+    }
+
+    _getTransactionDataItemsWithIds(ids) {
         const result = [];
         ids.forEach((id) => {
             const pair = this._dataItemEntryPairsById.get(id);
@@ -3115,6 +3286,7 @@ export class InMemoryTransactionsHandler extends TransactionsHandlerImplBase {
         });
         return result;
     }
+
 
     async asyncUpdateTransactionDataItemsAndEntries(entryDataItemUpdates, 
         idGeneratorOptions) {
