@@ -1578,6 +1578,55 @@ export class EngineAccessor extends EventEmitter {
      * if the account has no transactions on or before ymdDate.
      */
     async asyncGetAccountStateForDate(accountId, ymdDate) {
+        const accountIds = Array.isArray(accountId) ? accountId : [accountId];
+        const allResults = [];
+        allResults.length = accountIds.length;
+
+        const transactionAccountIds = [];
+        const transactionIds = [];
+        const transactionIdsIndexLookup = [];
+
+        ymdDate = getYMDDate(ymdDate);
+
+        const allTransactionKeys 
+            = await this.asyncGetSortedTransactionKeysForAccount(accountIds);
+        
+        for (let i = 0; i < accountIds.length; ++i) {
+            const transactionKeys = allTransactionKeys[i];
+            if (!transactionKeys || !transactionKeys.length) {
+                continue;
+            }
+
+            let index = bSearch(transactionKeys, ymdDate, (value, arrayValue) => 
+                YMDDate.compare(ymdDate, arrayValue.ymdDate));
+            if (index < 0) {
+                continue;
+            }
+
+            for (; index < transactionKeys.length; ++index) {
+                if (YMDDate.compare(ymdDate, transactionKeys[index].ymdDate) < 0) {
+                    break;
+                }
+            }
+            --index;
+
+            transactionAccountIds.push(accountIds[i]);
+            transactionIds.push(transactionKeys[index].id);
+            transactionIdsIndexLookup.push(i);
+        }
+
+        if (transactionAccountIds.length) {
+            const allAccountStateDataItems 
+                = await this.asyncGetAccountStateDataItemsAfterTransaction(
+                    transactionAccountIds, transactionIds);
+            for (let i = 0; i < allAccountStateDataItems.length; ++i) {
+                const result = allAccountStateDataItems[i];
+                allResults[transactionIdsIndexLookup[i]]
+                    = result[result.length - 1];
+            }
+        }
+
+        /*
         const transactionKeys 
             = await this.asyncGetSortedTransactionKeysForAccount(accountId);
         if (!transactionKeys || !transactionKeys.length) {
@@ -1602,6 +1651,11 @@ export class EngineAccessor extends EventEmitter {
         if (result) {
             return result[result.length - 1];
         }
+        */
+
+        return (accountIds === accountId)
+            ? allResults 
+            : allResults[0];
     }
 
 

@@ -339,17 +339,18 @@ test('EngineAccessor-actions', async () => {
         checkingBalance += settingsG.splits[2].quantityBaseValue;
 
 
+        const brokerageOpeningBalance = 1000000;
         const settingsH = {
             ymdDate: '2018-06-20',
             description: 'Transaction H',
             splits: [
                 { accountId: brokerageId,
                     reconcileState: T.ReconcileState.NOT_RECONCILED.name,
-                    quantityBaseValue: 1000000,
+                    quantityBaseValue: brokerageOpeningBalance,
                 },
                 { accountId: accessor.getOpeningBalancesAccountId(),
                     reconcileState: T.ReconcileState.NOT_RECONCILED.name,
-                    quantityBaseValue: 1000000,
+                    quantityBaseValue: brokerageOpeningBalance,
                 },
             ],
         };
@@ -391,6 +392,7 @@ test('EngineAccessor-actions', async () => {
         expect(await accessor.asyncGetTransactionDataItemWithId(transI.id))
             .toEqual(transI);
 
+        const brokerageBalance_I = brokerageOpeningBalance + -changeI.costBasisBaseValue;
 
         result = await accessor.asyncGetTransactionDateRange();
         expect(result).toEqual([ getYMDDate('2018-01-23'), getYMDDate('2019-10-14') ]);
@@ -432,6 +434,22 @@ test('EngineAccessor-actions', async () => {
         });
 
         
+
+        //
+        // Checking transactions are:
+        //  2018-01-23 => checkingOpeningBalance
+        //  2019-02-03 => checkingBalance
+
+        //
+        // Brokerage transactions are:
+        //  2018-06-20 => brokerageOpeningBalance
+        //  2019-10-14 => brokerageBalance_I
+
+        result = await accessor.asyncGetAccountStateForDate(checkingId, '2019-02-02');
+        expect(result).toEqual({ ymdDate: '2018-01-23', 
+            quantityBaseValue: checkingOpeningBalance,
+        });
+        
         result = await accessor.asyncGetAccountStateForDate(checkingId, '2019-02-03');
         expect(result).toEqual({ ymdDate: '2019-02-03', 
             quantityBaseValue: checkingBalance,
@@ -442,6 +460,55 @@ test('EngineAccessor-actions', async () => {
             quantityBaseValue: checkingBalance,
         });
         
+        
+        result = await accessor.asyncGetAccountStateForDate(brokerageId, '2019-02-04');
+        expect(result).toEqual({ ymdDate: '2018-06-20', 
+            quantityBaseValue: brokerageOpeningBalance,
+        });
+        
+        result = await accessor.asyncGetAccountStateForDate(brokerageId, '2019-10-14');
+        expect(result).toEqual({ ymdDate: '2019-10-14', 
+            quantityBaseValue: brokerageBalance_I,
+        });
+
+
+        result = await accessor.asyncGetAccountStateForDate(
+            [checkingId, brokerageId], 
+            '2019-02-04');
+        expect(result).toEqual([
+            { ymdDate: '2019-02-03', 
+                quantityBaseValue: checkingBalance,
+            },
+            { ymdDate: '2018-06-20', 
+                quantityBaseValue: brokerageOpeningBalance,
+            }
+        ]);
+
+        result = await accessor.asyncGetAccountStateForDate(
+            [checkingId, brokerageId], 
+            '2019-02-02');
+        expect(result).toEqual([
+            { ymdDate: '2018-01-23', 
+                quantityBaseValue: checkingOpeningBalance,
+            },
+            { ymdDate: '2018-06-20', 
+                quantityBaseValue: brokerageOpeningBalance,
+            }
+        ]);
+
+        result = await accessor.asyncGetAccountStateForDate(
+            [checkingId, brokerageId], 
+            '2019-10-14');
+        expect(result).toEqual([
+            { ymdDate: '2019-02-03', 
+                quantityBaseValue: checkingBalance,
+            },
+            { ymdDate: '2019-10-14', 
+                quantityBaseValue: brokerageBalance_I,
+            }
+        ]);
+
+
 
 
         result = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
@@ -458,11 +525,6 @@ test('EngineAccessor-actions', async () => {
         ]);
 
 
-        result = await accessor.asyncGetAccountStateForDate(checkingId, '2019-02-01');
-        expect(result).toEqual({ ymdDate: '2018-01-23', 
-            quantityBaseValue: checkingOpeningBalance,
-        });
-        
 
 
         result = await accessor.asyncGetNonReconciledTransactionIdsForAccountId(
