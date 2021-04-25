@@ -1899,6 +1899,18 @@ class XMLFileImporterImpl {
     }
 
 
+    isCreditDebitEntryExpenseAccount(entry) {
+        const { accountId } = entry;
+        let accountEntry = this.accountsById.get(accountId);
+        if (!accountEntry) {
+            return;
+        }
+
+        const type = A.getAccountType(accountEntry.account.type);
+        return type.category === A.AccountCategory.EXPENSE;
+    }
+
+
     isCreditDebitEntryInvesmentAccount(entry) {
         const { accountId } = entry;
         let accountEntry = this.accountsById.get(accountId);
@@ -2138,6 +2150,12 @@ class XMLFileImporterImpl {
                     xmlTransaction.date,
                     xmlTransaction.description,
                 ));
+            }
+            else if (this.isCreditDebitEntryExpenseAccount(feeEntry.creditEntry)) {
+                entry = feeEntry.creditEntry;
+            }
+            else if (this.isCreditDebitEntryExpenseAccount(feeEntry.debitEntry)) {
+                entry = feeEntry.debitEntry;
             }
             else if (this.isCreditDebitEntryInvesmentAccount(feeEntry.creditEntry)) {
                 entry = feeEntry.debitEntry;
