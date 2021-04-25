@@ -32,16 +32,21 @@ export function editableRowTable(WrappedTable) {
         }
 
 
+        componentDidMount() {
+            window.addEventListener('focus', this.monitorActiveColumn, true);
+        }
+
         componentWillUnmount() {
-            this._isUnmounting = true;
+            window.removeEventListener('focus', this.monitorActiveColumn);
         }
 
 
-        monitorActiveColumn() {
-            if (this._isUnmounting) {
+        monitorActiveColumn() {        
+            const { onEnterCellEdit, onExitCellEdit } = this.props;
+            if (!onEnterCellEdit && !onExitCellEdit) {
                 return;
             }
-        
+
             const { activeEditInfo } = this.state;
             if (!activeEditInfo) {
                 return;
@@ -94,7 +99,6 @@ export function editableRowTable(WrappedTable) {
                             setRowEditBuffer: this.setRowEditBuffer,
                             setCellEditBuffer: this.setCellEditBuffer,
                         };
-                        const { onEnterCellEdit, onExitCellEdit } = this.props;
                         if (onExitCellEdit && (activeColumnIndex >= 0)) {
                             onExitCellEdit(args);
                         }
@@ -111,8 +115,6 @@ export function editableRowTable(WrappedTable) {
                     }
                 }
             }
-
-            window.requestAnimationFrame(this.monitorActiveColumn);
         }
 
 
@@ -253,10 +255,6 @@ export function editableRowTable(WrappedTable) {
                 
                 this.focusToRef(refForFocus);
 
-                if (this.props.onEnterCellEdit
-                 || this.props.onExitCellEdit) {
-                    window.requestAnimationFrame(this.monitorActiveColumn);
-                }
             }
         }
 

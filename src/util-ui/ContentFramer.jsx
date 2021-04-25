@@ -7,8 +7,8 @@ import PropTypes from 'prop-types';
  * space between optional header and footer components.
  * <p>
  * This is a main container component holding containers for the header, content,
- * and footer components. It polls the sizes of the main, header, and footer 
- * containers via window.requestAnimationFrame() and sets a CSS height for the
+ * and footer components. It monitors the sizes of the main, header, and footer 
+ * containers via ResizeObserver and sets a CSS height for the
  * content container.
  * <p>
  * For now this only supports vertically stacked header/content/footer.
