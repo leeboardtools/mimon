@@ -1626,33 +1626,6 @@ export class EngineAccessor extends EventEmitter {
             }
         }
 
-        /*
-        const transactionKeys 
-            = await this.asyncGetSortedTransactionKeysForAccount(accountId);
-        if (!transactionKeys || !transactionKeys.length) {
-            return;
-        }
-
-        ymdDate = getYMDDate(ymdDate);
-        let index = bSearch(transactionKeys, ymdDate, (value, arrayValue) => 
-            YMDDate.compare(ymdDate, arrayValue.ymdDate));
-        if (index < 0) {
-            return;
-        }
-        for (; index < transactionKeys.length; ++index) {
-            if (YMDDate.compare(ymdDate, transactionKeys[index].ymdDate) < 0) {
-                break;
-            }
-        }
-        --index;
-
-        const result = await this.asyncGetAccountStateDataItemsAfterTransaction(
-            accountId, transactionKeys[index].id);
-        if (result) {
-            return result[result.length - 1];
-        }
-        */
-
         return (accountIds === accountId)
             ? allResults 
             : allResults[0];

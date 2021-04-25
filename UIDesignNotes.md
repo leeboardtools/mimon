@@ -296,7 +296,7 @@ Are the lists really two separate styles? Or can they be combined into one?
             - specific date
             - last month
             - last year
-
+        
 
     - Account Register
         - Auto-complete for description
@@ -384,12 +384,14 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Reminders Editor
         - Remove border around 'Deposit'/'Withdrawal' control.
+        - Add memo for transaction template?
 
 
     - Reminders List
         - Clicking enabled button does nothing.
         - Add Apply now command.
-
+        - Next Due dates are not right for new reminders, they're past due.
+        - Next Due date not appearing if repeat from end of month
 
 - Menus
 
@@ -505,4 +507,6 @@ Column sorting in RowTable:
 
     - Save/restore last window settings.
 
-
+- XML Import
+    - If Transaction_SellXS has multiple entries for account, negative one must be a fee.
+    

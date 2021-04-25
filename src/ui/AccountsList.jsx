@@ -104,6 +104,10 @@ export class AccountsList extends React.Component {
         this.onAccountsModify = this.onAccountsModify.bind(this);
         this.onAccountRemove = this.onAccountRemove.bind(this);
 
+        this.onTransactionsAdd = this.onTransactionsAdd.bind(this);
+        this.onTransactionsModify = this.onTransactionsModify.bind(this);
+        this.onTransactionsRemove = this.onTransactionsRemove.bind(this);
+
         this.onExpandCollapseRow = this.onExpandCollapseRow.bind(this);
         this.onRenderCell = this.onRenderCell.bind(this);
         this.onPreRenderRow = this.onPreRenderRow.bind(this);
@@ -194,10 +198,62 @@ export class AccountsList extends React.Component {
     }
 
 
+
+    onTransactionsAdd(result) {
+        this._updateIfOurTransactions(result.newTransactionDataItems);
+    }
+
+    onTransactionsModify(result) {
+        if (!this._updateIfOurTransactions(result.newTransactionDataItems)) {
+            this._updateIfOurTransactions(result.oldTransactionDataItems);
+        }
+    }
+
+    onTransactionsRemove(result) {
+        this._updateIfOurTransactions(result.removedTransactionDataItems);
+    }
+
+
+    _updateIfOurTransactions(transactionDataItems) {
+        for (let i = 0; i < transactionDataItems.length; ++i) {
+            const { splits } = transactionDataItems[i];
+            if (!splits) {
+                continue;
+            }
+
+            for (let s = 0; s < splits.length; ++s) {
+                if (this._isOurAccountId(splits[s].accountId)) {
+                    this.rebuildRowInfos();
+                    return true;
+                }
+            }
+        }
+    }
+
+    _isOurAccountId(accountId) {
+        if (this.isAccountIdDisplayed(accountId)) {
+            return true;
+        }
+
+        const { accountDataItem } = this.props.accessor.getAccountDataItemWithId(
+            accountId);
+        
+        const { parentAccountId } = accountDataItem;
+        if (parentAccountId) {
+            return this._isOurAccountId(parentAccountId);
+        }
+    }
+
+
     componentDidMount() {
         this.props.accessor.on('accountAdd', this.onAccountAdd);
         this.props.accessor.on('accountsModify', this.onAccountsModify);
         this.props.accessor.on('accountRemove', this.onAccountRemove);
+
+        this.props.accessor.on('transactionsAdd', this.onTransactionsAdd);
+        this.props.accessor.on('transactionsModify', this.onTransactionsModify);
+        this.props.accessor.on('transactionsRemove', this.onTransactionsRemove);
+
 
         this.updatePrices();
 
@@ -209,6 +265,10 @@ export class AccountsList extends React.Component {
     }
 
     componentWillUnmount() {
+        this.props.accessor.off('transactionsAdd', this.onTransactionsAdd);
+        this.props.accessor.off('transactionsModify', this.onTransactionsModify);
+        this.props.accessor.off('transactionsRemove', this.onTransactionsRemove);
+
         this.props.accessor.off('accountAdd', this.onAccountAdd);
         this.props.accessor.off('accountsModify', this.onAccountsModify);
         this.props.accessor.off('accountRemove', this.onAccountRemove);
