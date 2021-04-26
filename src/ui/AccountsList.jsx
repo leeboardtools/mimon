@@ -237,10 +237,11 @@ export class AccountsList extends React.Component {
 
         const { accountDataItem } = this.props.accessor.getAccountDataItemWithId(
             accountId);
-        
-        const { parentAccountId } = accountDataItem;
-        if (parentAccountId) {
-            return this._isOurAccountId(parentAccountId);
+        if (accountDataItem) {
+            const { parentAccountId } = accountDataItem;
+            if (parentAccountId) {
+                return this._isOurAccountId(parentAccountId);
+            }
         }
     }
 

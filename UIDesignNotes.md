@@ -508,5 +508,5 @@ Column sorting in RowTable:
     - Save/restore last window settings.
 
 - XML Import
-    - If Transaction_SellXS has multiple entries for account, negative one must be a fee.
-    
+ 
+

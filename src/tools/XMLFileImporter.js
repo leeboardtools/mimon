@@ -1121,6 +1121,11 @@ class XMLFileImporterImpl {
 
         this.state = 'OBJECT_STREAM';
 
+        this.jsonExtras = options.jsonExtras || {};
+        this.accountExtras = this.jsonExtras.accounts || {};
+        this.pricedItemExtras = this.jsonExtras.pricedItems || {};
+        this.applyToChildAccountsExtras = this.jsonExtras.applyToChildAccounts || {};
+
         this.processorStack = [];
         this.warnings = [];
 
@@ -1363,6 +1368,11 @@ class XMLFileImporterImpl {
             }
         }
 
+        const extras = this.pricedItemExtras[pricedItem.id];
+        if (extras) {
+            Object.assign(pricedItem, extras);
+        }
+
         this.newFileContents.pricedItems.pricedItems.push(pricedItem);
     }
 
@@ -1412,7 +1422,8 @@ class XMLFileImporterImpl {
 
 
     logAccount(entry, indent) {
-        const prefix = (entry.context || 'Account') + ':\t';
+        const prefix = (entry.context || 'Account') + ':\t'
+            + entry.accountType + '\t';
         if (this.options.isLogAccountNames) {
             this.recordLogIndent(indent, prefix + entry.id + ' ' + entry.name);
         }
@@ -1513,6 +1524,10 @@ class XMLFileImporterImpl {
         this.logAccount(xmlAccount, depth);
 
 
+        const parentXMLAccount = parentXMLAccounts.length
+            ? parentXMLAccounts[parentXMLAccounts.length - 1]
+            : undefined;
+
         const { securityIds } = xmlAccount;
         if (securityIds && securityIds.length) {
             const security = this.securitiesById.get(securityIds[0]);
@@ -1576,15 +1591,7 @@ class XMLFileImporterImpl {
                     
                     const childAccount = childAccounts[childAccounts.length - 1];
                     if (childAccount.type === A.AccountType.SECURITY.name) {
-                        if (!A.getAccountType(account.type).allowedChildTypes.includes(
-                            A.AccountType.SECURITY)) {
-                            this.recordWarning(userMsg(
-                                'XMLFileImporter-child_security_making_parent_brokerage',
-                                this.makeFullAccountName(parentXMLAccounts, xmlAccount),
-                                account.type,
-                                A.AccountType.BROKERAGE.name));
-                            account.type = A.AccountType.BROKERAGE.name;
-                        }
+                        account.type = A.AccountType.BROKERAGE.name;
                     }
                 }
             });
@@ -1627,6 +1634,19 @@ class XMLFileImporterImpl {
 
         xmlAccount.account = account;
 
+        if (parentXMLAccount) {
+            const applyToChildExtras 
+                = this.applyToChildAccountsExtras[parentXMLAccount.id];
+            if (applyToChildExtras) {
+                Object.assign(account, applyToChildExtras);
+            }
+        }
+
+        const extras = this.accountExtras[account.id];
+        if (extras) {
+            Object.assign(account, extras);
+        }
+        
         accounts.push(account);
 
         return true;
@@ -1784,24 +1804,46 @@ class XMLFileImporterImpl {
 
     applyDefaultSplitAccountTypes(accounts, mapping) {
         accounts.forEach((account) => {
+            // Apply the child accounts first so they get priority of
+            // the children of the asset accounts.
+            if (account.childAccounts) {
+                this.applyDefaultSplitAccountTypes(account.childAccounts, mapping);
+            }
+
             const assetAccount = this.findAssetAccountWithName(account.name);
             if (assetAccount) {
                 if (mapping.childAccountTypes.indexOf(assetAccount.type) >= 0) {
                     // Match!
-                    let { defaultSplitAccountIds } = assetAccount;
-                    if (!defaultSplitAccountIds) {
-                        defaultSplitAccountIds = {};
-                        assetAccount.defaultSplitAccountIds = defaultSplitAccountIds;
+                    const { property } = mapping.defaultSplitAccountType;
+                    this.applyDefaultSplitAccountIds(assetAccount, property, account.id);
+
+                    // Use this account as the default for any children that don't
+                    // have their own accounts....
+                    const { childAccounts } = assetAccount;
+                    if (childAccounts) {
+                        childAccounts.forEach((childAccount) => {
+                            this.applyDefaultSplitAccountIds(childAccount, 
+                                property, account.id);
+                        });
                     }
-                    defaultSplitAccountIds[mapping.defaultSplitAccountType.property]
-                        = account.id;
                 }
-            }
-            if (account.childAccounts) {
-                this.applyDefaultSplitAccountTypes(account.childAccounts, mapping);
             }
         });
     }
+
+    applyDefaultSplitAccountIds(assetAccount, property, accountId) {
+        let { defaultSplitAccountIds } = assetAccount;
+        if (!defaultSplitAccountIds) {
+            defaultSplitAccountIds = {};
+            assetAccount.defaultSplitAccountIds = defaultSplitAccountIds;
+        }
+
+        if (!defaultSplitAccountIds[property]) {   
+            defaultSplitAccountIds[property]
+                = accountId;
+        }
+    }
+
 
     findAssetAccountWithName(name) {
         const { newFileContents } = this;
@@ -2068,14 +2110,6 @@ class XMLFileImporterImpl {
     }
 
 
-    //
-    //-----------------------------------------------------
-    //
-    numberToSharesText(number) {
-        number = Math.round(number * 10000) / 10000;
-        return number.toString();
-    }
-
 
     //
     //-----------------------------------------------------
@@ -2236,6 +2270,38 @@ class XMLFileImporterImpl {
     }
 
 
+    updateDecimalPlacesFromInvestmentCreditDebitEntry(mainEntry, accountEntry) {
+        if (typeof accountEntry === 'string') {
+            accountEntry = this.accountsById.get(accountEntry);
+        }
+
+        const { quantity } = mainEntry;
+        if (accountEntry.quantityDefinitionChecked || !quantity) {
+            return;
+        }
+
+        const security = this.securitiesById.get(accountEntry.account.pricedItemId);
+        if (!security) {
+            return;
+        }
+
+        const decimalIndex = quantity.indexOf('.');
+        if (decimalIndex < 0) {
+            return;
+        }
+
+        const decimalPlaces = quantity.slice(decimalIndex + 1).length;
+        if ((decimalPlaces < 4) || (decimalPlaces > 8)) {
+            return;
+        }
+
+        if (!security.decimalPlaces || (decimalPlaces > security.decimalPlaces)) {
+            security.decimalPlaces = decimalPlaces;
+            security.quantityDefinition = getDecimalDefinition(decimalPlaces).getName();
+        }
+    }
+
+
     //
     //-----------------------------------------------------
     //
@@ -2258,8 +2324,10 @@ class XMLFileImporterImpl {
         }
 
         const { accountId } = investmentCreditDebitEntry;
-
         const accountEntry = this.accountsById.get(accountId);
+
+        this.updateDecimalPlacesFromInvestmentCreditDebitEntry(
+            mainEntry, accountEntry);
 
         let costBasis = this.getTransactionEntryCostBasis(mainEntry);
         splits.push({
@@ -2361,7 +2429,7 @@ class XMLFileImporterImpl {
         }
 
         splits.push({
-            accountId: dividendAccountEntry.parentId,
+            accountId: dividendAccountEntry.id,
             quantity: dividendCreditDebitEntry.amount,
         });
 
@@ -2397,6 +2465,10 @@ class XMLFileImporterImpl {
         }
 
         const { accountId } = investmentCreditDebitEntry;
+
+        this.updateDecimalPlacesFromInvestmentCreditDebitEntry(
+            mainEntry, accountId);
+
 
         let costBasis = this.getTransactionEntryCostBasis(mainEntry);
         splits.push({
@@ -2713,8 +2785,12 @@ class XMLFileImporterImpl {
             return;
         }
 
+
         const { accountId } = investmentCreditDebitEntry;
         const accountEntry = this.accountsById.get(accountId);
+
+        this.updateDecimalPlacesFromInvestmentCreditDebitEntry(
+            mainEntry, accountEntry);
 
         args = Object.assign({}, args, {
             dstAccountId: accountEntry.parentId,
@@ -3419,9 +3495,35 @@ function onSetSubLogValue(options, optionName, value) {
     }
 }
 
+/**
+ * @typedef {object} XMLFileImporter~accountExtras
+ * This is an object whose properties are the XML account id as the name and the
+ * property value any extra {@link AccountDataItem} properties to add to the
+ * account.
+ */
+
+/**
+ * @typedef {object} XMLFileImporter~applyToChildAccountsExtras
+ * This is an object whose properties are the XML account id as the name and the
+ * property value any extra {@link AccountDataItem} properties to add to the
+ * children accounts. One use of this is to assign the same default split account id
+ * to all the child accounts.
+ */
+
+/**
+ * @typedef {object} XMLFileImporter~pricedItemExtras
+ * This is an object whose properties are the XML priced item id as the name and the
+ * property value any extra {@link PricedItemDataItem} properties to add to the
+ * priced item.
+ */
 
 /**
  * File importer for XML files.
+ * <p>
+ * Supports a JSON extras file with the following object entries:
+ * <li>{@link XMLFileImporter~accountExtras}
+ * <li>{@link XMLFileImporter~applyToChildAccountsExtras}
+ * <li>{@link XMLFileImporter~pricedItemExtras}
  */
 export class XMLFileImporter {
     constructor(accessor) {

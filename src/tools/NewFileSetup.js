@@ -393,7 +393,8 @@ async function asyncLoadAccounts(setupInfo) {
 //---------------------------------------------------------
 //
 async function asyncFinalizeAccounts(setupInfo) {
-    const { defaultSplitAccountsByAccountId, accountManager, accountMapping } = setupInfo;
+    const { defaultSplitAccountsByAccountId, accountManager, 
+        accountMapping, reverseAccountMapping, } = setupInfo;
 
     for (const [accountId, defaultSplitAccountIds ] of defaultSplitAccountsByAccountId) {
         const resolvedDefaultSplitAccountIds = {};
@@ -403,6 +404,10 @@ async function asyncFinalizeAccounts(setupInfo) {
                 resolvedDefaultSplitAccountIds[name] = mappedAccount.id;
             }
         }
+
+        const myAccountDataItem = reverseAccountMapping.get(accountId);
+        myAccountDataItem.defaultSplitAccountIds = Object.assign({},
+            resolvedDefaultSplitAccountIds);
 
         await accountManager.asyncModifyAccount({
             id: accountId,
@@ -421,12 +426,13 @@ async function asyncLoadAccountsForRoot(setupInfo, rootAccountId) {
         return;
     }
 
-    const { accountManager, accountMapping } = setupInfo;
+    const { accountManager, accountMapping, reverseAccountMapping, } = setupInfo;
     const rootAccountDataItem = accountManager.getAccountDataItemWithId(rootAccountId);
     const rootType = A.AccountType[rootAccountDataItem.type];
     const rootCategory = rootType.category;
 
     accountMapping.set(rootCategory.name, rootAccountDataItem);
+    reverseAccountMapping.set(rootAccountDataItem.id, rootAccountDataItem);
 
     accounts = accounts[rootCategory.name];
     if (!accounts) {
@@ -456,8 +462,9 @@ async function asyncLoadAccountsForRoot(setupInfo, rootAccountId) {
 async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName,
     existingAccountCheck) {
 
-    const { accountManager, accountMapping, accountNameMapping, pricedItemManager,
-        defaultSplitAccountsByAccountId, accessor, warnings } = setupInfo;
+    const { accountManager, accountMapping, accountNameMapping, reverseAccountMapping,
+        pricedItemManager, defaultSplitAccountsByAccountId, 
+        accessor, warnings } = setupInfo;
 
     try {
         const accountSettings = Object.assign({}, item, {
@@ -509,6 +516,7 @@ async function asyncLoadAccount(setupInfo, parentAccountId, item, parentName,
         }
 
         accountMapping.set(item.id, accountDataItem);
+        reverseAccountMapping.set(accountDataItem.id, accountDataItem);
 
         if (item.defaultSplitAccountIds) {
             defaultSplitAccountsByAccountId.set(accountDataItem.id, 
@@ -853,6 +861,10 @@ export async function asyncSetupNewFile(accessor, accountingFile, initialContent
 
         accountMapping: new Map(),
         accountNameMapping: new Map(),
+
+        // This is a mapping of the new account ids to the account data items in
+        // accountMapping and accountNameMapping.
+        reverseAccountMapping: new Map(),
 
         // These are the default split account entries from the template,
         // we need to process these after all the accounts have been loaded.
