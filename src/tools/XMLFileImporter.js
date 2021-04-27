@@ -1802,15 +1802,21 @@ class XMLFileImporterImpl {
         });
     }
 
-    applyDefaultSplitAccountTypes(accounts, mapping) {
+    applyDefaultSplitAccountTypes(accounts, mapping, parentAccountNames) {
         accounts.forEach((account) => {
             // Apply the child accounts first so they get priority of
             // the children of the asset accounts.
+            parentAccountNames = parentAccountNames || [];
+
+            const assetAccount = this.findAssetAccountWithName(account.name, 
+                parentAccountNames);
             if (account.childAccounts) {
-                this.applyDefaultSplitAccountTypes(account.childAccounts, mapping);
+                const grandparentAccountNames = Array.from(parentAccountNames);
+                grandparentAccountNames.push(account.name);
+                this.applyDefaultSplitAccountTypes(account.childAccounts, mapping,
+                    grandparentAccountNames);
             }
 
-            const assetAccount = this.findAssetAccountWithName(account.name);
             if (assetAccount) {
                 if (mapping.childAccountTypes.indexOf(assetAccount.type) >= 0) {
                     // Match!
@@ -1845,16 +1851,25 @@ class XMLFileImporterImpl {
     }
 
 
-    findAssetAccountWithName(name) {
+    findAssetAccountWithName(name, parentAccountNames) {
         const { newFileContents } = this;
         const { accounts } = newFileContents;
         const assetAccounts = accounts.ASSET;
-        return this.findAccountWithName(assetAccounts, name);
+        return this.findAccountWithName(assetAccounts, name, parentAccountNames);
     }
 
-    findAccountWithName(accounts, name) {
+    findAccountWithName(accounts, name, parentAccountNames) {
         if (!name) {
             return;
+        }
+
+        if (parentAccountNames && parentAccountNames.length) {
+            const parentAccount = this.findAccountWithName(accounts,
+                parentAccountNames[parentAccountNames.length - 1],
+                parentAccountNames.slice(0, parentAccountNames.length - 1));
+            if (parentAccount) {
+                accounts = parentAccount.childAccounts;
+            }
         }
 
         name = name.toUpperCase();
