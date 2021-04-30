@@ -2016,10 +2016,10 @@ class XMLFileImporterImpl {
 
         let lotId;
         const { memo } = xmlTransactionEntry;
-        if (memo && memo.trim().startsWith('LOT:')) {
-            const parts = memo.trim().split(':');
-            if (parts.length > 1) {
-                lotId = parts[1].trim();
+        if (memo) {
+            const lotItems = this.parseStringToLotIds(memo);
+            if (lotItems && lotItems.length) {
+                lotId = lotItems[0].lotId;
             }
         }
 

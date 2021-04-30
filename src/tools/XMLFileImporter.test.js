@@ -223,12 +223,16 @@ test('XMLFileImporter-asyncImportXMLFile', async () => {
         expect(accountDataItem.defaultSplitAccountIds).toEqual(ref);
 
 
-        // Investments>IRA>Apple does not link to Dividends>IRA>AAPL
-        // (though maybe it should via the security ticker???)
+        // Investments>IRA>Apple links to Dividends>IRA...
         accountDataItem = getAccountFromPath(accessor, 
             accessor.getRootAssetAccountId(),
             'Investments>IRA>Apple');
-        expect(accountDataItem.defaultSplitAccountIds).toBeUndefined();
+        
+        ref[AH.DefaultSplitAccountType.DIVIDENDS_INCOME.property] 
+            = getAccountFromPath(accessor,
+                accessor.getRootIncomeAccountId(),
+                'Dividends>IRA').id;
+        expect(accountDataItem.defaultSplitAccountIds).toEqual(ref);
 
 
         //
