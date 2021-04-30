@@ -217,6 +217,7 @@ export function crawlAccountTree(accessor, accountDataItem, callback) {
  * @property {DefaultSplitAccountTypeDef}   DIVIDENDS_INCOME
  * @property {DefaultSplitAccountTypeDef}   LONG_TERM_CAPITAL_GAINS_INCOME
  * @property {DefaultSplitAccountTypeDef}   SHORT_TERM_CAPITAL_GAINS_INCOME
+ * @property {DefaultSplitAccountTypeDef}   ORDINARY_INCOME
  * @property {DefaultSplitAccountTypeDef}   INTEREST_EXPENSE
  * @property {DefaultSplitAccountTypeDef}   FEES_EXPENSE
  * @property {DefaultSplitAccountTypeDef}   TAXES_EXPENSE
@@ -233,14 +234,19 @@ export const DefaultSplitAccountType = {
         tags: [ StandardAccountTag.DIVIDENDS],
     },
     LONG_TERM_CAPITAL_GAINS_INCOME: { name: 'LONG_TERM_CAPITAL_GAINS_INCOME',
-        property: 'dividendsIncomeId',
+        property: 'longTermCapitalGainsIncomeId',
         category: A.AccountCategory.INCOME,
         tags: [ StandardAccountTag.LONG_TERM_CAPITAL_GAINS],
     },
     SHORT_TERM_CAPITAL_GAINS_INCOME: { name: 'SHORT_TERM_CAPITAL_GAINS_INCOME',
-        property: 'dividendsIncomeId',
+        property: 'shortTermCapitalGainsIncomeId',
         category: A.AccountCategory.INCOME,
         tags: [ StandardAccountTag.SHORT_TERM_CAPITAL_GAINS],
+    },
+    ORDINARY_INCOME: { name: 'ORDINARY_INCOME',
+        property: 'ordinaryIncomeId',
+        category: A.AccountCategory.INCOME,
+        tags: [ StandardAccountTag.ORDINARY_INCOME],
     },
     INTEREST_EXPENSE: { name: 'INTEREST_EXPENSE',
         property: 'interestExpenseId',

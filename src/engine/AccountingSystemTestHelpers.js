@@ -401,6 +401,15 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
             tags: [StandardAccountTag.SHORT_TERM_CAPITAL_GAINS.name, ]
         },
     )).newAccountDataItem.id;
+    
+    sys.ordinaryIncomeId = (await accountManager.asyncAddAccount(
+        { parentAccountId: rootIncomeId, 
+            type: A.AccountType.INCOME, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'Ordinary Income', 
+            tags: [StandardAccountTag.ORDINARY_INCOME.name, ]
+        },
+    )).newAccountDataItem.id;
 
     
     //

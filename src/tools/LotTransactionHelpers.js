@@ -312,6 +312,12 @@ export async function asyncCreateTransactionDataItemForRETURN_OF_CAPITAL(args) {
             workingArgs.shortTermCapitalGainsBaseValue,
         ));
     }
+    if (workingArgs.ordinaryIncomeBaseValue) {
+        splits.push(createCapitalGainsSplitDataItem(accessor, accountId,
+            AH.DefaultSplitAccountType.ORDINARY_INCOME,
+            workingArgs.ordinaryIncomeBaseValue,
+        ));
+    }
 
     const transactionDataItem = {
         ymdDate: ymdDate,

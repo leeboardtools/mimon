@@ -173,6 +173,11 @@
                 },
                 {
                     "type": "INCOME",
+                    "name": "Ordinary Income",
+                    "tags": ["ORDINARY_INCOME"]
+                },
+                {
+                    "type": "INCOME",
                     "name": "Salary"
                 },
                 {

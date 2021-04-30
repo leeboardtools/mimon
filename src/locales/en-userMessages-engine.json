@@ -65,6 +65,7 @@
     "AccountTag-DIVIDENDS": "Dividends",
     "AccountTag-SHORT_TERM_CAPITAL_GAINS": "Short Term Capital Gains",
     "AccountTag-LONG_TERM_CAPITAL_GAINS": "Long Term Capital Gains",
+    "AccountTag-ORDINARY_INCOME": "Ordinary Income",
     "AccountTag-FEES": "Fees",
     "AccountTag-BANK_FEES": "Bank Fees",
     "AccountTag-BROKERAGE_COMMISSIONS": "Brokerage Commissions",
