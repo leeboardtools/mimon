@@ -537,14 +537,18 @@ export class AccountEditor extends React.Component {
         const { accessor } = this.props;
         const { accountDataItem } = this.state;
 
-        const { property, category } = defaultSplitAccountType;
-        const tags = AH.getDefaultSplitAccountTags(accountDataItem, 
-            defaultSplitAccountType);
+        const { property, category, specialTags } = defaultSplitAccountType;
         let labelName = 'AccountEditor-default_split_account_label_' 
             + defaultSplitAccountType.name;
-        if (tags && tags[0]) {
-            labelName += '_' + tags[0].name;
+
+        if (specialTags) {
+            const tags = AH.getDefaultSplitAccountTags(accountDataItem, 
+                defaultSplitAccountType);
+            if (tags && tags[0]) {
+                labelName += '_' + tags[0].name;
+            }
         }
+
         const label = userMsg(labelName);
         const rootAccountId = accessor.getCategoryRootAccountId(category);
         const accountEntries = [];
@@ -571,21 +575,13 @@ export class AccountEditor extends React.Component {
         const { accountDataItem } = this.state;
         const type = A.getAccountType(accountDataItem.type);
         const category = type.category;
-        let dividendsEditor;
-        if (type.hasLots) {
-            dividendsEditor = this.renderDefaultSplitAccountEditor(
-                AH.DefaultSplitAccountType.DIVIDENDS_INCOME
-            );
-        }
-        else {
-            dividendsEditor = this.renderDefaultSplitAccountEditor(
-                AH.DefaultSplitAccountType.INTEREST_INCOME
-            );
+
+        if ((category !== A.AccountCategory.ASSET) 
+         && (category !== A.AccountCategory.LIABILITY)) {
+            return;
         }
 
-        switch (category) {
-        case A.AccountCategory.ASSET :
-        case A.AccountCategory.LIABILITY :
+        if (type.hasLots) {
             return <React.Fragment>
                 <Row>
                     <Col>
@@ -593,11 +589,48 @@ export class AccountEditor extends React.Component {
                             AH.DefaultSplitAccountType.FEES_EXPENSE)}
                     </Col>
                     <Col>
-                        {dividendsEditor}
+                        {this.renderDefaultSplitAccountEditor(
+                            AH.DefaultSplitAccountType.DIVIDENDS_INCOME)}
+                    </Col>
+                    <Col>
+                        {this.renderDefaultSplitAccountEditor(
+                            AH.DefaultSplitAccountType
+                                .LONG_TERM_CAPITAL_GAINS_INCOME)}
+                    </Col>
+                    <Col>
+                        {this.renderDefaultSplitAccountEditor(
+                            AH.DefaultSplitAccountType.ORDINARY_INCOME)}
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
+                    </Col>
+                    <Col>
+                    </Col>
+                    <Col>
+                        {this.renderDefaultSplitAccountEditor(
+                            AH.DefaultSplitAccountType
+                                .SHORT_TERM_CAPITAL_GAINS_INCOME)}
+                    </Col>
+                    <Col>
                     </Col>
                 </Row>
             </React.Fragment>;
         }
+
+        return <React.Fragment>
+            <Row>
+                <Col>
+                    {this.renderDefaultSplitAccountEditor(
+                        AH.DefaultSplitAccountType.FEES_EXPENSE)}
+                </Col>
+                <Col>{this.renderDefaultSplitAccountEditor(
+                    AH.DefaultSplitAccountType.INTEREST_INCOME)}
+                </Col>
+                <Col></Col>
+                <Col></Col>
+            </Row>
+        </React.Fragment>;
     }
 
 
