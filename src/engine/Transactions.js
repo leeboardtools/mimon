@@ -75,6 +75,7 @@ export function getAutoLotTypeName(ref) {
 export const LotTransactionType = {
     BUY_SELL: { name: 'BUY_SELL', 
         lotOriginType: L.LotOriginType.CASH_PURCHASE,
+        validateLotSplits: validateSplitsBUY_SELL,
     },
     REINVESTED_DIVIDEND: { name: 'REINVESTED_DIVIDEND', 
         lotOriginType: L.LotOriginType.REINVESTED_DIVIDEND,
@@ -93,7 +94,67 @@ export const LotTransactionType = {
 //
 //---------------------------------------------------------
 //
-function validateSplitsRETURN_OF_CAPITAL(transactionManager, splits) {
+function validateESPPBuyInfo(esppBuyInfo, ymdDate) {
+    if (!esppBuyInfo) {
+        throw userError(
+            'TransactionManager-no_espp_buy_info_for_espp_buy');
+    }
+
+    let { grantYMDDate, grantDateFMVPrice, purchaseDateFMVPrice, }
+        = esppBuyInfo;
+    grantYMDDate = getYMDDate(grantYMDDate);
+    if (!grantYMDDate) {
+        throw userError(
+            'TransactionManager-invalid_esppGrantYMDDate');
+    }
+
+    ymdDate = getYMDDate(ymdDate);
+    if (ymdDate) {
+        if (YMDDate.compare(grantYMDDate, ymdDate) > 0) {
+            throw userError(
+                'TransactionManager-esppGrantDate_after_purchaseDate'
+            );
+        }
+    }
+
+    if ((typeof grantDateFMVPrice !== 'number') || (grantDateFMVPrice < 0)) {
+        throw userError('TransactionManager-esppGrantDateFMVPrice_invalid');
+    }
+
+    if ((typeof purchaseDateFMVPrice !== 'number') || (purchaseDateFMVPrice < 0)) {
+        throw userError('TransactionManager-esppPurchaseDateFMVPrice_invalid');
+    }
+}
+
+
+
+//
+//---------------------------------------------------------
+//
+function validateSplitsBUY_SELL({transactionManager, splits, splitIndex, account, 
+    ymdDate, }) {
+    const split = splits[splitIndex];
+    if (account.type.isESPP) {
+        if (split.quantityBaseValue > 0) {
+            // Make sure the esppBuyInfo is valid...
+            validateESPPBuyInfo(split.esppBuyInfo, ymdDate);
+        }
+    }
+
+    const { sellAutoLotType, lotChanges } = split;
+    if (sellAutoLotType) {
+        if (lotChanges.length) {
+            throw userError(
+                'TransactionManager-no_lots_for_sell_auto_lots');
+        }
+    }
+}
+
+
+//
+//---------------------------------------------------------
+//
+function validateSplitsRETURN_OF_CAPITAL({splits, }) {
     if (splits.length > 3) {
         throw userError('TransactionManager-ROC_too_many_splits');
     }
@@ -114,7 +175,7 @@ function validateSplitsRETURN_OF_CAPITAL(transactionManager, splits) {
 //
 //---------------------------------------------------------
 //
-function validateSplitsSPLIT(transactionManager, splits) {
+function validateSplitsSPLIT({ splits, }) {
     if (splits.length !== 1) {
         throw userError('TransactionManager~SPLIT_only_1_split');
     }
@@ -140,6 +201,70 @@ export function getLotTransactionTypeName(ref) {
     return ((ref === undefined) || (typeof ref === 'string')) ? ref : ref.name;
 }
 
+
+
+/**
+ * @typedef {object} ESPPBuyInfoDataItem
+ * @property {string} grantYMDDate The grant date of the purchase.
+ * @property {number} grantDateFMVPrice The closing security price on the grant date.
+ * This is in decimal number format to match the prices in {@link Price}.
+ * @property {number} purchaseDateFMVPrice The closing security price on the purchase
+ * date. This is in decimal number format to match the prices in {@link Price}.
+ */
+
+/**
+ * @typedef {object} ESPPBuyInfo
+ * @property {YMDDate} grantYMDDate The grant date of the purchase.
+ * @property {number} grantDateFMVPrice The closing security price on the grant date.
+ * This is in decimal number format to match the prices in {@link Price}.
+ * @property {number} purchaseDateFMVPrice The closing security price on the purchase
+ * date. This is in decimal number format to match the prices in {@link Price}.
+ */
+
+/**
+ * Retrieves a {@link ESPPBuyInfoDataItem} representation of a {@link ESPPBuyInfo}, avoids
+ * copying if the arg is already a {@link ESPPBuyInfoDataItem}
+ * @param {ESPPBuyInfo|ESPPBuyInfoDataItem} esppBuyInfo 
+ * @param {boolean} [alwaysCopy=false] If <code>true</code> a new object will always
+ * be created.
+ * @returns {ESPPBuyDataItem|undefined}
+ */
+export function getESPPBuyInfoDataItem(esppBuyInfo, alwaysCopy) {
+    if (esppBuyInfo) {
+        const grantYMDDateString = (esppBuyInfo.grantYMDDate)
+            ? getYMDDateString(esppBuyInfo.grantYMDDate)
+            : undefined;
+        if (alwaysCopy
+         || (grantYMDDateString !== esppBuyInfo.grantYMDDate)) {
+            return Object.assign({}, esppBuyInfo, {
+                grantYMDDate: grantYMDDateString,
+            });
+        }
+    }
+    return esppBuyInfo;
+}
+
+/**
+ * Retrieves a {@link ESPPBuyInfo} representation of a {@link ESPPBuyInfoDataItem}, avoids
+ * copying if the arg is already a {@link ESPPBuyInfo}
+ * @param {ESPPBuyInfo|ESPPBuyInfoDataItem} esppBuyInfoDataItem 
+ * @param {boolean} [alwaysCopy=false] If <code>true</code> a new object will always
+ * be created.
+ * @returns {ESPPBuyDataItem|undefined}
+ */
+export function getESPPBuyInfo(esppBuyInfoDataItem, alwaysCopy) {
+    if (esppBuyInfoDataItem) {
+        const grantYMDDate = getYMDDate(esppBuyInfoDataItem.grantYMDDate);
+        if (alwaysCopy
+         || (grantYMDDate !== esppBuyInfoDataItem.grantYMDDate)) {
+            return Object.assign({}, esppBuyInfoDataItem, {
+                grantYMDDate: grantYMDDate,
+            });
+        }
+    }
+
+    return esppBuyInfoDataItem;
+}
 
 
 /**
@@ -214,6 +339,8 @@ export function loadTransactionsUserMessages() {
  * if specified then lotChanges should be an empty array.
  * @property {number}   [sellAutoLotQuantityBaseValue]  Required if sellAutoLotType is
  * being used, the number shares being sold.
+ * @property {ESPPBuyInfoDataItem}  [esppBuyInfo] Required if the account is an ESPP 
+ * security and this is a buy transaction type.
  * @property {LotChangeDataItem[]}  [lotChanges]    Array of changes to any lots.
  * @property {string}   [description]
  * @property {string}   [refNum]
@@ -236,6 +363,8 @@ export function loadTransactionsUserMessages() {
  * types, if specified then lotChanges should be an empty array.
  * @property {number}   [sellAutoLotQuantityBaseValue]  Required if sellAutoLotType is
  * being used, the number shares being sold.
+ * @property {ESPPBuyInfo}  [esppBuyInfo] Required if the account is an ESPP 
+ * security and this is a buy transaction type.
  * @property {LotChange[]}  [lotChanges]    Array of changes to any lots.
  * @property {string}   [description]
  * @property {string}   [refNum]
@@ -259,12 +388,14 @@ export function getSplitDataItem(split, alwaysCopy) {
             = getAutoLotTypeName(split.sellAutoLotType);
         const lotChangeDataItems = LS.getLotChangeDataItems(split.lotChanges, alwaysCopy);
         const currencyToUSDRatioJSON = getRatioJSON(split.currencyToUSDRatio);
+        const esppBuyInfo = getESPPBuyInfoDataItem(split.esppBuyInfo, alwaysCopy);
         if (alwaysCopy
          || (reconcileStateName !== split.reconcileState)
          || (lotTransactionTypeName !== split.lotTransactionType)
          || (sellAutoLotTypeName !== split.sellAutoLotType)
          || (lotChangeDataItems !== split.lotChanges)
-         || (currencyToUSDRatioJSON !== split.currencyToUSDRatio)) {
+         || (currencyToUSDRatioJSON !== split.currencyToUSDRatio)
+         || (esppBuyInfo !== split.esppBuyInfo)) {
             const splitDataItem = Object.assign({}, split);
             if (reconcileStateName !== undefined) {
                 splitDataItem.reconcileState = reconcileStateName;
@@ -280,6 +411,9 @@ export function getSplitDataItem(split, alwaysCopy) {
             }
             if (currencyToUSDRatioJSON !== undefined) {
                 splitDataItem.currencyToUSDRatio = currencyToUSDRatioJSON;
+            }
+            if (esppBuyInfo !== undefined) {
+                splitDataItem.esppBuyInfo = esppBuyInfo;
             }
             return splitDataItem;
         }
@@ -305,12 +439,15 @@ export function getSplit(splitDataItem, alwaysCopy) {
             splitDataItem.sellAutoLotType);
         const lotChanges = LS.getLotChanges(splitDataItem.lotChanges, alwaysCopy);
         const currencyToUSDRatio = getRatio(splitDataItem.currencyToUSDRatio);
+        const esppBuyInfo = getESPPBuyInfo(splitDataItem.esppBuyInfo, alwaysCopy);
+
         if (alwaysCopy
          || (reconcileState !== splitDataItem.reconcileState)
          || (lotTransactionType !== splitDataItem.lotTransactionType)
          || (sellAutoLotType !== splitDataItem.sellAutoLotType)
          || (lotChanges !== splitDataItem.lotChanges)
-         || (currencyToUSDRatio !== splitDataItem.currencyToUSDRatio)) {
+         || (currencyToUSDRatio !== splitDataItem.currencyToUSDRatio)
+         || (esppBuyInfo !== splitDataItem.esppBuyInfo)) {
             const split = Object.assign({}, splitDataItem);
             if (reconcileState !== undefined) {
                 split.reconcileState = reconcileState;
@@ -326,6 +463,9 @@ export function getSplit(splitDataItem, alwaysCopy) {
             }
             if (currencyToUSDRatio !== undefined) {
                 split.currencyToUSDRatio = currencyToUSDRatio;
+            }
+            if (esppBuyInfo !== undefined) {
+                split.esppBuyInfo = esppBuyInfo;
             }
             return split;
         }
@@ -383,9 +523,14 @@ export function getFullSplit(split) {
  */
 export function getSplitDataItems(splits, alwaysCopy) {
     if (splits) {
-        if (alwaysCopy
-         || (splits.length && (getSplitDataItem(splits[0]) !== splits[0]))) {
-            return splits.map((split) => getSplitDataItem(split, alwaysCopy));
+        const newSplits = splits.map((split) => getSplitDataItem(split, alwaysCopy));
+        if (alwaysCopy) {
+            return newSplits;
+        }
+        for (let i = 0; i < splits.length; ++i) {
+            if (splits[i] !== newSplits[i]) {
+                return newSplits;
+            }
         }
     }
     return splits;
@@ -1801,7 +1946,7 @@ export class TransactionManager extends EventEmitter {
     }
 
 
-    _sumSplits(splits, activeCurrency) {
+    _sumSplits(splits, activeCurrency, ymdDate) {
         const accountManager = this._accountingSystem.getAccountManager();
         const pricedItemManager = this._accountingSystem.getPricedItemManager();
 
@@ -1845,7 +1990,7 @@ export class TransactionManager extends EventEmitter {
             isCurrencyExchange = isCurrencyExchange || (currency !== activeCurrency);
 
             if (account.type.hasLots) {
-                let { lotChanges, lotTransactionType, sellAutoLotType } = split;
+                let { lotChanges, lotTransactionType, } = split;
                 lotTransactionType = getLotTransactionType(lotTransactionType);
                 if (!lotTransactionType) {
                     return userError('TransactionManager-split_needs_lot_transaction',
@@ -1866,23 +2011,20 @@ export class TransactionManager extends EventEmitter {
                         });
                     }
 
-                    if (lotTransactionType
-                        === LotTransactionType.BUY_SELL) {
-                        if (sellAutoLotType) {
-                            if (lotChanges.length) {
-                                return userError(
-                                    'TransactionManager-no_lots_for_sell_auto_lots');
-                            }
-                        }
-                    }
                     
                     if (lotTransactionType.validateLotSplits) {
-                        lotTransactionType.validateLotSplits(this, splits, i);
+                        lotTransactionType.validateLotSplits({
+                            transactionManager: this, 
+                            splits: splits, 
+                            splitIndex: i,
+                            account: account,
+                            ymdDate: ymdDate,
+                        });
                         validateSplitsFunc = lotTransactionType.validateLotSplits;
                     }
                 }
 
-                // Lot validation is performed by AccountStateUpdater.
+                // Lot validation is performed by AccountStatesUpdater.
             }
 
             creditSumBaseValue += creditBaseValue;
@@ -1928,52 +2070,63 @@ export class TransactionManager extends EventEmitter {
      * @param {boolean} isModify    If <code>true</code> the splits are for a 
      * transaction modify, and any lot changes will not be verified against the 
      * account's currenty state.
+     * @param {string|YMDDate} [ymdDate] Optional date for the transaction.
      * @returns {Error|undefined}   Returns an Error if invalid, 
      * <code>undefined</code> if valid.
      */
-    validateSplits(splits, isModify) {
-        if (!splits) {
-            return userError('TransactionManager~need_at_least_2_splits');
-        }
-
-        // We need to ensure that the sum of the values of the splits add up.
-        const result = this._sumSplits(splits);
-        if (result instanceof Error) {
-            return result;
-        }
-
-        let { creditSumBaseValue,
-            activeCurrency,
-            validateSplitsFunc,
-        } = result;
-
-
-        if (!validateSplitsFunc) {
-            if (splits.length < 2) {
+    validateSplits(splits, isModify, ymdDate) {
+        try {
+            if (!splits) {
                 return userError('TransactionManager~need_at_least_2_splits');
             }
 
-
-            if (creditSumBaseValue !== 0) {
-                if (!activeCurrency) {
-                    const pricedItemManager 
-                        = this._accountingSystem.getPricedItemManager();
-                    activeCurrency = pricedItemManager.getBaseCurrencyPricedItemDataItem()
-                        .currency;
-                }
-                const excessAmount = activeCurrency.baseValueToString(creditSumBaseValue);
-                return userError('TransactionManager~splits_dont_add_up', excessAmount);
+            // We need to ensure that the sum of the values of the splits add up.
+            const result = this._sumSplits(splits, undefined, ymdDate);
+            if (result instanceof Error) {
+                return result;
             }
+
+            let { creditSumBaseValue,
+                activeCurrency,
+                validateSplitsFunc,
+            } = result;
+
+
+            if (!validateSplitsFunc) {
+                if (splits.length < 2) {
+                    return userError('TransactionManager~need_at_least_2_splits');
+                }
+
+
+                if (creditSumBaseValue !== 0) {
+                    if (!activeCurrency) {
+                        const pricedItemManager 
+                            = this._accountingSystem.getPricedItemManager();
+                        activeCurrency 
+                            = pricedItemManager.getBaseCurrencyPricedItemDataItem()
+                                .currency;
+                    }
+                    const excessAmount 
+                        = activeCurrency.baseValueToString(creditSumBaseValue);
+                    return userError('TransactionManager~splits_dont_add_up', 
+                        excessAmount);
+                }
+            }
+        }
+        catch (e) {
+            return e;
         }
     }
 
 
     _validateTransactionBasics(transactionDataItem, isModify) {
-        if (!transactionDataItem.ymdDate) {
+        const { ymdDate } = transactionDataItem;
+        if (!ymdDate) {
             return userError('TransactionManager-date_required');
         }
 
-        const splitsError = this.validateSplits(transactionDataItem.splits, isModify);
+        const splitsError = this.validateSplits(transactionDataItem.splits, 
+            isModify, ymdDate);
         if (splitsError) {
             splitsError.transactionDataItem = transactionDataItem;
             return splitsError;

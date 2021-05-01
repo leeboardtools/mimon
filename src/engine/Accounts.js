@@ -58,6 +58,8 @@ export function accountCategory(ref) {
  * @property {string}   creditLabel The user label for credit values.
  * @property {boolean}  [hasLots=false] If <code>true</code> the account 
  * uses {@link Lot}s.
+ * @property {boolean}  [isESPP=false] If <code>true</code> the account is an 
+ * ESPP security account.
  * @property {boolean}  [isSingleton=false] If <code>true</code> only one instance of 
  * this type should be created.
  * @property {AccountTypeDef[]} allowedChildTypes   Array containing the account types 
@@ -75,6 +77,9 @@ export function accountCategory(ref) {
  * @property {AccountTypeDef}   BROKERAGE   Accounts that typically contain securities.
  * @property {AccountTypeDef}   CASH    For straight cash.
  * @property {AccountTypeDef}   SECURITY    For a specific security.
+ * @property {AccountTypeDef}   ESPP_SECURITY   For a specific security that's purchased
+ * as part of an Employee Stock Purchase Plan, this has a subscription date,
+ * subscription date fair market value, and purchase date fair market value.
  * @property {AccountTypeDef}   MUTUAL_FUND For a mutual fund account.
  * @property {AccountTypeDef}   REAL_ESTATE For a specific piece of real estate.
  * @property {AccountTypeDef}   PROPERTY    For specific piece of property.
@@ -116,6 +121,12 @@ export const AccountType = {
         category: AccountCategory.ASSET, 
         pricedItemType: PricedItemType.SECURITY, 
         hasLots: true, 
+    },
+    ESPP_SECURITY: { name: 'ESPP_SECURITY', 
+        category: AccountCategory.ASSET, 
+        pricedItemType: PricedItemType.SECURITY, 
+        hasLots: true, 
+        isESPP: true,
     },
     MUTUAL_FUND: { name: 'MUTUAL_FUND', 
         category: AccountCategory.ASSET, 
@@ -195,12 +206,14 @@ AccountType.ASSET.allowedChildTypes = [
     AccountType.REAL_ESTATE,
     AccountType.PROPERTY,
     AccountType.SECURITY,
+    AccountType.ESPP_SECURITY,
 ];
 
 AccountType.BANK.allowedChildTypes = [];
 
 AccountType.BROKERAGE.allowedChildTypes = [
     AccountType.SECURITY,
+    AccountType.ESPP_SECURITY,
     AccountType.MUTUAL_FUND,
     AccountType.PROPERTY,
 ];
@@ -216,6 +229,8 @@ AccountType.REAL_ESTATE.allowedChildTypes = [];
 AccountType.PROPERTY.allowedChildTypes = [];
 
 AccountType.SECURITY.allowedChildTypes = [];
+
+AccountType.ESPP_SECURITY.allowedChildTypes = [];
 
 AccountType.LIABILITY.allowedChildTypes = [
     AccountType.LIABILITY,

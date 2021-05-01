@@ -104,6 +104,10 @@ export async function asyncCreateAccountingSystem(options) {
 //              -aaplIRAId
 //              -tibexIRAId
 //
+//          -esppIBMId
+//              -ibmESPPId
+//
+//
 //  - Root Liabilities
 //      -creditCardsId
 //          -amexCardId
@@ -300,6 +304,14 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
         { parentAccountId: sys.iraId, type: A.AccountType.MUTUAL_FUND, pricedItemId: sys.tibexPricedItemId, name: 'TIAA TIBEX', },
     )).newAccountDataItem.id;
 
+
+    sys.esppIBMId = (await accountManager.asyncAddAccount(
+        { parentAccountId: sys.investmentsId, type: A.AccountType.BROKERAGE, pricedItemId: currencyBasePricedItemId, name: 'IBM ESPP', },
+    )).newAccountDataItem.id;
+
+    sys.ibmESPPId = (await accountManager.asyncAddAccount(
+        { parentAccountId: sys.esppIBMId, type: A.AccountType.ESPP_SECURITY, pricedItemId: sys.ibmPricedItemId, name: 'IBM', },
+    )).newAccountDataItem.id;
 
     
     //

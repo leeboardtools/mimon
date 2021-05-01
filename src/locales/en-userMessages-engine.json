@@ -27,6 +27,9 @@
     "AccountType-SECURITY": "Security",
     "AccountType-SECURITY_debit_label": "Increase",
     "AccountType-SECURITY_credit_label": "Decrease",
+    "AccountType-ESPP_SECURITY": "ESPP Security",
+    "AccountType-ESPP_SECURITY_debit_label": "Increase",
+    "AccountType-ESPP_SECURITY_credit_label": "Decrease",
     "AccountType-MUTUAL_FUND": "Mutual Fund",
     "AccountType-MUTUAL_FUND_debit_label": "Increase",
     "AccountType-MUTUAL_FUND_credit_label": "Decrease",
@@ -223,6 +226,13 @@
     "TransactionManager~splits_dont_add_up": ["The splits do not add up, there is a difference of ", "."],
     "TransactionManager-split_needs_lot_transaction": ["Splits for accounts of type '", "' require a lot transaction type."],
     "TransactionManager~split_needs_lots": ["Splits for accounts of type '", "' require lots."],
+    
+    "TransactionManager-no_espp_buy_info_for_espp_buy": ["Buy transactions for ESPP securities must include the ESPP purchase information."],
+    "TransactionManager-invalid_esppGrantYMDDate": ["ESPP buy transactions must include a valid grant date."],
+    "TransactionManager-esppGrantDate_after_purchaseDate": ["The grant date of an ESPP buy transaction must be before or on the purchase date."],
+    "TransactionManager-esppGrantDateFMVPrice_invalid": ["ESPP buy transactions must include a grant date fair market value (FMV) price greater than 0."],
+    "TransactionManager-esppPurchaseDateFMVPrice_invalid": ["ESPP buy transactions must include a purchase date fair market value (FMV) price greater than 0."],
+
     "TransactionManager-no_lots_for_return_of_capital": ["Return of capital splits cannot change lots."],
     "TransactionManager-no_lots_for_sell_auto_lots": ["Sell transactions with auto-lots cannot have specified lots."],
     "TransactionManager-remove_invalid_id": ["A transaction with id '", "' was not found."],

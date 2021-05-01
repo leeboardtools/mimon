@@ -38,6 +38,22 @@ function testLotChangeDataItem(lotChange) {
 }
 
 
+function testESPPBuyInfoDataItem(esppBuyInfo) {
+    const dataItem = T.getESPPBuyInfoDataItem(esppBuyInfo);
+    const string = JSON.stringify(dataItem);
+    const json = JSON.parse(string);
+    expect(json).toEqual(dataItem);
+
+    const back = T.getESPPBuyInfo(json);
+    expect(back).toEqual(esppBuyInfo);
+
+    expect(T.getESPPBuyInfo(esppBuyInfo) === esppBuyInfo).toBeTruthy();
+    expect(T.getESPPBuyInfoDataItem(dataItem) === dataItem).toBeTruthy();
+
+    expect(T.getESPPBuyInfo(esppBuyInfo, true) !== esppBuyInfo).toBeTruthy();
+    expect(T.getESPPBuyInfoDataItem(dataItem, true) !== dataItem).toBeTruthy();
+}
+
 
 function testSplitsDataItem(splits) {
     const dataItem = T.getSplitDataItems(splits);
@@ -89,6 +105,14 @@ test('Transaction-Data Items', () => {
         ],
     ]);
 
+
+    testESPPBuyInfoDataItem({
+        grantYMDDate: new YMDDate('2020-02-03'),
+        grantDateFMVPrice: 12.34,
+        purchaseDateFMVPrice: 34.56,
+    });
+
+
     testSplitsDataItem([
         {
             reconcileState: T.ReconcileState.NOT_RECONCILED,
@@ -117,6 +141,11 @@ test('Transaction-Data Items', () => {
                 { lotId: 123, quantityBaseValue: -12345, costBasisBaseValue: 98765, },
                 { lotId: 33, quantityBaseValue: 444, },
             ],
+            esppBuyInfo: {
+                grantYMDDate: new YMDDate('2019-01-02'),
+                grantDateFMVPrice: 321.01,
+                purchaseDateFMVPrice: 4.567,
+            },
         },
     ]);
 
@@ -195,6 +224,11 @@ test('Transaction-Data Items', () => {
                     { lotId: 123, quantityBaseValue: 12345, costBasisBaseValue: 98765, },
                     { lotId: 33, quantityBaseValue: 444, },
                 ],
+                esppBuyInfo: {
+                    grantYMDDate: new YMDDate('2019-01-02'),
+                    grantDateFMVPrice: 321.01,
+                    purchaseDateFMVPrice: 4.567,
+                },
             },
         ],
         description: 'A description',
@@ -3033,4 +3067,107 @@ test('Transactions-AutoLot', async () => {
     ACSTH.expectAccountState(
         transactionManager.getCurrentAccountStateDataItem(aaplId),
         aaplState_A);
+});
+
+
+//
+//---------------------------------------------------------
+//
+test('Transactions-esppValidation', async () => {
+    const sys = await ASTH.asyncCreateBasicAccountingSystem();
+
+    const { accountingSystem } = sys;
+    const transactionManager = accountingSystem.getTransactionManager();
+    const lotManager = accountingSystem.getLotManager();
+
+    const esppAccountId = sys.esppIBMId;
+    const securityId = sys.ibmESPPId;
+    const { ibmPricedItemId } = sys;
+
+    let result;
+    result;
+
+    const lot1 = (await lotManager.asyncAddLot(
+        { pricedItemId: ibmPricedItemId, 
+            description: 'Lot 1',
+            lotOriginType: L.LotOriginType.CASH_PURCHASE.name, 
+        })).newLotDataItem;
+    const changeA = {
+        lotId: lot1.id,
+        quantityBaseValue: 10000,
+        costBasisBaseValue: 200000,
+    };
+
+    const settingsA = {
+        ymdDate: '2020-05-01',
+        splits: [
+            { 
+                accountId: esppAccountId,
+                quantityBaseValue: -changeA.costBasisBaseValue,
+            },
+            {
+                accountId: securityId,
+                quantityBaseValue: changeA.costBasisBaseValue,
+                lotTransactionType: T.LotTransactionType.BUY_SELL.name,
+                lotChanges: [ changeA ],
+            }
+        ]
+    };
+    await expect(transactionManager.asyncAddTransaction(settingsA)).rejects.toThrow();
+
+    const esppBuyInfo = {
+        grantYMDDate: '2020-01-01',
+        grantDateFMVPrice: 12.34,
+        purchaseDateFMVPrice: 23.45,
+    };
+
+    // Missing grant date
+    settingsA.splits[1].esppBuyInfo = Object.assign({}, esppBuyInfo, {
+        grantYMDDate: undefined,
+    });
+    await expect(transactionManager.asyncAddTransaction(settingsA)).rejects.toThrow();
+
+    // Grant date after purchase date.
+    settingsA.splits[1].esppBuyInfo = Object.assign({}, esppBuyInfo, {
+        grantYMDDate: '2020-05-02',
+    });
+    await expect(transactionManager.asyncAddTransaction(settingsA)).rejects.toThrow();
+
+    // on purchase date should be fine.
+    settingsA.splits[1].esppBuyInfo = Object.assign({}, esppBuyInfo, {
+        grantYMDDate: settingsA.ymdDate,
+    });
+    result = await transactionManager.asyncAddTransaction(settingsA);
+    await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
+
+
+    // Invalid FMV prices
+    settingsA.splits[1].esppBuyInfo = Object.assign({}, esppBuyInfo, {
+        grantDateFMVPrice: '1234',
+    });
+    await expect(transactionManager.asyncAddTransaction(settingsA)).rejects.toThrow();
+
+    settingsA.splits[1].esppBuyInfo = Object.assign({}, esppBuyInfo, {
+        grantDateFMVPrice: -123.45,
+    });
+    await expect(transactionManager.asyncAddTransaction(settingsA)).rejects.toThrow();
+
+    settingsA.splits[1].esppBuyInfo = Object.assign({}, esppBuyInfo, {
+        purchaseDateFMVPrice: '1234',
+    });
+    await expect(transactionManager.asyncAddTransaction(settingsA)).rejects.toThrow();
+
+    settingsA.splits[1].esppBuyInfo = Object.assign({}, esppBuyInfo, {
+        purchaseDateFMVPrice: -123.45,
+    });
+    await expect(transactionManager.asyncAddTransaction(settingsA)).rejects.toThrow();
+
+
+    //
+    // OK Good to go...
+    settingsA.splits[1].esppBuyInfo = esppBuyInfo;
+
+    const transA = (await transactionManager.asyncAddTransaction(settingsA))
+        .newTransactionDataItem;
+    transA;
 });

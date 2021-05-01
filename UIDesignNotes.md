@@ -297,6 +297,8 @@ Are the lists really two separate styles? Or can they be combined into one?
             - last month
             - last year
         
+        - Add separate Balance Sheet and Profit Loss lists
+        
 
     - Account Register
         - Auto-complete for description
@@ -480,6 +482,20 @@ Column sorting in RowTable:
     - Account Register Tasks
         - Auto complete
         - Filter transactions
+
+        - Add mechanism for allocating gains to sell transactions?
+            - Or automatic
+        
+        - Add ESPP support. 
+            - Would need for buy transactions:
+                - Subscription date FMV
+                - Purchase date FMV
+                - Purchase price
+
+            - On sale allocate proceeds to:
+                - Ordinary income
+                - LT Capital gain
+                - ST Capital gain
     
 
     - Accounts List/Priced Items List
@@ -506,6 +522,7 @@ Column sorting in RowTable:
         
 
     - Save/restore last window settings.
+
 
 - XML Import
  
