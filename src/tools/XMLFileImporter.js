@@ -2367,6 +2367,9 @@ class XMLFileImporterImpl {
             return;
         }
 
+        // Need to update the cost basis of the lot with the fee.
+        // The first character is '-'...
+        splits[0].lotChanges[0].costBasis = costBasis.slice(1);
 
         let fundingQuantity = costBasis;
         let fundingAccountId = accountEntry.parentId;
@@ -2507,6 +2510,10 @@ class XMLFileImporterImpl {
         if (!costBasis) {
             return;
         }
+
+        // Need to update the cost basis of the lot with the fee.
+        // The first character is '-'...
+        splits[0].lotChanges[0].costBasis = costBasis.slice(1);
 
         splits.push({
             quantity: costBasis,
