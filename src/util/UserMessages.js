@@ -191,16 +191,39 @@ class ArgsClass {
 
 
 /**
- * Creates an {@link Error} object with the message based on {@link uMsg}. The Error 
- * object has a <code>msgCode</code> field set to the key argument.
- * @param {string} key The message key.
+ * @typedef {object} UserErrorMsgCode
+ * @property {string} key The message key
+ */
+
+/**
+ * @typedef {object} UserError
+ * An Error object with the following additional properties:
+ * @property {string|UserErrorMsgCode} msgCode
+ */
+
+
+/**
+ * Creates an {@link UserError} object with the message based on {@link uMsg}.
+ * @param {string|UserErrorMsgCode} key The message key, it may also be
+ * an object that has a property named 'key' in which case that property
+ * will be used as the message key. The msgCode property of the UserError
+ * object is set to this.
+ * <p>
+ * One use of the passing in a UserErrorMsgCode instead of a key is for validation,
+ * where the msg code object includes a 'which' property to identify what
+ * failed validation. This in turn could be used to identify which editor
+ * should be highlighted to fix the error.
  * @param  {...any} args
- * @returns {Error}
+ * @returns {UserError}
  */
 export function userError(key, ...args) {
+    let msgCode = key;
+    if (typeof key === 'object') {
+        key = key.key;
+    }
     const error = Error(userMsg(key, new ArgsClass(args)));
     error.name = '';
-    error.msgCode = key;
+    error.msgCode = msgCode;
     return error;
 }
 
