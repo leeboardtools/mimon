@@ -672,6 +672,18 @@ function getAccountRegisterColumnInfoDefs(accountType) {
             // price
             columnInfoDefs.price = LCE.getPriceColumnInfo(lceArgs);
 
+            if (accountType.isESPP) {
+                columnInfoDefs.grantDate = LCE.getGrantDateColumnInfo(lceArgs);
+
+                // grant FMV
+                columnInfoDefs.grantDateFMVPrice 
+                    = LCE.getGrantDateFMVPriceColumnInfo(lceArgs);
+
+                // purchase FMV
+                columnInfoDefs.purchaseDateFMVPrice 
+                    = LCE.getPurchaseDateFMVPriceColumnInfo(lceArgs);
+            }
+
             // total shares
             columnInfoDefs.totalShares = LCE.getTotalSharesColumnInfo(lceArgs);
 
@@ -683,6 +695,8 @@ function getAccountRegisterColumnInfoDefs(accountType) {
 
             // total cash-in
             columnInfoDefs.totalCashIn = LCE.getTotalCashInColumnInfo(lceArgs);
+
+
         }
         else {
             columnInfoDefs.description = ACE.getDescriptionColumnInfo(
@@ -892,10 +906,13 @@ export class AccountRegister extends React.Component {
     }
 
 
-    hasLots() {
+    getAccountType() {
         const { accessor, accountId } = this.props;
-        const accountType = accessor.getTypeOfAccountId(accountId);
-        return accountType.hasLots;
+        return accessor.getTypeOfAccountId(accountId);
+    }
+
+    hasLots() {
+        return this.getAccountType().hasLots;
     }
     
     isTransactionForThis(transactionDataItem) {
@@ -1176,7 +1193,8 @@ export class AccountRegister extends React.Component {
                 ymdDate: this._lastYMDDate,
             };
 
-            if (this.hasLots()) {
+            const accountType = this.getAccountType();
+            if (accountType.hasLots) {
                 const { accessor, accountId } = this.props;
                 const accountDataItem = accessor.getAccountDataItemWithId(accountId);
                 newTransactionDataItem.splits = [
@@ -1194,6 +1212,12 @@ export class AccountRegister extends React.Component {
                         quantityBaseValue: '',
                     },
                 ];
+
+                if (accountType.isESPP) {
+                    newTransactionDataItem.splits[0].esppBuyInfo = {
+                        grantYMDDate: this._lastYMDDate,
+                    };
+                }
             }
             else {
                 newTransactionDataItem.splits = [

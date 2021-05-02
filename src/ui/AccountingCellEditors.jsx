@@ -433,6 +433,7 @@ export function renderDateEditor(args) {
         tabIndex = {0}
         size = {columnInfo.inputSize}
         dateFormat = {dateFormat}
+        errorMsg = {args.errorMsg}
     />;
 }
 
@@ -479,7 +480,7 @@ export function getDateColumnInfo(args) {
         header: {
             label: userMsg('AccountingCellEditors-date'),
             ariaLabel: 'Date',
-            classExtras: 'RowTable-header-base Date-base date-header',
+            classExtras: 'RowTable-header-base Date-base Date-header',
         },
         inputClassExtras: 'Date-base Date-input',
         cellClassName: 'RowTable-cell-base Date-base Date-cell',

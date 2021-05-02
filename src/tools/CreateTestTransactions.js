@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import * as T from '../engine/Transactions';
 import { getDecimalDefinition } from '../util/Quantities';
 import * as DO from '../util/DateOccurrences';
@@ -39,6 +40,8 @@ export function createTestTransactions(newFileContents, options) {
     newFileContents.transactions = {
         transactions: transactions,
     };
+
+    
 
     transactions.push({
         ymdDate: '2010-01-30',
@@ -310,6 +313,12 @@ export function createTestTransactions(newFileContents, options) {
         'name': 'International Business Machines, Inc.',
         'onlineUpdateType': 'YAHOO_FINANCE',
     });
+    pricedItems.push({
+        'type': 'SECURITY',
+        'ticker': 'INTC',
+        'name': 'Intel Corporation',
+        'onlineUpdateType': 'YAHOO_FINANCE',
+    });
 
     const prices = [];
     newFileContents.prices = {
@@ -383,6 +392,50 @@ export function createTestTransactions(newFileContents, options) {
 
             { ymdDate: '2020-01-24', close: 165.04, },
             { ymdDate: '2020-01-31', close: 170.23, },
+        ],
+    });
+
+    prices.push({
+        pricedItemId: 'INTC',
+        prices: [
+            { ymdDate: '2018-01-01', close: 48.14, open: 46.38, low: 42.44, high:  50.85, },
+            { ymdDate: '2018-02-01', close: 49.29, open: 47.7, low: 42.04, high:  50.9, },
+            { ymdDate: '2018-03-01', close: 52.08, open: 49.5, low: 46.96, high:  53.78, },
+            { ymdDate: '2018-04-01', close: 51.62, open: 51.69, low: 47.29, high:  55.79, },
+            { ymdDate: '2018-05-01', close: 55.2, open: 51.64, low: 51, high:  56.2, },
+            { ymdDate: '2018-06-01', close: 49.71, open: 55.84, low: 48.5, high:  57.6, },
+            { ymdDate: '2018-07-01', close: 48.1, open: 49.04, low: 46.43, high:  53.3, },
+            { ymdDate: '2018-08-01', close: 48.43, open: 48.06, low: 46.19, high:  50.6, },
+            { ymdDate: '2018-09-01', close: 47.29, open: 48.38, low: 44.06, high:  48.43, },
+            { ymdDate: '2018-10-01', close: 46.88, open: 46.79, low: 42.36, high:  49.72, },
+            { ymdDate: '2018-11-01', close: 49.31, open: 46.95, low: 46.52, high:  49.32, },
+            { ymdDate: '2018-12-01', close: 46.93, open: 50, low: 43.51, high:  50.5, },
+            { ymdDate: '2019-01-01', close: 47.12, open: 45.96, low: 44.39, high:  50.04, },
+            { ymdDate: '2019-02-01', close: 52.96, open: 47.06, low: 47.01, high:  53.61, },
+            { ymdDate: '2019-03-01', close: 53.7, open: 53.44, low: 51.7, high:  54.99, },
+            { ymdDate: '2019-04-01', close: 51.04, open: 54.34, low: 50.87, high:  59.59, },
+            { ymdDate: '2019-05-01', close: 44.04, open: 51.1, low: 42.86, high:  51.82, },
+            { ymdDate: '2019-06-01', close: 47.87, open: 44.25, low: 43.2, high:  48.48, },
+            { ymdDate: '2019-07-01', close: 50.55, open: 49.29, low: 47.07, high:  53.5, },
+            { ymdDate: '2019-08-01', close: 47.41, open: 50.52, low: 44.8, high:  51.89, },
+            { ymdDate: '2019-09-01', close: 51.53, open: 47.12, low: 46.5, high:  53.33, },
+            { ymdDate: '2019-10-01', close: 56.53, open: 51.97, low: 48.53, high:  57.24, },
+            { ymdDate: '2019-11-01', close: 58.05, open: 55.94, low: 55.62, high:  59.13, },
+            { ymdDate: '2019-12-01', close: 59.85, open: 58.55, low: 55.75, high:  60.48, },
+            { ymdDate: '2020-01-01', close: 63.93, open: 60.24, low: 58.52, high:  69.29, },
+            { ymdDate: '2020-02-01', close: 55.52, open: 64.46, low: 53.6, high:  68.09, },
+            { ymdDate: '2020-03-01', close: 54.12, open: 55.79, low: 43.63, high:  59.02, },
+            { ymdDate: '2020-04-01', close: 59.98, open: 52.5, low: 51.22, high:  62.13, },
+            { ymdDate: '2020-05-01', close: 62.93, open: 58.83, low: 56.1, high:  64.14, },
+            { ymdDate: '2020-06-01', close: 59.83, open: 62.49, low: 56.76, high:  65.11, },
+            { ymdDate: '2020-07-01', close: 47.73, open: 59.91, low: 46.97, high:  61.93, },
+            { ymdDate: '2020-08-01', close: 50.95, open: 48.27, low: 47.7, high:  51.5, },
+            { ymdDate: '2020-09-01', close: 51.78, open: 50.91, low: 48.42, high:  52.68, },
+            { ymdDate: '2020-10-01', close: 44.28, open: 52.4, low: 43.61, high:  56.23, },
+            { ymdDate: '2020-11-01', close: 48.35, open: 44.96, low: 44.24, high:  48.5, },
+            { ymdDate: '2020-12-01', close: 49.82, open: 48.75, low: 45.24, high:  52.65, },
+            { ymdDate: '2021-01-01', close: 55.51, open: 49.89, low: 49.33, high:  63.95, },
+            { ymdDate: '2021-02-01', close: 60.78, open: 55.95, low: 55.71, high:  63.54, },
         ],
     });
 
@@ -961,6 +1014,182 @@ export function createTestTransactions(newFileContents, options) {
     if (fourOhOneKAccount) {
         // 
     }
+
+
+    // ESPP account
+    const investmentsAccount = findAccountEntry(newFileContents,
+        'ASSET-Investments');
+    
+    const intcESPPAccount = {
+        type: 'ESPP_SECURITY',
+        name: 'INTC',
+        pricedItemId: 'INTC',
+    };
+    const esppAccount = {
+        type: 'BROKERAGE',
+        name: 'Intel ESPP',
+        childAccounts: [
+            intcESPPAccount,
+        ],
+    };
+    const esppId = 'ASSET-Investments-Intel ESPP';
+
+    investmentsAccount.childAccounts.push(esppAccount);
+    const intcESPPId = esppId + '-INTC';
+    if (intcESPPId) {
+        // INTC ESPP?: Feb 1, Aug 1, 15% discount, FMV is average of high and low,
+        // last business day before beginning, last business day of subscription.
+
+        let balance = 0;
+        const esppContribution = 100;
+
+        // Some ESPP paychecks...
+        const esppPaycheck = {
+            description: 'Paycheck (ESPP)',
+            splits: [
+                { 
+                    accountId: 'ASSET-Current Assets-Checking Account',
+                    quantityBaseValue: 60000,
+                    description: 'Paycheck',
+                },
+                {
+                    accountId: 'INCOME-Salary',
+                    quantityBaseValue: 130000,
+                },
+                {
+                    accountId: 'EXPENSE-Taxes-Social Security',
+                    quantityBaseValue: 7000,
+                },
+                {
+                    accountId: 'ASSET-Investments-401(k) Account',
+                    quantityBaseValue: 20000,
+                },
+                {
+                    accountId: esppId,
+                    quantityBaseValue: esppContribution * 100,
+                },
+                {
+                    accountId: 'EXPENSE-Taxes-Federal Income Tax',
+                    quantityBaseValue: 20000,
+                },
+                {
+                    accountId: 'EXPENSE-Taxes-State Income Tax',
+                    quantityBaseValue: 10000,
+                },
+                {
+                    accountId: 'EXPENSE-Taxes-Medicare',
+                    quantityBaseValue: 3000,
+                },
+            ]
+        };
+
+        balance += esppContribution;
+        esppPaycheck.ymdDate = '2018-02-03';
+        transactions.push(Object.assign({}, esppPaycheck));
+
+        balance += esppContribution;
+        esppPaycheck.ymdDate = '2018-03-03';
+        transactions.push(Object.assign({}, esppPaycheck));
+
+        balance += esppContribution;
+        esppPaycheck.ymdDate = '2018-04-03';
+        transactions.push(Object.assign({}, esppPaycheck));
+
+        balance += esppContribution;
+        esppPaycheck.ymdDate = '2018-05-03';
+        transactions.push(Object.assign({}, esppPaycheck));
+
+        balance += esppContribution;
+        esppPaycheck.ymdDate = '2018-06-03';
+        transactions.push(Object.assign({}, esppPaycheck));
+
+        balance += esppContribution;
+        esppPaycheck.ymdDate = '2018-07-03';
+        transactions.push(Object.assign({}, esppPaycheck));
+
+        // ESPP Purchase...
+        const baseArgs = {
+            accountId: intcESPPId,
+            lots: lots,
+            transactions: transactions,
+            pricedItemId: 'INTC',
+            otherAccountId: esppId,
+        };
+
+        // We're just going to use the close, and the day of the subscription
+        // 2018-02-01: close: 49.29
+        // 2018-08-01: close: 48.43
+        // therefore use 85% of 48.43
+        // $600 balance in ESPP account.
+        const lotA = 'Lot 2018-08-01';
+        const priceA = .85 * 48.43;
+        const sharesA = Math.floor(balance / priceA);
+        balance -= Math.round(sharesA * priceA, 2);
+
+        const sharesA_QuantityBaseValue = sharesA * 10000;
+        addLotTransaction(baseArgs, {
+            ymdDate: '2018-08-01',
+            lotTransactionType: T.LotTransactionType.BUY_SELL,
+            lotId: lotA,
+            lotBaseValue: sharesA_QuantityBaseValue,
+            priceBaseValue: priceA * 100,
+            esppBuyInfo: {
+                grantYMDDate: '2018-02-01',
+                grantDateFMVPrice: 49.29,
+                purchaseDateFMVPrice: 48.43,
+            },
+        });
+
+
+        balance += esppContribution;
+        esppPaycheck.ymdDate = '2018-08-03';
+        transactions.push(Object.assign({}, esppPaycheck));
+
+        balance += esppContribution;
+        esppPaycheck.ymdDate = '2018-09-03';
+        transactions.push(Object.assign({}, esppPaycheck));
+
+        balance += esppContribution;
+        esppPaycheck.ymdDate = '2018-10-03';
+        transactions.push(Object.assign({}, esppPaycheck));
+
+        balance += esppContribution;
+        esppPaycheck.ymdDate = '2018-11-03';
+        transactions.push(Object.assign({}, esppPaycheck));
+
+        balance += esppContribution;
+        esppPaycheck.ymdDate = '2018-12-03';
+        transactions.push(Object.assign({}, esppPaycheck));
+
+        balance += esppContribution;
+        esppPaycheck.ymdDate = '2019-01-03';
+        transactions.push(Object.assign({}, esppPaycheck));
+
+        // 2018-08-01: close: 48.43
+        // 2019-02-01: close: 52.96
+        // therefore use 85% of 48.43
+        // $600 balance in ESPP account.
+        const lotB = 'Lot 2019-02-01';
+        const priceB = .85 * 48.43;
+        const sharesB = Math.floor(balance / priceB);
+        balance -= Math.round(sharesB * priceB, 2);
+
+        const sharesB_QuantityBaseValue = sharesB * 10000;
+        addLotTransaction(baseArgs, {
+            ymdDate: '2019-02-01',
+            lotTransactionType: T.LotTransactionType.BUY_SELL,
+            lotId: lotB,
+            lotBaseValue: sharesB_QuantityBaseValue,
+            priceBaseValue: priceB * 100,
+            esppBuyInfo: {
+                grantYMDDate: '2018-08-01',
+                grantDateFMVPrice: 48.43,
+                purchaseDateFMVPrice: 52.96,
+            },
+        });
+
+
+    }
 }
 
 
@@ -984,6 +1213,7 @@ function addLotTransaction(args, args2) {
         lotBaseValue,
         splitRatio,
         priceBaseValue,
+        esppBuyInfo,
     } = args;
 
     const currencyOD = getDecimalDefinition({
@@ -1077,6 +1307,10 @@ function addLotTransaction(args, args2) {
                 lotTransactionType: lotTransactionType,
                 lotChanges: lotChanges,
             });
+        }
+
+        if (esppBuyInfo) {
+            splits[splits.length - 1].esppBuyInfo = esppBuyInfo;
         }
         break;
     

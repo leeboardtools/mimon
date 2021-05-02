@@ -416,6 +416,9 @@ Are the lists really two separate styles? Or can they be combined into one?
             - LotsSelectionEditor
             - MultiSplitsEditor
             - PricesList
+    
+    - Support horizontal scrolling
+        - Need to figure out minimum column widths.
 
 
 - CollapsibleRowTable

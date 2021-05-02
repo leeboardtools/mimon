@@ -91,10 +91,14 @@ export const LotTransactionType = {
 
 
 
-//
-//---------------------------------------------------------
-//
-function validateESPPBuyInfo(esppBuyInfo, ymdDate) {
+/**
+ * Validates an {@link ESPPBuyInfo}. If not valid an {@link UserError} with
+ * a 'which' field set to the property that was invalid is thrown.
+ * @param {ESPPBuyInfo|ESPPBuyInfoDataItem} esppBuyInfo 
+ * @param {YMDDate|string} [ymdDate]
+ * @throws {UserError}
+ */
+export function validateESPPBuyInfo(esppBuyInfo, ymdDate) {
     if (!esppBuyInfo) {
         throw userError(
             'TransactionManager-no_espp_buy_info_for_espp_buy');
@@ -104,25 +108,34 @@ function validateESPPBuyInfo(esppBuyInfo, ymdDate) {
         = esppBuyInfo;
     grantYMDDate = getYMDDate(grantYMDDate);
     if (!grantYMDDate) {
-        throw userError(
-            'TransactionManager-invalid_esppGrantYMDDate');
+        throw userError({ 
+            key: 'TransactionManager-invalid_esppGrantYMDDate',
+            which: 'grantYMDDate',
+        });
     }
 
     ymdDate = getYMDDate(ymdDate);
     if (ymdDate) {
         if (YMDDate.compare(grantYMDDate, ymdDate) > 0) {
-            throw userError(
-                'TransactionManager-esppGrantDate_after_purchaseDate'
-            );
+            throw userError({ 
+                key: 'TransactionManager-esppGrantDate_after_purchaseDate',
+                which: 'grantYMDDate',
+            });
         }
     }
 
     if ((typeof grantDateFMVPrice !== 'number') || (grantDateFMVPrice < 0)) {
-        throw userError('TransactionManager-esppGrantDateFMVPrice_invalid');
+        throw userError({
+            key: 'TransactionManager-esppGrantDateFMVPrice_invalid',
+            which: 'grantDateFMVPrice',
+        });
     }
 
     if ((typeof purchaseDateFMVPrice !== 'number') || (purchaseDateFMVPrice < 0)) {
-        throw userError('TransactionManager-esppPurchaseDateFMVPrice_invalid');
+        throw userError({
+            key: 'TransactionManager-esppPurchaseDateFMVPrice_invalid',
+            which: 'purchaseDateFMVPrice',
+        });
     }
 }
 

@@ -169,7 +169,21 @@
                 {
                     "type": "INCOME",
                     "name": "Dividends",
-                    "tags": ["DIVIDENDS"]
+                    "tags": ["DIVIDENDS"],
+                    "childAccounts": [
+                        {
+                            "type": "INCOME",
+                            "name": "Brokerage Account"
+                        },
+                        {
+                            "type": "INCOME",
+                            "name": "IRA Account"
+                        },
+                        {
+                            "type": "INCOME",
+                            "name": "401(k) Account"
+                        }                       
+                    ]
                 },
                 {
                     "type": "INCOME",
