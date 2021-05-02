@@ -583,6 +583,11 @@ export class AccountEditor extends React.Component {
         }
 
         if (type.hasLots) {
+            let ordinaryIncomeEditor;
+            if (type.isESPP) {
+                ordinaryIncomeEditor = this.renderDefaultSplitAccountEditor(
+                    AH.DefaultSplitAccountType.ORDINARY_INCOME);
+            }
             return <React.Fragment>
                 <Row>
                     <Col>
@@ -599,8 +604,7 @@ export class AccountEditor extends React.Component {
                                 .LONG_TERM_CAPITAL_GAINS_INCOME)}
                     </Col>
                     <Col>
-                        {this.renderDefaultSplitAccountEditor(
-                            AH.DefaultSplitAccountType.ORDINARY_INCOME)}
+                        {ordinaryIncomeEditor}
                     </Col>
                 </Row>
                 <Row>
