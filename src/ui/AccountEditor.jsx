@@ -526,7 +526,8 @@ export class AccountEditor extends React.Component {
 
     onDefaultAccountChange(e, property) {
         const update = {
-            defaultSplitAccountIds: {},
+            defaultSplitAccountIds: Object.assign({},
+                this.state.accountDataItem.defaultSplitAccountIds),
         };
         update.defaultSplitAccountIds[property] = parseInt(e.target.value);
         this.updateAccountDataItem(update);
