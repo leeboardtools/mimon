@@ -107,14 +107,6 @@ export const CellDateEditor = React.forwardRef(
         let className = 'Cell CellDateEditor-textInput ' 
             + (inputClassExtras || '');
 
-        let errorMsgComponent;
-        if (errorMsg) {
-            className += ' Is-invalid';
-            errorMsgComponent = <div className="Invalid-feedback">
-                {errorMsg}
-            </div>;
-        }
-
         const [ state, setState ] = useState({
             isCalendarOpen: false,
         });
@@ -123,40 +115,52 @@ export const CellDateEditor = React.forwardRef(
         value = value || new YMDDate();
         const valueDate = getYMDDate(value).toLocalDate();
 
+        let datePicker = <DatePicker
+            className = {className}
+            selected = {valueDate}
+            onChange = {(e) => {
+                const newDate = new Date(e);
+                onChange(YMDDate.fromLocalDate(newDate).toString());
+            }}
+            onKeyDown = {(e) => {
+                onKeyDown(e, value, onChange, state, setState);
+            }}
+            onCalendarOpen = {() => setState({ 
+                isCalendarOpen: true, 
+                openCalendar: undefined, 
+            })}
+            onCalendarClose = {() => setState({ 
+                isCalendarOpen: false,
+                openCalendar: undefined,
+            })}
+            onBlur = {onBlur}
+            onFocus = {onFocus}
+            disabled = {disabled || !onChange}
+            aria-label = {ariaLabel}
+            dateFormat = {dateFormat}
+            locale = {locale}
+            size = {size}
+            tabIndex = {tabIndex}
+            ref = {ref}
+            preventOpenOnFocus = "true"
+            open = {state.openCalendar}
+            enableTabLoop = "false"
+            dropdownMode = "select"
+        />;
+
+        if (errorMsg) {
+            datePicker = <React.Fragment>
+                <div className = "Is-invalid">
+                    {datePicker}
+                </div>
+                <div className="Invalid-feedback">
+                    {errorMsg}
+                </div>
+            </React.Fragment>;
+        }
+
         return <div className = {divClassName}>
-            <DatePicker
-                className = {className}
-                selected = {valueDate}
-                onChange = {(e) => {
-                    const newDate = new Date(e);
-                    onChange(YMDDate.fromLocalDate(newDate).toString());
-                }}
-                onKeyDown = {(e) => {
-                    onKeyDown(e, value, onChange, state, setState);
-                }}
-                onCalendarOpen = {() => setState({ 
-                    isCalendarOpen: true, 
-                    openCalendar: undefined, 
-                })}
-                onCalendarClose = {() => setState({ 
-                    isCalendarOpen: false,
-                    openCalendar: undefined,
-                })}
-                onBlur = {onBlur}
-                onFocus = {onFocus}
-                disabled = {disabled || !onChange}
-                aria-label = {ariaLabel}
-                dateFormat = {dateFormat}
-                locale = {locale}
-                size = {size}
-                tabIndex = {tabIndex}
-                ref = {ref}
-                preventOpenOnFocus = "true"
-                open = {state.openCalendar}
-                enableTabLoop = "false"
-                dropdownMode = "select"
-            />
-            {errorMsgComponent}
+            {datePicker}            
         </div>;
     }
 );
