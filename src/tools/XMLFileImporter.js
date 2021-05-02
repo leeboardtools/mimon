@@ -1137,7 +1137,7 @@ class XMLFileImporterImpl {
         this.currenciesById = new Map();
         this.securitiesById = new Map();
 
-        this.accountsById = new Map();
+        this.accountEntriesById = new Map();
         this.transactionsById = new Map();
 
         // Each entry is a SortedArray of the lots for the account id sorted by
@@ -1382,7 +1382,7 @@ class XMLFileImporterImpl {
 
 
     addAccount(account) {
-        this.accountsById.set(account.id, account);
+        this.accountEntriesById.set(account.id, account);
     }
     
     addTransaction(transaction) {
@@ -1576,7 +1576,7 @@ class XMLFileImporterImpl {
         if (xmlChildAccountIds) {
             const childAccounts = [];
             xmlChildAccountIds.forEach((childAccountId) => {
-                const childXMLAccount = this.accountsById.get(childAccountId);
+                const childXMLAccount = this.accountEntriesById.get(childAccountId);
                 if (!childXMLAccount) {
                     this.recordWarning(userMsg('XMLFileImporter-child_account_not_found',
                         this.makeFullAccountName(parentXMLAccounts, xmlAccount), 
@@ -1656,7 +1656,7 @@ class XMLFileImporterImpl {
     finalizeXMLAccount(xmlAccount) {
         // Make sure we're in the parent's child list.
         const { id, parentId } = xmlAccount;
-        const parentAccount = this.accountsById.get(parentId);
+        const parentAccount = this.accountEntriesById.get(parentId);
 
         if (parentAccount) {
             const { childAccountIds } = parentAccount;
@@ -1680,11 +1680,11 @@ class XMLFileImporterImpl {
         const { newFileContents } = this;
         const { accounts } = newFileContents;
 
-        this.accountsById.forEach((xmlAccount) => 
+        this.accountEntriesById.forEach((xmlAccount) => 
             this.finalizeXMLAccount(xmlAccount));
 
 
-        const rootAccount = this.accountsById.get(this.rootAccountId);
+        const rootAccount = this.accountEntriesById.get(this.rootAccountId);
 
         const rootXMLAccountsToProcess = {
             ASSET: [],
@@ -1695,7 +1695,7 @@ class XMLFileImporterImpl {
         };
 
         rootAccount.childAccountIds.forEach((childAccountId) => {
-            const xmlAccount = this.accountsById.get(childAccountId);
+            const xmlAccount = this.accountEntriesById.get(childAccountId);
             if (!xmlAccount) {
                 this.recordWarning(userMsg('XMLFileImporter-root_account_not_found', 
                     childAccountId));
@@ -1728,7 +1728,7 @@ class XMLFileImporterImpl {
                 this.recordLog('Root child accounts: ' + childAccountIds.length);
 
                 childAccountIds.forEach((childAccountId) => {
-                    const childXMLAccount = this.accountsById.get(childAccountId);
+                    const childXMLAccount = this.accountEntriesById.get(childAccountId);
                     if (!childXMLAccount) {
                         this.recordWarning(userMsg(
                             'XMLFileImporter-root_account_type_invalid',
@@ -1913,7 +1913,7 @@ class XMLFileImporterImpl {
             quantity: entry.amount,
         };
 
-        const accountEntry = this.accountsById.get(entry.accountId);
+        const accountEntry = this.accountEntriesById.get(entry.accountId);
         if (!accountEntry) {
             this.recordWarning(userMsg(
                 'XMLFileImporter-transactionEntry_accountId_invalid',
@@ -1958,7 +1958,7 @@ class XMLFileImporterImpl {
 
     isCreditDebitEntryExpenseAccount(entry) {
         const { accountId } = entry;
-        let accountEntry = this.accountsById.get(accountId);
+        let accountEntry = this.accountEntriesById.get(accountId);
         if (!accountEntry) {
             return;
         }
@@ -1970,7 +1970,7 @@ class XMLFileImporterImpl {
 
     isCreditDebitEntryInvesmentAccount(entry) {
         const { accountId } = entry;
-        let accountEntry = this.accountsById.get(accountId);
+        let accountEntry = this.accountEntriesById.get(accountId);
         if (!accountEntry) {
             return;
         }
@@ -2050,7 +2050,7 @@ class XMLFileImporterImpl {
             }
         }
 
-        const accountEntry = this.accountsById.get(accountId);
+        const accountEntry = this.accountEntriesById.get(accountId);
         const lot = {
             id: lotId,
             pricedItemId: accountEntry.account.pricedItemId,
@@ -2084,7 +2084,7 @@ class XMLFileImporterImpl {
 
         const lotItems = [];
 
-        const entries = text.split(';').map(entry => entry.trim());
+        const entries = text.split(';').map(entry => entry.trim().toUpperCase());
         for (let i = 0; i < entries.length; ++i) {
             const entry = entries[i];
             let contents;
@@ -2287,7 +2287,7 @@ class XMLFileImporterImpl {
 
     updateDecimalPlacesFromInvestmentCreditDebitEntry(mainEntry, accountEntry) {
         if (typeof accountEntry === 'string') {
-            accountEntry = this.accountsById.get(accountEntry);
+            accountEntry = this.accountEntriesById.get(accountEntry);
         }
 
         const { quantity } = mainEntry;
@@ -2317,10 +2317,69 @@ class XMLFileImporterImpl {
     }
 
 
+    handleESPPMemo({splits, mainEntry, xmlTransaction, accountEntry, }) {
+        let grantYMDDate;
+        let grantDateFMVPrice;
+        let purchaseDateFMVPrice;
+
+        const { memo } = mainEntry;
+        if (memo) {
+            const parts = memo.split(';').map(entry => entry.trim().toUpperCase());
+            for (let i = 0; i < parts.length; ++i) {
+                const part = parts[i];
+                if (part.startsWith('SDATE:') || part.startsWith('SDATE ')) {
+                    grantYMDDate = part.slice(6).trim();
+                }
+                else if (part.startsWith('SFMV:') || part.startsWith('SFMV ')
+                    || part.startsWith('GFMV:') || part.startsWith('GFMV')) {
+                    grantDateFMVPrice = Number.parseFloat(part.slice(5).trim());
+                }
+                else if (part.startsWith('PFMV:') || part.startsWith('PFMV ')) {
+                    purchaseDateFMVPrice = Number.parseFloat(part.slice(5).trim());
+                }
+            }
+
+            if (Number.isNaN(grantDateFMVPrice)) {
+                grantDateFMVPrice = undefined;
+            }
+            else if (Number.isNaN(purchaseDateFMVPrice)) {
+                purchaseDateFMVPrice = undefined;
+            }
+        }
+
+        const { account } = accountEntry;
+
+        if (grantYMDDate
+         && (typeof grantDateFMVPrice === 'number')
+         && (typeof purchaseDateFMVPrice === 'number')) {
+            splits[0].esppBuyInfo = {
+                grantYMDDate: grantYMDDate,
+                grantDateFMVPrice: grantDateFMVPrice,
+                purchaseDateFMVPrice: purchaseDateFMVPrice,
+            };
+
+            // Switch the account to ESPP if necessary.
+            account.type = A.AccountType.ESPP_SECURITY.name;
+        }
+        else if (account.type === A.AccountType.ESPP_SECURITY.name) {
+            // Need all that info...
+            this.recordWarning(userMsg(
+                'XMLFileImporter-transactionEntry_esppBuyInfo_missing',
+                xmlTransaction.date,
+                xmlTransaction.description,
+            ));
+            return;
+        }
+
+        return true;
+    }
+
+
     //
     //-----------------------------------------------------
     //
-    processTransactionEntryBuyX({ splits, xmlTransaction, mainEntry }) {
+    processTransactionEntryBuyX(args) {
+        const { splits, xmlTransaction, mainEntry } = args;
         const lotId = this.addLot(xmlTransaction, mainEntry,
             L.LotOriginType.CASH_PURCHASE.name);
         if (!lotId) {
@@ -2339,7 +2398,7 @@ class XMLFileImporterImpl {
         }
 
         const { accountId } = investmentCreditDebitEntry;
-        const accountEntry = this.accountsById.get(accountId);
+        const accountEntry = this.accountEntriesById.get(accountId);
 
         this.updateDecimalPlacesFromInvestmentCreditDebitEntry(
             mainEntry, accountEntry);
@@ -2388,6 +2447,15 @@ class XMLFileImporterImpl {
             accountId: fundingAccountId,
         });
 
+        if (!this.handleESPPMemo({
+            splits: splits,
+            xmlTransaction: xmlTransaction,
+            mainEntry: mainEntry,
+            accountEntry: accountEntry,
+        })) {
+            return;
+        }
+
         this.logTransaction('BuyX',
             {
                 xmlTransaction: xmlTransaction,
@@ -2414,7 +2482,8 @@ class XMLFileImporterImpl {
             return;
         }
         
-        const accountEntry = this.accountsById.get(investmentCreditDebitEntry.accountId);
+        const accountEntry = this.accountEntriesById.get(
+            investmentCreditDebitEntry.accountId);
         if (!accountEntry) {
             this.recordWarning(userMsg(
                 'XMLFileImporter-dividend_account_id_invalid',
@@ -2434,7 +2503,7 @@ class XMLFileImporterImpl {
             = (investmentCreditDebitEntry === mainEntry.creditEntry)
                 ? mainEntry.debitEntry
                 : mainEntry.creditEntry;
-        const dividendAccountEntry = this.accountsById.get(
+        const dividendAccountEntry = this.accountEntriesById.get(
             dividendCreditDebitEntry.accountId);
         if (!dividendAccountEntry) {
             this.recordWarning(userMsg(
@@ -2809,7 +2878,7 @@ class XMLFileImporterImpl {
 
 
         const { accountId } = investmentCreditDebitEntry;
-        const accountEntry = this.accountsById.get(accountId);
+        const accountEntry = this.accountEntriesById.get(accountId);
 
         this.updateDecimalPlacesFromInvestmentCreditDebitEntry(
             mainEntry, accountEntry);
@@ -2823,7 +2892,8 @@ class XMLFileImporterImpl {
             = (investmentCreditDebitEntry === mainEntry.creditEntry)
                 ? mainEntry.debitEntry : mainEntry.creditEntry;
         if (otherCreditDebitEntry.accountId !== accountId) {
-            const dstAccount = this.accountsById.get(otherCreditDebitEntry.accountId);
+            const dstAccount = this.accountEntriesById.get(
+                otherCreditDebitEntry.accountId);
             if (dstAccount) {
                 args.dstAccountId = otherCreditDebitEntry.accountId;
             }
@@ -3396,7 +3466,7 @@ class XMLFileImporterImpl {
     async asyncFinalizeImport() {
         this.updateStatus(userMsg(
             'XMLFileImporter-updatePrimaryStatus_processingAccountAndTransactions',
-            this.accountsById.size,
+            this.accountEntriesById.size,
             this.transactionsById.size));
 
         this.postProcessAccounts();

@@ -344,6 +344,7 @@
     "XMLFileImporter-investmentTransactionEntry_invalid": ["An investment transaction dated ", " ", " and of type '", "' is not a supported format. The transaction will be ignored."],
     "XMLFileImporter-transactionEntry_accountId_invalid": ["A transaction dated ", " ", " refers to the account with id '", "' which was not found. The transaction will be ignored."],
     "XMLFileImporter-transactionEntry_investment_entry_missing":  ["An investment transaction dated ", " ", " contained an investment entry that did not contain an investment account. The transaction will be ignored."],
+    "XMLFileImporter-transactionEntry_esppBuyInfo_missing":  ["An ESPP buy transaction dated ", " ", " is missing the grant date, grant date FMV, and/or purchase date FMV. The transaction will be ignored."],
     "XMLFileImporter-extra_investment_transaction_entries": ["An investment transaction dated ", " ", " contains extra unsupported transaction entries. Those extra transaction entries will be ignored."],
     "XMLFileImporter-investment_transaction_invalid_fee": ["An investment transaction dated ", " ", " contains an invalid fee entry, '", "'. The fee will be ignored."],
     "XMLFileImporter-lotTransaction_cash_uses_parent": ["An investment transaction dated ", " ", " contains a cash transaction into a lot based account. The transaction will be made to the parent account."],
