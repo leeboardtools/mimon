@@ -73,6 +73,7 @@ export const LotActionType = {
         fromSplitInfo: buyFromSplitInfo, 
         needsCostBasis: true,
         hasModifyLotIds: true,
+        hasESPPBuyInfo: true,
     },
     SELL_FIFO: { name: 'SELL_FIFO', 
         fromSplitInfo: sellFromSplitInfo, 
@@ -116,6 +117,7 @@ export const LotActionType = {
         fromSplitInfo: addSharesFromSplitInfo,
         needsCostBasis: true,
         hasModifyLotIds: true,
+        hasESPPBuyInfo: true,
     },
     REMOVE_SHARES_FIFO: { name: 'REMOVE_SHARES_FIFO', 
         fromSplitInfo: removeSharesFromSplitInfo,
@@ -1087,19 +1089,17 @@ function updateTransactionDataItem(splitInfo, newTransactionDataItem,
 //
 //---------------------------------------------------------
 //
-function buyFromSplitInfo(splitInfo, transactionDataItem) {
+function esppBuyInfoFromSplitInfo(splitInfo, transactionDataItem) {
     const { accessor, splitIndex, editStates, } = splitInfo;
     const splitDataItem = splitInfo.transactionDataItem.splits[splitIndex];
     const accountDataItem = accessor.getAccountDataItemWithId(splitDataItem.accountId);
 
-    // Validate ESPP buy info now if needed.
-    let esppBuyInfo;
-
     const accountType = A.getAccountType(accountDataItem.type);
+
     if (accountType.isESPP) {
         try {
             const { priceQuantityDefinition } = splitInfo;
-            esppBuyInfo = {
+            const esppBuyInfo = {
                 grantYMDDate: editStates.grantYMDDate.ymdDate,
                 grantDateFMVPrice: priceQuantityDefinition.baseValueToNumber(
                     editStates.grantDateFMVPrice.editorBaseValue),
@@ -1108,6 +1108,7 @@ function buyFromSplitInfo(splitInfo, transactionDataItem) {
             };
 
             T.validateESPPBuyInfo(esppBuyInfo, splitInfo.transactionDataItem.ymdDate);
+            return esppBuyInfo;
         }
         catch (e) {
             const { msgCode } = e;
@@ -1117,6 +1118,22 @@ function buyFromSplitInfo(splitInfo, transactionDataItem) {
             }
             return e;
         }
+    }
+}
+
+
+//
+//---------------------------------------------------------
+//
+function buyFromSplitInfo(splitInfo, transactionDataItem) {
+    const { accessor, splitIndex, editStates, } = splitInfo;
+    const splitDataItem = splitInfo.transactionDataItem.splits[splitIndex];
+    const accountDataItem = accessor.getAccountDataItemWithId(splitDataItem.accountId);
+
+    // Validate ESPP buy info now if needed.
+    let esppBuyInfo = esppBuyInfoFromSplitInfo(splitInfo, transactionDataItem);
+    if (esppBuyInfo instanceof Error) {
+        return esppBuyInfo;
     }
 
     return updateTransactionDataItem(splitInfo, transactionDataItem,
@@ -1221,6 +1238,12 @@ function addSharesFromSplitInfo(splitInfo, transactionDataItem) {
         splitDataItem.accountId,
         AH.DefaultSplitAccountType.EQUITY);
 
+    // Validate ESPP buy info now if needed.
+    let esppBuyInfo = esppBuyInfoFromSplitInfo(splitInfo, transactionDataItem);
+    if (esppBuyInfo instanceof Error) {
+        return esppBuyInfo;
+    }
+
     return updateTransactionDataItem(splitInfo, transactionDataItem,
         {
             lotType: T.LotTransactionType.BUY_SELL,
@@ -1229,6 +1252,7 @@ function addSharesFromSplitInfo(splitInfo, transactionDataItem) {
             monetaryAmountAccountId: equityAccountId,
             fees: editStates.fees,
             price: editStates.price,
+            esppBuyInfo: esppBuyInfo,
         });
 }
 
@@ -1862,7 +1886,7 @@ export function getGrantDateColumnInfo(args) {
 function getGrantDateCellValue(args, columnInfoArgs) {
     const splitInfo = getSplitInfo(args, columnInfoArgs);
     if (splitInfo) {
-        if (splitInfo.actionType === LotActionType.BUY) {
+        if (splitInfo.actionType.hasESPPBuyInfo) {
             const { grantYMDDate } = splitInfo.editStates;
             if (grantYMDDate) {
                 return {
@@ -1879,6 +1903,11 @@ function saveGrantDateCellValue(args, columnInfoArgs) {
 
 
 function renderGrantDateEditor(args, columnInfoArgs) {
+    const splitInfo = getSplitInfo(args, columnInfoArgs);
+    if (splitInfo && !splitInfo.actionType.hasESPPBuyInfo) {
+        return;
+    }
+    
     args = Object.assign({}, args, {
         setCellEditBuffer: getDateEditorSetCellEditBuffer(
             'grantYMDDate', args, columnInfoArgs),
@@ -1946,10 +1975,17 @@ export function getPurchaseDateFMVPriceColumnInfo(args) {
 
 function getESPPFMVPriceColumnInfo(args, property) {
     return getQuantityEditorColumnInfo(property, args, 'Monetary',
-        undefined,
+        esppFMVPriceReadOnlyFilter,
         {
             headerClassExtras: 'Price-header',
         });
+}
+
+function esppFMVPriceReadOnlyFilter(args, columnInfoArgs) {
+    const splitInfo = getSplitInfo(args, columnInfoArgs);
+    if (!splitInfo || !splitInfo.actionType.hasESPPBuyInfo) {
+        return true;
+    }
 }
 
 
