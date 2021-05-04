@@ -741,6 +741,7 @@ export class RowTable extends React.Component {
             headerHeight,
             footerHeight,
             rowHeight,
+            rowCount,
         } = this.props;
 
         const { isSizeRender, sizeRenderRefs } = this.state;
@@ -1447,10 +1448,12 @@ export class RowTable extends React.Component {
 
             const ref = (isSizeRender) ? args.rowRef : undefined;
 
-            return <div className = {containerClassName}>
+            return <div className = {containerClassName}
+                style = {style}
+                ref = {ref}
+            >
+                {args.preComponent}
                 <div className = {rowClassName}
-                    style = {style}
-                    ref = {ref}
                 >
                     {cells}
                 </div>
@@ -1469,6 +1472,7 @@ export class RowTable extends React.Component {
             rowIndex: HEADER_ROW_INDEX,
             containerClassName: 'RowTableHeader',
             rowClassName: 'RowTableHeaderRow',
+            preComponent: this.props.preHeaderComponent,
             rowClassExtras: this.props.headerClassExtras,
             height: this.props.headerHeight,
             blockWidth: this.state.headerBlockWidth,
@@ -1650,9 +1654,11 @@ export class RowTable extends React.Component {
 
         const rows = [];
         if (isSizeRender || (topVisibleRow >= 0)) {
-            for (let rowIndex = firstRow; rowIndex <= lastRow; ++rowIndex) {
-                const row = this.renderRow(rowIndex);
-                rows.push(row);
+            if (rowCount > 0) {
+                for (let rowIndex = firstRow; rowIndex <= lastRow; ++rowIndex) {
+                    const row = this.renderRow(rowIndex);
+                    rows.push(row);
+                }
             }
         }
 
@@ -2095,6 +2101,8 @@ RowTable.propTypes = {
     rowHeight: PropTypes.number,
     headerHeight: PropTypes.number,
     footerHeight: PropTypes.number,
+
+    preHeaderComponent: PropTypes.any,
 
     activeRowIndex: PropTypes.number,
     onActivateRow: PropTypes.func,
