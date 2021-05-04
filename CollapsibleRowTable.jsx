@@ -146,7 +146,7 @@ export function renderCollapsibleRowTableAsText(props) {
     let myOnPreRenderRow;
     if (onPreRenderRow) {
         myOnPreRenderRow = (args) => {
-            if (args.rowIndex >= 0) {
+            if ((args.rowIndex >= 0) && (args.rowIndex < newRowEntries.length)) {
                 const rowInfo = newRowEntries[args.rowIndex];
                 args.rowInfo = rowInfo;
                 args.depth = rowInfo.depth;
@@ -385,7 +385,8 @@ export function collapsibleRowTable(WrappedTable) {
 
         onPreRenderRow(args) {
             const { onPreRenderRow } = this.props;
-            if (onPreRenderRow && (args.rowIndex >= 0)) {
+            if (onPreRenderRow && (args.rowIndex >= 0)
+             && (args.rowIndex < this.state.rowEntries.length)) {
                 // Don't copy args, it's writable...
                 const rowEntry = this.state.rowEntries[args.rowIndex];
                 args.rowInfo = rowEntry.rowInfo;
