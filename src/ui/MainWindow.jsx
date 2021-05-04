@@ -1204,12 +1204,26 @@ export class MainWindow extends React.Component {
         const { activeTabId } = this.state;
 
         const masterTabId = this._accountsListHandler.getMasterTabId();
+        const masterNetWorthTabId = masterTabId 
+            + this._accountsListHandler.getNetWorthTabIdSuffix();
+        const masterNetIncomeTabId = masterTabId 
+            + this._accountsListHandler.getNetIncomeTabIdSuffix();
 
         let subMenuItems = [
             { id: 'viewAccountsList', 
                 label: userMsg('MainWindow-viewAccountsList'),
                 checked: activeTabId === masterTabId,
                 onChooseItem: () => this.onActivateTab(masterTabId)
+            },
+            { id: 'viewNetWorth', 
+                label: userMsg('MainWindow-viewNetWorthList'),
+                checked: activeTabId === masterNetWorthTabId,
+                onChooseItem: () => this.onOpenTabId(masterNetWorthTabId)
+            },
+            { id: 'viewNetIncome', 
+                label: userMsg('MainWindow-viewNetIncomeList'),
+                checked: activeTabId === masterNetIncomeTabId,
+                onChooseItem: () => this.onOpenTabId(masterNetIncomeTabId)
             },
             {},
         ];

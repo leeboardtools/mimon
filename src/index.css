@@ -1,84 +1,84 @@
 html,
 body {
-  height: 100%;
+    height: 100%;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  margin: auto;
-  /*max-width: 38rem;*/
-  /*padding: 1rem;*/
-  display: -ms-flexbox;
-  display: flex;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: auto;
+    /*max-width: 38rem;*/
+    /*padding: 1rem;*/
+    display: -ms-flexbox;
+    display: flex;
 }
 
 /* Less margin bottom than Bootstrap */
 label {
-  display: inline-block;
-  margin-bottom: 0.25rem;
+    display: inline-block;
+    margin-bottom: 0.25rem;
 }
 
 
 /* Make this a little darker than Bootstrap's */
 .dropdown-item:hover {
-  background-color: rgba(0,0,0,0.075);
+    background-color: rgba(0,0,0,0.075);
 }
 .Dropdown-item:hover {
-  background-color: rgba(0,0,0,0.075);
+    background-color: rgba(0,0,0,0.075);
 }
 
 
 .Undo-tooltip {
-  position: relative;
-  display: inline-block;
+    position: relative;
+    display: inline-block;
 }
 
 .Undo-tooltip .Undo-tooltip-text {
-  visibility: hidden;
-  width: 200px;
-  background-color: #555;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-  position: absolute;
-  z-index: 1;
-  opacity: 0;
-  transition: opacity 0.3s;
-  top: 100%;
-  right: 0%;
-  margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
+    visibility: hidden;
+    width: 200px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.3s;
+    top: 100%;
+    right: 0%;
+    margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
 }
 
 .Undo-tooltip .Undo-tooltip-text::after {
-  content: "";
-  position: absolute;
-  bottom: 100%;
-  right: 10%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent transparent #555 transparent;
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    right: 10%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #555 transparent;
 }
 
 .Undo-tooltip:hover .Undo-tooltip-text {
-  visibility: visible;
-  opacity: 1;
+    visibility: visible;
+    opacity: 1;
 }
 
 
 
 
 .PageTitle {
-  margin-top: 0.5rem;
+    margin-top: 0.5rem;
 }
 
 
 .RowTableContainer {
-  height: 100%;
-  width: 100%;
-  border-collapse: collapse;
-  overflow: hidden;
+    height: 100%;
+    width: 100%;
+    border-collapse: collapse;
+    overflow: hidden;
 }
 
 
@@ -154,193 +154,204 @@ label {
     text-align: right;
 }
 
+.AccountsList-DateSelectorBar {
+    border-bottom: 1px solid #dee2e6!important;
+}
 
+.AccountsList-DateSelectorField {
+    margin-bottom: 0.5rem;
+}
+
+.DateSelectorBar {
+    margin-left: 0;
+    margin-right: 0;
+}
 
 
 .RowTable-header-base  {
-  /* TEST!!! */
-  /*border: 1px solid #666666;*/
-  flex-grow: 0;
+    /* TEST!!! */
+    /*border: 1px solid #666666;*/
+    flex-grow: 0;
 }
 
 .RowTable-cell-base {
-  /* TEST!!! */
-  /*border: 1px solid #333333;*/
-  flex-grow: 0;
+    /* TEST!!! */
+    /*border: 1px solid #333333;*/
+    flex-grow: 0;
 }
 
 
 .CheckboxCell {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 
 .Date-base {
-  text-align: center;
+    text-align: center;
 }
 
 .Date-cell {
-  flex-basis: 10rem;
+    flex-basis: 10rem;
 }
 
 
 .RefNum-base {
-  text-align: center;
+    text-align: center;
 }
 
 .RefNum-cell {
-  flex-basis: 6rem;
+    flex-basis: 6rem;
 }
 
 
 .Name-base {
-  text-align: left;
+    text-align: left;
 }
 
 .Name-cell {
-  flex-grow: 2;
+    flex-grow: 2;
 }
 
 
 .Description-base {
-  text-align: left;
+    text-align: left;
 }
 
 .Description-cell {
-  flex-grow: 2;
+    flex-grow: 2;
 }
 
 
 .AccountType-base {
-  text-align: left;
+    text-align: left;
 }
 
 .AccountType-cell {
-  flex-grow: 1;
+    flex-grow: 1;
 }
 
 
 .AccountId-base {
-  text-align: left;
+    text-align: left;
 }
 
 .AccountId-cell {
-  flex-grow: 2;
+    flex-grow: 2;
 }
 
 
 .Splits-base {
-  text-align: left;
+    text-align: left;
 }
 
 .Splits-cell {
-  flex-grow: 2;
+    flex-grow: 2;
 }
 
 
 .Reconcile-base {
-  text-align: center;
+    text-align: center;
 }
 
 .Reconcile-cell {
-  flex-basis: 3rem;
+    flex-basis: 3rem;
 }
 
 
 .SplitQuantity-base {
-  text-align: right;
+    text-align: right;
 }
 
 .SplitQuantity-header {
-  text-align: center;
+    text-align: center;
 }
 
 .SplitQuantity-cell {
-  flex-basis: 9rem;
+    flex-basis: 9rem;
 }
 
 
 .ActionType-cell {
-  flex-basis: 14rem;
+    flex-basis: 14rem;
 }
 
 
 .Shares-base {
-  text-align: right;
+    text-align: right;
 }
 
 .Shares-header {
-  text-align: center;
+    text-align: center;
 }
 
 .Shares-cell {
-  flex-basis: 10rem;
+    flex-basis: 10rem;
 }
 
 
 .Monetary-base {
-  text-align: right;
+    text-align: right;
 }
 
 .Monetary-header {
-  text-align: center;
+    text-align: center;
 }
 
 .Monetary-cell {
-  flex-basis: 10rem;
+    flex-basis: 10rem;
 }
 
 .Fees-header {
-  flex-basis: 4rem;
+    flex-basis: 4rem;
 }
 
 .Price-header {
-  flex-grow: 0;
-  flex-basis: 4rem;
+    flex-grow: 0;
+    flex-basis: 4rem;
 }
 
 
 .Percent-base {
-  text-align: right;
+    text-align: right;
 }
 
 .Percent-header {
-  text-align: center;
+    text-align: center;
 }
 
 .Percent-cell {
-  flex-grow: 0;
-  flex-basis: 8rem;
+    flex-grow: 0;
+    flex-basis: 8rem;
 }
 
 
 .PriceItemType-base {
-  text-align: left;
+    text-align: left;
 }
 
 .PriceItemType-cell {
-  flex-grow: 0;
+    flex-grow: 0;
 }
 
 
 
 .Button-input {
-  border-width: 1px;
-  border-radius: 2px;
-  border-color: darkgray;
-  text-align: center;
+    border-width: 1px;
+    border-radius: 2px;
+    border-color: darkgray;
+    text-align: center;
 }
 
 .All_None-button {
-  flex-basis: 5rem;
+    flex-basis: 5rem;
 }
 
 
 .MultiSplitsEditor-table {
-  padding: 1rem;
+    padding: 1rem;
 }
 
 /*
@@ -349,88 +360,88 @@ label {
 */
 
 .PriceRetrieverWindow-retrieveButton {
-  max-width: 12rem;
+    max-width: 12rem;
 }
 
 .PriceRetrieverWindow-dateControl {
-  max-width: 18rem;
+    max-width: 18rem;
 }
 
 .PriceRetrieverWindow-ticker-select-button {
-  margin: 1rem;
-  width: 10rem;
-  vertical-align: middle;
-  justify-items: center;
+    margin: 1rem;
+    width: 10rem;
+    vertical-align: middle;
+    justify-items: center;
 }
 
 
 .TickerSelector {
-  max-height: inherit;
-  height: inherit;
-  overflow: scroll;
+    max-height: inherit;
+    height: inherit;
+    overflow: scroll;
 }
 
 .TickerSelector-item {
-  position: relative;
-  display: block;
-  padding: .75rem 1.25rem;
-  background-color: #fff;
-  border: 1px solid rgba(0, 0, 0, .125);
-  width: 16rem;
-  height: 3rem;
+    position: relative;
+    display: block;
+    padding: .75rem 1.25rem;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, .125);
+    width: 16rem;
+    height: 3rem;
 }
 
 .TickerSelector-item:first-child {
-  border-top-left-radius: 0.25rem;
-  border-top-right-radius: 0.25rem;
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
 }
 
 .TickerSelector-item:last-child {
-  border-bottom-left-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
 }
 
 .TickerSelector-item.active {
-  z-index: 2;
-  /*color: #fff;*/
-  background-color: rgba(0,0,0, 0.075);
-  /*border-color: #007bff77;*/
+    z-index: 2;
+    /*color: #fff;*/
+    background-color: rgba(0,0,0, 0.075);
+    /*border-color: #007bff77;*/
 }
 
 .TickerSelector-item.disabled {
-  color: #6c757d;
-  pointer-events: none;
-  background-color: #fff;
+    color: #6c757d;
+    pointer-events: none;
+    background-color: #fff;
 }
 
 .Ticker-base {
-  text-align: left;
-  left: 1rem;
+    text-align: left;
+    left: 1rem;
 }
 
 
 .ReconcilerWindow-setup_date_editor {
-  text-align: center;
-  width: 12rem;
+    text-align: center;
+    width: 12rem;
 }
 
 .ReconcilerWindow-setup_balance_editor {
-  text-align: right;
-  max-width: 12rem;
+    text-align: right;
+    max-width: 12rem;
 }
 
 
 .ReconcilingWindow-mainContainer {
-  height: 100%;
-  align-content: stretch;
-  justify-content: space-between;
+    height: 100%;
+    align-content: stretch;
+    justify-content: space-between;
 }
 
 
 .ReconcilingWindow-splitInfosContainer {
-  height: 100%;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+    height: 100%;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
 }
 /*
 .ReconcilingWindow-summaryContainer {
@@ -439,165 +450,165 @@ label {
 */
 
 .ReconcileSplitInfosSelector {
-  border: 1px solid #dee2e6;
+    border: 1px solid #dee2e6;
 }
 
 .ReconcilingWindow-splitInfos-title {
-  padding-top: 1rem;
-  padding-bottom: 0.25rem;
-  font-size: larger;
-  font-weight: bold;
+    padding-top: 1rem;
+    padding-bottom: 0.25rem;
+    font-size: larger;
+    font-weight: bold;
 }
 
 .ReconcilingWindow-splitInfos {
-  height: 100%;
-  align-content: stretch;
-  justify-content: space-between;
+    height: 100%;
+    align-content: stretch;
+    justify-content: space-between;
 }
 
 .ReconcilingWindow-splitInfoTotal_value {
-  text-align: right;
-  max-width: 10rem;
+    text-align: right;
+    max-width: 10rem;
 }
 
 .ReconcilingWindow-splitInfos-total {
-  padding-top: 0.5rem;
-  /*padding-right: 1.5rem;*/
-  padding-right: 0rem;
-  padding-bottom: 0.5rem;
+    padding-top: 0.5rem;
+    /*padding-right: 1.5rem;*/
+    padding-right: 0rem;
+    padding-bottom: 0.5rem;
 }
 
 .ReconcilingWindow-summary {
-  padding-right: 0.5rem;
+    padding-right: 0.5rem;
 }
 
 .ReconcilingWindow-summary_row {
-  max-height: 1.5rem;
-  padding-right: 1.5rem;
+    max-height: 1.5rem;
+    padding-right: 1.5rem;
 }
 
 .ReconcilingWindow-summary_label {
-  text-align: right;
+    text-align: right;
 }
 
 .ReconcilingWindow-summary_value {
-  text-align: right;
-  max-width: 10rem;
+    text-align: right;
+    max-width: 10rem;
 }
 
 .ReconcilingWindow-summary_date {
-  text-align: right;
-  max-width: 10rem;
+    text-align: right;
+    max-width: 10rem;
 }
 
 
 
 .ReminderEditor-description {
-  width: 100%;
+    width: 100%;
 }
 
 .ReminderEditor-section_label {
-  text-align: left;
-  font-size: large;
-  font-weight: bold;
-  padding-bottom: 1rem;
+    text-align: left;
+    font-size: large;
+    font-weight: bold;
+    padding-bottom: 1rem;
 }
 
 
 .RemindersList-dueStatus {
-  text-align: center;
+    text-align: center;
 }
 
 .RemindersList-dueStatus_DUE {
-  color: darkred;
+    color: darkred;
 }
 
 .RemindersList-dueStatus_APPLIED {
-  color: darkgreen;
+    color: darkgreen;
 }
 
 .RemindersList-dueStatus_SKIPPED {
-  color: darkblue;
+    color: darkblue;
 }
 
 .RemindersList-dueStatus_PARTIAL {
-  color: orange;
+    color: orange;
 }
 
 
 .RemindersList-checkbox-cell {
-  flex-basis: 5rem;
+    flex-basis: 5rem;
 }
 
 
 .TransactionTemplateEditor-row {
-  width: 100%;
+    width: 100%;
 }
 
 .TransactionTemplateEditor-accountSelector {
-  min-width: 30rem;
+    min-width: 30rem;
 }
 
 /** The width: inherits for both the field and inner editor
 are necessary to max out the width */
 .TransactionTemplateEditor-descriptionField {
-  width: inherit;
+    width: inherit;
 }
 
 .TransactionTemplateEditor-descriptionEditor {
-  width: inherit;
+    width: inherit;
 }
 
 .TransactionTemplateEditor-splitsSelectorField {
-  width: inherit;
+    width: inherit;
 }
 
 .TransactionTemplateEditor-splitsSelector {
-  width: inherit;
+    width: inherit;
 }
 
 .TransactionTemplateEditor-debitCreditEditor {
-  text-align: right;
-  width: inherit;
-  max-width: 10rem;
+    text-align: right;
+    width: inherit;
+    max-width: 10rem;
 }
 
 .TransactionTemplateEditor-secondRow {
-  width: 100%;
+    width: 100%;
 }
 
 
 .Editor-body {
-  text-align: left;
-  padding-left: 1rem;
-  /* The 1.1 right side padding seems to be needed to avoid a horizontal scroll
-  under normal circumstances.*/
-  padding-right: 1.1rem;
-  margin-top: auto;
-  margin-bottom: auto;
+    text-align: left;
+    padding-left: 1rem;
+    /* The 1.1 right side padding seems to be needed to avoid a horizontal scroll
+    under normal circumstances.*/
+    padding-right: 1.1rem;
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 .ModalPage-inner_rows_container {
-  text-align: left;
-  margin: auto;
-  width: 100%;
-  padding: 15px;
+    text-align: left;
+    margin: auto;
+    width: 100%;
+    padding: 15px;
 }
 
 
 .H-inherit {
-  height: inherit;
+    height: inherit;
 }
 
 .W-inherit {
-  width: inherit;
+    width: inherit;
 }
 
 
 .Failed-msg {
-  color: darkred;
+    color: darkred;
 }
 
 .Success-msg {
-  color: darkgreen;
+    color: darkgreen;
 }

@@ -118,15 +118,17 @@ export class AccountsList extends React.Component {
         this.renderAsStringTable = this.renderAsStringTable.bind(this);
 
         const { accessor, collapsedAccountIds } = this.props;
-
-        this.state = {
-            topLevelAccountIds: [
+        let topLevelAccountIds = this.props.topLevelAccountIds 
+            || [
                 accessor.getRootAssetAccountId(),
                 accessor.getRootLiabilityAccountId(),
                 accessor.getRootIncomeAccountId(),
                 accessor.getRootExpenseAccountId(),
                 accessor.getRootEquityAccountId(),
-            ],
+            ];
+
+        this.state = {
+            topLevelAccountIds: topLevelAccountIds,
             rowInfos: [],
             pricesYMDDate: undefined,
             pricesByPricedItemId: new Map(),
@@ -280,6 +282,7 @@ export class AccountsList extends React.Component {
         const { props } = this;
         const { hiddenRootAccountTypes, hiddenAccountIds, 
         } = props;
+        
         let rowsNeedUpdating = false;
         if (!deepEqual(prevProps.hiddenRootAccountTypes, hiddenRootAccountTypes)) {
             this._hiddenRootAccountTypes = new Set(hiddenRootAccountTypes);
@@ -333,6 +336,18 @@ export class AccountsList extends React.Component {
     }
 
 
+    //
+    // Account states need to be updated if:
+    //  - A transaction referring to one of our accounts changes.
+    //      - The actual AccountStates need to be reloaded.
+    //
+    //  - A price referring to one of our priced items changes.
+    //      - Need to call updateRootRowInfoAccountStates()
+    //
+    //  - The date range changes.
+    //      - Need to reload AccountStates, prices.
+    // 
+
 
     onExpandCollapseRow({rowInfo, expandCollapseState}) {
         this.setState((state) => {
@@ -370,7 +385,6 @@ export class AccountsList extends React.Component {
     }
 
 
-    // TODO: Support summary rows...
     buildRowInfos(state) {
         state = state || this.state;
 
@@ -471,6 +485,8 @@ export class AccountsList extends React.Component {
             }
         }
 
+        this.updateRootRowInfoAccountStates(state, rowInfos);
+
         return {
             rowInfos: rowInfos,
             rowInfosByAccountId: rowInfosByAccountId,
@@ -478,43 +494,6 @@ export class AccountsList extends React.Component {
             topLevelRowInfos: topLevelRowInfos,
             groupRowInfos: groupRowInfos,
         };
-    }
-
-
-    addChildAccountIdsToAccountGainsState(args) {
-        let { state, totalAccountGainsState, childAccountIds } = args;
-        const { accessor } = this.props;
-
-        childAccountIds.forEach((accountId) => {
-            if (!this.isAccountIdDisplayed(accountId)) {
-                return;
-            }
-
-            const accountDataItem 
-                = accessor.getAccountDataItemWithId(accountId);
-            const priceDataItem = state.pricesByPricedItemId.get(
-                accountDataItem.pricedItemId);
-
-            const accountState = this.getAccountStateForAccountId(accountId);
-            const accountGainsState = GH.accountStateToAccountGainsState({
-                accessor: accessor,
-                accountId: accountId,
-                accountState: accountState,
-                priceDataItem: priceDataItem,
-                isExcludeFromGain: accountDataItem.isExcludeFromGain,
-                isQuantityShares: A.getAccountType(accountDataItem.type).hasLots,
-            });
-
-            totalAccountGainsState = GH.addAccountGainsState(
-                totalAccountGainsState, accountGainsState
-            );
-
-            if (accountDataItem.childAccountIds) {
-                this.addChildAccountIdsToAccountGainsState(Object.assign({}, args, {
-                    childAccountIds: accountDataItem.childAccountIds
-                }));
-            }
-        });
     }
 
 
@@ -539,19 +518,6 @@ export class AccountsList extends React.Component {
         const key = accountDataItem.id;
         const isCollapsed = this._collapsedRowIds.has(key);
 
-        const priceDataItem = state.pricesByPricedItemId.get(
-            accountDataItem.pricedItemId);
-
-        const accountState = this.getAccountStateForAccountId(accountId);
-        const accountGainsState = GH.accountStateToAccountGainsState({
-            accessor: accessor,
-            accountId: accountId,
-            accountState: accountState,
-            priceDataItem: priceDataItem,
-            isExcludeFromGain: accountDataItem.isExcludeFromGain,
-            isQuantityShares: A.getAccountType(accountDataItem.type).hasLots,
-        });
-
         const rowInfo = {
             key: key,
             expandCollapseState: (childAccountIds && childAccountIds.length)
@@ -563,8 +529,6 @@ export class AccountsList extends React.Component {
             accountDataItem: accountDataItem,
             isHidden: this.props.showHiddenAccounts 
                 && this._hiddenAccountIds.has(accountDataItem.id),
-            accountGainsState: accountGainsState,
-            totalAccountGainsState: accountGainsState,
             groupRowInfoIndex: groupRowInfoIndex,
         };
 
@@ -578,11 +542,7 @@ export class AccountsList extends React.Component {
         if (childAccountIds && childAccountIds.length) {
             const myGroupRowInfoIndex = groupRowInfos.length;
             groupRowInfos.push(rowInfo);
-
-            let { totalAccountGainsState } = rowInfo;
-            totalAccountGainsState = GH.cloneAccountGainsState(totalAccountGainsState);
-            rowInfo.totalAccountGainsState = totalAccountGainsState;
-
+            
             if (!isCollapsed) {
                 // We want to include the market value of this parent
                 // with the children for the percent of parent calculation.
@@ -593,7 +553,7 @@ export class AccountsList extends React.Component {
 
                 rowInfo.childRowInfos = [];
                 childAccountIds.forEach((childId) => {
-                    const childRowInfo = this.addAccountIdToRowEntries({
+                    this.addAccountIdToRowEntries({
                         state: state,
                         rowInfos: rowInfo.childRowInfos, 
                         accountId: childId, 
@@ -603,10 +563,6 @@ export class AccountsList extends React.Component {
                         groupRowInfos: groupRowInfos,
                         groupRowInfoIndex: myGroupRowInfoIndex,
                     });
-                    if (childRowInfo) {
-                        GH.addAccountGainsState(totalAccountGainsState, 
-                            childRowInfo.totalAccountGainsState);
-                    }
                 });
 
                 if (this.props.sortAlphabetically) {
@@ -627,16 +583,6 @@ export class AccountsList extends React.Component {
                     subtotalRowInfo.groupRowInfoIndex = groupRowInfoIndex;
                 }
             }
-            else {
-                // We need to manually add all the account gain states.
-                this.addChildAccountIdsToAccountGainsState({
-                    state: state,
-                    totalAccountGainsState: totalAccountGainsState,
-                    childAccountIds: childAccountIds,
-                });
-                rowInfo.accountGainsState = totalAccountGainsState;
-                rowInfo.subtotalName = accountDataItem.name;
-            }
         }
 
         return rowInfo;
@@ -650,7 +596,6 @@ export class AccountsList extends React.Component {
             key: '_SUBTOTAL_' + subtotalAccountDataItem.id,
             accountId: subtotalAccountDataItem.id,
             subtotalName: subtotalAccountDataItem.name,
-            accountGainsState: rowInfo.totalAccountGainsState,
         };
         childRowInfos.push(subtotalRowInfo);
 
@@ -663,57 +608,14 @@ export class AccountsList extends React.Component {
     }
 
 
-    buildAccountGainsForRootAccount(state, accountId) {
-        const { accessor } = this.props;
-        const accountDataItem = accessor.getAccountDataItemWithId(accountId);
-
-        const priceDataItem = state.pricesByPricedItemId.get(
-            accountDataItem.pricedItemId);
-
-        const accountState = this.getAccountStateForAccountId(accountId);
-        const accountGainsState = GH.accountStateToAccountGainsState({
-            accessor: accessor,
-            accountId: accountId,
-            accountState: accountState,
-            priceDataItem: priceDataItem,
-            isExcludeFromGain: accountDataItem.isExcludeFromGain,
-            isQuantityShares: A.getAccountType(accountDataItem.type).hasLots,
-        });
-
-        this.addChildAccountIdsToAccountGainsState({
-            state: state,
-            totalAccountGainsState: accountGainsState,
-            childAccountIds: accountDataItem.childAccountIds,
-        });
-
-        return accountGainsState;
-    }
-
 
     addRootNetRowInfo({ state, rowInfos, insertAfterRowInfo, 
         plusRootAccountDataItem, minusRootAccountDataItem, name }) {
-        
-        const plusAccountGainsState = this.buildAccountGainsForRootAccount(
-            state, plusRootAccountDataItem.id);
-        const minusAccountGainsState = this.buildAccountGainsForRootAccount(
-            state, minusRootAccountDataItem.id);
-        
-        let accountGainsState = GH.cloneAccountGainsState(plusAccountGainsState);
-        accountGainsState.quantityBaseValue 
-            -= minusAccountGainsState.quantityBaseValue;
-        accountGainsState.marketValueBaseValue 
-            -= minusAccountGainsState.marketValueBaseValue;
-
-        delete accountGainsState.costBasisBaseValue;
-        delete accountGainsState.cashInBaseValue;
-        delete accountGainsState.lotStates;
-        delete accountGainsState.cashInLotStates;
 
         const netRowInfo = {
             key: '_NET_' + name,
-            plusAccountGainsState: plusAccountGainsState,
-            minusAccountGainsState: minusAccountGainsState,
-            accountGainsState: accountGainsState,
+            plusRootAccountId: plusRootAccountDataItem.id,
+            minusRootAccountId: minusRootAccountDataItem.id,
             rootNetName: name,
         };
 
@@ -729,11 +631,167 @@ export class AccountsList extends React.Component {
     }
 
 
+    updateRootRowInfoAccountStates(state, rowInfos) {
+        for (let i = 0; i < rowInfos.length; ++i) {
+            const rowInfo = rowInfos[i];
+            const { key } = rowInfo;
+            if (typeof key === 'string') {
+                if (rowInfo.key.startsWith('_NET_')) {
+                    this.updateRootNetRowInfoAccountStates(state, rowInfo);
+                    continue;
+                }
+            }            
+
+            this.updateRowInfoAccountStates(state, rowInfo);
+        }
+        return rowInfos;
+    }
+
+
+    updateRowInfoAccountStates(state, rowInfo) {
+        const { accountId, accountDataItem } = rowInfo;
+        if (!accountDataItem) {
+            return;
+        }
+
+        const priceDataItem = state.pricesByPricedItemId.get(
+            accountDataItem.pricedItemId);
+
+        const { accessor } = this.props;
+
+        const accountState = this.getAccountStateForAccountId(accountId);
+        const accountGainsState = GH.accountStateToAccountGainsState({
+            accessor: accessor,
+            accountId: accountId,
+            accountState: accountState,
+            priceDataItem: priceDataItem,
+            isExcludeFromGain: accountDataItem.isExcludeFromGain,
+            isQuantityShares: A.getAccountType(accountDataItem.type).hasLots,
+        });
+
+        rowInfo.accountGainsState = accountGainsState;
+        rowInfo.totalAccountGainsState = accountGainsState;
+
+        const { childAccountIds } = accountDataItem;
+        if (childAccountIds && childAccountIds.length) {
+            let { totalAccountGainsState } = rowInfo;
+            totalAccountGainsState = GH.cloneAccountGainsState(totalAccountGainsState);
+            rowInfo.totalAccountGainsState = totalAccountGainsState;
+
+            const { childRowInfos } = rowInfo;
+            if (childRowInfos) {
+                childRowInfos.forEach((childRowInfo) => {
+                    const { key } = childRowInfo;
+                    if (typeof key === 'string') {
+                        if (key.startsWith('_SUBTOTAL_')) {
+                            childRowInfo.accountGainsState = totalAccountGainsState;
+                            return;
+                        }
+                    }
+
+                    this.updateRowInfoAccountStates(state, childRowInfo);
+                    GH.addAccountGainsState(totalAccountGainsState, 
+                        childRowInfo.totalAccountGainsState);
+                });
+            }
+            else {
+                // We need to manually add all the account gain states.
+                this.addChildAccountIdsToAccountGainsState({
+                    state: state,
+                    totalAccountGainsState: totalAccountGainsState,
+                    childAccountIds: childAccountIds,
+                });
+                rowInfo.accountGainsState = totalAccountGainsState;
+                rowInfo.subtotalName = accountDataItem.name;
+            }
+        }
+    }
+
+
+    updateRootNetRowInfoAccountStates(state, rowInfo) {
+        const plusAccountGainsState = this.addAccountToAccountGainsState(
+            state, rowInfo.plusRootAccountId);
+        const minusAccountGainsState = this.addAccountToAccountGainsState(
+            state, rowInfo.minusRootAccountId);
+        
+        let accountGainsState = GH.cloneAccountGainsState(plusAccountGainsState);
+        if (accountGainsState) {
+            accountGainsState.quantityBaseValue 
+                -= minusAccountGainsState.quantityBaseValue;
+            accountGainsState.marketValueBaseValue 
+                -= minusAccountGainsState.marketValueBaseValue;
+
+            delete accountGainsState.costBasisBaseValue;
+            delete accountGainsState.cashInBaseValue;
+            delete accountGainsState.lotStates;
+            delete accountGainsState.cashInLotStates;
+        }
+
+        rowInfo.plusAccountGainsState = plusAccountGainsState;
+        rowInfo.minusAccountGainsState = minusAccountGainsState;
+        rowInfo.accountGainsState = accountGainsState;
+    }
+
+
+    // Called by updateRowInfoAccountStates() when an account is collapsed...
+    // Also called by addAccountToAccountGainsState(), which calls this
+    // for child accounts.
+    addChildAccountIdsToAccountGainsState(args) {
+        let { state, totalAccountGainsState, childAccountIds } = args;
+
+        childAccountIds.forEach((accountId) => {
+            if (!this.isAccountIdDisplayed(accountId)) {
+                return;
+            }
+
+            this.addAccountToAccountGainsState(state, accountId, totalAccountGainsState);
+        });
+    }
+
+
+    // This is called by updateRootNetRowInfoAccountStates(),
+    // addChildAccountIsToAccountGainState()
+    addAccountToAccountGainsState(state, accountId, totalAccountGainsState) {
+        const { accessor } = this.props;
+        const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+
+        const priceDataItem = state.pricesByPricedItemId.get(
+            accountDataItem.pricedItemId);
+
+        const accountState = this.getAccountStateForAccountId(accountId);
+        let accountGainsState = GH.accountStateToAccountGainsState({
+            accessor: accessor,
+            accountId: accountId,
+            accountState: accountState,
+            priceDataItem: priceDataItem,
+            isExcludeFromGain: accountDataItem.isExcludeFromGain,
+            isQuantityShares: A.getAccountType(accountDataItem.type).hasLots,
+        });
+
+        if (totalAccountGainsState) {
+            accountGainsState = GH.addAccountGainsState(
+                totalAccountGainsState, accountGainsState
+            );
+        }
+
+        if (accountDataItem.childAccountIds) {
+            this.addChildAccountIdsToAccountGainsState({
+                state: state,
+                totalAccountGainsState: accountGainsState,
+                childAccountIds: accountDataItem.childAccountIds,
+            });
+        }
+
+        return accountGainsState;
+    }
+
 
     getAccountStateForAccountId(accountId) {
         // Some day support a date...
-        const { accessor } = this.props;
-        return accessor.getCurrentAccountStateDataItem(accountId);
+        const { accessor, startYMDDate, endYMDDate } = this.props;
+        if (!startYMDDate && !endYMDDate) {
+            return accessor.getCurrentAccountStateDataItem(accountId);
+        }
     }
 
 
@@ -1254,6 +1312,8 @@ export class AccountsList extends React.Component {
                 contextMenuItems = {props.contextMenuItems}
                 onChooseContextMenuItem = {props.onChooseContextMenuItem}
 
+                preHeaderComponent = {props.header}
+
                 rowClassExtras = {rowClassExtras}
 
                 id = {props.id}
@@ -1291,11 +1351,17 @@ AccountsList.propTypes = {
     columns: PropTypes.arrayOf(PropTypes.object),
     onSetColumnWidth: PropTypes.func,
     onMoveColumn: PropTypes.func,
+
     hiddenRootAccountTypes: PropTypes.arrayOf(PropTypes.string),
     hiddenAccountIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenAccounts: PropTypes.bool,
     showInactiveAccounts: PropTypes.bool,
     showAccountIds: PropTypes.bool,
+
+    topLevelAccountIds: PropTypes.arrayOf(PropTypes.number),
+
+    startYMDDate: PropTypes.string,
+    endYMDDate: PropTypes.string,
 
     collapsedAccountIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedAccountIds: PropTypes.func,
@@ -1309,6 +1375,7 @@ AccountsList.propTypes = {
     sortAlphabetically: PropTypes.bool,
     showRowBorders: PropTypes.bool,
 
+    header: PropTypes.any,
     children: PropTypes.any,
     id: PropTypes.string,
 };

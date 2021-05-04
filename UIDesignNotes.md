@@ -334,11 +334,12 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Lot selection editor
         - Add context menu to support resetting column widths.
         - Columns for cost-basis, gain, ref number
-        - Add summary info.
         - Figure out what to do about undo/redo and changing column widths.
             - Maybe just get rid of undo/redo support for editor?
             - Or undo/redo support for changing column widths in editor?
             - Or just don't allow column resizing.
+        - Add support for ESPP???
+            - At least determine if qualified or unqualified?
 
 
     - Multi-splits editor
@@ -489,16 +490,6 @@ Column sorting in RowTable:
         - Add mechanism for allocating gains to sell transactions?
             - Or automatic
         
-        - Add ESPP support. 
-            - Would need for buy transactions:
-                - Subscription date FMV
-                - Purchase date FMV
-                - Purchase price
-
-            - On sale allocate proceeds to:
-                - Ordinary income
-                - LT Capital gain
-                - ST Capital gain
     
 
     - Accounts List/Priced Items List
@@ -518,6 +509,25 @@ Column sorting in RowTable:
 
         - Date Range:
             - Will need to redo retrieval of account states since that is async.
+
+        - Date Selector Bar:
+            - Standard options:
+                - Today
+                - Last Month
+                - Last Quarter
+                - Last Year
+        - Date Range Selector Bar:
+            - Standard Options:
+                - End Date:
+                    - Same as Date Selector Bar.
+                - Start Date:
+                    - 1 day
+                    - 1 week
+                    - 1 month
+                    - 30 days
+                    - 1 quarter
+                    - 1 year
+                    - 52 weeks
  
 
         - Export as CSV

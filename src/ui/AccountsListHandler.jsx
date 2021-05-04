@@ -6,6 +6,8 @@ import * as A from '../engine/Accounts';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
 import { TabIdRowTableHandler, updateStateFromProjectSettings } from './RowTableHelpers';
+import { getYMDDate, YMDDate } from '../util/YMDDate';
+import { DateSelectorBar, DateRangeSelectorBar } from './DateSelectorBar';
 
 
 /**
@@ -157,6 +159,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
 
     updateStateFromModifiedProjectSettings(args) {
+        updateStateFromProjectSettings(args, 'showDateSelector');
+
         updateStateFromProjectSettings(args, 'hiddenRootAccountTypes');
         updateStateFromProjectSettings(args, 'hiddenAccountIds');
 
@@ -164,6 +168,9 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         updateStateFromProjectSettings(args, 'showInactiveAccounts');
 
         updateStateFromProjectSettings(args, 'sortAlphabetically');
+
+        updateStateFromProjectSettings(args, 'startYMDDate');
+        updateStateFromProjectSettings(args, 'endYMDDate');
 
         updateStateFromProjectSettings(args, 'collapsedAccountIds');
 
@@ -400,6 +407,39 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onToggleDateSelector(tabId, stateChanges) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, 
+            stateChanges || {
+                showDateSelector: !state.showDateSelector,
+            });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = (newState.showDateSelector)
+            ? 'AccountsListHandler-action_showDateSelector'
+            : 'AccountsListHandler-action_hideDateSelector';
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(state.projectSettingsId,
+            {
+                showDateSelector: newState.showDateSelector,
+            },
+            userMsg(actionNameId));
+    }
+
+
+    onYMDDateChange(tabId, change, actionNameId) {
+        const state = this.getTabIdState(tabId);
+        this.setTabIdState(tabId, change);
+
+        this.setTabIdProjectSettings(state.projectSettingsId,
+            change,
+            userMsg(actionNameId));
+    }
+
+
     onSetSubtotalsLevel(tabId, level) {
         const state = this.getTabIdState(tabId);
         this.setTabIdState(tabId, {
@@ -440,7 +480,31 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         const { renderAsStringTable } = current;
         if (renderAsStringTable) {
-            return renderAsStringTable();
+            const stringTable = renderAsStringTable();
+            if (!stringTable) {
+                return;
+            }
+
+            if (state.showDateSelector) {
+                const { accessor } = this.props;
+                let { startYMDDate, endYMDDate } = state;
+                endYMDDate = getYMDDate(endYMDDate) || new YMDDate();
+
+                let dateLine;
+                if (startYMDDate) {
+                    dateLine = userMsg('AccountsListHandler-dateRange',
+                        accessor.formatDate(startYMDDate),
+                        accessor.formatDate(endYMDDate));
+                }
+                else {
+                    dateLine = userMsg('AccountsListHandler-dateString',
+                        accessor.formatDate(endYMDDate));
+                }
+                
+                stringTable.splice(0, 0, dateLine);
+            }
+
+            return stringTable;
         }
     }
 
@@ -457,7 +521,9 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         const { hiddenRootAccountTypes, hiddenAccountIds, showHiddenAccounts,
             showInactiveAccounts, allColumns, sortAlphabetically,
             subtotalsLevel, showSubtotalsWhenCollapsed,
-            showNetWorth, showNetIncome }
+            showNetWorth, showNetIncome,
+            showDateSelector,
+            allowAsset, allowLiability, allowIncome, allowExpense, allowEquity, }
             = state;
 
         const showAccountLabelId = (hiddenAccountIds.indexOf(activeAccountId) >= 0)
@@ -474,167 +540,195 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 tabId, allColumns);
 
 
-        const menuItems = [
-            { id: 'reconciler',
-                label: userMsg('AccountsListHandler-reconcileAccount'),
-                disabled: !activeAccountDataItem,
-                onChooseItem: () => this.onReconcileAccount(tabId),
-            },
-            { id: 'openAccountRegister',
-                label: userMsg('AccountsListHandler-openAccountRegister'),
-                disabled: !activeAccountDataItem,
-                onChooseItem: () => this.onOpenAccountRegister(tabId),
-            },
-            { id: 'openPricesList',
+        const menuItems = [];
+        menuItems.push({ id: 'reconciler',
+            label: userMsg('AccountsListHandler-reconcileAccount'),
+            disabled: !activeAccountDataItem,
+            onChooseItem: () => this.onReconcileAccount(tabId),
+        });
+        menuItems.push({ id: 'openAccountRegister',
+            label: userMsg('AccountsListHandler-openAccountRegister'),
+            disabled: !activeAccountDataItem,
+            onChooseItem: () => this.onOpenAccountRegister(tabId),
+        });
+
+        if (allowAsset) {
+            menuItems.push({ id: 'openPricesList',
                 label: userMsg('AccountsListHandler-openPricesList'),
                 disabled: !accountType.hasLots,
                 onChooseItem: () => this.onOpenPricesList(tabId),
-            },
-            {},
-            { id: 'newAccount',
+            });
+        }
+
+        menuItems.push({ id: 'toggleDateSelector',
+            label: userMsg('AccountsListHandler-showDateSelector'),
+            checked: showDateSelector,
+            onChooseItem: () => this.onToggleDateSelector(tabId),
+        });
+
+        menuItems.push({});
+
+        if (allowAsset && allowLiability && allowIncome && allowExpense && allowEquity) {
+            menuItems.push({ id: 'newAccount',
                 label: userMsg('AccountsListHandler-newAccount'),
                 onChooseItem: () => this.onNewAccount(tabId),
-            },                        
-            { id: 'modifyAccount',
+            });
+            menuItems.push({ id: 'modifyAccount',
                 label: userMsg('AccountsListHandler-modifyAccount'),
                 disabled: !activeAccountDataItem,
                 onChooseItem: () => this.onModifyAccount(tabId),
-            },                        
-            { id: 'removeAccount',
+            });
+            menuItems.push({ id: 'removeAccount',
                 label: userMsg('AccountsListHandler-removeAccount'),
                 disabled: !activeAccountDataItem,
                 onChooseItem: () => this.onRemoveAccount(tabId),
-            },
+            });
+    
+            menuItems.push({});
+        }
 
-            {},
+        
+        const visibilityMenuItems = [];
+        menuItems.push({ id: 'accountsVisibilitySubMenu',
+            label: userMsg('AccountsListHandler-accountsVisibility_subMenu'),
+            subMenuItems: visibilityMenuItems,
+        });
+        if (allowAsset) {
+            visibilityMenuItems.push({ id: 'viewAssets',
+                label: userMsg('AccountsListHandler-view_assets'),
+                checked: (hiddenRootAccountTypes.indexOf('ASSET') < 0),
+                onChooseItem: () => this.onToggleViewAccountType(
+                    tabId, A.AccountType.ASSET.name),
+            });
+        }
+        if (allowLiability) {
+            visibilityMenuItems.push({ id: 'viewLiabilities',
+                label: userMsg('AccountsListHandler-view_liabilities'),
+                checked: (hiddenRootAccountTypes.indexOf('LIABILITY') < 0),
+                onChooseItem: () => this.onToggleViewAccountType(
+                    tabId, A.AccountType.LIABILITY.name),
+            });
+        }
+        if (allowIncome) {
+            visibilityMenuItems.push({ id: 'viewIncome',
+                label: userMsg('AccountsListHandler-view_income'),
+                checked: (hiddenRootAccountTypes.indexOf('INCOME') < 0),
+                onChooseItem: () => this.onToggleViewAccountType(
+                    tabId, A.AccountType.INCOME.name),
+            });
+        }
+        if (allowExpense) {
+            visibilityMenuItems.push({ id: 'viewExpenses',
+                label: userMsg('AccountsListHandler-view_expenses'),
+                checked: (hiddenRootAccountTypes.indexOf('EXPENSE') < 0),
+                onChooseItem: () => this.onToggleViewAccountType(
+                    tabId, A.AccountType.EXPENSE.name),
+            });
+        }
 
-            { id: 'accountsVisibilitySubMenu',
-                label: userMsg('AccountsListHandler-accountsVisibility_subMenu'),
-                subMenuItems: [
-                    { id: 'viewAssets',
-                        label: userMsg('AccountsListHandler-view_assets'),
-                        checked: (hiddenRootAccountTypes.indexOf('ASSET') < 0),
-                        onChooseItem: () => this.onToggleViewAccountType(
-                            tabId, A.AccountType.ASSET.name),
-                    },
-                    { id: 'viewLiabilities',
-                        label: userMsg('AccountsListHandler-view_liabilities'),
-                        checked: (hiddenRootAccountTypes.indexOf('LIABILITY') < 0),
-                        onChooseItem: () => this.onToggleViewAccountType(
-                            tabId, A.AccountType.LIABILITY.name),
-                    },
-                    { id: 'viewIncome',
-                        label: userMsg('AccountsListHandler-view_income'),
-                        checked: (hiddenRootAccountTypes.indexOf('INCOME') < 0),
-                        onChooseItem: () => this.onToggleViewAccountType(
-                            tabId, A.AccountType.INCOME.name),
-                    },
-                    { id: 'viewExpenses',
-                        label: userMsg('AccountsListHandler-view_expenses'),
-                        checked: (hiddenRootAccountTypes.indexOf('EXPENSE') < 0),
-                        onChooseItem: () => this.onToggleViewAccountType(
-                            tabId, A.AccountType.EXPENSE.name),
-                    },
-                    { id: 'viewEquity',
-                        label: userMsg('AccountsListHandler-view_equity'),
-                        checked: (hiddenRootAccountTypes.indexOf('EQUITY') < 0),
-                        onChooseItem: () => this.onToggleViewAccountType(
-                            tabId, A.AccountType.EQUITY.name),
-                    },
-                    {},
-                    { id: 'toggleAccountVisible',
-                        label: userMsg(showAccountLabelId),
-                        disabled: !activeAccountDataItem,
-                        onChooseItem: () => this.onToggleAccountVisible(
-                            tabId, activeAccountId),
-                    },
-                    { id: 'toggleShowHiddenAccounts',
-                        label: userMsg('AccountsListHandler-showHiddenAccounts'),
-                        checked: showHiddenAccounts,
-                        onChooseItem: () => this.onToggleShowHiddenAccounts(
-                            tabId),
-                    },
-                    {},
-                    { id: 'toggleShowInactiveAccounts',
-                        label: userMsg('AccountsListHandler-showInactiveAccounts'),
-                        checked: showInactiveAccounts,
-                        onChooseItem: () => this.onToggleShowInactiveAccounts(
-                            tabId),
-                    },
-                    {},
-                    { id: 'toggleDisplayAlphabetically',
-                        label: userMsg('AccountsListHandler-displayAlphabetically'),
-                        checked: sortAlphabetically,
-                        onChooseItem: () => this.onToggleSortAlphabetically(
-                            tabId),
-                    }
-                ],
-            },
+        if (allowEquity) {
+            visibilityMenuItems.push({ id: 'viewEquity',
+                label: userMsg('AccountsListHandler-view_equity'),
+                checked: (hiddenRootAccountTypes.indexOf('EQUITY') < 0),
+                onChooseItem: () => this.onToggleViewAccountType(
+                    tabId, A.AccountType.EQUITY.name),
+            });
+        }
 
-            { id: 'subtotalsSubMenu',
-                label: userMsg('AccountsListHandler-subtotals_subMenu'),
-                subMenuItems: [
-                    { id: 'toggleShowSubtotalsWhenCollapsed',
-                        label: userMsg('AccountsListHandler-subtotalsWhenCollapsed'),
-                        checked: showSubtotalsWhenCollapsed,
-                        onChooseItem: () => this.onToggleShowSubtotalsWhenCollapsed(
-                            tabId),
-                    },
-                    { id: 'toggleShowNetWorth',
-                        label: userMsg('AccountsListHandler-showNetWorth'),
-                        checked: showNetWorth,
-                        // TODO: disable if both root asset and root liability 
-                        // accounts are not displayed.
-                        onChooseItem: () => this.onToggleShowNetWorth(
-                            tabId),
-                    },
-                    { id: 'toggleShowNetIncome',
-                        label: userMsg('AccountsListHandler-showNetIncome'),
-                        checked: showNetIncome,
-                        // TODO: disable if both root income and root expense
-                        // accounts are not displayed.
-                        onChooseItem: () => this.onToggleShowNetIncome(
-                            tabId),
-                    },
-                    {},
-                    { id: 'displaySubtotalsForNone',
-                        label: userMsg('AccountsListHandler-subtotals_none'),
-                        checked: subtotalsLevel <= 0,
-                        onChooseItem: () => this.onSetSubtotalsLevel(tabId, 0),
-                    },
-                    { id: 'displaySubtotalsForAll',
-                        label: userMsg('AccountsListHandler-subtotals_all'),
-                        checked: (subtotalsLevel === Number.MAX_VALUE),
-                        onChooseItem: () => 
-                            this.onSetSubtotalsLevel(tabId, Number.MAX_VALUE),
-                    },
-                    { id: 'displaySubtotalsForTopLevel',
-                        label: userMsg('AccountsListHandler-subtotals_1'),
-                        checked: (subtotalsLevel === 1),
-                        onChooseItem: () => this.onSetSubtotalsLevel(tabId, 1),
-                    },
-                    { id: 'displaySubtotalsForLevel2',
-                        label: userMsg('AccountsListHandler-subtotals_2'),
-                        checked: (subtotalsLevel === 2),
-                        onChooseItem: () => this.onSetSubtotalsLevel(tabId, 2),
-                    },
-                    { id: 'displaySubtotalsForLevel3',
-                        label: userMsg('AccountsListHandler-subtotals_3'),
-                        checked: (subtotalsLevel === 3),
-                        onChooseItem: () => this.onSetSubtotalsLevel(tabId, 3),
-                    },
-                ],
-            },
-            
-            { id: 'columnsSubMenu',
-                label: userMsg('AccountsListHandler-columns_subMenu'),
-                subMenuItems: toggleColumnsSubMenuItems,
-            },
+        visibilityMenuItems.push({});
+        visibilityMenuItems.push({ id: 'toggleAccountVisible',
+            label: userMsg(showAccountLabelId),
+            disabled: !activeAccountDataItem,
+            onChooseItem: () => this.onToggleAccountVisible(
+                tabId, activeAccountId),
+        });
+        visibilityMenuItems.push({ id: 'toggleShowHiddenAccounts',
+            label: userMsg('AccountsListHandler-showHiddenAccounts'),
+            checked: showHiddenAccounts,
+            onChooseItem: () => this.onToggleShowHiddenAccounts(
+                tabId),
+        });
+        visibilityMenuItems.push({});
+        visibilityMenuItems.push({ id: 'toggleShowInactiveAccounts',
+            label: userMsg('AccountsListHandler-showInactiveAccounts'),
+            checked: showInactiveAccounts,
+            onChooseItem: () => this.onToggleShowInactiveAccounts(
+                tabId),
+        });
+        visibilityMenuItems.push({});
+        visibilityMenuItems.push({ id: 'toggleDisplayAlphabetically',
+            label: userMsg('AccountsListHandler-displayAlphabetically'),
+            checked: sortAlphabetically,
+            onChooseItem: () => this.onToggleSortAlphabetically(
+                tabId),
+        });
 
-            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state),
-            this._rowTableHandler.createResetColumnOrderMenuItem(tabId, state),
-            this._rowTableHandler.createToggleRowBordersMenuItem(tabId, state),
-        ];
+        const subtotalsMenuItem = [];
+        menuItems.push({ id: 'subtotalsSubMenu',
+            label: userMsg('AccountsListHandler-subtotals_subMenu'),
+            subMenuItems: subtotalsMenuItem,
+        });
+        subtotalsMenuItem.push({ id: 'toggleShowSubtotalsWhenCollapsed',
+            label: userMsg('AccountsListHandler-subtotalsWhenCollapsed'),
+            checked: showSubtotalsWhenCollapsed,
+            onChooseItem: () => this.onToggleShowSubtotalsWhenCollapsed(
+                tabId),
+        });
+        if (allowAsset || allowLiability) {
+            subtotalsMenuItem.push({ id: 'toggleShowNetWorth',
+                label: userMsg('AccountsListHandler-showNetWorth'),
+                checked: showNetWorth,
+                onChooseItem: () => this.onToggleShowNetWorth(
+                    tabId),
+            });
+        }
+        if (allowIncome || allowExpense) {
+            subtotalsMenuItem.push({ id: 'toggleShowNetIncome',
+                label: userMsg('AccountsListHandler-showNetIncome'),
+                checked: showNetIncome,
+                onChooseItem: () => this.onToggleShowNetIncome(
+                    tabId),
+            });
+        }
+        subtotalsMenuItem.push({});
+        subtotalsMenuItem.push({ id: 'displaySubtotalsForNone',
+            label: userMsg('AccountsListHandler-subtotals_none'),
+            checked: subtotalsLevel <= 0,
+            onChooseItem: () => this.onSetSubtotalsLevel(tabId, 0),
+        });
+        subtotalsMenuItem.push({ id: 'displaySubtotalsForAll',
+            label: userMsg('AccountsListHandler-subtotals_all'),
+            checked: (subtotalsLevel === Number.MAX_VALUE),
+            onChooseItem: () => 
+                this.onSetSubtotalsLevel(tabId, Number.MAX_VALUE),
+        });
+        subtotalsMenuItem.push({ id: 'displaySubtotalsForTopLevel',
+            label: userMsg('AccountsListHandler-subtotals_1'),
+            checked: (subtotalsLevel === 1),
+            onChooseItem: () => this.onSetSubtotalsLevel(tabId, 1),
+        });
+        subtotalsMenuItem.push({ id: 'displaySubtotalsForLevel2',
+            label: userMsg('AccountsListHandler-subtotals_2'),
+            checked: (subtotalsLevel === 2),
+            onChooseItem: () => this.onSetSubtotalsLevel(tabId, 2),
+        });
+        subtotalsMenuItem.push({ id: 'displaySubtotalsForLevel3',
+            label: userMsg('AccountsListHandler-subtotals_3'),
+            checked: (subtotalsLevel === 3),
+            onChooseItem: () => this.onSetSubtotalsLevel(tabId, 3),
+        });
+
+        menuItems.push({ id: 'columnsSubMenu',
+            label: userMsg('AccountsListHandler-columns_subMenu'),
+            subMenuItems: toggleColumnsSubMenuItems,
+        });
+
+        menuItems.push(this._rowTableHandler.createResetColumnWidthsMenuItem(
+            tabId, state));
+        menuItems.push(this._rowTableHandler.createResetColumnOrderMenuItem(
+            tabId, state));
+        menuItems.push(this._rowTableHandler.createToggleRowBordersMenuItem(
+            tabId, state));
 
         return {
             items: menuItems,
@@ -670,6 +764,14 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         return 'accountsList-';
     }
 
+    getNetWorthTabIdSuffix() {
+        return '-netWorth';
+    }
+
+    getNetIncomeTabIdSuffix() {
+        return '-netIncome';
+    }
+
 
     /**
      * Called by {@link MainWindow} to create the {@link TabbedPages~TabEntry}
@@ -680,10 +782,13 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     createTabEntry(tabId) {
         const projectSettingsId = tabId;
         let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
-        const title = (tabId === 'accountsList')
+        let title = (tabId === 'accountsList')
             ? userMsg('AccountsListHandler-masterAccountList_title')
             : settings.title;
         const allColumns = createDefaultColumns();
+        const showDateSelector = (settings.showDateSelector === undefined)
+            ? false
+            : settings.showDateSelector;
         const showRowBorders = (settings.showRowBorders === undefined)
             ? true
             : settings.showRowBorders;
@@ -699,16 +804,77 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             = (settings.showSubtotalsWhenCollapsed === undefined)
                 ? true
                 : settings.showSubtotalsWhenCollapsed;
-        const showNetWorth = (settings.showNetWorth === undefined)
+        let showNetWorth = (settings.showNetWorth === undefined)
             ? true
             : settings.showNetWorth;
-        const showNetIncome = (settings.showNetIncome === undefined)
+        let showNetIncome = (settings.showNetIncome === undefined)
             ? true
             : settings.showNetIncome;
         const subtotalsLevel = (settings.subtotalsLevel === undefined)
             ? 3
             : settings.subtotalsLevel;
         const subtotalAccountIds = settings.subtotalAccountIds || [];
+
+        let topLevelAccountIds = settings.topLevelAccountIds;
+        if (!topLevelAccountIds) {
+            const { accessor } = this.props;
+            if (tabId.endsWith(this.getNetWorthTabIdSuffix())) {
+                topLevelAccountIds = [
+                    accessor.getRootAssetAccountId(),
+                    accessor.getRootLiabilityAccountId(),
+                ];
+                if (!title) {
+                    title = userMsg('AccountsListHandler-masterNetWorthList_title');
+                }
+
+                showNetIncome = false;
+            }
+            else if (tabId.endsWith(this.getNetIncomeTabIdSuffix())) {
+                topLevelAccountIds = [
+                    accessor.getRootIncomeAccountId(),
+                    accessor.getRootExpenseAccountId(),
+                ];
+                if (!title) {
+                    title = userMsg('AccountsListHandler-masterNetIncomeList_title');
+                }
+
+                showNetWorth = false;
+            }
+        }
+
+
+        let allowAsset;
+        let allowLiability;
+        let allowIncome;
+        let allowExpense;
+        let allowEquity;
+        if (topLevelAccountIds) {
+            const { accessor } = this.props;
+            topLevelAccountIds.forEach((accountId) => {
+                if (accountId === accessor.getRootAssetAccountId()) {
+                    allowAsset = true;
+                }
+                else if (accountId === accessor.getRootLiabilityAccountId()) {
+                    allowLiability = true;
+                }
+                else if (accountId === accessor.getRootIncomeAccountId()) {
+                    allowIncome = true;
+                }
+                else if (accountId === accessor.getRootExpenseAccountId()) {
+                    allowExpense = true;
+                }
+                else if (accountId === accessor.getRootEquityAccountId()) {
+                    allowEquity = true;
+                }
+            });
+        }
+        else {
+            allowAsset = true;
+            allowLiability = true;
+            allowIncome = true;
+            allowExpense = true;
+            allowEquity = true;
+        }
 
         const tabEntry = {
             tabId: tabId,
@@ -720,6 +886,18 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             hiddenAccountIds: hiddenAccountIds,
             showHiddenAccounts: showHiddenAccounts,
             showInactiveAccounts: showInactiveAccounts,
+
+            topLevelAccountIds: topLevelAccountIds,
+            allowAsset: allowAsset,
+            allowLiability: allowLiability,
+            allowIncome: allowIncome,
+            allowExpense: allowExpense,
+            allowEquity: allowEquity,
+
+            startYMDDate: settings.startYMDDate,
+            endYMDDate: settings.endYMDDate,
+            showDateSelector: showDateSelector,
+
             collapsedAccountIds: collapsedAccountIds,
             sortAlphabetically: sortAlphabetically,
             showSubtotalsWhenCollapsed: showSubtotalsWhenCollapsed,
@@ -752,19 +930,81 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     onRenderTabPage(tabEntry, isActive) {
         const { accessor } = this.props;
 
-        const state = this.getTabIdState(tabEntry.tabId);
-        const { dropdownInfo, collapsedAccountIds } = state;
+        const { tabId } = tabEntry;
+
+        const state = this.getTabIdState(tabId);
+        const { dropdownInfo, collapsedAccountIds, showDateSelector } = state;
+        
         let contextMenuItems;
         if (dropdownInfo) {
             contextMenuItems = dropdownInfo.items;
         }
 
+        let dateSelector;
+        if (showDateSelector) {
+            if (tabEntry.allowAsset || tabEntry.allowLiability) {
+                dateSelector = <DateSelectorBar
+                    classExtras = "AccountsList-DateSelectorBar"
+                    fieldClassExtras = "AccountsList-DateSelectorField"
+                    label = {userMsg('AccountsListHandler-as_of_date_label')}
+                    ymdDate = {tabEntry.endYMDDate}
+                    onYMDDateChange = {(ymdDate) => this.onYMDDateChange(tabId, 
+                        {
+                            startYMDDate: undefined,
+                            endYMDDate: ymdDate,
+                        },
+                        'AccountsListHandler-action_as_of_date')}
+                    clearButtonLabel 
+                        = {userMsg('AccountsListHandler-today_button_label')}
+
+                    dateFormat = {accessor.getDateFormat()}
+                    onClose = {() => this.onToggleDateSelector(tabId, {
+                        showDateSelector: false,
+                    })}
+                />;
+            }
+            else {
+                dateSelector = <DateRangeSelectorBar
+                    classExtras = "AccountsList-DateSelectorBar"
+                    dateFormat = {accessor.getDateFormat()}
+
+                    startLabel = {userMsg('AccountsListHandler-from_date_label')}
+                    startYMDDate = {tabEntry.startYMDDate}
+                    onStartYMDDateChange = {(ymdDate) => this.onYMDDateChange(tabId, 
+                        {
+                            startYMDDate: ymdDate,
+                        },
+                        'AccountsListHandler-action_from_date')}
+                    clearStartButtonLabel 
+                        = {userMsg('AccountsListHandler-earliest_button_label')}
+                    startClearPlaceholderText
+                        = {userMsg('AccountsListHandler-earliest_placeholder')}
+
+                    endLabel = {userMsg('AccountsListHandler-to_date_label')}
+                    endYMDDate = {tabEntry.endYMDDate}
+                    onEndYMDDateChange = {(ymdDate) => this.onYMDDateChange(tabId, 
+                        {
+                            endYMDDate: ymdDate,
+                        },
+                        'AccountsListHandler-action_to_date')}
+                    clearEndButtonLabel
+                        = {userMsg('AccountsListHandler-latest_button_label')}
+                    endClearPlaceholderText
+                        = {userMsg('AccountsListHandler-latest_placeholder')}
+
+                    onClose = {() => this.onToggleDateSelector(tabId, {
+                        showDateSelector: false,
+                    })}
+                />;
+            }
+        }
+
         return <AccountsList
             accessor = {accessor}
             onSelectAccount = {(accountId) => 
-                this.onSelectAccount(tabEntry.tabId, accountId)}
+                this.onSelectAccount(tabId, accountId)}
             onChooseAccount = {(accountId) => 
-                this.onChooseAccount(tabEntry.tabId, accountId)}
+                this.onChooseAccount(tabId, accountId)}
             columns = {tabEntry.columns}
             hiddenRootAccountTypes = {tabEntry.hiddenRootAccountTypes}
             hiddenAccountIds = {tabEntry.hiddenAccountIds}
@@ -772,9 +1012,13 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             showInactiveAccounts = {tabEntry.showInactiveAccounts}
             sortAlphabetically = {tabEntry.sortAlphabetically}
 
+            topLevelAccountIds = {tabEntry.topLevelAccountIds}
+            startYMDDate = {tabEntry.startYMDDate}
+            endYMDDate = {tabEntry.endYMDDate}
+
             collapsedAccountIds = {collapsedAccountIds}
             onUpdateCollapsedAccountIds = {(args) =>
-                this.onUpdateCollapsedAccountIds(tabEntry.tabId, args)}
+                this.onUpdateCollapsedAccountIds(tabId, args)}
 
             showSubtotalsWhenCollapsed = {tabEntry.showSubtotalsWhenCollapsed}
             showNetWorth = {tabEntry.showNetWorth}
@@ -785,14 +1029,16 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
             showRowBorders = {tabEntry.showRowBorders}
             onSetColumnWidth = {(args) =>
-                this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)}
+                this._rowTableHandler.onSetColumnWidth(tabId, args)}
             onMoveColumn = {(args) =>
-                this._rowTableHandler.onMoveColumn(tabEntry.tabId, args)}
+                this._rowTableHandler.onMoveColumn(tabId, args)}
             contextMenuItems = {contextMenuItems}
+
+            header = {dateSelector}
 
             ref = {tabEntry.pageRef}
 
-            id = {tabEntry.tabId}
+            id = {tabId}
         />;
     }
 }

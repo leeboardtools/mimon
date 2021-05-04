@@ -2,7 +2,7 @@ import { userMsg } from '../util/UserMessages';
 
 
 /**
- * Generates a unique tabId   a given base.
+ * Generates a unique tabId for a given base.
  * @param {string} tabIdBase The base for the tabId
  * @param {string[]} tabIdsInUse Array of tabIds in use.
  * @returns {string} A tabId of the form tabIdBase + index

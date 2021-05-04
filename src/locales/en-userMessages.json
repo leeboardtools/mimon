@@ -17,6 +17,8 @@
 
     "MainWindow-accountsListSubMenu": "Account Lists",
     "MainWindow-viewAccountsList": "Master Accounts List",
+    "MainWindow-viewNetWorthList": "Net Worth",
+    "MainWindow-viewNetIncomeList": "Net Income",
 
     "MainWindow-CURRENCY_ListSubMenu": "Currencies Lists",
     "MainWindow-view_CURRENCY_List": "Master Currency List",
@@ -160,6 +162,9 @@
     "AccountsList-percentOfAccountGroup_column_label": "% of Account Group",
 
     "AccountsListHandler-masterAccountList_title": "Accounts",
+    "AccountsListHandler-masterNetWorthList_title": "Net Worth",
+    "AccountsListHandler-masterNetIncomeList_title": "Net Income",
+
     "AccountsListHandler-reconcileAccount": "Reconcile Account",
     "AccountsListHandler-openAccountRegister": "Open Account Register",
     "AccountsListHandler-openPricesList": "Open Prices",
@@ -178,6 +183,7 @@
     "AccountsListHandler-showHiddenAccounts": "Show Hidden Accounts",
     "AccountsListHandler-showInactiveAccounts": "Show Inactive Accounts",
     "AccountsListHandler-displayAlphabetically": "Display Alphabetically",
+    "AccountsListHandler-showDateSelector": "Show Date Selector",
 
     "AccountsListHandler-subtotals_subMenu": "Subtotals",
     "AccountsListHandler-subtotalsWhenCollapsed": "Show Subtotals for Collapsed Accounts",
@@ -212,6 +218,8 @@
     "AccountsListHandler-prompt_remove_priced_item_with_dependees": 
         ["", " '", "' has one or more accounts that refer to it.\nDeleting it will delete those accounts. Continue?"],
     
+    "AccountsListHandler-action_showDateSelector": "Show Date Selector",
+    "AccountsListHandler-action_hideDateSelector": "Hide Date Selector",
     "AccountsListHandler-action_showAccountType": ["Show ", " Accounts"],
     "AccountsListHandler-action_hideAccountType": ["Hide ", " Accounts"],
     "AccountsListHandler-action_showAccount": ["Show ", ""],
@@ -238,6 +246,20 @@
     "AccountsListHandler-action_subtotals_3": "Subtotal 3 Levels",
     "AccountsListHandler-action_showAccountSubtotals": ["Show Subtotals for ", ""],
     "AccountsListHandler-action_hideAccountSubtotals": ["Hide Subtotals for ", ""],
+    "AccountsListHandler-action_as_of_date": "As-Of Date Change",
+    "AccountsListHandler-action_from_date": "From Date Change",
+    "AccountsListHandler-action_to_date": "To Date Change",
+
+    "AccountsListHandler-dateRangeString": ["From ", " to ", ""],
+    "AccountsListHandler-dateString": ["Date: ", ""],
+    "AccountsListHandler-as_of_date_label": "As of: ",
+    "AccountsListHandler-from_date_label": "From: ",
+    "AccountsListHandler-to_date_label": " Until:",
+    "AccountsListHandler-earliest_button_label": "Use Earliest",
+    "AccountsListHandler-latest_button_label": "Use Latest",
+    "AccountsListHandler-today_button_label": "Today",
+    "AccountsListHandler-earliest_placeholder": "Earliest",
+    "AccountsListHandler-latest_placeholder": "Latest",
 
 
     "AccountEditorHandler-newAccount_title": "New Account",

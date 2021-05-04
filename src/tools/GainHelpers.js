@@ -188,6 +188,10 @@ export function accountStateToAccountGainsState(args) {
  */
 // KEEP!
 export function cloneAccountGainsState(accountGainsState) {
+    if (!accountGainsState) {
+        return;
+    }
+    
     const toAccountGainsState = AS.getAccountStateDataItem(accountGainsState, true);
     if (accountGainsState.lotStates) {
         toAccountGainsState.lotStates 
