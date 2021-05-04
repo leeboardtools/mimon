@@ -100,7 +100,7 @@ export const CellDateEditor = React.forwardRef(
     function CellDateEditorImpl(props, ref) {
         const { ariaLabel, inputClassExtras, errorMsg,
             onChange, onFocus, onBlur, disabled, size,
-            tabIndex,
+            tabIndex, placeholderText,
             dateFormat, locale } = props;
 
         const divClassName = '';
@@ -112,12 +112,19 @@ export const CellDateEditor = React.forwardRef(
         });
 
         let { value } = props;
-        value = value || new YMDDate();
-        const valueDate = getYMDDate(value).toLocalDate();
+        if (placeholderText === undefined) {
+            value = value || new YMDDate();
+        }
+        const valueDate = (value) 
+            ? getYMDDate(value).toLocalDate()
+            : '';
 
         let datePicker = <DatePicker
             className = {className}
             selected = {valueDate}
+            placeholderText = {placeholderText}
+            minDate = {props.minDate}
+            maxDate = {props.maxDate}
             onChange = {(e) => {
                 const newDate = new Date(e);
                 onChange(YMDDate.fromLocalDate(newDate).toString());
@@ -176,6 +183,9 @@ export const CellDateEditor = React.forwardRef(
  * @typedef {object} CellDateEditor~propTypes
  * @property {string}   [ariaLabel]
  * @property {string}   [value]
+ * @property {string}   [minDate]
+ * @property {string}   [maxDate]
+ * @property {string}   [placeholderText]
  * @property {string}   [inputClassExtras]  If specified additional CSS
  * classes to add to the &lt;input&gt; entity.
  * @property {string}   [errorMsg]  If specified an error message to be displayed
@@ -192,6 +202,9 @@ export const CellDateEditor = React.forwardRef(
 CellDateEditor.propTypes = {
     ariaLabel: PropTypes.string,
     value: PropTypes.string,
+    minDate: PropTypes.string,
+    maxDate: PropTypes.string,
+    placeholderText: PropTypes.string,
     inputClassExtras: PropTypes.string,
     size: PropTypes.number,
     errorMsg: PropTypes.string,

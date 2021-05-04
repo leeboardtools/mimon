@@ -11,6 +11,7 @@ import { CellDateEditor } from './CellDateEditor';
 export const DateField = React.forwardRef(
     function DateFieldImpl(props, ref) {
         const { inputClassExtras, ariaLabel, value, errorMsg,
+            minDate, maxDate, placeholderText,
             onChange, onFocus, onBlur,
             disabled, dateFormat, locale, tabIndex,
             ...passThroughProps } = props;
@@ -25,6 +26,9 @@ export const DateField = React.forwardRef(
                         + (inputClassName || '')}
                     aria-label = {ariaLabel}
                     value = {value || ''}
+                    minDate = {minDate}
+                    maxDate = {maxDate}
+                    placeholderText = {placeholderText}
                     errorMsg = {errorMsg}
                     onChange = {onChange}
                     onFocus = {onFocus}
@@ -48,6 +52,8 @@ export const DateField = React.forwardRef(
  * @property {string}   [ariaLabel]
  * @property {string}   [label]
  * @property {string}   [value]
+ * @property {string}   [minDate]
+ * @property {string}   [maxDate]
  * @property {string}   [fieldClassExtras] If specified additional CSS
  * classes to add to the outer field container.
  * @property {string}   [inputClassExtras]  If specified additional CSS
@@ -70,6 +76,9 @@ DateField.propTypes = {
     id: PropTypes.string,
     ariaLabel: PropTypes.string,
     value: PropTypes.string,
+    minDate: PropTypes.string,
+    maxDate: PropTypes.string,
+    placeholderText: PropTypes.string,
     inputClassExtras: PropTypes.string,
     size: PropTypes.number,
     errorMsg: PropTypes.string,
