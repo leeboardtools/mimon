@@ -1186,9 +1186,14 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * Retrieves the date range of prices available for a priced item.
-     * @param {number} pricedItemId 
-     * @returns {YMDDate[]|undefined}   An array containing the oldest and newest 
-     * price dates, or <code>undefined</code> if there are no prices.
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
+     * @returns {YMDDate[]|undefined|[]}   An array containing the oldest and newest 
+     * price dates, or <code>undefined</code> if there are no prices. If pricedItemId
+     * is an array of priced item ids this is an array of YMDDate arrays or 
+     * <code>undefined</code>s.
      */
     async asyncGetPriceDateRange(pricedItemId) {
         return this._priceManager.asyncGetPriceDateRange(pricedItemId);
@@ -1196,11 +1201,27 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * Retrieves the prices for a priced item within a date range.
-     * @param {number} pricedItemId 
+     * <p>
+     * If the first argument is a 
+     * {@link PriceManager~asyncGetPriceDataItemsInDateRangeArgs} the remaining
+     * arguments are ignored.
+     * The prices returned are raw prices unless the first argument is a
+     * {@link PriceManager~asyncGetPriceDataItemsInDateRangeArgs} and has the
+     * refYMDDate property specified.
+     * @param {number|PriceManager~asyncGetPriceDataItemsInDateRangeArgs|number[]}
+     *      pricedItemId This may also be an array of priced item ids, in which case
+     * the return will be an array whose elements correspond to what would be
+     * the result of the individual priced item id being passed to this function.
      * @param {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
+     * If pricedItemId is an array this may also be an array whose elements are
+     * one or two element sub-arrays, where the first element would be the ymdDateA
+     * and the second element would be the ymdDateB for that priced item id.
+     * If not an array then the same ymdDateA and ymdDateB values are used for
+     * all the priced item ids.
      * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
-     * range, inclusive.
-     * @returns {PriceDataItem[]}   Array containing the prices within the date range.
+     * range, inclusive. Not used if ymdDateA is an array.
+     * @returns {PriceDataItem[]}   Array containing the prices within the date range,
+     * an array of arrays if an array of priced item ids is passed in.
      */
     async asyncGetPriceDataItemsInDateRange(pricedItemId, ymdDateA, ymdDateB) {
         return this._priceManager.asyncGetPriceDataItemsInDateRange(pricedItemId, 
@@ -1211,9 +1232,22 @@ export class EngineAccessor extends EventEmitter {
     /**
      * Retrieves the price data item for a priced item that is on or closest to 
      * but before a particular date.
-     * @param {number} pricedItemId 
+     * <p>
+     * If the first argument is a 
+     * {@link PriceManager~asyncGetPriceDataItemOnOrClosestArgs} the remaining
+     * arguments are ignored.
+     * The prices returned are raw prices unless the first argument is a
+     * {@link PriceManager~asyncGetPriceDataItemOnOrClosestArgs} and has the
+     * refYMDDate property specified.
+     * @param {number|PriceManager~asyncGetPriceDataItemOnOrClosestArgs} pricedItemId 
+     * This may also be an array of priced item ids, in which case an array is
+     * returned whose elements correspond to what the results would be for each 
+     * priced item.
      * @param {YMDDate|string} ymdDate 
-     * @returns {PriceDataItem|undefined}
+     * @returns {PriceDataItem|undefined|PriceDataItem[]} The price data item,
+     * <code>undefined</code> if there is none,
+     * an array of price data items and/or <code>undefined</code>s if an array 
+     * of priced item ids is passed in.
      */
     async asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
         return this._priceManager.asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, 
@@ -1224,9 +1258,21 @@ export class EngineAccessor extends EventEmitter {
     /**
      * Retrieves the price data item for a priced item that is on or closest to 
      * but after a particular date.
-     * @param {number} pricedItemId 
+     * If the first argument is a 
+     * {@link PriceManager~asyncGetPriceDataItemOnOrClosestArgs} the remaining
+     * arguments are ignored.
+     * The prices returned are raw prices unless the first argument is a
+     * {@link PriceManager~asyncGetPriceDataItemOnOrClosestArgs} and has the
+     * refYMDDate property specified.
+     * @param {number|PriceManager~asyncGetPriceDataItemOnOrClosestArgs} pricedItemId 
+     * This may also be an array of priced item ids, in which case an array is
+     * returned whose elements correspond to what the results would be for each 
+     * priced item.
      * @param {YMDDate|string} ymdDate 
-     * @returns {PriceDataItem|undefined}
+     * @returns {PriceDataItem|undefined|PriceDataItem[]} The price data item,
+     * <code>undefined</code> if there is none,
+     * an array of price data items and/or <code>undefined</code>s if an array 
+     * of priced item ids is passed in.
      */
     async asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
         return this._priceManager.asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, 
@@ -1236,9 +1282,14 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * Retrieves the date range of price multipliers available for a priced item.
-     * @param {number} pricedItemId 
-     * @returns {YMDDate[]|undefined}   An array containing the oldest and newest 
-     * price multiplier dates, or <code>undefined</code> if there are no prices.
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
+     * @returns {YMDDate[]|undefined|[]}   An array containing the oldest and newest 
+     * price multiplier dates, or <code>undefined</code> if there are no prices. 
+     * If pricedItemId is an array of priced item ids this is an array of YMDDate 
+     * arrays or <code>undefined</code>s.
      */
     async asyncGetPriceMultiplierDateRange(pricedItemId) {
         return this._priceManager.asyncGetPriceMultiplierDateRange(pricedItemId);
@@ -1247,12 +1298,21 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * Retrieves the price multipliers for a priced item within a date range.
-     * @param {number} pricedItemId 
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
      * @param {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
+     * If pricedItemId is an array this may also be an array whose elements are
+     * one or two element sub-arrays, where the first element would be the ymdDateA
+     * and the second element would be the ymdDateB for that priced item id.
+     * If not an array then the same ymdDateA and ymdDateB values are used for
+     * all the priced item ids.
      * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
-     * range, inclusive.
+     * range, inclusive. Not used if ymdDateA is an array.
      * @returns {PriceMultiplierDataItem[]}   Array containing the prices within 
-     * the date range.
+     * the date range. If pricedItemId is an array of priced item ids this is an array
+     * of the price arrays for each priced item id.
      */
     async asyncGetPriceMultiplierDataItemsInDateRange(pricedItemId, ymdDateA, ymdDateB) {
         return this._priceManager.asyncGetPriceMultiplierDataItemsInDateRange(
@@ -1263,9 +1323,13 @@ export class EngineAccessor extends EventEmitter {
     /**
      * Retrieves the price multiplier data item for a priced item that is on or 
      * closest to but before a particular date.
-     * @param {number} pricedItemId 
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
      * @param {YMDDate|string} ymdDate 
-     * @returns {PriceMultiplierDataItem|undefined}
+     * @returns {PriceMultiplierDataItem|undefined} If pricedItemId is an array
+     * this is an array whose elements correspond the result for each priced item id.
      */
     async asyncGetPriceMultiplierDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
         return this._priceManager.asyncGetPriceMultiplierDataItemOnOrClosestBefore(
@@ -1276,9 +1340,13 @@ export class EngineAccessor extends EventEmitter {
     /**
      * Retrieves the price multiplier data item for a priced item that is on or 
      * closest to but after a particular date.
-     * @param {number} pricedItemId 
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
      * @param {YMDDate|string} ymdDate 
-     * @returns {PriceMultiplierDataItem|undefined}
+     * @returns {PriceMultiplierDataItem|undefined} If pricedItemId is an array
+     * this is an array whose elements correspond the result for each priced item id.
      */
     async asyncGetPriceMultiplierDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
         return this._priceManager.asyncGetPriceMultiplierDataItemOnOrClosestAfter(
@@ -1296,12 +1364,17 @@ export class EngineAccessor extends EventEmitter {
      * The prices returned are raw prices unless the first argument is a
      * {@link PriceManager~asyncGetPriceDataItemsInDateRangeArgs} and has the
      * refYMDDate property specified.
-     * @param {number|PriceManager~asyncGetPriceDataItemsInDateRangeArgs} pricedItemId 
+     * @param {number|PriceManager~asyncGetPriceDataItemsInDateRangeArgs|number[]}
+     *      pricedItemId This may also be an array of priced item ids, in which case
+     * the return will be an array whose elements correspond to what would be
+     * the result of the individual priced item id being passed to this function.
      * @param {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
      * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
      * range, inclusive.
      * @returns {PriceDataItem[]}   Array containing both the prices and the 
      * multipliers within the date range, sorted from oldest to newest date.
+     * If pricedItemId is an array this is an array whose elements correspond
+     * to the results for the individual priced item ids.
      */
     async asyncGetPriceAndMultiplierDataItemsInDateRange(
         pricedItemId, ymdDateA, ymdDateB) {

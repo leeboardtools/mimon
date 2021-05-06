@@ -176,7 +176,9 @@ test('Prices-InMemoryPricesHandler PriceMultipliers', async () => {
     expect(await handler.asyncGetPriceMultiplierDataItemsInDateRange(1)).toEqual([]);
 
 
-    const refA = [{ ymdDate: '2018-03-04', sharesIn: 1, sharesOut: 2, }];
+    const refA = [
+        { ymdDate: '2018-03-04', sharesIn: 1, sharesOut: 2, },
+    ];
     const multipliersA = await handler.asyncAddPriceDataItems(1, [], refA);
     expect(multipliersA.newPriceMultiplierDataItems).toEqual(refA);
 
@@ -199,18 +201,22 @@ test('Prices-InMemoryPricesHandler PriceMultipliers', async () => {
 
     result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
         new YMDDate('2018-03-03'));
+    result = P.getPriceMultiplierDataItem(result);
     expect(result).toBeUndefined();
 
     result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
         new YMDDate('2018-03-04'));
+    result = P.getPriceMultiplierDataItem(result);
     expect(result).toEqual(refA[0]);
 
     result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
         new YMDDate('2018-03-05'));
+    result = P.getPriceMultiplierDataItem(result);
     expect(result).toBeUndefined();
 
     result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
         new YMDDate('2018-03-04'));
+    result = P.getPriceMultiplierDataItem(result);
     expect(result).toEqual(refA[0]);
 
 
@@ -250,6 +256,19 @@ test('Prices-InMemoryPricesHandler PriceMultipliers', async () => {
         new YMDDate('2018-11-22'),
     ]);
 
+    // Multiple priced item ids
+    expect(await handler.asyncGetPriceMultiplierDateRange([2, 1])).toEqual([
+        [
+            new YMDDate('2018-10-11'),
+            new YMDDate('2018-11-22'),
+        ],
+        [
+            new YMDDate('2018-03-04'),
+            new YMDDate('2018-12-21'),
+        ],
+    ]);
+
+
     result = await handler.asyncGetPriceMultiplierDataItemsInDateRange(2,
         new YMDDate('2018-03-04'),
         new YMDDate('2018-12-21'));
@@ -257,6 +276,21 @@ test('Prices-InMemoryPricesHandler PriceMultipliers', async () => {
     expect(result).toEqual(
         expect.arrayContaining(refD_2)
     );
+
+
+    result = await handler.asyncGetPriceMultiplierDataItemsInDateRange([1, 2],
+        new YMDDate('2018-03-02'),
+        new YMDDate('2018-10-11'));
+    expect(result.length).toEqual(2);
+    expect(result).toEqual([
+        [
+            { ymdDate: '2018-03-04', sharesIn: 4, sharesOut: 5, },
+            { ymdDate: '2018-10-11', sharesIn: 2, sharesOut: 3, },
+        ],
+        [
+            { ymdDate: '2018-10-11', sharesIn: 7, sharesOut: 8, },
+        ],
+    ]);
 
 
     // Now have:
@@ -286,39 +320,48 @@ test('Prices-InMemoryPricesHandler PriceMultipliers', async () => {
 
     result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
         new YMDDate('2018-03-03'));
+    result = P.getPriceMultiplierDataItem(result);
     expect(result).toBeUndefined();
 
     result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
         new YMDDate('2018-03-04'));
+    result = P.getPriceMultiplierDataItem(result);
     expect(result).toEqual(refC[0]);
 
     result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
         new YMDDate('2018-10-10'));
+    result = P.getPriceMultiplierDataItem(result);
     expect(result).toEqual(refC[0]);
 
     result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(1,
         new YMDDate('2018-10-11'));
+    result = P.getPriceMultiplierDataItem(result);
     expect(result).toEqual(refB[0]);
 
 
     result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
         new YMDDate('2018-12-22'));
+    result = P.getPriceMultiplierDataItem(result);
     expect(result).toBeUndefined();
 
     result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
         new YMDDate('2018-12-21'));
+    result = P.getPriceMultiplierDataItem(result);
     expect(result).toEqual(refC[1]);
 
     result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
         new YMDDate('2018-12-20'));
+    result = P.getPriceMultiplierDataItem(result);
     expect(result).toEqual(refC[1]);
 
     result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
         new YMDDate('2018-11-23'));
+    result = P.getPriceMultiplierDataItem(result);
     expect(result).toEqual(refC[1]);
 
     result = await handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(1,
         new YMDDate('2018-11-22'));
+    result = P.getPriceMultiplierDataItem(result);
     expect(result).toEqual(refB[1]);
 
 
@@ -445,7 +488,8 @@ test('PriceManager', async () => {
     expect(removeEventArg.removedPriceDataItems).toEqual(
         expect.arrayContaining(pricesB));
 
-    expect(await manager.asyncGetPriceDataItemsInDateRange('2018-12-21', '2018-12-24'))
+    expect(await manager.asyncGetPriceDataItemsInDateRange(1, 
+        '2018-12-21', '2018-12-24'))
         .toEqual([]);
 
     await manager.asyncAddPrices(1, priceDataItemsB);
@@ -498,6 +542,7 @@ test('PriceManager', async () => {
         { ymdDate: '2018-01-24', close: 124.45 },
         { ymdDate: '2018-01-25', close: 125.45 },
         { ymdDate: '2018-01-26', close: 126.45 },
+        { ymdDate: '2018-12-30', close: 90.00 },
     ];
     expect((await manager.asyncAddPrices(2, priceDataItemsE2)).newPriceDataItems)
         .toEqual(priceDataItemsE2);
@@ -578,12 +623,83 @@ test('PriceManager', async () => {
     //  { ymdDate: '2018-12-21', close: 87.65 },
     //  { ymdDate: '2018-12-23', close: 98.76 },
     //  { ymdDate: '2018-12-24', close: 76.54 },
+    //  { ymdDate: '2018-12-30', close: 90.00 },
     expect(await manager.asyncGetPriceDataItemsInDateRange(2, 
         '2018-01-26', '2018-12-21')).toEqual([
         { ymdDate: '2018-01-26', close: 126.45 },
         { ymdDate: '2018-12-21', close: 87.65 },
     ]);
 
+
+    // Multiple priced items...
+    expect(await manager.asyncGetPriceDateRange(2))
+        .toEqual([ new YMDDate('2018-01-23'), new YMDDate('2018-12-30')]);
+    expect(await manager.asyncGetPriceDateRange([1, 2]))
+        .toEqual([
+            [ new YMDDate('2017-04-05'), new YMDDate('2018-12-24')],
+            [ new YMDDate('2018-01-23'), new YMDDate('2018-12-30')],
+        ]);
+    
+    result = await manager.asyncGetPriceDataItemsInDateRange([2, 1],
+        '2018-12-24', '2018-04-07');
+    expect(result).toEqual([
+        [
+            { ymdDate: '2018-12-21', close: 87.65 },
+            { ymdDate: '2018-12-23', close: 98.76 },
+            { ymdDate: '2018-12-24', close: 76.54 },
+        ],
+        [
+            { ymdDate: '2018-04-07', close: 91.19, open: 89.91, },
+            { ymdDate: '2018-12-21', close: 123.45 },
+            { ymdDate: '2018-12-23', close: 1234.56 },
+            { ymdDate: '2018-12-24', close: 123.32},
+        ],
+    ]);
+
+
+    // Different date ranges...
+    result = await manager.asyncGetPriceDataItemsInDateRange(
+        [1, 2],
+        [
+            ['2018-04-05', '2018-04-07'],
+            ['2018-12-23', '2018-11-30'],
+        ],
+    );
+    expect(result).toEqual([
+        [
+            { ymdDate: '2018-04-05', close: 89.98, open: 98.89, },
+            { ymdDate: '2018-04-06', close: 91.09, open: 89.98, },
+            { ymdDate: '2018-04-07', close: 91.19, open: 89.91, },            
+        ],
+        [
+            { ymdDate: '2018-12-21', close: 87.65 },
+            { ymdDate: '2018-12-23', close: 98.76 },
+        ],
+    ]);
+
+
+    result = await manager.asyncGetPriceDataItemOnOrClosestBefore(
+        [1, 2],
+        '2018-04-07');
+    expect(result).toEqual([
+        { ymdDate: '2018-04-07', close: 91.19, open: 89.91, },
+        { ymdDate: '2018-01-26', close: 126.45 },
+    ]);
+
+    result = await manager.asyncGetPriceDataItemOnOrClosestAfter([1, 2],
+        '2018-04-08');
+    expect(result).toEqual([
+        { ymdDate: '2018-12-21', close: 123.45 },
+        { ymdDate: '2018-12-21', close: 87.65 },
+    ]);
+
+    result = await manager.asyncGetPriceDataItemOnOrClosestAfter([1, 2],
+        '2018-12-30');
+    expect(result).toEqual([
+        undefined,
+        { ymdDate: '2018-12-30', close: 90.00 },
+    ]);
+        
 
     // Delete:
     result = await manager.asyncRemovePricesInDateRange(1, '2018-12-23'); 
@@ -634,7 +750,7 @@ test('PriceManager', async () => {
         .removedPriceDataItems).toEqual([]);
 
     expect(await manager.asyncGetPriceDateRange(2))
-        .toEqual([new YMDDate('2018-01-25'), new YMDDate('2018-12-23')]);
+        .toEqual([new YMDDate('2018-01-25'), new YMDDate('2018-12-30')]);
 
 
     //
@@ -844,6 +960,98 @@ test('PriceManager-PriceMultipliers', async () => {
     ]);
 
 
+    const split2_2_1_2014_06_08 = {
+        ymdDate: '2014-06-08', newCount: 2, oldCount: 1,
+    };
+    const split2_1_4_2016_01_31 = {
+        ymdDate: '2016-01-31', newCount: 1, oldCount: 4,
+    };
+    const prices2_A = [
+        { ymdDate: '2014-06-07', close: 10 * 2 / 4, },
+
+        // 2 for 1 split...
+        split2_2_1_2014_06_08,
+        { ymdDate: '2014-06-09', close: 20 / 4, },
+        { ymdDate: '2016-01-30', close: 40 / 4, },
+
+        // 1 for 4 merge...
+        split2_1_4_2016_01_31,
+        { ymdDate: '2016-02-01', close: 10, },
+    ];
+    result = await manager.asyncAddPrices(2, prices2_A);
+
+    //
+    // Multiple priced item ids...
+    expect(await manager.asyncGetPriceMultiplierDataItemsInDateRange(2,
+        '2014-06-08', '2016-01-31')).toEqual([
+        split2_2_1_2014_06_08,
+        split2_1_4_2016_01_31,
+    ]);
+    
+    expect(await manager.asyncGetPriceMultiplierDataItemsInDateRange(
+        [2, 1],
+        '2014-06-08', '2016-01-31'))
+        .toEqual([
+            [
+                split2_2_1_2014_06_08,
+                split2_1_4_2016_01_31,
+            ],
+            [
+                split_7_1_2014_06_09,
+            ],
+        ]);
+
+
+    // Multiple date ranges
+    expect(await manager.asyncGetPriceMultiplierDataItemsInDateRange(
+        [1, 2],
+        [
+            ['2020-01-20', '2020-12-31'],
+            ['2014-06-08'],
+        ]))
+        .toEqual([
+            [
+                split_4_1_2020_08_31,
+            ],
+            [
+                split2_2_1_2014_06_08,
+            ],
+        ]);
+
+
+    result = await manager.asyncGetPriceMultiplierDataItemOnOrClosestBefore(
+        [1, 2],
+        '2014-06-08');
+    expect(result).toEqual([
+        split_2_1_2005_02_28,
+        split2_2_1_2014_06_08,
+    ]);
+
+    result = await manager.asyncGetPriceMultiplierDataItemOnOrClosestBefore(
+        [1, 2],
+        '2014-06-09');
+    expect(result).toEqual([
+        split_7_1_2014_06_09,
+        split2_2_1_2014_06_08,
+    ]);
+
+
+    result = await manager.asyncGetPriceMultiplierDataItemOnOrClosestAfter(
+        [1, 2],
+        '2014-06-08');
+    expect(result).toEqual([
+        split_7_1_2014_06_09,
+        split2_2_1_2014_06_08,
+    ]);
+
+    result = await manager.asyncGetPriceMultiplierDataItemOnOrClosestAfter(
+        [1, 2],
+        '2014-06-09');
+    expect(result).toEqual([
+        split_7_1_2014_06_09,
+        split2_1_4_2016_01_31,
+    ]);
+
 
     //
     // Test price adjustments...
@@ -982,6 +1190,70 @@ test('PriceManager-PriceMultipliers', async () => {
         { ymdDate: '2014-06-06', close: round(23.06 * 7 * 4), },
         { ymdDate: '2014-06-09', close: round(23.42 * 4), },
         { ymdDate: '2020-08-31', close: round(129.04), },
+    ]);
+
+
+    /*
+    For priced item #2 we have:
+        { ymdDate: '2014-06-07', close: 10 * 2 / 4, },
+
+        // 2 for 1 split...
+        split2_2_1_2014_06_08,
+        { ymdDate: '2014-06-09', close: 20 / 4, },
+        { ymdDate: '2016-01-30', close: 40 / 4, },
+
+        // 1 for 4 merge...
+        split2_1_4_2016_01_31,
+        { ymdDate: '2016-02-01', close: 10, },
+    */
+
+    result = await manager.asyncAdjustPriceDataItems(2,
+        [
+            { ymdDate: '2014-06-07', close: 10 * 2 / 4, },
+            { ymdDate: '2014-06-09', close: 20 / 4, },
+            { ymdDate: '2016-02-01', close: 10, },
+        ],
+        '2014-06-09');
+    expect(result).toEqual([
+        { ymdDate: '2014-06-07', close: 10 / 4, },
+        { ymdDate: '2014-06-09', close: 20 / 4, },
+        { ymdDate: '2016-02-01', close: 10 / 4, },
+    ]);
+
+
+    // Check multiple priced item ids.
+    result = await manager.asyncAdjustPriceDataItems([1, 2],
+        [
+            [
+                { ymdDate: '2005-02-25', close: 1.59 * 2 * 7 * 4, },
+                { ymdDate: '2005-02-28', close: 1.60 * 7 * 4, },
+                { ymdDate: '2014-06-06', close: 23.06 * 7 * 4, },
+                { ymdDate: '2014-06-09', close: 23.42 * 4, },
+                { ymdDate: '2020-08-31', close: 129.04, },
+            ],
+            [
+                { ymdDate: '2014-06-07', close: 10 * 2 / 4, },
+                { ymdDate: '2014-06-09', close: 20 / 4, },
+                { ymdDate: '2016-02-01', close: 10, },
+            ],
+        ],
+        [
+            '2020-08-30',
+            '2014-06-09',
+        ]);
+    expect(result).toEqual([
+        [
+            { ymdDate: '2005-02-25', close: round(1.59 * 4), },
+            { ymdDate: '2005-02-28', close: round(1.60 * 4), },
+            { ymdDate: '2014-06-06', close: round(23.06 * 4), },
+            { ymdDate: '2014-06-09', close: round(23.42 * 4), },
+            { ymdDate: '2020-08-31', close: round(129.04 * 4), },
+        ],
+        [
+            { ymdDate: '2014-06-07', close: 10 / 4, },
+            { ymdDate: '2014-06-09', close: 20 / 4, },
+            { ymdDate: '2016-02-01', close: 10 / 4, },
+        ],
     ]);
 
 

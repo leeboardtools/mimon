@@ -197,6 +197,15 @@ export function isMultiplier(item) {
 }
 
 
+
+function resolveDateRange(ymdDateA, ymdDateB) {
+    ymdDateA = (ymdDateA !== undefined) ? getYMDDate(ymdDateA) : ymdDateA;
+    ymdDateB = (ymdDateB !== undefined) ? getYMDDate(ymdDateB) : ymdDateB;
+    return YMDDate.orderYMDDatePair(ymdDateA, ymdDateB);
+}
+
+
+
 /**
  * Manages {@link Price}s.
  */
@@ -227,12 +236,6 @@ export class PriceManager extends EventEmitter {
     }
 
     getAccountingSystem() { return this._accountingSystem; }
-
-    _resolveDateRange(ymdDateA, ymdDateB) {
-        ymdDateA = (ymdDateA !== undefined) ? getYMDDate(ymdDateA) : ymdDateA;
-        ymdDateB = (ymdDateB !== undefined) ? getYMDDate(ymdDateB) : ymdDateB;
-        return YMDDate.orderYMDDatePair(ymdDateA, ymdDateB);
-    }
 
 
     /**
@@ -273,9 +276,14 @@ export class PriceManager extends EventEmitter {
 
     /**
      * Retrieves the date range of prices available for a priced item.
-     * @param {number} pricedItemId 
-     * @returns {YMDDate[]|undefined}   An array containing the oldest and newest 
-     * price dates, or <code>undefined</code> if there are no prices.
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
+     * @returns {YMDDate[]|undefined|[]}   An array containing the oldest and newest 
+     * price dates, or <code>undefined</code> if there are no prices. If pricedItemId
+     * is an array of priced item ids this is an array of YMDDate arrays or 
+     * <code>undefined</code>s.
      */
     async asyncGetPriceDateRange(pricedItemId) {
         return this._handler.asyncGetPriceDateRange(pricedItemId);
@@ -300,14 +308,23 @@ export class PriceManager extends EventEmitter {
      * The prices returned are raw prices unless the first argument is a
      * {@link PriceManager~asyncGetPriceDataItemsInDateRangeArgs} and has the
      * refYMDDate property specified.
-     * @param {number|PriceManager~asyncGetPriceDataItemsInDateRangeArgs} pricedItemId 
+     * @param {number|PriceManager~asyncGetPriceDataItemsInDateRangeArgs|number[]}
+     *      pricedItemId This may also be an array of priced item ids, in which case
+     * the return will be an array whose elements correspond to what would be
+     * the result of the individual priced item id being passed to this function.
      * @param {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
+     * If pricedItemId is an array this may also be an array whose elements are
+     * one or two element sub-arrays, where the first element would be the ymdDateA
+     * and the second element would be the ymdDateB for that priced item id.
+     * If not an array then the same ymdDateA and ymdDateB values are used for
+     * all the priced item ids.
      * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
-     * range, inclusive.
-     * @returns {PriceDataItem[]}   Array containing the prices within the date range.
+     * range, inclusive. Not used if ymdDateA is an array.
+     * @returns {PriceDataItem[]}   Array containing the prices within the date range,
+     * an array of arrays if an array of priced item ids is passed in.
      */
     async asyncGetPriceDataItemsInDateRange(pricedItemId, ymdDateA, ymdDateB) {
-        if (typeof pricedItemId === 'object') {
+        if (!Array.isArray(pricedItemId) && (typeof pricedItemId === 'object')) {
             const args = pricedItemId;
             pricedItemId = args.pricedItemId;
             ymdDateA = args.ymdDateA;
@@ -323,10 +340,21 @@ export class PriceManager extends EventEmitter {
             return result;
         }
 
-        [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
+        if (!Array.isArray(ymdDateA)) {
+            [ymdDateA, ymdDateB] = resolveDateRange(ymdDateA, ymdDateB);
+        }
+
+        const pricedItemIds = Array.isArray(pricedItemId)
+            ? pricedItemId
+            : [pricedItemId];
         const result = await this._handler.asyncGetPriceDataItemsInDateRange(
-            pricedItemId, ymdDateA, ymdDateB);
-        return result.map((price) => getPriceDataItem(price, true));
+            pricedItemIds, ymdDateA, ymdDateB);
+        
+        const finalResult = result.map((itemResult) => 
+            itemResult.map((price) => getPriceDataItem(price, true)));
+        return (pricedItemIds === pricedItemId)
+            ? finalResult
+            : finalResult[0];
     }
 
 
@@ -349,11 +377,17 @@ export class PriceManager extends EventEmitter {
      * {@link PriceManager~asyncGetPriceDataItemOnOrClosestArgs} and has the
      * refYMDDate property specified.
      * @param {number|PriceManager~asyncGetPriceDataItemOnOrClosestArgs} pricedItemId 
+     * This may also be an array of priced item ids, in which case an array is
+     * returned whose elements correspond to what the results would be for each 
+     * priced item.
      * @param {YMDDate|string} ymdDate 
-     * @returns {PriceDataItem|undefined}
+     * @returns {PriceDataItem|undefined|PriceDataItem[]} The price data item,
+     * <code>undefined</code> if there is none,
+     * an array of price data items and/or <code>undefined</code>s if an array 
+     * of priced item ids is passed in.
      */
     async asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
-        if (typeof pricedItemId === 'object') {
+        if (!Array.isArray(pricedItemId) && (typeof pricedItemId === 'object')) {
             const args = pricedItemId;
             pricedItemId = args.pricedItemId;
             ymdDate = args.ymdDate;
@@ -367,9 +401,21 @@ export class PriceManager extends EventEmitter {
             }
             return result;
         }
+        
         ymdDate = getYMDDate(ymdDate);
-        return this._handler.asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, 
+
+        const pricedItemIds = Array.isArray(pricedItemId)
+            ? pricedItemId
+            : [pricedItemId];
+        const result = await this._handler.asyncGetPriceDataItemOnOrClosestBefore(
+            pricedItemIds, 
             ymdDate);
+
+        const finalResult = result.map((itemResult) =>
+            getPriceDataItem(itemResult, true));
+        return (pricedItemId === pricedItemIds)
+            ? finalResult
+            : finalResult[0];
     }
 
 
@@ -384,11 +430,17 @@ export class PriceManager extends EventEmitter {
      * {@link PriceManager~asyncGetPriceDataItemOnOrClosestArgs} and has the
      * refYMDDate property specified.
      * @param {number|PriceManager~asyncGetPriceDataItemOnOrClosestArgs} pricedItemId 
+     * This may also be an array of priced item ids, in which case an array is
+     * returned whose elements correspond to what the results would be for each 
+     * priced item.
      * @param {YMDDate|string} ymdDate 
-     * @returns {PriceDataItem|undefined}
+     * @returns {PriceDataItem|undefined|PriceDataItem[]} The price data item,
+     * <code>undefined</code> if there is none,
+     * an array of price data items and/or <code>undefined</code>s if an array 
+     * of priced item ids is passed in.
      */
     async asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
-        if (typeof pricedItemId === 'object') {
+        if (!Array.isArray(pricedItemId) && (typeof pricedItemId === 'object')) {
             const args = pricedItemId;
             pricedItemId = args.pricedItemId;
             ymdDate = args.ymdDate;
@@ -404,8 +456,19 @@ export class PriceManager extends EventEmitter {
         }
 
         ymdDate = getYMDDate(ymdDate);
-        return this._handler.asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, 
+
+        const pricedItemIds = Array.isArray(pricedItemId)
+            ? pricedItemId
+            : [pricedItemId];
+        const result = await this._handler.asyncGetPriceDataItemOnOrClosestAfter(
+            pricedItemIds, 
             ymdDate);
+
+        const finalResult = result.map((itemResult) =>
+            getPriceDataItem(itemResult, true));
+        return (pricedItemId === pricedItemIds)
+            ? finalResult
+            : finalResult[0];
     }
 
 
@@ -414,52 +477,87 @@ export class PriceManager extends EventEmitter {
      * on a given date.
      * <p>
      * If priceDataItems is an array, it will be sorted in place.
-     * @param {number} pricedItemId 
-     * @param {PriceDataItem|PriceDataItem[]} priceDataItems 
-     * @param {YMDDate|string} refYMDDate 
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which  If the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function. If this is an array then
+     * priceDataItems should also be an array, and refYMDDate may optionally be an 
+     * array.
+     * @param {PriceDataItem|PriceDataItem[]} priceDataItems If pricedItemId is an
+     * array of ids this should be an array whose elements correspond to what would
+     * be the pricedDataItems argument if the function were called with the individual
+     * priced item id.
+     * @param {YMDDate|string} refYMDDate If pricedItemId this may also be an array
+     * whose elements correspond to the reference date for the individual priced item
+     * ids.
      * @param {boolean} [isReverse=false] If <code>true</code>, the prices in 
      * priceDataItems are in terms of the pricing on refYMDDate, and are converted to
      * the price relative to the date of the individual prices.
-     * @returns {PriceDataItem|PriceDataItem[]}
+     * @returns {PriceDataItem|PriceDataItem[]} If pricedItemId is an array this is
+     * an array whose elements correspond to what would be returned for the 
+     * individual priced item ids.
      */
     async asyncAdjustPriceDataItems(pricedItemId, priceDataItems, refYMDDate, isReverse) {
         if (!priceDataItems || !refYMDDate) {
             return priceDataItems;
         }
 
-        const originalPriceDataItems = priceDataItems;
-        if (!Array.isArray(priceDataItems)) {
-            priceDataItems = [priceDataItems];
-        }
-        else if (!priceDataItems.length) {
-            return priceDataItems;
-        }
 
-
-        const priceMultiplierDateRange = await this.asyncGetPriceMultiplierDateRange(
-            pricedItemId
-        );
-        if (!priceMultiplierDateRange) {
-            // No multipliers...
-            return originalPriceDataItems;
+        let pricedItemIds;
+        let itemIdPriceDataItems;
+        if (Array.isArray(pricedItemId)) {
+            pricedItemIds = pricedItemId;
+            itemIdPriceDataItems = priceDataItems;
+        }
+        else {
+            pricedItemIds = [pricedItemId];
+            itemIdPriceDataItems = [priceDataItems];
         }
 
-        
-        const allPriceMultipliers 
+        const itemIdPriceMultiplierDateRanges
+            = await this.asyncGetPriceMultiplierDateRange(
+                pricedItemIds
+            );
+
+        const itemIdAllPriceMultipliers 
             = await this.asyncGetPriceMultiplierDataItemsInDateRange(
-                pricedItemId,
-                priceMultiplierDateRange[0], priceMultiplierDateRange[1]);
-        if (!allPriceMultipliers.length) {
-            return originalPriceDataItems;
+                pricedItemIds,
+                itemIdPriceMultiplierDateRanges);
+
+
+        const result = [];
+
+        for (let i = 0; i < pricedItemIds.length; ++i) {
+            const originalPriceDataItems = itemIdPriceDataItems[i];
+            result[i] = originalPriceDataItems;
+
+            let priceDataItems = originalPriceDataItems;
+            if (!Array.isArray(priceDataItems)) {
+                priceDataItems = [priceDataItems];
+            }
+            else if (!priceDataItems.length) {
+                continue;
+            }
+
+            const allPriceMultipliers = itemIdAllPriceMultipliers[i];
+            if (!allPriceMultipliers || !allPriceMultipliers.length) {
+                continue;
+            }
+
+            const ymdDate = Array.isArray(refYMDDate)
+                ? refYMDDate[i]
+                : refYMDDate;
+            this._adjustPriceDataItems(pricedItemIds[i], priceDataItems,
+                allPriceMultipliers, ymdDate, isReverse);
+
+            result[i] = Array.isArray(originalPriceDataItems)
+                ? priceDataItems
+                : priceDataItems[0];
         }
 
-        this._adjustPriceDataItems(pricedItemId, priceDataItems,
-            allPriceMultipliers, refYMDDate, isReverse);
-
-        if (!Array.isArray(originalPriceDataItems)) {
-            return priceDataItems[0];
-        }
-        return priceDataItems;
+        return (pricedItemId === pricedItemIds)
+            ? result
+            : result[0];
     }
 
 
@@ -565,9 +663,14 @@ export class PriceManager extends EventEmitter {
 
     /**
      * Retrieves the date range of price multipliers available for a priced item.
-     * @param {number} pricedItemId 
-     * @returns {YMDDate[]|undefined}   An array containing the oldest and newest 
-     * price multiplier dates, or <code>undefined</code> if there are no prices.
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
+     * @returns {YMDDate[]|undefined|[]}   An array containing the oldest and newest 
+     * price multiplier dates, or <code>undefined</code> if there are no prices. 
+     * If pricedItemId is an array of priced item ids this is an array of YMDDate 
+     * arrays or <code>undefined</code>s.
      */
     async asyncGetPriceMultiplierDateRange(pricedItemId) {
         return this._handler.asyncGetPriceMultiplierDateRange(pricedItemId);
@@ -575,55 +678,108 @@ export class PriceManager extends EventEmitter {
 
     /**
      * Retrieves the price multipliers for a priced item within a date range.
-     * @param {number} pricedItemId 
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
      * @param {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
+     * If pricedItemId is an array this may also be an array whose elements are
+     * one or two element sub-arrays, where the first element would be the ymdDateA
+     * and the second element would be the ymdDateB for that priced item id.
+     * If not an array then the same ymdDateA and ymdDateB values are used for
+     * all the priced item ids.
      * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
-     * range, inclusive.
+     * range, inclusive. Not used if ymdDateA is an array.
      * @returns {PriceMultiplierDataItem[]}   Array containing the prices within 
-     * the date range.
+     * the date range. If pricedItemId is an array of priced item ids this is an array
+     * of the price arrays for each priced item id.
      */
     async asyncGetPriceMultiplierDataItemsInDateRange(pricedItemId, ymdDateA, ymdDateB) {
-        if (typeof pricedItemId === 'object') {
+        if (!Array.isArray(pricedItemId) && (typeof pricedItemId === 'object')) {
             const args = pricedItemId;
             pricedItemId = args.pricedItemId;
             ymdDateA = args.ymdDateA;
             ymdDateB = args.ymdDateB;
         }
 
-        [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
+        if (!Array.isArray(ymdDateA)) {
+            [ymdDateA, ymdDateB] = resolveDateRange(ymdDateA, ymdDateB);
+        }
+
+        const pricedItemIds = Array.isArray(pricedItemId)
+            ? pricedItemId
+            : [pricedItemId];
         const result = await this._handler.asyncGetPriceMultiplierDataItemsInDateRange(
-            pricedItemId, ymdDateA, ymdDateB);
-        return result.map((price) => getPriceMultiplierDataItem(price, true));
+            pricedItemIds, ymdDateA, ymdDateB);
+
+        const finalResult = result.map((itemResult) =>
+            itemResult.map((price) => getPriceMultiplierDataItem(price, true)));
+        
+        return (pricedItemId === pricedItemIds)
+            ? finalResult
+            : finalResult[0];
     }
 
 
     /**
      * Retrieves the price multiplier data item for a priced item that is on or 
      * closest to but before a particular date.
-     * @param {number} pricedItemId 
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
      * @param {YMDDate|string} ymdDate 
-     * @returns {PriceMultiplierDataItem|undefined}
+     * @returns {PriceMultiplierDataItem|undefined} If pricedItemId is an array
+     * this is an array whose elements correspond the result for each priced item id.
      */
     async asyncGetPriceMultiplierDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
         ymdDate = getYMDDate(ymdDate);
-        return this._handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(
-            pricedItemId, 
-            ymdDate);
+
+        const pricedItemIds = Array.isArray(pricedItemId)
+            ? pricedItemId
+            : [pricedItemId];
+        const result 
+            = await this._handler.asyncGetPriceMultiplierDataItemOnOrClosestBefore(
+                pricedItemIds, 
+                ymdDate);
+
+        const finalResult = result.map((itemResult) =>
+            getPriceMultiplierDataItem(itemResult, true));
+        
+        return (pricedItemId === pricedItemIds)
+            ? finalResult
+            : finalResult[0];
     }
 
 
     /**
      * Retrieves the price multiplier data item for a priced item that is on or 
      * closest to but after a particular date.
-     * @param {number} pricedItemId 
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
      * @param {YMDDate|string} ymdDate 
-     * @returns {PriceMultiplierDataItem|undefined}
+     * @returns {PriceMultiplierDataItem|undefined} If pricedItemId is an array
+     * this is an array whose elements correspond the result for each priced item id.
      */
     async asyncGetPriceMultiplierDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
         ymdDate = getYMDDate(ymdDate);
-        return this._handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(
-            pricedItemId, 
-            ymdDate);
+
+        const pricedItemIds = Array.isArray(pricedItemId)
+            ? pricedItemId
+            : [pricedItemId];
+        const result 
+            = await this._handler.asyncGetPriceMultiplierDataItemOnOrClosestAfter(
+                pricedItemIds, 
+                ymdDate);
+
+        const finalResult = result.map((itemResult) =>
+            getPriceMultiplierDataItem(itemResult, true));
+        
+        return (pricedItemId === pricedItemIds)
+            ? finalResult
+            : finalResult[0];
     }
 
     /**
@@ -636,20 +792,43 @@ export class PriceManager extends EventEmitter {
      * The prices returned are raw prices unless the first argument is a
      * {@link PriceManager~asyncGetPriceDataItemsInDateRangeArgs} and has the
      * refYMDDate property specified.
-     * @param {number|PriceManager~asyncGetPriceDataItemsInDateRangeArgs} pricedItemId 
+     * @param {number|PriceManager~asyncGetPriceDataItemsInDateRangeArgs|number[]}
+     *      pricedItemId This may also be an array of priced item ids, in which case
+     * the return will be an array whose elements correspond to what would be
+     * the result of the individual priced item id being passed to this function.
      * @param {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
      * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
      * range, inclusive.
      * @returns {PriceDataItem[]}   Array containing both the prices and the 
      * multipliers within the date range, sorted from oldest to newest date.
+     * If pricedItemId is an array this is an array whose elements correspond
+     * to the results for the individual priced item ids.
      */
     async asyncGetPriceAndMultiplierDataItemsInDateRange(
         pricedItemId, ymdDateA, ymdDateB) {
-        const prices = await this.asyncGetPriceDataItemsInDateRange(
-            pricedItemId, ymdDateA, ymdDateB);
-        const multipliers = await this.asyncGetPriceMultiplierDataItemsInDateRange(
-            pricedItemId, ymdDateA, ymdDateB);
+        
+        const pricedItemIds = Array.isArray(pricedItemId)
+            ? pricedItemId
+            : [pricedItemId];
+        
+        const allPrices = await this.asyncGetPriceDataItemsInDateRange(
+            pricedItemIds, ymdDateA, ymdDateB);
+        const allMultipliers = await this.asyncGetPriceMultiplierDataItemsInDateRange(
+            pricedItemIds, ymdDateA, ymdDateB);
 
+        const allResults = [];
+        for (let i = 0; i < allPrices.length; ++i) {
+            allResults[i] = this._combinePricesAndMultipliers(
+                allPrices[i], allMultipliers[i]);
+        }
+
+        return (pricedItemId === pricedItemIds)
+            ? allResults
+            : allResults[0];
+    }
+
+
+    _combinePricesAndMultipliers(prices, multipliers) {
         if (!multipliers.length) {
             return prices;
         }
@@ -1019,7 +1198,7 @@ export class PriceManager extends EventEmitter {
      * @fires {PriceManager~pricesRemove}
      */
     async asyncRemovePricesInDateRange(pricedItemId, ymdDateA, ymdDateB, options) {
-        [ymdDateA, ymdDateB] = this._resolveDateRange(ymdDateA, ymdDateB);
+        [ymdDateA, ymdDateB] = resolveDateRange(ymdDateA, ymdDateB);
         const result = await this._handler.asyncRemovePricesInDateRange(
             pricedItemId, ymdDateA, ymdDateB, options);
 
@@ -1060,9 +1239,14 @@ export class PriceManager extends EventEmitter {
 export class PricesHandler {
     /**
      * Retrieves the date range of prices available for a priced item.
-     * @param {number} pricedItemId 
-     * @returns {YMDDate[]|undefined}   An array containing the oldest and newest 
-     * price dates, or <code>undefined</code> if there are no prices.
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
+     * @returns {YMDDate[]|undefined|[]}   An array containing the oldest and newest 
+     * price dates, or <code>undefined</code> if there are no prices. If pricedItemId
+     * is an array of priced item ids this is an array of YMDDate arrays or 
+     * <code>undefined</code>s.
      */
     async asyncGetPriceDateRange(pricedItemId) {
         throw Error('PricesHandler.asyncGetPricedDateRange() abstract method!');
@@ -1070,10 +1254,21 @@ export class PricesHandler {
 
     /**
      * Retrieves the prices for a priced item within a date range.
-     * @param {number} pricedItemId 
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
      * @param {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
-     * @param {(YMDDate|string)} ymdDateB   The other end of the date range, inclusive.
+     * If pricedItemId is an array this may also be an array whose elements are
+     * one or two element sub-arrays, where the first element would be the ymdDateA
+     * and the second element would be the ymdDateB for that priced item id.
+     * If not an array then the same ymdDateA and ymdDateB values are used for
+     * all the priced item ids.
+     * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
+     * range, inclusive. Not used if ymdDateA is an array.
      * @returns {PriceDataItem[]}   Array containing the prices within the date range.
+     * If pricedItemId is an array of priced item ids this is any array of 
+     * PriceDataItem arrays.
      */
     async asyncGetPriceDataItemsInDateRange(pricedItemId, ymdDateA, ymdDateB) {
         throw Error('PricesHandler.asyncGetPriceDataItemsInDateRange() abstract method!');
@@ -1082,7 +1277,10 @@ export class PricesHandler {
     /**
      * Retrieves the price data item for a priced item that is on or closest to but 
      * before a particular date.
-     * @param {number} pricedItemId 
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
      * @param {YMDDate|string} ymdDate 
      * @returns {PriceDataItem|undefined}
      */
@@ -1094,7 +1292,10 @@ export class PricesHandler {
     /**
      * Retrieves the price data item for a priced item that is on or closest to 
      * but after a particular date.
-     * @param {number} pricedItemId 
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
      * @param {YMDDate|string} ymdDate 
      * @returns {PriceDataItem|undefined}
      */
@@ -1106,10 +1307,14 @@ export class PricesHandler {
 
     /**
      * Retrieves the date range of price multipliers available for a priced item.
-     * @param {number} pricedItemId 
-     * @returns {YMDDate[]|undefined}   An array containing the oldest and newest 
-     * price multiplier dates, or <code>undefined</code> if there are no price 
-     * multipliers.
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
+     * @returns {YMDDate[]|undefined|[]}   An array containing the oldest and newest 
+     * price multiplier dates, or <code>undefined</code> if there are no prices. 
+     * If pricedItemId is an array of priced item ids this is an array of YMDDate 
+     * arrays or <code>undefined</code>s.
      */
     async asyncGetPriceMultiplierDateRange(pricedItemId) {
         throw Error('PricesHandler.asyncGetPriceMultiplierDateRange() abstract method!');
@@ -1117,11 +1322,21 @@ export class PricesHandler {
 
     /**
      * Retrieves the price multipliers for a priced item within a date range.
-     * @param {number} pricedItemId 
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
      * @param {(YMDDate|string)} ymdDateA   One end of the date range, inclusive.
-     * @param {(YMDDate|string)} ymdDateB   The other end of the date range, inclusive.
-     * @returns {PriceMultiplierDataItem[]}   Array containing the price multipliers 
-     * within the date range.
+     * If pricedItemId is an array this may also be an array whose elements are
+     * one or two element sub-arrays, where the first element would be the ymdDateA
+     * and the second element would be the ymdDateB for that priced item id.
+     * If not an array then the same ymdDateA and ymdDateB values are used for
+     * all the priced item ids.
+     * @param {(YMDDate|string)} [ymdDateB=ymdDateA]   The other end of the date 
+     * range, inclusive. Not used if ymdDateA is an array.
+     * @returns {PriceMultiplierDataItem[]}   Array containing the prices within 
+     * the date range. If pricedItemId is an array of priced item ids this is an array
+     * of the price arrays for each priced item id.
      */
     async asyncGetPriceMultiplierDataItemsInDateRange(pricedItemId, ymdDateA, ymdDateB) {
         // eslint-disable-next-line max-len
@@ -1131,9 +1346,13 @@ export class PricesHandler {
     /**
      * Retrieves the price multiplier data item for a priced item that is on or 
      * closest to but before a particular date.
-     * @param {number} pricedItemId 
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
      * @param {YMDDate|string} ymdDate 
-     * @returns {PriceMultiplierDataItem|undefined}
+     * @returns {PriceMultiplierDataItem|undefined} If pricedItemId is an array
+     * this is an array whose elements correspond the result for each priced item id.
      */
     async asyncGetPriceMultiplierDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
         // eslint-disable-next-line max-len
@@ -1143,9 +1362,13 @@ export class PricesHandler {
     /**
      * Retrieves the price multiplier data item for a priced item that is on or 
      * closest to but after a particular date.
-     * @param {number} pricedItemId 
+     * @param {number|number[]} pricedItemId The id of the priced item of interest, 
+     * this may be an array of multiple priced items, in which case the result will 
+     * be an array whose elements correspond to what would be the result of the 
+     * individual priced item id passed to this function.
      * @param {YMDDate|string} ymdDate 
-     * @returns {PriceMultiplierDataItem|undefined}
+     * @returns {PriceMultiplierDataItem|undefined} If pricedItemId is an array
+     * this is an array whose elements correspond the result for each priced item id.
      */
     async asyncGetPriceMultiplierDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
         // eslint-disable-next-line max-len
@@ -1255,29 +1478,69 @@ export class InMemoryPricesHandler extends PricesHandler {
     }
 
     async asyncGetPriceDateRange(pricedItemId) {
-        return this._getItemDateRange(
-            this._sortedPricesByPricedItemId,
-            pricedItemId
-        );
+        const pricedItemIds = Array.isArray(pricedItemId) 
+            ? pricedItemId 
+            : [pricedItemId];
+        
+        const result = pricedItemIds.map((pricedItemId) => 
+            this._getItemDateRange(
+                this._sortedPricesByPricedItemId,
+                pricedItemId
+            ));
+        return (pricedItemId === pricedItemIds)
+            ? result
+            : result[0];
     }
 
     async asyncGetPriceMultiplierDateRange(pricedItemId) {
-        return this._getItemDateRange(
-            this._sortedPriceMultipliersByPricedItemId,
-            pricedItemId
-        );
+        const pricedItemIds = Array.isArray(pricedItemId)
+            ? pricedItemId
+            : [pricedItemId];
+
+        const result = pricedItemIds.map((pricedItemId) => 
+            this._getItemDateRange(
+                this._sortedPriceMultipliersByPricedItemId,
+                pricedItemId
+            ));
+        return (pricedItemId === pricedItemIds)
+            ? result
+            : result[0];
     }
 
 
     _getDataItemsInDateRange(itemsByPricedItemIds, pricedItemId, ymdDateA, ymdDateB) {
-        const entry = itemsByPricedItemIds.get(pricedItemId);
-        if (entry && entry.length > 0) {
-            const indexA = entry.indexGE({ ymdDate: ymdDateA });
-            const indexB = entry.indexLE({ ymdDate: ymdDateB });
-            return entry.getValues().slice(indexA, indexB + 1).map(
-                (value) => getPriceDataItem(value));
+        const pricedItemIds = Array.isArray(pricedItemId)
+            ? pricedItemId
+            : [pricedItemId];
+        
+        const result = [];
+        const ymdDateArray = Array.isArray(ymdDateA) ? ymdDateA : undefined;
+
+        for (let i = 0; i < pricedItemIds.length; ++i) {
+            const pricedItemId = pricedItemIds[i];
+
+            let answer;
+            const entry = itemsByPricedItemIds.get(pricedItemId);
+            if (entry && entry.length > 0) {
+                if (ymdDateArray) {
+                    const row = ymdDateArray[i];
+                    [ ymdDateA, ymdDateB ] = resolveDateRange(row[0], row[1]);
+                }
+
+                const indexA = entry.indexGE({ ymdDate: ymdDateA });
+                const indexB = entry.indexLE({ ymdDate: ymdDateB });
+                answer = entry.getValues().slice(indexA, indexB + 1).map(
+                    (value) => getPriceDataItem(value));
+            }
+            else {
+                answer = [];
+            }
+            result.push(answer);
         }
-        return [];
+
+        return (pricedItemId === pricedItemIds)
+            ? result
+            : result[0];
     }
 
     async asyncGetPriceDataItemsInDateRange(pricedItemId, ymdDateA, ymdDateB) {
@@ -1292,40 +1555,60 @@ export class InMemoryPricesHandler extends PricesHandler {
 
 
     _getItemOnOrClosestBefore(itemsByPricedItemIds, pricedItemId, ymdDate) {
-        const entry = itemsByPricedItemIds.get(pricedItemId);
-        if (entry && entry.length > 0) {
-            const index = entry.indexLE({ ymdDate: ymdDate });
-            return entry.at(index);
-        }
+        const pricedItemIds = Array.isArray(pricedItemId)
+            ? pricedItemId
+            : [pricedItemId];
+        
+        const result = pricedItemIds.map((pricedItemId) => {
+            const entry = itemsByPricedItemIds.get(pricedItemId);
+            if (entry && entry.length > 0) {
+                const index = entry.indexLE({ ymdDate: ymdDate });
+                return entry.at(index);
+            }
+        });
+
+        return (pricedItemId === pricedItemIds)
+            ? result
+            : result[0];
     }
 
     async asyncGetPriceDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
-        return getPriceDataItem(this._getItemOnOrClosestBefore(
-            this._sortedPricesByPricedItemId, pricedItemId, ymdDate));
+        return this._getItemOnOrClosestBefore(
+            this._sortedPricesByPricedItemId, pricedItemId, ymdDate);
     }
     
     async asyncGetPriceMultiplierDataItemOnOrClosestBefore(pricedItemId, ymdDate) {
-        return getPriceMultiplierDataItem(this._getItemOnOrClosestBefore(
-            this._sortedPriceMultipliersByPricedItemId, pricedItemId, ymdDate));
+        return this._getItemOnOrClosestBefore(
+            this._sortedPriceMultipliersByPricedItemId, pricedItemId, ymdDate);
     }
 
 
     _getPriceDataItemOnOrClosestAfter(itemsByPricedItemIds, pricedItemId, ymdDate) {
-        const entry = itemsByPricedItemIds.get(pricedItemId);
-        if (entry && entry.length > 0) {
-            const index = entry.indexGE({ ymdDate: ymdDate });
-            return entry.at(index);
-        }
+        const pricedItemIds = Array.isArray(pricedItemId)
+            ? pricedItemId
+            : [pricedItemId];
+
+        const result = pricedItemIds.map((pricedItemId) => {
+            const entry = itemsByPricedItemIds.get(pricedItemId);
+            if (entry && entry.length > 0) {
+                const index = entry.indexGE({ ymdDate: ymdDate });
+                return entry.at(index);
+            }
+        });
+
+        return (pricedItemId === pricedItemIds)
+            ? result
+            : result[0];
     }
 
     async asyncGetPriceDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
-        return getPriceDataItem(this._getPriceDataItemOnOrClosestAfter(
-            this._sortedPricesByPricedItemId, pricedItemId, ymdDate));
+        return this._getPriceDataItemOnOrClosestAfter(
+            this._sortedPricesByPricedItemId, pricedItemId, ymdDate);
     }
 
     async asyncGetPriceMultiplierDataItemOnOrClosestAfter(pricedItemId, ymdDate) {
-        return getPriceMultiplierDataItem(this._getPriceDataItemOnOrClosestAfter(
-            this._sortedPriceMultipliersByPricedItemId, pricedItemId, ymdDate));
+        return this._getPriceDataItemOnOrClosestAfter(
+            this._sortedPriceMultipliersByPricedItemId, pricedItemId, ymdDate);
     }
 
 
