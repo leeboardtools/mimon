@@ -1390,9 +1390,11 @@ export class AccountRegister extends React.Component {
                 const pricedItemDataItem 
                     = AH.getPricedItemDataItemForAccountId(accessor, accountId);
                 const priceDataItem 
-                    = await accessor.asyncGetPriceDataItemOnOrClosestBefore(
-                        pricedItemDataItem.id,
-                        transactionDataItem.ymdDate);
+                    = await accessor.asyncGetPriceDataItemOnOrClosestBefore({
+                        pricedItemId: pricedItemDataItem.id,
+                        ymdDate: transactionDataItem.ymdDate,
+                        refYMDDate: transactionDataItem.ymdDate,
+                    });
                 if (priceDataItem) {
                     const priceQuantityDefinition 
                         = accessor.getPriceQuantityDefinitionForPricedItem(
