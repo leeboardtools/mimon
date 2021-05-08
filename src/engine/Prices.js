@@ -806,6 +806,13 @@ export class PriceManager extends EventEmitter {
      */
     async asyncGetPriceAndMultiplierDataItemsInDateRange(
         pricedItemId, ymdDateA, ymdDateB) {
+
+        if (!Array.isArray(pricedItemId) && (typeof pricedItemId === 'object')) {
+            const args = pricedItemId;
+            pricedItemId = args.pricedItemId;
+            ymdDateA = args.ymdDateA;
+            ymdDateB = args.ymdDateB;
+        }
         
         const pricedItemIds = Array.isArray(pricedItemId)
             ? pricedItemId
