@@ -741,7 +741,6 @@ export class RowTable extends React.Component {
             headerHeight,
             footerHeight,
             rowHeight,
-            rowCount,
         } = this.props;
 
         const { isSizeRender, sizeRenderRefs } = this.state;
@@ -1660,6 +1659,10 @@ export class RowTable extends React.Component {
                     rows.push(row);
                 }
             }
+            else if (isSizeRender) {
+                const row = this.renderRow(0);
+                rows.push(row);
+            }
         }
 
         let bodyClassName = 'RowTableBody';
@@ -1702,7 +1705,7 @@ export class RowTable extends React.Component {
         else {
             bodyClassName += ' Visibility-hidden';
         }
-        
+
         return <div className = {bodyClassName}
             style = {bodyStyle}
             onScroll = {this.onScroll}
