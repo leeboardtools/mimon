@@ -142,7 +142,9 @@ export class PricesListHandler extends MainWindowHandlerBase {
         const allColumns = createDefaultColumns(pricedItemDataItem.type);
         const tabEntry = {
             tabId: tabId,
-            title: pricedItemDataItem.name,
+            title: pricedItemDataItem.name 
+                || pricedItemDataItem.ticker
+                || pricedItemDataItem.description,
             hasClose: true,
             pricedItemId: pricedItemId,
             onRenderTabPage: this.onRenderTabPage,
