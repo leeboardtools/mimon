@@ -528,6 +528,11 @@ Column sorting in RowTable:
                     - 1 quarter
                     - 1 year
                     - 52 weeks
+
+        - Date selector/header bar doesn't change body area size.
+
+        - Indicate accounts that are 'out of date range'.
+            - Need to distinguish from accounts that simply don't have any transactions.
  
 
         - Export as CSV
