@@ -575,6 +575,9 @@ export class RowTable extends React.Component {
             this.setState(this.getStateUpdateFromColumns(),
                 () => this.updateLayout(true));
         }
+        else if (props.preHeaderComponent !== prevProps.preHeaderComponent) {
+            this.updateLayout(true);
+        }
 
         if ((props.rowCount !== prevProps.rowCount)
          && !state.nextLayoutState) {

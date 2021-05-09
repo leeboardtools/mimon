@@ -526,8 +526,6 @@ Column sorting in RowTable:
                     - 1 year
                     - 52 weeks
 
-        - Date selector/header bar doesn't change body area size.
-
         - Export as CSV
             - Need to clean up FileSelector.
         
