@@ -531,8 +531,9 @@ Column sorting in RowTable:
 
         - Date selector/header bar doesn't change body area size.
 
-        - Indicate accounts that are 'out of date range'.
-            - Need to distinguish from accounts that simply don't have any transactions.
+        - Add price info to lot based balance tooltip.
+
+        - Root accounts are displaying total balance when not collapsed.
  
 
         - Export as CSV

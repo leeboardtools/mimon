@@ -652,9 +652,6 @@ export class AccountsList extends React.Component {
             return {};
         }
 
-        // TEST!!!
-        //this.updateRootRowInfoAccountStates(state, rowInfos);
-
         return {
             rowInfos: rowInfos,
             rowInfosChangeId: state.rowInfosChangeId + 1,
@@ -1066,6 +1063,16 @@ export class AccountsList extends React.Component {
             columnInfo = Object.assign({}, columnInfo, {
                 inputClassExtras: (columnInfo.inputClassExtras || '')
                     + ' AccountList-inactive-account',
+            });
+        }
+
+        if (accountDataItem 
+         && (!accountDataItem.childAccountIds
+          || !accountDataItem.childAccountIds.length)
+         && !rowInfo.accountGainsState) {
+            columnInfo = Object.assign({}, columnInfo, {
+                inputClassExtras: (columnInfo.inputClassExtras || '')
+                    + ' AccountList-too-young-account',
             });
         }
 

@@ -131,7 +131,15 @@ label {
 .AccountList-always-hidden-account {
     font-style: italic;
 }
+
 .AccountList-inactive-account {
+    font-weight:lighter;
+    color: #495057a6;
+}
+
+.AccountList-too-young-account {
+    font-style: italic;
+    text-decoration: line-through;
     font-weight:lighter;
     color: #495057a6;
 }
