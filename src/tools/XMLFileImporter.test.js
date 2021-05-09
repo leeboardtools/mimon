@@ -119,6 +119,7 @@ test('XMLFileImporter-asyncImportXMLFile', async () => {
             currency: 'USD',
         });
 
+        
         await asyncExpectSecurity(accessor, 'AAPL', {
             description: 'Apple Computer Inc',
             onlineUpdateType: PI.PricedItemOnlineUpdateType.YAHOO_FINANCE.name,
@@ -127,17 +128,17 @@ test('XMLFileImporter-asyncImportXMLFile', async () => {
         [
             {
                 ymdDate: '2020-08-27',
-                close: scalePrice(125.010002, 4, 1),
-                high: scalePrice(127.485001, 4, 1),
-                low: scalePrice(123.832497, 4, 1),
-                volume: 155552400,
+                close: scalePrice(500.040008, 1, 1),
+                high: scalePrice(509.940004, 1, 1),
+                low: scalePrice(495.329988, 1, 1),
+                volume: 38888100,
             },
             {   
                 ymdDate: '2020-08-28',
-                close: scalePrice(124.807503, 4, 1),
-                high: scalePrice(126.442497, 4, 1),
-                low: scalePrice(124.577499, 4, 1),
-                volume: 187630000,
+                close: scalePrice(499.230011, 1, 1),
+                high: scalePrice(505.750000, 1, 1),
+                low: scalePrice(498.320007, 1, 1),
+                volume: 46907500,
             },
             {
                 ymdDate: '2020-08-31',

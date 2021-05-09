@@ -87,8 +87,8 @@
       <isin></isin>
       <historyNodes id="62">
         <SecurityHistoryNode id="63" date="2020-08-31" price="129.039993" high="131.000000" low="126.000000" volume="225702700"/>
-        <SecurityHistoryNode id="64" date="2020-08-28" price="124.807503" high="126.442497" low="124.577499" volume="187630000"/>
-        <SecurityHistoryNode id="65" date="2020-08-27" price="125.010002" high="127.485001" low="123.832497" volume="155552400"/>
+        <SecurityHistoryNode id="64" date="2020-08-28" price="499.230011" high="505.750000" low="498.320007" volume="46907500"/>
+        <SecurityHistoryNode id="65" date="2020-08-27" price="500.040008" high="509.940004" low="495.329988" volume="38888100"/>
         <SecurityHistoryNode id="66" date="2019-08-14" price="202.750000" high="206.440002" low="202.589996" volume="36547400"/>
         <SecurityHistoryNode id="67" date="2019-08-13" price="208.970001" high="212.139999" low="200.479996" volume="47218500"/>
         <SecurityHistoryNode id="68" date="2019-08-12" price="200.479996" high="202.050003" low="199.149994" volume="22474900"/>

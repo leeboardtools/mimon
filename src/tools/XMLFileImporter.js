@@ -348,28 +348,16 @@ class SECURITYNODE extends XMLNodeProcessor {
                     return result;
                 });
                 
-                let numerator = 1;
-                let denominator = 1;
                 for (let i = itemPrices.length - 1; i >= 0; --i) {
                     const item = itemPrices[i];
                     if (item.newCount !== item.oldCount) {
-                        numerator *= item.newCount;
-                        denominator *= item.oldCount;
-
-                        if (!numerator || !denominator) {
+                        if (!item.newCount || !item.oldCount) {
                             // Presume this is an actual corporate split/merge,
                             // so there were no prices beforehand. For now just
                             // ditch the prices.
                             itemPrices.splice(0, i + 1);
                             break;
                         }
-                    }
-                    else {
-                        scalePriceProperty(item, 'close', numerator, denominator);
-                        scalePriceProperty(item, 'high', numerator, denominator);
-                        scalePriceProperty(item, 'low', numerator, denominator);
-                        scalePriceProperty(item, 'open', numerator, denominator);
-                        scalePriceProperty(item, 'adjClose', numerator, denominator);
                     }
 
                     delete item.ymdDateObject;
