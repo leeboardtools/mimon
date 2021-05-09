@@ -25,7 +25,6 @@ import { userError } from '../util/UserMessages';
  * @returns {number|undefined}
  * @memberof GainHelpers
  */
-// KEEP
 export function absoluteGain({inputValue, outputValue}) {
     if ((typeof inputValue === 'number')
      && (typeof outputValue === 'number')) {
@@ -41,7 +40,6 @@ export function absoluteGain({inputValue, outputValue}) {
  * inputValue is 0.
  * @memberof GainHelpers
  */
-// KEEP
 export function percentGain({inputValue, outputValue}) {
     if ((typeof inputValue === 'number')
      && (typeof outputValue === 'number')) {
@@ -66,7 +64,6 @@ export function percentGain({inputValue, outputValue}) {
  * @returns {number|undefined} Returns <code>undefined</code> if inputValue
  * is 0 or the dates are not valid.
  */
-// KEEP
 export function compoundAnnualGrowthRate(
     {inputValue, ymdDateInput, outputValue, ymdDateOutput }) {
 
@@ -101,16 +98,20 @@ export function compoundAnnualGrowthRate(
 
 
 /**
- * @typedef {object} GainHelpers~convertAccountStateForGainsArgs
+ * @typedef {object} GainHelpers~acountStateToAccountGainsStateArgs
  * @property {EngineAccess} accessor
  * @property {number} accountId
  * @property {AccountStateDataItem} accountState,
  * @property {PriceDataItem} priceDataItem
  * @property {boolean} [isExcludeFromGain=false]
- * @returns {GainHelpers~AccountGainsStateDataItem}
  */
 
-// KEEP
+/**
+ * Converts an {@link AccountState} to an
+ * {@link GainHelpers~AccountGainsStateDataItem}
+ * @param {GainHelpers~acountStateToAccountGainsStateArgs} args 
+ * @returns {GainHelpers~AccountGainsStateDataItem}
+ */
 export function accountStateToAccountGainsState(args) {
     const { 
         accessor, 
@@ -186,7 +187,6 @@ export function accountStateToAccountGainsState(args) {
  * @param {GainHelpers~AccountGainsStateDataItem} accountGainsState 
  * @returns {GainHelpers~AccountGainsStateDataItem}
  */
-// KEEP!
 export function cloneAccountGainsState(accountGainsState) {
     if (!accountGainsState) {
         return;
@@ -213,7 +213,6 @@ export function cloneAccountGainsState(accountGainsState) {
  * @param {GainHelpers~AccountGainsStateDataItem} fromAccountGainsState 
  * @returns {GainHelpers~AccountGainsStateDataItem}
  */
-// KEEP!
 export function addAccountGainsState(toAccountGainsState, fromAccountGainsState) {
     if (!fromAccountGainsState) {
         return toAccountGainsState;
@@ -304,7 +303,6 @@ export function addAccountGainsState(toAccountGainsState, fromAccountGainsState)
  * @returns {GainHelpers~AccountStateInfo|undefined}
  * @memberof GainHelpers
  */
-// KEEP
 export function createAccountStateInfo(args) {
 
     const {accessor, accountId, } = args;
@@ -345,7 +343,6 @@ export function createAccountStateInfo(args) {
 }
 
 
-// KEEP
 function calcMarketValueBaseValueFromLotState(
     accountStateInfo, lotStateDataItem) {
 
@@ -450,7 +447,6 @@ export function getLotStateCashInBaseValue(accountStateInfo, lotStateDataItem) {
  * @param {GainHelpers~AccountGainsState} accountGainsState 
  * @returns {GainHelpers~GainParts}
  */
-// KEEP
 export function getAccountGainsStateSimpleGainParts(accountGainsState) {
     if (accountGainsState) {
         return {
@@ -466,28 +462,10 @@ export function getAccountGainsStateSimpleGainParts(accountGainsState) {
  * @param {GainHelpers~AccountGainsState} accountGainsState 
  * @returns {LotStateDataItem[]}
  */
-// KEEP
 export function getAccountGainsStateSimpleGainLotStates(accountGainsState) {
     if (accountGainsState) {
         return accountGainsState.lotStates;
     }
-}
-
-/**
- * Calculates the gain parts for simple gain, which uses the full cost basis.
- * @param {GainHelpers~AccountStateInfo} accountStateInfo 
- * @param {LotStateDataItem} lotStateDataItem 
- * @returns {GainHelpers~GainParts|undefined}
- * @memberof GainHelpers
- */
-// GOES AWAY
-export function getLotStateSimpleGainParts(accountStateInfo, lotStateDataItem) {
-    return {
-        inputBaseValue: getLotStateCostBasisBaseValue(accountStateInfo,
-            lotStateDataItem),
-        outputBaseValue: calcLotStateMarketValueBaseValue(accountStateInfo,
-            lotStateDataItem),
-    };
 }
 
 
@@ -498,7 +476,6 @@ export function getLotStateSimpleGainParts(accountStateInfo, lotStateDataItem) {
  * @returns {boolean}
  * @memberof GainHelpers
  */
-// KEEP
 export function isLotStateCashIn(accessor, lotStateDataItem) {
     if (lotStateDataItem) {
         const lotDataItem = accessor.getLotDataItemWithId(lotStateDataItem.lotId);
@@ -516,7 +493,6 @@ export function isLotStateCashIn(accessor, lotStateDataItem) {
  * @param {GainHelpers~AccountGainsState} accountGainsState 
  * @returns {GainHelpers~GainParts}
  */
-// KEEP
 export function getAccountGainsStateCashInGainParts(accountGainsState) {
     if (accountGainsState) {
         return {
@@ -532,30 +508,10 @@ export function getAccountGainsStateCashInGainParts(accountGainsState) {
  * @param {GainHelpers~AccountGainsState} accountGainsState 
  * @returns {LotStateDataItem[]}
  */
-// KEEP
 export function getAccountGainsStateCashInLotStates(accountGainsState) {
     if (accountGainsState) {
         return accountGainsState.cashInLotStates;
     }
-}
-
-
-/**
- * Calculates the gain parts for cash-in gain, which only includes lots for which
- * {@link GainHelpers.isLotStateCashIn} returns <code>true<.code>.
- * @param {GainHelpers~AccountStateInfo} accountStateInfo 
- * @param {LotStateDataItem} lotStateDataItem 
- * @returns {GainHelpers~GainParts}
- * @memberof GainHelpers
- */
-// GOES AWAY
-export function getLotStateCashInGainParts(accountStateInfo, lotStateDataItem) {
-    return {
-        inputBaseValue: getLotStateCashInBaseValue(accountStateInfo,
-            lotStateDataItem),
-        outputBaseValue: calcLotStateMarketValueBaseValue(accountStateInfo,
-            lotStateDataItem),
-    };
 }
 
 
@@ -632,7 +588,6 @@ function resolveLotStatesFromArgs(args, lotStates, lotStatesName) {
  * @returns {GainHelpers~LotStateGainResult}
  * @memberof GainHelpers
  */
-// KEEP
 export function calcLotStateGain(args, lotStates) {
     const accountStateInfo = createAccountStateInfo(args);
     if (!accountStateInfo) {
@@ -714,247 +669,6 @@ export function calcLotStateGain(args, lotStates) {
 }
 
 
-/**
- * @typedef {object} GainHelpers~calcLotStatePercentAnnualGainArgs
- * {@link GainHelpers~createAccountStateInfoArgs} plus the following:
- * @property {YMDDate|string} [ymdDateRef] If specified the reference date for the
- * annual gain, otherwise today will be used.
- * @property {LotStateDataItem[]} [lotStates] Either lotStates or accuontStateDataItem
- * may be specified, if lotStates is not then accountStateDataItem should be or
- * passed as the second arg to {@link calcLotStatePercentAnnualGainArgs}.
- * @property {AccountStateDataItem} [accountStateDataItem]
- */
-
-/**
- * @typedef {object} GainHelpers~LotPercentAnnualGainInfo
- * @property {LotStateDataItem} lotState
- * @property {number}   percentAnnualGain
- * @property {boolean}  isStraightGain This is <code>true</code> if 
- * percentAnnualGain is just the straight gain.
- */
-
-/**
- * @typedef {object} GainHelpers~LotStatePercentAnnualGainResult
- * @property {GainHelpers~AccountStateInfo} accountStateInfo
- * @property {GainHelpers~LotPercentAnnualGainInfo[]} lotPercentAnnualGains
- * @property {number} percentAnnualGain
- * @property {number} percentAnnualGainBaseValue
- */
-
-export function calcAccountGainsStatePercentAnnualGain(args) {
-    const accountStateInfo = createAccountStateInfo(args);
-    if (!accountStateInfo) {
-        return;
-    }
-
-    const { accountGainsState, getLotStatesFromAccountGainsState } = args;
-    if (!accountGainsState || !getLotStatesFromAccountGainsState
-     || accountGainsState.isExcludeFromGain) {
-        return;
-    }
-
-    const lotStates = getLotStatesFromAccountGainsState(accountGainsState);
-    if (!lotStates) {
-        return;
-    }
-
-    let { ymdDateRef } = args;
-    if (!ymdDateRef) {
-        ymdDateRef = new YMDDate();
-    }
-    else {
-        ymdDateRef = getYMDDate(ymdDateRef);
-    }
-    const ymdDateYearOld = ymdDateRef.addYears(-1);
-
-    let totalSharesBaseValue = 0;
-    lotStates.forEach((lotState) => totalSharesBaseValue += lotState.quantityBaseValue);
-
-    const lotPercentAnnualGains = [];
-    let percentAnnualGain = 0;
-
-    const percentQuantityDefinition 
-        = accountStateInfo.accessor.getPercentGainQuantityDefinition();
-
-    for (let i = 0; i < lotStates.length; ++i) {
-        const lotState = lotStates[i];
-        const ymdDateCreated = getYMDDate(lotState.ymdDateCreated);
-
-        const { marketValueBaseValue } = lotState;
-
-        let percentGainValue;
-        let isStraightGain;
-        if (YMDDate.compare(ymdDateYearOld, ymdDateCreated) < 0) {
-            // Too soon, just do straight percentage
-            // OK to use base values...
-            percentGainValue = percentGain({
-                inputValue: lotState.costBasisBaseValue,
-                outputValue: marketValueBaseValue,
-            });
-            isStraightGain = true;
-        }
-        else {
-            // Do CAGR
-            percentGainValue = compoundAnnualGrowthRate({
-                inputValue: lotState.costBasisBaseValue,
-                outputValue: marketValueBaseValue,
-                ymdDateInput: lotState.ymdDateCreated,
-                ymdDateOutput: ymdDateRef,
-            }) * 100;
-        }
-
-        percentGainValue = percentQuantityDefinition.cleanupNumber(percentGainValue);
-
-        lotPercentAnnualGains.push({
-            lotState: lotState,
-            percentAnnualGain: percentGainValue,
-            isStraightGain: isStraightGain,
-        });
-
-        if (percentAnnualGain !== undefined) {
-            percentAnnualGain += percentGainValue * lotState.quantityBaseValue
-                / totalSharesBaseValue;
-        }
-    }
-
-    const percentAnnualGainBaseValue 
-        = percentQuantityDefinition.numberToBaseValue(percentAnnualGain);
-    percentAnnualGain = percentQuantityDefinition.baseValueToNumber(
-        percentAnnualGainBaseValue
-    );
-
-    return {
-        accountStateInfo: accountStateInfo,
-        lotPercentAnnualGains: lotPercentAnnualGains,
-        percentAnnualGain: percentAnnualGain,
-        percentAnnualGainBaseValue: percentAnnualGainBaseValue,
-        ymdDateRef: ymdDateRef.toString(),
-    };
-}
-
-
-
-/**
- * Calculates the weighted percent annual gain for lot states.
- * <p>
- * Note that for any lots that are less than a year old the straight gain 
- * is used to avoid having those unduly influencing the overall gain.
- * @param {GainHelpers~LotPercentAnnualGainInfo} args 
- * @param {LotStateDataItem[]|AccountStateDataItem}  [lotStates]
- * @returns {GainHelpers~LotStatePercentAnnualGainResult}
- * @memberof GainHelpers
- */
-// GOES AWAY
-export function calcLotStatePercentAnnualGain(args, lotStates) {
-    const accountStateInfo = createAccountStateInfo(args);
-    if (!accountStateInfo) {
-        return;
-    }
-
-    lotStates = resolveLotStatesFromArgs(args, lotStates, 'gainLotStates');
-    if (!lotStates) {
-        return;
-    }
-
-    let { ymdDateRef } = args;
-    if (!ymdDateRef) {
-        ymdDateRef = new YMDDate();
-    }
-    else {
-        ymdDateRef = getYMDDate(ymdDateRef);
-    }
-    const ymdDateYearOld = ymdDateRef.addYears(-1);
-
-    let totalSharesBaseValue = 0;
-    lotStates.forEach((lotState) => totalSharesBaseValue += lotState.quantityBaseValue);
-
-    const lotPercentAnnualGains = [];
-    let percentAnnualGain = 0;
-
-    const percentQuantityDefinition 
-        = accountStateInfo.accessor.getPercentGainQuantityDefinition();
-
-    for (let i = 0; i < lotStates.length; ++i) {
-        const lotState = lotStates[i];
-        const ymdDateCreated = getYMDDate(lotState.ymdDateCreated);
-
-        const marketValueBaseValue = calcLotStateMarketValueBaseValue(
-            accountStateInfo, lotState);
-
-        let percentGainValue;
-        let isStraightGain;
-        if (YMDDate.compare(ymdDateYearOld, ymdDateCreated) < 0) {
-            // Too soon, just do straight percentage
-            // OK to use base values...
-            percentGainValue = percentGain({
-                inputValue: lotState.costBasisBaseValue,
-                outputValue: marketValueBaseValue,
-            });
-            isStraightGain = true;
-        }
-        else {
-            // Do CAGR
-            percentGainValue = compoundAnnualGrowthRate({
-                inputValue: lotState.costBasisBaseValue,
-                outputValue: marketValueBaseValue,
-                ymdDateInput: lotState.ymdDateCreated,
-                ymdDateOutput: ymdDateRef,
-            }) * 100;
-        }
-
-        percentGainValue = percentQuantityDefinition.cleanupNumber(percentGainValue);
-
-        lotPercentAnnualGains.push({
-            lotState: lotState,
-            percentAnnualGain: percentGainValue,
-            isStraightGain: isStraightGain,
-        });
-
-        if (percentAnnualGain !== undefined) {
-            percentAnnualGain += percentGainValue * lotState.quantityBaseValue
-                / totalSharesBaseValue;
-        }
-    }
-
-    const percentAnnualGainBaseValue 
-        = percentQuantityDefinition.numberToBaseValue(percentAnnualGain);
-    percentAnnualGain = percentQuantityDefinition.baseValueToNumber(
-        percentAnnualGainBaseValue
-    );
-
-    return {
-        accountStateInfo: accountStateInfo,
-        lotPercentAnnualGains: lotPercentAnnualGains,
-        percentAnnualGain: percentAnnualGain,
-        percentAnnualGainBaseValue: percentAnnualGainBaseValue,
-        ymdDateRef: ymdDateRef.toString(),
-    };
-}
-
-
-/**
- * Calculates the weighted percent annual cash-in gain for lot states. 
- * Non-cash-in lots are distributed using 
- * {@link distributeNonCashInLots}.
- * <p>
- * Note that for any lots that are less than a year old the straight gain 
- * is used to avoid having those unduly influencing the overall gain.
- * @param {GainHelpers~LotPercentAnnualGainInfo} args 
- * @param {LotStateDataItem[]|AccountStateDataItem}  [lotStates]
- * @returns {GainHelpers~LotStatePercentAnnualGainResult}
- * @memberof GainHelpers
- */
-// GOES AWAY
-export function calcLotStateCashInPercentAnnualGain(args, lotStates) {
-    lotStates = resolveLotStatesFromArgs(args, lotStates, 'gainLotStates');
-    if (!lotStates) {
-        return;
-    }
-
-    lotStates = distributeNonCashInLots(args.accessor, lotStates);
-    return calcLotStatePercentAnnualGain(args, lotStates);
-}
-
 
 /**
  * Distributes any non-cash-in lot states among all older lot states 
@@ -966,7 +680,6 @@ export function calcLotStateCashInPercentAnnualGain(args, lotStates) {
  * @throws Error
  * @memberof GainHelpers
  */
-// KEEP
 export function distributeNonCashInLots(accessor, lotStateDataItems) {
     if (lotStateDataItems.length <= 1) {
         return lotStateDataItems;
@@ -1044,7 +757,6 @@ export function distributeNonCashInLots(accessor, lotStateDataItems) {
  * @returns {LotStateDataItem[]} Returns lotStateDataItems
  * @memberof GainHelpers
  */
-// KEEP
 export function distributeSharesToLotStates(sharesBaseValue, lotStateDataItems) {
     let totalSharesBaseValue = 0;
     lotStateDataItems.forEach((lotState) => 
@@ -1068,165 +780,5 @@ export function distributeSharesToLotStates(sharesBaseValue, lotStateDataItems) 
 }
 
 
-/**
- * @callback GainHelpers~getLotStatePart
- * @param {GainHelpers~AccountStateInfo} accountStateInfo 
- * @param {LotStateDataItem} lotStateDataItem
- * @returns {GainHelpers~getLotStatePart}
- */
 
-/**
- * @typedef {object} GainHelpers~sumLotStatePartArgs
- * {@link GainHelpers~createAccountStateInfoArgs} plus the following:
- * @property {LotStateDataItem[]} [lotStates] Either lotStates or accuontStateDataItem
- * may be specified, if lotStates is not then accountStateDataItem should be.
- * @property {AccountStateDataItem} [accountStateDataItem]
- * @property {GainHelpers~getLotStatePart} getLotStatePart
- */
-
-/**
- * Sums a part from an array of {@link LotStateDataItem}s.
- * @param {GainHelpers~sumLotStatePartArgs} args 
- * @param {LotStateDataItem[]|AccountStateDataItem} [lotStates=undefined]
- * If this is specified then it is the lot state array or account state
- * to sum over, otherwise args is expected to have the lot state array
- * or account state.
- * @returns {number|undefined}
- * @memberof GainHelpers
- */
-// GOES AWAY
-export function sumLotStatePart(args, lotStates) {
-    const accountStateInfo = createAccountStateInfo(args);
-    if (!accountStateInfo) {
-        return;
-    }
-
-    const { getLotStatePart } = args;
-    if (!getLotStatePart) {
-        return;
-    }
-
-    let sumBaseValue = 0;
-
-    lotStates = resolveLotStatesFromArgs(args, lotStates);
-    if (lotStates) {
-        lotStates.forEach((lotState) => {
-            const baseValue = getLotStatePart(accountStateInfo, lotState);
-            if (baseValue) {
-                sumBaseValue += baseValue;
-            }
-        });
-    }
-
-    const { sumQuantityDefinition } = args;
-    const quantityDefinition = sumQuantityDefinition 
-        || accountStateInfo.currencyQuantityDefinition;
-
-    return {
-        quantityBaseValue: sumBaseValue,
-        quantityDefinition: quantityDefinition,
-    };
-}
-
-
-/**
- * @typedef {object} GainHelpers~LotStateDataItemWithMarketValue
- * A {@link LotStateDataItem} with the following additional properties:
- * @property {number} marketValueBaseValue
- */
-
-
-/**
- * @typedef {object} GainHelpers~getTotalMarketValueBaseValueResult
- * @property {number} quantityBaseValue
- * @property {string} quantityDefinition
- * @property {GainHelpers~LotStateDataItemWithMarketValue[]} lotStatesWithMarketValue
- */
-
-/**
- * Calculates the market value of an array of {@link LotState}s.
- * @param {GainHelpers~sumLotStatePartArgs} args 
- * @param {LotStateDataItem[]|AccountStateDataItem} [lotStates=undefined]
- * If this is specified then it is the lot state array or account state
- * to sum over, otherwise args is expected to have the lot state array
- * or account state.
- * @returns {GainHelpers~getTotalMarketValueBaseValueResult|undefined}
- * @memberof GainHelpers
- */
-// GOES AWAY
-export function getTotalMarketValueBaseValue(args, lotStates) {
-    const accountStateInfo = createAccountStateInfo(args);
-    if (!accountStateInfo) {
-        return;
-    }
-
-    let sumBaseValue = 0;
-
-    let lotStatesWithMarketValue;
-    lotStates = resolveLotStatesFromArgs(args, lotStates);
-    if (lotStates) {
-        lotStatesWithMarketValue = [];
-
-        lotStates.forEach((lotState) => {
-            const marketValueBaseValue = calcLotStateMarketValueBaseValue(
-                accountStateInfo, lotState);
-            if (marketValueBaseValue === undefined) {
-                return;
-            }
-
-            sumBaseValue += marketValueBaseValue;
-            lotStatesWithMarketValue.push(Object.assign({}, lotState, {
-                marketValueBaseValue: marketValueBaseValue,
-            }));
-        });
-    }
-
-    const { sumQuantityDefinition } = args;
-    const quantityDefinition = sumQuantityDefinition 
-        || accountStateInfo.currencyQuantityDefinition;
-
-    return {
-        quantityBaseValue: sumBaseValue,
-        quantityDefinition: quantityDefinition,
-        lotStatesWithMarketValue: lotStatesWithMarketValue,
-    };
-}
-
-
-/**
- * Calculates the cost basis of an array of {@link LotState}s.
- * @param {GainHelpers~sumLotStatePartArgs} args 
- * @param {LotStateDataItem[]|AccountStateDataItem} [lotStates=undefined]
- * If this is specified then it is the lot state array or account state
- * to sum over, otherwise args is expected to have the lot state array
- * or account state.
- * @returns {number|undefined}
- * @memberof GainHelpers
- */
-// GOES AWAY
-export function getTotalCostBasisBaseValue(args, lotStates) {
-    return sumLotStatePart(Object.assign({}, args, {
-        getLotStatePart: getLotStateCostBasisBaseValue,
-    }),
-    lotStates);
-}
-
-
-/**
- * Calculates the cash-in of an array of {@link LotState}s.
- * @param {GainHelpers~sumLotStatePartArgs} args 
- * @param {LotStateDataItem[]|AccountStateDataItem} [lotStates=undefined]
- * If this is specified then it is the lot state array or account state
- * to sum over, otherwise args is expected to have the lot state array
- * or account state.
- * @returns {number|undefined}
- * @memberof GainHelpers
- */
-// GOES AWAY
-export function getTotalCashInBaseValue(args, lotStates) {
-    return sumLotStatePart(Object.assign({}, args, {
-        getLotStatePart: getLotStateCashInBaseValue,
-    }),
-    lotStates);
-}
 
