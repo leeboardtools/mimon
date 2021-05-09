@@ -1190,7 +1190,7 @@ export class EngineAccessor extends EventEmitter {
      * this may be an array of multiple priced items, in which case the result will 
      * be an array whose elements correspond to what would be the result of the 
      * individual priced item id passed to this function.
-     * @returns {YMDDate[]|undefined|[]}   An array containing the oldest and newest 
+     * @returns {YMDDate[]|undefined}   An array containing the oldest and newest 
      * price dates, or <code>undefined</code> if there are no prices. If pricedItemId
      * is an array of priced item ids this is an array of YMDDate arrays or 
      * <code>undefined</code>s.
@@ -1286,7 +1286,7 @@ export class EngineAccessor extends EventEmitter {
      * this may be an array of multiple priced items, in which case the result will 
      * be an array whose elements correspond to what would be the result of the 
      * individual priced item id passed to this function.
-     * @returns {YMDDate[]|undefined|[]}   An array containing the oldest and newest 
+     * @returns {YMDDate[]|undefined}   An array containing the oldest and newest 
      * price multiplier dates, or <code>undefined</code> if there are no prices. 
      * If pricedItemId is an array of priced item ids this is an array of YMDDate 
      * arrays or <code>undefined</code>s.
