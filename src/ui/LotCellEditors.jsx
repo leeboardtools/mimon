@@ -2285,6 +2285,16 @@ function calcGainBalanceValue(args) {
             currency.baseValueToString(result.inputBaseValue)
         ));
 
+        const { accountGainsState } = accountStateInfo;
+        if (accountGainsState) {
+            const reinvestedGain = accountGainsState.costBasisBaseValue
+                - accountGainsState.cashInBaseValue;
+            if (reinvestedGain) {
+                tooltips.push(userMsg('LotCellEditors-reinvestedGain_tooltip',
+                    currency.baseValueToString(reinvestedGain)));
+            }
+        }
+
         const { priceDataItem } = accountStateInfo;
         if (priceDataItem) {
             tooltips.push(userMsg('LotCellEditors-price_date_tooltip',
@@ -2453,7 +2463,8 @@ export function getTotalAnnualPercentGainColumnInfo(args) {
 export function calcAnnualPercentGainBalanceValue(args) {
     args = Object.assign({}, args, {
         getLotStatesFromAccountGainsState: GH.getAccountGainsStateSimpleGainLotStates,
-        //inputMsgId: 'LotCellEditors-cashIn_tooltip',
+        inputMsgId: 'LotCellEditors-costBasis_tooltip',
+        inputBaseValuePropertyName: 'costBasisBaseValue',
     });
     const result = GH.calcAccountGainsStatePercentAnnualGain(args);
     return annualGainResultToBalanceValue(args, result);
@@ -2464,33 +2475,52 @@ export function calcAnnualPercentGainBalanceValue(args) {
 //---------------------------------------------------------
 //
 function annualGainResultToBalanceValue(args, result) {
-    const { accessor } = args;
     if (!result) {
         return;
     }
 
-    const { percentAnnualGainBaseValue, lotPercentAnnualGains } = result;
+    const { percentAnnualGainBaseValue, } = result;
     if ((typeof percentAnnualGainBaseValue !== 'number')
      || Number.isNaN(percentAnnualGainBaseValue)) {
         return;
     }
 
+    const { accessor, inputBaseValuePropertyName } = args;
     const percentQuantityDefinition = accessor.getPercentGainQuantityDefinition();
-    const { sharesQuantityDefinition } = result.accountStateInfo;
 
     // Tooltips:
-    let tooltips;
-    if (lotPercentAnnualGains && lotPercentAnnualGains.length) {
-        tooltips = lotPercentAnnualGains.map((entry) => {
-            // Want:CAGR, shares, date
-            const { lotState } = entry;
-            const sharesValue = sharesQuantityDefinition.baseValueToNumber(
-                lotState.quantityBaseValue);
-            return userMsg('LotCellEditors-percent_shares_date',
-                entry.percentAnnualGain,
-                sharesValue,
-                accessor.formatDate(lotState.ymdDateCreated));
-        });
+    const tooltips = [];
+    const { accountStateInfo, } = result;
+    if (accountStateInfo && inputBaseValuePropertyName) {
+        const { currency, accountGainsState } = accountStateInfo;
+        if (accountGainsState) {
+            tooltips.push(userMsg('LotCellEditors-marketValue_tooltip',
+                currency.baseValueToString(accountGainsState.marketValueBaseValue)
+            ));
+
+            const { inputMsgId } = args;
+            if (inputMsgId) {
+                tooltips.push(userMsg(inputMsgId,
+                    currency.baseValueToString(
+                        accountGainsState[inputBaseValuePropertyName]),
+                ));
+            }
+
+            const reinvestedGain = accountGainsState.costBasisBaseValue
+                - accountGainsState.cashInBaseValue;
+            if (reinvestedGain) {
+                tooltips.push(userMsg('LotCellEditors-reinvestedGain_tooltip',
+                    currency.baseValueToString(reinvestedGain)));
+            }
+
+            const { priceDataItem } = accountStateInfo;
+            if (priceDataItem) {
+                tooltips.push(userMsg('LotCellEditors-price_date_tooltip',
+                    currency.decimalValueToString(priceDataItem.close),
+                    accessor.formatDate(priceDataItem.ymdDate)
+                ));
+            }
+        }
     }
 
     return {
@@ -2529,8 +2559,10 @@ export function getTotalAnnualCashInPercentGainColumnInfo(args) {
 export function calcAnnualCashInPercentGainBalanceValue(args) {
     args = Object.assign({}, args, {
         getLotStatesFromAccountGainsState: GH.getAccountGainsStateCashInLotStates,
-        //inputMsgId: 'LotCellEditors-cashIn_tooltip',
+        inputMsgId: 'LotCellEditors-cashIn_tooltip',
+        inputBaseValuePropertyName: 'cashInBaseValue',
     });
     const result = GH.calcAccountGainsStatePercentAnnualGain(args);
+
     return annualGainResultToBalanceValue(args, result);
 }

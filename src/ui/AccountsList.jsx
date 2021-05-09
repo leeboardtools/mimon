@@ -1174,7 +1174,7 @@ export class AccountsList extends React.Component {
     }
 
 
-    renderQuantityBaseValue(renderArgs, quantityBaseValue) {
+    renderQuantityBaseValue(renderArgs, quantityBaseValue, tooltip) {
         const columnInfo = this.columnInfoFromRenderArgs(renderArgs);
 
         const currency = this.props.accessor.getCurrencyOfAccountId(
@@ -1187,6 +1187,10 @@ export class AccountsList extends React.Component {
             quantityBaseValue: quantityBaseValue,
             currency: currency,
         };
+        if (tooltip) {
+            quantityValue.tooltip = tooltip;
+        }
+
         return ACE.renderBalanceDisplay({
             columnInfo: columnInfo,
             value: quantityValue,
@@ -1200,7 +1204,17 @@ export class AccountsList extends React.Component {
         const { accountGainsState } = rowInfo;
         if (accountGainsState) {
             const quantityBaseValue = accountGainsState.marketValueBaseValue;
-            return this.renderQuantityBaseValue(renderArgs, quantityBaseValue);
+
+            let tooltip;
+            const { priceDataItem } = accountGainsState;
+            if (priceDataItem) {
+                tooltip = userMsg('AccountsList-price_tooltip',
+                    priceDataItem.close,
+                    this.props.accessor.formatDate(priceDataItem.ymdDate),
+                );
+            }
+            return this.renderQuantityBaseValue(
+                renderArgs, quantityBaseValue, tooltip);
         }
     }
 

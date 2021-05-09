@@ -87,6 +87,7 @@ export function compoundAnnualGrowthRate(
  * @property {number} marketValueBaseValue
  * @property {number} costBasisBaseValue
  * @property {number} cashInBaseValue
+ * @property {PriceDataItem} [priceDataItem]
  * @property {LotStateDataItem[]} [cashInLotStates] Only present if lotStates is also
  * present, the lot states adjusted to reflect the cash-in state.
  * @property {boolean} isQuantityShares This is true if the quantityBaseValue property
@@ -177,6 +178,11 @@ export function accountStateToAccountGainsState(args) {
     }
 
     accountState.isExcludeFromGain = isExcludeFromGain;
+    
+    const { priceDataItem } = args;
+    if (priceDataItem) {
+        accountState.priceDataItem = priceDataItem;
+    }
 
     return accountState;
 }

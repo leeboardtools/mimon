@@ -158,6 +158,8 @@
     "AccountsList-netWorth_name": "Net Worth",
     "AccountsList-netIncome_name": "Net Income",
 
+    "AccountsList-price_tooltip": ["", "sh @ ", " on ", ""],
+
     "AccountsList-percentOfRootAccount_column_label": "% of Root Account",
     "AccountsList-percentOfAccountGroup_column_label": "% of Account Group",
 
@@ -380,6 +382,7 @@
     "LotCellEditors-price_date_tooltip": ["Price: ", " On ", ""],
     "LotCellEditors-percentGain_tooltip": ["", "%"],
     "LotCellEditors-absoluteGain_tooltip": ["Absolute Gain: ", ""],
+    "LotCellEditors-reinvestedGain_tooltip": ["Reinvested Gain: ", ""],
 
 
     "LotsSelectionEditor-term": "Term",

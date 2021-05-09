@@ -531,10 +531,7 @@ Column sorting in RowTable:
 
         - Date selector/header bar doesn't change body area size.
 
-        - Add price info to lot based balance tooltip.
-
         - Root accounts are displaying total balance when not collapsed.
- 
 
         - Export as CSV
             - Need to clean up FileSelector.
