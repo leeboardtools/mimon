@@ -669,6 +669,125 @@ export function calcLotStateGain(args, lotStates) {
 }
 
 
+/**
+ * @typedef {object} GainHelpers~calcLotStatePercentAnnualGainArgs
+ * {@link GainHelpers~createAccountStateInfoArgs} plus the following:
+ * @property {YMDDate|string} [ymdDateRef] If specified the reference date for the
+ * annual gain, otherwise today will be used.
+ * @property {LotStateDataItem[]} [lotStates] Either lotStates or accuontStateDataItem
+ * may be specified, if lotStates is not then accountStateDataItem should be or
+ * passed as the second arg to {@link calcLotStatePercentAnnualGainArgs}.
+ * @property {AccountStateDataItem} [accountStateDataItem]
+ */
+
+/**
+ * @typedef {object} GainHelpers~LotPercentAnnualGainInfo
+ * @property {LotStateDataItem} lotState
+ * @property {number}   percentAnnualGain
+ * @property {boolean}  isStraightGain This is <code>true</code> if 
+ * percentAnnualGain is just the straight gain.
+ */
+
+/**
+ * @typedef {object} GainHelpers~LotStatePercentAnnualGainResult
+ * @property {GainHelpers~AccountStateInfo} accountStateInfo
+ * @property {GainHelpers~LotPercentAnnualGainInfo[]} lotPercentAnnualGains
+ * @property {number} percentAnnualGain
+ * @property {number} percentAnnualGainBaseValue
+ */
+
+export function calcAccountGainsStatePercentAnnualGain(args) {
+    const accountStateInfo = createAccountStateInfo(args);
+    if (!accountStateInfo) {
+        return;
+    }
+
+    const { accountGainsState, getLotStatesFromAccountGainsState } = args;
+    if (!accountGainsState || !getLotStatesFromAccountGainsState
+     || accountGainsState.isExcludeFromGain) {
+        return;
+    }
+
+    const lotStates = getLotStatesFromAccountGainsState(accountGainsState);
+    if (!lotStates) {
+        return;
+    }
+
+    let { ymdDateRef } = args;
+    if (!ymdDateRef) {
+        ymdDateRef = new YMDDate();
+    }
+    else {
+        ymdDateRef = getYMDDate(ymdDateRef);
+    }
+    const ymdDateYearOld = ymdDateRef.addYears(-1);
+
+    let totalSharesBaseValue = 0;
+    lotStates.forEach((lotState) => totalSharesBaseValue += lotState.quantityBaseValue);
+
+    const lotPercentAnnualGains = [];
+    let percentAnnualGain = 0;
+
+    const percentQuantityDefinition 
+        = accountStateInfo.accessor.getPercentGainQuantityDefinition();
+
+    for (let i = 0; i < lotStates.length; ++i) {
+        const lotState = lotStates[i];
+        const ymdDateCreated = getYMDDate(lotState.ymdDateCreated);
+
+        const { marketValueBaseValue } = lotState;
+
+        let percentGainValue;
+        let isStraightGain;
+        if (YMDDate.compare(ymdDateYearOld, ymdDateCreated) < 0) {
+            // Too soon, just do straight percentage
+            // OK to use base values...
+            percentGainValue = percentGain({
+                inputValue: lotState.costBasisBaseValue,
+                outputValue: marketValueBaseValue,
+            });
+            isStraightGain = true;
+        }
+        else {
+            // Do CAGR
+            percentGainValue = compoundAnnualGrowthRate({
+                inputValue: lotState.costBasisBaseValue,
+                outputValue: marketValueBaseValue,
+                ymdDateInput: lotState.ymdDateCreated,
+                ymdDateOutput: ymdDateRef,
+            }) * 100;
+        }
+
+        percentGainValue = percentQuantityDefinition.cleanupNumber(percentGainValue);
+
+        lotPercentAnnualGains.push({
+            lotState: lotState,
+            percentAnnualGain: percentGainValue,
+            isStraightGain: isStraightGain,
+        });
+
+        if (percentAnnualGain !== undefined) {
+            percentAnnualGain += percentGainValue * lotState.quantityBaseValue
+                / totalSharesBaseValue;
+        }
+    }
+
+    const percentAnnualGainBaseValue 
+        = percentQuantityDefinition.numberToBaseValue(percentAnnualGain);
+    percentAnnualGain = percentQuantityDefinition.baseValueToNumber(
+        percentAnnualGainBaseValue
+    );
+
+    return {
+        accountStateInfo: accountStateInfo,
+        lotPercentAnnualGains: lotPercentAnnualGains,
+        percentAnnualGain: percentAnnualGain,
+        percentAnnualGainBaseValue: percentAnnualGainBaseValue,
+        ymdDateRef: ymdDateRef.toString(),
+    };
+}
+
+
 
 /**
  * Distributes any non-cash-in lot states among all older lot states 
