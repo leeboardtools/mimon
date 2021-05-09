@@ -507,9 +507,6 @@ Column sorting in RowTable:
                 - Can't add different currencies.
         
 
-        - Date Range:
-            - Will need to redo retrieval of account states since that is async.
-
         - Date Selector Bar:
             - Standard options:
                 - Today
@@ -530,8 +527,6 @@ Column sorting in RowTable:
                     - 52 weeks
 
         - Date selector/header bar doesn't change body area size.
-
-        - Root accounts are displaying total balance when not collapsed.
 
         - Export as CSV
             - Need to clean up FileSelector.

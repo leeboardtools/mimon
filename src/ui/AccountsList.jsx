@@ -954,6 +954,9 @@ export class AccountsList extends React.Component {
                 totalAccountGainsState, accountGainsState
             );
         }
+        else {
+            accountGainsState = GH.cloneAccountGainsState(accountGainsState);
+        }
 
         const accountDataItem = accessor.getAccountDataItemWithId(accountId);
         if (accountDataItem.childAccountIds) {
