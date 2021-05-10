@@ -187,7 +187,7 @@ export class AccountsList extends React.Component {
 
 
     onAccountAdd(result) {
-        if (this.isAccountIdDisplayed(result.newAccountDataItem.id)) {
+        if (this.isAccountIdCounted(result.newAccountDataItem.id)) {
             this.rebuildRowInfos();
         }
     }
@@ -252,7 +252,7 @@ export class AccountsList extends React.Component {
     }
 
     _isOurAccountId(accountId) {
-        if (this.isAccountIdDisplayed(accountId)) {
+        if (this.isAccountIdCounted(accountId)) {
             return true;
         }
 
@@ -620,6 +620,7 @@ export class AccountsList extends React.Component {
                 state: state,
                 rowInfos: rowInfos, 
                 insertAfterRowInfo: rootNetWorthAfterRowInfo,
+                accountStateInfosByAccountId: accountStateInfosByAccountId,
                 plusRootAccountDataItem: accessor.getAccountDataItemWithId(
                     rootAssetAccountId), 
                 minusRootAccountDataItem: accessor.getAccountDataItemWithId(
@@ -632,6 +633,7 @@ export class AccountsList extends React.Component {
                 state: state,
                 rowInfos: rowInfos, 
                 insertAfterRowInfo: rootNetIncomeAfterRowInfo,
+                accountStateInfosByAccountId: accountStateInfosByAccountId,
                 plusRootAccountDataItem: accessor.getAccountDataItemWithId(
                     rootIncomeAccountId), 
                 minusRootAccountDataItem: accessor.getAccountDataItemWithId(
@@ -813,7 +815,31 @@ export class AccountsList extends React.Component {
 
 
     addRootNetRowInfo({ state, rowInfos, insertAfterRowInfo, 
+        accountStateInfosByAccountId,
         plusRootAccountDataItem, minusRootAccountDataItem, name }) {
+
+        let isPlusRowInfo;
+        let isMinusRowInfo;
+        rowInfos.forEach((rowInfo) => {
+            if (rowInfo.accountDataItem) {
+                if (rowInfo.accountDataItem.id === plusRootAccountDataItem.id) {
+                    isPlusRowInfo = true;
+                }
+                else if (rowInfo.accountDataItem.id === minusRootAccountDataItem.id) {
+                    isMinusRowInfo = true;
+                }
+            }
+        });
+
+        if (!isPlusRowInfo) {
+            this.addNonRowInfoChildAccount(
+                plusRootAccountDataItem.id, accountStateInfosByAccountId);
+        }
+
+        if (!isMinusRowInfo) {
+            this.addNonRowInfoChildAccount(
+                minusRootAccountDataItem.id, accountStateInfosByAccountId);
+        }
 
         const netRowInfo = {
             key: '_NET_' + name,
@@ -933,7 +959,7 @@ export class AccountsList extends React.Component {
         let { state, totalAccountGainsState, childAccountIds } = args;
 
         childAccountIds.forEach((accountId) => {
-            if (!this.isAccountIdDisplayed(accountId)) {
+            if (!this.isAccountIdCounted(accountId)) {
                 return;
             }
 
@@ -979,7 +1005,7 @@ export class AccountsList extends React.Component {
     }
 
 
-    isAccountIdDisplayed(accountId) {
+    isAccountIdCounted(accountId) {
         const { showHiddenAccounts, showInactiveAccounts } = this.props;
         if (!showHiddenAccounts && this._hiddenAccountIds.has(accountId)) {
             return false;
@@ -999,6 +1025,17 @@ export class AccountsList extends React.Component {
             return false;
         }
 
+        return true;
+    }
+
+
+    isAccountIdDisplayed(accountId) {
+        if (!this.isAccountIdCounted(accountId)) {
+            return false;
+        }
+
+        const accountDataItem = this.props.accessor.getAccountDataItemWithId(
+            accountId);
         if (this._hiddenRootAccountTypes.has(accountDataItem.type)) {
             return false;
         }
