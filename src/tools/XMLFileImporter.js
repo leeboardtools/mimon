@@ -1620,6 +1620,11 @@ class XMLFileImporterImpl {
             }
         }
 
+        if (!A.getAccountType(account.type).hasLots) {
+            account.isExcludeFromGain = true;
+        }
+
+
         xmlAccount.account = account;
 
         if (parentXMLAccount) {
