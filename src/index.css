@@ -137,7 +137,8 @@ label {
     color: #495057a6;
 }
 
-.AccountList-too-young-account {
+.AccountList-too-young-account,
+.PricedItemsList-too-young {
     font-style: italic;
     text-decoration: line-through;
     font-weight:lighter;

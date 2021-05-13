@@ -455,10 +455,14 @@
     "PricedItemsListHandler-showPricedItemAccounts": "Show Accounts Containing Securities",
     "PricedItemsListHandler-showHiddenPricedItemAccounts": "Show Hidden Accounts",
     "PricedItemsListHandler-showInactivePricedItemAccounts": "Show Inactive Accounts",
+    "PricedItemsListHandler-showDateSelector": "Show Date Selector",
     "PricedItemsListHandler-sortAlphabetically": "Display Alphabetically",
     "PricedItemsListHandler-columns_subMenu": "Columns",
     "PricedItemsListHandler-title": ["", " List"],
 
+    "PricedItemsListHandler-action_showDateSelector": "Show Date Selector",
+    "PricedItemsListHandler-action_hideDateSelector": "Hide Date Selector",
+    "PricedItemsListHandler-action_as_of_date": "As-Of Date Change",
     "PricedItemsListHandler-action_toggleShowHiddenPricedItems": ["Toggle Show Hidden ", ""],
     "PricedItemsListHandler-action_showAccounts": "Show Accounts Containing Securities",
     "PricedItemsListHandler-action_hideAccounts": "Hide Accounts Containing Securities",
@@ -472,6 +476,9 @@
     "PricedItemsListHandler-action_expandPricedItem": ["Show Accounts of ", ""],
     "PricedItemsListHandler-action_collapsePricedItem": ["Hide Accounts of ", ""],
 
+    "PricedItemsListHandler-dateString": ["Date: ", ""],
+    "PricedItemsListHandler-as_of_date_label": "As of: ",
+    "PricedItemsListHandler-today_button_label": "Today",
 
     "PricedItemSelector-baseCurrency_label": ["Default Currency (", ")" ],
     "PricedItemSelector-currency_label": ["", " - ", ""],

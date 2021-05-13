@@ -539,7 +539,6 @@ Column sorting in RowTable:
         
     
     - Priced Items List
-        - Convert to use AccountGainsState loading similar to AccountsList.
         - Listen for price, transaction changes.
         
 

@@ -742,6 +742,11 @@ export class PricedItemsList extends React.Component {
         const { state } = this;
         const { rowInfos } = state;
 
+        const summaryRowInfo = state.rowInfosByKey.get('_SUMMARY_');
+        if (summaryRowInfo) {
+            summaryRowInfo.accountGainsState = undefined;
+        }
+
         let summaryAccountGainsState;
 
         rowInfos.forEach((rowInfo) => {
@@ -753,7 +758,6 @@ export class PricedItemsList extends React.Component {
             );
         });
 
-        const summaryRowInfo = state.rowInfosByKey.get('_SUMMARY_');
         if (summaryRowInfo) {
             summaryRowInfo.accountGainsState = summaryAccountGainsState;
         }
@@ -904,7 +908,10 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    renderName({ columnInfo, rowInfo, renderAsText }) {
+    renderName(args) {
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        const { rowInfo, renderAsText } = args;
+
         const { pricedItemDataItem } = rowInfo;
         if (pricedItemDataItem) {
             let value = pricedItemDataItem.name;
@@ -943,7 +950,10 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    renderDescription({ columnInfo, rowInfo, renderAsText }) {
+    renderDescription(args) {
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        const { rowInfo, renderAsText } = args;
+
         const { pricedItemDataItem } = rowInfo;
         if (pricedItemDataItem) {
             return ACE.renderDescriptionDisplay({
@@ -955,7 +965,10 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    renderCurrency({ columnInfo, rowInfo, renderAsText }) {
+    renderCurrency(args) {
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        const { rowInfo, renderAsText } = args;
+
         const { pricedItemDataItem } = rowInfo;
         if (pricedItemDataItem) {
             let { currency } = pricedItemDataItem;
@@ -974,7 +987,10 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    renderQuantityDefinition({ columnInfo, rowInfo, renderAsText }) {
+    renderQuantityDefinition(args) {
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        const { rowInfo, renderAsText } = args;
+
         const { pricedItemDataItem } = rowInfo;
         if (pricedItemDataItem) {
             const quantityDefinition 
@@ -990,7 +1006,10 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    renderTicker({ columnInfo, rowInfo, renderAsText }) {
+    renderTicker(args) {
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        const { rowInfo, renderAsText } = args;
+
         const { pricedItemDataItem } = rowInfo;
         if (pricedItemDataItem) {
             return ACE.renderTextDisplay({
@@ -1007,7 +1026,10 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    renderOnlineSource({ columnInfo, rowInfo, renderAsText }) {
+    renderOnlineSource(args) {
+        const columnInfo = this.columnInfoFromRenderArgs(args);
+        const { rowInfo, renderAsText } = args;
+
         const { pricedItemDataItem } = rowInfo;
         if (pricedItemDataItem) {
             const onlineUpdateType = PI.getPricedItemOnlineUpdateType(
@@ -1029,6 +1051,12 @@ export class PricedItemsList extends React.Component {
             columnInfo = Object.assign({}, columnInfo);
             columnInfo.inputClassExtras
                 += ' PricedItemsList-subtotal PricedItemsList-subtotal-value';
+        }
+        else if (!rowInfo.accountGainsState) {
+            columnInfo = Object.assign({}, columnInfo, {
+                inputClassExtras: (columnInfo.inputClassExtras || '')
+                    + ' PricedItemsList-too-young',
+            });
         }
 
         return columnInfo;
@@ -1304,6 +1332,8 @@ export class PricedItemsList extends React.Component {
                 contextMenuItems = {props.contextMenuItems}
                 onChooseContextMenuItem = {props.onChooseContextMenuItem}
 
+                preHeaderComponent = {props.header}
+
                 rowClassExtras = {rowClassExtras}
 
                 id = {props.id}
@@ -1369,6 +1399,8 @@ PricedItemsList.propTypes = {
 
     collapsedPricedItemIds: PropTypes.arrayOf(PropTypes.number),
     onUpdateCollapsedPricedItemIds: PropTypes.func,
-    id: PropTypes.string,
+
+    header: PropTypes.any,
     children: PropTypes.any,
+    id: PropTypes.string,
 };

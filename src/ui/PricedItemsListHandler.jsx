@@ -8,6 +8,8 @@ import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
 import { TabIdRowTableHandler, updateStateFromProjectSettings, 
 } from './RowTableHelpers';
 import { getColumnWithKey } from '../util-ui/ColumnInfo';
+import { getYMDDate, YMDDate } from '../util/YMDDate';
+import { DateSelectorBar, } from './DateSelectorBar';
 
 const pricedItemsListTagPrefix = 'pricedItemsList_';
 
@@ -125,6 +127,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
 
     updateStateFromModifiedProjectSettings(args) {
+        updateStateFromProjectSettings(args, 'showDateSelector');
+
         updateStateFromProjectSettings(args, 'hiddenPricedItemIds');
 
         updateStateFromProjectSettings(args, 'showHiddenPricedItems');
@@ -343,6 +347,40 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
 
 
+    onToggleDateSelector(tabId, stateChanges) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, 
+            stateChanges || {
+                showDateSelector: !state.showDateSelector,
+            });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = (newState.showDateSelector)
+            ? 'PricedItemsListHandler-action_showDateSelector'
+            : 'PricedItemsListHandler-action_hideDateSelector';
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(state.projectSettingsId,
+            {
+                showDateSelector: newState.showDateSelector,
+            },
+            userMsg(actionNameId));
+    }
+
+
+    onYMDDateChange(tabId, change, actionNameId) {
+        const state = this.getTabIdState(tabId);
+        this.setTabIdState(tabId, change);
+
+        this.setTabIdProjectSettings(state.projectSettingsId,
+            change,
+            userMsg(actionNameId));
+    }
+
+
+
     onExportAsStringTable(tabId) {
         const state = this.getTabIdState(tabId);
         const { current } = state.pageRef;
@@ -352,7 +390,31 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
         const { renderAsStringTable } = current;
         if (renderAsStringTable) {
-            return renderAsStringTable();
+            const stringTable = renderAsStringTable();
+            if (!stringTable) {
+                return;
+            }
+
+            if (state.showDateSelector) {
+                const { accessor } = this.props;
+                let { startYMDDate, endYMDDate } = state;
+                endYMDDate = getYMDDate(endYMDDate) || new YMDDate();
+
+                let dateLine;
+                if (startYMDDate) {
+                    dateLine = userMsg('AccountsListHandler-dateRange',
+                        accessor.formatDate(startYMDDate),
+                        accessor.formatDate(endYMDDate));
+                }
+                else {
+                    dateLine = userMsg('AccountsListHandler-dateString',
+                        accessor.formatDate(endYMDDate));
+                }
+                
+                stringTable.splice(0, 0, dateLine);
+            }
+
+            return stringTable;
         }
     }
 
@@ -363,6 +425,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             showHiddenPricedItems, showInactivePricedItems,
             showAccounts, showHiddenAccounts, showInactiveAccounts,
             sortAlphabetically,
+            showDateSelector,
             allColumns,
         } = state;
 
@@ -402,6 +465,11 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                     typeDescription),
                 disabled: !activePricedItemId,
                 onChooseItem: () => this.onOpenPricesList(tabId),
+            },
+            { id: 'toggleDateSelector',
+                label: userMsg('PricedItemsListHandler-showDateSelector'),
+                checked: showDateSelector,
+                onChooseItem: () => this.onToggleDateSelector(tabId),
             },
             {},
             { id: 'newPricedItem',
@@ -594,6 +662,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             ? userMsg('PricedItemsListHandler-title', typeDescription)
             : settings.title;
         const allColumns = createDefaultColumns(pricedItemTypeName);
+        const showDateSelector = (settings.showDateSelector === undefined)
+            ? false
+            : settings.showDateSelector;
         const showRowBorders = (settings.showRowBorders === undefined)
             ? true
             : settings.showRowBorders;
@@ -618,6 +689,10 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             showAccounts: showAccounts,
             showHiddenAccounts: settings.showHiddenAccounts,
             showInactiveAccounts: settings.showInactiveAccounts,
+
+            pricesYMDDate: settings.pricesYMDDate,
+            showDateSelector: showDateSelector,
+
             sortAlphabetically: sortAlphabetically,
             collapsedPricedItemIds: collapsedPricedItemIds,
             allColumns: allColumns,
@@ -645,11 +720,36 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     onRenderTabPage(tabEntry, isActive) {
         const { accessor } = this.props;
 
-        const state = this.getTabIdState(tabEntry.tabId);
-        const { dropdownInfo, collapsedPricedItemIds } = state;
+        const { tabId } = tabEntry;
+
+        const state = this.getTabIdState(tabId);
+        const { dropdownInfo, collapsedPricedItemIds, showDateSelector } = state;
+
         let contextMenuItems;
         if (dropdownInfo) {
             contextMenuItems = dropdownInfo.items;
+        }
+
+        let dateSelector;
+        if (showDateSelector) {
+            dateSelector = <DateSelectorBar
+                classExtras = "PricedItemsList-DateSelectorBar"
+                fieldClassExtras = "PricedItemsList-DateSelectorField"
+                label = {userMsg('PricedItemsListHandler-as_of_date_label')}
+                ymdDate = {tabEntry.pricesYMDDate}
+                onYMDDateChange = {(ymdDate) => this.onYMDDateChange(tabId, 
+                    {
+                        pricesYMDDate: ymdDate,
+                    },
+                    'PricedItemsListHandler-action_as_of_date')}
+                clearButtonLabel 
+                    = {userMsg('PricedItemsListHandler-today_button_label')}
+
+                dateFormat = {accessor.getDateFormat()}
+                onClose = {() => this.onToggleDateSelector(tabId, {
+                    showDateSelector: false,
+                })}
+            />;
         }
 
         return <PricedItemsList
@@ -668,6 +768,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             showHiddenAccounts = {tabEntry.showHiddenAccounts}
             showInactiveAccounts = {tabEntry.showInactiveAccounts}
 
+            pricesYMDDate = {tabEntry.pricesYMDDate}
+
             sortAlphabetically = {tabEntry.sortAlphabetically}
 
             collapsedPricedItemIds = {collapsedPricedItemIds}
@@ -680,6 +782,8 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             onMoveColumn = {(args) =>
                 this._rowTableHandler.onMoveColumn(tabEntry.tabId, args)}
             contextMenuItems = {contextMenuItems}
+
+            header = {dateSelector}
 
             ref = {tabEntry.pageRef}
 
