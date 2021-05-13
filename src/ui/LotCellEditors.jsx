@@ -2286,9 +2286,9 @@ function calcGainBalanceValue(args) {
         ));
 
         const { accountGainsState } = accountStateInfo;
-        if (accountGainsState) {
-            const reinvestedGain = accountGainsState.costBasisBaseValue
-                - accountGainsState.cashInBaseValue;
+        if (accountGainsState && accountGainsState.gainTotals) {
+            const reinvestedGain = accountGainsState.gainTotals.costBasisBaseValue
+                - accountGainsState.gainTotals.cashInBaseValue;
             if (reinvestedGain) {
                 tooltips.push(userMsg('LotCellEditors-reinvestedGain_tooltip',
                     currency.baseValueToString(reinvestedGain)));
@@ -2493,21 +2493,22 @@ function annualGainResultToBalanceValue(args, result) {
     const { accountStateInfo, } = result;
     if (accountStateInfo && inputBaseValuePropertyName) {
         const { currency, accountGainsState } = accountStateInfo;
-        if (accountGainsState) {
+        if (accountGainsState && accountGainsState.gainTotals) {
             tooltips.push(userMsg('LotCellEditors-marketValue_tooltip',
-                currency.baseValueToString(accountGainsState.marketValueBaseValue)
+                currency.baseValueToString(
+                    accountGainsState.gainTotals.marketValueBaseValue)
             ));
 
             const { inputMsgId } = args;
             if (inputMsgId) {
                 tooltips.push(userMsg(inputMsgId,
                     currency.baseValueToString(
-                        accountGainsState[inputBaseValuePropertyName]),
+                        accountGainsState.gainTotals[inputBaseValuePropertyName]),
                 ));
             }
 
-            const reinvestedGain = accountGainsState.costBasisBaseValue
-                - accountGainsState.cashInBaseValue;
+            const reinvestedGain = accountGainsState.gainTotals.costBasisBaseValue
+                - accountGainsState.gainTotals.cashInBaseValue;
             if (reinvestedGain) {
                 tooltips.push(userMsg('LotCellEditors-reinvestedGain_tooltip',
                     currency.baseValueToString(reinvestedGain)));

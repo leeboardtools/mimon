@@ -202,6 +202,8 @@ export class PricedItemsList extends React.Component {
         this.onActivateRow = this.onActivateRow.bind(this);
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
 
+        this._asyncLoadAccountStateInfos = this._asyncLoadAccountStateInfos.bind(this);
+
         this.renderAsStringTable = this.renderAsStringTable.bind(this);
 
         const { pricedItemTypeName, collapsedPricedItemIds } = this.props;
@@ -210,8 +212,25 @@ export class PricedItemsList extends React.Component {
 
         this.state = {
             rowInfos: [],
+            rowInfosChangeId: 0,
+
             rowInfosByKey: new Map(),
+
             columnKeys: new Set(),
+
+            accountStateInfosByAccountId: new Map(),
+            accountStateInfosByPricedItemId: new Map(),
+
+            accountStateInfoLoadingInfo: {
+                rowInfosChangeId: 0,
+                ymdDate: props.pricesYMDDate,
+            },
+            loadedAccountStateInfo: {
+                rowInfosChangeId: 0,
+                ymdDate: props.pricesYMDDate,
+            },
+
+
             accountIdsByPricedItemId: new Map(),
             pricesByPricedItemId: new Map(),
         };
@@ -291,7 +310,7 @@ export class PricedItemsList extends React.Component {
 
         this.accountIdsUpdated();
 
-        this.updatePrices();
+        this.reloadAccountStateInfos();
     }
 
     componentWillUnmount() {
@@ -365,6 +384,7 @@ export class PricedItemsList extends React.Component {
 
         if (rowsNeedUpdating) {
             const { prevActiveRowKey } = this.state;
+
             const result = this.buildRowInfos();
             result.rowsNeedUpdating = false;
             this.setState(result);
@@ -378,6 +398,120 @@ export class PricedItemsList extends React.Component {
             }
         }
 
+        if ((props.pricesYMDDate !== prevProps.pricesYMDDate)
+         || (this.state.rowInfosChangeId 
+            !== this.state.accountStateInfoLoadingInfo.rowInfosChangeId)) {
+            this.reloadAccountStateInfos();
+        }
+    }
+
+
+    reloadAccountStateInfos() {
+        const { state, props } = this;
+        const { rowInfosChangeId, accountStateInfoLoadingInfo } = state;
+        const { pricesYMDDate, } = props;
+
+        if ((rowInfosChangeId !== accountStateInfoLoadingInfo.rowInfosChangeId)
+         || (pricesYMDDate !== accountStateInfoLoadingInfo.ymdDate)) {
+            this.setState({
+                accountStateInfoLoadingInfo: {
+                    rowInfosChangeId: rowInfosChangeId,
+                    ymdDate: pricesYMDDate,
+                },
+            },
+
+            () => {
+                process.nextTick(this._asyncLoadAccountStateInfos);
+            });
+        }
+    }
+
+
+    async _asyncLoadAccountStateInfos() {
+        const { accessor } = this.props;
+        const { accountStateInfoLoadingInfo, accountStateInfosByAccountId } = this.state;
+
+        const allAccountIds = Array.from(accountStateInfosByAccountId.keys());
+        const allAccountStateInfos = Array.from(accountStateInfosByAccountId.values());
+
+        let accountStateDataItems;
+
+        let { ymdDate } = accountStateInfoLoadingInfo;
+        if (ymdDate) {
+            accountStateDataItems = await accessor.asyncGetAccountStateForDate(
+                allAccountIds,
+                ymdDate,
+            );
+        }
+        else {
+            ymdDate = (new YMDDate()).toString();
+        }
+
+
+        if (!accountStateDataItems) {
+            accountStateDataItems = allAccountIds.map((accountId) =>
+                accessor.getCurrentAccountStateDataItem(accountId));
+        }
+
+        // We only need priceDataItems for account states that have lots.
+        const accountIdIndicesByPriceDataItemId = new Map();
+        for (let i = 0; i < allAccountIds.length; ++i) {
+            const accountStateDataItem = accountStateDataItems[i];
+            if (!accountStateDataItem) {
+                continue;
+            }
+
+            const accountStateInfo = allAccountStateInfos[i];
+            const { accountDataItem } = accountStateInfo;
+            let accountIdsIndices = accountIdIndicesByPriceDataItemId.get(
+                accountDataItem.pricedItemId
+            );
+            if (!accountIdsIndices) {
+                accountIdsIndices = [];
+                accountIdIndicesByPriceDataItemId.set(accountDataItem.pricedItemId,
+                    accountIdsIndices);
+            }
+            accountIdsIndices.push(i);
+        }
+
+        if (accountIdIndicesByPriceDataItemId.size) {
+            const pricedItemIds = Array.from(accountIdIndicesByPriceDataItemId.keys());
+            const priceDataItems = await accessor.asyncGetPriceDataItemOnOrClosestBefore({
+                pricedItemId: pricedItemIds,
+                ymdDate: ymdDate,
+                refYMDDate: ymdDate,
+            });
+
+            const allAccountIdIndices 
+                = Array.from(accountIdIndicesByPriceDataItemId.values());
+            for (let i = 0; i < pricedItemIds.length; ++i) {
+                const accountIdIndices = allAccountIdIndices[i];
+                accountIdIndices.forEach((index) => {
+                    allAccountStateInfos[index].priceDataItem = priceDataItems[i];
+                });
+            }
+        }
+
+        for (let i = 0; i < allAccountIds.length; ++i) {
+            const accountStateInfo = allAccountStateInfos[i];
+            const { accountDataItem } = accountStateInfo;
+            const args = {
+                accessor: accessor,
+                accountId: allAccountIds[i],
+                accountState: accountStateDataItems[i],
+                priceDataItem: accountStateInfo.priceDataItem,
+                isExcludeFromGain: accountDataItem.isExcludeFromGain,
+                isQuantityShares: true,
+            };
+
+            accountStateInfo.accountGainsState = GH.accountStateToAccountGainsState(args);
+        }
+
+        this.updateRootRowInfoAccountStates();
+
+        this.setState({
+            loadedAccountStateInfo: accountStateInfoLoadingInfo,
+        });
     }
 
 
@@ -400,12 +534,9 @@ export class PricedItemsList extends React.Component {
     buildRowInfos(state) {
         state = state || this.state;
 
-        const summaryRowInfo = {
-            key: '_SUMMARY_',
-            expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
-        };
-
         const rowInfos = [];
+        const accountStateInfosByAccountId = new Map();
+
         const { accessor, pricedItemTypeName, 
             sortAlphabetically, 
         } = this.props;
@@ -424,18 +555,21 @@ export class PricedItemsList extends React.Component {
                 pricedItemDataItem.id);
         }
 
+        const addArgs = {
+            state: state,
+            rowInfos: rowInfos,
+            accountStateInfosByAccountId: accountStateInfosByAccountId,
+        };
         pricedItemIds.forEach((id) => {
-            this.addPricedItemIdToRowEntries(state, rowInfos, id);
+            addArgs.pricedItemId = id;
+            this.addPricedItemIdToRowEntries(addArgs);
         });
 
-        let summaryAccountGainsState;
-        rowInfos.forEach((rowInfo) => {
-            summaryAccountGainsState = GH.addAccountGainsState(summaryAccountGainsState,
-                rowInfo.accountGainsState);
-            rowInfo.summaryRowInfo = summaryRowInfo;
-        });
-        summaryRowInfo.accountGainsState = summaryAccountGainsState;
 
+        const summaryRowInfo = {
+            key: '_SUMMARY_',
+            expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
+        };
         rowInfos.push(summaryRowInfo);
 
         let { activeRowKey } = state;
@@ -460,6 +594,8 @@ export class PricedItemsList extends React.Component {
 
         return {
             rowInfos: rowInfos,
+            rowInfosChangeId: state.rowInfosChangeId + 1,
+            accountStateInfosByAccountId: accountStateInfosByAccountId,
             rowInfosByKey: rowInfosByKey,
             activeRowKey: newActiveRowKey,
         };
@@ -488,7 +624,9 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    addPricedItemIdToRowEntries(state, rowInfos, pricedItemId) {
+    addPricedItemIdToRowEntries({state, rowInfos, pricedItemId, 
+        accountStateInfosByAccountId, }) {
+
         if (!this.isPricedItemIdDisplayed(pricedItemId)) {
             return;
         }
@@ -513,11 +651,11 @@ export class PricedItemsList extends React.Component {
             expandCollapseState: expandCollapseState,
             pricedItemDataItem: pricedItemDataItem,
             pricedItemId: pricedItemId,
+            accountIds: accountIds,
         };
         rowInfos.push(rowInfo);
 
         if (accountIds) {
-            let pricedItemAccountGainsState;
             let childRowInfos;
 
             if (showAccounts) {
@@ -531,47 +669,43 @@ export class PricedItemsList extends React.Component {
                     return;
                 }
 
-                const priceDataItem = state.pricesByPricedItemId.get(
-                    accountDataItem.pricedItemId);
-                
-                const accountState = this.getAccountStateForAccountId(accountId);
-                const accountGainsState = GH.accountStateToAccountGainsState({
-                    accessor: accessor,
-                    accountId: accountId,
-                    pricedItemId: pricedItemId,
-                    accountState: accountState,
-                    priceDataItem: priceDataItem,
-                    isExcludeFromGain: accountDataItem.isExcludeFromGain,
-                });
-
-                pricedItemAccountGainsState = GH.addAccountGainsState(
-                    pricedItemAccountGainsState,
-                    accountGainsState);
-
+                let childRowInfo;
                 if (childRowInfos) {
-                    childRowInfos.push({
+                    childRowInfo = {
                         key: 'AccountId_' + accountId,
                         expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
                         accountDataItem: accountDataItem,
-                        accountGainsState: accountGainsState,
-                    });
+                    };
+                    childRowInfos.push(childRowInfo);
                 }
+
+                const accountStateInfo = this.createAccountStateInfo(
+                    accountId, childRowInfo);
+                accountStateInfosByAccountId.set(accountId,
+                    accountStateInfo);
             });
 
             if (childRowInfos && this.props.sortAlphabetically) {
                 childRowInfos.sort((a, b) =>
                     a.accountDataItem.name.localeCompare(b.accountDataItem.name));
             }
-
-            rowInfo.accountGainsState = pricedItemAccountGainsState;
         }
     }
 
 
-    getAccountStateForAccountId(accountId) {
-        // Some day support a date...
-        const { accessor } = this.props;
-        return accessor.getCurrentAccountStateDataItem(accountId);
+    createAccountStateInfo(accountId, rowInfo) {
+        const { accessor, pricesYMDDate, } = this.props;
+
+        const accountStateInfo = {
+            rowInfo: rowInfo,
+            accountDataItem: accessor.getAccountDataItemWithId(accountId),
+        };
+        if (!pricesYMDDate) {
+            accountStateInfo.accountState 
+                = accessor.getCurrentAccountStateDataItem(accountId);
+        }
+
+        return accountStateInfo;
     }
 
 
@@ -604,32 +738,66 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    updatePrices() {
-        process.nextTick(async () => {
-            const newPricesByPricedItemId = new Map();
+    updateRootRowInfoAccountStates() {
+        const { state } = this;
+        const { rowInfos } = state;
 
-            const { accessor } = this.props;
-            let { pricesYMDDate } = this.props;
-            if (!pricesYMDDate) {
-                pricesYMDDate = new YMDDate();
-            }
+        let summaryAccountGainsState;
 
-            const pricedItemIds = accessor.getPricedItemIds();
-            for (let i = 0; i < pricedItemIds.length; ++i) {
-                const pricedItemId = pricedItemIds[i];
-                const priceDataItem 
-                    = await accessor.asyncGetPriceDataItemOnOrClosestBefore(
-                        pricedItemId, pricesYMDDate);
-                newPricesByPricedItemId.set(pricedItemId, priceDataItem);
-            }
+        rowInfos.forEach((rowInfo) => {
+            this.updatePricedItemRowInfoAccountStates(rowInfo);
 
-            if (!deepEqual(newPricesByPricedItemId, this.state.pricesByPricedItemId)) {
-                this.setState({
-                    pricesByPricedItemId: newPricesByPricedItemId,
-                });
-                this.rebuildRowInfos();
-            }
+            summaryAccountGainsState = GH.addAccountGainsState(
+                summaryAccountGainsState,
+                rowInfo.accountGainsState,
+            );
         });
+
+        const summaryRowInfo = state.rowInfosByKey.get('_SUMMARY_');
+        if (summaryRowInfo) {
+            summaryRowInfo.accountGainsState = summaryAccountGainsState;
+        }
+    }
+
+
+    updatePricedItemRowInfoAccountStates(rowInfo) {
+        const { accountStateInfosByAccountId } = this.state;
+        const { accountIds, childRowInfos } = rowInfo;
+        if (!accountIds) {
+            return;
+        }
+
+        let pricedItemAccountGainsState;
+        if (childRowInfos) {
+            childRowInfos.forEach((rowInfo) => {
+                const accountId = rowInfo.accountDataItem.id;
+                const accountStateInfo = accountStateInfosByAccountId.get(accountId);
+                if (!accountStateInfo) {
+                    rowInfo.accountGainsState = undefined;
+                    return;
+                }
+                rowInfo.accountGainsState = accountStateInfo.accountGainsState;
+
+                pricedItemAccountGainsState = GH.addAccountGainsState(
+                    pricedItemAccountGainsState,
+                    accountStateInfo.accountGainsState);
+            });
+        }
+        else {
+            accountIds.forEach((accountId) => {
+                const accountStateInfo = accountStateInfosByAccountId.get(accountId);
+                if (!accountStateInfo) {
+                    return;
+                }
+
+                pricedItemAccountGainsState = GH.addAccountGainsState(
+                    pricedItemAccountGainsState,
+                    accountStateInfo.accountGainsState);
+            });
+        }
+
+
+        rowInfo.accountGainsState = pricedItemAccountGainsState;
     }
 
 
@@ -873,7 +1041,7 @@ export class PricedItemsList extends React.Component {
         const { accountGainsState, pricedItemId } = rowInfo;
         if (accountGainsState) {
             const quantityValue = {
-                quantityBaseValue: accountGainsState.marketValueBaseValue,
+                quantityBaseValue: accountGainsState.overallTotals.marketValueBaseValue,
                 quantityDefinition: this.props.accessor.getCurrencyOfPricedItemId(
                     pricedItemId
                 ).getQuantityDefinition(),
@@ -916,7 +1084,7 @@ export class PricedItemsList extends React.Component {
         const { accountGainsState, pricedItemId } = rowInfo;
         if (accountGainsState) {
             const quantityValue = {
-                quantityBaseValue: accountGainsState.costBasisBaseValue,
+                quantityBaseValue: accountGainsState.overallTotals.costBasisBaseValue,
                 quantityDefinition: this.props.accessor.getCurrencyOfPricedItemId(
                     pricedItemId
                 ).getQuantityDefinition(),
@@ -937,7 +1105,7 @@ export class PricedItemsList extends React.Component {
         const { accountGainsState, pricedItemId } = rowInfo;
         if (accountGainsState) {
             const quantityValue = {
-                quantityBaseValue: accountGainsState.cashInBaseValue,
+                quantityBaseValue: accountGainsState.overallTotals.cashInBaseValue,
                 quantityDefinition: this.props.accessor.getCurrencyOfPricedItemId(
                     pricedItemId
                 ).getQuantityDefinition(),
@@ -992,7 +1160,7 @@ export class PricedItemsList extends React.Component {
             return;
         }
 
-        if (!totalAccountGainsState.marketValueBaseValue) {
+        if (!totalAccountGainsState.gainTotals.marketValueBaseValue) {
             return;
         }
 
@@ -1006,9 +1174,9 @@ export class PricedItemsList extends React.Component {
 
         const quantityDefinition = totalCurrency.getQuantityDefinition();
         const totalValue = quantityDefinition.baseValueToNumber(
-            totalAccountGainsState.marketValueBaseValue);
+            totalAccountGainsState.gainTotals.marketValueBaseValue);
         const thisValue = quantityDefinition.baseValueToNumber(
-            accountGainsState.marketValueBaseValue);
+            accountGainsState.gainTotals.marketValueBaseValue);
         const percent = 100. * thisValue / totalValue;
         const percentQuantityDefinition = accessor.getPercentGainQuantityDefinition();
 
@@ -1191,6 +1359,7 @@ PricedItemsList.propTypes = {
     showHiddenPricedItems: PropTypes.bool,
     showInactivePricedItems: PropTypes.bool,
     showPricedItemIds: PropTypes.bool,
+
     sortAlphabetically: PropTypes.bool,
     showRowBorders: PropTypes.bool,
 

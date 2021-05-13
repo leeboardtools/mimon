@@ -147,9 +147,6 @@ export class AccountsList extends React.Component {
                 startYMDDate: props.startYMDDate,
                 endYMDDate: props.endYMDDate,
             },
-
-            pricesYMDDate: undefined,
-            pricesByPricedItemId: new Map(),
         };
 
         this._collapsedRowIds = new Set(collapsedAccountIds);
@@ -236,6 +233,8 @@ export class AccountsList extends React.Component {
 
 
     _updateIfOurTransactions(transactionDataItems) {
+        const { accountStateInfosByAccountId } = this.state;
+
         for (let i = 0; i < transactionDataItems.length; ++i) {
             const { splits } = transactionDataItems[i];
             if (!splits) {
@@ -243,25 +242,10 @@ export class AccountsList extends React.Component {
             }
 
             for (let s = 0; s < splits.length; ++s) {
-                if (this._isOurAccountId(splits[s].accountId)) {
+                if (accountStateInfosByAccountId.get(splits[s].accountId)) {
                     this.rebuildRowInfos();
                     return true;
                 }
-            }
-        }
-    }
-
-    _isOurAccountId(accountId) {
-        if (this.isAccountIdCounted(accountId)) {
-            return true;
-        }
-
-        const { accountDataItem } = this.props.accessor.getAccountDataItemWithId(
-            accountId);
-        if (accountDataItem) {
-            const { parentAccountId } = accountDataItem;
-            if (parentAccountId) {
-                return this._isOurAccountId(parentAccountId);
             }
         }
     }
@@ -358,17 +342,6 @@ export class AccountsList extends React.Component {
     }
 
 
-    //
-    // Account states need to be updated if:
-    //  - A transaction referring to one of our accounts changes.
-    //      - The actual AccountStates need to be reloaded.
-    //
-    //  - A price referring to one of our priced items changes.
-    //      - Need to call updateRootRowInfoAccountStates()
-    //
-    //  - The date range changes.
-    //      - Need to reload AccountStates, prices.
-    // 
     reloadAccountStateInfos() {
         const { state, props } = this;
         const { rowInfosChangeId, accountStateInfoLoadingInfo } = state;
@@ -778,6 +751,52 @@ export class AccountsList extends React.Component {
     }
 
 
+    /**
+     * @typedef {object} AccountsList~RowInfo
+     * A {@link CollapsibleRowTable~RowInfo} plus:
+     * @property {number} accountId
+     * @property {AccountDataItem} accountDataItem
+     * @property {boolean} isHidden
+     * @property {number} [groupRowInfoIndex]
+     * @property {number} [topLevelRowInfoIndex]
+     * @property {AccountGainsState} [accountGainsState]
+     * @property {AccountGainsState} [totalAccountGainsState] Contains the totals of 
+     * an account and all its children, used by renderPercentOfDisplay()
+     * for 'percentOfRootAccount' and 'percentOfAccountGroup'.
+     * Subtotal rows do not have a totalAccountGainsState.
+     * For accounts without children or not displaying their children
+     * accountGainsState === totalAccountGainsState.
+     * 
+     */
+
+    /**
+     * @typedef {object} AccountsList~SubtotalRowInfo
+     * A {@link AccountsList~RowInfo} plus:
+     * @property {string} subtotalName
+     */
+
+    /**
+     * @typedef {object} AccountsList~RootNetRowInfo
+     * A {@link AccountsList~RowInfo} plus:
+     * @property {number} plusRootAccountId
+     * @property {number} minusRootAccountId
+     * @property {AccountGainsState} plusAccountGainsState
+     * @property {AccountGainsState} minusAccountGainsState
+     * @property {string} rootNetName
+     */
+
+
+    /**
+     * @typedef {object} AccountsList~AccountStateInfo
+     * @private
+     * @property {AccountsList~RowInfo} rowInfo
+     * @property {AccountDataItem} accountDataItem
+     * @property {AccountState} [accountState]
+     * @property {GainHelpers~AccountGainsStateDataItem} [accountGainsState]
+     * @property {PriceDataItem} [priceDataItem]
+     * @property {PriceDataItem} [startPriceDataItem]
+     */
+
     createAccountStateInfo(accountId, rowInfo) {
         const { accessor, startYMDDate, endYMDDate } = this.props;
 
@@ -868,7 +887,7 @@ export class AccountsList extends React.Component {
             const rowInfo = rowInfos[i];
             const { key } = rowInfo;
             if (typeof key === 'string') {
-                if (rowInfo.key.startsWith('_NET_')) {
+                if (key.startsWith('_NET_')) {
                     this.updateRootNetRowInfoAccountStates(state, rowInfo);
                     continue;
                 }
@@ -895,6 +914,10 @@ export class AccountsList extends React.Component {
         if (childAccountIds && childAccountIds.length) {
             let { totalAccountGainsState } = rowInfo;
             totalAccountGainsState = GH.cloneAccountGainsState(totalAccountGainsState);
+            if (totalAccountGainsState.isExcludeFromGain) {
+                totalAccountGainsState.gainTotals = {};
+            }
+            
             rowInfo.totalAccountGainsState = totalAccountGainsState;
 
             const { childRowInfos } = rowInfo;
@@ -903,7 +926,9 @@ export class AccountsList extends React.Component {
                     const { key } = childRowInfo;
                     if (typeof key === 'string') {
                         if (key.startsWith('_SUBTOTAL_')) {
-                            childRowInfo.accountGainsState = totalAccountGainsState;
+                            childRowInfo.accountGainsState = GH.cloneAccountGainsState(
+                                totalAccountGainsState);
+                            childRowInfo.accountGainsState.isExcludeFromGain = false;
                             return;
                         }
                     }
@@ -937,13 +962,10 @@ export class AccountsList extends React.Component {
         if (accountGainsState) {
             accountGainsState.quantityBaseValue 
                 -= minusAccountGainsState.quantityBaseValue;
-            accountGainsState.marketValueBaseValue 
-                -= minusAccountGainsState.marketValueBaseValue;
+            accountGainsState.overallTotals.marketValueBaseValue 
+                -= minusAccountGainsState.overallTotals.marketValueBaseValue;
 
-            delete accountGainsState.costBasisBaseValue;
-            delete accountGainsState.cashInBaseValue;
-            delete accountGainsState.lotStates;
-            delete accountGainsState.cashInLotStates;
+            delete accountGainsState.gainTotals;
         }
 
         rowInfo.plusAccountGainsState = plusAccountGainsState;
@@ -1243,7 +1265,8 @@ export class AccountsList extends React.Component {
         let { rowInfo, } = renderArgs;
         const { accountGainsState } = rowInfo;
         if (accountGainsState) {
-            const quantityBaseValue = accountGainsState.marketValueBaseValue;
+            const quantityBaseValue 
+                = accountGainsState.overallTotals.marketValueBaseValue;
 
             let tooltip;
             const { priceDataItem } = accountGainsState;
@@ -1271,7 +1294,9 @@ export class AccountsList extends React.Component {
             return;
         }
 
-        if (!totalAccountGainsState.marketValueBaseValue) {
+        const totalMarketValueBaseValue 
+            = totalAccountGainsState.overallTotals.marketValueBaseValue;
+        if (!totalMarketValueBaseValue) {
             return;
         }
 
@@ -1284,9 +1309,9 @@ export class AccountsList extends React.Component {
 
         const quantityDefinition = totalCurrency.getQuantityDefinition();
         const totalValue = quantityDefinition.baseValueToNumber(
-            totalAccountGainsState.marketValueBaseValue);
+            totalMarketValueBaseValue);
         const thisValue = quantityDefinition.baseValueToNumber(
-            accountGainsState.marketValueBaseValue);
+            accountGainsState.overallTotals.marketValueBaseValue);
         const percent = 100. * thisValue / totalValue;
         const percentQuantityDefinition = accessor.getPercentGainQuantityDefinition();
 
@@ -1333,7 +1358,7 @@ export class AccountsList extends React.Component {
         let { rowInfo, } = renderArgs;
         const { accountGainsState } = rowInfo;
         if (accountGainsState) {
-            const quantityBaseValue = accountGainsState.costBasisBaseValue;
+            const quantityBaseValue = accountGainsState.overallTotals.costBasisBaseValue;
             return this.renderQuantityBaseValue(renderArgs, quantityBaseValue);
         }
     }
@@ -1343,7 +1368,7 @@ export class AccountsList extends React.Component {
         let { rowInfo, } = renderArgs;
         const { accountGainsState } = rowInfo;
         if (accountGainsState) {
-            const quantityBaseValue = accountGainsState.cashInBaseValue;
+            const quantityBaseValue = accountGainsState.overallTotals.cashInBaseValue;
             return this.renderQuantityBaseValue(renderArgs, quantityBaseValue);
         }
     }

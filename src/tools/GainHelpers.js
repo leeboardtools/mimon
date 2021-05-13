@@ -82,11 +82,18 @@ export function compoundAnnualGrowthRate(
 
 
 /**
- * @typedef {object} GainHelpers~AccountGainsStateDataItem
- * {@link AccountStateDataItem} with the following added:
+ * @typedef {object} GainHelpers~Totals
  * @property {number} marketValueBaseValue
  * @property {number} costBasisBaseValue
  * @property {number} cashInBaseValue
+ */
+
+
+/**
+ * @typedef {object} GainHelpers~AccountGainsStateDataItem
+ * {@link AccountStateDataItem} with the following added:
+ * @property {GainHelpers~Totals} overallTotals
+ * @property {GainHelpers~Totals} gainTotals
  * @property {PriceDataItem} [priceDataItem]
  * @property {LotStateDataItem[]} [cashInLotStates] Only present if lotStates is also
  * present, the lot states adjusted to reflect the cash-in state.
@@ -130,10 +137,13 @@ export function accountStateToAccountGainsState(args) {
         return;
     }
 
-    accountState = AS.getAccountStateDataItem(accountState, true);
-    accountState.isQuantityShares = A.getAccountType(accountDataItem.type).hasLots;
+    const accountGainsState = AS.getAccountStateDataItem(accountState, true);
+    accountGainsState.isQuantityShares = A.getAccountType(accountDataItem.type).hasLots;
 
-    let { lotStates } = accountState;
+    const overallTotals = {};
+    accountGainsState.overallTotals = overallTotals;
+
+    let { lotStates } = accountGainsState;
     if (lotStates) {
         const accountStateInfo = createAccountStateInfo(args);
 
@@ -152,7 +162,7 @@ export function accountStateToAccountGainsState(args) {
             lotStates[i] = lotState;
         }
 
-        accountState.lotStates = lotStates;
+        accountGainsState.lotStates = lotStates;
 
         const cashInLotStates = distributeNonCashInLots(
             accessor, lotStates);
@@ -166,25 +176,27 @@ export function accountStateToAccountGainsState(args) {
             }
         });
 
-        accountState.cashInLotStates = cashInLotStates;
+        accountGainsState.cashInLotStates = cashInLotStates;
 
-        accountState.marketValueBaseValue = totalMarketValueBaseValue;
-        accountState.costBasisBaseValue = totalCostBasisBaseValue;
-        accountState.cashInBaseValue = totalCashInBaseValue;
+        overallTotals.marketValueBaseValue = totalMarketValueBaseValue;
+        overallTotals.costBasisBaseValue = totalCostBasisBaseValue;
+        overallTotals.cashInBaseValue = totalCashInBaseValue;
     }
     else {
-        accountState.marketValueBaseValue 
-            = accountState.quantityBaseValue;
+        overallTotals.marketValueBaseValue 
+            = accountGainsState.quantityBaseValue;
     }
 
-    accountState.isExcludeFromGain = isExcludeFromGain;
+    accountGainsState.gainTotals = Object.assign({}, overallTotals);
+
+    accountGainsState.isExcludeFromGain = isExcludeFromGain;
     
     const { priceDataItem } = args;
     if (priceDataItem) {
-        accountState.priceDataItem = priceDataItem;
+        accountGainsState.priceDataItem = priceDataItem;
     }
 
-    return accountState;
+    return accountGainsState;
 }
 
 
@@ -208,7 +220,47 @@ export function cloneAccountGainsState(accountGainsState) {
             = Array.from(accountGainsState.cashInLotStates);
     }
 
+    const { overallTotals } = accountGainsState;
+    if (overallTotals) {
+        toAccountGainsState.overallTotals = Object.assign({}, overallTotals);
+    }
+
+    const { gainTotals } = accountGainsState;
+    if (gainTotals) {
+        toAccountGainsState.gainTotals = Object.assign({}, gainTotals);
+    }
+
     return toAccountGainsState;
+}
+
+
+export function addToTotals(toTotals, totalsToAdd) {
+    if (!totalsToAdd) {
+        return toTotals;
+    }
+    if (!toTotals) {
+        return Object.assign({}, totalsToAdd);
+    }
+
+    if (totalsToAdd.marketValueBaseValue) {
+        toTotals.marketValueBaseValue 
+            = (toTotals.marketValueBaseValue || 0)
+                + totalsToAdd.marketValueBaseValue;
+    }
+
+    if (totalsToAdd.costBasisBaseValue) {
+        toTotals.costBasisBaseValue
+            = (toTotals.costBasisBaseValue || 0)
+                + totalsToAdd.costBasisBaseValue;
+    }
+
+    if (totalsToAdd.cashInBaseValue) {
+        toTotals.cashInBaseValue
+            = (toTotals.cashInBaseValue || 0)
+                + totalsToAdd.cashInBaseValue;
+    }
+
+    return toTotals;
 }
 
 
@@ -225,15 +277,7 @@ export function addAccountGainsState(toAccountGainsState, fromAccountGainsState)
     }
 
     if (!toAccountGainsState) {
-        toAccountGainsState = AS.getAccountStateDataItem(fromAccountGainsState, true);
-        if (fromAccountGainsState.lotStates) {
-            toAccountGainsState.lotStates 
-                = Array.from(fromAccountGainsState.lotStates);
-        }
-        if (fromAccountGainsState.cashInLotStates) {
-            toAccountGainsState.cashInLotStates 
-                = Array.from(fromAccountGainsState.cashInLotStates);
-        }
+        toAccountGainsState = cloneAccountGainsState(fromAccountGainsState);
     }
     else {
         if (!fromAccountGainsState.isExcludeFromGain) {
@@ -248,6 +292,11 @@ export function addAccountGainsState(toAccountGainsState, fromAccountGainsState)
                     = (toAccountGainsState.cashInLotStates || []).concat(
                         fromAccountGainsState.cashInLotStates);
             }
+
+            toAccountGainsState.gainTotals = addToTotals(
+                toAccountGainsState.gainTotals,
+                fromAccountGainsState.gainTotals
+            );
         }
 
         if (fromAccountGainsState.quantityBaseValue
@@ -259,23 +308,10 @@ export function addAccountGainsState(toAccountGainsState, fromAccountGainsState)
                     + fromAccountGainsState.quantityBaseValue;
         }
 
-        if (fromAccountGainsState.marketValueBaseValue) {
-            toAccountGainsState.marketValueBaseValue 
-                = (toAccountGainsState.marketValueBaseValue || 0)
-                    + fromAccountGainsState.marketValueBaseValue;
-        }
-
-        if (fromAccountGainsState.costBasisBaseValue) {
-            toAccountGainsState.costBasisBaseValue
-                = (toAccountGainsState.costBasisBaseValue || 0)
-                    + fromAccountGainsState.costBasisBaseValue;
-        }
-
-        if (fromAccountGainsState.cashInBaseValue) {
-            toAccountGainsState.cashInBaseValue
-                = (toAccountGainsState.cashInBaseValue || 0)
-                    + fromAccountGainsState.cashInBaseValue;
-        }
+        toAccountGainsState.overallTotals = addToTotals(
+            toAccountGainsState.overallTotals,
+            fromAccountGainsState.overallTotals
+        );
     }
 
     return toAccountGainsState;
@@ -454,10 +490,10 @@ export function getLotStateCashInBaseValue(accountStateInfo, lotStateDataItem) {
  * @returns {GainHelpers~GainParts}
  */
 export function getAccountGainsStateSimpleGainParts(accountGainsState) {
-    if (accountGainsState) {
+    if (accountGainsState && accountGainsState.gainTotals) {
         return {
-            inputBaseValue: accountGainsState.costBasisBaseValue,
-            outputBaseValue: accountGainsState.marketValueBaseValue,
+            inputBaseValue: accountGainsState.gainTotals.costBasisBaseValue,
+            outputBaseValue: accountGainsState.gainTotals.marketValueBaseValue,
         };
     }
 }
@@ -500,10 +536,10 @@ export function isLotStateCashIn(accessor, lotStateDataItem) {
  * @returns {GainHelpers~GainParts}
  */
 export function getAccountGainsStateCashInGainParts(accountGainsState) {
-    if (accountGainsState) {
+    if (accountGainsState && accountGainsState.gainTotals) {
         return {
-            inputBaseValue: accountGainsState.cashInBaseValue,
-            outputBaseValue: accountGainsState.marketValueBaseValue,
+            inputBaseValue: accountGainsState.gainTotals.cashInBaseValue,
+            outputBaseValue: accountGainsState.gainTotals.marketValueBaseValue,
         };
     }
 }

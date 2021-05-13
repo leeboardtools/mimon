@@ -280,6 +280,8 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Account Editor
         - Canceling makes arbitrary tab active, not previously selected tab.
+        - Security list:
+            - Sort, hide hidden/inactive securities
 
 
     - Accounts List
@@ -309,6 +311,9 @@ Are the lists really two separate styles? Or can they be combined into one?
             - For HTML include the split drop down???
             
         - Filtering transactions
+
+        - Lot transactions:
+            - Add description of action.
 
 
     - Account Selector
@@ -490,6 +495,9 @@ Column sorting in RowTable:
         - Add mechanism for allocating gains to sell transactions?
             - Or automatic
         
+        - Lot transactions:
+            - Add description of action.
+
     
 
     - Accounts List/Priced Items List
@@ -528,6 +536,11 @@ Column sorting in RowTable:
 
         - Export as CSV
             - Need to clean up FileSelector.
+        
+    
+    - Priced Items List
+        - Convert to use AccountGainsState loading similar to AccountsList.
+        - Listen for price, transaction changes.
         
 
     - Save/restore last window settings.
