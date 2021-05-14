@@ -21,6 +21,7 @@ import { ReminderEditorHandler } from './ReminderEditorHandler';
 import { RemindersListHandler } from './RemindersListHandler';
 import { CustomTabInstanceManager, 
     generateCustomTabId, } from '../util-ui/CustomTabInstanceManager';
+import { RingBuffer } from '../util/RingBuffer';
 import { StringPrompter } from '../util-ui/StringPrompter';
 import { AllFilesFilter, CSVFilter, FileSelector } from '../util-ui/FileSelector';
 import { makeValidFileName, asyncDirExists } from '../util/Files';
@@ -179,6 +180,9 @@ export class MainWindow extends React.Component {
         this._tabItemsById = new Map();
 
 
+        this._prevActiveTabIds = new RingBuffer(20);
+
+
         process.nextTick(async () => {
             const { accessor } = props;
 
@@ -254,7 +258,14 @@ export class MainWindow extends React.Component {
 
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.isPrint && !prevState.isPrint) {
+        const { state } = this;
+        if (state.activeTabId !== prevState.activeTabId) {
+            if (state.activeTabId && prevState.activeTabId) {
+                this._prevActiveTabIds.push(prevState.activeTabId);
+            }
+        }
+
+        if (state.isPrint && !prevState.isPrint) {
             // We print using the isPrint state in order to have the drop-down menu
             // go away before printing.
             this.setState({
@@ -363,6 +374,16 @@ export class MainWindow extends React.Component {
                 let { activeTabId } = oldState;
                 
                 if ((activeTabId === tabId) || !activeTabId) {
+                    while (this._prevActiveTabIds.elementCount()) {
+                        const tabId = this._prevActiveTabIds.popNewest();
+                        if (this._tabItemsById.has(tabId)) {
+                            activeTabId = tabId;
+                            break;
+                        }
+                    }
+                }
+
+                if (!activeTabId) {
                     if (i < oldTabEntries.length) {
                         activeTabId = oldTabEntries[i].tabId;
                     }

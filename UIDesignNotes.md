@@ -514,6 +514,7 @@ Column sorting in RowTable:
             - What about currencies?
                 - Can't add different currencies.
         
+        - Show/hide empty accounts (no value, no child accounts)
 
         - Date Selector Bar:
             - Standard options:
@@ -540,9 +541,13 @@ Column sorting in RowTable:
     
     - Priced Items List
         - Listen for price, transaction changes.
-        
-
-    - Save/restore last window settings.
+        - Show/Hide securities with no shares
+            - Potential problem here is double reload of account states since won't
+                know if an priced item has no shares until it is loaded.
+    
+    - Main Window
+        - Smartly save/restore last window settings.
+            - Maybe save by screen size?
 
 
 - XML Import
