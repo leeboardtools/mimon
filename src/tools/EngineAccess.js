@@ -17,9 +17,9 @@ import * as math from 'mathjs-expression-parser';
 
 
 /**
- * @event EngineAccessor#actionChange
  * This is fired whenever an action is performed, undone, or the undo/redo action
  * lists change.
+ * @event EngineAccessor~actionChange
  */
 
 /**
@@ -713,7 +713,7 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * Removes all applied actions from the manager.
-     * @fires {EngineAccessor#actionChange}
+     * @fires {EngineAccessor~actionChange}
      */
     async asyncClearAppliedActions() {
         this._clearLastAppliedAction();
@@ -723,7 +723,7 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * Removes all undone actions from the manager.
-     * @fires {EngineAccessor#actionChange}
+     * @fires {EngineAccessor~actionChange}
      */
     async asyncClearUndoneActions() {
         this._clearLastAppliedAction();
@@ -733,8 +733,8 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * Removes all actions from the manager.
-     * @fires {EngineAccessor#actionChange}
-     * @fires {EngineAccessor#actionChange}
+     * @fires {EngineAccessor~actionChange}
+     * @fires {EngineAccessor~actionChange}
      */
     async asyncClearAllActions() {
         await this.asyncClearAppliedActions();
@@ -758,7 +758,7 @@ export class EngineAccessor extends EventEmitter {
      * at index {@link ActionManager#getAppliedActionCount} - 1.
      * @param {ActionDataItem} action 
      * @returns {object}    The result of the action.
-     * @fires {EngineAccessor#actionChange}
+     * @fires {EngineAccessor~actionChange}
      */
     async asyncApplyAction(action) {
         this._clearLastAppliedAction();
@@ -806,7 +806,7 @@ export class EngineAccessor extends EventEmitter {
      * undone action list.
      * @param {number} [actionCount=1]  The number of applied actions to undo, if 
      * greater than the number of applied actions then all applied actions are undone.
-     * @fires {EngineAccessor#actionChange}
+     * @fires {EngineAccessor~actionChange}
      */
     async asyncUndoLastAppliedActions(actionCount) {
         this._clearLastAppliedAction();
@@ -819,7 +819,7 @@ export class EngineAccessor extends EventEmitter {
      * undone action list to the applied action list as they are reapplied.
      * @param {number} [actionCount=1]  The number of undone actions to reapply. 
      * If greater than the number of undone actions then all undone actions are reapplied.
-     * @fires {EngineAccessor#actionChange}
+     * @fires {EngineAccessor~actionChange}
      */
     async asyncReapplyLastUndoneActions(actionCount) {
         this._clearLastAppliedAction();
