@@ -9,17 +9,39 @@ import { getDecimalDefinition } from './Quantities';
  */
 export class Currency {
     constructor(options) {
+        const { currency } = options;
+        if (currency) {
+            // Copying currency...
+            options = Object.assign({}, options);
+            if (!options.code) {
+                options.code = currency.getCode();
+            }
+            if (!options.numericCode) {
+                options.numericCode = currency.getNumericCode();
+            }
+            if (!options.name) {
+                options.name = currency.getName();
+            }
+            if (options.decimalPlaces === undefined) {
+                options.decimalPlaces = currency._decimalPlaces;
+            }
+        }
+
         this._code = options.code;
         this._numericCode = options.numericCode;
         this._name = options.name;
         const formatOptions = {
             style: 'currency',
             currency: this._code,
+            maximumFractionDigits: options.decimalPlaces,
+            minimumFractionDigits: options.decimalPlaces,
         };
         if (options.valueToStringOptions) {
             Object.assign(formatOptions, options.valueToStringOptions);
         }
         this._valueToStringFormat = new Intl.NumberFormat(options.locale, formatOptions);
+        this._formatLocale = options.locale;
+        this._formatOptions = formatOptions;
 
         this._decimalPlaces = options.decimalPlaces;
 
@@ -76,6 +98,11 @@ export class Currency {
     getName() { return this._name; }
 
     /**
+     * @returns {number} The number of decimal places displayed.
+     */
+    getDecimalPlaces() { return this._decimalPlaces;}
+
+    /**
      * @returns {QuantityDefinition}    The quantity definition for representing cash.
      */
     getQuantityDefinition() { return this._quantityDefinition; }
@@ -85,9 +112,21 @@ export class Currency {
      * Converts a currency decimal value ($12.34 would be 12.34) into an 
      * internationalized currency string.
      * @param {number} value The decimal value to convert to a string.
+     * @param {number} [decimalPlaces] If specified the number of decimal places
+     * to use.
      * @returns {string}
      */
-    decimalValueToString(value) {
+    decimalValueToString(value, decimalPlaces) {
+        if ((typeof decimalPlaces === 'number')
+         && (decimalPlaces !== this._decimalPlaces)) {
+            const formatOptions = Object.assign({}, this._formatOptions, {
+                maximumFractionDigits: decimalPlaces,
+                minimumFractionDigits: decimalPlaces,
+            });
+            const format = new Intl.NumberFormat(this._formatLocale, formatOptions);
+            return format.format(value);
+
+        }
         return this._valueToStringFormat.format(value);
     }
 
@@ -184,7 +223,7 @@ export class Currency {
         }
 
         let text = '';
-        this._valueToStringFormat.formatToParts(value / this._valueScale).map(
+        this._valueToStringFormat.formatToParts(value / this._valueScale).forEach(
             ({ type, value }) => {
                 if (!partsToSkip.includes(type)) {
                     text += value;

@@ -1,4 +1,4 @@
-import { USD } from './Currency';
+import { Currency, USD } from './Currency';
 //import { Currency, Currencies } from './Currency';
 //import { JSONProcessor } from './JSONProcessor';
 
@@ -11,6 +11,21 @@ test('Currency-decimalValueToString', () => {
 
     result = USD.decimalValueToString(1234567.89);
     expect(result).toEqual('$1,234,567.89');
+
+    result = USD.decimalValueToString(123.45678, 4);
+    expect(result).toEqual('$123.4568');
+
+    result = USD.decimalValueToString(123.456446, 4);
+    expect(result).toEqual('$123.4564');
+
+    result = USD.decimalValueToString(100);
+    expect(result).toEqual('$100.00');
+
+    result = USD.decimalValueToString(100, 0);
+    expect(result).toEqual('$100');
+
+    result = USD.decimalValueToString(100, 3);
+    expect(result).toEqual('$100.000');
 });
 
 test('Currency-decimalValueFromString', () => {
@@ -81,4 +96,19 @@ test('Currency Simple JSON', () => {
     const result = processor.objectFromJSON(json);
     expect(result).toEqual(currencies);
 */
+});
+
+
+test('Currency-copyConstructor', () => {
+    let currency = new Currency({ currency: USD, 
+        name: 'USD Stock Price',
+        decimalPlaces: 4, 
+    });
+    expect(currency.getCode()).toEqual('USD');
+    expect(currency.getNumericCode()).toEqual(USD.getNumericCode());
+    expect(currency.getName()).toEqual('USD Stock Price');
+    expect(currency.getDecimalPlaces()).toEqual(4);
+
+    let result = currency.decimalValueToString(123);
+    expect(result).toEqual('$123.0000');
 });
