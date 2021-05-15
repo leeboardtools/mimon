@@ -153,6 +153,7 @@ export const CellDateEditor = React.forwardRef(
             open = {state.openCalendar}
             enableTabLoop = "false"
             dropdownMode = "select"
+            showYearDropdown
         />;
 
         if (errorMsg) {
