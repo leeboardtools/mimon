@@ -1671,7 +1671,8 @@ export class EngineAccessor extends EventEmitter {
             }
 
             let index = bSearch(transactionKeys, ymdDate, (value, arrayValue) => 
-                YMDDate.compare(ymdDate, arrayValue.ymdDate));
+                YMDDate.compare(value.ymdDate ? value.ymdDate : value, 
+                    arrayValue.ymdDate));
             if (index < 0) {
                 continue;
             }

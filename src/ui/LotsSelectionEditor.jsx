@@ -47,7 +47,8 @@ async function asyncProcessLotTransactions({ accessor, accountId,
     }
     else {
         transactionIndex = bSearch(transactionKeys, ymdDate, (value, arrayValue) => 
-            YMDDate.compare(value, arrayValue.ymdDate));
+            YMDDate.compare(value.ymdDate ? value.ymdDate : value, 
+                arrayValue.ymdDate));
         if (transactionIndex >= 0) {
             for ( ; transactionIndex < transactionKeys.length; ++transactionIndex) {
                 if (YMDDate.compare(transactionKeys[transactionIndex].ymdDate, ymdDate)
