@@ -10,7 +10,7 @@ import * as T from '../engine/Transactions';
 import * as LS from '../engine/LotStates';
 import * as GH from '../tools/GainHelpers';
 import { isLotStateCashIn } from '../tools/GainHelpers';
-import { getCurrency } from '../util/Currency';
+import { Currency, getCurrency } from '../util/Currency';
 import { getQuantityDefinition } from '../util/Quantities';
 import { CellButton } from '../util-ui/CellButton';
 import deepEqual from 'deep-equal';
@@ -71,33 +71,46 @@ import { LotsSelectionEditor } from './LotsSelectionEditor';
 export const LotActionType = {
     BUY: { name: 'BUY', 
         fromSplitInfo: buyFromSplitInfo, 
+        formatTransactionDescription: formatSharesAtPriceTransactionDescription,
+        formatTransactionMsgId: 'LotCellEditors-transactionDescription-BUY',
         needsCostBasis: true,
         hasModifyLotIds: true,
         hasESPPBuyInfo: true,
     },
     SELL_FIFO: { name: 'SELL_FIFO', 
         fromSplitInfo: sellFromSplitInfo, 
+        formatTransactionDescription: formatSharesAtPriceTransactionDescription,
+        formatTransactionMsgId: 'LotCellEditors-transactionDescription-SELL',
         sharesNegative: true,
         autoLotType: T.AutoLotType.FIFO,
     },
     SELL_LIFO: { name: 'SELL_LIFO', 
         fromSplitInfo: sellFromSplitInfo, 
+        formatTransactionDescription: formatSharesAtPriceTransactionDescription,
+        formatTransactionMsgId: 'LotCellEditors-transactionDescription-SELL',
         sharesNegative: true,
         autoLotType: T.AutoLotType.LIFO,
     },
     SELL_BY_LOTS: { name: 'SELL_BY_LOTS', 
         fromSplitInfo: sellFromSplitInfo, 
+        formatTransactionDescription: formatSharesAtPriceTransactionDescription,
+        formatTransactionMsgId: 'LotCellEditors-transactionDescription-SELL',
         sharesNegative: true,
         hasSelectedLots: true,
         hasLotChanges: true,
     },
     REINVESTED_DIVIDEND: { name: 'REINVESTED_DIVIDEND', 
         fromSplitInfo: reinvestedDividendFromSplitInfo,
+        formatTransactionDescription: formatSharesAtPriceTransactionDescription,
+        formatTransactionMsgId: 
+            'LotCellEditors-transactionDescription-REINVESTED_DIVIDEND',
         needsCostBasis: true,
         hasModifyLotIds: true,
     },
     SPLIT: { name: 'SPLIT', 
         fromSplitInfo: asyncSplitFromSplitInfo,
+        formatTransactionDescription: formatSplitMergeTransactionDescription,
+        formatTransactionMsgId: 'LotCellEditors-transactionDescription-SPLIT',
         noCostBasis: true, 
         noMonetaryAmount: true,
         noFees: true,
@@ -106,6 +119,8 @@ export const LotActionType = {
     },
     REVERSE_SPLIT: { name: 'REVERSE_SPLIT', 
         fromSplitInfo: asyncSplitFromSplitInfo,
+        formatTransactionDescription: formatSplitMergeTransactionDescription,
+        formatTransactionMsgId: 'LotCellEditors-transactionDescription-REVERSE_SPLIT',
         noCostBasis: true, 
         noMonetaryAmount: true,
         noFees: true,
@@ -115,28 +130,38 @@ export const LotActionType = {
     },
     ADD_SHARES: { name: 'ADD_SHARES', 
         fromSplitInfo: addSharesFromSplitInfo,
+        formatTransactionDescription: formatSharesAtPriceTransactionDescription,
+        formatTransactionMsgId: 'LotCellEditors-transactionDescription-ADD_SHARES',
         needsCostBasis: true,
         hasModifyLotIds: true,
         hasESPPBuyInfo: true,
     },
     REMOVE_SHARES_FIFO: { name: 'REMOVE_SHARES_FIFO', 
         fromSplitInfo: removeSharesFromSplitInfo,
+        formatTransactionDescription: formatSharesAtPriceTransactionDescription,
+        formatTransactionMsgId: 'LotCellEditors-transactionDescription-REMOVE_SHARES',
         sharesNegative: true,
         autoLotType: T.AutoLotType.FIFO,
     },
     REMOVE_SHARES_LIFO: { name: 'REMOVE_SHARES_LIFO', 
         fromSplitInfo: removeSharesFromSplitInfo,
+        formatTransactionDescription: formatSharesAtPriceTransactionDescription,
+        formatTransactionMsgId: 'LotCellEditors-transactionDescription-REMOVE_SHARES',
         sharesNegative: true,
         autoLotType: T.AutoLotType.LIFO,
     },
     REMOVE_SHARES_BY_LOTS: { name: 'REMOVE_SHARES_BY_LOTS', 
         fromSplitInfo: removeSharesFromSplitInfo,
+        formatTransactionDescription: formatSharesAtPriceTransactionDescription,
+        formatTransactionMsgId: 'LotCellEditors-transactionDescription-REMOVE_SHARES',
         sharesNegative: true,
         hasSelectedLots: true,
         hasLotChanges: true,
     },
     RETURN_OF_CAPITAL: { name: 'RETURN_OF_CAPITAL', 
         fromSplitInfo: asyncReturnOfCapitalFromSplitInfo,
+        formatTransactionDescription: formatReturnOfCapitalTransactionDescription,
+        formatTransactionMsgId: 'LotCellEditors-transactionDescription-RETURN_OF_CAPITAL',
         noShares: true, 
         noCostBasis: true,
         noFees: true,
@@ -270,11 +295,13 @@ function lotActionTypeFromTransactionInfo(transactionDataItem, splitIndex, acces
  * @typedef {object} LotCellEditors~SplitInfo
  * @property {EngineAccessor}   accessor
  * @property {TransactionDataItem}  transactionDataItem
+ * @property {PricedItemDataItem}   pricedItemDataItem
  * @property {number}   splitIndex
  * @property {LotActionType}    actionType
  * @property {QuantityDefinition}   currencyQuantityDefinition
- * @property {Currency} currency
+ * @property {Currency} currency    The currency for market value, cost basis, etc.
  * @property {QuantityDefinition}   priceQuantityDefinition
+ * @property {Currency} priceCurrency   The currency for prices.
  * @property {QuantityDefinition}   sharesQuantityDefinition
  * @property {LotCellEditors~EditStates} editStates
  * @property {number}   nextQuantityEditHit
@@ -379,11 +406,25 @@ export function createSplitInfo(transactionDataItem, splitIndex, accessor, args)
     const priceQuantityDefinition = accessor.getPriceQuantityDefinitionForPricedItem(
         pricedItemDataItem.id);
 
+    let priceCurrency = currency;
+    if (typeof priceQuantityDefinition.getDecimalPlaces === 'function') {
+        const decimalPlaces = priceQuantityDefinition.getDecimalPlaces();
+        if (decimalPlaces !== currency.getDecimalPlaces()) {
+            priceCurrency = new Currency({
+                currency: currency,
+                decimalPlaces: decimalPlaces,
+            });
+        }
+    }
+
     const splitInfo = Object.assign({}, args, {
         currencyQuantityDefinition: currencyQuantityDefinition,
         sharesQuantityDefinition: sharesQuantityDefinition,
         priceQuantityDefinition: priceQuantityDefinition,
         currency: currency,
+
+        pricedItemDataItem: pricedItemDataItem,
+        priceCurrency: priceCurrency,
 
         actionType: actionType,
 
@@ -719,20 +760,20 @@ export function updateSplitInfoValues(splitInfo) {
         let editStateToCalc;
 
         if ((sharesValue === undefined)
-        && !actionType.noShares
-        && !actionType.hasSelectedLots) {
+         && !actionType.noShares
+         && !actionType.hasSelectedLots) {
             editStateToCalc = editStates.shares;
         }
         else if ((monetaryAmountValue === undefined)
-        && !actionType.noCostBasis) {
+         && !actionType.noCostBasis) {
             editStateToCalc = editStates.monetaryAmount;
         }
         else if ((feesValue === undefined)
-        && !actionType.noFees) {
+         && !actionType.noFees) {
             editStateToCalc = editStates.fees;
         }
         else if ((priceValue === undefined)
-        && !actionType.noCostBasis) {
+         && !actionType.noCostBasis) {
             editStateToCalc = editStates.price;
         }
         else {
@@ -867,6 +908,65 @@ export function copySplitInfo(splitInfo) {
 //
 //---------------------------------------------------------
 //
+function formatSharesAtPriceTransactionDescription({
+    splitInfo,
+    actionType,
+    ticker,
+    sharesBaseValue,
+    priceBaseValue,
+}) {
+    const { sharesQuantityDefinition, }
+        = splitInfo;
+    let sharesValue;
+    if (typeof sharesBaseValue === 'number') {
+        sharesValue = sharesQuantityDefinition.baseValueToValueText(
+            Math.abs(sharesBaseValue)
+        );
+    }
+
+    let priceValue;
+    if (typeof priceBaseValue === 'number') {
+        priceValue = splitInfo.priceCurrency.baseValueToString(priceBaseValue);
+    }
+
+    if ((typeof sharesValue === 'string') && (typeof priceValue === 'string')) {
+        return userMsg(actionType.formatTransactionMsgId, 
+            ticker, sharesValue, priceValue);
+    }
+}
+
+
+//
+//---------------------------------------------------------
+//
+function formatSplitMergeTransactionDescription({
+    actionType,
+    ticker,
+    totalSharesIn,
+    totalSharesOut,
+}) {
+    if ((typeof totalSharesIn === 'number') && (typeof totalSharesOut === 'number')) {
+        return userMsg(actionType.formatTransactionMsgId, 
+            ticker, totalSharesOut, totalSharesIn);
+    }
+}
+
+
+//
+//---------------------------------------------------------
+//
+function formatReturnOfCapitalTransactionDescription({
+    actionType,
+    ticker,
+    monetaryAmount,
+}) {
+    return userMsg(actionType.formatTransactionMsgId, ticker, monetaryAmount);
+}
+
+
+//
+//---------------------------------------------------------
+//
 function getFeesSplitIndex(splitInfo, transactionDataItem) {
     transactionDataItem = transactionDataItem || splitInfo.transactionDataItem;
     const { accessor } = splitInfo;
@@ -958,10 +1058,15 @@ function updateTransactionDataItem(splitInfo, newTransactionDataItem,
     else if (lots) {
         if (actionType.hasLotChanges) {
             splitDataItem.lotChanges = lots.lotChanges;
+
+            sharesBaseValue = 0;
+            lots.lotChanges.forEach((lotChange) => 
+                sharesBaseValue += lotChange.quantityBaseValue);
         }
         else if (actionType.autoLotType) {
             splitDataItem.sellAutoLotType = actionType.autoLotType.name;
             splitDataItem.sellAutoLotQuantityBaseValue = lots.editorBaseValue;
+            sharesBaseValue = lots.editorBaseValue;
         }
     }
 
@@ -1022,8 +1127,9 @@ function updateTransactionDataItem(splitInfo, newTransactionDataItem,
         }
     }
 
+    let priceBaseValue;
     if (price) {
-        // 
+        priceBaseValue = price.editorBaseValue;
     }
     
     const newSplits = [];
@@ -1071,6 +1177,25 @@ function updateTransactionDataItem(splitInfo, newTransactionDataItem,
     }
     if (feesSplit) {
         newSplits.push(feesSplit);
+    }
+
+    const { formatTransactionDescription } = actionType;
+    if (formatTransactionDescription) {
+        const { pricedItemDataItem } = splitInfo;
+        newTransactionDataItem.description = formatTransactionDescription({
+            accessor: accessor,
+            splitAccountDataItem: splitAccountDataItem,
+            splitInfo: splitInfo,
+            actionType: actionType,
+            newSplits: newSplits,
+            splitIndex: splitIndex,
+            ticker: pricedItemDataItem.ticker,
+            sharesBaseValue: sharesBaseValue,
+            priceBaseValue: priceBaseValue,
+            // totalSharesIn
+            // totalSharesOut
+            monetaryAmount: monetaryAmount,
+        });
     }
 
     newTransactionDataItem.id 
@@ -2298,7 +2423,8 @@ function calcGainBalanceValue(args) {
         const { priceDataItem } = accountStateInfo;
         if (priceDataItem) {
             tooltips.push(userMsg('LotCellEditors-price_date_tooltip',
-                currency.decimalValueToString(priceDataItem.close),
+                accountStateInfo.priceCurrency.decimalValueToString(
+                    priceDataItem.close),
                 accessor.formatDate(priceDataItem.ymdDate)
             ));
         }
@@ -2514,10 +2640,10 @@ function annualGainResultToBalanceValue(args, result) {
                     currency.baseValueToString(reinvestedGain)));
             }
 
-            const { priceDataItem } = accountStateInfo;
+            const { priceDataItem, priceCurrency } = accountStateInfo;
             if (priceDataItem) {
                 tooltips.push(userMsg('LotCellEditors-price_date_tooltip',
-                    currency.decimalValueToString(priceDataItem.close),
+                    priceCurrency.decimalValueToString(priceDataItem.close),
                     accessor.formatDate(priceDataItem.ymdDate)
                 ));
             }

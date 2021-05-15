@@ -362,6 +362,15 @@
     "LotCellEditors-actionType-REMOVE_SHARES_LIFO": "Remove Shares LIFO",
     "LotCellEditors-actionType-REMOVE_SHARES_BY_LOTS": "Remove Shares by Lots",
 
+    "LotCellEditors-transactionDescription-BUY": ["Buy: ", " ", " @ ", ""],
+    "LotCellEditors-transactionDescription-SELL": ["Sell: ", " ", " @ ", ""],
+    "LotCellEditors-transactionDescription-REINVESTED_DIVIDEND": ["Reinvested dividend: ", " ", " @ ", ""],
+    "LotCellEditors-transactionDescription-SPLIT": ["Split: ", " for ", ""],
+    "LotCellEditors-transactionDescription-REVERSE_SPLIT": ["Reverse split: ", " for ", ""],
+    "LotCellEditors-transactionDescription-ADD_SHARES": ["Add: ", " ", " @ ", ""],
+    "LotCellEditors-transactionDescription-REMOVE_SHARES": ["Remove: ", " ", " @ ", ""],
+    "LotCellEditors-transactionDescription-RETURN_OF_CAPITAL": ["Return of capital: ", ""],
+
     "LotCellEditors-shares_lt_zero": "The number of shares must be >= 0.",
     "LotCellEditors-monetaryAmount_lt_zero": "The amount must be >= 0.",
     "LotCellEditors-price_lt_zero": "The price must be >= 0.",

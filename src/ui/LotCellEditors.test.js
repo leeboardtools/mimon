@@ -920,6 +920,10 @@ test('LotCellEditors-BUY', async () => {
 
         // We do lose any lot ids...
         removeLotIds(transactionDataItem);
+
+        // Not going to try to test description since it's built on the fly
+        // as a user message.
+        newTransactionDataItem.description = transactionDataItem.description;
         expect(newTransactionDataItem).toEqual(transactionDataItem);
 
 
@@ -1125,6 +1129,10 @@ test('LotCellEditors-SELL_FIFO', async () => {
 
         // We do lose any lot ids...
         removeLotIds(transactionDataItem);
+
+        // Not going to try to test description since it's built on the fly
+        // as a user message.
+        newTransactionDataItem.description = transactionDataItem.description;
         expect(newTransactionDataItem).toEqual(transactionDataItem);
 
 
@@ -1403,6 +1411,10 @@ test('LotCellEditors-SELL_LIFO', async () => {
 
         // We do lose any lot ids...
         removeLotIds(transactionDataItem);
+
+        // Not going to try to test description since it's built on the fly
+        // as a user message.
+        newTransactionDataItem.description = transactionDataItem.description;
         expect(newTransactionDataItem).toEqual(transactionDataItem);
 
 
@@ -1626,6 +1638,9 @@ test('LotCellEditors-SELL_BY_LOTS', async () => {
         result = await LCE.asyncTransactionDataItemFromSplitInfo(splitInfo, 
             newTransactionDataItem);
 
+        // Not going to try to test description since it's built on the fly
+        // as a user message.
+        newTransactionDataItem.description = transactionDataItem.description;
         expect(newTransactionDataItem).toEqual(transactionDataItem);
 
 
@@ -1832,6 +1847,10 @@ test('LotCellEditors-REINVESTED_DIVIDEND', async () => {
 
         // We do lose any lot ids...
         removeLotIds(transactionDataItem);
+
+        // Not going to try to test description since it's built on the fly
+        // as a user message.
+        newTransactionDataItem.description = transactionDataItem.description;
         expect(newTransactionDataItem).toEqual(transactionDataItem);
 
 
@@ -2011,6 +2030,10 @@ test('LotCellEditors-ADD_SHARES', async () => {
 
         // We do lose any lot ids...
         removeLotIds(transactionDataItem);
+
+        // Not going to try to test description since it's built on the fly
+        // as a user message.
+        newTransactionDataItem.description = transactionDataItem.description;
         expect(newTransactionDataItem).toEqual(transactionDataItem);
 
         
@@ -2203,6 +2226,10 @@ test('LotCellEditors-REMOVE_SHARES_FIFO', async () => {
 
         // We do lose any lot ids...
         removeLotIds(transactionDataItem);
+
+        // Not going to try to test description since it's built on the fly
+        // as a user message.
+        newTransactionDataItem.description = transactionDataItem.description;
         expect(newTransactionDataItem).toEqual(transactionDataItem);
 
 
@@ -2440,6 +2467,10 @@ test('LotCellEditors-REMOVE_SHARES_LIFO', async () => {
 
         // We do lose any lot ids...
         removeLotIds(transactionDataItem);
+
+        // Not going to try to test description since it's built on the fly
+        // as a user message.
+        newTransactionDataItem.description = transactionDataItem.description;
         expect(newTransactionDataItem).toEqual(transactionDataItem);
 
         
@@ -2645,6 +2676,10 @@ test('LotCellEditors-REMOVE_SHARES_BY_LOTS', async () => {
         result = await LCE.asyncTransactionDataItemFromSplitInfo(splitInfo, 
             newTransactionDataItem);
 
+
+        // Not going to try to test description since it's built on the fly
+        // as a user message.
+        newTransactionDataItem.description = transactionDataItem.description;
         expect(newTransactionDataItem).toEqual(transactionDataItem);
 
         
@@ -3237,6 +3272,7 @@ test('LotCellEditors-RETURN_OF_CAPITAL', async () => {
         let transactionDataItem;
         let splitInfo;
         let result;
+        result;
 
         // A brand new transaction data item...
         transactionDataItem = {

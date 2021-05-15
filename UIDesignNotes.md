@@ -496,8 +496,9 @@ Column sorting in RowTable:
             - Or automatic
         
         - Lot transactions:
-            - Add description of action.
-
+            - Return of Capital doesn't work quite right.
+                - Where is it going???
+                - It's changing the market value.
     
 
     - Accounts List/Priced Items List
@@ -522,6 +523,16 @@ Column sorting in RowTable:
                 - Last Month
                 - Last Quarter
                 - Last Year
+            
+            - Improve selection:
+                - Display date
+                - Options for changing the date
+                    - Today
+                    - Calendar
+                    - Last calendar month
+                    - Last calendar quarter
+                    - Last calendar year 
+
         - Date Range Selector Bar:
             - Standard Options:
                 - End Date:
@@ -541,10 +552,11 @@ Column sorting in RowTable:
     
     - Priced Items List
         - Listen for price, transaction changes.
+
         - Show/Hide securities with no shares
-            - Potential problem here is double reload of account states since won't
-                know if an priced item has no shares until it is loaded.
+            - Potential problem here is double reload of account states since won't know if a priced item has no shares until it is loaded.
     
+
     - Main Window
         - Smartly save/restore last window settings.
             - Maybe save by screen size?
