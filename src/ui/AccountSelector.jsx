@@ -20,18 +20,34 @@ import { userMsg } from '../util/UserMessages';
  */
 
 /**
- * Helper for building the accountEntries property for {@link AccountSelector}.
- * @param {EngineAccessor} accessor 
+ * @typedef addAccountIdsToAccountEntriesArgs
+ * @property {EngineAccessor} accessor 
  * @property {AccountSelector~AccountEntry} accountEntries
- * @param {number} accountId 
- * @param {addAccountIdsToAccountEntriesFilterCallback} filter 
+ * @property {number[]} accountIds
+ * @property {addAccountIdsToAccountEntriesFilterCallback} [filter]
+ * @property {boolean} [sortByName]
  */
-export function addAccountIdsToAccountEntries(accessor, accountEntries,
-    accountIds, filter) {
 
+/**
+ * Helper for building the accountEntries property for {@link AccountSelector}.
+ * @param {addAccountIdsToAccountEntriesArgs} args
+ */
+export function addAccountIdsToAccountEntries(args) {
+    let { accessor, accountEntries, accountIds, filter, sortByName, } = args;
     filter = filter || (() => undefined);
 
-    accountIds.forEach((accountId) => {
+    const accountDataItems = accountIds.map((accountId) => 
+        accessor.getAccountDataItemWithId(accountId));
+    if (sortByName) {
+        accountDataItems.sort((a, b) =>
+            a.name.localeCompare(b.name));
+    }
+
+    args = Object.assign({}, args);
+
+    accountDataItems.forEach((accountDataItem) => {
+        const accountId = accountDataItem.id;
+
         const filterResult = filter(accountId) || {};
         if (!filterResult.skipAccountId) {
             const accountEntry = {
@@ -43,10 +59,11 @@ export function addAccountIdsToAccountEntries(accessor, accountEntries,
             accountEntries.push(accountEntry);
         }
         if (!filterResult.skipChildren) {
-            const accountDataItem = accessor.getAccountDataItemWithId(accountId);
-            if (accountDataItem && accountDataItem.childAccountIds) {                    
-                addAccountIdsToAccountEntries(accessor, accountEntries,
-                    accountDataItem.childAccountIds, filter);
+            if (accountDataItem.childAccountIds) {                    
+                args.accountIds = accountDataItem.childAccountIds;
+                args.sortByName = true;
+
+                addAccountIdsToAccountEntries(args);
             }
         }
     });

@@ -94,8 +94,11 @@ class TransactionTemplateEditor extends React.Component {
         const { accessor } = this.props;
         const accountEntries = [];
         const rootAccountIds = accessor.getRootAccountIds();
-        addAccountIdsToAccountEntries(
-            accessor, accountEntries, rootAccountIds); 
+        addAccountIdsToAccountEntries({ 
+            accessor: accessor, 
+            accountEntries: accountEntries, 
+            accountIds: rootAccountIds, 
+        }); 
         
         const items = accountEntriesToItems(accessor, accountEntries);
 

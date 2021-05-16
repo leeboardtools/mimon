@@ -659,9 +659,14 @@ function addAccountIdsToItems(accessor, items, accountId, filter) {
 
     const { childAccountIds } = accountDataItem;
     if (childAccountIds) {
-        childAccountIds.forEach((childId) => {
-            addAccountIdsToItems(accessor, items, childId, filter);
-        });
+        const childAccountDataItems = childAccountIds.map((accountId) =>
+            accessor.getAccountDataItemWithId(accountId));
+
+        childAccountDataItems.sort((a, b) =>
+            a.name.localeCompare(b.name));
+
+        childAccountDataItems.forEach((accountDataItem) =>
+            addAccountIdsToItems(accessor, items, accountDataItem.id, filter));
     }
 }
 
