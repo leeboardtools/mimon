@@ -25,7 +25,8 @@ import { userMsg } from '../util/UserMessages';
  * @property {AccountSelector~AccountEntry} accountEntries
  * @property {number[]} accountIds
  * @property {addAccountIdsToAccountEntriesFilterCallback} [filter]
- * @property {boolean} [sortByName]
+ * @property {boolean} [sortByName] This is normally set to false for the root account
+ * ids, child accounts are always sorted by name.
  */
 
 /**

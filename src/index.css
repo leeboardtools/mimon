@@ -252,6 +252,17 @@ label {
 }
 
 
+.DropdownSelector.AccountId-input {
+    margin: 0 -0.3rem!important;
+}
+
+.AccountId-base > .DropdownSelector-button {
+    margin: 0 .25rem!important;
+    padding: 3px .5rem 0 0!important;
+    border: none !important;
+}
+
+
 .Splits-base {
     text-align: left;
 }
@@ -382,7 +393,6 @@ label {
     vertical-align: middle;
     justify-items: center;
 }
-
 
 .TickerSelector {
     max-height: inherit;

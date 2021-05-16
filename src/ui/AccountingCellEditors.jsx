@@ -17,6 +17,8 @@ import * as AH from '../tools/AccountHelpers';
 import { ReconcileState, getReconcileStateName } from '../engine/Transactions';
 import { getCurrency } from '../util/Currency';
 import { Row, Col } from '../util-ui/RowCols';
+import { addAccountIdsToAccountEntries, AccountSelector, 
+    accountEntriesToItems } from './AccountSelector';
 
 
 /*
@@ -646,30 +648,6 @@ export function getAccountTypeColumnInfo(args) {
  * @property {CellAccountIdValue}   value
  */
 
-function addAccountIdsToItems(accessor, items, accountId, filter) {
-    const accountDataItem = accessor.getAccountDataItemWithId(accountId);
-    if (!accountDataItem) {
-        return;
-    }
-
-    if (filter(accountId)) {
-        const name = AH.getShortAccountAncestorNames(accessor, accountId);
-        items.push([accountId, name]);
-    }
-
-    const { childAccountIds } = accountDataItem;
-    if (childAccountIds) {
-        const childAccountDataItems = childAccountIds.map((accountId) =>
-            accessor.getAccountDataItemWithId(accountId));
-
-        childAccountDataItems.sort((a, b) =>
-            a.name.localeCompare(b.name));
-
-        childAccountDataItems.forEach((accountDataItem) =>
-            addAccountIdsToItems(accessor, items, accountDataItem.id, filter));
-    }
-}
-
 function onAccountIdChange(e, args) {
     const value = parseInt(e.target.value);
     const { cellEditBuffer, setCellEditBuffer, } = args;
@@ -702,28 +680,36 @@ export function renderAccountIdEditor(args) {
     const { accessor, accountId } = value;
     const filter = value.accountIdFilter || (() => true);
     const rootAccountIds = accessor.getRootAccountIds();
-    
-    const items = [];
-    rootAccountIds.forEach((id) => addAccountIdsToItems(accessor, items, 
-        id, filter));
-    
+
+    const accountEntries = [];
+    addAccountIdsToAccountEntries({
+        accessor: accessor,
+        accountEntries: accountEntries,
+        accountIds: rootAccountIds,
+        filter: filter,
+    });
+
+    const accountItems = accountEntriesToItems(accessor, accountEntries);
+
     if (args.renderAsText) {
         return renderCellSelectEditorAsText({
-            items: items,
+            items: accountItems,
             selectedValue: accountId,
         });
     }
 
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
 
-    return <CellSelectEditor
-        selectedValue = {accountId}
-        items = {items}
-        errorMsg = {errorMsg}
-        ariaLabel = {ariaLabel}
-        classExtras = {inputClassExtras}
-        size = {inputSize}
+    return <AccountSelector
+        accessor = {accessor}
+        accountEntries = {accountItems}
+        accountEntriesAreItems
+        selectedAccountId = {accountId}
         onChange = {(e) => onAccountIdChange(e, args)}
+        inputClassExtras = {inputClassExtras}
+        ariaLabel = {ariaLabel}
+        size = {inputSize}
+        errorMsg = {errorMsg}
         ref = {refForFocus}
     />;
 }
@@ -770,7 +756,7 @@ export function getAccountIdColumnInfo(args) {
             label: userMsg('AccountingCellEditors-accountId'),
             classExtras: 'RowTable-header-base AccountId-base AccountId-header',
         },
-        inputClassExtras: 'AccountId-base AccountId-input',
+        inputClassExtras: 'Cell CellSelectEditor-select AccountId-base AccountId-input',
         cellClassName: 'RowTable-cell-base AccountId-base AccountId-cell',
 
         renderDisplayCell: renderAccountIdDisplay,

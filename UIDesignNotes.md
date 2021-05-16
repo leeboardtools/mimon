@@ -351,6 +351,10 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Add context menu to support resetting column widths.
         - Or don't allow column resizing.
 
+        - Add column sorting
+
+        - Save last selected account for new split entry.
+
 
     - Priced Item List
         - Custom Priced Item Lists
@@ -392,7 +396,10 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Reminders Editor
         - Remove border around 'Deposit'/'Withdrawal' control.
-        - Add memo for transaction template?
+        - Add memo for transaction template? Yes...
+        - Setting first of month triggers 'next due'
+            - Only start on or after is not checked on modify.
+        - Track last primary account
 
 
     - Reminders List
@@ -555,6 +562,9 @@ Column sorting in RowTable:
 
         - Show/Hide securities with no shares
             - Potential problem here is double reload of account states since won't know if a priced item has no shares until it is loaded.
+    
+        - Show/Hide security doesn't work
+        - % of Total doesn't work
     
 
     - Main Window
