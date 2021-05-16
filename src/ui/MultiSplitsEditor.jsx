@@ -308,6 +308,12 @@ export class MultiSplitsEditor extends React.Component {
             split.accountId = getDefaultAccountIdForNewSplit(accessor, 
                 this.state.accountType);
         }
+        else {
+            split = Object.assign({}, split);
+            if (split.quantityBaseValue === undefined) {
+                split.quantityBaseValue = '';
+            }
+        }
 
         const { accountId } = split;
         const accountDataItem = accessor.getAccountDataItemWithId(accountId);
