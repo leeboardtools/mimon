@@ -37,12 +37,14 @@ export function getValidQuantityBaseValue(value, quantityDefinition,
             let result;
             try {
                 if (evalExpression) {
+                    value = quantityDefinition.cleanValueText(value);
                     value = evalExpression(value).toString();
                 }
                 result = quantityDefinition.fromValueText(value);
             }
             catch (e) {
                 //
+                console.log('invalidExpression: ' + value + ' ' + e);
             }
             
             if ((result !== undefined) && !result.remainingText) {
