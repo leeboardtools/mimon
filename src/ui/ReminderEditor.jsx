@@ -242,11 +242,13 @@ class TransactionTemplateEditor extends React.Component {
         });
 
         if (this.props.onOpenMultiSplitsEditor) {
-            accountItems.push({
-                value: -1,
-                text: userMsg(
-                    'TransactionTemplateEditor-secondaryAccountSelector_multiSplits'),
-            });
+            accountItems.splice(0, 0, 
+                {
+                    value: -1,
+                    text: userMsg(
+                        'TransactionTemplateEditor-secondaryAccountSelector_multiSplits'),
+                    indent: 0,
+                });
         }
 
         return <AccountSelector
