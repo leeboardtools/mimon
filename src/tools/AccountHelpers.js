@@ -75,7 +75,7 @@ export function getAccountAncestorNames(accessor, id, options) {
  * name is shortened if there are more than four accounts in the ancestor tree,
  * in which case only the root and the last two accounts are included.
  * @param {EngineAccessor} accessor 
- * @param {number} id 
+ * @param {number|AccountDataItem} id 
  * @param {getShortAccountAncestorNamesOptions} [options]
  * @returns {string}
  */
@@ -83,6 +83,10 @@ export function getShortAccountAncestorNames(accessor, id, options) {
     options = options || {};
     const separator = options.separator || ':';
     const maxAccounts = (options.maxAccounts > 1) ? options.maxAccounts : 4;
+
+    if (typeof id === 'object') {
+        id = id.id;
+    }
 
     const accountDataItems = getAncestorAccountDataItems(accessor, id);
     if (accountDataItems.length <= maxAccounts) {

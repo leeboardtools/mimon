@@ -11,13 +11,14 @@ import * as AH from '../tools/AccountHelpers';
 import { columnInfosToColumns, } from '../util-ui/ColumnInfo';
 import deepEqual from 'deep-equal';
 import { CellEditorsManager } from '../util-ui/CellEditorsManager';
-import { CellSelectDisplay, CellSelectEditor } from '../util-ui/CellSelectEditor';
-import { CellButton } from '../util-ui/CellButton';
+import { CellSelectDisplay, } from '../util-ui/CellSelectEditor';
 import { getDefaultAccountIdForNewSplit, 
     MultiSplitsEditor } from './MultiSplitsEditor';
 import { YMDDate } from '../util/YMDDate';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { Row, Col } from '../util-ui/RowCols';
+import { addAccountIdsToAccountEntries, AccountSelector, 
+    accountEntriesToItems } from './AccountSelector';
 
 
 const allColumnInfoDefs = {};
@@ -419,26 +420,6 @@ function renderSplitsListDisplay(args) {
 }
 
 
-function addAccountIdsToItems(accessor, items, accountId, filter) {
-    const accountDataItem = accessor.getAccountDataItemWithId(accountId);
-    if (!accountDataItem) {
-        return;
-    }
-
-    if (filter(accountId)) {
-        const name = AH.getShortAccountAncestorNames(accessor, accountId);
-        items.push([accountId, name]);
-    }
-
-    const { childAccountIds } = accountDataItem;
-    if (childAccountIds) {
-        childAccountIds.forEach((childId) => {
-            addAccountIdsToItems(accessor, items, childId, filter);
-        });
-    }
-}
-
-
 function handleMultiSplitSelect(args) {
     const { cellEditBuffer, } = args;
     const { rowEntry } = cellEditBuffer.value;
@@ -530,22 +511,49 @@ function renderSplitsListEditor(args) {
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
 
     const multiSplitsMsg = userMsg('AccountRegister-multi_splits');
-    if (splits.length !== 2) {
-        return <CellButton
-            value = {multiSplitsMsg}
-            ariaLabel = {ariaLabel}
-            classExtras = {inputClassExtras}
-            size = {inputSize}
-            onClick = {(e) => handleMultiSplitSelect(args)}
-        />;
-    }
 
-    // Dropdown list, with one option the --Split-- button.
-    // When the --Split-- button is chosen, we bring up a modal
-    // multi-split selection component.
-    // 
-    // To clear a multi-split, just remove the other accounts in the
-    // multi-split selection component.
+    const rootAccountIds = accessor.getRootAccountIds();
+
+    const accountEntries = [];
+    addAccountIdsToAccountEntries({
+        accessor: accessor,
+        accountEntries: accountEntries,
+        accountIds: rootAccountIds,
+        filter: (id) => id !== accountId,
+        labelCallback: AH.getShortAccountAncestorNames,
+    });
+
+    const accountItems = accountEntriesToItems({
+        accessor: accessor, 
+        accountEntries: accountEntries,
+        noIndent: true,
+    });
+    accountItems.splice(0, 0,
+        {
+            value: -1,
+            text: multiSplitsMsg,
+        }
+    );
+
+
+    const activeAccountId = (splits.length !== 2) 
+        ? -1
+        : splits[1 - splitIndex].accountId;
+
+    return <AccountSelector
+        accessor = {accessor}
+        accountEntries = {accountItems}
+        accountEntriesAreItems
+        selectedAccountId = {activeAccountId}
+        errorMsg = {errorMsg}
+        ariaLabel = {ariaLabel}
+        classExtras = {inputClassExtras}
+        size = {inputSize}
+        onChange = {(e) => onSplitsListChange(e, args)}
+        ref = {refForFocus}
+    />;
+
+    /*
     const items = [[ -1, multiSplitsMsg]];
 
     const rootAccountIds = accessor.getRootAccountIds();
@@ -564,6 +572,7 @@ function renderSplitsListEditor(args) {
         onChange = {(e) => onSplitsListChange(e, args)}
         ref = {refForFocus}
     />;
+    */
 }
 
 
@@ -711,7 +720,8 @@ function getAccountRegisterColumnInfoDefs(accountType) {
                     label: userMsg('AccountRegister-split'),
                     classExtras: 'RowTable-header-base Splits-base Splits-header',
                 },
-                inputClassExtras: 'Splits-base Splits-input',
+                inputClassExtras: 'Splits-base Splits-input '
+                    + 'Cell CellSelectEditor-select AccountId-base AccountId-input',
                 cellClassName: 'RowTable-cell-base Splits-base Splits-cell',
 
                 propertyName: 'splits',

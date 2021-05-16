@@ -677,7 +677,7 @@ export function renderAccountIdEditor(args) {
         return renderAccountIdDisplay(args);
     }
 
-    const { accessor, accountId } = value;
+    const { accessor, accountId, } = value;
     const filter = value.accountIdFilter || (() => true);
     const rootAccountIds = accessor.getRootAccountIds();
 
@@ -687,9 +687,14 @@ export function renderAccountIdEditor(args) {
         accountEntries: accountEntries,
         accountIds: rootAccountIds,
         filter: filter,
+        labelCallback: AH.getShortAccountAncestorNames,
     });
 
-    const accountItems = accountEntriesToItems(accessor, accountEntries);
+    const accountItems = accountEntriesToItems({
+        accessor: accessor, 
+        accountEntries: accountEntries,
+        noIndent: true,
+    });
 
     if (args.renderAsText) {
         return renderCellSelectEditorAsText({

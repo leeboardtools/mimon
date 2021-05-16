@@ -14,9 +14,21 @@ import { userMsg } from '../util/UserMessages';
 
 /**
  * Filter callback for {@link addAccountIdsToAccountEntries}
+ * If an object is returned, the object should be a
+ * {@link addAccountIdsToAccountEntriesFilterCallback~Result}, otherwise
+ * if the result is falsy then the account id will be excluded.
  * @callback addAccountIdsToAccountEntriesFilterCallback
  * @param {number} accountId
- * @returns {addAccountIdsToAccountEntriesFilterCallback~Result|undefined}
+ * @returns {addAccountIdsToAccountEntriesFilterCallback~Result|*}
+ */
+
+/**
+ * Optional callback for {@link addAccountIdsToAccountEntries} for generating the
+ * label for the account. One option is to use {@link }
+ * @callback addAccountIdsToAccountEntriesLabelCallback
+ * @param {EngineAccessor} accessor
+ * @param {AccountDataItem} accountDataItem
+ * @returns {string}
  */
 
 /**
@@ -27,6 +39,7 @@ import { userMsg } from '../util/UserMessages';
  * @property {addAccountIdsToAccountEntriesFilterCallback} [filter]
  * @property {boolean} [sortByName] This is normally set to false for the root account
  * ids, child accounts are always sorted by name.
+ * @property {addAccountIdsToAccountEntriesLabelCallback} [labelCallback]
  */
 
 /**
@@ -34,8 +47,9 @@ import { userMsg } from '../util/UserMessages';
  * @param {addAccountIdsToAccountEntriesArgs} args
  */
 export function addAccountIdsToAccountEntries(args) {
-    let { accessor, accountEntries, accountIds, filter, sortByName, } = args;
-    filter = filter || (() => undefined);
+    let { accessor, accountEntries, accountIds, filter, sortByName,
+        labelCallback, } = args;
+    filter = filter || (() => true);
 
     const accountDataItems = accountIds.map((accountId) => 
         accessor.getAccountDataItemWithId(accountId));
@@ -49,13 +63,25 @@ export function addAccountIdsToAccountEntries(args) {
     accountDataItems.forEach((accountDataItem) => {
         const accountId = accountDataItem.id;
 
-        const filterResult = filter(accountId) || {};
+        let filterResult = filter(accountId);
+        if (typeof filterResult !== 'object') {
+            if (!filterResult) {
+                return;
+            }
+            else {
+                filterResult = {};
+            }
+        }
+
         if (!filterResult.skipAccountId) {
             const accountEntry = {
                 accountId: accountId,
             };
             if (filterResult.disabled) {
                 accountEntry.disabled = true;
+            }
+            if (labelCallback) {
+                accountEntry.text = labelCallback(accessor, accountDataItem);
             }
             accountEntries.push(accountEntry);
         }
@@ -72,6 +98,14 @@ export function addAccountIdsToAccountEntries(args) {
 
 
 /**
+ * @typedef accountEntriesToItemsArgs
+ * @property {EngineAccessor} accessor 
+ * @property {AccountSelector~AccountEntry} accountEntries
+ * @property {boolean} [noIndent=false]
+ */
+
+
+/**
  * Converts an array of {@link AccountSelector~AccountEntry}s into items that
  * can be used directly by {@link AccountSelector} with the accountEntriesAreItems
  * property set to <code>true</code>.
@@ -81,7 +115,7 @@ export function addAccountIdsToAccountEntries(args) {
  * @param {AccountSelector~AccountEntry} accountEntries
  * @returns {Array}
  */
-export function accountEntriesToItems(accessor, accountEntries) {
+export function accountEntriesToItems({ accessor, accountEntries, noIndent, }) {
     const items = [];
     const parentStack = [];
     accountEntries.forEach((entry) => {
@@ -101,8 +135,10 @@ export function accountEntriesToItems(accessor, accountEntries) {
         const item = {
             value: accountId,
             text: entry.text || accountDataItem.name,
-            indent: parentStack.length,
         };
+        if (!noIndent) {
+            item.indent = parentStack.length;
+        }
         if (entry.disabled) {
             item.disabled = true;
         }
@@ -135,7 +171,10 @@ export function AccountSelector(props) {
         items = accountEntries;
     }
     else {
-        items = accountEntriesToItems(accessor, accountEntries);
+        items = accountEntriesToItems({
+            accessor: accessor, 
+            accountEntries: accountEntries,
+        });
     }
 
     return <DropdownField
