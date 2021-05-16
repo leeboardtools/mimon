@@ -524,6 +524,23 @@ class QuantityDefinition {
     }
 
     /**
+     * Simple 'cleaning' of a string containing a value or an expression, the default
+     * is to remove all occurences of the group marker from teh string.
+     * @param {string} valueText 
+     * @returns {string}
+     */
+    cleanValueText(valueText) {
+        if (typeof this.getGroupMark === 'function') {
+            const groupMark = this.getGroupMark();
+            if (groupMark) {
+                return valueText.replaceAll(groupMark, '');
+            }
+        }
+        return valueText;
+    }
+
+
+    /**
      * Adds several quantities together. The resulting quantity has this definition.
      * @param {(Quantity[]|...Quantity)} args The quantities to be added, either 
      * an array of {@link Quantity}s or as individual parameters.

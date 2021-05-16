@@ -107,12 +107,13 @@ export const CellQuantityEditor = React.forwardRef(
         else if (props.allowEmpty && (!value || !value.trim())) {
             // OK to be empty...
         }
-        else if (!errorMsg) {
+        else if (!errorMsg && (typeof value === 'string')) {
             // Validate the value.
             try {
                 value = value.trim();
                 if (props.evalExpression && (typeof value === 'string')
                   && value) {
+                    value = quantityDefinition.cleanValueText(value);
                     props.evalExpression(value);
                 }
                 else {

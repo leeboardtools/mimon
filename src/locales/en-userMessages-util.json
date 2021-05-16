@@ -157,6 +157,7 @@
     "FileFilter-xml_description": "XML Files (.xml)",
     "FileFilter-all_description": "All Files",
 
+    "QuantityField-invalid_value": ["", ""],
 
     "SequentialPages-next_btn": "Next",
     "SequentialPages-finish-btn": "Finish",
