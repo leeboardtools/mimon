@@ -443,10 +443,10 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
         const optionalColumns = [];
         if (PI.getPricedItemType(pricedItemTypeName).hasTickerSymbol) {
-            optionalColumns.push(getColumnWithKey(allColumns, 'totalMarketValue'));
             optionalColumns.push(getColumnWithKey(allColumns, 'totalShares'));
             optionalColumns.push(getColumnWithKey(allColumns, 'totalCostBasis'));
             optionalColumns.push(getColumnWithKey(allColumns, 'totalCashIn'));
+            optionalColumns.push(getColumnWithKey(allColumns, 'totalMarketValue'));
             optionalColumns.push(getColumnWithKey(allColumns, 'totalGain'));
             optionalColumns.push(getColumnWithKey(allColumns, 'totalCashInGain'));
             optionalColumns.push(getColumnWithKey(allColumns, 'totalPercentGain'));
@@ -454,10 +454,17 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             optionalColumns.push(getColumnWithKey(allColumns, 'totalAnnualPercentGain'));
             optionalColumns.push(
                 getColumnWithKey(allColumns, 'totalAnnualCashInPercentGain'));
+            optionalColumns.push(getColumnWithKey(allColumns, 'percentOfTotal'));
+
             optionalColumns.push(getColumnWithKey(allColumns, 'onlineSource'));
         }
+        else {
+            optionalColumns.push(getColumnWithKey(allColumns, 'totalMarketValue'));
+        }
+
         optionalColumns.push(getColumnWithKey(allColumns, 'currency'));
         optionalColumns.push(getColumnWithKey(allColumns, 'quantityDefinition'));
+
 
         const toggleColumnsSubMenuItems 
             = this._rowTableHandler.createToggleColumnMenuItems(
