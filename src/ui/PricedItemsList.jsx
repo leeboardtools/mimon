@@ -594,6 +594,7 @@ export class PricedItemsList extends React.Component {
 
         return {
             rowInfos: rowInfos,
+            summaryRowInfo: summaryRowInfo,
             rowInfosChangeId: state.rowInfosChangeId + 1,
             accountStateInfosByAccountId: accountStateInfosByAccountId,
             rowInfosByKey: rowInfosByKey,
@@ -742,7 +743,7 @@ export class PricedItemsList extends React.Component {
         const { state } = this;
         const { rowInfos } = state;
 
-        const summaryRowInfo = state.rowInfosByKey.get('_SUMMARY_');
+        const { summaryRowInfo } = state;
         if (summaryRowInfo) {
             summaryRowInfo.accountGainsState = undefined;
         }
@@ -1178,7 +1179,8 @@ export class PricedItemsList extends React.Component {
 
     renderPercentOfTotal(args) {
         const { rowInfo, } = args;
-        const { accountGainsState, summaryRowInfo } = rowInfo;
+        const { accountGainsState, } = rowInfo;
+        const { summaryRowInfo } = this.state;
         if (!accountGainsState || !summaryRowInfo) {
             return;
         }

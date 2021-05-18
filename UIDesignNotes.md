@@ -562,8 +562,6 @@ Column sorting in RowTable:
         - Show/Hide securities with no shares
             - Potential problem here is double reload of account states since won't know if a priced item has no shares until it is loaded.
     
-        - Show/Hide security doesn't work
-        - % of Total doesn't work
     
 
     - Main Window

@@ -149,17 +149,22 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     }
 
 
-    onTogglePricedItemVisible(tabId, pricedItemId, pricedItemTypeName) {
+    onTogglePricedItemVisible(tabId, pricedItemTypeName) {
         const state = this.getTabIdState(tabId);
+        const { activePricedItemId } = state;
+        if (!activePricedItemId) {
+            return;
+        }
+
         const hiddenPricedItemIds = Array.from(state.hiddenPricedItemIds);
-        const index = hiddenPricedItemIds.indexOf(pricedItemId);
+        const index = hiddenPricedItemIds.indexOf(activePricedItemId);
         let actionNameId;
         if (index >= 0) {
             hiddenPricedItemIds.splice(index, 1);
             actionNameId = 'PricedItemsListHandler-showPricedItem';
         }
         else {
-            hiddenPricedItemIds.push(pricedItemId);
+            hiddenPricedItemIds.push(activePricedItemId);
             actionNameId = 'PricedItemsListHandler-hidePricedItem';
             // TODO: Also need to set the active pricedItem to something else
             // if we're not showing hidden pricedItems.
@@ -173,13 +178,15 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         this.setTabIdState(tabId, newState);
 
         const pricedItemDataItem = this.props.accessor.getPricedItemDataItemWithId(
-            pricedItemId);
+            activePricedItemId);
 
+        const pricedItemName = pricedItemDataItem.name || pricedItemDataItem.ticker
+            || pricedItemDataItem.description;
         this.setTabIdProjectSettings(state.projectSettingsId, 
             {
                 hiddenPricedItemIds: hiddenPricedItemIds,
             },
-            userMsg(actionNameId, pricedItemDataItem.name));
+            userMsg(actionNameId, pricedItemName));
     }
 
 
@@ -499,7 +506,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                             typeDescription),
                         disabled: !activePricedItemId,
                         onChooseItem: () => this.onTogglePricedItemVisible(
-                            tabId, activePricedItemId, pricedItemTypeName),
+                            tabId, pricedItemTypeName),
                     },
                     { id: 'toggleShowHiddenPricedItems',
                         label: userMsg('PricedItemsListHandler-showHiddenPricedItems', 
