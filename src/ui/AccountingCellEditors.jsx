@@ -711,7 +711,7 @@ export function renderAccountIdEditor(args) {
         accountEntriesAreItems
         selectedAccountId = {accountId}
         onChange = {(e) => onAccountIdChange(e, args)}
-        inputClassExtras = {inputClassExtras}
+        classExtras = {inputClassExtras}
         ariaLabel = {ariaLabel}
         size = {inputSize}
         errorMsg = {errorMsg}

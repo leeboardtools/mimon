@@ -5,7 +5,7 @@ import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { TextField } from '../util-ui/TextField';
 import deepEqual from 'deep-equal';
-import { AccountSelector } from './AccountSelector';
+import { AccountSelectorField } from './AccountSelector';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
 import { DropdownField } from '../util-ui/DropdownField';
@@ -352,7 +352,7 @@ export class AccountEditor extends React.Component {
         
         }
 
-        return <AccountSelector
+        return <AccountSelectorField
             accessor={accessor}
             id={this._idBase + '_parent'}
             accountEntries={accountEntries}
@@ -558,7 +558,7 @@ export class AccountEditor extends React.Component {
         let selectedAccountId = AH.getDefaultSplitAccountId(accessor, accountDataItem,
             defaultSplitAccountType);
 
-        return <AccountSelector
+        return <AccountSelectorField
             accessor={accessor}
             id={this._idBase + property}
             accountEntries={accountEntries}

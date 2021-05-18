@@ -1525,7 +1525,10 @@ from BS col-form-label */
     overflow-x: hidden;
     overflow-y: auto;
 }
-  
+
+.Scrollable-menu.DropdownSelector-dropdownList {
+    max-height: 60vh;
+}
 
 .QuantityDisplay {
     text-align: right;

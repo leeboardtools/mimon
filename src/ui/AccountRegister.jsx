@@ -552,27 +552,6 @@ function renderSplitsListEditor(args) {
         onChange = {(e) => onSplitsListChange(e, args)}
         ref = {refForFocus}
     />;
-
-    /*
-    const items = [[ -1, multiSplitsMsg]];
-
-    const rootAccountIds = accessor.getRootAccountIds();
-    rootAccountIds.forEach((id) => addAccountIdsToItems(accessor, items, 
-        id, (id) => id !== accountId));
-
-    const activeAccountId = splits[1 - splitIndex].accountId;
-
-    return <CellSelectEditor
-        selectedValue = {activeAccountId}
-        items = {items}
-        errorMsg = {errorMsg}
-        ariaLabel = {ariaLabel}
-        classExtras = {inputClassExtras}
-        size = {inputSize}
-        onChange = {(e) => onSplitsListChange(e, args)}
-        ref = {refForFocus}
-    />;
-    */
 }
 
 

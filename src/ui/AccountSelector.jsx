@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { DropdownField } from '../util-ui/DropdownField';
+import { DropdownSelector } from '../util-ui/DropdownSelector';
 import { userMsg } from '../util/UserMessages';
 
 
@@ -153,36 +154,39 @@ export function accountEntriesToItems({ accessor, accountEntries, noIndent, }) {
 
 
 /**
- * Dropdown field component for selecting an account.
+ * Dropdown component for selecting an account.
  * @class
  */
-export function AccountSelector(props) {
-    const { accessor, accountEntries, accountEntriesAreItems,
-        selectedAccountId, disabledRoot,
-        ...passThroughProps } = props;
-    let items = [];
-    if (disabledRoot) {
-        items.push({
-            value: -1,
-            text: userMsg('AccountSelector-disabled_root'),
-        });
-    }
-    else if (accountEntriesAreItems) {
-        items = accountEntries;
-    }
-    else {
-        items = accountEntriesToItems({
-            accessor: accessor, 
-            accountEntries: accountEntries,
-        });
-    }
+export const AccountSelector = React.forwardRef(
+    function _AccountSelector(props, ref) {
+        const { accessor, accountEntries, accountEntriesAreItems,
+            selectedAccountId, disabledRoot,
+            ...passThroughProps } = props;
+        let items = [];
+        if (disabledRoot) {
+            items.push({
+                value: -1,
+                text: userMsg('AccountSelector-disabled_root'),
+            });
+        }
+        else if (accountEntriesAreItems) {
+            items = accountEntries;
+        }
+        else {
+            items = accountEntriesToItems({
+                accessor: accessor, 
+                accountEntries: accountEntries,
+            });
+        }
 
-    return <DropdownField
-        {...passThroughProps}
-        items={items}
-        value={selectedAccountId}
-    />;
-}
+        return <DropdownSelector
+            {...passThroughProps}
+            items = {items}
+            value = {selectedAccountId}
+            ref = {ref}
+        />;
+    }
+);
 
 /**
  * @typedef {object}    AccountSelector~AccountEntry
@@ -196,6 +200,68 @@ export function AccountSelector(props) {
  * accountEntries has been converted to items via {@link accountEntriesToItems}.
  */
 AccountSelector.propTypes = {
+    accessor: PropTypes.object.isRequired,
+    accountEntries: PropTypes.array.isRequired,
+    accountEntriesAreItems: PropTypes.bool,
+    ariaLabel: PropTypes.string,
+    selectedAccountId: PropTypes.number,
+    inputClassExtras: PropTypes.string,
+    errorMsg: PropTypes.string,
+    onChange: PropTypes.func,
+    onFocus: PropTypes.func,
+    onBlur: PropTypes.func,
+    disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
+    disabledRoot: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
+};
+
+
+/**
+ * Dropdown field component for selecting an account.
+ * @class
+ */
+export const AccountSelectorField = React.forwardRef(
+    function _AccountSelectorField(props, ref) {
+        const { accessor, accountEntries, accountEntriesAreItems,
+            selectedAccountId, disabledRoot,
+            ...passThroughProps } = props;
+        let items = [];
+        if (disabledRoot) {
+            items.push({
+                value: -1,
+                text: userMsg('AccountSelector-disabled_root'),
+            });
+        }
+        else if (accountEntriesAreItems) {
+            items = accountEntries;
+        }
+        else {
+            items = accountEntriesToItems({
+                accessor: accessor, 
+                accountEntries: accountEntries,
+            });
+        }
+
+        return <DropdownField
+            {...passThroughProps}
+            items = {items}
+            value = {selectedAccountId}
+            ref = {ref}
+        />;
+    }
+);
+
+/**
+ * @typedef {object}    AccountSelector~AccountEntry
+ * @property {number}   accountId
+ */
+
+/**
+ * @typedef {object}    AccountSelector~propTypes
+ * @property {AccountSelector~AccountEntry} accountEntries
+ * @property {boolean} [accountEntriesAreItems=false] Set to true if
+ * accountEntries has been converted to items via {@link accountEntriesToItems}.
+ */
+AccountSelectorField.propTypes = {
     accessor: PropTypes.object.isRequired,
     id: PropTypes.string,
     accountEntries: PropTypes.array.isRequired,

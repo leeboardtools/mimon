@@ -295,6 +295,7 @@ export class DropdownSelector extends React.Component {
             <Popup
                 show = {isDropdownListShown}
                 onClose = {this.closeDropdown}
+                isDebug = {props.isDebug}
             >
                 {dropdownList}
             </Popup>
@@ -346,4 +347,5 @@ DropdownSelector.propTypes = {
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
     disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
+    isDebug: PropTypes.bool,
 };

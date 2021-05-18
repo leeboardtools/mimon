@@ -257,6 +257,7 @@ label {
 
 .DropdownSelector.AccountId-input {
     margin: 0 -0.3rem!important;
+    position: relative!important;
 }
 
 .AccountId-base > .DropdownSelector-button {

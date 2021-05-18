@@ -318,7 +318,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Account Selector
         - Add a search box.
-        - Scrolling issues with the dropdown being too long.
     
     - File import
         - Will not bother importing Reminders

@@ -15,7 +15,7 @@ import * as T from '../engine/Transactions';
 import * as DO from '../util/DateOccurrences';
 import { SeparatorBar } from '../util-ui/SeparatorBar';
 import { DateOccurrenceEditor } from '../util-ui/DateOccurrenceEditor';
-import { accountEntriesToItems, AccountSelector, 
+import { accountEntriesToItems, AccountSelectorField, 
     addAccountIdsToAccountEntries } from './AccountSelector';
 import { MultiSplitsEditor } from './MultiSplitsEditor';
 import { QuantityField, getValidQuantityBaseValue } 
@@ -165,7 +165,7 @@ class TransactionTemplateEditor extends React.Component {
     renderPrimaryAccountSelector() {
         const { accessor } = this.props;
 
-        return <AccountSelector
+        return <AccountSelectorField
             id = {this.makeId('PrimaryAccountSelector')}
             accessor = {accessor}
             accountEntries = {this.state.accountItems}
@@ -254,7 +254,7 @@ class TransactionTemplateEditor extends React.Component {
                 });
         }
 
-        return <AccountSelector
+        return <AccountSelectorField
             id = {this.makeId('SplitsSelector')}
             accessor = {accessor}
             accountEntries = {accountItems}
