@@ -23,6 +23,7 @@ export class DropdownSelector extends React.Component {
         this._outerRef = React.createRef();
         this._buttonRef = React.createRef();
         this._dropdownListRef = React.createRef();
+        this._activeItemRef = React.createRef();
 
         this.state = {
             isDropdownListShown: false,
@@ -32,6 +33,13 @@ export class DropdownSelector extends React.Component {
 
     focus() {
         if (this.state.isDropdownListShown) {
+            // Can't focus to the active item because it doesn't handle keys (for now...)
+            /*
+            if (EU.setFocus(this._activeItemRef.current)) {
+                return;
+            }
+            */
+
             if (EU.setFocus(this._dropdownListRef.current)) {
                 return;
             }
@@ -47,16 +55,24 @@ export class DropdownSelector extends React.Component {
 
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevState.isDropdownListShown !== this.state.isDropdownListShown) {
+        const { props, state } = this;
+        if (prevState.isDropdownListShown !== state.isDropdownListShown) {
             // If we have focus we need to update who actually has focus...
             if (EU.isElementAncestor(this._outerRef.current, document.activeElement)) {
                 this.focus();
             }
+            if (state.isDropdownListShown) {
+                this.positionActiveItem();
+            }
         }
         
-        if ((this.props.value !== prevProps.value)
-         || (!deepEqual(this.props.items, prevProps.items))) {
+        if ((props.value !== prevProps.value)
+         || (!deepEqual(props.items, prevProps.items))) {
             this.updateActiveValue();
+        }
+
+        if (state.activeIndex !== state.positionedActiveIndex) {
+            this.positionActiveItem();
         }
     }
 
@@ -80,8 +96,38 @@ export class DropdownSelector extends React.Component {
         this.setState({
             itemValues: itemValues,
             activeIndex: activeIndex,
+            positionedActiveIndex: -1,
             originalActiveIndex: activeIndex,
         });
+    }
+
+
+    positionActiveItem() {
+        const { activeIndex } = this.state;
+
+        const container = this._dropdownListRef.current;
+        const element = this._activeItemRef.current;
+        if (container && element) {
+            const containerTop = container.scrollTop;
+            const containerHeight = container.clientHeight;
+            const scrollHeight = container.scrollHeight;
+
+            if (scrollHeight > containerHeight ) {
+                const scrollBottom = containerHeight + container.scrollTop;
+                const elementBottom = element.offsetTop + element.offsetHeight;
+                if (elementBottom > scrollBottom) {
+                    container.scrollTop = elementBottom - containerHeight;
+                }
+                else if (element.offsetTop < containerTop) {
+                    container.scrollTop = element.offsetTop;
+                }
+            }
+
+            this.setState({
+                positionedActiveIndex: activeIndex,
+            });
+        }
+
     }
 
 
@@ -96,7 +142,7 @@ export class DropdownSelector extends React.Component {
         this.setState((state) => {
             const { itemValues } = state;
             if (index < 0) {
-                index = itemValues.length;
+                index = itemValues.length - 1;
             }
             else if (index >= itemValues.length) {
                 index = 0;
@@ -109,29 +155,36 @@ export class DropdownSelector extends React.Component {
 
 
     onKeyDown(e) {
-        if (!this.state.isDropdownListShown) {
-            return;
-        }
-
         let { activeIndex } = this.state;
 
         switch (e.key) {
         case 'Enter' :
-            if (typeof activeIndex !== 'number') {
-                this.onItemClick(e, this.props.value);
+            if (!this.state.isDropdownListShown) {
+                this.setState({ 
+                    isDropdownListShown: true,
+                });
             }
             else {
-                this.onItemClick(e, this.state.itemValues[activeIndex]);
+                if (typeof activeIndex !== 'number') {
+                    this.onItemClick(e, this.props.value);
+                }
+                else {
+                    this.onItemClick(e, this.state.itemValues[activeIndex]);
+                }
             }
             e.preventDefault();
+            e.stopPropagation();
             break;
 
         case 'Escape' :
             this.setState({
                 activeIndex: this.state.originalActiveIndex,
             });
-            this.closeDropdown();
-            e.preventDefault();
+            if (this.state.isDropdownListShown) {
+                this.closeDropdown();
+                e.preventDefault();
+                e.stopPropagation();
+            }
             break;
         
         case 'ArrowUp' :
@@ -140,6 +193,7 @@ export class DropdownSelector extends React.Component {
             }
             this.activateItemAtIndex(activeIndex - 1);
             e.preventDefault();
+            e.stopPropagation();
             break;
 
         case 'ArrowDown' :
@@ -148,14 +202,22 @@ export class DropdownSelector extends React.Component {
             }
             this.activateItemAtIndex(activeIndex + 1);
             e.preventDefault();
+            e.stopPropagation();
             break;
         
         case 'Home' :
             this.activateItemAtIndex(0);
+            e.preventDefault();
+            e.stopPropagation();
             break;
 
         case 'End' :
             this.activateItemAtIndex(this.state.itemValues.length - 1);
+            e.preventDefault();
+            e.stopPropagation();
+            break;
+        
+        default :
             break;
         }
     }
@@ -205,9 +267,11 @@ export class DropdownSelector extends React.Component {
             }
 
             let className = 'Dropdown-item ';
+            let itemRef;
             if (activeIndexValue === value) {
                 className += 'active ';
                 valueText = text;
+                itemRef = this._activeItemRef;
             }
             if (item.disabled) {
                 className += 'disabled ';
@@ -228,6 +292,7 @@ export class DropdownSelector extends React.Component {
                             this.onItemClick(e, value);
                         }
                     }}
+                    ref = {itemRef}
                 >
                     {component}
                 </a>
@@ -246,6 +311,8 @@ export class DropdownSelector extends React.Component {
         const { id, ariaLabel, classExtras, 
             onFocus, onBlur, disabled, } = props;
 
+        const { isDropdownListShown } = this.state;
+
         const { itemComponents, valueText } = this.renderItems();
 
         const dropdownList = <div 
@@ -259,8 +326,6 @@ export class DropdownSelector extends React.Component {
             {itemComponents}
         </div>;
 
-
-        const { isDropdownListShown } = this.state;
 
         let buttonClassName = 'Btn Btn-block Border DropdownSelector-button';
         const button = <button className = {buttonClassName} 
@@ -288,6 +353,7 @@ export class DropdownSelector extends React.Component {
             className = {className}
             aria-label = {ariaLabel}
             onFocus = {onFocus}
+            onKeyDown = {this.onKeyDown}
             onBlur = {onBlur}
             ref = {this._outerRef}
         >
