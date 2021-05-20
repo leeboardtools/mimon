@@ -256,13 +256,15 @@ label {
 
 
 .DropdownSelector.AccountId-input {
-    margin: 0 -0.3rem!important;
+    margin-left: -0.8rem!important;
     position: relative!important;
 }
 
 .AccountId-base > .DropdownSelector-button {
-    margin: 0 .25rem!important;
-    padding: 3px .5rem 0 0!important;
+    margin: 0!important;
+    /* top right bottom left */
+    padding-bottom: 0.2rem!important;
+    padding-top: 0.2rem;
     border: none !important;
 }
 

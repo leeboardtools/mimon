@@ -432,6 +432,8 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Support horizontal scrolling
         - Need to figure out minimum column widths.
 
+    - Indicate focus on the active row.
+
 
 - CollapsibleRowTable
 
@@ -563,6 +565,8 @@ Column sorting in RowTable:
             - Potential problem here is double reload of account states since won't know if a priced item has no shares until it is loaded.
     
     
+    - DropdownSelector
+        - Add contextual typing support.
 
     - Main Window
         - Smartly save/restore last window settings.
