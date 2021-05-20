@@ -3,6 +3,12 @@
     height: calc(100vh - 3.5em);
 }
 
+a:focus,
+button:focus,
+div:focus {
+    outline: thin dotted;
+}
+
 
 /* Originally from BS alert, etc. */
 .Alert {
@@ -790,12 +796,17 @@ from BS col-form-label */
 }
 
 .Form-control:focus,
-.Cell:focus {
+.Cell:focus,
+.DropdownSelector:focus-within {
     color: #495057;
     background-color: #fff;
     border-color: #80bdff;
     outline: 0;
     box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.DropdownSelector:focus-within {
+    border-radius: 0;
 }
 
 .Form-control:disabled, 
@@ -1004,7 +1015,7 @@ from BS col-form-label */
 }
 
 .MenuList-itemsContainer:focus {
-    outline: none;
+    outline: thin dotted;
 }
 
 .MenuList-item {
