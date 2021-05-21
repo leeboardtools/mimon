@@ -576,7 +576,7 @@ export function editableRowTable(WrappedTable) {
 
             const { state } = this;
 
-            const { activeRowEditIndex } = state;
+            const { activeEditInfo } = state;
 
             let myOnRenderCell = this.onRenderCell;
             if (onOuterRenderCell) {
@@ -594,7 +594,7 @@ export function editableRowTable(WrappedTable) {
                 onOpenActiveRow = {this.onOpenActiveRow}
                 onKeyDown = {this.onKeyDown}
                 onRenderCell = {myOnRenderCell}
-                noActiveRowFocus = {activeRowEditIndex !== undefined}
+                noActiveRowFocus = {activeEditInfo !== undefined}
 
                 ref = {this._rowTableRef}
             >

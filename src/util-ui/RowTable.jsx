@@ -1095,11 +1095,15 @@ export class RowTable extends React.Component {
     }
 
     onBodyFocus(e) {
-        //console.log('onBodyFocus: ' + this._dumpElement(e.relatedTarget));
+        this.setState({
+            hasFocus: true,
+        });
     }
 
     onBodyBlur(e) {
-        //console.log('onBodyBlur: ' + this._dumpElement(e.relatedTarget));
+        this.setState({
+            hasFocus: false,
+        });
     }
 
 
@@ -1514,6 +1518,7 @@ export class RowTable extends React.Component {
             sizeRenderRefs,
             isSizeRender,
             bodyRowHeight,
+            hasFocus,
         } = this.state;
 
         const columnWidths = (isSizeRender)
@@ -1604,6 +1609,10 @@ export class RowTable extends React.Component {
         let rowClassName = 'RowTableRow';
         if (rowIndex === activeRowIndex) {
             rowClassName += ' RowTable-active';
+
+            if (hasFocus && !this.props.noActiveRowFocus) {
+                rowClassName += ' focus';
+            }
         }
         if (rowClassExtras) {
             rowClassName += ' ' + rowClassExtras;
