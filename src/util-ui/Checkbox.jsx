@@ -9,11 +9,15 @@ import PropTypes from 'prop-types';
  */
 export function Checkbox(props) {
     const onChange = props.onChange || (() => {});
-    const { value, label, tabIndex, classExtras, children } = props;
+    const { value, label, tabIndex, classExtras, children,
+        disabled, } = props;
     let ariaLabel = props.ariaLabel || label;
     let buttonClassName = 'Checkbox Text-center';
     if (value) {
         buttonClassName += ' Checkbox-checked';
+    }
+    if (disabled) {
+        buttonClassName += ' disabled';
     }
 
     if (!label && !children && classExtras) {
@@ -28,6 +32,8 @@ export function Checkbox(props) {
                 onChange(!value);
             }
         }}
+        disabled = {disabled}
+
         tabIndex = {tabIndex}
     ></div>;
     if (!label && !children) {
@@ -75,5 +81,6 @@ Checkbox.propTypes = {
     tabIndex: PropTypes.number,
     classExtras: PropTypes.string,
     onChange: PropTypes.func,
+    disabled: PropTypes.bool,
     children: PropTypes.any,
 };

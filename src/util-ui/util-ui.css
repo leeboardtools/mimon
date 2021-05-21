@@ -638,6 +638,13 @@ button.Close {
     top: -2px;
 }
 
+.Checkbox:disabled,
+.Checkbox.disabled {
+    color: #6c757d !important;
+    background-color: #e9ecef;
+    opacity: 0.5;
+}
+
 .Checkbox-label {
     padding-left: 0.5rem;
 }
@@ -882,6 +889,10 @@ from BS col-form-label */
 .Input-group-prepend {
     display: -ms-flexbox;
     display: flex;
+}
+
+.Input-group.nowrap {
+    flex-wrap: nowrap;
 }
 
 .Input-group>.Cell {

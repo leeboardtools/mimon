@@ -62,7 +62,7 @@ export function Field(props) {
         ? onRenderEditor(editorClassName)
         : props.children;
     if (prepend || append) {
-        let inputClassName = 'Input-group';
+        let inputClassName = 'Input-group nowrap';
         if (errorMsg) {
             inputClassName += ' is-invalid';
         }
