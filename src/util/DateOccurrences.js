@@ -1374,6 +1374,10 @@ export function makeValidDateOccurrenceDefinition(definition, refYMDDate) {
     if (!definition) {
         definition = {
             occurrenceType: OccurrenceType.DAY_OF_MONTH,
+            repeatDefinition: {
+                repeatType: OccurrenceRepeatType.MONTHLY,
+                period: 1,
+            },
         };
     }
     else {
