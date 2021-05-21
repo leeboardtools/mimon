@@ -809,6 +809,10 @@ from BS col-form-label */
     border-radius: 0;
 }
 
+.DropdownSelector-button {
+    outline: none!important;
+}
+
 .Form-control:disabled, 
 .Form-control[readonly] {
     background-color: #e9ecef;
@@ -1395,13 +1399,15 @@ from BS col-form-label */
 
 .RowTable-active .RowTableRow, 
 .RowTable-active>.RowTableRowCell {
-    background-color: rgba(0, 0, 0, 0.075);
+    background-color: rgba(0, 0, 0, 0.15);
 }
 
-/*
-.RowTableRowCell {
+.RowTableRow.focus {
+    outline: thin dotted;
 }
-*/
+.RowTableRow.no-focus {
+    outline: none;
+}
 
 .RowTableFooter {
     vertical-align: middle;
