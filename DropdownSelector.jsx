@@ -3,13 +3,13 @@ import PropTypes from 'prop-types';
 import { Popup } from './Popup';
 import * as EU from '../util/ElementUtils';
 import deepEqual from 'deep-equal';
+import { KeysContextSelector } from '../util/KeyContextSelector';
 
 
 /**
  * React component for a dropdown selector. A DropdownSelector differs from a 
  * {@link DropdownMenu} in that the selector is a control, it displays the 
  * selected value in the button, and selections call a callback prop.
- * @class
  */
 export class DropdownSelector extends React.Component {
     constructor(props) {
@@ -19,11 +19,16 @@ export class DropdownSelector extends React.Component {
         this.onKeyDown = this.onKeyDown.bind(this);
         this.onDropdownListBlur = this.onDropdownListBlur.bind(this);
         this.onItemClick = this.onItemClick.bind(this);
+        this.onSelectFromKeys = this.onSelectFromKeys.bind(this);
 
         this._outerRef = React.createRef();
         this._buttonRef = React.createRef();
         this._dropdownListRef = React.createRef();
         this._activeItemRef = React.createRef();
+
+        this._keysContextSelector = new KeysContextSelector({
+            onSelectFromKeys: this.onSelectFromKeys,
+        });
 
         this.state = {
             isDropdownListShown: false,
@@ -34,11 +39,6 @@ export class DropdownSelector extends React.Component {
     focus() {
         if (this.state.isDropdownListShown) {
             // Can't focus to the active item because it doesn't handle keys (for now...)
-            /*
-            if (EU.setFocus(this._activeItemRef.current)) {
-                return;
-            }
-            */
 
             if (EU.setFocus(this._dropdownListRef.current)) {
                 return;
@@ -218,7 +218,51 @@ export class DropdownSelector extends React.Component {
             break;
         
         default :
+            {
+                const { onKeyDown } = this.props;
+                if (onKeyDown) {
+                    onKeyDown(e);
+                    if (e.isDefaultPrevented || e.isPropagationStopped) {
+                        return;
+                    }
+                }
+
+                this._keysContextSelector.onKeyDown(e);
+            }
             break;
+        }
+    }
+
+
+    onSelectFromKeys(keysSoFar, e) {
+        let { activeIndex, itemValues } = this.state;
+        if (typeof activeIndex !== 'number') {
+            activeIndex = 0;
+        }
+
+        let match = this.findMatchInRange(keysSoFar, activeIndex + 1, itemValues.length);
+        if (match === undefined) {
+            match = this.findMatchInRange(keysSoFar, 0, activeIndex);
+        }
+        if (match !== undefined) {
+            this.activateItemAtIndex(match);
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    findMatchInRange(keysSoFar, startIndex, endIndex) {
+        const { items } = this.props;
+        if (items) {
+            for (let i = startIndex; i < endIndex; ++i) {
+                // 
+                const item = items[i];
+                const text = item.text || item.value;
+                if (text && !text.toUpperCase().indexOf(keysSoFar)) {
+                    return i;
+                }
+            }
         }
     }
 
@@ -401,6 +445,11 @@ export class DropdownSelector extends React.Component {
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onfocus}.
  * @property {function} [onBlur]    onBlur event handler
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onblur}.
+ * @property {function} [onKeyDown] onKeyDown event handler
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onkeydown},
+ * this is only called for the keys not handled by the dropdown. This is called before
+ * any key context processing, to ignore the key context processing either 
+ * e.preventDefault() or e.stopPropagation() should be called.
  * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
  */
 DropdownSelector.propTypes = {
@@ -412,6 +461,7 @@ DropdownSelector.propTypes = {
     onChange: PropTypes.func.isRequired,
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
+    onKeyDown: PropTypes.func,
     disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
     isDebug: PropTypes.bool,
 };
