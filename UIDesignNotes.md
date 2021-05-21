@@ -432,7 +432,6 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Support horizontal scrolling
         - Need to figure out minimum column widths.
 
-    - Indicate focus on the active row.
 
 
 - CollapsibleRowTable
@@ -566,7 +565,7 @@ Column sorting in RowTable:
     
     
     - DropdownSelector
-        - Add contextual typing support.
+        
 
     - Main Window
         - Smartly save/restore last window settings.
