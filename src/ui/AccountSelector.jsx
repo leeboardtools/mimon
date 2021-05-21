@@ -82,7 +82,10 @@ export function addAccountIdsToAccountEntries(args) {
                 accountEntry.disabled = true;
             }
             if (labelCallback) {
-                accountEntry.text = labelCallback(accessor, accountDataItem);
+                // TODO:
+                // Until we implement some kind of smart key context support,
+                // we'll force simple account names.
+                //accountEntry.text = labelCallback(accessor, accountDataItem);
             }
             accountEntries.push(accountEntry);
         }
@@ -117,6 +120,11 @@ export function addAccountIdsToAccountEntries(args) {
  * @returns {Array}
  */
 export function accountEntriesToItems({ accessor, accountEntries, noIndent, }) {
+    // TODO:
+    // Until we implement some kind of smart key context support,
+    // we'll force simple account names/indenting.
+    noIndent = false;
+    
     const items = [];
     const parentStack = [];
     accountEntries.forEach((entry) => {
