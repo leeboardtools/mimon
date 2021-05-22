@@ -26,7 +26,7 @@ export function getEngineLocal() {
  * Main engine initialization function.
  * @param {string} settingsPathName The path name to the settings JSON file.
  */
-export async function initializeEngine(settingsPathName, appPathName) {
+export async function asyncInitializeEngine(settingsPathName, appPathName) {
     const noElectron = (settingsPathName === undefined);
 
     locale = (noElectron) ? undefined : require('electron').remote.app.getLocale();

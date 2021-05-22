@@ -304,7 +304,7 @@ export default class App extends React.Component {
         const settingsPathName = path.join(app.getPath('appData'), 
             app.name, 'user.json');
 
-        await Engine.initializeEngine(settingsPathName, app.getAppPath());
+        await Engine.asyncInitializeEngine(settingsPathName, app.getAppPath());
 
         await this.asyncPostEngineInitialized();
     }
