@@ -12,17 +12,17 @@ const { app, screen } = require('electron');
  * part of a JSON file in app.getPath('appData')/app.name/user.json.
  * <p>
  * There are two parts to this. The first is to call 
- * {@link module:electron-WindowState#getWindowState} prior to instantiating
+ * {@link module:electron-WindowState.getWindowState} prior to instantiating
  * an electron BrowserWindow, then passing the position and size information
  * to the BrowserWindow constructor.
  * <p>
  * The second part is to pass the newly instantiated browser window and
  * the window state that was returned in the first part to
- * {@link module:electron-WindowState#manageBrowserWindow}. This sets things
+ * {@link module:electron-WindowState.manageBrowserWindow}. This sets things
  * up for saving the browser window position when the window is closed.
  * <p>
  * States for multiple browser windows are supported via the windowName
- * property passed to {@link module:electron-WindowState#getWindowState}.
+ * property passed to {@link module:electron-WindowState.getWindowState}.
  * <p>
  * Additionally, window states are maintained for different display configurations,
  * with display configurations identified by the positions and sizes of the
@@ -171,8 +171,13 @@ function saveWindowState(windowState) {
  * Retrieves the window state containing the position and size information to
  * pass to <code>new BrowserWindow()</code>.
  * <p>
+ * If the browser window supports maximization, the isMaximized property
+ * of the window state will indicate if the browser window should be maximized,
+ * this is done by calling the browser window's maximize() method.
+ * <p>
  * The browser is normally passed along with the window state to
- * {@link manageBrowserWindow} right after the window is instantiated.
+ * {@link module:electron-WindowState.manageBrowserWindow} right after the 
+ * window is instantiated.
  * @param {module:electron-WindowState~getWindowStateArgs} args
  * @returns {module:electron-WindowState~WindowState}
  */
@@ -220,7 +225,7 @@ export function getWindowState({
  * when the browser window is closed.
  * @param {BrowserWindow} browserWindow 
  * @param {module:electron-WindowState~WindowState} windowState This should be the
- * same object returned by {@link getWindowState}.
+ * same object returned by {@link module:electron-WindowState.getWindowState}.
  */
 export function manageBrowserWindow(browserWindow, windowState) {
     browserWindow.once('move', () => {
