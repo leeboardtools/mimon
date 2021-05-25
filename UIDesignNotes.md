@@ -499,6 +499,8 @@ Column sorting in RowTable:
         - Auto complete
         - Filter transactions
 
+        - Add memo column
+
         - Add mechanism for allocating gains to sell transactions?
             - Or automatic
         
@@ -568,8 +570,20 @@ Column sorting in RowTable:
         
 
     - Main Window
-        - Smartly save/restore last window settings.
-            - Maybe save by screen size?
+                    
+
+    - Multi-splits editor
+        - Add context menu to support resetting column widths.
+        - Or don't allow column resizing.
+
+        - Add column sorting
+
+        - Save last selected account for new split entry.
+
+        - Account Selector not properly saving when key context selected.
+        - Pressing enter on existing quantity base value makes it full value.
+
+
 
 
 - XML Import

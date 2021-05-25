@@ -1,10 +1,11 @@
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import { getWindowState, manageBrowserWindow } from './util/electron-WindowState';
 // import 'regenerator-runtime/runtime';
 
 const { app, Menu, BrowserWindow, ipcMain } = require('electron');
 app.allowRendererProcessReuse = true;
 
-const { session } = require('electron');
+const { session, } = require('electron');
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
 if (isDevMode) {
@@ -73,10 +74,20 @@ ipcMain.handle('async-setFullScreen', (event, arg) => {
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
+
 Menu.setApplicationMenu(null);
 
 
-const createWindow = () => {
+const onReady = () => {
+
+    const windowState = getWindowState({
+        windowName: 'mainWindow',
+    });
+
+    createWindow(windowState);
+};
+
+const createWindow = (windowState) => {
 
     // TODO isDevMode test is a hack to get the devTools to show up, as it's
     // currently broken
@@ -97,11 +108,12 @@ const createWindow = () => {
         });
     }
 
-
     // Create the browser window.
     mainWindow = new BrowserWindow({
-        width: 1000,
-        height: 600,
+        width: windowState.width,
+        height: windowState.height,
+        x: windowState.x,
+        y: windowState.y,
         webPreferences: {
             nodeIntegration: true,
             defaultFontSize: 14,
@@ -110,6 +122,9 @@ const createWindow = () => {
             //contextIsolation: true,
         }
     });
+    if (windowState.isMaximized) {
+        mainWindow.maximize();
+    }
 
     // and load the index.html of the app.
     // eslint-disable-next-line no-undef
@@ -120,12 +135,13 @@ const createWindow = () => {
         mainWindow.webContents.openDevTools();
     }
 
+    manageBrowserWindow(mainWindow, windowState);
     
     // Emitted when the window is closed.
     mainWindow.on('closed', () => {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
+        // Dereference the window object, usually you would store windows
+        // in an array if your app supports multi windows, this is the time
+        // when you should delete the corresponding element.
         mainWindow = null;
     });
 };
@@ -133,7 +149,7 @@ const createWindow = () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', onReady);
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
