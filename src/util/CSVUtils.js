@@ -32,7 +32,7 @@ export function encloseInQuotes(cell) {
 
 /**
  * Makes a string a valid CSV cell by enclosing it in quotes via 
- * {@link module:CSVUtils#encloseInQuotes} if it contains a comma, '\n', or double quote.
+ * {@link module:CSVUtils.encloseInQuotes} if it contains a comma, '\n', or double quote.
  * @param {string} cell 
  * @returns {string}
  */
