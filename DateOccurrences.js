@@ -710,20 +710,26 @@ function getNextYMDDate_DAY_OF_WEEK(definition, occurrenceType,
     // Adjust refYMDDate to satisfy the day of the week.
     const { dayOfWeek, repeatDefinition } = definition;
 
-    const refDayOfWeek = refYMDDate.getDayOfWeek();
-    if (refDayOfWeek !== dayOfWeek) {
-        let deltaDays = dayOfWeek - refDayOfWeek;
-        if (deltaDays < 0) {
-            if (!isRepeatDefinitionRepeat(repeatDefinition)) {
-                // If we have a repeat we want the next valid date after
-                // the repeat, so we go backwards.
-                deltaDays += 7;
+    const isRepeat = isRepeatDefinitionRepeat(repeatDefinition);
+    refYMDDate = getNextRepeatDefinitionYMDDate(repeatDefinition, 
+        refYMDDate, occurrenceCount);
+
+    if (refYMDDate) {
+        const refDayOfWeek = refYMDDate.getDayOfWeek();
+        if (refDayOfWeek !== dayOfWeek) {
+            let deltaDays = dayOfWeek - refDayOfWeek;
+            if (deltaDays < 0) {
+                if (!isRepeat || !occurrenceCount) {
+                    // If we have a repeat we want the next valid date after
+                    // the repeat, so we go backwards.
+                    deltaDays += 7;
+                }
             }
+            refYMDDate = refYMDDate.addDays(deltaDays);
         }
-        refYMDDate = refYMDDate.addDays(deltaDays);
     }
 
-    return getNextRepeatDefinitionYMDDate(repeatDefinition, refYMDDate, occurrenceCount);
+    return refYMDDate;
 }
 
 function makeValid_DAY_OF_WEEK(definition, refYMDDate) {
@@ -752,7 +758,7 @@ function getNextYMDDate_DAY_OF_MONTH(definition, occurrenceType,
             refYMDDate = refYMDDate.addDays(offset - refOffset);
             // If we're not a repeat, we need to advance to the following month
             // since we need to be after the original refYMDDate...
-            if (!isRepeat) {
+            if (!isRepeat || !occurrenceCount) {
                 refYMDDate = refYMDDate.addMonths(1);
             }
         }
@@ -793,16 +799,23 @@ function getNextYMDDate_DAY_END_OF_MONTH(definition, occurrenceType,
         refYMDDate, occurrenceCount);
 
     if (refYMDDate) {
-        const lastDOM = refYMDDate.getLastDateOfMonth();
-        const newDOM = Math.max(lastDOM - offset, 1);
+        let lastDOM = refYMDDate.getLastDateOfMonth();
+        let newDOM = Math.max(lastDOM - offset, 1);
         const currentDOM = refYMDDate.getDOM();
 
         refYMDDate = new YMDDate(refYMDDate.getFullYear(), refYMDDate.getMonth(),
             newDOM);
-        if ((newDOM < currentDOM) && !isRepeat) {
+        if ((newDOM < currentDOM) && (!isRepeat || !occurrenceCount)) {
             // The offset is before the original refYMDDate, we need to be on or after
             // the original refYMDDate...
             refYMDDate = refYMDDate.addMonths(1);
+
+            // We need to refigure the DOM since the number of days in the month
+            // may change...
+            lastDOM = refYMDDate.getLastDateOfMonth();
+            newDOM = Math.max(lastDOM - offset, 1);
+            refYMDDate = new YMDDate(refYMDDate.getFullYear(), refYMDDate.getMonth(),
+                newDOM);
         }
     }
 
@@ -834,7 +847,7 @@ function getNextYMDDate_DOW_OF_MONTH(definition, occurrenceType,
     if (refYMDDate) {
         const originalYMDDate = refYMDDate;
         refYMDDate = getMonthNthDayOfWeek(refYMDDate, offset + 1, dayOfWeek);
-        if (!isRepeat) {
+        if (!isRepeat || !occurrenceCount) {
             // If the new date is before the original one we need to advance a month.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addMonths(1);
@@ -872,7 +885,7 @@ function getNextYMDDate_DOW_END_OF_MONTH(definition, occurrenceType,
     if (refYMDDate) {
         const originalYMDDate = refYMDDate;
         refYMDDate = getMonthNthDayOfWeek(refYMDDate, -offset - 1, dayOfWeek);
-        if (!isRepeat) {
+        if (!isRepeat || !occurrenceCount) {
             // If the new date is before the original one we need to advance a month.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addMonths(1);
@@ -912,7 +925,7 @@ function getNextYMDDate_DAY_OF_SPECIFIC_MONTH(definition, occurrenceType,
         const originalYMDDate = refYMDDate;
         refYMDDate = new YMDDate(refYMDDate.getFullYear(), month, 1);
         refYMDDate = getYMDDateWithDOM(refYMDDate, offset + 1);
-        if (!isRepeat) {
+        if (!isRepeat || !occurrenceCount) {
             // If the new date is before the original one we need to advance a year.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addYears(1);
@@ -952,7 +965,7 @@ function getNextYMDDate_DAY_END_OF_SPECIFIC_MONTH(definition, occurrenceType,
         refYMDDate = new YMDDate(refYMDDate.getFullYear(), month, 1);
         refYMDDate = getYMDDateWithDOM(refYMDDate, 
             refYMDDate.getLastDateOfMonth() - offset);
-        if (!isRepeat) {
+        if (!isRepeat || !occurrenceCount) {
             // If the new date is before the original one we need to advance a year.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addYears(1);
@@ -991,7 +1004,7 @@ function getNextYMDDate_DOW_OF_SPECIFIC_MONTH(definition, occurrenceType,
         const originalYMDDate = refYMDDate;
         refYMDDate = new YMDDate(refYMDDate.getFullYear(), month, 1);
         refYMDDate = getMonthNthDayOfWeek(refYMDDate, offset + 1, dayOfWeek);
-        if (!isRepeat) {
+        if (!isRepeat || !occurrenceCount) {
             // If the new date is before the original one we need to advance a year.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addYears(1);
@@ -1032,7 +1045,7 @@ function getNextYMDDate_DOW_END_OF_SPECIFIC_MONTH(definition, occurrenceType,
         const originalYMDDate = refYMDDate;
         refYMDDate = new YMDDate(refYMDDate.getFullYear(), month, 1);
         refYMDDate = getMonthNthDayOfWeek(refYMDDate, -offset - 1, dayOfWeek);
-        if (!isRepeat) {
+        if (!isRepeat || !occurrenceCount) {
             // If the new date is before the original one we need to advance a year.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addYears(1);
@@ -1074,7 +1087,7 @@ function getNextYMDDate_DAY_OF_YEAR(definition, occurrenceType,
         const originalYMDDate = refYMDDate;
         refYMDDate = new YMDDate(refYMDDate.getFullYear(), 0, 1);
         refYMDDate = refYMDDate.addDays(offset);
-        if (!isRepeat) {
+        if (!isRepeat || !occurrenceCount) {
             // If the new date is before the original one we need to advance a year.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = new YMDDate(refYMDDate.getFullYear() + 1, 0, 1);
@@ -1113,7 +1126,7 @@ function getNextYMDDate_DAY_END_OF_YEAR(definition, occurrenceType,
         const originalYMDDate = refYMDDate;
         refYMDDate = new YMDDate(refYMDDate.getFullYear(), 11, 31);
         refYMDDate = refYMDDate.addDays(-offset);
-        if (!isRepeat) {
+        if (!isRepeat || !occurrenceCount) {
             // If the new date is before the original one we need to advance a year.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = new YMDDate(refYMDDate.getFullYear() + 1, 11, 31);
@@ -1151,7 +1164,7 @@ function getNextYMDDate_DOW_OF_YEAR(definition, occurrenceType,
     if (refYMDDate) {
         const originalYMDDate = refYMDDate;
         refYMDDate = getYearNthDayOfWeek(refYMDDate, offset + 1, dayOfWeek);
-        if (!isRepeat) {
+        if (!isRepeat || !occurrenceCount) {
             // If the new date is before the original one we need to advance a year.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addYears(1);
@@ -1191,7 +1204,7 @@ function getNextYMDDate_DOW_END_OF_YEAR(definition, occurrenceType,
     if (refYMDDate) {
         const originalYMDDate = refYMDDate;
         refYMDDate = getYearNthDayOfWeek(refYMDDate, -offset - 1, dayOfWeek);
-        if (!isRepeat) {
+        if (!isRepeat || !occurrenceCount) {
             // If the new date is before the original one we need to advance a year.
             if (YMDDate.compare(originalYMDDate, refYMDDate) > 0) {
                 refYMDDate = refYMDDate.addYears(1);
@@ -1220,9 +1233,14 @@ function getNextYMDDate_ON_DATE(definition, occurrenceType,
     const { onYMDDate, repeatDefinition } = definition;
 
     const isRepeat = isRepeatDefinitionRepeat(repeatDefinition);
-    if (!isRepeat) {
-        if (YMDDate.compare(refYMDDate, onYMDDate) <= 0) {
+    if (!isRepeat || !occurrenceCount) {
+        const result = YMDDate.compare(refYMDDate, onYMDDate);
+        if (result <= 0) {
             return onYMDDate;
+        }
+        else if (isRepeat && (result > 0)) {
+            return new YMDDate(onYMDDate.getFullYear() + 1, 
+                onYMDDate.getMonth(), onYMDDate.getDOM());
         }
         return;
     }
