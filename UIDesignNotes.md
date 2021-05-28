@@ -402,10 +402,8 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
     - Reminders List
-        - Clicking enabled button does nothing.
         - Add Apply now command.
-        - Next Due dates are not right for new reminders, they're past due.
-        - Next Due date not appearing if repeat from end of month
+
 
 - Menus
 

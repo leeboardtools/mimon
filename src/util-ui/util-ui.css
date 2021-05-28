@@ -659,6 +659,18 @@ button.Close {
     border: none;
 }
 
+.Cell.Checkbox {
+    width: 1.25rem!important;
+    height: 1.25rem!important;
+    margin-top: 0.3rem;
+    padding: 0;
+    
+    /*
+    padding-left: .75rem;
+    padding-right: .75rem;
+    */
+}
+
 
 .DateField-editor {
     text-align: center;

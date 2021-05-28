@@ -84,6 +84,11 @@ label {
     overflow: hidden;
 }
 
+/*
+.RowTableRow {
+    align-items: stretch;
+}
+*/
 
 .RowTableHeaderRow {
     border-bottom: 1px solid #dee2e6!important;
@@ -194,6 +199,13 @@ label {
 
 
 .CheckboxCell {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.Cell > .Checkbox {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -570,17 +582,23 @@ label {
     width: 100%;
 }
 
+.TransactionTemplateEditor-accountSelector-label {
+    min-width: 8rem;
+}
+
 .TransactionTemplateEditor-accountSelector {
     min-width: 30rem;
 }
 
 /** The width: inherits for both the field and inner editor
 are necessary to max out the width */
-.TransactionTemplateEditor-descriptionField {
+.TransactionTemplateEditor-descriptionField,
+.TransactionTemplateEditor-memoField {
     width: inherit;
 }
 
-.TransactionTemplateEditor-descriptionEditor {
+.TransactionTemplateEditor-descriptionEditor,
+.TransactionTemplateEditor-memoEditor {
     width: inherit;
 }
 
@@ -597,6 +615,11 @@ are necessary to max out the width */
     width: inherit;
     max-width: 10rem;
 }
+
+.TransactionTemplateEditor-primaryRow {
+    width: 100%;
+}
+
 
 .TransactionTemplateEditor-secondRow {
     width: 100%;

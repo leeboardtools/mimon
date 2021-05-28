@@ -154,13 +154,36 @@ export class RemindersListHandler extends MainWindowHandlerBase {
                 transactionTemplate, true);
             delete baseTransactionDataItem.id;
 
-            if (accessor.validateSplits(transactionTemplate.splits)) {
-                // Presume all the splits did not have quantityBaseValues...
-                baseTransactionDataItem.splits.forEach((split) => {
-                    split.quantityBaseValue = 0;
-                });
+            const { splits } = baseTransactionDataItem;
+            if (accessor.validateSplits(splits)) {
+                let missingSplitIndex = -1;
+                for (let i = 0; i < splits.length; ++i) {
+                    const split = splits[i];
+                    if (!split.quantityBaseValue) {
+                        if (missingSplitIndex >= 0) {
+                            // Multiple missing splits, zero everything out.
+                            missingSplitIndex = -1;
+                            break;
+                        }
+                        missingSplitIndex = i;
+                    }
+                }
 
-                result.dueEntry.dueStatus = 'PARTIAL';
+                if (missingSplitIndex >= 0) {
+                    const workingSplits = splits.slice(0, missingSplitIndex).concat(
+                        splits.slice(missingSplitIndex + 1)
+                    );
+                    splits[missingSplitIndex] = accessor.createBalancingSplitDataItem(
+                        workingSplits, splits[missingSplitIndex].accountId);
+                }
+                else {
+                    // Presume all the splits did not have quantityBaseValues...
+                    baseTransactionDataItem.splits.forEach((split) => {
+                        split.quantityBaseValue = 0;
+                    });
+
+                    result.dueEntry.dueStatus = 'PARTIAL';
+                }
             }
         }
 
@@ -633,6 +656,24 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         }
     }
 
+    onToggleEnabled(tabId, reminderId) {
+        const state = this.getTabIdState(tabId);
+
+        const { accessor } = this.props;
+        if (state.dueEntriesById) {
+            // 
+        }
+        else {
+            const accountingActions = accessor.getAccountingActions();
+
+            const reminderDataItem = accessor.getReminderDataItemWithId(reminderId);
+            reminderDataItem.isEnabled = !reminderDataItem.isEnabled;
+            const action = accountingActions.createModifyReminderAction(
+                reminderDataItem);
+            
+            accessor.asyncApplyAction(action);
+        }
+    }
 
 
     /**
@@ -643,12 +684,13 @@ export class RemindersListHandler extends MainWindowHandlerBase {
      */
     createTabEntry(tabId) {
         let settings = this.getTabIdProjectSettings(tabId) || {};
-        const allColumns = createDefaultColumns();
 
         const isRemindersDue = (tabId === 'remindersDueList');
         const titleId = (isRemindersDue)
             ? 'RemindersListHandler-remindersDueList_title'
             : 'RemindersListHandler-masterReminderList_title';
+
+        const allColumns = createDefaultColumns(isRemindersDue);
 
         const tabEntry = {
             tabId: tabId,
@@ -717,7 +759,9 @@ export class RemindersListHandler extends MainWindowHandlerBase {
                 this.onSelectReminder(tabEntry.tabId, reminderId)}
             onChooseReminder = {(reminderId) => 
                 this.onChooseReminder(tabEntry.tabId, reminderId)}
-            onClose={() => this.closeTab(tabEntry.tabId)}
+            onClose = {() => this.closeTab(tabEntry.tabId)}
+            onToggleEnabled = {(reminderId) => 
+                this.onToggleEnabled(tabEntry.tabId, reminderId)}
             hiddenReminderIds = {tabEntry.hiddenReminderIds}
             showHiddenReminders = {tabEntry.showHiddenReminders}
             dueEntriesById = {tabEntry.dueEntriesById}

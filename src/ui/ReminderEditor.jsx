@@ -35,6 +35,7 @@ class TransactionTemplateEditor extends React.Component {
         this.updateAccountEntries = this.updateAccountEntries.bind(this);
         this.onPrimaryAccountSelected = this.onPrimaryAccountSelected.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
+        this.onMemoChange = this.onMemoChange.bind(this);
         this.onSplitSelected = this.onSplitSelected.bind(this);
         this.onDebitCreditChange = this.onDebitCreditChange.bind(this);
         this.onDebitCreditBlur = this.onDebitCreditBlur.bind(this);
@@ -172,20 +173,12 @@ class TransactionTemplateEditor extends React.Component {
             accountEntriesAreItems = {true}
             selectedAccountId = {this.getPrimaryAccountId()}
             onChange = {this.onPrimaryAccountSelected}
-            inputClassExtras = "TransactionTemplateEditor-accountSelector"
-            prependComponent = {userMsg(
+            inputClassExtras = "TransactionTemplateEditor-accountSelector Field-postSpace"
+            label = {userMsg(
                 'TransactionTemplateEditor-primaryAccountSelector_label')}
+            ariaLabel = "Primary Account"
         />;
     }
-
-
-    renderPrimaryAccountRow() {
-        const primaryAccountSelector = this.renderPrimaryAccountSelector();
-        return <div className = "FieldContainer-inline">
-            {primaryAccountSelector}
-        </div>;
-    }
-
 
 
     onDescriptionChange(e) {
@@ -193,7 +186,6 @@ class TransactionTemplateEditor extends React.Component {
             description: e.target.value,
         });
     }
-
 
     renderDescriptionEditor() {
         const { transactionTemplate } = this.props;
@@ -209,6 +201,30 @@ class TransactionTemplateEditor extends React.Component {
                 = "Field-postSpace TransactionTemplateEditor-descriptionField"
             inputClassExtras 
                 = "TransactionTemplateEditor-descriptionEditor"
+        />;
+    }
+
+
+    onMemoChange(e) {
+        this.updateTransactionTemplate({
+            memo: e.target.value,
+        });
+    }
+
+    renderMemoEditor() {
+        const { transactionTemplate } = this.props;
+        const memo = transactionTemplate.memo
+            || transactionTemplate.splits[0].memo;
+        return <TextField 
+            id = {this.makeId('MemoEditor')}
+            ariaLabel = "Memo"
+            placeholder = {userMsg('TransactionTemplateEditor-memo_label')}
+            value = {memo}
+            onChange = {this.onMemoChange}
+            fieldClassExtras 
+                = "Field-postSpace TransactionTemplateEditor-memoField"
+            inputClassExtras 
+                = "TransactionTemplateEditor-memoEditor"
         />;
     }
 
@@ -264,6 +280,9 @@ class TransactionTemplateEditor extends React.Component {
             fieldClassExtras
                 = "Field-postSpace TransactionTemplateEditor-splitsSelectorField"
             inputClassExtras = "TransactionTemplateEditor-splitsSelector"
+            label = {userMsg(
+                'TransactionTemplateEditor-secondaryAccountSelector_label')}
+            ariaLabel = "Split"
         />;
     }
 
@@ -339,9 +358,14 @@ class TransactionTemplateEditor extends React.Component {
         const primaryAccountId = this.getPrimaryAccountId();
         const accountType = accessor.getTypeOfAccountId(primaryAccountId);
 
+        let label;
         let sign = this.getCreditSign();
         if (type === 'debit') {
             sign = -sign;
+            label = accountType.debitLabel;
+        }
+        else {
+            label = accountType.creditLabel;
         }
 
         let value = this.state[type + 'ValueText'];
@@ -357,6 +381,7 @@ class TransactionTemplateEditor extends React.Component {
         return <QuantityField
             id = {this.makeId(type + 'Editor')}
             arialLabel = {type + ' Editor'}
+            label = {label}
             value = {value}
             quantityDefinition = {quantityDefinition}
             fieldClassExtras = {classExtras}
@@ -371,15 +396,28 @@ class TransactionTemplateEditor extends React.Component {
         />;
     }
 
-    renderSecondRow() {
+
+    renderPrimaryAccountRow() {
         const descriptionEditor = this.renderDescriptionEditor();
+
+        // TODO: AccountRegister doesn't yet support memos...
+        const memoEditor = undefined;   // = this.renderMemoEditor();
+        return <div className 
+            = "FieldContainer-inline TransactionTemplateEditor-primaryRow">
+            {descriptionEditor}
+            {memoEditor}
+        </div>;
+    }
+
+    renderSecondRow() {
+        const primaryAccountSelector = this.renderPrimaryAccountSelector();
         const secondaryAccountSelector = this.renderSplitSelector();
         const debitEditor = this.renderDebitCreditEditor('debit', 'Field-postSpace');
         const creditEditor = this.renderDebitCreditEditor('credit');
 
         return <div className 
             = "FieldContainer-inline TransactionTemplateEditor-secondRow">
-            {descriptionEditor}
+            {primaryAccountSelector}
             {secondaryAccountSelector}
             {debitEditor}
             {creditEditor}
@@ -647,7 +685,7 @@ export class ReminderEditor extends React.Component {
         return <TextField
             id = {this.makeId('Description')}
             ariaLabel = "Description"
-            label = {userMsg('ReminderEditor-description_label')}
+            placeholder = {userMsg('ReminderEditor-description_label')}
             value = {this.state.reminderDataItem.description}
             onChange = {this.onDescriptionChange}
             inputClassExtras = "ReminderEditor-description"
@@ -788,12 +826,12 @@ export class ReminderEditor extends React.Component {
         const lastStateEditor = this.renderLastOccurrenceStateEditor();
 
         return <PageBody classExtras = "Editor-body ReminderEditor-body">
-            <Row classExtras = "Row-align-items-end">
-                <Col>
-                    {descriptionEditor}
-                </Col>
+            <Row classExtras = "Row-align-items-center Mt-2">
                 <Col classExtras = "Col-auto Mr-4">
                     {enabledEditor}
+                </Col>
+                <Col>
+                    {descriptionEditor}
                 </Col>
             </Row>
             <SeparatorBar/>

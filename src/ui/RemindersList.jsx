@@ -9,8 +9,9 @@ import { getCurrencyForAccountId }
     from '../tools/AccountHelpers';
 import { getCurrency } from '../util/Currency';
 import { Checkbox } from '../util-ui/Checkbox';
-import { isReminderDue } from '../engine/Reminders';
+import { getReminderNextDateOccurrenceState } from '../engine/Reminders';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
+import { YMDDate } from '../util/YMDDate';
 
 
 function getReminderDataItem(args) {
@@ -55,11 +56,20 @@ function getEnabledCellValue(args) {
 }
 
 function renderEnabledCell(args) {
-    const { caller, value, rowIndex } = args;
-    return <Checkbox
+    const { caller, value, } = args;
+    const { onToggleEnabled } = caller.props;
+    const reminderDataItem = getReminderDataItem(args);
+
+    const checkbox = <Checkbox
+        classExtras = "Cell"
         value = {value}
-        onChange = {(isChecked) => caller.toggleEnabled(rowIndex)}
+        onChange = {(isChecked) => caller.toggleEnabled(reminderDataItem.id)}
+        disabled = { onToggleEnabled === undefined }
     />;
+
+    return <div className = "Input-group Mb-0">
+        {checkbox}
+    </div>;
 }
 
 
@@ -176,9 +186,22 @@ function getLastAppliedDateCellValue(args) {
 // Next due date
 
 function getNextDateCellValue(args) {
-    const reminderDataItem = getReminderDataItem(args);
+    let reminderDataItem = getReminderDataItem(args);
     if (reminderDataItem) {
-        const nextOccurrenceState = isReminderDue(reminderDataItem);
+        let occurrenceState;
+        const { lastOccurrenceState, occurrenceDefinition } = reminderDataItem;
+        if (!lastOccurrenceState || !lastOccurrenceState.lastOccurrenceYMDDate) {
+            if (occurrenceDefinition && !occurrenceDefinition.startYMDDate) {
+                // Prevent earlier than today if new and no start date...
+                occurrenceState = {
+                    lastOccurrenceYMDDate: (new YMDDate()).addDays(-1),
+                };
+            }
+        }
+
+        const nextOccurrenceState = getReminderNextDateOccurrenceState(
+            reminderDataItem,
+            occurrenceState);
         if (nextOccurrenceState) {
             return {
                 accessor: getAccessor(args),
@@ -599,7 +622,10 @@ export class RemindersList extends React.Component {
 
 
     toggleEnabled(rowIndex) {
-
+        const { onToggleEnabled } = this.props;
+        if (onToggleEnabled) {
+            onToggleEnabled(rowIndex);
+        }
     }
 
 
@@ -649,6 +675,7 @@ RemindersList.propTypes = {
     accessor: PropTypes.object,
     onSelectReminder: PropTypes.func,
     onChooseReminder: PropTypes.func,
+    onToggleEnabled: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
     onClose: PropTypes.func.isRequired,

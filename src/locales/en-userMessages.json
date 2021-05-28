@@ -573,7 +573,9 @@
 
     "TransactionTemplateEditor-primaryAccountSelector_label": "Primary account: ",
     "TransactionTemplateEditor-description_label": "Description",
+    "TransactionTemplateEditor-memo_label": "Memo",
     "TransactionTemplateEditor-secondaryAccountSelector_multiSplits": "-Split-",
+    "TransactionTemplateEditor-secondaryAccountSelector_label": "Split:",
 
 
 
@@ -582,7 +584,7 @@
     "RemindersList-amount_heading": "Amount",
     "RemindersList-lastDate_heading": "Last Occurrence",
     "RemindersList-nextDate_heading": "Next Due",
-    "RemindersList-no_reminders_due": "You have no reminders due.",
+    "RemindersList-no_reminders_due": "There are no reminders due.",
     "RemindersList-dueStatus_heading": "Status",
 
     "RemindersList-dueStatus_DUE": "DUE",
