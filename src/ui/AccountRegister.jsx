@@ -594,11 +594,7 @@ function saveSplitQuantityCellValue(args) {
         
         const { split } = value;
         const { quantityBaseValue } = split;
-        if (typeof quantityBaseValue === 'number') {
-            // If a number then the value hasn't been edited.
-            return;
-        }
-        else if (quantityBaseValue === '') {
+        if (quantityBaseValue === '') {
             // Not set presume the opposite will set it.
             return;
         }

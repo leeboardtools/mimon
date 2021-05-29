@@ -1290,7 +1290,7 @@ function setSplitQuantityValue(args, quantityValue, index) {
 }
 
 
-function onChangeSplitQuantity(e, args) {
+function getOtherSplitQuantityIndex(args) {
     const { columnInfo } = args;
 
     const { getColumnInfo } = args;
@@ -1300,10 +1300,17 @@ function onChangeSplitQuantity(e, args) {
         for (let i = 0; i < cellEditBuffers.length; ++i) {
             const otherColumnInfo = getColumnInfo(i);
             if (otherColumnInfo.key === oppositeColumnInfo.key) {
-                setSplitQuantityValue(args, '', i);
-                break;
+                return i;
             }
         }
+    }
+}
+
+
+function onChangeSplitQuantity(e, args) {
+    const otherIndex = getOtherSplitQuantityIndex(args);
+    if (otherIndex !== undefined) {
+        setSplitQuantityValue(args, '', otherIndex);
     }
 
     setSplitQuantityValue(args, e.target.value);
@@ -1351,27 +1358,42 @@ function exitSplitQuantityCellEdit(args) {
     if (!quantityInfo) {
         return;
     }
-    let { isLots, quantityBaseValue, } = quantityInfo;
+    let { isLots, quantityBaseValue, sign, } = quantityInfo;
     if (isLots) {
         // FIX ME!!!
         return value.split;
     }
 
     try {
-        const quantityDefinition = getQuantityDefinition(value.quantityDefinition);
-        quantityBaseValue = getValidQuantityBaseValue(quantityBaseValue, 
-            quantityDefinition, 
-            value.accessor.evalExpression);
-        quantityBaseValue = quantityDefinition.baseValueToValueText(quantityBaseValue);
+        if (typeof quantityBaseValue !== 'number') {
+            const quantityDefinition = getQuantityDefinition(value.quantityDefinition);
+            quantityBaseValue = getValidQuantityBaseValue(quantityBaseValue, 
+                quantityDefinition, 
+                value.accessor.evalExpression);
+        }
+        //quantityBaseValue = quantityDefinition.baseValueToValueText(quantityBaseValue);
 
         const newValue = (quantityBaseValue === undefined) 
-            ? '' : quantityBaseValue;
+            ? '' 
+            : (quantityBaseValue * sign);
         let oldValue = value.split.quantityBaseValue;
         if (oldValue === undefined) {
             oldValue = '';
         }
         
         if (newValue !== oldValue) {
+            if (typeof newValue === 'number') {
+                if (newValue * sign < 0) {
+                    // Negative value, swap to the 'other'' column...
+                    const otherIndex = getOtherSplitQuantityIndex(args);
+                    if (otherIndex !== undefined) {
+                        setSplitQuantityValue(args, '');
+                        setSplitQuantityValue(args, newValue, otherIndex);
+                        return;
+                    }
+                }
+            }
+
             setSplitQuantityValue(args, newValue);
         }
     }

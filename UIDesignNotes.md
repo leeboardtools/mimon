@@ -579,7 +579,6 @@ Column sorting in RowTable:
         - Save last selected account for new split entry.
 
         - Account Selector not properly saving when key context selected.
-        - Pressing enter on existing quantity base value makes it full value.
 
 
 
