@@ -40,13 +40,11 @@ export class DropdownSelector extends React.Component {
     focus() {
         if (this.state.isDropdownListShown) {
             // Can't focus to the active item because it doesn't handle keys (for now...)
-            console.log('focus dropdown')
             if (EU.setFocus(this._dropdownListRef.current)) {
                 return;
             }
         }
 
-        console.log('focus button')
         EU.setFocus(this._buttonRef.current);
     }
 
