@@ -304,6 +304,7 @@ export class CellEditorsManager {
             cellBufferArgs.columnIndex = columnIndex;
             cellBufferArgs.columnInfo = columnInfo;
             cellBufferArgs.cellEditBuffer = args.cellEditBuffers[columnIndex];
+            cellBufferArgs.getColumnInfo = this.props.getColumnInfo,
             callback(cellBufferArgs);
         }
     }

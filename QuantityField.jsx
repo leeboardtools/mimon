@@ -16,6 +16,7 @@ import { TextField } from './TextField';
 
 /**
  * Retrieves the quantity base value of a value from a quantity cell editor.
+ * If value is a number then it is presumed to already be a quantity base value.
  * @param {number|string|undefined} value 
  * @param {QuantityDefinition} quantityDefinition 
  * @param {EvalExpressionCallback} [evalExpression] If specified the value is
@@ -29,7 +30,7 @@ export function getValidQuantityBaseValue(value, quantityDefinition,
 
     switch (typeof value) {
     case 'number' :
-        return quantityDefinition.numberToBaseValue(value);
+        return value;
 
     case 'string' :
         value = value.trim();
