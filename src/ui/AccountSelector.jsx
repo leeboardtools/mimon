@@ -191,6 +191,7 @@ export const AccountSelector = React.forwardRef(
             {...passThroughProps}
             items = {items}
             value = {selectedAccountId}
+            tabIndex = {0}
             ref = {ref}
         />;
     }
