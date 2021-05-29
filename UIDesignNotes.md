@@ -578,9 +578,6 @@ Column sorting in RowTable:
 
         - Save last selected account for new split entry.
 
-        - Account Selector not properly saving when key context selected.
-
-
 
 
 - XML Import

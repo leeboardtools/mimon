@@ -20,6 +20,7 @@ export class DropdownSelector extends React.Component {
         this.onDropdownListBlur = this.onDropdownListBlur.bind(this);
         this.onItemClick = this.onItemClick.bind(this);
         this.onSelectFromKeys = this.onSelectFromKeys.bind(this);
+        this.onBlur = this.onBlur.bind(this);
 
         this._outerRef = React.createRef();
         this._buttonRef = React.createRef();
@@ -39,12 +40,13 @@ export class DropdownSelector extends React.Component {
     focus() {
         if (this.state.isDropdownListShown) {
             // Can't focus to the active item because it doesn't handle keys (for now...)
-
+            console.log('focus dropdown')
             if (EU.setFocus(this._dropdownListRef.current)) {
                 return;
             }
         }
 
+        console.log('focus button')
         EU.setFocus(this._buttonRef.current);
     }
 
@@ -274,6 +276,35 @@ export class DropdownSelector extends React.Component {
     }
 
 
+    onBlur(e) {
+        if (e.relatedTarget && this._outerRef.current) {
+            if (this._outerRef.current.contains(e.relatedTarget)) {
+                return;
+            }
+        }
+
+        const { activeIndex, itemValues } = this.state;
+        if (itemValues 
+         && (activeIndex >= 0) && (activeIndex < itemValues.length)) {
+            let { value } = this.props;
+            if (itemValues[activeIndex] !== value) {
+                value = itemValues[activeIndex];
+                const changeEvent = {
+                    target: {
+                        value: value,
+                    }
+                };
+                this.props.onChange(changeEvent, value);
+            }
+        }
+
+        const { onBlur } = this.props;
+        if (onBlur) {
+            onBlur(e);
+        }
+    }
+
+
     onItemClick(e, value) {
         e.target.value = value;
         this.props.onChange(e, value);
@@ -353,7 +384,7 @@ export class DropdownSelector extends React.Component {
     render() {
         const { props } = this;
         const { id, ariaLabel, classExtras, 
-            onFocus, onBlur, disabled, } = props;
+            onFocus, disabled, } = props;
 
         const { isDropdownListShown } = this.state;
 
@@ -398,7 +429,7 @@ export class DropdownSelector extends React.Component {
             aria-label = {ariaLabel}
             onFocus = {onFocus}
             onKeyDown = {this.onKeyDown}
-            onBlur = {onBlur}
+            onBlur = {this.onBlur}
             ref = {this._outerRef}
         >
             {button}
