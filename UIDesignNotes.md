@@ -342,6 +342,7 @@ Are the lists really two separate styles? Or can they be combined into one?
             - Maybe just get rid of undo/redo support for editor?
             - Or undo/redo support for changing column widths in editor?
             - Or just don't allow column resizing.
+
         - Add support for ESPP???
             - At least determine if qualified or unqualified?
 
@@ -361,15 +362,13 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Securities:
             - Option to mark security to exclude from gain calculations
                 - Use to mark account as cash/money market fund
-        - Indicate hidden securities when displaying hidden securities
-        - Don't build full tooltips for subtotal %gains, list can get too long.
 
 
     - Priced Item Editor
 
 
     - Securites/Mutual Fund List
-        - Add % of total market value column (also to AccountsList)
+
         - Add % of total cost basis column
 
 
@@ -392,12 +391,14 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Reconciler
         - Add column width support.
 
+        - Sort by date.
+
 
     - Reminders Editor
         - Remove border around 'Deposit'/'Withdrawal' control.
+
         - Add memo for transaction template? Yes...
-        - Setting first of month triggers 'next due'
-            - Only start on or after is not checked on modify.
+
         - Track last primary account
 
 
@@ -492,6 +493,8 @@ Column sorting in RowTable:
     - Reconciler
         - Add column width support.
 
+        - Sort by date
+
 
     - Account Register Tasks
         - Auto complete
@@ -506,6 +509,9 @@ Column sorting in RowTable:
             - Return of Capital doesn't work quite right.
                 - Where is it going???
                 - It's changing the market value.
+            
+        - When transaction finishes editing, old values are displayed momentarily then
+            the new ones appear.
     
 
     - Accounts List/Priced Items List
@@ -563,22 +569,18 @@ Column sorting in RowTable:
         - Show/Hide securities with no shares
             - Potential problem here is double reload of account states since won't know if a priced item has no shares until it is loaded.
     
+        - Option to include brokerage cash
+
     
     - DropdownSelector
         
 
     - Main Window
                     
-
-    - Multi-splits editor
-        - Add context menu to support resetting column widths.
-        - Or don't allow column resizing.
-
-        - Add column sorting
-
-        - Save last selected account for new split entry.
-
+    - Update of reinvest dividend transaction after changing dividends account doesn't update the
+    old dividend account.
 
 
 - XML Import
  
+- Add Lock file

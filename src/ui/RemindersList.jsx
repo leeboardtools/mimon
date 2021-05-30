@@ -194,7 +194,7 @@ function getNextDateCellValue(args) {
             if (occurrenceDefinition && !occurrenceDefinition.startYMDDate) {
                 // Prevent earlier than today if new and no start date...
                 occurrenceState = {
-                    lastOccurrenceYMDDate: (new YMDDate()).addDays(-1),
+                    lastOccurrenceYMDDate: new YMDDate(),
                 };
             }
         }
