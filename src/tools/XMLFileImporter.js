@@ -3213,7 +3213,7 @@ class XMLFileImporterImpl {
             let isBaseAccountCredit;
             for (const [id, instanceCounts] of instanceCountsByAccountIds) {
                 if (instanceCounts[0] + instanceCounts[1]
-                    === transactionEntries.length) {
+                 === transactionEntries.length) {
                     baseAccountId = id;
                     isBaseAccountCredit = (instanceCounts[0] === 1);
                     break;
@@ -3221,6 +3221,7 @@ class XMLFileImporterImpl {
             }
 
             let baseSum = 0;
+            let baseReconciled;
             transactionEntries.forEach((xmlEntry) => {
                 const { creditEntry, debitEntry } = xmlEntry;
 
@@ -3234,6 +3235,7 @@ class XMLFileImporterImpl {
                     baseEntry = creditEntry;
                     entry = debitEntry;
                 }
+                baseReconciled = baseEntry.reconciled;
 
                 const split = this.createSplitFromCreditDebitEntry(entry,
                     xmlTransaction);
@@ -3258,6 +3260,13 @@ class XMLFileImporterImpl {
                 quantity: baseSum.toString(),
                 isCredit: isBaseAccountCredit,
             };
+            if (baseReconciled === 'RECONCILED') {
+                baseSplit.reconcileState = T.ReconcileState.RECONCILED.name;
+            }
+            else if (baseReconciled === 'CLEARED') {
+                baseSplit.reconcileState = T.ReconcileState.PENDING.name;
+            }
+
             splits.splice(0, 0, baseSplit);
 
             if (!baseAccountId) {
