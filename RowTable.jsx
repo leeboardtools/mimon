@@ -846,7 +846,7 @@ export class RowTable extends React.Component {
         offsetY = Math.max(
             0,
             offsetY);
-
+        
         return {
             scrollTop: scrollTop,
             topVisibleRow: topVisibleRow,
@@ -960,11 +960,14 @@ export class RowTable extends React.Component {
 
 
     onScroll(e) {
-        const scrollTop = e.target.scrollTop;
-        window.requestAnimationFrame(
-            () => {
-                this.updateVisibleRows(scrollTop);
-            });
+        if ((e.target === this._bodyRef.current)
+         || (e.target === this._rowsContainerRef.current)) {
+            const scrollTop = e.target.scrollTop;
+            window.requestAnimationFrame(
+                () => {
+                    this.updateVisibleRows(scrollTop);
+                });
+        }
     }
 
 
