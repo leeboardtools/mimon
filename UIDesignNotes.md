@@ -406,6 +406,8 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Add Apply now command.
 
 
+    - XML Import
+ 
 - Menus
 
 
@@ -423,10 +425,10 @@ Are the lists really two separate styles? Or can they be combined into one?
             - PricedItemsList
 
         - EditableRowTable
-            - AccountRegister
-            - LotsSelectionEditor
-            - MultiSplitsEditor
-            - PricesList
+            - AccountRegister (CellEditorsManager)
+            - LotsSelectionEditor (CellEditorsManager), (AccessorRowTableHandler)
+            - MultiSplitsEditor (CellEditorsManager), (AccessorRowTableHandler)
+            - PricesList (CellEditorsManager)
     
     - Support horizontal scrolling
         - Need to figure out minimum column widths.
@@ -467,18 +469,9 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Auto Save
 
 
-Notes:
-Column sorting in RowTable:
-    - Column may or may not be sortable.
-    - If sortable, can be in one of these states:
-        - Not sorted
-        - Sorted ascending
-        - Sorted descending
-        - ??? Filter ???
 
 
 - Immediate TODO:
-    - Add column sorting to RowTable.
 
     - Prices List
         - Changing column width of prices list then undoing/redoing does not
@@ -580,7 +573,22 @@ Column sorting in RowTable:
     - Update of reinvest dividend transaction after changing dividends account doesn't update the
     old dividend account.
 
+    - Add Lock file
 
-- XML Import
- 
-- Add Lock file
+    - RowTable
+        - Add column sorting to RowTable.
+            - Column may or may not be sortable.
+            - If sortable, can be in one of these states:
+                - Not sorted
+                - Sorted ascending
+                - Sorted descending
+                - ??? Filter ???
+            
+            - To keep the fundamental operation of RowTable simple, row indices will stay sequential
+            from 0.
+            - 
+
+    - Figure out why editing a transaction is so slow.
+        - Currently calling setCellEditBuffer() each onChange event, setCellEditBuffer() updates the state of EditableRowTable, which means the RowTable gets rendered each keystroke.
+        - Turns out rendering of the accounts list is takes a bit of time
+        as the accounts list is built each render.

@@ -510,31 +510,13 @@ function renderSplitsListEditor(args) {
 
     const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
 
-    const multiSplitsMsg = userMsg('AccountRegister-multi_splits');
-
-    const rootAccountIds = accessor.getRootAccountIds();
-
-    const accountEntries = [];
-    addAccountIdsToAccountEntries({
-        accessor: accessor,
-        accountEntries: accountEntries,
-        accountIds: rootAccountIds,
-        filter: (id) => id !== accountId,
-        labelCallback: AH.getShortAccountAncestorNames,
-    });
-
-    const accountItems = accountEntriesToItems({
-        accessor: accessor, 
-        accountEntries: accountEntries,
-        noIndent: true,
-    });
-    accountItems.splice(0, 0,
-        {
-            value: -1,
-            text: multiSplitsMsg,
+    const accountItems = Array.from(caller.state.accountItems);
+    for (let i = 0; i < accountItems.length; ++i) {
+        if (accountItems[i].value === accountId) {
+            accountItems.splice(i, 1);
+            break;
         }
-    );
-
+    }
 
     const activeAccountId = (splits.length !== 2) 
         ? -1
@@ -782,6 +764,8 @@ export class AccountRegister extends React.Component {
 
         this.onEditTransactionSplit = this.onEditTransactionSplit.bind(this);
 
+        this.onAccountEvent = this.onAccountEvent.bind(this);
+
         this.getUndoRedoInfo = this.getUndoRedoInfo.bind(this);
 
         this.getRowKey = this.getRowKey.bind(this);
@@ -988,6 +972,11 @@ export class AccountRegister extends React.Component {
     }
 
 
+    onAccountEvent() {
+        this.updateAccountItems();
+    }
+
+
     componentDidMount() {
         const { accessor, eventEmitter } = this.props;
 
@@ -995,9 +984,15 @@ export class AccountRegister extends React.Component {
         accessor.on('transactionsModify', this.onTransactionsModify);
         accessor.on('transactionsRemove', this.onTransactionsRemove);
 
+        accessor.on('accountAdd', this.onAccountEvent);
+        accessor.on('accountsModify', this.onAccountEvent);
+        accessor.on('accountRemove', this.onAccountEvent);
+
         if (eventEmitter) {
             eventEmitter.on('editTransactionSplit', this.onEditTransactionSplit);
         }
+
+        this.updateAccountItems();
     }
 
     componentWillUnmount() {
@@ -1010,6 +1005,10 @@ export class AccountRegister extends React.Component {
         if (eventEmitter) {
             eventEmitter.off('editTransactionSplit', this.onEditTransactionSplit);
         }
+
+        accessor.off('accountAdd', this.onAccountEvent);
+        accessor.off('accountsModify', this.onAccountEvent);
+        accessor.off('accountRemove', this.onAccountEvent);
     }
 
 
@@ -1046,6 +1045,37 @@ export class AccountRegister extends React.Component {
         if (openArgs && !openArgsProcessed) {
             this.onEditTransactionSplit(this.props.accountId, openArgs);
         }
+    }
+
+
+    updateAccountItems() {
+        const { accessor } = this.props;
+
+        const rootAccountIds = accessor.getRootAccountIds();
+
+        const accountEntries = [];
+        addAccountIdsToAccountEntries({
+            accessor: accessor,
+            accountEntries: accountEntries,
+            accountIds: rootAccountIds,
+            labelCallback: AH.getShortAccountAncestorNames,
+        });
+
+        const accountItems = accountEntriesToItems({
+            accessor: accessor, 
+            accountEntries: accountEntries,
+            noIndent: true,
+        });
+        accountItems.splice(0, 0,
+            {
+                value: -1,
+                text: userMsg('AccountRegister-multi_splits'),
+            }
+        );
+
+        this.setState({
+            accountItems: accountItems,
+        });
     }
 
 
