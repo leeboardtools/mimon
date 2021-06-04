@@ -345,6 +345,8 @@ Are the lists really two separate styles? Or can they be combined into one?
 
         - Add support for ESPP???
             - At least determine if qualified or unqualified?
+        
+        - Select All is generating an error in Sell By Lots when saving the row.
 
 
     - Multi-splits editor
@@ -503,8 +505,9 @@ Are the lists really two separate styles? Or can they be combined into one?
                 - Where is it going???
                 - It's changing the market value.
             
-        - When transaction finishes editing, old values are displayed momentarily then
-            the new ones appear.
+        - When transaction finishes editing, old values are displayed momentarily then the new ones appear.
+
+        - Lose focus after closing multi-split
     
 
     - Accounts List/Priced Items List
@@ -588,7 +591,4 @@ Are the lists really two separate styles? Or can they be combined into one?
             from 0.
             - 
 
-    - Figure out why editing a transaction is so slow.
-        - Currently calling setCellEditBuffer() each onChange event, setCellEditBuffer() updates the state of EditableRowTable, which means the RowTable gets rendered each keystroke.
-        - Turns out rendering of the accounts list is takes a bit of time
-        as the accounts list is built each render.
+

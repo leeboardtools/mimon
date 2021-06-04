@@ -3,7 +3,106 @@ import PropTypes from 'prop-types';
 import { RowTable } from './RowTable';
 import { setFocus } from '../util/ElementUtils';
 
+
 let id = 1;
+
+/**
+ * This component is used to encapsulate the row being edited. The reason we have it
+ * is so we can track the edit buffers within the row and re-render only the 
+ * row's components whenever the buffers change. Without it the table would be stuck
+ * re-rendering the entire table each time the edit buffers change, which may be
+ * as often as every keystroke.
+ * <p>
+ * The edit buffer itself is stored directly in the EditableRowTable and not as part
+ * of the state. We store it there so the edit buffers are always up-to-date for 
+ * when row editing must be saved.
+ * @private
+ */
+class EditedRowContainer extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.setRowEditBuffer = this.setRowEditBuffer.bind(this);
+        this.setCellEditBuffer = this.setCellEditBuffer.bind(this);
+    }
+
+
+    setRowEditBuffer(bufferChanges, callback) {
+        const { activeEditInfo, setActiveEditInfo } = this.props;
+        if (activeEditInfo) {
+            let setStateCallback;
+            if (callback) {
+                setStateCallback = () => {
+                    callback(activeEditInfo.rowEditBuffer);
+                };
+            }
+
+            const newRowEditBuffer = Object.assign({}, 
+                activeEditInfo.rowEditBuffer, 
+                bufferChanges);
+            if (typeof newRowEditBuffer.changeId === 'number') {
+                ++newRowEditBuffer.changeId;
+            }
+
+            setActiveEditInfo(
+                {
+                    rowEditBuffer: newRowEditBuffer,
+                }, 
+                setStateCallback);
+
+            this.forceUpdate();
+        }
+        
+        return this.activeEditInfo;
+    }
+
+
+    setCellEditBuffer(columnIndex, bufferChanges) {
+        const { activeEditInfo, setActiveEditInfo } = this.props;
+        if (activeEditInfo) {
+            const newCellEditBuffers = Array.from(activeEditInfo.cellEditBuffers);
+            const newCellEditBuffer = Object.assign({},
+                newCellEditBuffers[columnIndex], bufferChanges);
+            if (typeof newCellEditBuffer.changeId === 'number') {
+                ++newCellEditBuffer.changeId;
+            }
+
+            newCellEditBuffers[columnIndex] = newCellEditBuffer;
+
+            setActiveEditInfo({
+                cellEditBuffers: newCellEditBuffers,
+            });
+
+            this.forceUpdate();
+        }
+        
+        return this.activeEditInfo;
+    }
+
+
+    render() {
+        let { onRenderRowCells, renderRowCellsArgs, } = this.props;
+
+        renderRowCellsArgs = Object.assign({}, renderRowCellsArgs, {
+            setRowEditBuffer: this.setRowEditBuffer,
+            setCellEditBuffer: this.setCellEditBuffer,
+        });
+
+        const cells = onRenderRowCells(renderRowCellsArgs);
+
+        return <React.Fragment>
+            {cells}
+        </React.Fragment>;
+    }
+}
+
+EditedRowContainer.propTypes = {
+    onRenderRowCells: PropTypes.func.isRequired,
+    renderRowCellsArgs: PropTypes.any.isRequired,
+    activeEditInfo: PropTypes.object.isRequired,
+    setActiveEditInfo: PropTypes.func.isRequired,
+};
+
 
 export function editableRowTable(WrappedTable) {
     class _EditableRowTable extends React.Component {
@@ -16,13 +115,13 @@ export function editableRowTable(WrappedTable) {
 
             this.asyncEndRowEdit = this.asyncEndRowEdit.bind(this);
             this.cancelRowEdit = this.cancelRowEdit.bind(this);
-            this.setRowEditBuffer = this.setRowEditBuffer.bind(this);
-            this.setCellEditBuffer = this.setCellEditBuffer.bind(this);
+            this.setActiveEditInfo = this.setActiveEditInfo.bind(this);
 
             this.onActivateRow = this.onActivateRow.bind(this);
             this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
             this.onKeyDown = this.onKeyDown.bind(this);
             this.onRenderCell = this.onRenderCell.bind(this);
+            this.onRenderRow = this.onRenderRow.bind(this);
 
             this._rowTableRef = React.createRef();
 
@@ -47,7 +146,7 @@ export function editableRowTable(WrappedTable) {
                 return;
             }
 
-            const { activeEditInfo } = this.state;
+            const activeEditInfo = this._activeEditInfo;
             if (!activeEditInfo) {
                 return;
             }
@@ -96,8 +195,6 @@ export function editableRowTable(WrappedTable) {
                             cellEditBuffers: activeEditInfo.cellEditBuffers,
                             asyncEndRowEdit: this.asyncEndRowEdit,
                             cancelRowEdit: this.cancelRowEdit,
-                            setRowEditBuffer: this.setRowEditBuffer,
-                            setCellEditBuffer: this.setCellEditBuffer,
                         };
                         if (onExitCellEdit && (activeColumnIndex >= 0)) {
                             onExitCellEdit(args);
@@ -119,7 +216,7 @@ export function editableRowTable(WrappedTable) {
 
 
         componentDidUpdate(prevProps, prevState) {
-            const { props, state } = this;
+            const { props, } = this;
             if (props.requestedActiveRowIndex !== undefined) {
                 if (props.requestedActiveRowIndex !== this.state.activeRowIndex) {
                     this.setState({
@@ -130,7 +227,7 @@ export function editableRowTable(WrappedTable) {
             }
 
             if (props.requestOpenActiveRow) {
-                const { activeEditInfo } = state;
+                const activeEditInfo = this._activeEditInfo;
                 if (!activeEditInfo && this._rowTableRef.current) {
                     this._rowTableRef.current.openActiveRow();
                     return;
@@ -152,83 +249,31 @@ export function editableRowTable(WrappedTable) {
         }
 
 
-        setActiveEditInfo(changes) {
+        setActiveEditInfo(changes, callback) {
             if (!changes) {
-                this.setState({
-                    activeEditInfo: undefined,
-                });
+                this._activeEditInfo = undefined;
             }
             else {
-                this.setState((state) => {
-                    const newActiveEditInfo = Object.assign({},
-                        state.activeEditInfo || {},
-                        changes);
-                    return {
-                        activeEditInfo: newActiveEditInfo,
-                    };
-                });
+                // NOTE: We only change the contents of the _activeEditInfo, we
+                // can't replace the object itself as _activeEditInfo is
+                // passed to EditedRowContainer only during render so is only
+                // updated when the table renders. The whole point of
+                // EditedRowContainer is to avoid the full table render so
+                // _activeEditInfo must be the same object throughout the
+                // row edit.
+                this._activeEditInfo = Object.assign(
+                    this._activeEditInfo || {},
+                    changes);
             }
-        }
 
-
-        setRowEditBuffer(bufferChanges, callback) {
-            let setStateCallback;
             if (callback) {
-                setStateCallback = () => {
-                    const { activeEditInfo } = this.state;
-                    callback(activeEditInfo.rowEditBuffer);
-                };
+                callback();
             }
-            this.setState((state) => {
-                const { activeEditInfo } = state;
-                if (activeEditInfo) {
-                    const newRowEditBuffer = Object.assign({}, 
-                        activeEditInfo.rowEditBuffer, 
-                        bufferChanges);
-                    if (typeof newRowEditBuffer.changeId === 'number') {
-                        ++newRowEditBuffer.changeId;
-                    }
-                    const newActiveEditInfo = Object.assign({},
-                        activeEditInfo,
-                        {
-                            rowEditBuffer: newRowEditBuffer,
-                        });
-                    return {
-                        activeEditInfo: newActiveEditInfo,
-                    };
-                }
-            },
-            setStateCallback);
-        }
-
-
-        setCellEditBuffer(columnIndex, bufferChanges) {
-            this.setState((state) => {
-                const { activeEditInfo } = state;
-                if (activeEditInfo) {
-                    const newCellEditBuffers = Array.from(activeEditInfo.cellEditBuffers);
-                    const newCellEditBuffer = Object.assign({},
-                        newCellEditBuffers[columnIndex], bufferChanges);
-                    if (typeof newCellEditBuffer.changeId === 'number') {
-                        ++newCellEditBuffer.changeId;
-                    }
-
-                    newCellEditBuffers[columnIndex] = newCellEditBuffer;
-                    const newActiveEditInfo = Object.assign({},
-                        activeEditInfo,
-                        {
-                            cellEditBuffers: newCellEditBuffers,
-                        });
-                    return {
-                        activeEditInfo: newActiveEditInfo,
-                    };
-                }
-            });
         }
 
 
         updateForNewEdit() {
-            const { activeEditInfo } = this.state;
+            const activeEditInfo = this._activeEditInfo;
             if (activeEditInfo) {
                 const { refsForFocus } = activeEditInfo;
 
@@ -276,8 +321,6 @@ export function editableRowTable(WrappedTable) {
                     cellEditBuffers:    newCellEditBuffers,
                     asyncEndRowEdit: this.asyncEndRowEdit,
                     cancelRowEdit: this.cancelRowEdit,
-                    setRowEditBuffer: this.setRowEditBuffer,
-                    setCellEditBuffer: this.setCellEditBuffer,
                 })) {
                     this.setActiveEditInfo({
                         rowIndex: rowIndex,
@@ -302,7 +345,7 @@ export function editableRowTable(WrappedTable) {
                 return;
             }
 
-            const { activeEditInfo } = this.state;
+            const activeEditInfo = this._activeEditInfo;
             if (activeEditInfo) {
                 const { asyncOnSaveRowEdit } = this.props;
                 if (asyncOnSaveRowEdit) {
@@ -328,7 +371,7 @@ export function editableRowTable(WrappedTable) {
                 return;
             }
 
-            const { activeEditInfo } = this.state;
+            const activeEditInfo = this._activeEditInfo;
             if (activeEditInfo) {
                 this.asyncSaveRowEdit({
                     reason: 'startRowEdit',
@@ -352,7 +395,7 @@ export function editableRowTable(WrappedTable) {
                 return;
             }
 
-            const { activeEditInfo } = this.state;
+            const activeEditInfo = this._activeEditInfo;
             if (activeEditInfo) {
                 const { onCancelRowEdit } = this.props;
                 if (onCancelRowEdit) {
@@ -398,7 +441,7 @@ export function editableRowTable(WrappedTable) {
                 return;
             }
 
-            const { activeEditInfo } = this.state;
+            const activeEditInfo = this._activeEditInfo;
             if (activeEditInfo
              && (activeEditInfo.rowIndex !== rowIndex)) {
                 this.asyncSaveRowEdit({
@@ -421,7 +464,7 @@ export function editableRowTable(WrappedTable) {
 
 
         findCellFocus(startIndex, increment) {
-            let { activeEditInfo } = this.state;
+            const activeEditInfo = this._activeEditInfo;
             if (activeEditInfo) {
                 const { refsForFocus } = activeEditInfo;
                 const endIndex = (increment > 0) 
@@ -446,7 +489,7 @@ export function editableRowTable(WrappedTable) {
 
         getColumnIndexWithFocus() {
             const currentFocus = document.activeElement;
-            let { activeEditInfo } = this.state;
+            const activeEditInfo = this._activeEditInfo;
             if (activeEditInfo && currentFocus) {
                 const { refsForFocus } = activeEditInfo;
                 for (let i = 0; i < refsForFocus.length; ++i) {
@@ -502,7 +545,7 @@ export function editableRowTable(WrappedTable) {
                 return;
             }
 
-            const { activeEditInfo } = this.state;
+            const activeEditInfo = this._activeEditInfo;
             if (activeEditInfo) {
                 switch (e.key) {
                 case 'Escape' :
@@ -545,7 +588,7 @@ export function editableRowTable(WrappedTable) {
 
         onRenderCell(args) {
             const { onRenderDisplayCell, onRenderEditCell } = this.props;
-            const { activeEditInfo } = this.state;
+            const activeEditInfo = this._activeEditInfo;
             if (activeEditInfo) {
                 const { rowIndex, columnIndex } = args;
                 if (rowIndex === activeEditInfo.rowIndex) {
@@ -564,6 +607,23 @@ export function editableRowTable(WrappedTable) {
         }
 
 
+        onRenderRow(args) {
+            const { rowIndex, onRenderRowCells } = args;
+            const activeEditInfo = this._activeEditInfo;
+
+            if (activeEditInfo && (rowIndex === activeEditInfo.rowIndex)) {
+                return <EditedRowContainer 
+                    onRenderRowCells = {onRenderRowCells}
+                    renderRowCellsArgs = {args}
+                    activeEditInfo = {activeEditInfo}
+                    setActiveEditInfo = {this.setActiveEditInfo}
+                />;
+            }
+
+            return onRenderRowCells(args);
+        }
+
+
         render() {
             const {
                 onOuterRenderCell,
@@ -576,7 +636,7 @@ export function editableRowTable(WrappedTable) {
 
             const { state } = this;
 
-            const { activeEditInfo } = state;
+            const activeEditInfo = this._activeEditInfo;
 
             let myOnRenderCell = this.onRenderCell;
             if (onOuterRenderCell) {
@@ -594,6 +654,7 @@ export function editableRowTable(WrappedTable) {
                 onOpenActiveRow = {this.onOpenActiveRow}
                 onKeyDown = {this.onKeyDown}
                 onRenderCell = {myOnRenderCell}
+                onRenderRow = {this.onRenderRow}
                 noActiveRowFocus = {activeEditInfo !== undefined}
 
                 ref = {this._rowTableRef}
@@ -650,6 +711,13 @@ export function editableRowTable(WrappedTable) {
      * @property {object}   rowEditBuffer
      * @property {object[]} cellEditBuffers
      * @property {object}   cellEditBuffer
+     * @property {EditableRowTable~setRowEditBuffer}    setRowEditBuffer    Callback that
+     * should be called when the row edit buffer needs updating. Note that within
+     * onStartRowEdit() rowEditBuffer should be set directly, not vial setRowEditBuffer().
+     * @property {EditableRowTable~setCellEditBuffer}   setCellEditBuffer   Callback that
+     * should be called when a cell edit buffer needs updating. Note that within
+     * onStartRowEdit() cellEditBuffers should be set directly, not via 
+     * setCellEditBuffer().
      * @property {React.Ref}    refForFocus This is used to set focus to the appropriate
      * editor when a cell is double-clicked.
      */
@@ -716,13 +784,6 @@ export function editableRowTable(WrappedTable) {
      * called to programatically end the editing with save.
      * @property {EditableRowTable~cancelRowEdit}   cancelRowEdit   Callback that can be
      * called to programatically cancel editing.
-     * @property {EditableRowTable~setRowEditBuffer}    setRowEditBuffer    Callback that
-     * should be called when the row edit buffer needs updating. Note that within
-     * onStartRowEdit() rowEditBuffer should be set directly, not vial setRowEditBuffer().
-     * @property {EditableRowTable~setCellEditBuffer}   setCellEditBuffer   Callback that
-     * should be called when a cell edit buffer needs updating. Note that within
-     * onStartRowEdit() cellEditBuffers should be set directly, not via 
-     * setCellEditBuffer().
      */
 
     /**
