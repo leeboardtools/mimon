@@ -217,8 +217,7 @@ export class CellEditorsManager {
             return;
         }
 
-        const { asyncEndRowEdit, cancelRowEdit,
-            setRowEditBuffer, setCellEditBuffer, } = args;
+        const { asyncEndRowEdit, cancelRowEdit, } = args;
 
         const { startRowEdit } = this.props;
         if (startRowEdit) {
@@ -243,8 +242,6 @@ export class CellEditorsManager {
                 rowIndex: args.rowIndex,
                 asyncEndRowEdit: asyncEndRowEdit,
                 cancelRowEdit: cancelRowEdit,
-                setRowEditBuffer: setRowEditBuffer, 
-                setCellEditBuffer: setCellEditBuffer,
             },
             errorMsgs: {}
         });
@@ -353,22 +350,23 @@ export class CellEditorsManager {
 
         const { renderEditCell, saveCellValue } = columnInfo;
         if (!args.isSizeRender && renderEditCell && saveCellValue) {
-            return renderEditCell(Object.assign({}, args, { 
+            const editArgs = Object.assign({}, args, { 
                 columnInfo: columnInfo,
                 getColumnInfo: this.props.getColumnInfo,
                 rowIndex: args.rowIndex,
                 rowEntry: rowEntry,
-                setRowEditBuffer: (state.editInfo)
-                    ? state.editInfo.setRowEditBuffer : undefined,
-                setCellEditBuffer: (index, value) => {
-                    if (state.editInfo && state.editInfo.setCellEditBuffer) {
-                        state.editInfo.setCellEditBuffer(
-                            (index === undefined) ? columnIndex : index, 
-                            value);
-                    }
-                },
                 errorMsg: state.errorMsgs[columnInfo.key],
-            }));
+            });
+
+            const { setCellEditBuffer } = editArgs;
+            if (setCellEditBuffer) {
+                editArgs.setCellEditBuffer = (index, value) => {
+                    setCellEditBuffer(
+                        (index === undefined) ? columnIndex : index, 
+                        value);
+                };
+            }
+            return renderEditCell(editArgs);
         }
 
         return this.onRenderDisplayCell(args);

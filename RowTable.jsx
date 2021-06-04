@@ -475,6 +475,8 @@ export class RowTable extends React.Component {
             = this.onColumnMoveTrackingMoved.bind(this);
         this.onColumnMoveTrackingStopped 
             = this.onColumnMoveTrackingStopped.bind(this);
+        
+        this.renderRowCells = this.renderRowCells.bind(this);
 
         this._mainRef = React.createRef();
         this._bodyRef = React.createRef();
@@ -1507,52 +1509,24 @@ export class RowTable extends React.Component {
     }
 
 
-    renderRow(rowIndex) {
-        let { rowClassExtras } = this.props;
-        const {
-            onPreRenderRow,
-            onRenderCell,
-            onPostRenderRow,
-            columns,
-            activeRowIndex,
-        } = this.props;
+    renderRowCells(cellRenderArgs) {
+        const cells = [];
 
-        const {
-            sizeRenderRefs,
-            isSizeRender,
-            bodyRowHeight,
-            hasFocus,
-        } = this.state;
+        const { columns, onRenderCell, } = this.props;
+        const { sizeRenderRefs, } = this.state;
+        const { rowIndex } = cellRenderArgs;
 
-        const columnWidths = (isSizeRender)
+        const columnWidths = (cellRenderArgs.isSizeRender)
             ? this.state.defColumnWidths
             : this.state.columnWidths;
 
-
-        let rowRenderInfo;
-        if (onPreRenderRow) {
-            const args = {
-                rowIndex: rowIndex,
-                isSizeRender: isSizeRender,
-                rowClassExtras: rowClassExtras,
-            };
-
-            rowRenderInfo = onPreRenderRow(args);
-
-            rowClassExtras = args.rowClassExtras;
-        }
-
-        const getRowKey = this.props.getRowKey || ((i) => i);
-        const cells = [];
         for (let colIndex = 0; colIndex < columns.length; ++colIndex) {
             const column = columns[colIndex];
-            let cell = onRenderCell({
-                rowIndex: rowIndex, 
+            const args = Object.assign({}, cellRenderArgs, {
                 columnIndex: colIndex, 
                 column: column,
-                isSizeRender: isSizeRender,
-                rowRenderInfo: rowRenderInfo,
             });
+            let cell = onRenderCell(args);
 
             let cellClassName = 'RowTableCell RowTableRowCell';
 
@@ -1599,6 +1573,49 @@ export class RowTable extends React.Component {
             cells.push(cell);
         }
 
+        return cells;
+    }
+
+
+    renderRow(rowIndex) {
+        let { rowClassExtras } = this.props;
+        const {
+            onPreRenderRow,
+            onRenderRow,
+            onPostRenderRow,
+            activeRowIndex,
+        } = this.props;
+
+        const {
+            isSizeRender,
+            bodyRowHeight,
+            hasFocus,
+        } = this.state;
+
+
+        let rowRenderInfo;
+        if (onPreRenderRow) {
+            const args = {
+                rowIndex: rowIndex,
+                isSizeRender: isSizeRender,
+                rowClassExtras: rowClassExtras,
+            };
+
+            rowRenderInfo = onPreRenderRow(args);
+
+            rowClassExtras = args.rowClassExtras;
+        }
+
+        const cellRenderArgs = {
+            rowIndex: rowIndex, 
+            isSizeRender: isSizeRender,
+            rowRenderInfo: rowRenderInfo,
+            onRenderRowCells: this.renderRowCells,
+        };
+
+        const cells = (onRenderRow) 
+            ? onRenderRow(cellRenderArgs)
+            : this.renderRowCells(cellRenderArgs);
 
         if (onPostRenderRow) {
             onPostRenderRow({
@@ -1608,6 +1625,7 @@ export class RowTable extends React.Component {
             });
         }
 
+        const getRowKey = this.props.getRowKey || ((i) => i);
 
         let rowClassName = 'RowTableRow';
         if (rowIndex === activeRowIndex) {
@@ -2110,6 +2128,7 @@ RowTable.propTypes = {
     onRenderCell: PropTypes.func.isRequired,
     onPreRenderRow: PropTypes.func,
     onPostRenderRow: PropTypes.func,
+    onRenderRow: PropTypes.func,
 
     requestedVisibleRowIndex: PropTypes.number,
 
