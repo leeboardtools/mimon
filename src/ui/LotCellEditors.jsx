@@ -1473,10 +1473,10 @@ function updateSplitInfo(args, columnInfoArgs, newSplitInfo) {
 }
 
 
-function setModal(args, columnInfoArgs, modal) {
+function setModal(args, columnInfoArgs, modal, reason) {
     const { setModal } = columnInfoArgs;
     if (setModal) {
-        return setModal(args, modal);
+        return setModal(args, modal, reason);
     }
 }
 
@@ -1826,7 +1826,7 @@ function onSellByLotsDone(args, columnInfoArgs, result) {
         updateSplitInfo(args, columnInfoArgs, splitInfo);
     }
 
-    setModal(args, columnInfoArgs, undefined);
+    setModal(args, columnInfoArgs, undefined, 'done');
 }
 
 
@@ -1894,6 +1894,7 @@ function renderSharesEditor(args, columnInfoArgs) {
             size = {inputSize}
             onClick = {(e) => handleSellByLots(args, columnInfoArgs)}
             errorMsg = {errorMsg}
+            ref = {args.refForFocus}
         />;
     }
 

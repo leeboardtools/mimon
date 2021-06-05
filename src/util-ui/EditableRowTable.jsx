@@ -463,6 +463,20 @@ export function editableRowTable(WrappedTable) {
         }
 
 
+        focus(columnIndex) {
+            const activeEditInfo = this._activeEditInfo;
+            if (activeEditInfo && (columnIndex !== undefined)) {
+                const { refsForFocus } = activeEditInfo;
+                const ref = refsForFocus[columnIndex];
+                if (ref && setFocus(ref.current)) {
+                    return;
+                }
+            }
+
+            setFocus(this._rowTableRef.current);
+        }
+
+
         findCellFocus(startIndex, increment) {
             const activeEditInfo = this._activeEditInfo;
             if (activeEditInfo) {

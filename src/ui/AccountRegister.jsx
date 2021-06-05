@@ -68,10 +68,16 @@ function updateSplitInfo(args, newSplitInfo) {
     caller.updateLCESplitInfo(args, newSplitInfo);
 }
 
-function setModal(args, modal) {
+function setModal(args, modal, reason) {
     const { rowEntry } = args;
     const { caller } = rowEntry;
-    caller.setModal(modal);
+    let { columnIndex } = args;
+    if (columnIndex !== undefined) {
+        if (reason === 'done') {
+            ++columnIndex;
+        }
+    }
+    caller.setModal(modal, columnIndex);
 }
 
 
@@ -438,10 +444,10 @@ function handleMultiSplitSelect(args) {
             splitIndex = {splitIndex}
             onDone = {({splits, splitIndex}) => {
                 caller.updateSplits(args, splits, splitIndex);
-                caller.setModal(undefined);
+                setModal(args, undefined, 'done');
             }}
             onCancel = {() => {
-                caller.setModal(undefined);
+                setModal(args, undefined);
             }}
             refreshUndoMenu = {caller.props.refreshUndoMenu}
             ref = {ref}
@@ -1816,7 +1822,7 @@ export class AccountRegister extends React.Component {
     }
 
 
-    setModal(modal) {
+    setModal(modal, columnIndex) {
         if (modal !== this.state.modal) {
             this.setState({
                 modal: modal,
@@ -1825,6 +1831,11 @@ export class AccountRegister extends React.Component {
                 const { refreshUndoMenu} = this.props;
                 if (refreshUndoMenu) {
                     refreshUndoMenu();
+                }
+                if (!this.state.modal) {
+                    if (this._rowTableRef.current) {
+                        this._rowTableRef.current.focus(columnIndex);
+                    }
                 }
             });
         }

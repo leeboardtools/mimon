@@ -507,8 +507,6 @@ Are the lists really two separate styles? Or can they be combined into one?
             
         - When transaction finishes editing, old values are displayed momentarily then the new ones appear.
 
-        - Lose focus after closing multi-split
-    
 
     - Accounts List/Priced Items List
         - Option to flatten hierarchy
