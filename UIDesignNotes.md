@@ -381,6 +381,8 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Price Retrieval Window
         - Add a new security?
+        - Wants to retrieve prices for inactive accounts
+        - Sort!
 
 
     - Printing
@@ -406,6 +408,7 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Reminders List
         - Add Apply now command.
+        
 
 
     - XML Import
@@ -507,6 +510,12 @@ Are the lists really two separate styles? Or can they be combined into one?
             
         - When transaction finishes editing, old values are displayed momentarily then the new ones appear.
 
+        - Reminder transaction with no value appears as 0 for both columns.
+
+        - Editing date loses focus
+
+        - Support +/- keys in date editor
+
 
     - Accounts List/Priced Items List
         - Option to flatten hierarchy
@@ -555,6 +564,8 @@ Are the lists really two separate styles? Or can they be combined into one?
 
         - Export as CSV
             - Need to clean up FileSelector.
+        
+        - Need to listen for price/transaction updates
         
     
     - Priced Items List

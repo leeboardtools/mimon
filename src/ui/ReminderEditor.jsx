@@ -517,6 +517,9 @@ export class ReminderEditor extends React.Component {
         const today = new YMDDate();
         reminderDataItem.occurrenceDefinition = DO.makeValidDateOccurrenceDefinition(
             reminderDataItem.occurrenceDefinition, today);
+        if (!reminderId) {
+            reminderDataItem.occurrenceDefinition.startYMDDate = today;
+        }
 
         if (!originalReminderDataItem) {
             originalReminderDataItem = R.getReminderDataItem(
