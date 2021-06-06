@@ -1532,16 +1532,20 @@ export function getNextDateOccurrenceState(definition, lastState) {
         lastState = {};
     }
 
+    let { startYMDDate } = definition;
+    if (!YMDDate.isValidDate(startYMDDate)) {
+        startYMDDate = undefined;
+    }
+
     let refYMDDate = lastState.lastOccurrenceYMDDate;
     if (!YMDDate.isValidDate(lastState.lastOccurrenceYMDDate)) {
         // Basically reset...
-        refYMDDate = new YMDDate();
+        refYMDDate = startYMDDate || new YMDDate();
         lastState.occurrenceCount = 0;
         lastState.isDone = false;
     }
 
-    const { startYMDDate } = definition;
-    if (YMDDate.isValidDate(startYMDDate)) {
+    if (startYMDDate) {
         if (YMDDate.compare(startYMDDate, refYMDDate) > 0) {
             refYMDDate = startYMDDate;
         }

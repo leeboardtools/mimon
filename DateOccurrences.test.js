@@ -789,6 +789,7 @@ test('DateOccurrences-DAY_OF_MONTH', () => {
     });
 
 
+
     result = DO.getNextDateOccurrenceState(B, {
         lastOccurrenceYMDDate: '2020-04-05',
         occurrenceCount: 1,
@@ -827,6 +828,47 @@ test('DateOccurrences-DAY_OF_MONTH', () => {
         isDone: false,
     });
 
+
+    //
+    // Use startYMDDate if no lastOccurrenceYMDDate
+    const C = {
+        occurrenceType: DO.OccurrenceType.DAY_OF_MONTH,
+        offset: 28,
+        startYMDDate: '2020-04-29',
+        repeatDefinition: {
+            repeatType: DO.OccurrenceRepeatType.MONTHLY,
+            period: 3,
+        },
+    };
+    result = DO.getNextDateOccurrenceState(C, {
+        occurrenceCount: 0,
+    });
+    expect(result).toEqual({
+        lastOccurrenceYMDDate: getYMDDate('2020-04-29'),
+        occurrenceCount: 1,
+        isDone: false,
+    });
+
+    result = DO.getNextDateOccurrenceState(C, {
+        lastOccurrenceYMDDate: '2020-04-30',
+        occurrenceCount: 0,
+    });
+    expect(result).toEqual({
+        lastOccurrenceYMDDate: getYMDDate('2020-05-29'),
+        occurrenceCount: 1,
+        isDone: false,
+    });
+
+    // Before startYMDDate should be ignored
+    result = DO.getNextDateOccurrenceState(C, {
+        lastOccurrenceYMDDate: '2020-03-30',
+        occurrenceCount: 0,
+    });
+    expect(result).toEqual({
+        lastOccurrenceYMDDate: getYMDDate('2020-04-29'),
+        occurrenceCount: 1,
+        isDone: false,
+    });
 });
 
 
