@@ -1490,7 +1490,7 @@ export function renderSplitQuantityDisplay(args) {
     const { accessor, split, } = value;
     const { lotChanges } = split;
 
-    if (quantityBaseValue < 0) {
+    if ((quantityBaseValue < 0) || Object.is(quantityBaseValue, -0)) {
         if (args.isSizeRender) {
             quantityBaseValue = -quantityBaseValue;
         }

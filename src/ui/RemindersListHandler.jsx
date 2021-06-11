@@ -178,8 +178,15 @@ export class RemindersListHandler extends MainWindowHandlerBase {
                 }
                 else {
                     // Presume all the splits did not have quantityBaseValues...
-                    baseTransactionDataItem.splits.forEach((split) => {
-                        split.quantityBaseValue = 0;
+                    const { splits } = baseTransactionDataItem;
+
+                    let sign = 1;
+                    splits.forEach((split) => {
+                        const accountCategory = accessor.getCategoryOfAccountId(
+                            split.accountId
+                        );
+                        split.quantityBaseValue = sign * accountCategory.creditSign * 0;
+                        sign = -sign;
                     });
 
                     result.dueEntry.dueStatus = 'PARTIAL';
@@ -634,6 +641,7 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         }
         else {
             menuItems.push(checkRemindersItem);
+            menuItems.push({});
 
             const applyLatestDueNow = { id: 'applyLatestDueNow',
                 label: userMsg('RemindersListHandler-applyLatestDueNow'),
