@@ -2,10 +2,10 @@ import React from 'react';
 import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { RemindersList, createDefaultColumns } from './RemindersList';
-import { isReminderDue } from '../engine/Reminders';
+import { isReminderDue, getReminderNextDateOccurrenceState } from '../engine/Reminders';
 import { createCompositeAction } from '../util/Actions';
 import * as T from '../engine/Transactions';
-import { YMDDate } from '../util/YMDDate';
+import { YMDDate, getYMDDateString } from '../util/YMDDate';
 import deepEqual from 'deep-equal';
 import { TabIdRowTableHandler } from './RowTableHelpers';
 
@@ -187,19 +187,67 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             }
         }
 
-        let transactionDataItem = baseTransactionDataItem;        
+        let transactionDataItem = baseTransactionDataItem;
         let transactionAction;
 
+        // modes:
+        // NEXT - "Apply All Due Reminders for Next Date Only"
+        // ALL - "Apply All Due Reminders for All Due Dates Until Today"
+        // LATEST - "Apply All Due Reminders for Latest Date Only"
+        // NEXT_NOW
+        // NOW_KEEP_NEXT
+        let onlyLatest;
+        let keepNext;
+        let applyNow;
+        let repeatForAll;
+        switch (mode) {
+        case 'NEXT':
+            break;
+
+        case 'ALL':
+            repeatForAll = true;
+            break;
+
+        case 'LATEST':
+            onlyLatest = true;
+            break;
+
+        case 'LATEST_NOW':
+            onlyLatest = true;
+            applyNow = true;
+            break;
+
+        case 'NEXT_NOW':
+            applyNow = true;
+            break;
+
+        case 'NOW_KEEP_NEXT':
+            applyNow = true;
+            keepNext = true;
+            break;
+        }
+
+        const today = new YMDDate();
         do {
             let nextOccurrenceState = isReminderDue(reminderDataItem);
-            if (mode === 'LATEST') {
+            if (onlyLatest) {
                 // We want the latest due date.
-                let latestOccurrenceState = nextOccurrenceState;
-                const today = new YMDDate();
-                while (latestOccurrenceState) {
-                    nextOccurrenceState = latestOccurrenceState;
-                    latestOccurrenceState = isReminderDue(
-                        reminderDataItem, today, latestOccurrenceState);
+                if (nextOccurrenceState) {
+                    let latestOccurrenceState = nextOccurrenceState;
+                    while (latestOccurrenceState) {
+                        nextOccurrenceState = latestOccurrenceState;
+                        latestOccurrenceState = isReminderDue(
+                            reminderDataItem, today, latestOccurrenceState);
+                    }
+                }
+            }
+            if (applyNow) {
+                if (!nextOccurrenceState || onlyLatest) {
+                    nextOccurrenceState = getReminderNextDateOccurrenceState(
+                        reminderDataItem,
+                        {
+                            lastOccurrenceYMDDate: today,
+                        });
                 }
             }
             if (!nextOccurrenceState) {
@@ -218,12 +266,19 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             }
 
             // Update the reminder's state...
-            reminderDataItem.lastOccurrenceState = nextOccurrenceState;
+            if (!keepNext) {
+                reminderDataItem.lastOccurrenceState = nextOccurrenceState;
+            }
+            if (!isSkip) {
+                if (nextOccurrenceState.lastOccurrenceYMDDate !== today) {
+                    reminderDataItem.lastAppliedYMDDate = getYMDDateString(today);
+                }
+            }
             const reminderAction = accountingActions.createModifyReminderAction(
                 reminderDataItem);
             actions.push(reminderAction);
         }
-        while (mode === 'ALL');
+        while (repeatForAll);
 
         if (transactionAction) {
             // This is the transaction action for the latest application.
@@ -242,6 +297,7 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         return result;
     }
 
+
     applyOrSkipReminders(args) {
         const { tabId, reminderId, } = args;
         let reminderIds;
@@ -254,7 +310,10 @@ export class RemindersListHandler extends MainWindowHandlerBase {
 
         process.nextTick(async () => {
             const state = this.getTabIdState(tabId);
-            const newDueEntriesById = new Map(state.dueEntriesById);
+            const { dueEntriesById } = state;
+            const newDueEntriesById = (dueEntriesById) 
+                ? new Map(dueEntriesById)
+                : undefined;
             let dueEntriesByIdUpdated;
             let actions = [];
             for (let i = 0; i < reminderIds.length; ++i) {
@@ -263,8 +322,10 @@ export class RemindersListHandler extends MainWindowHandlerBase {
                     args);
                 if (result) {
                     actions = actions.concat(result.actions);
-                    newDueEntriesById.set(reminderIds[i], result.dueEntry);
-                    dueEntriesByIdUpdated = true;
+                    if (newDueEntriesById) {
+                        newDueEntriesById.set(reminderIds[i], result.dueEntry);
+                        dueEntriesByIdUpdated = true;
+                    }
                 }
             }
 
@@ -433,6 +494,17 @@ export class RemindersListHandler extends MainWindowHandlerBase {
                 }
             }
         }
+        else if (activeReminderId) {
+            const { accessor } = this.props;
+            const reminderDataItem = accessor.getReminderDataItemWithId(activeReminderId);
+            if (reminderDataItem) {
+                const nextOccurrenceState = getReminderNextDateOccurrenceState(
+                    reminderDataItem);
+                if (nextOccurrenceState && nextOccurrenceState.lastOccurrenceYMDDate) {
+                    canApplyActiveItem = true;
+                }
+            }
+        }
 
         const openAppliedTransactionItem = { id: 'openSelectedAppliedReminderTransaction',
             label: userMsg('RemindersListHandler-openSelectedAppliedReminderTransaction'),
@@ -562,6 +634,55 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         }
         else {
             menuItems.push(checkRemindersItem);
+
+            const applyLatestDueNow = { id: 'applyLatestDueNow',
+                label: userMsg('RemindersListHandler-applyLatestDueNow'),
+                disabled: !canApplyActiveItem,
+                onChooseItem: () => this.onApplyReminders({
+                    tabId: tabId, 
+                    reminderId: activeReminderId,
+                    mode: 'LATEST_NOW',
+                    actionNameId: 'RemindersListHandler-applyLatestDueNow',
+                }),
+            };
+            menuItems.push(applyLatestDueNow);
+
+            const applyNextDueNow = { id: 'applyNextDueNow',
+                label: userMsg('RemindersListHandler-applyNextDueNow'),
+                disabled: !canApplyActiveItem,
+                onChooseItem: () => this.onApplyReminders({
+                    tabId: tabId, 
+                    reminderId: activeReminderId,
+                    mode: 'NEXT_NOW',
+                    actionNameId: 'RemindersListHandler-applyNextDueNow',
+                }),
+            };
+            menuItems.push(applyNextDueNow);
+
+            const applyNowKeepNextDue = { id: 'applyNowKeepNextDue',
+                label: userMsg('RemindersListHandler-applyNowKeepNextDue'),
+                disabled: !canApplyActiveItem,
+                onChooseItem: () => this.onApplyReminders({
+                    tabId: tabId, 
+                    reminderId: activeReminderId,
+                    mode: 'NOW_KEEP_NEXT',
+                    actionNameId: 'RemindersListHandler-applyNowKeepNextDue',
+                }),
+            };
+            menuItems.push(applyNowKeepNextDue);
+
+            const skipNextDue = { id: 'skipNextDue',
+                label: userMsg('RemindersListHandler-skipNextDue'),
+                disabled: !canApplyActiveItem,
+                onChooseItem: () => this.onSkipDueReminders({
+                    tabId: tabId, 
+                    reminderId: activeReminderId,
+                    mode: 'NEXT_NOW',
+                    actionNameId: 'RemindersListHandler-skipNextDue',
+                }),
+            };
+            menuItems.push(skipNextDue);
+
             menuItems.push({});
             menuItems.push(newReminderItem);
             menuItems.push(modifyReminderItem);

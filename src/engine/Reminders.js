@@ -3,7 +3,7 @@ import { userError } from '../util/UserMessages';
 import { NumericIdGenerator } from '../util/NumericIds';
 import * as DO from '../util/DateOccurrences';
 import { getTransaction, getTransactionDataItem } from './Transactions';
-import { getYMDDate, YMDDate } from '../util/YMDDate';
+import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 
 
 
@@ -14,6 +14,14 @@ import { getYMDDate, YMDDate } from '../util/YMDDate';
  * reminder is to occur and optionally repeat.
  * @property {DateOccurrenceState} lastOccurrenceState The state representing
  * the last occurrence.
+ * @property {YMDDate} [lastAppliedYMDDate] If present the date of the last
+ * application of the reminder. Normally the lastOccurrenceYMDDate property
+ * of lastOccurrenceState is the date of the last application. However,
+ * that property is used to determine the next due date. If a reminder is
+ * to applied early, in order for the next due date to skip that application
+ * lastOccurrenceYMDDate will need to be on or after the original due date.
+ * lastAppliedYMDDate is used in that scenario to track the date the
+ * reminder was last applied.
  * @property {string}   [description]   The description of the reminder.
  * @property {Transaction} transactionTemplate  The template for
  * the transaction being reminded of.
@@ -27,6 +35,14 @@ import { getYMDDate, YMDDate } from '../util/YMDDate';
  * the reminder is to occur and optionally repeat.
  * @property {DateOccurrenceStateDataItem} lastOccurrenceState The state representing
  * the last occurrence.
+ * @property {string} [lastAppliedYMDDate] If present the date of the last
+ * application of the reminder. Normally the lastOccurrenceYMDDate property
+ * of lastOccurrenceState is the date of the last application. However,
+ * that property is used to determine the next due date. If a reminder is
+ * to applied early, in order for the next due date to skip that application
+ * lastOccurrenceYMDDate will need to be on or after the original due date.
+ * lastAppliedYMDDate is used in that scenario to track the date the
+ * reminder was last applied.
  * @property {string}   [description]   The description of the reminder.
  * @property {TransactionDataItem} transactionTemplate  The template for
  * the transaction being reminded of.
@@ -46,12 +62,14 @@ export function getReminder(reminderDataItem, alwaysCopy) {
             reminderDataItem.occurrenceDefinition, alwaysCopy);
         const lastOccurrenceState = DO.getDateOccurrenceState(
             reminderDataItem.lastOccurrenceState, alwaysCopy);
+        const lastAppliedYMDDate = getYMDDate(reminderDataItem.lastAppliedYMDDate);
         const transactionTemplate 
             = getTransaction(reminderDataItem.transactionTemplate, alwaysCopy);
 
         if (alwaysCopy
          || (occurrenceDefinition !== reminderDataItem.occurrenceDefinition)
          || (lastOccurrenceState !== reminderDataItem.lastOccurrenceState)
+         || (lastAppliedYMDDate !== reminderDataItem.lastAppliedYMDDate)
          || (transactionTemplate !== reminderDataItem.transactionTemplate)) {
             const reminder = Object.assign({}, reminderDataItem);
             if (occurrenceDefinition) {
@@ -59,6 +77,9 @@ export function getReminder(reminderDataItem, alwaysCopy) {
             }
             if (lastOccurrenceState) {
                 reminder.lastOccurrenceState = lastOccurrenceState;
+            }
+            if (lastAppliedYMDDate) {
+                reminder.lastAppliedYMDDate = lastAppliedYMDDate;
             }
             if (transactionTemplate) {
                 reminder.transactionTemplate = transactionTemplate;
@@ -83,11 +104,13 @@ export function getReminderDataItem(reminder, alwaysCopy) {
             reminder.occurrenceDefinition, alwaysCopy);
         const lastOccurrenceState = DO.getDateOccurrenceStateDataItem(
             reminder.lastOccurrenceState, alwaysCopy);
+        const lastAppliedYMDDate = getYMDDateString(reminder.lastAppliedYMDDate);
         const transactionTemplate 
             = getTransactionDataItem(reminder.transactionTemplate, alwaysCopy);
         if (alwaysCopy
          || (occurrenceDefinition !== reminder.occurrenceDefinition)
          || (lastOccurrenceState !== reminder.lastOccurrenceState)
+         || (lastAppliedYMDDate !== reminder.lastAppliedYMDDate)
          || (transactionTemplate !== reminder.transactionTemplate)) {
             const reminderDataItem = Object.assign({}, reminder);
             if (occurrenceDefinition) {
@@ -95,6 +118,9 @@ export function getReminderDataItem(reminder, alwaysCopy) {
             }
             if (lastOccurrenceState) {
                 reminderDataItem.lastOccurrenceState = lastOccurrenceState;
+            }
+            if (lastAppliedYMDDate) {
+                reminderDataItem.lastAppliedYMDDate = lastAppliedYMDDate;
             }
             if (transactionTemplate) {
                 reminderDataItem.transactionTemplate = transactionTemplate;

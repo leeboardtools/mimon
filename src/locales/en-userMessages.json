@@ -617,6 +617,11 @@
     "RemindersListHandler-applyReminderAction_ALL": "Apply Reminders for all dates",
     "RemindersListHandler-skipReminderAction_ALL": "Skip Reminders for all dates",
 
+    "RemindersListHandler-applyLatestDueNow": "Apply Latest Due Date Now",
+    "RemindersListHandler-applyNextDueNow": "Apply Next Due Date Now",
+    "RemindersListHandler-applyNowKeepNextDue": "Apply Now, Keep Next Due Date",
+    "RemindersListHandler-skipNextDue": "Skip Next Due Date",
+
 
     "RowTableHandler-action_showColumn": ["Show '", "' Column"],
     "RowTableHandler-action_hideColumn": ["Hide '", "' Column"],

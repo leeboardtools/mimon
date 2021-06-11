@@ -170,11 +170,17 @@ function getAmountCellValue(args) {
 function getLastAppliedDateCellValue(args) {
     const reminderDataItem = getReminderDataItem(args);
     if (reminderDataItem) {
-        const { lastOccurrenceState } = reminderDataItem;
-        if (lastOccurrenceState) {
+        let { lastAppliedYMDDate } = reminderDataItem;
+        if (!lastAppliedYMDDate) {
+            const { lastOccurrenceState } = reminderDataItem;
+            if (lastOccurrenceState) {
+                lastAppliedYMDDate = lastOccurrenceState.lastOccurrenceYMDDate;
+            }
+        }
+        if (lastAppliedYMDDate) {
             return {
                 accessor: getAccessor(args),
-                ymdDate: lastOccurrenceState.lastOccurrenceYMDDate,
+                ymdDate: lastAppliedYMDDate,
             };
         }
     }

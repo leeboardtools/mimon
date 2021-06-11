@@ -484,8 +484,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
     - Reminders List
-        - Clicking enabled button does nothing.
-        - Add Apply now command.
 
 
     - Reconciler
@@ -581,11 +579,14 @@ Are the lists really two separate styles? Or can they be combined into one?
         
 
     - Main Window
-                    
+
+
     - Update of reinvest dividend transaction after changing dividends account doesn't update the
     old dividend account.
 
+
     - Add Lock file
+
 
     - RowTable
         - Add column sorting to RowTable.
@@ -595,9 +596,12 @@ Are the lists really two separate styles? Or can they be combined into one?
                 - Sorted ascending
                 - Sorted descending
                 - ??? Filter ???
+            - Array of sorted column indices to support multiple sorts
             
             - To keep the fundamental operation of RowTable simple, row indices will stay sequential
             from 0.
-            - 
+                - This means the row table implementation will need to sort the row entries?
+                - Would be nice to have some kind of mapping.
+
 
 
