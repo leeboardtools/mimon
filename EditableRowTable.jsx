@@ -577,7 +577,10 @@ export function editableRowTable(WrappedTable) {
                         this.focusToRef(newFocus);
                     }
                     else {
-                        let newFocus = this.getNextCellFocus();
+                        let newFocus;
+                        if (!e.ctrlKey) {
+                            newFocus = this.getNextCellFocus();
+                        }
                         if (!newFocus) {
                             this.asyncSaveRowEdit({
                                 reason: 'Enter',
