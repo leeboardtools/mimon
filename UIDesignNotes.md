@@ -381,8 +381,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Price Retrieval Window
         - Add a new security?
-        - Wants to retrieve prices for inactive accounts
-        - Sort!
 
 
     - Printing
@@ -508,8 +506,6 @@ Are the lists really two separate styles? Or can they be combined into one?
             
         - When transaction finishes editing, old values are displayed momentarily then the new ones appear.
 
-        - Reminder transaction with no value appears as 0 for both columns.
-
         - Editing date loses focus
 
         - Support +/- keys in date editor
@@ -590,18 +586,28 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - RowTable
         - Add column sorting to RowTable.
-            - Column may or may not be sortable.
-            - If sortable, can be in one of these states:
-                - Not sorted
-                - Sorted ascending
-                - Sorted descending
-                - ??? Filter ???
-            - Array of sorted column indices to support multiple sorts
-            
-            - To keep the fundamental operation of RowTable simple, row indices will stay sequential
-            from 0.
-                - This means the row table implementation will need to sort the row entries?
-                - Would be nice to have some kind of mapping.
+            - Add isSortable to ColumnInfo
+            - Add columnSorting property to RowTable
+                - Array containing column keys and sortSign pairs.
+                - Used to indicate the column sort state.
+            - Add onColumnSortingChange property to RowTable
+                - Receives the new columnSorting
+            - Add sort component to sortable columns
+                - Three states:
+                    - not sorted
+                    - sort ascending
+                    - sort descending
+            - Responsibility of RowTable owner to apply columnSorting
 
+        - Owners:
+            - Responsible for applying columnSorting, row indices will remain 0 based.
+            - Add KeyedSorters class
+                - set up with a list of key/sort functions
+                - Set the active sorting, use an array just like columnSorting
+                - Provide a compare method
+                    - Steps through the active sorting while the sort function returns 0
+                    - Applies the sortSign to the sort function result.
 
+            - Owner will maintain a master row entry array and apply the KeyedSorter to the master row entry array when necessary.
 
+            - CollapsibleRowTables will just need to provide sorting on the child row tables.

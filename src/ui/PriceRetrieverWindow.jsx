@@ -33,7 +33,7 @@ function updateTickerEntries(tickerEntriesByTicker, tickers, callback) {
 
 
 /**
- * @typedef {object} PriceRetrieverWindow~TtickerSelection
+ * @typedef {object} PriceRetrieverWindow~TickerSelection
  * @property {boolean} [selectDefaults]
  * @property {string[]} [selectedTickers]
  */
@@ -43,21 +43,25 @@ function addPricedItemsToTickers(accessor, pricedItemType,
 
     const ids = accessor.getPricedItemIdsForType(pricedItemType);
     if (ids) {
+        const myTickerEntries = [];
         ids.forEach((id) => {
             const pricedItemDataItem = accessor.getPricedItemDataItemWithId(id);
-            const { ticker, onlineUpdateType, disabled } = pricedItemDataItem;
-            if (ticker && onlineUpdateType) {
-                tickerEntriesByTicker.set(ticker, 
-                    { 
-                        pricedItemDataItem: pricedItemDataItem,
-                        ticker: ticker, 
-                        isSelected: false, 
-                    });
-                if (!disabled) {
+            const { ticker, onlineUpdateType, isInactive, isHidden } = pricedItemDataItem;
+            if (ticker && onlineUpdateType && !isInactive) {
+                myTickerEntries.push({ 
+                    pricedItemDataItem: pricedItemDataItem,
+                    ticker: ticker, 
+                    isSelected: false, 
+                });
+                if (!isHidden) {
                     defaultTickers.add(ticker);
                 }
             }
         });
+
+        myTickerEntries.sort((a, b) => a.ticker.localeCompare(b.ticker));
+        myTickerEntries.forEach((entry) => 
+            tickerEntriesByTicker.set(entry.ticker, entry));
     }
 }
 
