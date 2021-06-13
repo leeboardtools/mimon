@@ -3,6 +3,38 @@ import * as CI from '../util-ui/ColumnInfo';
 import { dataDeepCopy } from '../util/DataDeepCopy';
 import deepEqual from 'deep-equal';
 
+
+/**
+ * Sorts a shallow copy of an array of row infos using a 
+ * {@link MultiCompare} to perform the sorting comparisons.
+ * <p>
+ * If a row info entry has a childRowInfos property, this is called recursively
+ * for the childRowInfos. In this case the row info entry with a childRowInfos
+ * is shallow copied so the childRowInfos property can be changed.
+ * @param {MultiCompare} multiCompare 
+ * @param {Array} rowInfos 
+ * @returns {Array}
+ */
+export function sortRowInfos(multiCompare, rowInfos) {
+    if (rowInfos && multiCompare) {
+        rowInfos = Array.from(rowInfos);
+        rowInfos.sort(multiCompare.compare);
+
+        for (let i = 0; i < rowInfos.length; ++i) {
+            const rowInfo = rowInfos[i];
+            const { childRowInfos } = rowInfo;
+            if (childRowInfos) {
+                rowInfos[i] = Object.assign({}, rowInfo, {
+                    childRowInfos: sortRowInfos(multiCompare, childRowInfos),
+                });
+            }
+        }
+    }
+
+    return rowInfos;
+}
+
+
 //
 // Called from:
 // _setupNewStateFromSettings():
@@ -215,6 +247,7 @@ export class RowTableHandler {
         this._onProjectSettingsModified 
             = this._onProjectSettingsModified.bind(this);
 
+        this.onColumnSortingChange = this.onColumnSortingChange.bind(this);
         this.onSetColumnWidth = this.onSetColumnWidth.bind(this);
         this.onMoveColumn = this.onMoveColumn.bind(this);
     }
@@ -422,6 +455,10 @@ export class RowTableHandler {
                 newState.defaultColumnStates);
         }
 
+        if (settings.columnSorting) {
+            newState.columnSorting = settings.columnSorting;
+        }
+
         updateStateColumns(newState);
         return newState;
     }
@@ -469,12 +506,79 @@ export class RowTableHandler {
 
 
     /**
+     * The {@link RowTable~onColumnSortingChange} for the {@link RowTable}'s
+     * onColumnSortingChange property
+     * @param {string} stateId 
+     * @param {RowTable~onColumnSortingChangeArgs} args 
+     */
+    onColumnSortingChange(stateId, args) {
+        const state = this.getState(stateId);
+
+        const newColumnSorting = args.newColumnSorting || [];
+        const oldColumnSorting = args.oldColumnSorting || [];
+
+        let actionName;
+
+        // newColumnSorting.length < oldColumnSorting.length indicates sorting
+        // for the column was turned off...
+        if (newColumnSorting.length >= oldColumnSorting.length) {
+            const columnLabel = this.getColumnLabel(
+                state.columns, newColumnSorting[0].key);
+            if (columnLabel) {
+                actionName = userMsg('RowTableHandler-action_sortByColumn', columnLabel);
+            }
+        }
+        if (!actionName) {
+            actionName = userMsg('RowTableHandler-action_sortColumnChange');
+        }
+        
+        // Don't bother sorting more than 3 deep...
+        newColumnSorting.length = Math.min(newColumnSorting.length, 3);
+
+        const projectSettingsId = state.projectSettingsId || stateId;
+        this.setProjectSettings(projectSettingsId, 
+            {
+                columnSorting: newColumnSorting,
+            },
+            actionName);
+    }
+
+
+    _onClearColumnSortings(stateId) {
+        const state = this.getState(stateId);
+        if (!state.columnSorting || !state.columnSorting.length) {
+            return;
+        }
+
+        const actionName = userMsg('RowTableHandler-action_clearColumnSorting');
+
+        const projectSettingsId = state.projectSettingsId || stateId;
+        this.setProjectSettings(projectSettingsId, 
+            {
+                columnSorting: undefined,
+            },
+            actionName);
+    }
+
+
+    createClearColumnSortingMenuItem(stateId, state) {
+        const { columnSorting } = state;
+        return {
+            id: 'clearColumnSorting',
+            label: userMsg('RowTableHandler-clearColumnSorting'),
+            disabled: !(columnSorting && columnSorting.length),
+            onChooseItem: () => this._onClearColumnSortings(stateId),
+        };
+    }
+
+
+    /**
      * The {@link RowTable~onSetColumnWidth} for the {@link RowTable}'s
      * onSetColumnWidth property.
      * @param {string} stateId 
      * @param {RowTable~onSetColumnWidthArgs} args 
      */
-    onSetColumnWidth(stateId, args) {
+    onSetColumnWidth(stateId, args) {   
         const state = this.getState(stateId);
 
         const { columnWidth, columnIndex } = args;

@@ -629,10 +629,14 @@
     "RowTableHandler-action_resetColumnWidth": "Reset Column Widths",
     "RowTableHandler-action_moveColumn": ["'", "' Column Move"],
     "RowTableHandler-action_resetColumnOrder": "Reset Column Ordering",
+    "RowTableHandler-action_sortColumnChange": "Column Sorting Change",
+    "RowTableHandler-action_sortByColumn": ["Sort by '", "'"],
+    "RowTableHandler-action_clearColumnSorting": "Clear Column Sorting",
 
     "RowTableHandler-resetColumnWidth": "Reset Column Widths",
     "RowTableHandler-resetColumnOrder": "Reset Column Ordering",
     "RowTableHandler-toggleShowRowBorders": "Show Row Borders",
+    "RowTableHandler-clearColumnSorting": "Clear Column Sorting",
     
 
     "": ""

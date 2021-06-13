@@ -29,75 +29,80 @@ export const FOOTER_ROW_INDEX = -2;
  * name of the cell container.
  * @property {RowTable~HeaderFooter}    [header]
  * @property {RowTable~HeaderFooter}    [footer]
+ * @property {boolean}  [isSortable=false]
  */
 
 
-//
-// The component structure:
-//
-//  <div containerStyle: {width: 100%  height: 100%  overflow: hidden}
-//      >>> ref = _mainRef <<<
-//      <div>
-//          <div "Table RowTable">
-//              <div "RowTableHeader">
-//                  ...header...
-//              </div>  // RowTableHeader
-//
-//              <div "RowTableBody" {
-//                      overflow-y: scroll, overflow-x: hidden, 
-//                      vertical-align: middle
-//                  }
-//                  bodyStyle: { height: bodyHeight width: bodyWidth }
-//                  onScroll
-//                  tabIndex: 0 
-//                  onKeyDown
-//                  >>> ref = _bodyRef <<<
-//
-//                  // The main body, this has the scroll bar and handles non-editing
-//                  // focus/keyboard control.
-//              >
-//
-//                  <div rowsContainerStyle: {
-//                          height: rowCount * bodyRowHeight, 
-//                          position: relative
-//                      }
-//                      // The rowsContainerStyle represents the full scrollable range,
-//                      // rowCount * bodyRowHeight.
-//                  >
-//                      <div rowsInnerStyle: {
-//                              transform: translateY(state.offsetY)
-//                          }
-//                          // The rowsInnerStyle is necessary so we can render virtual
-//                          // rows and not have to render rows from the first row. 
-//                      >
-//                          <div "RowTableRow" { display: flex; flex-wrap: nowrap }
-//                              style: { height: 36.5625px }
-//                          >
-//                              ...
-//                          </div>  // RowTableRow
-//
-//                          <div "RowTableRow" { display: flex; flex-wrap: nowrap}
-//                              style: { height: 36.5625px }
-//                          >
-//                              ...
-//                          </div>  // RowTableRow
-//
-//                      </div>  // rowsInnerStyle
-//
-//                  </div>  // rowsContainerStyle
-//
-//              </div>  // RowTableBody
-//
-//              <div "RowTableFooter">   
-//                  ...footer...
-//              </div>  // RowTableFoooter
-//          </div>  // RowTabl
-//      </div>
-//
-//      <div hidden Render>
-//      </div>
-//  </div>
-//
+export function SortArrows(props) {
+    const { sortSign, classExtras, onSortChange } = props;
+    let className = 'SortArrows';
+
+    let nextSortSign;
+    if (sortSign === undefined) {
+        nextSortSign = 1;
+        className += ' SortArrows-none';
+    }
+    else if (sortSign >= 0) {
+        nextSortSign = -1;
+        className += ' SortArrows-increase';
+    }
+    else {
+        className += ' SortArrows-decrease';
+    }
+
+    let onClick;
+    if (onSortChange) {
+        onClick = (e) => onSortChange(nextSortSign);
+    }
+
+    if (classExtras) {
+        className += ' ' + classExtras;
+    }
+    return <div className = {className}
+        onClick = {onClick}
+    />;
+}
+
+SortArrows.propTypes = {
+    sortSign: PropTypes.number,
+    onSortChange: PropTypes.func,
+    classExtras: PropTypes.string,
+};
+
+
+function RowTableColumnSorter(props) {
+    let classExtras;
+    const { sortOrder } = props;
+    if (sortOrder >= 2) {
+        classExtras = 'SortArrows-tertiary';
+    }
+    else if (sortOrder >= 1) {
+        classExtras = 'SortArrows-secondary';
+    }
+
+    const sortArrows = <SortArrows
+        classExtras = {classExtras}
+        sortSign = {props.sortSign}
+        onSortChange = {props.onSortChange}
+    />;
+
+    return <div className = "RowTableColumnSorter">
+        <div>
+            {props.children}
+        </div>
+        <div className = "RowTableColumnSorterSortArrowsContainer">
+            {sortArrows}
+        </div>
+    </div>;
+}
+
+RowTableColumnSorter.propTypes = {
+    sortSign: PropTypes.number,
+    sortOrder: PropTypes.number,
+    onSortChange: PropTypes.func,
+    children: PropTypes.any,
+};
+
 
 /**
  * React component for the column resizer bar that is dragged.
@@ -1112,6 +1117,39 @@ export class RowTable extends React.Component {
     }
 
 
+    onColumnSortChange(key, sortSign) {
+        const { onColumnSortingChange } = this.props;
+        if (!onColumnSortingChange) {
+            return;
+        }
+
+        let newColumnSorting = (this.props.columnSorting)
+            ? Array.from(this.props.columnSorting)
+            : [];
+
+        // Remove the key if it's in the sorting list..
+        for (let i = 0; i < newColumnSorting.length; ++i) {
+            if (newColumnSorting[i].key === key) {
+                newColumnSorting.splice(i, 1);
+                break;
+            }
+        }
+
+        // sortSign is undefined for the don't sort case...
+        if (typeof sortSign === 'number') {
+            newColumnSorting.splice(0, 0, {
+                key: key,
+                sortSign: sortSign,
+            });
+        }
+
+        onColumnSortingChange({
+            oldColumnSorting: this.props.columnSorting,
+            newColumnSorting: newColumnSorting,
+        });
+    }
+    
+
     onColumnResize(delta, columnIndex) {
         const { onSetColumnWidth } = this.props;
         let columnWidth = this.state.columnWidths[columnIndex];
@@ -1295,13 +1333,25 @@ export class RowTable extends React.Component {
 
     renderHeaderFooter(args) {
         const { getHeaderFooter, } = args;
-        const { columns } = this.props;
+        const { columns, onColumnSortingChange, columnSorting } = this.props;
 
         let isHeaderFooter;
         for (let i = 0; i < columns.length; ++i) {
             if (getHeaderFooter(columns[i])) {
                 isHeaderFooter = true;
                 break;
+            }
+        }
+
+        let columnSortingByKey;
+        if (onColumnSortingChange && columnSorting) {
+            columnSortingByKey = new Map();
+            for (let i = 0; i < columnSorting.length; ++i) {
+                const sorting = columnSorting[i];
+                columnSortingByKey.set(sorting.key, {
+                    sortSign: sorting.sortSign,
+                    sortOrder: i,
+                });
             }
         }
 
@@ -1373,6 +1423,28 @@ export class RowTable extends React.Component {
                             rowRenderInfo: rowRenderInfo,
                         });
                     }
+                }
+
+                if (column.isSortable) {
+                    let sortSign;
+                    let sortOrder;
+                    let disabled = !onColumnSortingChange;
+                    if (columnSortingByKey) {
+                        const entry = columnSortingByKey.get(column.key);
+                        if (entry) {
+                            sortSign = entry.sortSign;
+                            sortOrder = entry.sortOrder;
+                        }
+                    }
+                    cell = <RowTableColumnSorter
+                        sortSign = {sortSign}
+                        sortOrder = {sortOrder}
+                        disabled = {disabled}
+                        onSortChange = {(sortSign) =>
+                            this.onColumnSortChange(column.key, sortSign)}
+                    >
+                        {cell}
+                    </RowTableColumnSorter>;
                 }
 
                 if (this.props.onMoveColumn) {
@@ -2072,7 +2144,27 @@ export class RowTable extends React.Component {
  */
 
 /**
+ * @typedef {object} RowTable~ColumnSorting
+ * @property {string}   key The column key this refers to.
+ * @property {number}   [sortSign=1] The sorting sign, if >= 0 then sort ascending,
+ * otherwise sort descending.
+ */
+
+
+/**
+ * @typedef {object} RowTable~onColumnSortingChangeArgs
+ * @property {RowTable~ColumnSorting[]}    newColumnSorting
+ * @property {RowTable~ColumnSorting[]}    oldColumnSorting
+ */
+
+/**
+ * @callback RowTable~onColumnSortingChange
+ * @param {RowTable~onColumnSortingChangeArgs} args
+ */
+
+/**
  * @typedef {RowTable~propTypes}
+ * 
  * @property {RowTable~Column[]}    columns Array of the column definitions.
  * 
  * @property {number}   rowCount    The number of rows.
@@ -2088,9 +2180,20 @@ export class RowTable extends React.Component {
  * 
  * @property {number}   [requestedVisibleRowIndex]   If specified the index of a row to 
  * try to keep visible.
+ * 
+ * @property {RowTable~ColumnSorting[]} [columnSorting] Optional array defining 
+ * the current column sorting. Only columns with the isSortable property truthy
+ * are used.
+ * @property {RowTable~onColumnSortingChange} [onColumnSortingChange] Optional callback
+ * called whenever the column sorting array has changed.
+ * 
  * @property {RowTable~onSetColumnWidth}    [onSetColumnWidth]  If specified the columns
  * will be resizable and this callback will be called whenever a column's width
  * is changed.
+ * 
+ * @property {RowTable~onMoveColumn}    [onMoveColumn]  If specified the columns
+ * will be re-orderable and this callback will be called whenever a column is dragged
+ * to a new column position.
  * 
  * @property {number}   [rowHeight] Optional height of each row, if not specified
  * then onRenderCell is called with isSizeRender to generate a dummy row for sizing.
@@ -2131,6 +2234,9 @@ RowTable.propTypes = {
     onRenderRow: PropTypes.func,
 
     requestedVisibleRowIndex: PropTypes.number,
+
+    columnSorting: PropTypes.arrayOf(PropTypes.object),
+    onColumnSortingChange: PropTypes.func,
 
     onSetColumnWidth: PropTypes.func,
     onMoveColumn: PropTypes.func,

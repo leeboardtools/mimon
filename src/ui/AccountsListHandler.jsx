@@ -655,7 +655,12 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             onChooseItem: () => this.onToggleShowInactiveAccounts(
                 tabId),
         });
+
         visibilityMenuItems.push({});
+
+        visibilityMenuItems.push(this._rowTableHandler.createClearColumnSortingMenuItem(
+            tabId, state
+        ));
         visibilityMenuItems.push({ id: 'toggleDisplayAlphabetically',
             label: userMsg('AccountsListHandler-displayAlphabetically'),
             checked: sortAlphabetically,
@@ -1028,6 +1033,11 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             subtotalAccountIds = {tabEntry.subtotalAccountIds}
 
             showRowBorders = {tabEntry.showRowBorders}
+
+            columnSorting = {tabEntry.columnSorting}
+            onColumnSortingChange = {(args) =>
+                this._rowTableHandler.onColumnSortingChange(tabId, args)}
+                
             onSetColumnWidth = {(args) =>
                 this._rowTableHandler.onSetColumnWidth(tabId, args)}
             onMoveColumn = {(args) =>

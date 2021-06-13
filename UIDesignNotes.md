@@ -611,3 +611,5 @@ Are the lists really two separate styles? Or can they be combined into one?
             - Owner will maintain a master row entry array and apply the KeyedSorter to the master row entry array when necessary.
 
             - CollapsibleRowTables will just need to provide sorting on the child row tables.
+
+    

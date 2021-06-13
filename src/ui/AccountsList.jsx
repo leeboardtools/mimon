@@ -7,12 +7,15 @@ import { CollapsibleRowTable, ExpandCollapseState,
     findRowInfoWithKey, updateRowInfo,
     renderCollapsibleRowTableAsText, } from '../util-ui/CollapsibleRowTable';
 import { SimpleRowTableTextRecorder } from '../util-ui/RowTable';
+import { sortRowInfos } from './RowTableHelpers';
 import { getDecimalDefinition, getQuantityDefinitionName, } from '../util/Quantities';
 import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';
 import * as GH from '../tools/GainHelpers';
-import { columnInfosToColumns, getColumnWithKey, } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns, getColumnWithKey,
+    columnInfosToMultiComparators, } from '../util-ui/ColumnInfo';
 import { YMDDate } from '../util/YMDDate';
+import { compare, MultiCompare } from '../util/MultiCompare';
 
 
 function getPercentOfRootAccount() {
@@ -24,6 +27,7 @@ function getPercentOfRootAccount() {
         },
         inputClassExtras: 'Percent-base Percent-input',
         cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
+        isSortable: true,
     };
 }
 
@@ -36,9 +40,61 @@ function getPercentOfAccountGroup() {
         },
         inputClassExtras: 'Percent-base Percent-input',
         cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
+        isSortable: true,
     };
 }
 
+
+function compareAccountDataItemProperty(a, b, property) {
+    a = (a.accountDataItem) ? a.accountDataItem[property] : '';
+    b = (b.accountDataItem) ? b.accountDataItem[property] : '';
+
+    a = a || '';
+    b = b || '';
+    return a.localeCompare(b);
+}
+
+
+function getBalanceQuantityBaseValue(rowInfo) {
+    if (rowInfo) {
+        const { accountGainsState } = rowInfo;
+        if (accountGainsState) {
+            return accountGainsState.overallTotals.marketValueBaseValue;
+        }
+    }
+}
+
+function compareRowInfoBalance(rowInfoA, rowInfoB) {
+    const balanceBaseValueA = getBalanceQuantityBaseValue(rowInfoA);
+    const balanceBaseValueB = getBalanceQuantityBaseValue(rowInfoB);
+    return compare(balanceBaseValueA, balanceBaseValueB);
+}
+
+function keyToRank(key) {
+    if (typeof key === 'string') {
+        if (key.startsWith('_NET')) {
+            return (key.startsWith('_NET_')) 
+                ? 10
+                : 11;
+        }
+        else if (key.startsWith('_SUBTOTAL')) {
+            return (key.startsWith('_SUBTOTAL_'))
+                ? 1
+                : 2;
+        }
+    }
+
+    return 0;
+}
+
+function baseCompare(rowInfoA, rowInfoB, sign, compare) {
+    let rankA = keyToRank(rowInfoA.key);
+    let rankB = keyToRank(rowInfoB.key);
+    if (rankA !== rankB) {
+        return (rankA - rankB) * sign;
+    }
+    return compare(rowInfoA, rowInfoB);
+}
 
 let columnInfoDefs;
 
@@ -49,26 +105,57 @@ let columnInfoDefs;
 function getAccountsListColumnInfoDefs() {
     if (!columnInfoDefs) {
         columnInfoDefs = [
-            ACE.getNameColumnInfo({}),
-            ACE.getDescriptionColumnInfo({}),
+            ACE.getNameColumnInfo({ 
+                isSortable: true, 
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareAccountDataItemProperty(a, b, 'name')),
+            }),
+            ACE.getDescriptionColumnInfo({ 
+                isSortable: true, 
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareAccountDataItemProperty(a, b, 'description')),
+            }),
             ACE.getAccountTypeColumnInfo({}),
-            ACE.getBalanceColumnInfo({}),
+            ACE.getBalanceColumnInfo({ isSortable: true, 
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    compareRowInfoBalance),
+            }),
             getPercentOfRootAccount(),
             getPercentOfAccountGroup(),
-            LCE.getTotalSharesColumnInfo({}),
-            LCE.getTotalCostBasisColumnInfo({}),
-            LCE.getTotalCashInColumnInfo({}),
-            LCE.getTotalGainColumnInfo({}),
-            LCE.getTotalCashInGainColumnInfo({}),
-            LCE.getTotalSimplePercentGainColumnInfo({}),
-            LCE.getTotalCashInPercentGainColumnInfo({}),
-            LCE.getTotalAnnualPercentGainColumnInfo({}),
-            LCE.getTotalAnnualCashInPercentGainColumnInfo({}),
+            LCE.getTotalSharesColumnInfo({ isSortable: true, }),
+            LCE.getTotalCostBasisColumnInfo({ isSortable: true, }),
+            LCE.getTotalCashInColumnInfo({ isSortable: true, }),
+            LCE.getTotalGainColumnInfo({ isSortable: true, }),
+            LCE.getTotalCashInGainColumnInfo({ isSortable: true, }),
+            LCE.getTotalSimplePercentGainColumnInfo({ isSortable: true, }),
+            LCE.getTotalCashInPercentGainColumnInfo({ isSortable: true, }),
+            LCE.getTotalAnnualPercentGainColumnInfo({ isSortable: true, }),
+            LCE.getTotalAnnualCashInPercentGainColumnInfo({ isSortable: true, }),
         ];
     }
 
     return columnInfoDefs;
 }
+
+
+let columnInfoComparators;
+
+function getAccountsListColumnComparators() {
+    if (!columnInfoComparators) {
+        const columnInfos = getAccountsListColumnInfoDefs();
+        columnInfoComparators = columnInfosToMultiComparators(
+            columnInfos
+        );
+
+        // The default compare...
+        columnInfoComparators.push({
+            compare: (a, b) => compareAccountDataItemProperty(a, b, 'name'),
+        });
+    }
+
+    return columnInfoComparators;
+}
+
 
 /**
  * Retrieves the account list columns with default settings.
@@ -119,6 +206,10 @@ export class AccountsList extends React.Component {
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
 
         this.renderAsStringTable = this.renderAsStringTable.bind(this);
+
+        this._multiCompare = new MultiCompare(getAccountsListColumnComparators());
+        this._multiCompare.setCompareOrder(props.columnSorting);
+
 
         const { accessor, collapsedAccountIds } = this.props;
         let topLevelAccountIds = this.props.topLevelAccountIds 
@@ -285,7 +376,6 @@ export class AccountsList extends React.Component {
         const { hiddenRootAccountTypes, hiddenAccountIds, 
         } = props;
 
-        
         let rowsNeedUpdating = false;
         if (!deepEqual(prevProps.hiddenRootAccountTypes, hiddenRootAccountTypes)) {
             this._hiddenRootAccountTypes = new Set(hiddenRootAccountTypes);
@@ -319,6 +409,12 @@ export class AccountsList extends React.Component {
             rowsNeedUpdating = true;
         }
 
+        let sortingNeedsUpdating = !deepEqual(props.columnSorting,
+            prevProps.columnSorting);
+        if (sortingNeedsUpdating) {
+            this._multiCompare.setCompareOrder(props.columnSorting);
+        }
+
         if (rowsNeedUpdating) {
             let prevActiveRowKey = this.state.activeRowKey;
             
@@ -336,8 +432,13 @@ export class AccountsList extends React.Component {
         if ((props.startYMDDate !== prevProps.startYMDDate)
          || (props.endYMDDate !== prevProps.endYMDDate)
          || (this.state.rowInfosChangeId 
-            !== this.state.accountStateInfoLoadingInfo.rowInfosChangeId)) {
+          !== this.state.accountStateInfoLoadingInfo.rowInfosChangeId)) {
+            sortingNeedsUpdating = false;
             this.reloadAccountStateInfos();
+        }
+
+        if (sortingNeedsUpdating) {
+            this.updateRowInfoSorting();
         }
     }
 
@@ -478,8 +579,36 @@ export class AccountsList extends React.Component {
 
         this.updateRootRowInfoAccountStates();
 
+        this.updateRowInfoSorting();
+
         this.setState({
             loadedAccountStateInfo: accountStateInfoLoadingInfo,
+        });
+    }
+
+
+    updateRowInfoSorting(state) {
+        state = state || this.state;
+        if (!this.props.columnSorting || !this.props.columnSorting.length) {
+            this.setState({
+                sortedRowInfos: undefined,
+            });
+            return;
+        }
+
+        const rootRowInfos = Array.from(state.rowInfos);
+        const multiCompare = this._multiCompare;
+    
+        const sortedRowInfos = [];
+        rootRowInfos.forEach((rowInfo) => {
+            rowInfo = Object.assign({}, rowInfo, {
+                childRowInfos: sortRowInfos(multiCompare, rowInfo.childRowInfos),
+            });
+            sortedRowInfos.push(rowInfo);
+        });
+
+        this.setState({
+            sortedRowInfos: sortedRowInfos,
         });
     }
 
@@ -513,6 +642,7 @@ export class AccountsList extends React.Component {
 
             return {
                 rowInfos: updateRowInfo(state.rowInfos, rowInfo),
+                sortedRowInfos: undefined,
             };
         }, 
         () => {
@@ -629,6 +759,7 @@ export class AccountsList extends React.Component {
 
         return {
             rowInfos: rowInfos,
+            sortedRowInfos: undefined,
             rowInfosChangeId: state.rowInfosChangeId + 1,
             accountStateInfosByAccountId: accountStateInfosByAccountId,
             activeRowKey: newActiveRowKey,
@@ -824,7 +955,7 @@ export class AccountsList extends React.Component {
         childRowInfos.push(subtotalRowInfo);
 
         const emptyRowInfo = {
-            key: '_EMPTY_' + subtotalAccountDataItem.id,
+            key: '_SUBTOTALEMPTY_' + subtotalAccountDataItem.id,
         };
         childRowInfos.push(emptyRowInfo);
 
@@ -868,7 +999,7 @@ export class AccountsList extends React.Component {
         };
 
         const emptyRowInfo = {
-            key: '_EMPTY_' + name,
+            key: '_NETEMPTY_' + name,
         };
 
         let rowIndex = rowInfos.indexOf(insertAfterRowInfo);
@@ -1151,7 +1282,7 @@ export class AccountsList extends React.Component {
             recorder: new SimpleRowTableTextRecorder(),
 
             columns: props.columns,
-            rowInfos: state.rowInfos,
+            rowInfos: state.sortedRowInfos || state.rowInfos,
 
             onRenderCell: this.onRenderCell,
             onPreRenderRow: this.onPreRenderRow,
@@ -1515,16 +1646,19 @@ export class AccountsList extends React.Component {
         if (!props.showRowBorders) {
             rowClassExtras = 'No-border';
         }
+        
 
         return <div className="RowTableContainer AccountsList">
             <CollapsibleRowTable
                 columns = {props.columns}
-                rowInfos = {state.rowInfos}
+                rowInfos = {state.sortedRowInfos || state.rowInfos}
                 onExpandCollapseRow = {this.onExpandCollapseRow}
 
                 onRenderCell = {this.onRenderCell}
                 onPreRenderRow = {this.onPreRenderRow}
 
+                columnSorting = {props.columnSorting}
+                onColumnSortingChange = {props.onColumnSortingChange}
                 onSetColumnWidth = {props.onSetColumnWidth}
                 onMoveColumn = {props.onMoveColumn}
 
@@ -1572,9 +1706,13 @@ AccountsList.propTypes = {
     onChooseAccount: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
+
     columns: PropTypes.arrayOf(PropTypes.object),
+    columnSorting: PropTypes.arrayOf(PropTypes.object),
+    onColumnSortingChange: PropTypes.func,
     onSetColumnWidth: PropTypes.func,
     onMoveColumn: PropTypes.func,
+
 
     hiddenRootAccountTypes: PropTypes.arrayOf(PropTypes.string),
     hiddenAccountIds: PropTypes.arrayOf(PropTypes.number),
