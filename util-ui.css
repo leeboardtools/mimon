@@ -1522,6 +1522,60 @@ from BS col-form-label */
 */
 
 
+
+.SortArrows {
+    width: 0;
+    height: 0;
+    border-color: black;
+    border-top-width: 5px;
+    border-bottom-width: 5px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    cursor: n-resize;
+}
+
+.SortArrows-none {
+    border-bottom-style: solid;
+    border-top-style: solid;
+}
+
+.SortArrows-increase {
+    border-bottom-style: solid;
+}
+
+.SortArrows-decrease {
+    border-top-style: solid;
+}
+
+.SortArrows-secondary {
+    border-top-width: 4px;
+    border-bottom-width: 4px;
+    border-top-color: rgba(0, 0, 0, 0.75);
+    border-bottom-color: rgba(0, 0, 0, 0.75);
+}
+
+.SortArrows-tertiary,
+.SortArrows-none {
+    border-top-width: 3px;
+    border-bottom-width: 3px;
+    border-top-color: rgba(0, 0, 0, 0.5);
+    border-bottom-color: rgba(0, 0, 0, 0.5);
+}
+
+.RowTableColumnSorter {
+    display: flex!important;
+    justify-content: space-between;
+}
+
+.RowTableColumnSorterSortArrowsContainer {
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+
 .RowTableCell .Invalid-feedback {
   opacity: 1.0;
   background-color: white;

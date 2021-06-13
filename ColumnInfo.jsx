@@ -4,6 +4,9 @@
  * @property {string}   [ariaLabel]
  * @property {string}   [inputClassExtras]
  * @property {number}   [inputSize]
+ * @property {MultiCompare~CompareCallback} [sortCompare] Comparator
+ * for {@link MultiCompare} returned by 
+ * {@link columnInfosToMultiComparators}
  */
 
 /**
@@ -31,7 +34,7 @@ export function columnInfosToColumns({ columnInfos, columnWidths }) {
     }
 
     const columns = columnInfos.map((columnInfo) => {
-        return {
+        const column = {
             key: columnInfo.key,
             // width
             // minWidth
@@ -41,6 +44,10 @@ export function columnInfosToColumns({ columnInfos, columnWidths }) {
             footer: columnInfo.footer,
             columnInfo: columnInfo,
         };
+        if (columnInfo.sortCompare) {
+            column.isSortable = true;
+        }
+        return column;
     });
 
     if (columnWidths) {
@@ -53,6 +60,37 @@ export function columnInfosToColumns({ columnInfos, columnWidths }) {
     }
 
     return columns;
+}
+
+
+/**
+ * @typedef {object} columnInfosToMultiComparatorsArgs
+ * @property {ColumnInfo[]} columnInfos The array of column infos.
+ */
+
+/**
+ * Builds an array that can be passed to the constructor of
+ * {@link MultiCompare} from the column infos that have
+ * a sortCompare property.
+ * @param {ColumnInfo[]|columnInfosToMultiComparatorsArgs} columnInfos 
+ * @returns {MultiCompare~Comparator[]}
+ */
+export function columnInfosToMultiComparators(args) {
+    let { columnInfos } = args;
+    if (!columnInfos) {
+        columnInfos = args;
+    }
+
+    const comparators = [];
+    columnInfos.forEach((columnInfo) => {
+        if (columnInfo.sortCompare) {
+            comparators.push({
+                key: columnInfo.key,
+                compare: columnInfo.sortCompare,
+            });
+        }
+    });
+    return comparators;
 }
 
 
