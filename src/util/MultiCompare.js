@@ -148,8 +148,10 @@ export function compare(a, b) {
  * of comparisons.
  * <p>
  * If {@link MultiCompare#setCompareOrder} is not called or does not specify any of
- * the comparators, the comparison will be the same as if {@link compare} were 
- * called.
+ * the comparators, the default comparison will be used, which by default will
+ * be the same as if {@link compare} were called.
+ * If a key-less comparator is specified in the comparator list for the 
+ * constructor, its compare property will be the default compare.
  */
 export class MultiCompare {
     /**
@@ -162,10 +164,16 @@ export class MultiCompare {
         this._comparators = {};
         this._activeComparators = [];
         this._finalSign = 1;
+        this._defaultCompare = compare;
 
         if (comparators) {
             comparators.forEach((comparator) => {
-                this._comparators[comparator.key] = comparator.compare;
+                if (!comparator.key) {
+                    this._defaultCompare = comparator.compare;
+                }
+                else {
+                    this._comparators[comparator.key] = comparator.compare;
+                }
             });
         }
     }
@@ -174,6 +182,7 @@ export class MultiCompare {
      * @callback MultiCompare~CompareCallback
      * @param {*} a
      * @param {*} b
+     * @param {number} sortSign This will either be 1 or -1.
      * @returns {number}
      */
 
@@ -186,7 +195,7 @@ export class MultiCompare {
     /**
      * @typedef {object} MultiCompare~CompareDef
      * @property {string} key
-     * @property {number} [sign=1] Optional sign for the comparison, if &ge; 0
+     * @property {number} [sortSign=1] Optional sign for the comparison, if &ge; 0
      * then the normal comparison order for the comparator will be used,
      * otherwise the reverse order will be used.
      */
@@ -199,7 +208,7 @@ export class MultiCompare {
      * order for the case when all specified comparators return 0,
      * you can call:
      * <pre><code>
-     *     multiCompare.setCompareOrder({ sign: -1, });
+     *     multiCompare.setCompareOrder({ sortSign: -1, });
      * </code></pre>
      * <p>
      * If all the specified comparators return 0 then {@link compare} will
@@ -215,23 +224,45 @@ export class MultiCompare {
             }
 
             compareOrder.forEach((compareDef) => {
-                let sign = 1;
-                if (compareDef.sign < 0) {
-                    sign = -1;
+                let sortSign = 1;
+                if (compareDef.sortSign < 0) {
+                    sortSign = -1;
                 }
 
                 const comparator = this._comparators[compareDef.key];
                 if (comparator) {
                     this._activeComparators.push({
+                        key: compareDef.key,
                         compare: comparator,
-                        sign: sign,
+                        sortSign: sortSign,
                     });
                 }
                 else if (!compareDef.key) {
-                    this._finalSign = sign;
+                    this._finalSign = sortSign;
                 }
             });
         }
+    }
+
+    /**
+     * 
+     * @returns {MultiCompare~CompareDef[]} An array containing the active
+     * compare order. The final entry is the final sign, its key property
+     * is undefined.
+     */
+    getCompareOrder() {
+        const compareOrder = this._activeComparators.map((comparator) => {
+            return {
+                key: comparator.key,
+                sortSign: comparator.sortSign,
+            };
+        });
+
+        compareOrder.push({
+            sortSign: this._finalSign,
+        });
+
+        return compareOrder;
     }
 
 
@@ -245,12 +276,13 @@ export class MultiCompare {
      */
     compare(a, b) {
         for (let i = 0; i < this._activeComparators.length; ++i) {
-            const result = this._activeComparators[i].compare(a, b);
+            const { compare, sortSign } = this._activeComparators[i];
+            const result = compare(a, b, sortSign);
             if (result) {
-                return result * this._activeComparators[i].sign;
+                return result * sortSign;
             }
         }
 
-        return compare(a, b) * this._finalSign;
+        return this._defaultCompare(a, b, this._finalSign) * this._finalSign;
     }
 }

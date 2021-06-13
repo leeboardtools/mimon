@@ -216,7 +216,7 @@ test('MultiCompare', () => {
 
     //
     // Reverse compare order...
-    multiCompare.setCompareOrder({ key: 'b', sign: -1, });
+    multiCompare.setCompareOrder({ key: 'b', sortSign: -1, });
     expect(multiCompare.compare(a, b)).toBeLessThan(0);
 
     // b is same, sign doesn't matter.
@@ -225,8 +225,8 @@ test('MultiCompare', () => {
     //
     // Reverse final compare...
     multiCompare.setCompareOrder([
-        { key: 'b', sign: -1, },
-        { sign: -1, },
+        { key: 'b', sortSign: -1, },
+        { sortSign: -1, },
     ]);
     expect(multiCompare.compare(a, b)).toBeLessThan(0);
     expect(multiCompare.compare(a, c)).toBeGreaterThan(0);
@@ -235,8 +235,8 @@ test('MultiCompare', () => {
     //
     // Multi-level
     multiCompare.setCompareOrder([
-        { key: 'c', sign: -1, },
-        { key: 'b', sign: 1, },
+        { key: 'c', sortSign: -1, },
+        { key: 'b', sortSign: 1, },
     ]);
     expect(multiCompare.compare(a, c)).toBeGreaterThan(0);
     expect(multiCompare.compare(c, d)).toEqual(0);
@@ -248,8 +248,8 @@ test('MultiCompare', () => {
     //
     // Make sure sign is applied to correct item...
     multiCompare.setCompareOrder([
-        { key: 'c', sign: 1, },
-        { key: 'b', sign: -1, },
+        { key: 'c', sortSign: 1, },
+        { key: 'b', sortSign: -1, },
     ]);
     expect(multiCompare.compare(a, c)).toBeLessThan(0);
     expect(multiCompare.compare(c, a)).toBeGreaterThan(0);
