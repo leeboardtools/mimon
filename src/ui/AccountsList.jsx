@@ -18,33 +18,8 @@ import { YMDDate } from '../util/YMDDate';
 import { compare, MultiCompare } from '../util/MultiCompare';
 
 
-function getPercentOfRootAccount() {
-    return { key: 'percentOfRootAccount',
-        header: {
-            label: userMsg('AccountsList-percentOfRootAccount_column_label'),
-            ariaLabel: 'Percent of Root Account',
-            classExtras: 'RowTable-header-base Percent-base Percent-header',
-        },
-        inputClassExtras: 'Percent-base Percent-input',
-        cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
-        isSortable: true,
-    };
-}
-
-function getPercentOfAccountGroup() {
-    return { key: 'percentOfAccountGroup',
-        header: {
-            label: userMsg('AccountsList-percentOfAccountGroup_column_label'),
-            ariaLabel: 'Percent of Parent Account',
-            classExtras: 'RowTable-header-base Percent-base Percent-header',
-        },
-        inputClassExtras: 'Percent-base Percent-input',
-        cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
-        isSortable: true,
-    };
-}
-
-
+//
+//
 function compareAccountDataItemProperty(a, b, property) {
     a = (a.accountDataItem) ? a.accountDataItem[property] : '';
     b = (b.accountDataItem) ? b.accountDataItem[property] : '';
@@ -55,6 +30,8 @@ function compareAccountDataItemProperty(a, b, property) {
 }
 
 
+//
+//
 function getBalanceQuantityBaseValue(rowInfo) {
     if (rowInfo) {
         const { accountGainsState } = rowInfo;
@@ -64,12 +41,17 @@ function getBalanceQuantityBaseValue(rowInfo) {
     }
 }
 
+//
+//
 function compareRowInfoBalance(rowInfoA, rowInfoB) {
     const balanceBaseValueA = getBalanceQuantityBaseValue(rowInfoA);
     const balanceBaseValueB = getBalanceQuantityBaseValue(rowInfoB);
     return compare(balanceBaseValueA, balanceBaseValueB);
 }
 
+
+//
+//
 function keyToRank(key) {
     if (typeof key === 'string') {
         if (key.startsWith('_NET')) {
@@ -87,14 +69,155 @@ function keyToRank(key) {
     return 0;
 }
 
-function baseCompare(rowInfoA, rowInfoB, sign, compare) {
+
+//
+//
+function baseCompare(argsA, argsB, sign, compare) {
+    const rowInfoA = argsA.rowInfo;
+    const rowInfoB = argsB.rowInfo;
     let rankA = keyToRank(rowInfoA.key);
     let rankB = keyToRank(rowInfoB.key);
     if (rankA !== rankB) {
         return (rankA - rankB) * sign;
     }
-    return compare(rowInfoA, rowInfoB);
+    return compare(rowInfoA, rowInfoB, argsA.caller);
 }
+
+
+//
+// This is for columns that also have subtotal values (actually, any column
+// that has values, but this handles subtotals specially for row with
+// subtotals by using the subtotal value as the value for the row)
+function subtotalCompare(argsA, argsB, sign, compare) {
+    const rowInfoA = argsA.rowInfo;
+    const rowInfoB = argsB.rowInfo;
+    const subtotalA = rowInfoA.subtotalRowInfo;
+    const subtotalB = rowInfoB.subtotalRowInfo;
+
+    let rankA = (subtotalA) ? 0 : keyToRank(rowInfoA.key);
+    let rankB = (subtotalB) ? 0 : keyToRank(rowInfoB.key);
+    if (rankA !== rankB) {
+        return (rankA - rankB) * sign;
+    }
+
+    return compare(subtotalA || rowInfoA, subtotalB || rowInfoB, argsA.caller);
+}
+
+
+//
+//
+function getPercentOfValue({ rowInfo, totalsRowInfo, accessor }) {
+    if (!totalsRowInfo) {
+        return;
+    }
+
+    const { accountGainsState } = rowInfo;
+    const { totalAccountGainsState } = totalsRowInfo;
+    if (!accountGainsState || !totalAccountGainsState) {
+        return;
+    }
+
+    const totalMarketValueBaseValue 
+        = totalAccountGainsState.overallTotals.marketValueBaseValue;
+    if (!totalMarketValueBaseValue) {
+        return;
+    }
+
+    const totalCurrency = accessor.getCurrencyOfAccountId(totalsRowInfo.accountId);
+    const thisCurrency = accessor.getCurrencyOfAccountId(rowInfo.accountId);
+    if (totalCurrency !== thisCurrency) {
+        return;
+    }
+
+    const quantityDefinition = totalCurrency.getQuantityDefinition();
+    const totalValue = quantityDefinition.baseValueToNumber(
+        totalMarketValueBaseValue);
+    const thisValue = quantityDefinition.baseValueToNumber(
+        accountGainsState.overallTotals.marketValueBaseValue);
+    const percent = 100. * thisValue / totalValue;
+    const percentQuantityDefinition = accessor.getPercentGainQuantityDefinition();
+
+    return {
+        quantityBaseValue: percentQuantityDefinition.numberToBaseValue(percent),
+        quantityDefinition: percentQuantityDefinition,
+    };
+}
+
+//
+//
+function comparePercentOf(rowInfoA, totalsRowInfoA, rowInfoB, totalsRowInfoB, caller) {
+    const args = {
+        rowInfo: rowInfoA,
+        totalsRowInfo: totalsRowInfoA,
+        accessor: caller.props.accessor,
+    };
+    const valueA = getPercentOfValue(args);
+    
+    args.rowInfo = rowInfoB;
+    args.totalsRowInfo = totalsRowInfoB;
+    const valueB = getPercentOfValue(args);
+
+    const quantityBaseValueA = (valueA) ? valueA.quantityBaseValue : undefined;
+    const quantityBaseValueB = (valueB) ? valueB.quantityBaseValue : undefined;
+    return compare(quantityBaseValueA, quantityBaseValueB);
+}
+
+//
+//
+function comparePercentOfRootAccount(rowInfoA, rowInfoB, caller) {
+    const totalsRowInfoA = caller.state.topLevelRowInfos[
+        rowInfoA.topLevelRowInfoIndex];
+    const totalsRowInfoB = caller.state.topLevelRowInfos[
+        rowInfoB.topLevelRowInfoIndex];
+    
+    return comparePercentOf(rowInfoA, totalsRowInfoA, rowInfoB, totalsRowInfoB, caller);
+}
+
+//
+//
+function comparePercentOfAccountGroup(rowInfoA, rowInfoB, caller) {
+    const { state } = caller;
+    const totalsRowInfoA = state.groupRowInfos[rowInfoA.groupRowInfoIndex]
+        || state.topLevelRowInfos[rowInfoB.topLevelRowInfoIndex];
+    const totalsRowInfoB = state.groupRowInfos[rowInfoB.groupRowInfoIndex]
+        || state.topLevelRowInfos[rowInfoB.topLevelRowInfoIndex];
+
+    return comparePercentOf(rowInfoA, totalsRowInfoA, rowInfoB, totalsRowInfoB, caller);
+}
+
+
+//
+//
+function getPercentOfRootAccount() {
+    return { key: 'percentOfRootAccount',
+        header: {
+            label: userMsg('AccountsList-percentOfRootAccount_column_label'),
+            ariaLabel: 'Percent of Root Account',
+            classExtras: 'RowTable-header-base Percent-base Percent-header',
+        },
+        inputClassExtras: 'Percent-base Percent-input',
+        cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
+        sortCompare: (a, b, sign) => subtotalCompare(a, b, sign,
+            comparePercentOfRootAccount),
+    };
+}
+
+//
+//
+function getPercentOfAccountGroup() {
+    return { key: 'percentOfAccountGroup',
+        header: {
+            label: userMsg('AccountsList-percentOfAccountGroup_column_label'),
+            ariaLabel: 'Percent of Parent Account',
+            classExtras: 'RowTable-header-base Percent-base Percent-header',
+        },
+        inputClassExtras: 'Percent-base Percent-input',
+        cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
+        sortCompare: (a, b, sign) => subtotalCompare(a, b, sign,
+            comparePercentOfAccountGroup),
+    };
+}
+
 
 let columnInfoDefs;
 
@@ -106,31 +229,29 @@ function getAccountsListColumnInfoDefs() {
     if (!columnInfoDefs) {
         columnInfoDefs = [
             ACE.getNameColumnInfo({ 
-                isSortable: true, 
                 sortCompare: (a, b, sign) => baseCompare(a, b, sign,
                     (a, b) => compareAccountDataItemProperty(a, b, 'name')),
             }),
             ACE.getDescriptionColumnInfo({ 
-                isSortable: true, 
                 sortCompare: (a, b, sign) => baseCompare(a, b, sign,
                     (a, b) => compareAccountDataItemProperty(a, b, 'description')),
             }),
             ACE.getAccountTypeColumnInfo({}),
-            ACE.getBalanceColumnInfo({ isSortable: true, 
-                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+            ACE.getBalanceColumnInfo({
+                sortCompare: (a, b, sign) => subtotalCompare(a, b, sign,
                     compareRowInfoBalance),
             }),
             getPercentOfRootAccount(),
             getPercentOfAccountGroup(),
-            LCE.getTotalSharesColumnInfo({ isSortable: true, }),
-            LCE.getTotalCostBasisColumnInfo({ isSortable: true, }),
-            LCE.getTotalCashInColumnInfo({ isSortable: true, }),
-            LCE.getTotalGainColumnInfo({ isSortable: true, }),
-            LCE.getTotalCashInGainColumnInfo({ isSortable: true, }),
-            LCE.getTotalSimplePercentGainColumnInfo({ isSortable: true, }),
-            LCE.getTotalCashInPercentGainColumnInfo({ isSortable: true, }),
-            LCE.getTotalAnnualPercentGainColumnInfo({ isSortable: true, }),
-            LCE.getTotalAnnualCashInPercentGainColumnInfo({ isSortable: true, }),
+            LCE.getTotalSharesColumnInfo({}),
+            LCE.getTotalCostBasisColumnInfo({}),
+            LCE.getTotalCashInColumnInfo({}),
+            LCE.getTotalGainColumnInfo({}),
+            LCE.getTotalCashInGainColumnInfo({}),
+            LCE.getTotalSimplePercentGainColumnInfo({}),
+            LCE.getTotalCashInPercentGainColumnInfo({}),
+            LCE.getTotalAnnualPercentGainColumnInfo({}),
+            LCE.getTotalAnnualCashInPercentGainColumnInfo({}),
         ];
     }
 
@@ -597,12 +718,14 @@ export class AccountsList extends React.Component {
         }
 
         const rootRowInfos = Array.from(state.rowInfos);
-        const multiCompare = this._multiCompare;
+        const compare = (a, b) => this._multiCompare.compare(
+            { rowInfo: a, caller: this, },
+            { rowInfo: b, caller: this, });
     
         const sortedRowInfos = [];
         rootRowInfos.forEach((rowInfo) => {
             rowInfo = Object.assign({}, rowInfo, {
-                childRowInfos: sortRowInfos(multiCompare, rowInfo.childRowInfos),
+                childRowInfos: sortRowInfos(rowInfo.childRowInfos, compare),
             });
             sortedRowInfos.push(rowInfo);
         });
@@ -854,6 +977,7 @@ export class AccountsList extends React.Component {
                         accountDataItem);
                     subtotalRowInfo.topLevelRowInfoIndex = topLevelRowInfoIndex;
                     subtotalRowInfo.groupRowInfoIndex = groupRowInfoIndex;
+                    rowInfo.subtotalRowInfo = subtotalRowInfo;
                 }
             }
             else {
@@ -1414,42 +1538,10 @@ export class AccountsList extends React.Component {
 
 
     renderPercentOfDisplay(renderArgs) {
-        const { rowInfo, totalsRowInfo, } = renderArgs;
-        if (!totalsRowInfo) {
+        const value = getPercentOfValue(renderArgs);
+        if (!value) {
             return;
         }
-
-        const { accountGainsState } = rowInfo;
-        const { totalAccountGainsState } = totalsRowInfo;
-        if (!accountGainsState || !totalAccountGainsState) {
-            return;
-        }
-
-        const totalMarketValueBaseValue 
-            = totalAccountGainsState.overallTotals.marketValueBaseValue;
-        if (!totalMarketValueBaseValue) {
-            return;
-        }
-
-        const { accessor } = this.props;
-        const totalCurrency = accessor.getCurrencyOfAccountId(totalsRowInfo.accountId);
-        const thisCurrency = accessor.getCurrencyOfAccountId(rowInfo.accountId);
-        if (totalCurrency !== thisCurrency) {
-            return;
-        }
-
-        const quantityDefinition = totalCurrency.getQuantityDefinition();
-        const totalValue = quantityDefinition.baseValueToNumber(
-            totalMarketValueBaseValue);
-        const thisValue = quantityDefinition.baseValueToNumber(
-            accountGainsState.overallTotals.marketValueBaseValue);
-        const percent = 100. * thisValue / totalValue;
-        const percentQuantityDefinition = accessor.getPercentGainQuantityDefinition();
-
-        const value = {
-            quantityBaseValue: percentQuantityDefinition.numberToBaseValue(percent),
-            quantityDefinition: percentQuantityDefinition,
-        };
 
         const columnInfo = this.columnInfoFromRenderArgs(renderArgs);
         return ACE.renderBalanceDisplay({
@@ -1560,6 +1652,7 @@ export class AccountsList extends React.Component {
         }
 
         const renderArgs = {
+            accessor: this.props.accessor,
             rowInfo: rowInfo,
             columnInfo: columnInfo, 
             accountDataItem: accountDataItem,

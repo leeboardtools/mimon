@@ -6,26 +6,27 @@ import deepEqual from 'deep-equal';
 
 /**
  * Sorts a shallow copy of an array of row infos using a 
- * {@link MultiCompare} to perform the sorting comparisons.
+ * comparison function to perform the sorting comparisons.
  * <p>
  * If a row info entry has a childRowInfos property, this is called recursively
  * for the childRowInfos. In this case the row info entry with a childRowInfos
  * is shallow copied so the childRowInfos property can be changed.
- * @param {MultiCompare} multiCompare 
  * @param {Array} rowInfos 
+ * @param {Function} [compare] Comparison function compatible with
+ * Array.sort's compare function.
  * @returns {Array}
  */
-export function sortRowInfos(multiCompare, rowInfos) {
-    if (rowInfos && multiCompare) {
+export function sortRowInfos(rowInfos, compare) {
+    if (rowInfos) {
         rowInfos = Array.from(rowInfos);
-        rowInfos.sort(multiCompare.compare);
+        rowInfos.sort(compare);
 
         for (let i = 0; i < rowInfos.length; ++i) {
             const rowInfo = rowInfos[i];
             const { childRowInfos } = rowInfo;
             if (childRowInfos) {
                 rowInfos[i] = Object.assign({}, rowInfo, {
-                    childRowInfos: sortRowInfos(multiCompare, childRowInfos),
+                    childRowInfos: sortRowInfos(childRowInfos, compare),
                 });
             }
         }
@@ -476,7 +477,7 @@ export class RowTableHandler {
 
         let newState;
         if (projectSettings.columnStates || originalChanges.columnStates) {
-            newState = Object.assign({}, state);
+            newState = Object.assign({}, state, projectSettings);
             newState.allColumns = dataDeepCopy(newState.allColumns);
 
             updateColumnsFromColumnStates(newState.allColumns, 

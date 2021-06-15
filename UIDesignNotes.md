@@ -404,9 +404,7 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Track last primary account
 
 
-    - Reminders List
-        - Add Apply now command.
-        
+    - Reminders List        
 
 
     - XML Import
@@ -476,12 +474,21 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 - Immediate TODO:
 
+    - Modal Dialogs
+        - Pressing Enter -> Done?
+
     - Prices List
         - Changing column width of prices list then undoing/redoing does not
         properly resize other open tabs that are not active.
 
 
     - Reminders List
+
+
+    - Reminders Due
+        - Clean up apply/skip options:
+            - Make skip only for selected reminder
+        - Update status if applied transaction is updated with values.
 
 
     - Reconciler
@@ -526,6 +533,8 @@ Are the lists really two separate styles? Or can they be combined into one?
                 - Can't add different currencies.
         
         - Show/hide empty accounts (no value, no child accounts)
+
+        - Collapse/Expand child account children
 
         - Date Selector Bar:
             - Standard options:
@@ -612,4 +621,8 @@ Are the lists really two separate styles? Or can they be combined into one?
 
             - CollapsibleRowTables will just need to provide sorting on the child row tables.
 
-    
+        - Need to sort by subtotals.
+            - But subtotals are a child of the row info to be sorted.
+            - Only apply to items where subtotals apply.
+            - subtotalsCompare() function along lines of baseCompare().
+            
