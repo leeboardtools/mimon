@@ -388,13 +388,15 @@ export class RemindersListHandler extends MainWindowHandlerBase {
     onReminderAdd(tabId, result) {
         const state = this.getTabIdState(tabId);
         if (state.dueEntriesById) {
-            const newDueEntriesById = new Map(state.dueEntriesById);
-
             const reminderDataItem = result.newReminderDataItem;
             const { id } = reminderDataItem;
-            newDueEntriesById.set(id, this.createDueEntry(reminderDataItem));
-
+            const dueEntry = this.createDueEntry(reminderDataItem);
+            if (dueEntry) {
+                const newDueEntriesById = new Map(state.dueEntriesById);
+                newDueEntriesById.set(id, dueEntry);
             this.updateDueEntriesById(tabId, newDueEntriesById);
+            }
+
         }
     }
 
@@ -405,8 +407,14 @@ export class RemindersListHandler extends MainWindowHandlerBase {
 
             const reminderDataItem = result.newReminderDataItem;
             const { id } = reminderDataItem;
-            newDueEntriesById.set(id, this.createDueEntry(reminderDataItem,
-                state.dueEntriesById.get(id)));
+            const dueEntry = this.createDueEntry(reminderDataItem,
+                state.dueEntriesById.get(id));
+            if (dueEntry) {
+                newDueEntriesById.set(id, dueEntry);
+            }
+            else {
+                newDueEntriesById.delete(id);
+            }
             
             this.updateDueEntriesById(tabId, newDueEntriesById);
         }
