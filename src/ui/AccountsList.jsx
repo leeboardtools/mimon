@@ -70,6 +70,27 @@ function compareShares(rowInfoA, rowInfoB) {
 
 //
 //
+function getGainBaseValue(rowInfo, property) {
+    if (rowInfo) {
+        const value = rowInfo[property];
+        if (value) {
+            return value.quantityBaseValue;
+        }
+    }
+}
+
+
+//
+//
+function compareGainBaseValues(rowInfoA, rowInfoB, property) {
+    const baseValueA = getGainBaseValue(rowInfoA, property);
+    const baseValueB = getGainBaseValue(rowInfoB, property);
+    return compare(baseValueA, baseValueB);
+}
+
+
+//
+//
 function keyToRank(key) {
     if (typeof key === 'string') {
         if (key.startsWith('_NET')) {
@@ -242,12 +263,36 @@ function getAccountsListColumnInfoDefs() {
                     (a, b) => compareOverallTotalsBaseValues(
                         a, b, 'cashInBaseValue')),
             }),
-            LCE.getTotalGainColumnInfo({}),
-            LCE.getTotalCashInGainColumnInfo({}),
-            LCE.getTotalSimplePercentGainColumnInfo({}),
-            LCE.getTotalCashInPercentGainColumnInfo({}),
-            LCE.getTotalAnnualPercentGainColumnInfo({}),
-            LCE.getTotalAnnualCashInPercentGainColumnInfo({}),
+            LCE.getTotalGainColumnInfo({
+                sortCompare: (a, b, sign) => subtotalCompare(a, b, sign,
+                    (a, b) => compareGainBaseValues(
+                        a, b, 'totalGainValue')),
+            }),
+            LCE.getTotalCashInGainColumnInfo({
+                sortCompare: (a, b, sign) => subtotalCompare(a, b, sign,
+                    (a, b) => compareGainBaseValues(
+                        a, b, 'totalCashInGainValue')),
+            }),
+            LCE.getTotalSimplePercentGainColumnInfo({
+                sortCompare: (a, b, sign) => subtotalCompare(a, b, sign,
+                    (a, b) => compareGainBaseValues(
+                        a, b, 'totalPercentGainValue')),
+            }),
+            LCE.getTotalCashInPercentGainColumnInfo({
+                sortCompare: (a, b, sign) => subtotalCompare(a, b, sign,
+                    (a, b) => compareGainBaseValues(
+                        a, b, 'totalCashInPercentGainValue')),
+            }),
+            LCE.getTotalAnnualPercentGainColumnInfo({
+                sortCompare: (a, b, sign) => subtotalCompare(a, b, sign,
+                    (a, b) => compareGainBaseValues(
+                        a, b, 'totalAnnualPercentGainValue')),
+            }),
+            LCE.getTotalAnnualCashInPercentGainColumnInfo({
+                sortCompare: (a, b, sign) => subtotalCompare(a, b, sign,
+                    (a, b) => compareGainBaseValues(
+                        a, b, 'totalAnnualCashInPercentGainValue')),
+            }),
         ];
     }
 
@@ -1153,7 +1198,7 @@ export class AccountsList extends React.Component {
 
             if (rowInfo.childRowInfos) {
                 rowInfo.childRowInfos.forEach((childRowInfo) =>
-                    this.updateRowInfoPercentOfs(state, childRowInfo, rowInfo)
+                    this.updateRowInfoCalculateds(state, childRowInfo, rowInfo)
                 );
             }
         }
@@ -1236,7 +1281,7 @@ export class AccountsList extends React.Component {
         rowInfo.accountGainsState = accountGainsState;
     }
 
-    updateRowInfoPercentOfs(state, rowInfo, topLevelRowInfo) {
+    updateRowInfoCalculateds(state, rowInfo, topLevelRowInfo) {
         rowInfo.percentOfTotal = getPercentOf({
             rowInfo: rowInfo,
             totalsRowInfo: topLevelRowInfo,
@@ -1249,10 +1294,45 @@ export class AccountsList extends React.Component {
             totalsRowInfo: groupRowInfo,
         });
 
+        
+        rowInfo.totalGainValue = this.calcGainValue(rowInfo, 
+            LCE.calcSimpleGainBalanceValue);
+
+        rowInfo.totalPercentGainValue = this.calcGainValue(rowInfo,
+            LCE.calcSimplePercentGainBalanceValue);
+
+        rowInfo.totalCashInGainValue = this.calcGainValue(rowInfo,
+            LCE.calcCashInGainBalanceValue);
+
+        rowInfo.totalCashInPercentGainValue = this.calcGainValue(rowInfo,
+            LCE.calcCashInPercentGainBalanceValue);
+
+        rowInfo.totalAnnualPercentGainValue = this.calcGainValue(rowInfo,
+            LCE.calcAnnualPercentGainBalanceValue);
+
+        rowInfo.totalAnnualCashInPercentGainValue = this.calcGainValue(rowInfo,
+            LCE.calcAnnualCashInPercentGainBalanceValue);
+
+
         if (rowInfo.childRowInfos) {
             rowInfo.childRowInfos.forEach((childRowInfo) =>
-                this.updateRowInfoPercentOfs(state, childRowInfo, topLevelRowInfo)
+                this.updateRowInfoCalculateds(state, childRowInfo, topLevelRowInfo)
             );
+        }
+    }
+
+
+    calcGainValue(rowInfo, calcGainValueCallback) {
+        const { accountGainsState } = rowInfo;
+        if (accountGainsState) {
+            const value = calcGainValueCallback({
+                accessor: this.props.accessor,
+                accountId: rowInfo.accountId,
+                accountGainsState: accountGainsState,
+            });
+            if (value && (value.quantityBaseValue !== undefined)) {
+                return value;
+            }
         }
     }
 
@@ -1635,21 +1715,10 @@ export class AccountsList extends React.Component {
 
     renderGainDisplay(renderArgs) {
         const columnInfo = this.columnInfoFromRenderArgs(renderArgs);
-        let { rowInfo, calcGainValueCallback, suffix } = renderArgs;
 
-        const { accessor } = this.props;
-
-        const { accountGainsState } = rowInfo;
-        if (accountGainsState) {
-            const value = calcGainValueCallback({
-                accessor: accessor,
-                accountId: rowInfo.accountId,
-                accountGainsState: accountGainsState,
-            });
-            if (!value || (value.quantityBaseValue === undefined)) {
-                return;
-            }
-
+        const { rowInfo, gainProperty, suffix } = renderArgs;
+        const value = rowInfo[gainProperty];
+        if (value) {
             return ACE.renderBalanceDisplay({
                 columnInfo: columnInfo,
                 value: value,
@@ -1728,31 +1797,30 @@ export class AccountsList extends React.Component {
             return this.renderCashInDisplay(renderArgs);
         
         case 'totalGain' :
-            renderArgs.calcGainValueCallback = LCE.calcSimpleGainBalanceValue;
+            renderArgs.gainProperty = 'totalGainValue';
             return this.renderGainDisplay(renderArgs);
         
         case 'totalPercentGain' :
-            renderArgs.calcGainValueCallback = LCE.calcSimplePercentGainBalanceValue;
+            renderArgs.gainProperty = 'totalPercentGainValue';
             renderArgs.suffix = this._percentSuffix;
             return this.renderGainDisplay(renderArgs);
         
         case 'totalCashInGain' :
-            renderArgs.calcGainValueCallback = LCE.calcCashInGainBalanceValue;
+            renderArgs.gainProperty = 'totalCashInGainValue';
             return this.renderGainDisplay(renderArgs);
         
         case 'totalCashInPercentGain' :
-            renderArgs.calcGainValueCallback = LCE.calcCashInPercentGainBalanceValue;
+            renderArgs.gainProperty = 'totalCashInPercentGainValue';
             renderArgs.suffix = this._percentSuffix;
             return this.renderGainDisplay(renderArgs);
         
         case 'totalAnnualPercentGain' :
-            renderArgs.calcGainValueCallback = LCE.calcAnnualPercentGainBalanceValue;
+            renderArgs.gainProperty = 'totalAnnualPercentGainValue';
             renderArgs.suffix = this._percentSuffix;
             return this.renderGainDisplay(renderArgs);
         
         case 'totalAnnualCashInPercentGain' :
-            renderArgs.calcGainValueCallback 
-                = LCE.calcAnnualCashInPercentGainBalanceValue;
+            renderArgs.gainProperty = 'totalAnnualCashInPercentGainValue';
             renderArgs.suffix = this._percentSuffix;
             return this.renderGainDisplay(renderArgs);
         }
