@@ -32,21 +32,39 @@ function compareAccountDataItemProperty(a, b, property) {
 
 //
 //
-function getBalanceQuantityBaseValue(rowInfo) {
+function getOverallTotalsBaseValue(rowInfo, property) {
     if (rowInfo) {
         const { accountGainsState } = rowInfo;
         if (accountGainsState) {
-            return accountGainsState.overallTotals.marketValueBaseValue;
+            return accountGainsState.overallTotals[property];
+        }
+    }
+}
+
+function compareOverallTotalsBaseValues(rowInfoA, rowInfoB, property) {
+    const baseValueA = getOverallTotalsBaseValue(rowInfoA, property);
+    const baseValueB = getOverallTotalsBaseValue(rowInfoB, property);
+    return compare(baseValueA, baseValueB);
+}
+
+
+//
+//
+function getSharesBaseValue(rowInfo) {
+    if (rowInfo) {
+        const { accountGainsState, } = rowInfo;
+        if (accountGainsState && accountGainsState.isQuantityShares) {
+            return accountGainsState.quantityBaseValue;
         }
     }
 }
 
 //
 //
-function compareRowInfoBalance(rowInfoA, rowInfoB) {
-    const balanceBaseValueA = getBalanceQuantityBaseValue(rowInfoA);
-    const balanceBaseValueB = getBalanceQuantityBaseValue(rowInfoB);
-    return compare(balanceBaseValueA, balanceBaseValueB);
+function compareShares(rowInfoA, rowInfoB) {
+    const sharesBaseValueA = getSharesBaseValue(rowInfoA);
+    const sharesBaseValueB = getSharesBaseValue(rowInfoB);
+    return compare(sharesBaseValueA, sharesBaseValueB);
 }
 
 
@@ -205,13 +223,25 @@ function getAccountsListColumnInfoDefs() {
             ACE.getAccountTypeColumnInfo({}),
             ACE.getBalanceColumnInfo({
                 sortCompare: (a, b, sign) => subtotalCompare(a, b, sign,
-                    compareRowInfoBalance),
+                    (a, b) => compareOverallTotalsBaseValues(
+                        a, b, 'marketValueBaseValue')),
             }),
             getPercentOfRootAccount(),
             getPercentOfAccountGroup(),
-            LCE.getTotalSharesColumnInfo({}),
-            LCE.getTotalCostBasisColumnInfo({}),
-            LCE.getTotalCashInColumnInfo({}),
+            LCE.getTotalSharesColumnInfo({
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareShares(a, b)),
+            }),
+            LCE.getTotalCostBasisColumnInfo({
+                sortCompare: (a, b, sign) => subtotalCompare(a, b, sign,
+                    (a, b) => compareOverallTotalsBaseValues(
+                        a, b, 'costBasisBaseValue')),
+            }),
+            LCE.getTotalCashInColumnInfo({
+                sortCompare: (a, b, sign) => subtotalCompare(a, b, sign,
+                    (a, b) => compareOverallTotalsBaseValues(
+                        a, b, 'cashInBaseValue')),
+            }),
             LCE.getTotalGainColumnInfo({}),
             LCE.getTotalCashInGainColumnInfo({}),
             LCE.getTotalSimplePercentGainColumnInfo({}),
@@ -1516,13 +1546,11 @@ export class AccountsList extends React.Component {
 
     renderBalanceDisplay(renderArgs) {
         let { rowInfo, } = renderArgs;
-        const { accountGainsState } = rowInfo;
-        if (accountGainsState) {
-            const quantityBaseValue 
-                = accountGainsState.overallTotals.marketValueBaseValue;
-
+        const quantityBaseValue = getOverallTotalsBaseValue(
+            rowInfo, 'marketValueBaseValue');
+        if (quantityBaseValue !== undefined) {
             let tooltip;
-            const { priceDataItem } = accountGainsState;
+            const { priceDataItem } = rowInfo.accountGainsState;
             if (priceDataItem) {
                 tooltip = userMsg('AccountsList-price_tooltip',
                     priceDataItem.close,
@@ -1564,9 +1592,13 @@ export class AccountsList extends React.Component {
     renderSharesDisplay(renderArgs) {
         const columnInfo = this.columnInfoFromRenderArgs(renderArgs);
         const { rowInfo } = renderArgs;
-        const { accountGainsState, accountDataItem } = rowInfo;
-        if (accountGainsState && accountGainsState.isQuantityShares
-         && accountDataItem) {
+        const sharesBaseValue = getSharesBaseValue(rowInfo);
+        if (sharesBaseValue === undefined) {
+            return;
+        }
+
+        const { accountDataItem } = rowInfo;
+        if (accountDataItem) {
             const { accessor } = this.props;
             const pricedItemDataItem = accessor.getPricedItemDataItemWithId(
                 accountDataItem.pricedItemId
@@ -1575,7 +1607,7 @@ export class AccountsList extends React.Component {
                 return LCE.renderTotalSharesDisplay({
                     columnInfo: columnInfo,
                     value: {
-                        quantityBaseValue: accountGainsState.quantityBaseValue,
+                        quantityBaseValue: sharesBaseValue,
                         quantityDefinition: pricedItemDataItem.quantityDefinition,
                     },
                     renderAsText: renderArgs.renderAsText,
@@ -1587,21 +1619,17 @@ export class AccountsList extends React.Component {
 
     renderCostBasisDisplay(renderArgs) {
         let { rowInfo, } = renderArgs;
-        const { accountGainsState } = rowInfo;
-        if (accountGainsState) {
-            const quantityBaseValue = accountGainsState.overallTotals.costBasisBaseValue;
-            return this.renderQuantityBaseValue(renderArgs, quantityBaseValue);
-        }
+        const quantityBaseValue = getOverallTotalsBaseValue(rowInfo, 
+            'costBasisBaseValue');
+        return this.renderQuantityBaseValue(renderArgs, quantityBaseValue);
     }
 
 
     renderCashInDisplay(renderArgs) {
         let { rowInfo, } = renderArgs;
-        const { accountGainsState } = rowInfo;
-        if (accountGainsState) {
-            const quantityBaseValue = accountGainsState.overallTotals.cashInBaseValue;
-            return this.renderQuantityBaseValue(renderArgs, quantityBaseValue);
-        }
+        const quantityBaseValue = getOverallTotalsBaseValue(rowInfo, 
+            'cashInBaseValue');
+        return this.renderQuantityBaseValue(renderArgs, quantityBaseValue);
     }
 
 
