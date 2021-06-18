@@ -106,7 +106,7 @@ function subtotalCompare(argsA, argsB, sign, compare) {
 
 //
 //
-function getPercentOfValue({ rowInfo, totalsRowInfo, accessor }) {
+function getPercentOf({ rowInfo, totalsRowInfo, }) {
     if (!totalsRowInfo) {
         return;
     }
@@ -123,8 +123,8 @@ function getPercentOfValue({ rowInfo, totalsRowInfo, accessor }) {
         return;
     }
 
-    const totalCurrency = accessor.getCurrencyOfAccountId(totalsRowInfo.accountId);
-    const thisCurrency = accessor.getCurrencyOfAccountId(rowInfo.accountId);
+    const totalCurrency = totalsRowInfo.currency;
+    const thisCurrency = rowInfo.currency;
     if (totalCurrency !== thisCurrency) {
         return;
     }
@@ -135,54 +135,20 @@ function getPercentOfValue({ rowInfo, totalsRowInfo, accessor }) {
     const thisValue = quantityDefinition.baseValueToNumber(
         accountGainsState.overallTotals.marketValueBaseValue);
     const percent = 100. * thisValue / totalValue;
-    const percentQuantityDefinition = accessor.getPercentGainQuantityDefinition();
+    return percent;
+}
 
-    return {
-        quantityBaseValue: percentQuantityDefinition.numberToBaseValue(percent),
-        quantityDefinition: percentQuantityDefinition,
-    };
+
+//
+//
+function comparePercentOfRootAccount(rowInfoA, rowInfoB) {
+    return compare(rowInfoA.percentOfTotal, rowInfoB.percentOfTotal);
 }
 
 //
 //
-function comparePercentOf(rowInfoA, totalsRowInfoA, rowInfoB, totalsRowInfoB, caller) {
-    const args = {
-        rowInfo: rowInfoA,
-        totalsRowInfo: totalsRowInfoA,
-        accessor: caller.props.accessor,
-    };
-    const valueA = getPercentOfValue(args);
-    
-    args.rowInfo = rowInfoB;
-    args.totalsRowInfo = totalsRowInfoB;
-    const valueB = getPercentOfValue(args);
-
-    const quantityBaseValueA = (valueA) ? valueA.quantityBaseValue : undefined;
-    const quantityBaseValueB = (valueB) ? valueB.quantityBaseValue : undefined;
-    return compare(quantityBaseValueA, quantityBaseValueB);
-}
-
-//
-//
-function comparePercentOfRootAccount(rowInfoA, rowInfoB, caller) {
-    const totalsRowInfoA = caller.state.topLevelRowInfos[
-        rowInfoA.topLevelRowInfoIndex];
-    const totalsRowInfoB = caller.state.topLevelRowInfos[
-        rowInfoB.topLevelRowInfoIndex];
-    
-    return comparePercentOf(rowInfoA, totalsRowInfoA, rowInfoB, totalsRowInfoB, caller);
-}
-
-//
-//
-function comparePercentOfAccountGroup(rowInfoA, rowInfoB, caller) {
-    const { state } = caller;
-    const totalsRowInfoA = state.groupRowInfos[rowInfoA.groupRowInfoIndex]
-        || state.topLevelRowInfos[rowInfoB.topLevelRowInfoIndex];
-    const totalsRowInfoB = state.groupRowInfos[rowInfoB.groupRowInfoIndex]
-        || state.topLevelRowInfos[rowInfoB.topLevelRowInfoIndex];
-
-    return comparePercentOf(rowInfoA, totalsRowInfoA, rowInfoB, totalsRowInfoB, caller);
+function comparePercentOfAccountGroup(rowInfoA, rowInfoB) {
+    return compare(rowInfoA.percentOfGroup, rowInfoB.percentOfGroup);
 }
 
 
@@ -922,6 +888,7 @@ export class AccountsList extends React.Component {
                 : ExpandCollapseState.NO_EXPAND_COLLAPSE,
             accountId: accountId,
             accountDataItem: accountDataItem,
+            currency: accessor.getCurrencyOfAccountId(accountId),
             isHidden: this.props.showHiddenAccounts 
                 && this._hiddenAccountIds.has(accountDataItem.id),
             groupRowInfoIndex: groupRowInfoIndex,
@@ -1075,6 +1042,8 @@ export class AccountsList extends React.Component {
             key: '_SUBTOTAL_' + subtotalAccountDataItem.id,
             accountId: subtotalAccountDataItem.id,
             subtotalName: subtotalAccountDataItem.name,
+            currency: this.props.accessor.getCurrencyOfAccountId(
+                subtotalAccountDataItem.id),
         };
         childRowInfos.push(subtotalRowInfo);
 
@@ -1120,6 +1089,8 @@ export class AccountsList extends React.Component {
             plusRootAccountId: plusRootAccountDataItem.id,
             minusRootAccountId: minusRootAccountDataItem.id,
             rootNetName: name,
+            currency: this.props.accessor.getCurrencyOfAccountId(
+                plusRootAccountDataItem.id),
         };
 
         const emptyRowInfo = {
@@ -1149,6 +1120,12 @@ export class AccountsList extends React.Component {
             }            
 
             this.updateRowInfoAccountStates(state, rowInfo);
+
+            if (rowInfo.childRowInfos) {
+                rowInfo.childRowInfos.forEach((childRowInfo) =>
+                    this.updateRowInfoPercentOfs(state, childRowInfo, rowInfo)
+                );
+            }
         }
         return rowInfos;
     }
@@ -1156,6 +1133,7 @@ export class AccountsList extends React.Component {
 
     updateRowInfoAccountStates(state, rowInfo) {
         const { accountId, accountDataItem } = rowInfo;
+
         if (!accountDataItem) {
             return;
         }
@@ -1226,6 +1204,26 @@ export class AccountsList extends React.Component {
         rowInfo.plusAccountGainsState = plusAccountGainsState;
         rowInfo.minusAccountGainsState = minusAccountGainsState;
         rowInfo.accountGainsState = accountGainsState;
+    }
+
+    updateRowInfoPercentOfs(state, rowInfo, topLevelRowInfo) {
+        rowInfo.percentOfTotal = getPercentOf({
+            rowInfo: rowInfo,
+            totalsRowInfo: topLevelRowInfo,
+        });
+
+        const groupRowInfo = state.groupRowInfos[rowInfo.groupRowInfoIndex]
+            || topLevelRowInfo;
+        rowInfo.percentOfGroup = getPercentOf({
+            rowInfo: rowInfo,
+            totalsRowInfo: groupRowInfo,
+        });
+
+        if (rowInfo.childRowInfos) {
+            rowInfo.childRowInfos.forEach((childRowInfo) =>
+                this.updateRowInfoPercentOfs(state, childRowInfo, topLevelRowInfo)
+            );
+        }
     }
 
 
@@ -1494,8 +1492,8 @@ export class AccountsList extends React.Component {
     renderQuantityBaseValue(renderArgs, quantityBaseValue, tooltip) {
         const columnInfo = this.columnInfoFromRenderArgs(renderArgs);
 
-        const currency = this.props.accessor.getCurrencyOfAccountId(
-            renderArgs.accountId);
+        const { rowInfo } = renderArgs;
+        const { currency } = rowInfo;
         if (!currency || (quantityBaseValue === undefined)) {
             return;
         }
@@ -1538,10 +1536,20 @@ export class AccountsList extends React.Component {
 
 
     renderPercentOfDisplay(renderArgs) {
-        const value = getPercentOfValue(renderArgs);
-        if (!value) {
+        const { percentOfProperty, rowInfo, } = renderArgs;
+
+        const percent = rowInfo[percentOfProperty];
+        if (percent === undefined) {
             return;
         }
+
+        const percentQuantityDefinition 
+            = this.props.accessor.getPercentGainQuantityDefinition();
+        const value = {
+            quantityBaseValue: 
+                percentQuantityDefinition.numberToBaseValue(percent),
+            quantityDefinition: percentQuantityDefinition,
+        };
 
         const columnInfo = this.columnInfoFromRenderArgs(renderArgs);
         return ACE.renderBalanceDisplay({
@@ -1675,16 +1683,11 @@ export class AccountsList extends React.Component {
             return this.renderBalanceDisplay(renderArgs);
         
         case 'percentOfRootAccount' :
-            renderArgs.totalsRowInfo = this.state.topLevelRowInfos[
-                rowInfo.topLevelRowInfoIndex];
+            renderArgs.percentOfProperty = 'percentOfTotal';
             return this.renderPercentOfDisplay(renderArgs);
         
         case 'percentOfAccountGroup' :
-            renderArgs.totalsRowInfo 
-                = this.state.groupRowInfos[
-                    rowInfo.groupRowInfoIndex]
-                || this.state.topLevelRowInfos[
-                    rowInfo.topLevelRowInfoIndex];
+            renderArgs.percentOfProperty = 'percentOfGroup';
             return this.renderPercentOfDisplay(renderArgs);
         
         case 'totalShares' :
