@@ -1535,8 +1535,10 @@ from BS col-form-label */
 }
 
 .SortArrows-none {
-    border-bottom-style: solid;
-    border-top-style: solid;
+    border-style: solid;
+    border-color: darkgray;
+    border-width: 3.5px;
+    transform: rotate(-45deg);
 }
 
 .SortArrows-increase {
@@ -1554,13 +1556,13 @@ from BS col-form-label */
     border-bottom-color: rgba(0, 0, 0, 0.75);
 }
 
-.SortArrows-tertiary,
-.SortArrows-none {
+.SortArrows-tertiary {
     border-top-width: 3px;
     border-bottom-width: 3px;
     border-top-color: rgba(0, 0, 0, 0.5);
     border-bottom-color: rgba(0, 0, 0, 0.5);
 }
+
 
 .RowTableColumnSorter {
     display: flex!important;
