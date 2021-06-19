@@ -2082,6 +2082,10 @@ from BS col-form-label */
 }
 
 
+.CheckboxField {
+    margin-bottom: 0.25rem;
+}
+
 
 
 .FileSelector-dir_button {

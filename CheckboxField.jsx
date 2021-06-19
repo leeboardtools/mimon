@@ -11,6 +11,7 @@ import { Checkbox } from './Checkbox';
 export const CheckboxField = React.forwardRef(
     function CheckboxFieldImpl(props, ref) {
         const { inputClassExtras, ariaLabel, value,
+            fieldClassExtras,
             checkboxText,
             onChange, onFocus, onBlur,
             disabled, tabIndex,
@@ -18,6 +19,7 @@ export const CheckboxField = React.forwardRef(
 
         return <Field
             {...passThroughProps}
+            fieldClassExtras = {'CheckboxField ' + (fieldClassExtras || '')}
             editorClassExtras = {inputClassExtras}
             onRenderEditor = {(inputClassName) =>
                 <Checkbox
@@ -70,6 +72,7 @@ CheckboxField.propTypes = {
     ariaLabel: PropTypes.string,
     value: PropTypes.any,
     checkboxText: PropTypes.string,
+    fieldClassExtras: PropTypes.string,
     inputClassExtras: PropTypes.string,
     onChange: PropTypes.func,
     onFocus: PropTypes.func,
