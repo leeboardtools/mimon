@@ -450,6 +450,7 @@
     "PricedItemsList-quantityDefinition": "Format",
     "PricedItemsList-ticker": "Ticker",
     "PricedItemsList-onlineSource": "Online Update",
+    "PricedItemsList-price": "Price",
     "PricedItemsList-default_currency": ["(", ")"],
     "PricedItemsList-dummy_name": "This is a dummy name for priced items",
     "PricedItemsList-dummy_description": "This is a dummy description for priced items",

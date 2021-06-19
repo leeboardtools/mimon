@@ -80,6 +80,27 @@ function compareOverallTotalsBaseValues(rowInfoA, rowInfoB, property) {
 
 //
 //
+function getPriceClose(rowInfo) {
+    if (rowInfo) {
+        const { accountGainsState, } = rowInfo;
+        if (accountGainsState) {
+            const { priceDataItem } = accountGainsState;
+            if (priceDataItem) {
+                return priceDataItem.close;
+            }
+        }
+    }
+}
+
+function comparePrices(rowInfoA, rowInfoB) {
+    const priceValueA = getPriceClose(rowInfoA);
+    const priceValueB = getPriceClose(rowInfoB);
+    return compare(priceValueA, priceValueB);
+}
+
+
+//
+//
 function getSharesBaseValue(rowInfo) {
     if (rowInfo) {
         const { accountGainsState, } = rowInfo;
@@ -89,8 +110,6 @@ function getSharesBaseValue(rowInfo) {
     }
 }
 
-//
-//
 function compareShares(rowInfoA, rowInfoB) {
     const sharesBaseValueA = getSharesBaseValue(rowInfoA);
     const sharesBaseValueB = getSharesBaseValue(rowInfoB);
@@ -267,15 +286,23 @@ function getPricedItemsListColumnInfoDefs() {
                     (a, b) => comparePercentOfTotal(a, b)),
             },
 
+            totalShares: LCE.getTotalSharesColumnInfo({
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareShares(a, b, sign)),
+            }),
+
+            price: LCE.getPriceColumnInfo({
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => comparePrices(a, b)),
+                header: {
+                    label: userMsg('PricedItemsList-price'),
+                },
+            }),
+
             totalMarketValue: LCE.getTotalMarketValueColumnInfo({
                 sortCompare: (a, b, sign) => baseCompare(a, b, sign,
                     (a, b) => compareOverallTotalsBaseValues(
                         a, b, 'marketValueBaseValue')),
-            }),
-
-            totalShares: LCE.getTotalSharesColumnInfo({
-                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
-                    (a, b) => compareShares(a, b, sign)),
             }),
 
             totalCostBasis: LCE.getTotalCostBasisColumnInfo({
@@ -347,6 +374,7 @@ export function createDefaultColumns(pricedItemType) {
         columnInfos.push(columnInfoDefs.ticker);
         columnInfos.push(columnInfoDefs.name);
         columnInfos.push(columnInfoDefs.totalShares);
+        columnInfos.push(columnInfoDefs.price);
         columnInfos.push(columnInfoDefs.totalCostBasis);
         columnInfos.push(columnInfoDefs.totalCashIn);
         columnInfos.push(columnInfoDefs.totalMarketValue);
@@ -382,6 +410,7 @@ export function createDefaultColumns(pricedItemType) {
 
     markColumnVisible(columns, 'totalMarketValue');
     markColumnVisible(columns, 'totalShares');
+    markColumnVisible(columns, 'price');
     markColumnVisible(columns, 'totalCostBasis');
     markColumnVisible(columns, 'totalGain');
     markColumnVisible(columns, 'percentOfTotal');
@@ -1420,6 +1449,35 @@ export class PricedItemsList extends React.Component {
     }
 
 
+    renderPrice(args) {
+        const { rowInfo, } = args;
+        const price = getPriceClose(rowInfo);
+        if (price !== undefined) {
+            const columnInfo = this.columnInfoFromRenderArgs(args);
+            const { pricedItemId } = rowInfo;
+            const quantityDefinition = this.props.accessor
+                .getPriceQuantityDefinitionForPricedItem(pricedItemId);
+            const quantityValue = {
+                quantityBaseValue: quantityDefinition.numberToBaseValue(price),
+                quantityDefinition: quantityDefinition,
+            };
+
+            let tooltip;
+            const { priceDataItem } = rowInfo.accountGainsState;
+            if (priceDataItem) {
+                tooltip = this.props.accessor.formatDate(priceDataItem.ymdDate);
+            }
+
+            return ACE.renderBalanceDisplay({
+                columnInfo: columnInfo,
+                value: quantityValue,
+                renderAsText: args.renderAsText,
+                tooltip: tooltip,
+            });
+        }
+    }
+
+
     renderTotalShares(args) {
         const columnInfo = this.columnInfoFromRenderArgs(args);
         const { rowInfo, } = args;
@@ -1561,6 +1619,9 @@ export class PricedItemsList extends React.Component {
         
         case 'totalMarketValue' :
             return this.renderTotalMarketValue(args);
+        
+        case 'price' :
+            return this.renderPrice(args);
         
         case 'totalShares' :
             return this.renderTotalShares(args);

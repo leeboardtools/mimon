@@ -580,8 +580,6 @@ Are the lists really two separate styles? Or can they be combined into one?
     
         - Option to include brokerage cash?
 
-        - Current Price column
-
     
     - DropdownSelector
         

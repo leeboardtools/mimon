@@ -445,6 +445,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const optionalColumns = [];
         if (PI.getPricedItemType(pricedItemTypeName).hasTickerSymbol) {
             optionalColumns.push(getColumnWithKey(allColumns, 'totalShares'));
+            optionalColumns.push(getColumnWithKey(allColumns, 'price'));
             optionalColumns.push(getColumnWithKey(allColumns, 'totalCostBasis'));
             optionalColumns.push(getColumnWithKey(allColumns, 'totalCashIn'));
             optionalColumns.push(getColumnWithKey(allColumns, 'totalMarketValue'));
