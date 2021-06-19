@@ -16,7 +16,7 @@ import { ErrorBoundary } from '../util-ui/ErrorBoundary';
 import * as AH from '../tools/AccountHelpers';
 import { Row, Col } from '../util-ui/RowCols';
 import { Button } from '../util-ui/Button';
-import { Checkbox } from '../util-ui/Checkbox';
+import { CheckboxField } from '../util-ui/CheckboxField';
 
 
 /**
@@ -47,7 +47,6 @@ export class AccountEditor extends React.Component {
 
         this.onIsInactiveChange = this.onIsInactiveChange.bind(this);
         this.onIsHiddenChange = this.onIsHiddenChange.bind(this);
-        this.onIsExcludeFromGainChange = this.onIsExcludeFromGainChange.bind(this);
 
         this.onRenderPage = this.onRenderPage.bind(this);
 
@@ -651,49 +650,47 @@ export class AccountEditor extends React.Component {
         });
     }
 
-    onIsExcludeFromGainChange(isCheck) {
-        this.updateAccountDataItem({
-            isExcludeFromGain: isCheck,
-        });
-    }
 
     renderOptionsEditor() {
         const { accountDataItem } = this.state;
+        
+        const attributeOptions = [];
+        const type = A.getAccountType(accountDataItem.type);
+        const { allowedFlagAttributes } = type;
+        if (allowedFlagAttributes) {
+            allowedFlagAttributes.forEach((attribute) => {
+                const label = userMsg('AccountEditor-flagAttribute-' + attribute);
+                attributeOptions.push(<CheckboxField
+                    key = {attribute}
+                    ariaLabel = {label}
+                    value = {accountDataItem[attribute]}
+                    checkboxText = {label}
+                    onChange = {(isChecked) => {
+                        const change = {};
+                        change[attribute] = isChecked;
+                        this.updateAccountDataItem(change);
+                    }}
+                    tabIndex = {0}
+                />);
+            });
+        }
 
         return <React.Fragment>
-            <Row>
-                <Col>
-                    <Checkbox
-                        ariaLabel = "Is Inactive"
-                        value = {accountDataItem.isInactive}
-                        label = {userMsg('AccountEditor-isInactive_label')}
-                        onChange = {this.onIsInactiveChange}
-                        tabIndex = {0}
-                    />
-                </Col>
-            </Row>
-            <Row>
-                <Col>
-                    <Checkbox
-                        ariaLabel = "Is Hidden"
-                        value = {accountDataItem.isHidden}
-                        label = {userMsg('AccountEditor-isHidden_label')}
-                        onChange = {this.onIsHiddenChange}
-                        tabIndex = {0}
-                    />
-                </Col>
-            </Row>
-            <Row>
-                <Col>
-                    <Checkbox
-                        ariaLabel = "Is Exclude From Gain"
-                        value = {accountDataItem.isExcludeFromGain}
-                        label = {userMsg('AccountEditor-isExcludeFromGain_label')}
-                        onChange = {this.onIsExcludeFromGainChange}
-                        tabIndex = {0}
-                    />
-                </Col>
-            </Row>
+            <CheckboxField
+                ariaLabel = "Is Inactive"
+                value = {accountDataItem.isInactive}
+                checkboxText = {userMsg('AccountEditor-isInactive_label')}
+                onChange = {this.onIsInactiveChange}
+                tabIndex = {0}
+            />
+            <CheckboxField
+                ariaLabel = "Is Hidden"
+                value = {accountDataItem.isHidden}
+                checkboxText = {userMsg('AccountEditor-isHidden_label')}
+                onChange = {this.onIsHiddenChange}
+                tabIndex = {0}
+            />
+            {attributeOptions}
         </React.Fragment>;
     }
 

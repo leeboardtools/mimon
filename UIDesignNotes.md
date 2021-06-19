@@ -577,7 +577,7 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Show/Hide securities with no shares
             - Potential problem here is double reload of account states since won't know if a priced item has no shares until it is loaded.
     
-        - Option to include brokerage cash
+        - Option to include brokerage cash?
 
     
     - DropdownSelector
@@ -593,36 +593,5 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Add Lock file
 
 
-    - RowTable
-        - Add column sorting to RowTable.
-            - Add isSortable to ColumnInfo
-            - Add columnSorting property to RowTable
-                - Array containing column keys and sortSign pairs.
-                - Used to indicate the column sort state.
-            - Add onColumnSortingChange property to RowTable
-                - Receives the new columnSorting
-            - Add sort component to sortable columns
-                - Three states:
-                    - not sorted
-                    - sort ascending
-                    - sort descending
-            - Responsibility of RowTable owner to apply columnSorting
-
-        - Owners:
-            - Responsible for applying columnSorting, row indices will remain 0 based.
-            - Add KeyedSorters class
-                - set up with a list of key/sort functions
-                - Set the active sorting, use an array just like columnSorting
-                - Provide a compare method
-                    - Steps through the active sorting while the sort function returns 0
-                    - Applies the sortSign to the sort function result.
-
-            - Owner will maintain a master row entry array and apply the KeyedSorter to the master row entry array when necessary.
-
-            - CollapsibleRowTables will just need to provide sorting on the child row tables.
-
-        - Need to sort by subtotals.
-            - But subtotals are a child of the row info to be sorted.
-            - Only apply to items where subtotals apply.
-            - subtotalsCompare() function along lines of baseCompare().
-            
+    - Add retirement account flag
+    - Add cash account flag

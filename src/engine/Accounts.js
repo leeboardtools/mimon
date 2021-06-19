@@ -62,6 +62,8 @@ export function accountCategory(ref) {
  * ESPP security account.
  * @property {boolean}  [isSingleton=false] If <code>true</code> only one instance of 
  * this type should be created.
+ * @property {string[]} [allowedFlagAttributes] Array containing the allowed optional 
+ * flag attributes
  * @property {AccountTypeDef[]} allowedChildTypes   Array containing the account types 
  * allowed for child accounts.
  * @property {PricedItemType}   pricedItemType  The type of priced items this supports.
@@ -112,6 +114,9 @@ export const AccountType = {
         category: AccountCategory.ASSET, 
         pricedItemType: PricedItemType.CURRENCY, 
         hasChecks: true, 
+        allowedFlagAttributes: [
+            'isRetirementAccount',
+        ],
     },
     CASH: { name: 'CASH', 
         category: AccountCategory.ASSET, 
@@ -121,6 +126,10 @@ export const AccountType = {
         category: AccountCategory.ASSET, 
         pricedItemType: PricedItemType.SECURITY, 
         hasLots: true, 
+        allowedFlagAttributes: [
+            'isCashSecurity',
+            'isExcludeFromGain',
+        ]
     },
     ESPP_SECURITY: { name: 'ESPP_SECURITY', 
         category: AccountCategory.ASSET, 
@@ -170,6 +179,9 @@ export const AccountType = {
     EXPENSE: { name: 'EXPENSE', 
         category: AccountCategory.EXPENSE, 
         pricedItemType: PricedItemType.CURRENCY, 
+        allowedFlagAttributes: [
+            'isTaxDeduction',
+        ]
     },
 
     EQUITY: { name: 'EQUITY', 
@@ -315,7 +327,6 @@ export function loadAccountsUserMessages() {
  * @property {boolean}  [isHidden]
  * @property {boolean}  [isInactive]
  * @property {boolean}  [isLocked]
- * @property {boolean}  [isExcludeFromGain]
  */
 
 /**
@@ -343,7 +354,6 @@ export function loadAccountsUserMessages() {
  * @property {boolean}  [isHidden]
  * @property {boolean}  [isInactive]
  * @property {boolean}  [isLocked]
- * @property {boolean}  [isExcludeFromGain]
  */
 
 /**
