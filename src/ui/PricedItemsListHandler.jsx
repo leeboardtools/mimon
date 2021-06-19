@@ -11,6 +11,7 @@ import { getColumnWithKey } from '../util-ui/ColumnInfo';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
 import { DateSelectorBar, } from './DateSelectorBar';
 
+
 const pricedItemsListTagPrefix = 'pricedItemsList_';
 
 /**
@@ -473,6 +474,68 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const typeDescription = PI.getPricedItemType(pricedItemTypeName).description;
         const pluralTypeDescription 
             = PI.getPricedItemType(pricedItemTypeName).pluralDescription;
+
+        const visibilityMenuItems = [];
+        visibilityMenuItems.push({ id: 'togglePricedItemVisible',
+            label: userMsg(showPricedItemLabelId, 
+                typeDescription),
+            disabled: !activePricedItemId,
+            onChooseItem: () => this.onTogglePricedItemVisible(
+                tabId, pricedItemTypeName),
+        });
+        visibilityMenuItems.push({ id: 'toggleShowHiddenPricedItems',
+            label: userMsg('PricedItemsListHandler-showHiddenPricedItems', 
+                pluralTypeDescription),
+            checked: showHiddenPricedItems,
+            onChooseItem: () => this.onToggleShowHiddenPricedItems(
+                tabId, pricedItemTypeName),
+        });
+        visibilityMenuItems.push({ id: 'toggleShowInactivePricedItems',
+            label: userMsg('PricedItemsListHandler-showInactivePricedItems', 
+                pluralTypeDescription),
+            checked: showInactivePricedItems,
+            onChooseItem: () => this.onToggleShowInactivePricedItems(
+                tabId, pricedItemTypeName),
+        });
+
+        visibilityMenuItems.push({});
+
+        visibilityMenuItems.push(this._rowTableHandler.createClearColumnSortingMenuItem(
+            tabId, state
+        ));
+        visibilityMenuItems.push({ id: 'toggleSortAlphabetically',
+            label: userMsg('PricedItemsListHandler-sortAlphabetically', 
+                pluralTypeDescription),
+            checked: sortAlphabetically,
+            onChooseItem: () => this.onToggleSortAlphabetically(
+                tabId, pricedItemTypeName),
+        });
+
+
+        const accountsSubMenuItems = [];
+        accountsSubMenuItems.push({ id: 'toggleShowPricedItemAccounts',
+            label: userMsg(
+                'PricedItemsListHandler-showPricedItemAccounts'),
+            checked: showAccounts,
+            onChooseItem: () => this.onToggleShowAccounts(
+                tabId),
+        });
+        accountsSubMenuItems.push({ id: 'toggleShowHiddenPricedItemAccounts',
+            label: userMsg(
+                'PricedItemsListHandler-showHiddenPricedItemAccounts'),
+            checked: showHiddenAccounts,
+            onChooseItem: () => this.onToggleShowHiddenAccounts(
+                tabId),
+        });
+        accountsSubMenuItems.push({ id: 'toggleShowInactivePricedItemAccounts',
+            label: userMsg(
+                'PricedItemsListHandler-showInactivePricedItemAccounts'),
+            checked: showInactiveAccounts,
+            onChooseItem: () => this.onToggleShowInactiveAccounts(
+                tabId),
+        });
+        
+
         const menuItems = [
             { id: 'openPricesList',
                 label: userMsg('PricedItemsListHandler-openPricesList', 
@@ -507,63 +570,11 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             { id: 'pricedItemsVisibilitySubMenu',
                 label: userMsg('PricedItemsListHandler-visibility_subMenu',
                     typeDescription),
-                subMenuItems: [
-                    { id: 'togglePricedItemVisible',
-                        label: userMsg(showPricedItemLabelId, 
-                            typeDescription),
-                        disabled: !activePricedItemId,
-                        onChooseItem: () => this.onTogglePricedItemVisible(
-                            tabId, pricedItemTypeName),
-                    },
-                    { id: 'toggleShowHiddenPricedItems',
-                        label: userMsg('PricedItemsListHandler-showHiddenPricedItems', 
-                            pluralTypeDescription),
-                        checked: showHiddenPricedItems,
-                        onChooseItem: () => this.onToggleShowHiddenPricedItems(
-                            tabId, pricedItemTypeName),
-                    },
-                    { id: 'toggleShowInactivePricedItems',
-                        label: userMsg('PricedItemsListHandler-showInactivePricedItems', 
-                            pluralTypeDescription),
-                        checked: showInactivePricedItems,
-                        onChooseItem: () => this.onToggleShowInactivePricedItems(
-                            tabId, pricedItemTypeName),
-                    },
-                    {},
-                    { id: 'toggleSortAlphabetically',
-                        label: userMsg('PricedItemsListHandler-sortAlphabetically', 
-                            pluralTypeDescription),
-                        checked: sortAlphabetically,
-                        onChooseItem: () => this.onToggleSortAlphabetically(
-                            tabId, pricedItemTypeName),
-                    },
-                ],
+                subMenuItems: visibilityMenuItems,
             },
             { id: 'pricedItemsAccountsSubMenu',
                 label: userMsg('PricedItemsListHandler-accounts_subMenu'),
-                subMenuItems: [
-                    { id: 'toggleShowPricedItemAccounts',
-                        label: userMsg(
-                            'PricedItemsListHandler-showPricedItemAccounts'),
-                        checked: showAccounts,
-                        onChooseItem: () => this.onToggleShowAccounts(
-                            tabId),
-                    },
-                    { id: 'toggleShowHiddenPricedItemAccounts',
-                        label: userMsg(
-                            'PricedItemsListHandler-showHiddenPricedItemAccounts'),
-                        checked: showHiddenAccounts,
-                        onChooseItem: () => this.onToggleShowHiddenAccounts(
-                            tabId),
-                    },
-                    { id: 'toggleShowInactivePricedItemAccounts',
-                        label: userMsg(
-                            'PricedItemsListHandler-showInactivePricedItemAccounts'),
-                        checked: showInactiveAccounts,
-                        onChooseItem: () => this.onToggleShowInactiveAccounts(
-                            tabId),
-                    },
-                ],
+                subMenuItems: accountsSubMenuItems,
             },
             {},
             
@@ -786,6 +797,10 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
             sortAlphabetically = {tabEntry.sortAlphabetically}
 
+            columnSorting = {tabEntry.columnSorting}
+            onColumnSortingChange = {(args) =>
+                this._rowTableHandler.onColumnSortingChange(tabId, args)}
+                
             collapsedPricedItemIds = {collapsedPricedItemIds}
             onUpdateCollapsedPricedItemIds = {(args) =>
                 this.onUpdateCollapsedPricedItemIds(tabEntry.tabId, args)}

@@ -10,11 +10,179 @@ import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';
 import * as AH from '../tools/AccountHelpers';
 import * as GH from '../tools/GainHelpers';
-import { columnInfosToColumns, getColumnWithKey, } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns, getColumnWithKey,
+    columnInfosToMultiComparators, } from '../util-ui/ColumnInfo';
 import { CollapsibleRowTable, ExpandCollapseState,
     findRowInfoWithKey, updateRowInfo,
     renderCollapsibleRowTableAsText, } from '../util-ui/CollapsibleRowTable';
 import { SimpleRowTableTextRecorder } from '../util-ui/RowTable';
+import { sortRowInfos } from './RowTableHelpers';
+import { compare, MultiCompare } from '../util/MultiCompare';
+
+
+//
+//
+function getTickerFromRowInfo(rowInfo) {
+    const { tickerValue } = rowInfo;
+    if (tickerValue) {
+        const { value } = tickerValue;
+        if (typeof value === 'string') {
+            return value;
+        }
+        return tickerValue;
+    }
+}
+
+function compareTickerValues(a, b) {
+    const tickerA = getTickerFromRowInfo(a);
+    const tickerB = getTickerFromRowInfo(b);
+    return compare(tickerA, tickerB);
+}
+
+
+//
+//
+function getNameFromRowInfo(rowInfo) {
+    const { nameValue } = rowInfo;
+    if (nameValue) {
+        const { name } = nameValue;
+        if (typeof name === 'string') {
+            return name;
+        }
+        return nameValue;
+    }
+}
+
+function compareNameValues(a, b) {
+    const nameA = getNameFromRowInfo(a);
+    const nameB = getNameFromRowInfo(b);
+    return compare(nameA, nameB);
+}
+
+
+//
+//
+function getOverallTotalsBaseValue(rowInfo, property) {
+    if (rowInfo) {
+        const { accountGainsState } = rowInfo;
+        if (accountGainsState) {
+            return accountGainsState.overallTotals[property];
+        }
+    }
+}
+
+function compareOverallTotalsBaseValues(rowInfoA, rowInfoB, property) {
+    const baseValueA = getOverallTotalsBaseValue(rowInfoA, property);
+    const baseValueB = getOverallTotalsBaseValue(rowInfoB, property);
+    return compare(baseValueA, baseValueB);
+}
+
+
+//
+//
+function getSharesBaseValue(rowInfo) {
+    if (rowInfo) {
+        const { accountGainsState, } = rowInfo;
+        if (accountGainsState && accountGainsState.isQuantityShares) {
+            return accountGainsState.quantityBaseValue;
+        }
+    }
+}
+
+//
+//
+function compareShares(rowInfoA, rowInfoB) {
+    const sharesBaseValueA = getSharesBaseValue(rowInfoA);
+    const sharesBaseValueB = getSharesBaseValue(rowInfoB);
+    return compare(sharesBaseValueA, sharesBaseValueB);
+}
+
+
+//
+//
+function getGainBaseValue(rowInfo, property) {
+    if (rowInfo) {
+        const value = rowInfo[property];
+        if (value) {
+            return value.quantityBaseValue;
+        }
+    }
+}
+
+
+//
+//
+function compareGainBaseValues(rowInfoA, rowInfoB, property) {
+    const baseValueA = getGainBaseValue(rowInfoA, property);
+    const baseValueB = getGainBaseValue(rowInfoB, property);
+    return compare(baseValueA, baseValueB);
+}
+
+
+//
+//
+function getPercentOfTotal(rowInfo, topLevelRowInfo) {
+    const { accountGainsState, } = rowInfo;
+    if (!accountGainsState || !topLevelRowInfo) {
+        return;
+    }
+
+    const totalAccountGainsState = topLevelRowInfo.accountGainsState;
+    if (!totalAccountGainsState) {
+        return;
+    }
+
+    if (!totalAccountGainsState.gainTotals.marketValueBaseValue) {
+        return;
+    }
+
+    let totalCurrency = topLevelRowInfo.currency;
+    let itemCurrency = rowInfo.currency;
+    if (totalCurrency !== itemCurrency) {
+        return;
+    }
+
+    const quantityDefinition = totalCurrency.getQuantityDefinition();
+    const totalValue = quantityDefinition.baseValueToNumber(
+        totalAccountGainsState.gainTotals.marketValueBaseValue);
+    const thisValue = quantityDefinition.baseValueToNumber(
+        accountGainsState.gainTotals.marketValueBaseValue);
+    const percent = 100. * thisValue / totalValue;
+    return percent;
+}
+
+function comparePercentOfTotal(rowInfoA, rowInfoB) {
+    const percentA = rowInfoA.percentOfTotal;
+    const percentB = rowInfoB.percentOfTotal;
+    return compare(percentA, percentB);
+}
+
+
+//
+//
+function keyToRank(key) {
+    if (typeof key === 'string') {
+        if (key === '_SUMMARY_') {
+            return 10;
+        }
+    }
+
+    return 0;
+}
+
+
+//
+//
+function baseCompare(argsA, argsB, sign, compare) {
+    const rowInfoA = argsA.rowInfo;
+    const rowInfoB = argsB.rowInfo;
+    let rankA = keyToRank(rowInfoA.key);
+    let rankB = keyToRank(rowInfoB.key);
+    if (rankA !== rankB) {
+        return (rankA - rankB) * sign;
+    }
+    return compare(rowInfoA, rowInfoB, argsA.caller);
+}
 
 
 let columnInfoDefs;
@@ -33,6 +201,8 @@ function getPricedItemsListColumnInfoDefs() {
                 propertyName: 'ticker',
                 cellClassName: cellClassName + ' Text-left',
                 inputSize: -6,
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareTickerValues(a, b, sign)),
             },
             name: { key: 'name',
                 header: {
@@ -42,6 +212,8 @@ function getPricedItemsListColumnInfoDefs() {
                 },
                 propertyName: 'name',
                 cellClassName: cellClassName + ' Text-left W-40',
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareNameValues(a, b, sign)),
             },
             description: { key: 'description',
                 header: {
@@ -91,33 +263,70 @@ function getPricedItemsListColumnInfoDefs() {
                 },
                 inputClassExtras: 'Percent-base Percent-input',
                 cellClassName: 'RowTable-cell-base Percent-base Percent-cell',
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => comparePercentOfTotal(a, b)),
             },
 
-            totalMarketValue: LCE.getTotalMarketValueColumnInfo({}),
+            totalMarketValue: LCE.getTotalMarketValueColumnInfo({
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareOverallTotalsBaseValues(
+                        a, b, 'marketValueBaseValue')),
+            }),
 
-            totalShares: LCE.getTotalSharesColumnInfo({}),
+            totalShares: LCE.getTotalSharesColumnInfo({
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareShares(a, b, sign)),
+            }),
 
-            totalCostBasis: LCE.getTotalCostBasisColumnInfo({}),
+            totalCostBasis: LCE.getTotalCostBasisColumnInfo({
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareOverallTotalsBaseValues(
+                        a, b, 'costBasisBaseValue')),
+            }),
 
-            totalCashIn: LCE.getTotalCashInColumnInfo({}),
+            totalCashIn: LCE.getTotalCashInColumnInfo({
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareOverallTotalsBaseValues(
+                        a, b, 'cashInBaseValue')),
+            }),
 
-            totalGain: LCE.getTotalGainColumnInfo({}),
+            totalGain: LCE.getTotalGainColumnInfo({
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareGainBaseValues(a, b, 'totalGainValue')),
+            }),
 
-            totalCashInGain: LCE.getTotalCashInGainColumnInfo({}),
+            totalCashInGain: LCE.getTotalCashInGainColumnInfo({
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareGainBaseValues(a, b, 'totalCashInGainValue')),
+            }),
 
-            totalPercentGain: LCE.getTotalSimplePercentGainColumnInfo({}),
+            totalPercentGain: LCE.getTotalSimplePercentGainColumnInfo({
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareGainBaseValues(a, b, 'totalPercentGainValue')),
+            }),
 
-            totalCashInPercentGain: LCE.getTotalCashInPercentGainColumnInfo({}),
+            totalCashInPercentGain: LCE.getTotalCashInPercentGainColumnInfo({
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareGainBaseValues(a, b, 'totalCashInPercentGainValue')),
+            }),
 
-            totalAnnualPercentGain: LCE.getTotalAnnualPercentGainColumnInfo({}),
+            totalAnnualPercentGain: LCE.getTotalAnnualPercentGainColumnInfo({
+                sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                    (a, b) => compareGainBaseValues(a, b, 'totalAnnualPercentGainValue')),
+            }),
 
             totalAnnualCashInPercentGain: 
-                LCE.getTotalAnnualCashInPercentGainColumnInfo({}),
+                LCE.getTotalAnnualCashInPercentGainColumnInfo({
+                    sortCompare: (a, b, sign) => baseCompare(a, b, sign,
+                        (a, b) => compareGainBaseValues(a, b, 
+                            'totalAnnualCashInPercentGainValue')),
+                }),
         };
     }
 
     return columnInfoDefs;
 }
+
 
 function markColumnVisible(columns, key) {
     const column = getColumnWithKey(columns, key);
@@ -181,6 +390,20 @@ export function createDefaultColumns(pricedItemType) {
 }
 
 
+let columnInfoComparators;
+
+function getPricedItemsListColumnComparators() {
+    if (!columnInfoComparators) {
+        const columnInfos = getPricedItemsListColumnInfoDefs();
+        columnInfoComparators = columnInfosToMultiComparators(
+            Object.values(columnInfos)
+        );
+    }
+
+    return columnInfoComparators;
+}
+
+
 /**
  * Component for displaying a list of priced items.
  */
@@ -205,6 +428,10 @@ export class PricedItemsList extends React.Component {
         this._asyncLoadAccountStateInfos = this._asyncLoadAccountStateInfos.bind(this);
 
         this.renderAsStringTable = this.renderAsStringTable.bind(this);
+
+        this._multiCompare = new MultiCompare(getPricedItemsListColumnComparators());
+        this._multiCompare.setCompareOrder(props.columnSorting);
+
 
         const { pricedItemTypeName, collapsedPricedItemIds } = this.props;
 
@@ -330,6 +557,8 @@ export class PricedItemsList extends React.Component {
         const { hiddenPricedItemIds, 
             showHiddenPricedItems,
             showInactivePricedItems } = props;
+        
+        this._hasNameColumn = this.state.columnKeys.has('name');
 
         if (!deepEqual(prevProps.hiddenPricedItemIds, hiddenPricedItemIds)) {
             this._hiddenPricedItemIds = new Set(hiddenPricedItemIds);
@@ -361,6 +590,12 @@ export class PricedItemsList extends React.Component {
             props.collapsedPricedItemIds)) {
             this._collapsedRowIds = new Set(props.collapsedPricedItemIds);
             rowsNeedUpdating = true;
+        }
+
+        let sortingNeedsUpdating = !deepEqual(props.columnSorting,
+            prevProps.columnSorting);
+        if (sortingNeedsUpdating) {
+            this._multiCompare.setCompareOrder(props.columnSorting);
         }
 
         if (!deepEqual(prevProps.columns, props.columns)) {
@@ -400,8 +635,13 @@ export class PricedItemsList extends React.Component {
 
         if ((props.pricesYMDDate !== prevProps.pricesYMDDate)
          || (this.state.rowInfosChangeId 
-            !== this.state.accountStateInfoLoadingInfo.rowInfosChangeId)) {
+          !== this.state.accountStateInfoLoadingInfo.rowInfosChangeId)) {
+            sortingNeedsUpdating = false;
             this.reloadAccountStateInfos();
+        }
+
+        if (sortingNeedsUpdating) {
+            this.updateRowInfoSorting();
         }
     }
 
@@ -509,8 +749,41 @@ export class PricedItemsList extends React.Component {
 
         this.updateRootRowInfoAccountStates();
 
+        this.updateRowInfoSorting();
+
         this.setState({
             loadedAccountStateInfo: accountStateInfoLoadingInfo,
+        });
+    }
+
+
+    updateRowInfoSorting(state) {
+        state = state || this.state;
+        if (!this.props.columnSorting || !this.props.columnSorting.length) {
+            this.setState({
+                sortedRowInfos: undefined,
+            });
+            return;
+        }
+
+        const compare = (a, b) => this._multiCompare.compare(
+            { rowInfo: a, caller: this, },
+            { rowInfo: b, caller: this, });
+
+        const { rowInfos } = state;
+        const sortedRowInfos = [];
+
+        rowInfos.forEach((rowInfo) => {
+            rowInfo = Object.assign({}, rowInfo, {
+                childRowInfos: sortRowInfos(rowInfo.childRowInfos, compare),
+            });
+            sortedRowInfos.push(rowInfo);
+        });
+
+        sortedRowInfos.sort(compare);
+
+        this.setState({
+            sortedRowInfos: sortedRowInfos,
         });
     }
 
@@ -569,6 +842,8 @@ export class PricedItemsList extends React.Component {
         const summaryRowInfo = {
             key: '_SUMMARY_',
             expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
+            currency: accessor.getCurrencyOfAccountId(
+                accessor.getRootAssetAccountId()),
         };
         rowInfos.push(summaryRowInfo);
 
@@ -653,7 +928,30 @@ export class PricedItemsList extends React.Component {
             pricedItemDataItem: pricedItemDataItem,
             pricedItemId: pricedItemId,
             accountIds: accountIds,
+            currency: accessor.getCurrencyOfPricedItemId(pricedItemId),
         };
+
+        if (this._hasNameColumn) {
+            rowInfo.tickerValue = pricedItemDataItem.ticker;
+        }
+        else {
+            rowInfo.tickerValue = {
+                value: pricedItemDataItem.ticker,
+                tooltip: pricedItemDataItem.name,
+            };
+        }
+
+        let { name, description } = pricedItemDataItem;
+        if (!name) {
+            rowInfo.nameValue = description;
+        }
+        else {
+            rowInfo.nameValue = {
+                name: name,
+                description: description,
+            };
+        }
+
         rowInfos.push(rowInfo);
 
         if (accountIds) {
@@ -676,7 +974,10 @@ export class PricedItemsList extends React.Component {
                         key: 'AccountId_' + accountId,
                         expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
                         accountDataItem: accountDataItem,
+                        nameValue: AH.getShortAccountAncestorNames(accessor,
+                            accountDataItem.id),
                     };
+
                     childRowInfos.push(childRowInfo);
                 }
 
@@ -762,6 +1063,10 @@ export class PricedItemsList extends React.Component {
         if (summaryRowInfo) {
             summaryRowInfo.accountGainsState = summaryAccountGainsState;
         }
+
+        rowInfos.forEach((rowInfo) => {
+            this.updateRowInfoCalculateds(state, rowInfo, summaryRowInfo);
+        });
     }
 
 
@@ -805,6 +1110,51 @@ export class PricedItemsList extends React.Component {
         rowInfo.accountGainsState = pricedItemAccountGainsState;
     }
 
+
+
+    updateRowInfoCalculateds(state, rowInfo, topLevelRowInfo) {
+        rowInfo.percentOfTotal = getPercentOfTotal(rowInfo, topLevelRowInfo);
+
+
+        rowInfo.totalGainValue = this.calcGainValue(rowInfo, 
+            LCE.calcSimpleGainBalanceValue);
+
+        rowInfo.totalPercentGainValue = this.calcGainValue(rowInfo,
+            LCE.calcSimplePercentGainBalanceValue);
+
+        rowInfo.totalCashInGainValue = this.calcGainValue(rowInfo,
+            LCE.calcCashInGainBalanceValue);
+
+        rowInfo.totalCashInPercentGainValue = this.calcGainValue(rowInfo,
+            LCE.calcCashInPercentGainBalanceValue);
+
+        rowInfo.totalAnnualPercentGainValue = this.calcGainValue(rowInfo,
+            LCE.calcAnnualPercentGainBalanceValue);
+
+        rowInfo.totalAnnualCashInPercentGainValue = this.calcGainValue(rowInfo,
+            LCE.calcAnnualCashInPercentGainBalanceValue);
+
+        if (rowInfo.childRowInfos) {
+            rowInfo.childRowInfos.forEach((childRowInfo) =>
+                this.updateRowInfoCalculateds(state, childRowInfo, topLevelRowInfo)
+            );
+        }
+    }
+
+
+    calcGainValue(rowInfo, calcGainValueCallback) {
+        const { accountGainsState } = rowInfo;
+        if (accountGainsState) {
+            const value = calcGainValueCallback({
+                accessor: this.props.accessor,
+                accountId: rowInfo.accountId,
+                accountGainsState: accountGainsState,
+            });
+            if (value && (value.quantityBaseValue !== undefined)) {
+                return value;
+            }
+        }
+    }
 
 
     onExpandCollapseRow({rowInfo, expandCollapseState}) {
@@ -913,41 +1263,12 @@ export class PricedItemsList extends React.Component {
         const columnInfo = this.columnInfoFromRenderArgs(args);
         const { rowInfo, renderAsText } = args;
 
-        const { pricedItemDataItem } = rowInfo;
-        if (pricedItemDataItem) {
-            let value = pricedItemDataItem.name;
-            if (this.state.columnKeys.has('description')) {
-                value = pricedItemDataItem.name;
-            }
-            else {
-                let { name, description } = pricedItemDataItem;
-                if (!name) {
-                    value = description;
-                }
-                else {
-                    value = {
-                        name: name,
-                        description: description,
-                    };
-                }
-            }
-            return ACE.renderNameDisplay({
-                columnInfo: columnInfo,
-                value: value,
-                renderAsText: renderAsText,
-            });
-        }
-
-        const { accountDataItem } = rowInfo;
-        if (accountDataItem) {
-            const name = AH.getShortAccountAncestorNames(this.props.accessor,
-                accountDataItem.id);
-            return ACE.renderNameDisplay({
-                columnInfo: columnInfo,
-                value: name,
-                renderAsText: renderAsText,
-            });
-        }
+        const { nameValue } = rowInfo;
+        return ACE.renderNameDisplay({
+            columnInfo: columnInfo,
+            value: nameValue,
+            renderAsText: renderAsText,
+        });
     }
 
 
@@ -1011,19 +1332,12 @@ export class PricedItemsList extends React.Component {
         const columnInfo = this.columnInfoFromRenderArgs(args);
         const { rowInfo, renderAsText } = args;
 
-        const { pricedItemDataItem } = rowInfo;
-        if (pricedItemDataItem) {
-            return ACE.renderTextDisplay({
-                columnInfo: columnInfo, 
-                value: (this.state.columnKeys.has('name'))
-                    ? pricedItemDataItem.ticker
-                    : {
-                        value: pricedItemDataItem.ticker,
-                        tooltip: pricedItemDataItem.name,
-                    },
-                renderAsText: renderAsText,
-            });
-        }
+        const { tickerValue } = rowInfo;
+        return ACE.renderTextDisplay({
+            columnInfo: columnInfo, 
+            value: tickerValue,
+            renderAsText: renderAsText,
+        });
     }
 
 
@@ -1151,25 +1465,13 @@ export class PricedItemsList extends React.Component {
 
     renderGainDisplay(args) {
         const columnInfo = this.columnInfoFromRenderArgs(args);
-        const { rowInfo, } = args;
-        const { accountGainsState, pricedItemId } = rowInfo;
 
-        const { calcGainValueCallback, suffix, } = args;
-        const { accessor } = this.props;
-
-        if (accountGainsState) {
-            const quantityValue = calcGainValueCallback({
-                accessor: accessor,
-                pricedItemId: pricedItemId,
-                accountGainsState: accountGainsState,
-            });
-            if (quantityValue === undefined) {
-                return;
-            }
-
+        const { rowInfo, gainProperty, suffix } = args;
+        const value = rowInfo[gainProperty];
+        if (value) {
             return ACE.renderBalanceDisplay({
                 columnInfo: columnInfo,
-                value: quantityValue,
+                value: value,
                 suffix: suffix,
                 renderAsText: args.renderAsText,
             });
@@ -1179,49 +1481,25 @@ export class PricedItemsList extends React.Component {
 
     renderPercentOfTotal(args) {
         const { rowInfo, } = args;
-        const { accountGainsState, } = rowInfo;
-        const { summaryRowInfo } = this.state;
-        if (!accountGainsState || !summaryRowInfo) {
-            return;
+        const { percentOfTotal } = rowInfo;
+        if (percentOfTotal !== undefined) {
+            const percentQuantityDefinition 
+                = this.props.accessor.getPercentGainQuantityDefinition();
+
+            const value = {
+                quantityBaseValue: percentQuantityDefinition.numberToBaseValue(
+                    percentOfTotal),
+                quantityDefinition: percentQuantityDefinition,
+            };
+
+            const columnInfo = this.columnInfoFromRenderArgs(args);
+            return ACE.renderBalanceDisplay({
+                columnInfo: columnInfo,
+                value: value,
+                suffix: this._percentSuffix,
+                renderAsText: args.renderAsText,
+            });
         }
-
-        const totalAccountGainsState = summaryRowInfo.accountGainsState;
-        if (!totalAccountGainsState) {
-            return;
-        }
-
-        if (!totalAccountGainsState.gainTotals.marketValueBaseValue) {
-            return;
-        }
-
-        const { accessor } = this.props;
-        let totalCurrency = accessor.getCurrencyOfAccountId(
-            accessor.getRootAssetAccountId());
-        let itemCurrency = accessor.getCurrencyOfPricedItemId(rowInfo.pricedItemId);
-        if (totalCurrency !== itemCurrency) {
-            return;
-        }
-
-        const quantityDefinition = totalCurrency.getQuantityDefinition();
-        const totalValue = quantityDefinition.baseValueToNumber(
-            totalAccountGainsState.gainTotals.marketValueBaseValue);
-        const thisValue = quantityDefinition.baseValueToNumber(
-            accountGainsState.gainTotals.marketValueBaseValue);
-        const percent = 100. * thisValue / totalValue;
-        const percentQuantityDefinition = accessor.getPercentGainQuantityDefinition();
-
-        const value = {
-            quantityBaseValue: percentQuantityDefinition.numberToBaseValue(percent),
-            quantityDefinition: percentQuantityDefinition,
-        };
-
-        const columnInfo = this.columnInfoFromRenderArgs(args);
-        return ACE.renderBalanceDisplay({
-            columnInfo: columnInfo,
-            value: value,
-            suffix: this._percentSuffix,
-            renderAsText: args.renderAsText,
-        });
     }
 
 
@@ -1273,30 +1551,30 @@ export class PricedItemsList extends React.Component {
             return this.renderTotalCashIn(args);
 
         case 'totalGain' :
-            args.calcGainValueCallback = LCE.calcSimpleGainBalanceValue;
+            args.gainProperty = 'totalGainValue';
             return this.renderGainDisplay(args);
 
         case 'totalCashInGain' :
-            args.calcGainValueCallback = LCE.calcCashInGainBalanceValue;
+            args.gainProperty = 'totalCashInGainValue';
             return this.renderGainDisplay(args);
 
         case 'totalPercentGain' :
-            args.calcGainValueCallback = LCE.calcSimplePercentGainBalanceValue;
+            args.gainProperty = 'totalPercentGainValue';
             args.suffix = this._percentSuffix;
             return this.renderGainDisplay(args);
 
         case 'totalCashInPercentGain' :
-            args.calcGainValueCallback = LCE.calcCashInPercentGainBalanceValue;
+            args.gainProperty = 'totalCashInPercentGainValue';
             args.suffix = this._percentSuffix;
             return this.renderGainDisplay(args);
 
         case 'totalAnnualPercentGain' :
-            args.calcGainValueCallback = LCE.calcAnnualPercentGainBalanceValue;
+            args.gainProperty = 'totalAnnualPercentGainValue';
             args.suffix = this._percentSuffix;
             return this.renderGainDisplay(args);
 
         case 'totalAnnualCashInPercentGain' :
-            args.calcGainValueCallback = LCE.calcAnnualCashInPercentGainBalanceValue;
+            args.gainProperty = 'totalAnnualCashInPercentGainValue';
             args.suffix = this._percentSuffix;
             return this.renderGainDisplay(args);
         
@@ -1318,11 +1596,13 @@ export class PricedItemsList extends React.Component {
         return <div className="RowTableContainer PricedItemsList">
             <CollapsibleRowTable
                 columns = { props.columns }
-                rowInfos = {state.rowInfos}
+                rowInfos = {state.sortedRowInfos || state.rowInfos}
                 onExpandCollapseRow = {this.onExpandCollapseRow}
 
                 onRenderCell={this.onRenderCell}
 
+                columnSorting = {props.columnSorting}
+                onColumnSortingChange = {props.onColumnSortingChange}
                 onSetColumnWidth = {props.onSetColumnWidth}
                 onMoveColumn = {props.onMoveColumn}
 
@@ -1383,7 +1663,10 @@ PricedItemsList.propTypes = {
     onChooseItem: PropTypes.func,
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
+
     columns: PropTypes.arrayOf(PropTypes.object),
+    columnSorting: PropTypes.arrayOf(PropTypes.object),
+    onColumnSortingChange: PropTypes.func,
     onSetColumnWidth: PropTypes.func,
     onMoveColumn: PropTypes.func,
 

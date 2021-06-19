@@ -1281,6 +1281,7 @@ export class AccountsList extends React.Component {
         rowInfo.accountGainsState = accountGainsState;
     }
 
+
     updateRowInfoCalculateds(state, rowInfo, topLevelRowInfo) {
         rowInfo.percentOfTotal = getPercentOf({
             rowInfo: rowInfo,
