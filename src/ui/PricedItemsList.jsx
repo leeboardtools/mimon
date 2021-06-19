@@ -1160,8 +1160,12 @@ export class PricedItemsList extends React.Component {
 
 
     calcGainValue(rowInfo, calcGainValueCallback) {
-        const { accountGainsState } = rowInfo;
+        const { accountGainsState, pricedItemDataItem } = rowInfo;
         if (accountGainsState) {
+            if (pricedItemDataItem && pricedItemDataItem.isExcludeFromGain) {
+                return;
+            }
+            
             const value = calcGainValueCallback({
                 accessor: this.props.accessor,
                 accountId: rowInfo.accountId,
