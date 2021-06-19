@@ -63,7 +63,7 @@ export function accountCategory(ref) {
  * @property {boolean}  [isSingleton=false] If <code>true</code> only one instance of 
  * this type should be created.
  * @property {string[]} [allowedFlagAttributes] Array containing the allowed optional 
- * flag attributes
+ * flag (boolean) attributes
  * @property {AccountTypeDef[]} allowedChildTypes   Array containing the account types 
  * allowed for child accounts.
  * @property {PricedItemType}   pricedItemType  The type of priced items this supports.

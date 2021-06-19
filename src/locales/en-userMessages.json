@@ -437,6 +437,8 @@
     "PricedItemEditor-onlineUpdate_label": "Online Updating",
     "PricedItemEditor-isInactive_label": "Is inactive",
     "PricedItemEditor-isHidden_label": "Is hidden",
+    "PricedItemEditor-flagAttribute-isCashSecurity": "Treat as cash",
+    "PricedItemEditor-flagAttribute-isExcludeFromGain": "Exclude from gains",
 
     "PricedItemEditorHandler-newPricedItem_title": ["New ", ""],
     "PricedItemEditorHandler-modifyPricedItem_title": ["Edit '", "'"],

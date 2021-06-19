@@ -570,7 +570,6 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Export as CSV
             - Need to clean up FileSelector.
         
-        - Need to listen for price/transaction updates
         
     
     - Priced Items List
@@ -590,8 +589,7 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Main Window
 
 
-    - Update of reinvest dividend transaction after changing dividends account doesn't update the
-    old dividend account.
+    - Update of reinvest dividend transaction after changing dividends account doesn't update the old dividend account.
 
 
     - Add Lock file

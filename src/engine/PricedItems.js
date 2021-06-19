@@ -13,6 +13,8 @@ import { userError } from '../util/UserMessages';
  * @property {string}   pluralDescription The plural version of description.
  * @property {boolean}  [hasTickerSymbol]   If <code>true</code> priced items of this
  * type have a ticker symbol property.
+ * @property {string[]} [allowedFlagAttributes] Array containing the allowed optional 
+ * flag (boolean) attributes
  */
 
 /**
@@ -32,10 +34,18 @@ export const PricedItemType = {
     SECURITY: { name: 'SECURITY', 
         validateFunc: validateSecurityDataItem, 
         hasTickerSymbol: true,
+        allowedFlagAttributes: [
+            'isCashSecurity',
+            'isExcludeFromGain',
+        ],
     },
     MUTUAL_FUND: { name: 'MUTUAL_FUND', 
         validateFunc: validateMutualFundDataItem, 
         hasTickerSymbol: true,
+        allowedFlagAttributes: [
+            'isCashSecurity',
+            'isExcludeFromGain',
+        ],
     },
     REAL_ESTATE: { name: 'REAL_ESTATE', 
         validateFunc: validateRealEstateDataItem, 

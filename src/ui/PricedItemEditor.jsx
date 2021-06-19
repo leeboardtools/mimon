@@ -14,7 +14,7 @@ import { DropdownField } from '../util-ui/DropdownField';
 import { getDecimalDefinition, getQuantityDefinitionName } from '../util/Quantities';
 import { QuantityDefinitionField } from '../util-ui/QuantityDefinitionField';
 import { Row, Col } from '../util-ui/RowCols';
-import { Checkbox } from '../util-ui/Checkbox';
+import { CheckboxField } from '../util-ui/CheckboxField';
 
 
 /**
@@ -392,6 +392,46 @@ export class PricedItemEditor extends React.Component {
 
     renderOptionsEditor() {
         const { pricedItemDataItem } = this.state;
+        
+        const attributeOptions = [];
+        const type = PI.getPricedItemType(pricedItemDataItem.type);
+        const { allowedFlagAttributes } = type;
+        if (allowedFlagAttributes) {
+            allowedFlagAttributes.forEach((attribute) => {
+                const label = userMsg('PricedItemEditor-flagAttribute-' + attribute);
+                attributeOptions.push(<CheckboxField
+                    key = {attribute}
+                    ariaLabel = {label}
+                    value = {pricedItemDataItem[attribute]}
+                    checkboxText = {label}
+                    onChange = {(isChecked) => {
+                        const change = {};
+                        change[attribute] = isChecked;
+                        this.updatePricedItemDataItem(change);
+                    }}
+                    tabIndex = {0}
+                />);
+            });
+        }
+
+        return <React.Fragment>
+            <CheckboxField
+                ariaLabel = "Is Inactive"
+                value = {pricedItemDataItem.isInactive}
+                checkboxText = {userMsg('PricedItemEditor-isInactive_label')}
+                onChange = {this.onIsInactiveChange}
+                tabIndex = {0}
+            />
+            <CheckboxField
+                ariaLabel = "Is Hidden"
+                value = {pricedItemDataItem.isHidden}
+                checkboxText = {userMsg('PricedItemEditor-isHidden_label')}
+                onChange = {this.onIsHiddenChange}
+                tabIndex = {0}
+            />
+            {attributeOptions}
+        </React.Fragment>;
+        /*
         return <React.Fragment>
             <Row>
                 <Col>
@@ -416,6 +456,7 @@ export class PricedItemEditor extends React.Component {
                 </Col>
             </Row>
         </React.Fragment>;
+        */
     }
 
 
