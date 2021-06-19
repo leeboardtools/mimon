@@ -158,7 +158,7 @@
     "AccountsList-netWorth_name": "Net Worth",
     "AccountsList-netIncome_name": "Net Income",
 
-    "AccountsList-price_tooltip": ["", "sh @ ", " on ", ""],
+    "AccountsList-price_tooltip": ["", " on ", ""],
 
     "AccountsList-percentOfRootAccount_column_label": "% of Root Account",
     "AccountsList-percentOfAccountGroup_column_label": "% of Account Group",

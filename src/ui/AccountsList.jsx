@@ -357,6 +357,8 @@ export class AccountsList extends React.Component {
         this.onTransactionsModify = this.onTransactionsModify.bind(this);
         this.onTransactionsRemove = this.onTransactionsRemove.bind(this);
 
+        this.onPricesChange = this.onPricesChange.bind(this);
+
         this._asyncLoadAccountStateInfos 
             = this._asyncLoadAccountStateInfos.bind(this);
 
@@ -504,6 +506,15 @@ export class AccountsList extends React.Component {
     }
 
 
+    onPricesChange() {
+        this.setState((state) => {
+            return {
+                rowInfosChangeId: state.accountStateInfoLoadingInfo.rowInfosChangeId + 1,
+            };
+        });
+    }
+
+
     componentDidMount() {
         this.props.accessor.on('accountAdd', this.onAccountAdd);
         this.props.accessor.on('accountsModify', this.onAccountsModify);
@@ -512,6 +523,9 @@ export class AccountsList extends React.Component {
         this.props.accessor.on('transactionsAdd', this.onTransactionsAdd);
         this.props.accessor.on('transactionsModify', this.onTransactionsModify);
         this.props.accessor.on('transactionsRemove', this.onTransactionsRemove);
+
+        this.props.accessor.on('pricesAdd', this.onPricesChange);
+        this.props.accessor.on('pricesRemove', this.onPricesChange);
 
         this.reloadAccountStateInfos();
 
@@ -523,6 +537,9 @@ export class AccountsList extends React.Component {
     }
 
     componentWillUnmount() {
+        this.props.accessor.off('pricesAdd', this.onPricesChange);
+        this.props.accessor.off('pricesRemove', this.onPricesChange);
+
         this.props.accessor.off('transactionsAdd', this.onTransactionsAdd);
         this.props.accessor.off('transactionsModify', this.onTransactionsModify);
         this.props.accessor.off('transactionsRemove', this.onTransactionsRemove);

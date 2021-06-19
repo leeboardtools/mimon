@@ -382,6 +382,8 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Price Retrieval Window
         - Add a new security?
 
+        - Change PriceManager.asyncAddPrices() to support multiple priced items.
+
 
     - Printing
         - Only print contents of active tab, not full window.
@@ -572,12 +574,14 @@ Are the lists really two separate styles? Or can they be combined into one?
         
     
     - Priced Items List
-        - Listen for price, transaction changes.
+        - Listen for transaction changes.
 
         - Show/Hide securities with no shares
             - Potential problem here is double reload of account states since won't know if a priced item has no shares until it is loaded.
     
         - Option to include brokerage cash?
+
+        - Current Price column
 
     
     - DropdownSelector
@@ -593,5 +597,5 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Add Lock file
 
 
-    - Add retirement account flag
-    - Add cash account flag
+    - Price Retrieval
+        - Change PriceManager.asyncAddPrices() to support multiple priced items.

@@ -420,6 +420,8 @@ export class PricedItemsList extends React.Component {
         this.onAccountsModify = this.onAccountsModify.bind(this);
         this.onAccountRemove = this.accountIdsUpdated;
 
+        this.onPricesChange = this.onPricesChange.bind(this);
+
         this.onExpandCollapseRow = this.onExpandCollapseRow.bind(this);
         this.onRenderCell = this.onRenderCell.bind(this);
         this.onActivateRow = this.onActivateRow.bind(this);
@@ -535,12 +537,18 @@ export class PricedItemsList extends React.Component {
         this.props.accessor.on('accountsModify', this.onAccountsModify);
         this.props.accessor.on('accountRemove', this.onAccountRemove);
 
+        this.props.accessor.on('pricesAdd', this.onPricesChange);
+        this.props.accessor.on('pricesRemove', this.onPricesChange);
+
         this.accountIdsUpdated();
 
         this.reloadAccountStateInfos();
     }
 
     componentWillUnmount() {
+        this.props.accessor.off('pricesAdd', this.onPricesChange);
+        this.props.accessor.off('pricesRemove', this.onPricesChange);
+
         this.props.accessor.off('accountAdd', this.onAccountAdd);
         this.props.accessor.off('accountsModify', this.onAccountsModify);
         this.props.accessor.off('accountRemove', this.onAccountRemove);
@@ -800,6 +808,15 @@ export class PricedItemsList extends React.Component {
         this.accountIdsUpdated();
         this.setState({
             rowsNeedUpdating: true,
+        });
+    }
+
+
+    onPricesChange() {
+        this.setState((state) => {
+            return {
+                rowInfosChangeId: state.accountStateInfoLoadingInfo.rowInfosChangeId + 1,
+            };
         });
     }
 
