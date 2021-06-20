@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import * as PI from '../engine/PricedItems';
+import * as A from '../engine/Accounts';
 import deepEqual from 'deep-equal';
 import { YMDDate } from '../util/YMDDate';
 import { getQuantityDefinition, 
@@ -179,11 +180,19 @@ function comparePercentOfTotal(rowInfoA, rowInfoB) {
 
 //
 //
-function keyToRank(key) {
-    if (typeof key === 'string') {
-        if (key === '_SUMMARY_') {
-            return 10;
-        }
+function typeToRank(type) {
+    switch (type) {
+    case 'SUMMARY' :
+        return 10;
+    
+    case 'EMPTY' :
+        return 9;
+    
+    case 'GROUP_SUBTOTAL' :
+        return 8;
+    
+    case 'GROUP' :
+        return -1;
     }
 
     return 0;
@@ -195,8 +204,8 @@ function keyToRank(key) {
 function baseCompare(argsA, argsB, sign, compare) {
     const rowInfoA = argsA.rowInfo;
     const rowInfoB = argsB.rowInfo;
-    let rankA = keyToRank(rowInfoA.key);
-    let rankB = keyToRank(rowInfoB.key);
+    let rankA = typeToRank(rowInfoA.type);
+    let rankB = typeToRank(rowInfoB.type);
     if (rankA !== rankB) {
         return (rankA - rankB) * sign;
     }
@@ -433,6 +442,18 @@ function getPricedItemsListColumnComparators() {
 }
 
 
+export function getDefaultIncludeOptions() {
+    return {
+        includeRegularAccounts: true,
+        includeRetirementAccounts: true,
+        includeBrokerageCash: true,
+        includeCashSecurities: true,
+        includeAccountLessSecurities: true,
+        groupSecurities: false,
+    };
+}
+
+
 /**
  * Component for displaying a list of priced items.
  */
@@ -464,7 +485,7 @@ export class PricedItemsList extends React.Component {
         this._multiCompare.setCompareOrder(props.columnSorting);
 
 
-        const { pricedItemTypeName, collapsedPricedItemIds } = this.props;
+        const { pricedItemTypeName, collapsedRowKeys } = this.props;
 
         this._hiddenPricedItemIds = new Set(this.props.hiddenPricedItemIds);
 
@@ -493,7 +514,7 @@ export class PricedItemsList extends React.Component {
             pricesByPricedItemId: new Map(),
         };
 
-        this._collapsedRowIds = new Set(collapsedPricedItemIds);
+        this._collapsedRowKeys = new Set(collapsedRowKeys);
 
         this.state = Object.assign(this.state, this.buildRowInfos());
 
@@ -538,7 +559,8 @@ export class PricedItemsList extends React.Component {
     onPricedItemModify(result) {
         const { id } = result.newPricedItemDataItem;
         for (let rowEntry of this.state.rowInfos) {
-            if (rowEntry.pricedItemDataItem.id === id) {
+            const { pricedItemDataItem } = rowEntry;
+            if (pricedItemDataItem && (pricedItemDataItem.id === id)) {
                 this.rebuildRowInfos();
                 return;
             }
@@ -549,7 +571,8 @@ export class PricedItemsList extends React.Component {
     onPricedItemRemove(result) {
         const { id } = result.removedPricedItemDataItem;
         for (let rowEntry of this.state.rowInfos) {
-            if (rowEntry.pricedItemDataItem.id === id) {
+            const { pricedItemDataItem } = rowEntry;
+            if (pricedItemDataItem && (pricedItemDataItem.id === id)) {
                 this.rebuildRowInfos();
                 return;
             }
@@ -613,8 +636,9 @@ export class PricedItemsList extends React.Component {
         rowsNeedUpdating
             |= (prevProps.showInactiveAccounts !== props.showInactiveAccounts);
 
-        rowsNeedUpdating
-            |= (prevProps.sortAlphabetically !== props.sortAlphabetically);
+        if (!rowsNeedUpdating) {
+            rowsNeedUpdating = !deepEqual(props.includeOptions, prevProps.includeOptions);
+        }
 
         if (!rowsNeedUpdating) {
             if (!deepEqual(prevState.accountIdsByPricedItemId,
@@ -623,9 +647,9 @@ export class PricedItemsList extends React.Component {
             }
         }
 
-        if (!deepEqual(prevProps.collapsedPricedItemIds, 
-            props.collapsedPricedItemIds)) {
-            this._collapsedRowIds = new Set(props.collapsedPricedItemIds);
+        if (!deepEqual(prevProps.collapsedRowKeys, 
+            props.collapsedRowKeys)) {
+            this._collapsedRowKeys = new Set(props.collapsedRowKeys);
             rowsNeedUpdating = true;
         }
 
@@ -857,41 +881,120 @@ export class PricedItemsList extends React.Component {
         const accountStateInfosByAccountId = new Map();
 
         const { accessor, pricedItemTypeName, 
-            sortAlphabetically, 
         } = this.props;
+
         let pricedItemIds = accessor.getPricedItemIdsForType(pricedItemTypeName);
 
-        if (sortAlphabetically) {
-            const pricedItemDataItems = pricedItemIds.map((id) => 
-                accessor.getPricedItemDataItemWithId(id));
-            
-            const sorter = (PI.PricedItemType[pricedItemTypeName].hasTickerSymbol)
-                ? (a, b) => (a.ticker || a.name).localeCompare(b.ticker || b.name)
-                : (a, b) => (a.name || '').localeCompare(b.name || '');
-            pricedItemDataItems.sort(sorter);
+        const rootCurrency = accessor.getCurrencyOfAccountId(
+            accessor.getRootAssetAccountId());
 
-            pricedItemIds = pricedItemDataItems.map((pricedItemDataItem) => 
-                pricedItemDataItem.id);
+        const includeOptions = this.props.includeOptions || getDefaultIncludeOptions();
+        const rowInfoGroups = [];
+        if (includeOptions.groupSecurities) {
+            if (includeOptions.includeRegularAccounts) {
+                rowInfoGroups.push({
+                    keyPrefix: 'Group_regularAccounts',
+                    includeOptions: {
+                        includeRegularAccounts: true,
+                        includeBrokerageCash: includeOptions.includeBrokerageCash,
+                        includeCashSecurities: includeOptions.includeCashSecurities,
+                    },
+                    rowInfos: [],
+                });
+            }
+            if (includeOptions.includeRetirementAccounts) {
+                rowInfoGroups.push({
+                    keyPrefix: 'Group_retirementAccounts',
+                    includeOptions: {
+                        includeRetirementAccounts: true,
+                        includeBrokerageCash: includeOptions.includeBrokerageCash,
+                        includeCashSecurities: includeOptions.includeCashSecurities,
+                    },
+                    rowInfos: [],
+                });
+            }
+            if (includeOptions.includeAccountLessSecurities) {
+                rowInfoGroups.push({
+                    keyPrefix: 'Group_accountLessSecurities',
+                    includeOptions: {
+                        includeAccountLessSecurities: true,
+                        includeBrokerageCash: includeOptions.includeBrokerageCash,
+                        includeCashSecurities: includeOptions.includeCashSecurities,
+                    },
+                    rowInfos: [],
+                });
+            }
+        }
+        else {
+            rowInfoGroups.push({
+                includeOptions: includeOptions,
+                rowInfos: rowInfos,
+            });
         }
 
-        const addArgs = {
-            state: state,
-            rowInfos: rowInfos,
-            accountStateInfosByAccountId: accountStateInfosByAccountId,
-        };
-        pricedItemIds.forEach((id) => {
-            addArgs.pricedItemId = id;
-            this.addPricedItemIdToRowEntries(addArgs);
+        rowInfoGroups.forEach((rowInfoGroup) => {
+            const addArgs = {
+                state: state,
+                rowInfoGroup: rowInfoGroup,
+                accountStateInfosByAccountId: accountStateInfosByAccountId,
+            };
+
+            // TODO:
+            // Want a 'cash' rowEntry if includeBrokerageCash
+
+            pricedItemIds.forEach((id) => {
+                addArgs.pricedItemId = id;
+                this.addPricedItemIdToRowEntries(addArgs);
+            });
+
+            if (rowInfoGroups.length > 1) {
+                if (rowInfoGroup.rowInfos.length) {
+                    const subtotalRowInfo = {
+                        key: '_SUBTOTAL_' + key,
+                        type: 'GROUP_SUBTOTAL',
+                        expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
+                        currency: rootCurrency,
+                    };
+                    rowInfoGroup.rowInfos.push(subtotalRowInfo);
+
+                    const emptyRowInfo = {
+                        key: '_SUBTOTALEMPTY_' + key,
+                        type: 'EMPTY',
+                    };
+                    rowInfoGroup.rowInfos.push(emptyRowInfo);
+
+                    const key = rowInfoGroup.keyPrefix;
+                    const groupRowInfo = {
+                        key: key,
+                        type: 'GROUP',
+                        nameValue: userMsg('PricedItemsList-' + key),
+                        expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
+                        currency: rootCurrency,
+                        childRowInfos: rowInfoGroup.rowInfos,
+                        subtotalRowInfo: subtotalRowInfo,
+                    };
+
+                    const isCollapsed = this._collapsedRowKeys.has(key);
+                    groupRowInfo.expandCollapseState
+                        = (isCollapsed)
+                            ? ExpandCollapseState.COLLAPSED
+                            : ExpandCollapseState.EXPANDED;
+
+                    rowInfos.push(groupRowInfo);
+                }
+            }
         });
 
 
         const summaryRowInfo = {
             key: '_SUMMARY_',
+            type: 'SUMMARY',
             expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
-            currency: accessor.getCurrencyOfAccountId(
-                accessor.getRootAssetAccountId()),
+            currency: rootCurrency,
+            nameValue: userMsg('PricedItemsList-Summary'),
         };
         rowInfos.push(summaryRowInfo);
+
 
         let { activeRowKey } = state;
         let newActiveRowKey;
@@ -946,22 +1049,79 @@ export class PricedItemsList extends React.Component {
     }
 
 
-    addPricedItemIdToRowEntries({state, rowInfos, pricedItemId, 
+    addPricedItemIdToRowEntries({state, rowInfoGroup, pricedItemId, 
         accountStateInfosByAccountId, }) {
 
         if (!this.isPricedItemIdDisplayed(pricedItemId)) {
             return;
         }
 
+        const { rowInfos, keyPrefix, includeOptions, } = rowInfoGroup;
+
         const { accessor, showAccounts } = this.props;
         const pricedItemDataItem = accessor.getPricedItemDataItemWithId(pricedItemId);
-
-        const key = pricedItemDataItem.id;
-        const isCollapsed = this._collapsedRowIds.has(key);
+        if (pricedItemDataItem.isCashSecurity
+         && !includeOptions.includeCashSecurities) {
+            return;
+        }
 
         const { accountIdsByPricedItemId } = state;
+        const allAccountIds = accountIdsByPricedItemId.get(pricedItemId);
+
+        let accountIds;
+        if (allAccountIds) {
+            accountIds = [];
+            allAccountIds.forEach((accountId) => {
+                const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+                const parentAccountDataItem = accessor.getAccountDataItemWithId(
+                    accountDataItem.parentAccountId
+                );
+                if (parentAccountDataItem.isRetirementAccount) {
+                    if (!includeOptions.includeRetirementAccounts) {
+                        return;
+                    }
+                }
+                else {
+                    if (!includeOptions.includeRegularAccounts) {
+                        return;
+                    }
+                }
+
+                accountIds.push(accountId);
+            });
+
+            if (allAccountIds.length) {
+                // This case indicates the priced item is being filtered out.
+                if (!accountIds.length) {
+                    return;
+                }
+            }
+
+            if (!accountIds.length) {
+                if (!includeOptions.includeAccountLessSecurities) {
+                    return;
+                }
+            }
+            else {
+                if (includeOptions.includeAccountLessSecurities
+                 && includeOptions.groupSecurities) {
+                    return;
+                }
+            }
+        }
+
+        // 
+        let key;
+        if (keyPrefix) {
+            key = keyPrefix + '_' + pricedItemDataItem.id;
+        }
+        else {
+            key = pricedItemDataItem.id;
+        }
+
+        const isCollapsed = this._collapsedRowKeys.has(key);
+
         let expandCollapseState = ExpandCollapseState.NO_EXPAND_COLLAPSE;
-        const accountIds = accountIdsByPricedItemId.get(pricedItemId);
         if (accountIds && accountIds.length && showAccounts) {
             expandCollapseState = (isCollapsed)
                 ? ExpandCollapseState.COLLAPSED
@@ -970,6 +1130,7 @@ export class PricedItemsList extends React.Component {
 
         const rowInfo = {
             key: key,
+            type: 'PRICED_ITEM',
             expandCollapseState: expandCollapseState,
             pricedItemDataItem: pricedItemDataItem,
             pricedItemId: pricedItemId,
@@ -1018,6 +1179,7 @@ export class PricedItemsList extends React.Component {
                 if (childRowInfos) {
                     childRowInfo = {
                         key: 'AccountId_' + accountId,
+                        type: 'ACCOUNT',
                         expandCollapseState: ExpandCollapseState.NO_EXPAND_COLLAPSE,
                         accountDataItem: accountDataItem,
                         nameValue: AH.getShortAccountAncestorNames(accessor,
@@ -1032,11 +1194,6 @@ export class PricedItemsList extends React.Component {
                 accountStateInfosByAccountId.set(accountId,
                     accountStateInfo);
             });
-
-            if (childRowInfos && this.props.sortAlphabetically) {
-                childRowInfos.sort((a, b) =>
-                    a.accountDataItem.name.localeCompare(b.accountDataItem.name));
-            }
         }
     }
 
@@ -1095,24 +1252,51 @@ export class PricedItemsList extends React.Component {
             summaryRowInfo.accountGainsState = undefined;
         }
 
-        let summaryAccountGainsState;
-
-        rowInfos.forEach((rowInfo) => {
-            this.updatePricedItemRowInfoAccountStates(rowInfo);
-
-            summaryAccountGainsState = GH.addAccountGainsState(
-                summaryAccountGainsState,
-                rowInfo.accountGainsState,
-            );
-        });
-
-        if (summaryRowInfo) {
-            summaryRowInfo.accountGainsState = summaryAccountGainsState;
-        }
+        this.updateSubtotalRowInfoAccountStates(summaryRowInfo, rowInfos);
 
         rowInfos.forEach((rowInfo) => {
             this.updateRowInfoCalculateds(state, rowInfo, summaryRowInfo);
         });
+    }
+
+
+    updateRowInfoAccountStates(rowInfo) {
+        const { type } = rowInfo;
+        switch (type) {
+        case 'PRICED_ITEM':
+            this.updatePricedItemRowInfoAccountStates(rowInfo);
+            return rowInfo.accountGainsState;
+
+        case 'GROUP':
+            if (rowInfo.expandCollapseState === ExpandCollapseState.EXPANDED) {
+                this.updateSubtotalRowInfoAccountStates(
+                    rowInfo.subtotalRowInfo, rowInfo.childRowInfos);
+                return rowInfo.subtotalRowInfo.accountGainsState;
+            }
+            else {
+                this.updateSubtotalRowInfoAccountStates(
+                    rowInfo, rowInfo.childRowInfos);
+                return rowInfo.accountGainsState;
+            }
+        }
+    }
+
+
+    updateSubtotalRowInfoAccountStates(rowInfo, rowInfos) {
+        let summaryAccountGainsState;
+
+        rowInfos.forEach((rowInfo) => {
+            const accountGainsState = this.updateRowInfoAccountStates(rowInfo);
+
+            summaryAccountGainsState = GH.addAccountGainsState(
+                summaryAccountGainsState,
+                accountGainsState,
+            );
+        });
+
+        if (rowInfo) {
+            rowInfo.accountGainsState = summaryAccountGainsState;
+        }
     }
 
 
@@ -1214,11 +1398,11 @@ export class PricedItemsList extends React.Component {
             });
             switch (expandCollapseState) {
             case ExpandCollapseState.EXPANDED :
-                this._collapsedRowIds.delete(rowInfo.key);
+                this._collapsedRowKeys.delete(rowInfo.key);
                 break;
     
             case ExpandCollapseState.COLLAPSED :
-                this._collapsedRowIds.add(rowInfo.key);
+                this._collapsedRowKeys.add(rowInfo.key);
                 break;
             
             default :
@@ -1230,7 +1414,7 @@ export class PricedItemsList extends React.Component {
                 onUpdateCollapsedPricedItemIds({
                     pricedItemId: rowInfo.key,
                     expandCollapseState: expandCollapseState,
-                    collapsedPricedItemIds: Array.from(this._collapsedRowIds.values()),
+                    collapsedRowKeys: Array.from(this._collapsedRowKeys.values()),
                 });
             }
 
@@ -1314,11 +1498,16 @@ export class PricedItemsList extends React.Component {
         const { rowInfo, renderAsText } = args;
 
         const { nameValue } = rowInfo;
-        return ACE.renderNameDisplay({
-            columnInfo: columnInfo,
-            value: nameValue,
-            renderAsText: renderAsText,
-        });
+
+        // Test against undefined so we don't end up displaying a blank cell with
+        // the summary bar for the summary/subtotal rows.
+        if (nameValue !== undefined) {
+            return ACE.renderNameDisplay({
+                columnInfo: columnInfo,
+                value: nameValue,
+                renderAsText: renderAsText,
+            });
+        }
     }
 
 
@@ -1383,11 +1572,16 @@ export class PricedItemsList extends React.Component {
         const { rowInfo, renderAsText } = args;
 
         const { tickerValue } = rowInfo;
-        return ACE.renderTextDisplay({
-            columnInfo: columnInfo, 
-            value: tickerValue,
-            renderAsText: renderAsText,
-        });
+
+        // Test against undefined so we don't end up displaying a blank cell with
+        // the summary bar for the summary/subtotal rows.
+        if (tickerValue !== undefined) {
+            return ACE.renderTextDisplay({
+                columnInfo: columnInfo, 
+                value: tickerValue,
+                renderAsText: renderAsText,
+            });
+        }
     }
 
 
@@ -1412,7 +1606,17 @@ export class PricedItemsList extends React.Component {
 
     columnInfoFromRenderArgs(renderArgs) {
         let { columnInfo, rowInfo } = renderArgs;
-        if (!rowInfo.pricedItemId && !rowInfo.accountDataItem) {
+        const { type } = rowInfo;
+        
+        if (type === 'GROUP') {
+            columnInfo = Object.assign({}, columnInfo);
+            columnInfo.inputClassExtras
+                += ' PricedItemsList-group';
+        }
+        else if (type === 'EMPTY') {
+            //
+        }
+        else if (!rowInfo.pricedItemId && !rowInfo.accountDataItem) {
             columnInfo = Object.assign({}, columnInfo);
             columnInfo.inputClassExtras
                 += ' PricedItemsList-subtotal PricedItemsList-subtotal-value';
@@ -1451,6 +1655,11 @@ export class PricedItemsList extends React.Component {
 
     renderPrice(args) {
         const { rowInfo, } = args;
+        const { type } = rowInfo;
+        if ((type !== 'PRICED_ITEM') && (type !== 'ACCOUNT')) {
+            return;
+        }
+
         const price = getPriceClose(rowInfo);
         if (price !== undefined) {
             const columnInfo = this.columnInfoFromRenderArgs(args);
@@ -1757,14 +1966,18 @@ PricedItemsList.propTypes = {
     showInactivePricedItems: PropTypes.bool,
     showPricedItemIds: PropTypes.bool,
 
-    sortAlphabetically: PropTypes.bool,
     showRowBorders: PropTypes.bool,
 
     showAccounts: PropTypes.bool,
     showHiddenAccounts: PropTypes.bool,
     showInactiveAccounts: PropTypes.bool,
 
-    collapsedPricedItemIds: PropTypes.arrayOf(PropTypes.number),
+    includeOptions: PropTypes.object,
+
+    collapsedRowKeys: PropTypes.arrayOf(PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.string])
+    ),
     onUpdateCollapsedPricedItemIds: PropTypes.func,
 
     header: PropTypes.any,

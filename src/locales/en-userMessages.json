@@ -457,19 +457,36 @@
 
     "PricedItemsList-percentOfTotal_column_label": "% of Total",
 
+    "PricedItemsList-Group_regularAccounts": "Regular Account Securities",
+    "PricedItemsList-Group_retirementAccounts": "Retirement Account Securities",
+    "PricedItemsList-Group_accountLessSecurities": "Unowned Securities",
+    "PricedItemsList-Summary": "Totals:",
+
+
     "PricedItemsListHandler-openPricesList": ["Open prices list"],
     "PricedItemsListHandler-showPricedItem": ["Show ", ""],
     "PricedItemsListHandler-hidePricedItem": ["Hide ", ""],
     "PricedItemsListHandler-newPricedItem": ["New ", ""],
     "PricedItemsListHandler-modifyPricedItem": ["Modify ", ""],
     "PricedItemsListHandler-removePricedItem": ["Delete ", ""],
+
     "PricedItemsListHandler-visibility_subMenu": ["", " Visibility"],
     "PricedItemsListHandler-showHiddenPricedItems": ["Show Hidden ", ""],
     "PricedItemsListHandler-showInactivePricedItems": ["Show Inactive ", ""],
+
     "PricedItemsListHandler-accounts_subMenu": "Accounts",
     "PricedItemsListHandler-showPricedItemAccounts": "Show Accounts Containing Securities",
     "PricedItemsListHandler-showHiddenPricedItemAccounts": "Show Hidden Accounts",
     "PricedItemsListHandler-showInactivePricedItemAccounts": "Show Inactive Accounts",
+
+    "PricedItemsListHandler-include_subMenu": "Include",
+    "PricedItemsListHandler-includeRegularAccounts": "Regular Accounts",
+    "PricedItemsListHandler-includeRetirementAccounts": "Retirement Accounts",
+    "PricedItemsListHandler-includeBrokerageCash": "Cash in Brokerage Accounts",
+    "PricedItemsListHandler-includeCashSecurities": "Cash Securities",
+    "PricedItemsListHandler-includeAccountLessSecurities": "Unowned Securities",
+    "PricedItemsListHandler-groupSecurities": "Group Securities",
+
     "PricedItemsListHandler-showDateSelector": "Show Date Selector",
     "PricedItemsListHandler-sortAlphabetically": "Display Alphabetically",
     "PricedItemsListHandler-columns_subMenu": "Columns",
@@ -486,10 +503,10 @@
     "PricedItemsListHandler-action_toggleShowInactivePricedItems": ["Toggle Show Inactive ", ""],
     "PricedItemsListHandler-action_showInactiveAccounts": "Show Inactive Accounts",
     "PricedItemsListHandler-action_hideInactiveAccounts": "Hide Inactive Accounts",
-    "PricedItemsListHandler-action_enableSortAlphabeticall": "Enable Display Alphabetically",
-    "PricedItemsListHandler-action_disableSortAlphabetically": "Disable Display Alphabetically",
     "PricedItemsListHandler-action_expandPricedItem": ["Show Accounts of ", ""],
     "PricedItemsListHandler-action_collapsePricedItem": ["Hide Accounts of ", ""],
+    "PricedItemsListHandler-action_toggleOption": ["Toggle ", ""],
+
 
     "PricedItemsListHandler-dateString": ["Date: ", ""],
     "PricedItemsListHandler-as_of_date_label": "As of: ",

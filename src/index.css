@@ -154,7 +154,8 @@ label {
 }
 
 .AccountsList-subtotal, 
-.PricedItemsList-subtotal {
+.PricedItemsList-subtotal,
+.PricedItemsList-group {
     font-weight: bold;
 }
 

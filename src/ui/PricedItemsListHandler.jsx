@@ -1,7 +1,8 @@
 import React from 'react';
 import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
-import { PricedItemsList, createDefaultColumns } from './PricedItemsList';
+import { PricedItemsList, createDefaultColumns,
+    getDefaultIncludeOptions, } from './PricedItemsList';
 import * as PI from '../engine/PricedItems';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
@@ -139,8 +140,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         updateStateFromProjectSettings(args, 'showHiddenAccounts');
         updateStateFromProjectSettings(args, 'showInactiveAccounts');
 
-        updateStateFromProjectSettings(args, 'sortAlphabetically');
-        updateStateFromProjectSettings(args, 'collapsedPricedItemIds');
+        updateStateFromProjectSettings(args, 'collapsedRowKeys');
     }
 
 
@@ -303,34 +303,13 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
     }
 
 
-    onToggleSortAlphabetically(tabId) {
-        const state = this.getTabIdState(tabId);
-
-        const newState = Object.assign({}, state, {
-            sortAlphabetically: !state.sortAlphabetically,
-        });
-        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
-        
-        const actionNameId = (newState.sortAlphabetically)
-            ? 'PricedItemsListHandler-action_enableSortAlphabetically'
-            : 'PricedItemsListHandler-action_disableSortAlphabetically';
-
-        this.setTabIdState(tabId, newState);
-
-        this.setTabIdProjectSettings(state.projectSettingsId, 
-            {
-                sortAlphabetically: newState.sortAlphabetically,
-            },
-            userMsg(actionNameId));
-    }
-
 
     onUpdateCollapsedPricedItemIds(tabId, 
-        { pricedItemId, expandCollapseState, collapsedPricedItemIds}) {
+        { pricedItemId, expandCollapseState, collapsedRowKeys}) {
         const state = this.getTabIdState(tabId);
 
         this.setTabIdState(tabId, {
-            collapsedPricedItemIds: collapsedPricedItemIds
+            collapsedRowKeys: collapsedRowKeys
         });
 
         const actionNameId = (expandCollapseState === ExpandCollapseState.EXPANDED)
@@ -348,11 +327,35 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
         this.setTabIdProjectSettings(state.projectSettingsId, 
             {
-                collapsedPricedItemIds: collapsedPricedItemIds,
+                collapsedRowKeys: collapsedRowKeys,
             },
             actionName);
     }
 
+
+    onToggleIncludeOption(tabId, option) {
+        const state = this.getTabIdState(tabId);
+        const { includeOptions } = state;
+        const changes = {};
+        changes[option] = !includeOptions[option];
+
+        const newIncludeOptions = Object.assign({}, includeOptions, changes);
+        const newState = Object.assign({}, state, {
+            includeOptions: newIncludeOptions,
+        });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+
+        const actionName = userMsg('PricedItemsListHandler-action_toggleOption',
+            userMsg('PricedItemsListHandler-' + option));
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(state.projectSettingsId,
+            {
+                includeOptions: newIncludeOptions,
+            },
+            actionName);
+    }
 
 
     onToggleDateSelector(tabId, stateChanges) {
@@ -432,10 +435,11 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             hiddenPricedItemIds, 
             showHiddenPricedItems, showInactivePricedItems,
             showAccounts, showHiddenAccounts, showInactiveAccounts,
-            sortAlphabetically,
             showDateSelector,
             allColumns,
         } = state;
+
+        let includeOptions = state.includeOptions || {};
 
         const showPricedItemLabelId 
             = (hiddenPricedItemIds.indexOf(activePricedItemId) >= 0)
@@ -472,9 +476,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             = this._rowTableHandler.createToggleColumnMenuItems(
                 tabId, optionalColumns);
 
-        const typeDescription = PI.getPricedItemType(pricedItemTypeName).description;
-        const pluralTypeDescription 
-            = PI.getPricedItemType(pricedItemTypeName).pluralDescription;
+        const type = PI.getPricedItemType(pricedItemTypeName);
+        const typeDescription = type.description;
+        const pluralTypeDescription = type.pluralDescription;
 
         const visibilityMenuItems = [];
         visibilityMenuItems.push({ id: 'togglePricedItemVisible',
@@ -504,13 +508,6 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         visibilityMenuItems.push(this._rowTableHandler.createClearColumnSortingMenuItem(
             tabId, state
         ));
-        visibilityMenuItems.push({ id: 'toggleSortAlphabetically',
-            label: userMsg('PricedItemsListHandler-sortAlphabetically', 
-                pluralTypeDescription),
-            checked: sortAlphabetically,
-            onChooseItem: () => this.onToggleSortAlphabetically(
-                tabId, pricedItemTypeName),
-        });
 
 
         const accountsSubMenuItems = [];
@@ -535,60 +532,133 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             onChooseItem: () => this.onToggleShowInactiveAccounts(
                 tabId),
         });
+
+
+        const includeSubMenuItems = [];
+        includeSubMenuItems.push({ id: 'toggleIncludeRegularAccounts',
+            label: userMsg(
+                'PricedItemsListHandler-includeRegularAccounts'),
+            checked: includeOptions.includeRegularAccounts,
+            onChooseItem: () => this.onToggleIncludeOption(
+                tabId, 'includeRegularAccounts'),
+        });
+        includeSubMenuItems.push({ id: 'toggleIncludeRetirementAccounts',
+            label: userMsg(
+                'PricedItemsListHandler-includeRetirementAccounts'),
+            checked: includeOptions.includeRetirementAccounts,
+            onChooseItem: () => this.onToggleIncludeOption(
+                tabId, 'includeRetirementAccounts'),
+        });
+        includeSubMenuItems.push({ id: 'toggleIncludeBrokerageCash',
+            label: userMsg(
+                'PricedItemsListHandler-includeBrokerageCash'),
+            checked: includeOptions.includeBrokerageCash,
+            onChooseItem: () => this.onToggleIncludeOption(
+                tabId, 'includeBrokerageCash'),
+        });
+        includeSubMenuItems.push({ id: 'toggleIncludeCashSecurities',
+            label: userMsg(
+                'PricedItemsListHandler-includeCashSecurities'),
+            checked: includeOptions.includeCashSecurities,
+            onChooseItem: () => this.onToggleIncludeOption(
+                tabId, 'includeCashSecurities'),
+        });
+        includeSubMenuItems.push({ id: 'toggleIncludeAccountLessSecurities',
+            label: userMsg(
+                'PricedItemsListHandler-includeAccountLessSecurities'),
+            checked: includeOptions.includeAccountLessSecurities,
+            onChooseItem: () => this.onToggleIncludeOption(
+                tabId, 'includeAccountLessSecurities'),
+        });
+        includeSubMenuItems.push({});
+        includeSubMenuItems.push({ id: 'toggleGroupSecurities',
+            label: userMsg(
+                'PricedItemsListHandler-groupSecurities'),
+            checked: includeOptions.groupSecurities,
+            onChooseItem: () => this.onToggleIncludeOption(
+                tabId, 'groupSecurities'),
+        });
         
 
-        const menuItems = [
+        const menuItems = [];
+        menuItems.push(
             { id: 'openPricesList',
                 label: userMsg('PricedItemsListHandler-openPricesList', 
                     typeDescription),
                 disabled: !activePricedItemId,
                 onChooseItem: () => this.onOpenPricesList(tabId),
-            },
+            });
+        menuItems.push(
             { id: 'toggleDateSelector',
                 label: userMsg('PricedItemsListHandler-showDateSelector'),
                 checked: showDateSelector,
                 onChooseItem: () => this.onToggleDateSelector(tabId),
-            },
-            {},
+            });
+        menuItems.push(
+            {});
+        menuItems.push(
             { id: 'newPricedItem',
                 label: userMsg('PricedItemsListHandler-newPricedItem', 
                     typeDescription),
                 onChooseItem: () => this.onNewPricedItem(tabId, pricedItemTypeName),
-            },                        
+            });
+        menuItems.push(
             { id: 'modifyPricedItem',
                 label: userMsg('PricedItemsListHandler-modifyPricedItem', 
                     typeDescription),
                 disabled: !activePricedItemId,
                 onChooseItem: () => this.onModifyPricedItem(tabId),
-            },                        
+            });
+        menuItems.push(
             { id: 'removePricedItem',
                 label: userMsg('PricedItemsListHandler-removePricedItem', 
                     typeDescription),
                 disabled: !activePricedItemId,
                 onChooseItem: () => this.onRemovePricedItem(tabId, pricedItemTypeName),
-            },
-            {},
+            });
+
+        menuItems.push(
+            {});
+
+        menuItems.push(
             { id: 'pricedItemsVisibilitySubMenu',
                 label: userMsg('PricedItemsListHandler-visibility_subMenu',
                     typeDescription),
                 subMenuItems: visibilityMenuItems,
-            },
+            });
+        menuItems.push(
             { id: 'pricedItemsAccountsSubMenu',
                 label: userMsg('PricedItemsListHandler-accounts_subMenu'),
                 subMenuItems: accountsSubMenuItems,
-            },
-            {},
-            
+            });
+        
+        if (type.hasTickerSymbol) {
+            menuItems.push(
+                {
+                    id: 'pricedItemsIncludeSubMenu',
+                    label: userMsg('PricedItemsListHandler-include_subMenu'),
+                    subMenuItems: includeSubMenuItems,
+                });
+        }
+
+        menuItems.push(
+            {});
+
+        menuItems.push(
             { id: 'columnsSubMenu',
                 label: userMsg('PricedItemsListHandler-columns_subMenu'),
                 subMenuItems: toggleColumnsSubMenuItems,
-            },
+            });
 
-            {},
-            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state),
-            this._rowTableHandler.createResetColumnOrderMenuItem(tabId, state),
-            this._rowTableHandler.createToggleRowBordersMenuItem(tabId, state),
-        ];
+        menuItems.push(
+            {});
+
+        menuItems.push(
+            this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state));
+        menuItems.push(
+            this._rowTableHandler.createResetColumnOrderMenuItem(tabId, state));
+        menuItems.push(
+            this._rowTableHandler.createToggleRowBordersMenuItem(tabId, state));
 
         return {
             items: menuItems,
@@ -694,13 +764,13 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const showRowBorders = (settings.showRowBorders === undefined)
             ? true
             : settings.showRowBorders;
-        const collapsedPricedItemIds = settings.collapsedPricedItemIds || [];
+        const collapsedRowKeys = settings.collapsedRowKeys || [];
         const showAccounts = (settings.showAccounts === undefined)
             ? true
             : settings.showAccounts;
-        const sortAlphabetically = (settings.sortAlphabetically === undefined)
-            ? true
-            : settings.sortAlphabetically;
+        
+        const includeOptions = settings.includeOptions || getDefaultIncludeOptions();
+        
 
         const tabEntry = {
             tabId: tabId,
@@ -719,10 +789,11 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             pricesYMDDate: settings.pricesYMDDate,
             showDateSelector: showDateSelector,
 
-            sortAlphabetically: sortAlphabetically,
-            collapsedPricedItemIds: collapsedPricedItemIds,
+            collapsedRowKeys: collapsedRowKeys,
             allColumns: allColumns,
             showRowBorders: showRowBorders,
+
+            includeOptions: includeOptions,
 
             pageRef: React.createRef(),
             canExportAsStringTable: () => true,
@@ -749,7 +820,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         const { tabId } = tabEntry;
 
         const state = this.getTabIdState(tabId);
-        const { dropdownInfo, collapsedPricedItemIds, showDateSelector } = state;
+        const { dropdownInfo, collapsedRowKeys, showDateSelector } = state;
 
         let contextMenuItems;
         if (dropdownInfo) {
@@ -796,13 +867,13 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
             pricesYMDDate = {tabEntry.pricesYMDDate}
 
-            sortAlphabetically = {tabEntry.sortAlphabetically}
+            includeOptions = {tabEntry.includeOptions}
 
             columnSorting = {tabEntry.columnSorting}
             onColumnSortingChange = {(args) =>
                 this._rowTableHandler.onColumnSortingChange(tabId, args)}
                 
-            collapsedPricedItemIds = {collapsedPricedItemIds}
+            collapsedRowKeys = {collapsedRowKeys}
             onUpdateCollapsedPricedItemIds = {(args) =>
                 this.onUpdateCollapsedPricedItemIds(tabEntry.tabId, args)}
             
