@@ -457,6 +457,9 @@
 
     "PricedItemsList-percentOfTotal_column_label": "% of Total",
 
+    "PricedItemsList-cash_ticker": " Cash",
+    "PricedItemsList-cash_name": "Cash and cash equivalents",
+
     "PricedItemsList-Group_regularAccounts": "Regular Account Securities",
     "PricedItemsList-Group_retirementAccounts": "Retirement Account Securities",
     "PricedItemsList-Group_accountLessSecurities": "Unowned Securities",

@@ -577,8 +577,9 @@ Are the lists really two separate styles? Or can they be combined into one?
 
         - Show/Hide securities with no shares
             - Potential problem here is double reload of account states since won't know if a priced item has no shares until it is loaded.
-    
-        - Option to include brokerage cash?
+            - Could filter it somehow at the sorting level.
+
+        - Collapse/Expand children
 
     
     - DropdownSelector
