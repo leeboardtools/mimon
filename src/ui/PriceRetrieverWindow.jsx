@@ -518,7 +518,7 @@ export class PriceRetrieverWindow extends React.Component {
             'ymdDateFrom');
 
         const toDate = this.renderDateComponent(
-            'PriceRetrieverWindow-from_date',
+            'PriceRetrieverWindow-to_date',
             'ymdDateTo');
 
         const controlsClassName = 'Py-2 Row-justify-content-center '
