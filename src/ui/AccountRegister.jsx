@@ -85,20 +85,22 @@ function setModal(args, modal, reason) {
 function getSplitCellValue(args, propertyName, valueName) {
     const { newTransactionDataItem, splitIndex } = getTransactionInfo(args);
     if (newTransactionDataItem) {
-        valueName = valueName || propertyName;
+        let cellValue = newTransactionDataItem.splits[splitIndex][propertyName];
+        if (!valueName) {
+            return cellValue;
+        }
         const value = {};
-        value[valueName] = newTransactionDataItem.splits[splitIndex][propertyName];
+        value[valueName] = cellValue;
         return value;
     }
 }
 
-function saveSplitCellValue(args, propertyName, valueName) {
+function saveSplitCellValue(args, propertyName) {
     const { cellEditBuffer, saveBuffer } = args;
     const { splitIndex } = getTransactionInfo(args);
     if (saveBuffer && propertyName) {
-        valueName = valueName || propertyName;
         saveBuffer.newTransactionDataItem.splits[splitIndex][propertyName] 
-            = cellEditBuffer.value[valueName];
+            = cellEditBuffer.value;
     }
 }
 
@@ -590,8 +592,10 @@ function saveSplitQuantityCellValue(args) {
         const { newTransactionDataItem } = saveBuffer;
         const { splitIndex } = getTransactionInfo(args);
 
-        newTransactionDataItem.splits[splitIndex] 
-            = ACE.resolveSplitQuantityEditValueToSplitDataItem(args);
+        const splitToUpdate = newTransactionDataItem.splits[splitIndex];
+        newTransactionDataItem.splits[splitIndex] = Object.assign({},
+            splitToUpdate,
+            ACE.resolveSplitQuantityEditValueToSplitDataItem(args));
     }
 }
 
@@ -609,8 +613,8 @@ function getAccountRegisterColumnInfoDefs(accountType) {
                 saveCellValue: saveDateCellValue,
             }),
             refNum: ACE.getRefNumColumnInfo({
-                getCellValue: (args) => getSplitCellValue(args, 'refNum', 'value'),
-                saveCellValue: (args) => saveSplitCellValue(args, 'refNum', 'value'),
+                getCellValue: (args) => getSplitCellValue(args, 'refNum'),
+                saveCellValue: (args) => saveSplitCellValue(args, 'refNum'),
             }),
         };
 
