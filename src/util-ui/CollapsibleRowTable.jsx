@@ -227,22 +227,63 @@ export function collapsibleRowTable(WrappedTable) {
             };
         }
 
+        updateStateUpdatedForSizingRowInfo() {
+            let { sizingRowInfo } = this.props;
+            if (!sizingRowInfo) {
+                sizingRowInfo = [];
+            }
+            else if (!Array.isArray(sizingRowInfo)) {
+                sizingRowInfo = [sizingRowInfo];
+            }
+        
+            const newRowEntries = [];
+            const newRowIndicesByKey = new Map();
+            const maxDepth = addRowInfosToEntries(sizingRowInfo, 0,
+                newRowEntries, newRowIndicesByKey);
+            
+            this.setState({
+                sizingRowEntriesInfo: {
+                    rowEntries: newRowEntries,
+                    rowIndicesByKey: newRowIndicesByKey,
+                    maxDepth: Math.max(maxDepth, 1),
+                },
+            });
+        }
+
 
         updateRowEntries() {
             this.setState(this.getStateUpdateForRowEntries());
         }
 
 
-        
-
 
         getRowKey(rowIndex) {
-            return this.state.rowEntries[rowIndex].rowInfo.key;
+            const rowEntry = this.state.rowEntries[rowIndex];
+            if (rowEntry) {
+                return rowEntry.rowInfo.key;
+            }
+
+            const { sizingRowEntriesInfo } = this.state;
+            if (sizingRowEntriesInfo) {
+                const { rowEntries } = sizingRowEntriesInfo;
+                if (rowEntries && rowEntries.length) {
+                    return rowEntries[0].rowInfo.key;
+                }
+            }
+        }
+
+
+        componentDidMount() {
+            this.updateStateUpdatedForSizingRowInfo();
         }
 
 
         componentDidUpdate(prevProps, prevState) {
             const { props } = this;
+
+            if (!deepEqual(props.sizingRowInfo, prevProps.sizingRowInfo)) {
+                this.updateStateUpdatedForSizingRowInfo();
+            }
 
             if (!deepEqual(props.rowInfos, prevProps.rowInfos)) {
                 this.updateRowEntries();
@@ -312,7 +353,20 @@ export function collapsibleRowTable(WrappedTable) {
         _onRenderCellImpl(args, onRenderCell) {
             args = Object.assign({}, args);
 
-            const rowEntry = this.state.rowEntries[args.rowIndex];
+            let rowEntry = this.state.rowEntries[args.rowIndex];
+            if (!rowEntry && args.isSizeRender) {
+                const { sizingRowEntriesInfo } = this.state;
+                if (sizingRowEntriesInfo) {
+                    const { rowEntries } = sizingRowEntriesInfo;
+                    if (rowEntries && rowEntries.length) {
+                        rowEntry = rowEntries[0];
+                    }
+                }
+            }
+            if (!rowEntry) {
+                return;
+            }
+
             args.rowInfo = rowEntry.rowInfo;
             args.depth = rowEntry.depth;
             let cell = onRenderCell(args);
@@ -509,6 +563,8 @@ export function collapsibleRowTable(WrappedTable) {
     /**
      * @typedef {object}    CollapsibleRowTable~propTypes
      * @property {CollapsibleRowTable~RowInfo[]}    rowInfos
+     * @property {CollapsibleRowTable~RowInfo} [sizingRowInfo]  Optional
+     * row info to use for sizing renders if rowInfos is empty.
      * @property {CollapsibleRowTable~onExpandCollapseRow}  onExpandCollapseRow
      * @property {*}    [activeRowKey]
      * @property {CollapsibleRowTable~onActivateRow}    onActivateRow
@@ -521,6 +577,7 @@ export function collapsibleRowTable(WrappedTable) {
      */
     _CollapsibleRowTable.propTypes = {
         rowInfos: PropTypes.array.isRequired,
+        sizingRowInfo: PropTypes.object,
         onExpandCollapseRow: PropTypes.func.isRequired,
 
         activeRowKey:   PropTypes.any,

@@ -5,8 +5,7 @@ import * as PI from '../engine/PricedItems';
 import * as A from '../engine/Accounts';
 import deepEqual from 'deep-equal';
 import { YMDDate } from '../util/YMDDate';
-import { getQuantityDefinition, 
-    getQuantityDefinitionName, } from '../util/Quantities';
+import { getQuantityDefinition, } from '../util/Quantities';
 import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';
 import * as AH from '../tools/AccountHelpers';
@@ -524,25 +523,36 @@ export class PricedItemsList extends React.Component {
 
         const { accessor } = props;
 
+        const sizingPricedItemDataItem = {
+            id: this.props.accessor.getBaseCurrencyPricedItemId(),
+            name: userMsg('PricedItemsList-dummy_name'),
+            description: userMsg('PricedItemsList-dummy_description'),
+            type: pricedItemTypeName,
+            onlineUpdateType: PI.PricedItemOnlineUpdateType.YAHOO_FINANCE.name,
+            ticker: 'WWWW',
+            quantityDefinition: accessor.getDefaultSharesQuantityDefinition(),
+        };
+
         this._sizingRowEntry = {
-            pricedItemDataItem: {
-                id: this.props.accessor.getBaseCurrencyPricedItemId(),
-                name: userMsg('PricedItemsList-dummy_name'),
-                description: userMsg('PricedItemsList-dummy_description'),
-                type: pricedItemTypeName,
-                onlineUpdateType: PI.PricedItemOnlineUpdateType.YAHOO_FINANCE.name,
-                ticker: 'WWWW',
-                accountState: {
-                    quantityBaseValue: ACE.BalanceSizingBaseValue,
-                },
-                quantityDefinition: accessor.getDefaultSharesQuantityDefinition(),
+            key: 'sizing',
+            type: 'PRICED_ITEM',
+            expandCollapseState: ExpandCollapseState.COLLAPSED,
+            pricedItemDataItem: sizingPricedItemDataItem,
+            pricedItemId: sizingPricedItemDataItem.id,
+            accountIds: [],
+
+            tickerValue: 'WWWW',
+            nameValue: {
+                name: sizingPricedItemDataItem.name,
+                description: sizingPricedItemDataItem.description,
             },
+
             accountState: {
                 quantityBaseValue: ACE.BalanceSizingBaseValue,
             },
-            quantityDefinition: getQuantityDefinitionName(
-                accessor.getDefaultSharesQuantityDefinition(),
-            ),
+            //quantityDefinition: getQuantityDefinitionName(
+            //    accessor.getDefaultSharesQuantityDefinition(),
+            //),
         };
 
         this._percentSuffix = userMsg('AccountsList-percentSuffix');
@@ -1176,7 +1186,7 @@ export class PricedItemsList extends React.Component {
         const allAccountIds = accountIdsByPricedItemId.get(pricedItemId);
 
         let accountIds;
-        if (allAccountIds) {
+        if (allAccountIds && this._hasTickers) {
             accountIds = [];
             allAccountIds.forEach((accountId) => {
                 const accountDataItem = accessor.getAccountDataItemWithId(accountId);
@@ -1759,6 +1769,10 @@ export class PricedItemsList extends React.Component {
 
 
     columnInfoFromRenderArgs(renderArgs) {
+        if (!this._hasTickers) {
+            return renderArgs.columnInfo;
+        }
+        
         let { columnInfo, rowInfo } = renderArgs;
         const { type } = rowInfo;
         
@@ -2042,6 +2056,7 @@ export class PricedItemsList extends React.Component {
             <CollapsibleRowTable
                 columns = { props.columns }
                 rowInfos = {state.sortedRowInfos || state.rowInfos}
+                sizingRowInfo = {this._sizingRowEntry}
                 onExpandCollapseRow = {this.onExpandCollapseRow}
 
                 onRenderCell={this.onRenderCell}
