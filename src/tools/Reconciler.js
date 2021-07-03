@@ -442,9 +442,25 @@ export class Reconciler extends EventEmitter {
      */
     async asyncGetNonReconciledSplitInfos() {
         const splitInfos = [];
+        
+        const transactionDataItems 
+            = await this._accessor.asyncGetTransactionDataItemsWithIds(
+                Array.from(this._transactionEntriesByTransactionId.keys())
+            );
+        const transactionDataItemsById = new Map();
+        transactionDataItems.forEach((transactionDataItem) => 
+            transactionDataItemsById.set(transactionDataItem.id, transactionDataItem));
+
         this._transactionEntriesByTransactionId.forEach((transactionEntry, id) => {
+            const transactionDataItem = transactionDataItemsById.get(id);
+            const { splits } = transactionDataItem;
+
             const { splitEntries } = transactionEntry;
             splitEntries.forEach((splitEntry) => {
+                const split = splits[splitEntry.splitIndex];
+                if (split.reconcileState === T.ReconcileState.RECONCILED.name) {
+                    return;
+                }
                 splitInfos.push({
                     transactionId: id,
                     splitIndex: splitEntry.splitIndex,
