@@ -390,6 +390,12 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Somehow fit to page so it doesn't get clipped.
         - Print date
         - Margin setup
+    
+
+    - Real Estate
+        - Cost basis
+        - Improvements
+        - Depreciation
 
 
     - Reconciler
@@ -517,7 +523,7 @@ Are the lists really two separate styles? Or can they be combined into one?
 
         - Editing date loses focus
 
-        - Support +/- keys in date editor
+        - Indicate transactions in the future
 
 
     - Accounts List/Priced Items List
@@ -535,8 +541,6 @@ Are the lists really two separate styles? Or can they be combined into one?
                 - Can't add different currencies.
         
         - Show/hide empty accounts (no value, no child accounts)
-
-        - Collapse/Expand child account children
 
         - Date Selector Bar:
             - Standard options:

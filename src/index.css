@@ -100,86 +100,6 @@ label {
     margin: auto;
 }
 
-/*
-.AccountRegister {
-}
-*/
-
-.AccountRegister-tooltip-row {
-    margin-left: -10px;
-    margin-right: -10px;
-}
-
-.AccountRegister-tooltip-code {
-    -ms-flex: 0 0 auto;
-    flex: 0 0 auto;
-    width: 2.5rem;
-    max-width: 100%;
-    text-align: center;
-    padding-left: 0;
-    padding-right: 5px;
-    font-size:x-small;
-}
-
-.AccountRegister-tooltip-value {
-    text-align: right;
-}
-
-.AccountRegister-tooltip-value-withCode {
-    padding-right: 0;
-}
-
-/*
-.AccountsList {
-}
-*/
-.AccountList-hidden-account {
-    font-style: italic;
-}
-.AccountList-always-hidden-account {
-    font-style: italic;
-}
-
-.AccountList-inactive-account {
-    font-weight:lighter;
-    color: #495057a6;
-}
-
-.AccountList-too-young-account,
-.PricedItemsList-too-young {
-    font-style: italic;
-    text-decoration: line-through;
-    font-weight:lighter;
-    color: #495057a6;
-}
-
-.AccountsList-subtotal, 
-.PricedItemsList-subtotal,
-.PricedItemsList-group {
-    font-weight: bold;
-}
-
-.AccountsList-subtotal-value, 
-.PricedItemsList-subtotal-value {
-    border-top: 1px solid;
-    margin-top: -5px;
-    padding-top: 5px;
-    text-align: right;
-}
-
-.AccountsList-subtotal-collapsed-value, 
-.PricedItemsList-subtotal-collapsed-value {
-    text-align: right;
-}
-
-.AccountsList-DateSelectorBar {
-    border-bottom: 1px solid #dee2e6!important;
-}
-
-.AccountsList-DateSelectorField {
-    margin-bottom: 0.5rem;
-}
-
 .DateSelectorBar {
     margin-left: 0;
     margin-right: 0;
@@ -392,6 +312,95 @@ label {
 .MultiSplitsEditor-table {
     padding: 1rem;
 }
+
+
+
+/*
+.AccountRegister {
+}
+*/
+
+.AccountRegister-tooltip-row {
+    margin-left: -10px;
+    margin-right: -10px;
+}
+
+.AccountRegister-tooltip-code {
+    -ms-flex: 0 0 auto;
+    flex: 0 0 auto;
+    width: 2.5rem;
+    max-width: 100%;
+    text-align: center;
+    padding-left: 0;
+    padding-right: 5px;
+    font-size:x-small;
+}
+
+.AccountRegister-tooltip-value {
+    text-align: right;
+}
+
+.AccountRegister-tooltip-value-withCode {
+    padding-right: 0;
+}
+
+/*
+.AccountsList {
+}
+*/
+.AccountList-hidden-account {
+    font-style: italic;
+}
+.AccountList-always-hidden-account {
+    font-style: italic;
+}
+
+.AccountList-inactive-account {
+    font-weight:lighter;
+    color: #495057a6;
+}
+
+.AccountList-too-young-account,
+.PricedItemsList-too-young {
+    font-style: italic;
+    text-decoration: line-through;
+    font-weight:lighter;
+    color: #495057a6;
+}
+
+.AccountsList-subtotal, 
+.PricedItemsList-subtotal,
+.PricedItemsList-group {
+    font-weight: bold;
+}
+
+.AccountsList-subtotal-value, 
+.PricedItemsList-subtotal-value {
+    border-top: 1px solid;
+    margin-top: -5px;
+    padding-top: 5px;
+    text-align: right;
+}
+/*
+.AccountsList-subtotal-collapsed-value, 
+.PricedItemsList-subtotal-collapsed-value {
+    text-align: right;
+}
+*/
+
+.AccountsList-subtotal-name,
+.PricedItemsList-subtotal-name {
+    text-align: right;
+}
+
+.AccountsList-DateSelectorBar {
+    border-bottom: 1px solid #dee2e6!important;
+}
+
+.AccountsList-DateSelectorField {
+    margin-bottom: 0.5rem;
+}
+
 
 /*
 .PriceRetrieverWindow-controls {

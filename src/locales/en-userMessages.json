@@ -186,6 +186,8 @@
     "AccountsListHandler-showInactiveAccounts": "Show Inactive Accounts",
     "AccountsListHandler-displayAlphabetically": "Display Alphabetically",
     "AccountsListHandler-showDateSelector": "Show Date Selector",
+    "AccountsListHandler-expandChildAccounts": "Expand All Child Accounts",
+    "AccountsListHandler-collapseChildAccounts": "Collapse All Child Accounts",
 
     "AccountsListHandler-subtotals_subMenu": "Subtotals",
     "AccountsListHandler-subtotalsWhenCollapsed": "Show Subtotals for Collapsed Accounts",
@@ -232,8 +234,11 @@
     "AccountsListHandler-action_hideInactiveAccounts": "Hide Inactive Accounts",
     "AccountsListHandler-action_enableSortAlphabetically": "Enable Sort Alphabetically",
     "AccountsListHandler-action_disableSortAlphabetically": "Disable Sort Alphabetically",
-    "AccountsListHandler-action_expandAccount": ["Expand Child Accounts of ", ""],
-    "AccountsListHandler-action_collapseAccount": ["Collapse Child Accounts of ", ""],
+    "AccountsListHandler-action_expandAccount": ["Expand ", ""],
+    "AccountsListHandler-action_collapseAccount": ["Collapse ", ""],
+    "AccountsListHandler-action_expandChildAccounts": ["Expand All Child Accounts of ", ""],
+    "AccountsListHandler-action_collapseChildAccount": ["Collapse All Child Accounts of ", ""],
+
 
     "AccountsListHandler-action_showSubtotalsWhenCollapsed": "Show Subtotals for Collapsed Accounts",
     "AccountsListHandler-action_showNetWorth": "Show Net Worth",

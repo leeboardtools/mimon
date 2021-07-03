@@ -312,8 +312,38 @@ export class AccountsListHandler extends MainWindowHandlerBase {
     }
 
 
+    onExpandCollapseChildAccounts(tabId, accountId, expandCollapseState) {
+        const state = this.getTabIdState(tabId);
+
+        const accountDataItem = this.props.accessor.getAccountDataItemWithId(
+            accountId);
+        const { childAccountIds } = accountDataItem;
+
+        let actionNameId;
+        const collapsedAccountIdsSet = new Set(state.collapsedAccountIds);
+        if (expandCollapseState === ExpandCollapseState.EXPANDED) {
+            childAccountIds.forEach((childAccountId) => 
+                collapsedAccountIdsSet.delete(childAccountId)
+            );
+            actionNameId = 'AccountsListHandler-action_expandChildAccounts';
+        }
+        else {
+            childAccountIds.forEach((childAccountId) => 
+                collapsedAccountIdsSet.add(childAccountId)
+            );
+            actionNameId = 'AccountsListHandler-action_collapseChildAccounts';
+        }
+
+        this.onUpdateCollapsedAccountIds(tabId, {
+            accountId: accountId,
+            collapsedAccountIds: Array.from(collapsedAccountIdsSet.values()),
+            actionName: userMsg(actionNameId),
+        });
+    }
+
+
     onUpdateCollapsedAccountIds(tabId, 
-        { accountId, expandCollapseState, collapsedAccountIds}) {
+        { accountId, expandCollapseState, collapsedAccountIds, actionName}) {
 
         const state = this.getTabIdState(tabId);
 
@@ -321,16 +351,17 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             collapsedAccountIds: collapsedAccountIds
         });
 
-        const actionNameId = (expandCollapseState === ExpandCollapseState.EXPANDED)
-            ? 'AccountsListHandler-action_expandAccount'
-            : 'AccountsListHandler-action_collapseAccount';
+        if (!actionName) {
+            const actionNameId = (expandCollapseState === ExpandCollapseState.EXPANDED)
+                ? 'AccountsListHandler-action_expandAccount'
+                : 'AccountsListHandler-action_collapseAccount';
 
-        const accountDataItem = this.props.accessor.getAccountDataItemWithId(
-            accountId);
+            const accountDataItem = this.props.accessor.getAccountDataItemWithId(
+                accountId);
 
-        let actionName;
-        if (accountDataItem) {
-            actionName = userMsg(actionNameId, accountDataItem.name);
+            if (accountDataItem) {
+                actionName = userMsg(actionNameId, accountDataItem.name);
+            }
         }
 
         this.setTabIdProjectSettings(state.projectSettingsId, 
@@ -564,6 +595,46 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             label: userMsg('AccountsListHandler-showDateSelector'),
             checked: showDateSelector,
             onChooseItem: () => this.onToggleDateSelector(tabId),
+        });
+
+        menuItems.push({});
+
+        let expandChildrenDisabled = true;
+        let collapseChildrenDisabled = true;
+        if (activeAccountDataItem) {
+            const { childAccountIds } = activeAccountDataItem;
+            if (childAccountIds) {
+                for (let i = 0; i < childAccountIds.length; ++i) {
+                    const isCollapsed 
+                        = state.collapsedAccountIds.indexOf(childAccountIds[i]) >= 0;
+                    if (isCollapsed) {
+                        expandChildrenDisabled = false;
+                        if (!collapseChildrenDisabled) {
+                            break;
+                        }
+                    }
+                    else {
+                        collapseChildrenDisabled = false;
+                        if (!expandChildrenDisabled) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        menuItems.push({ id: 'expandChildAccounts',
+            label: userMsg('AccountsListHandler-expandChildAccounts'),
+            disabled: expandChildrenDisabled,
+            onChooseItem: () => this.onExpandCollapseChildAccounts(tabId,
+                activeAccountId, ExpandCollapseState.EXPANDED)
+        });
+        
+        menuItems.push({ id: 'collapseChildAccounts',
+            label: userMsg('AccountsListHandler-collapseChildAccounts'),
+            disabled: collapseChildrenDisabled,
+            onChooseItem: () => this.onExpandCollapseChildAccounts(tabId,
+                activeAccountId, ExpandCollapseState.COLLAPSED)
         });
 
         menuItems.push({});

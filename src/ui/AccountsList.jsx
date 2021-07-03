@@ -91,18 +91,19 @@ function compareGainBaseValues(rowInfoA, rowInfoB, property) {
 
 //
 //
-function keyToRank(key) {
-    if (typeof key === 'string') {
-        if (key.startsWith('_NET')) {
-            return (key.startsWith('_NET_')) 
-                ? 10
-                : 11;
-        }
-        else if (key.startsWith('_SUBTOTAL')) {
-            return (key.startsWith('_SUBTOTAL_'))
-                ? 1
-                : 2;
-        }
+function getRowInfoRank(rowInfo) {
+    switch (rowInfo.type) {
+    case 'NET' :
+        return 10;
+    
+    case 'NET_EMPTY' :
+        return 11;
+    
+    case 'SUBTOTAL' :
+        return 1;
+    
+    case 'SUBTOTAL_EMPTY' :
+        return 2;
     }
 
     return 0;
@@ -114,8 +115,8 @@ function keyToRank(key) {
 function baseCompare(argsA, argsB, sign, compare) {
     const rowInfoA = argsA.rowInfo;
     const rowInfoB = argsB.rowInfo;
-    let rankA = keyToRank(rowInfoA.key);
-    let rankB = keyToRank(rowInfoB.key);
+    let rankA = getRowInfoRank(rowInfoA);
+    let rankB = getRowInfoRank(rowInfoB);
     if (rankA !== rankB) {
         return (rankA - rankB) * sign;
     }
@@ -133,8 +134,8 @@ function subtotalCompare(argsA, argsB, sign, compare) {
     const subtotalA = rowInfoA.subtotalRowInfo;
     const subtotalB = rowInfoB.subtotalRowInfo;
 
-    let rankA = (subtotalA) ? 0 : keyToRank(rowInfoA.key);
-    let rankB = (subtotalB) ? 0 : keyToRank(rowInfoB.key);
+    let rankA = (subtotalA) ? 0 : getRowInfoRank(rowInfoA);
+    let rankB = (subtotalB) ? 0 : getRowInfoRank(rowInfoB);
     if (rankA !== rankB) {
         return (rankA - rankB) * sign;
     }
@@ -973,6 +974,7 @@ export class AccountsList extends React.Component {
 
         const rowInfo = {
             key: key,
+            type: 'ACCOUNT',
             expandCollapseState: (childAccountIds && childAccountIds.length)
                 ? ((isCollapsed) 
                     ? ExpandCollapseState.COLLAPSED
@@ -1132,6 +1134,7 @@ export class AccountsList extends React.Component {
 
         const subtotalRowInfo = {
             key: '_SUBTOTAL_' + subtotalAccountDataItem.id,
+            type: 'SUBTOTAL',
             accountId: subtotalAccountDataItem.id,
             subtotalName: subtotalAccountDataItem.name,
             currency: this.props.accessor.getCurrencyOfAccountId(
@@ -1141,6 +1144,7 @@ export class AccountsList extends React.Component {
 
         const emptyRowInfo = {
             key: '_SUBTOTALEMPTY_' + subtotalAccountDataItem.id,
+            type: 'SUBTOTAL_EMPTY',
         };
         childRowInfos.push(emptyRowInfo);
 
@@ -1178,6 +1182,7 @@ export class AccountsList extends React.Component {
 
         const netRowInfo = {
             key: '_NET_' + name,
+            type: 'NET',
             plusRootAccountId: plusRootAccountDataItem.id,
             minusRootAccountId: minusRootAccountDataItem.id,
             rootNetName: name,
@@ -1187,6 +1192,7 @@ export class AccountsList extends React.Component {
 
         const emptyRowInfo = {
             key: '_NETEMPTY_' + name,
+            type: 'NET_EMPTY',
         };
 
         let rowIndex = rowInfos.indexOf(insertAfterRowInfo);
@@ -1203,13 +1209,11 @@ export class AccountsList extends React.Component {
 
         for (let i = 0; i < rowInfos.length; ++i) {
             const rowInfo = rowInfos[i];
-            const { key } = rowInfo;
-            if (typeof key === 'string') {
-                if (key.startsWith('_NET_')) {
-                    this.updateRootNetRowInfoAccountStates(state, rowInfo);
-                    continue;
-                }
-            }            
+            const { type } = rowInfo;
+            if (type === 'NET') {
+                this.updateRootNetRowInfoAccountStates(state, rowInfo);
+                continue;
+            }
 
             this.updateRowInfoAccountStates(state, rowInfo);
 
@@ -1248,14 +1252,12 @@ export class AccountsList extends React.Component {
             const { childRowInfos } = rowInfo;
             if (childRowInfos) {
                 childRowInfos.forEach((childRowInfo) => {
-                    const { key } = childRowInfo;
-                    if (typeof key === 'string') {
-                        if (key.startsWith('_SUBTOTAL_')) {
-                            childRowInfo.accountGainsState = GH.cloneAccountGainsState(
-                                totalAccountGainsState);
-                            childRowInfo.accountGainsState.isExcludeFromGain = false;
-                            return;
-                        }
+                    const { type } = childRowInfo;
+                    if (type === 'SUBTOTAL') {
+                        childRowInfo.accountGainsState = GH.cloneAccountGainsState(
+                            totalAccountGainsState);
+                        childRowInfo.accountGainsState.isExcludeFromGain = false;
+                        return;
                     }
 
                     this.updateRowInfoAccountStates(state, childRowInfo);
@@ -1481,10 +1483,15 @@ export class AccountsList extends React.Component {
         let { columnInfo, rowInfo } = renderArgs;
         if (rowInfo.subtotalName || rowInfo.rootNetName) {
             columnInfo = Object.assign({}, columnInfo);
-            columnInfo.inputClassExtras = 'AccountsList-subtotal '
+            columnInfo.inputClassExtras += ' AccountsList-subtotal '
                 + ((rowInfo.accountDataItem)
                     ? 'AccountsList-subtotal-collapsed-value'
                     : 'AccountsList-subtotal-value');
+            
+            if ((columnInfo.key === 'name')
+             && (rowInfo.type === 'SUBTOTAL')) {
+                columnInfo.inputClassExtras += ' AccountsList-subtotal-name';
+            }
         }
 
         const { accountDataItem } = rowInfo;
