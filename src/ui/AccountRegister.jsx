@@ -95,12 +95,14 @@ function getSplitCellValue(args, propertyName, valueName) {
     }
 }
 
-function saveSplitCellValue(args, propertyName) {
+function saveSplitCellValue(args, propertyName, valueName) {
     const { cellEditBuffer, saveBuffer } = args;
     const { splitIndex } = getTransactionInfo(args);
     if (saveBuffer && propertyName) {
         saveBuffer.newTransactionDataItem.splits[splitIndex][propertyName] 
-            = cellEditBuffer.value;
+            = (valueName && (typeof cellEditBuffer.value === 'object')) 
+                ? cellEditBuffer.value[valueName]
+                : cellEditBuffer.value;
     }
 }
 
@@ -632,8 +634,10 @@ function getAccountRegisterColumnInfoDefs(accountType) {
 
             // reconcileState
             columnInfoDefs.reconcile = ACE.getReconcileStateColumnInfo({
-                getCellValue: (args) => getSplitCellValue(args, 'reconcileState'),
-                saveCellValue: (args) => saveSplitCellValue(args, 'reconcileState'),
+                getCellValue: (args) => getSplitCellValue(args, 'reconcileState',
+                    'reconcileState'),
+                saveCellValue: (args) => saveSplitCellValue(args, 'reconcileState',
+                    'reconcileState'),
             });
 
             // shares
@@ -700,8 +704,10 @@ function getAccountRegisterColumnInfoDefs(accountType) {
 
             columnInfoDefs.reconcile = ACE.getReconcileStateColumnInfo(
                 {
-                    getCellValue: (args) => getSplitCellValue(args, 'reconcileState'),
-                    saveCellValue: (args) => saveSplitCellValue(args, 'reconcileState'),
+                    getCellValue: (args) => getSplitCellValue(args, 'reconcileState',
+                        'reconcileState'),
+                    saveCellValue: (args) => saveSplitCellValue(args, 'reconcileState',
+                        'reconcileState'),
                 }
             );
 
