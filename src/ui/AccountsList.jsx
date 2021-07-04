@@ -1234,9 +1234,14 @@ export class AccountsList extends React.Component {
             return;
         }
 
-        const accountGainsState = this.getAccountGainsStateForAccountId(accountId);
+        const accountStateInfo = this.state.accountStateInfosByAccountId.get(accountId);
+        const { accountGainsState, accountState } = accountStateInfo;
 
-        rowInfo.accountGainsState = accountGainsState;
+        // This prevents the display of balance, % of, for accounts without any transactions.
+        if (accountState.transactionId || accountState.quantityBaseValue) {
+            rowInfo.accountGainsState = accountGainsState;
+        }
+
         rowInfo.totalAccountGainsState = accountGainsState;
 
         const { childAccountIds } = accountDataItem;
