@@ -1289,11 +1289,13 @@ test('Transactions-openingBalances', async () => {
 
     expect(manager.getCurrentAccountStateDataItem(sys.checkingId)).toEqual(
         { ymdDate: initialYMDDate, 
+            transactionId: sys.checkingOpeningBalanceTransId,
             quantityBaseValue: sys.checkingOBQuantityBaseValue, 
         });
 
     expect(manager.getCurrentAccountStateDataItem(sys.cashId)).toEqual(
         { ymdDate: initialYMDDate, 
+            transactionId: sys.cashOpeningBalanceTransId,
             quantityBaseValue: sys.cashOBQuantityBaseValue, 
         });
     
@@ -1304,9 +1306,11 @@ test('Transactions-openingBalances', async () => {
         sys.cashId]);
     expect(result).toEqual([
         { ymdDate: initialYMDDate, 
+            transactionId: sys.checkingOpeningBalanceTransId,
             quantityBaseValue: sys.checkingOBQuantityBaseValue, 
         },
         { ymdDate: initialYMDDate, 
+            transactionId: sys.cashOpeningBalanceTransId,
             quantityBaseValue: sys.cashOBQuantityBaseValue, 
         }
     ]);
@@ -1399,36 +1403,56 @@ test('Transactions-accountStateUpdates', async () => {
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transD.id)).toEqual(
         [{ ymdDate: settingsD.ymdDate, 
+            transactionId: transD.id,
             quantityBaseValue: checkingQuantityBaseValueD 
         }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transD.id)).toEqual(
-        [{ ymdDate: settingsC.ymdDate, quantityBaseValue: checkingQuantityBaseValueC }]);
+        [{ ymdDate: settingsC.ymdDate, 
+            transactionId: transC.id,
+            quantityBaseValue: checkingQuantityBaseValueC,
+        }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transC.id)).toEqual(
-        [{ ymdDate: settingsC.ymdDate, quantityBaseValue: checkingQuantityBaseValueC }]);
+        [{ ymdDate: settingsC.ymdDate, 
+            transactionId: transC.id,
+            quantityBaseValue: checkingQuantityBaseValueC,
+        }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transC.id)).toEqual(
-        [{ ymdDate: settingsB.ymdDate, quantityBaseValue: checkingQuantityBaseValueB }]);
+        [{ ymdDate: settingsB.ymdDate, 
+            transactionId: transB.id,
+            quantityBaseValue: checkingQuantityBaseValueB,
+        }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transB.id)).toEqual(
-        [{ ymdDate: settingsB.ymdDate, quantityBaseValue: checkingQuantityBaseValueB }]);
+        [{ ymdDate: settingsB.ymdDate, 
+            transactionId: transB.id,
+            quantityBaseValue: checkingQuantityBaseValueB,
+        }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transB.id)).toEqual(
-        [{ ymdDate: settingsA.ymdDate, quantityBaseValue: checkingQuantityBaseValueA }]);
+        [{ ymdDate: settingsA.ymdDate, 
+            transactionId: transA.id,
+            quantityBaseValue: checkingQuantityBaseValueA,
+        }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transA.id)).toEqual(
-        [{ ymdDate: settingsA.ymdDate, quantityBaseValue: checkingQuantityBaseValueA }]);
+        [{ ymdDate: settingsA.ymdDate, 
+            transactionId: transA.id,
+            quantityBaseValue: checkingQuantityBaseValueA,
+        }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transA.id)).toEqual(
         [{ ymdDate: initialYMDDate, 
+            transactionId: sys.checkingOpeningBalanceTransId,
             quantityBaseValue: sys.checkingOBQuantityBaseValue 
         }]);
     
@@ -1439,17 +1463,27 @@ test('Transactions-accountStateUpdates', async () => {
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         [sys.cashId, sys.checkingId], [transD.id, transC.id])).toEqual(
         [
-            [{ ymdDate: settingsC.ymdDate, quantityBaseValue: cashQuantityBaseValueC }],
+            [{ ymdDate: settingsC.ymdDate, 
+                transactionId: transC.id,
+                quantityBaseValue: cashQuantityBaseValueC,
+            }],
             [{ ymdDate: settingsB.ymdDate, 
-                quantityBaseValue: checkingQuantityBaseValueB }],
+                transactionId: transB.id,
+                quantityBaseValue: checkingQuantityBaseValueB,
+            }],
         ]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         [sys.cashId, sys.checkingId], [transC.id, transB.id])).toEqual(
         [
-            [{ ymdDate: settingsC.ymdDate, quantityBaseValue: cashQuantityBaseValueC }],
+            [{ ymdDate: settingsC.ymdDate, 
+                transactionId: transC.id,
+                quantityBaseValue: cashQuantityBaseValueC,
+            }],
             [{ ymdDate: settingsB.ymdDate, 
-                quantityBaseValue: checkingQuantityBaseValueB }]
+                transactionId: transB.id,
+                quantityBaseValue: checkingQuantityBaseValueB,
+            }]
         ]);
 
 
@@ -1460,9 +1494,11 @@ test('Transactions-accountStateUpdates', async () => {
             {
                 accountStateDataItem:
                     { ymdDate: settingsA.ymdDate, 
+                        transactionId: transA.id,
                         quantityBaseValue: checkingQuantityBaseValueA },
                 preAccountStateDataItem:
                     { ymdDate: sys.initialYMDDate, 
+                        transactionId: sys.checkingOpeningBalanceTransId,
                         quantityBaseValue: sys.checkingOBQuantityBaseValue },
                 transactionDataItem: transA,
                 splitIndex: 0,
@@ -1471,9 +1507,11 @@ test('Transactions-accountStateUpdates', async () => {
             {
                 accountStateDataItem:
                     { ymdDate: settingsB.ymdDate, 
+                        transactionId: transB.id,
                         quantityBaseValue: checkingQuantityBaseValueB },
                 preAccountStateDataItem:
                     { ymdDate: settingsA.ymdDate, 
+                        transactionId: transA.id,
                         quantityBaseValue: checkingQuantityBaseValueA },
                 transactionDataItem: transB,
                 splitIndex: 1,
@@ -1482,9 +1520,11 @@ test('Transactions-accountStateUpdates', async () => {
             {
                 accountStateDataItem:
                     { ymdDate: settingsC.ymdDate, 
+                        transactionId: transC.id,
                         quantityBaseValue: checkingQuantityBaseValueC },
                 preAccountStateDataItem:
                     { ymdDate: settingsB.ymdDate, 
+                        transactionId: transB.id,
                         quantityBaseValue: checkingQuantityBaseValueB },
                 transactionDataItem: transC,
                 splitIndex: 0,
@@ -1498,9 +1538,11 @@ test('Transactions-accountStateUpdates', async () => {
             {
                 accountStateDataItem:
                     { ymdDate: settingsB.ymdDate, 
+                        transactionId: transB.id,
                         quantityBaseValue: checkingQuantityBaseValueB },
                 preAccountStateDataItem:
                     { ymdDate: settingsA.ymdDate, 
+                        transactionId: transA.id,
                         quantityBaseValue: checkingQuantityBaseValueA },
                 transactionDataItem: transB,
                 splitIndex: 1,
@@ -1509,9 +1551,11 @@ test('Transactions-accountStateUpdates', async () => {
             {
                 accountStateDataItem:
                     { ymdDate: settingsC.ymdDate, 
+                        transactionId: transC.id,
                         quantityBaseValue: checkingQuantityBaseValueC },
                 preAccountStateDataItem:
                     { ymdDate: settingsB.ymdDate, 
+                        transactionId: transB.id,
                         quantityBaseValue: checkingQuantityBaseValueB },
                 transactionDataItem: transC,
                 splitIndex: 0,
@@ -1545,35 +1589,50 @@ test('Transactions-accountStateUpdates', async () => {
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transD.id)).toEqual(
-        [{ ymdDate: settingsD.ymdDate, quantityBaseValue: checkingQuantityBaseValueD }]);
+        [{ ymdDate: settingsD.ymdDate, 
+            transactionId: transD.id,
+            quantityBaseValue: checkingQuantityBaseValueD }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transD.id)).toEqual(
-        [{ ymdDate: settingsB.ymdDate, quantityBaseValue: checkingQuantityBaseValueBa }]);
+        [{ ymdDate: settingsB.ymdDate, 
+            transactionId: transB.id,
+            quantityBaseValue: checkingQuantityBaseValueBa }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transB.id)).toEqual(
-        [{ ymdDate: settingsB.ymdDate, quantityBaseValue: checkingQuantityBaseValueBa }]);
+        [{ ymdDate: settingsB.ymdDate, 
+            transactionId: transB.id,
+            quantityBaseValue: checkingQuantityBaseValueBa }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transB.id)).toEqual(
-        [{ ymdDate: ymdDateCa, quantityBaseValue: checkingQuantityBaseValueCa }]);
+        [{ ymdDate: ymdDateCa, 
+            transactionId: transC.id,
+            quantityBaseValue: checkingQuantityBaseValueCa }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transC.id)).toEqual(
-        [{ ymdDate: ymdDateCa, quantityBaseValue: checkingQuantityBaseValueCa }]);
+        [{ ymdDate: ymdDateCa, 
+            transactionId: transC.id,
+            quantityBaseValue: checkingQuantityBaseValueCa }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transC.id)).toEqual(
-        [{ ymdDate: settingsA.ymdDate, quantityBaseValue: checkingQuantityBaseValueA }]);
+        [{ ymdDate: settingsA.ymdDate, 
+            transactionId: transA.id,
+            quantityBaseValue: checkingQuantityBaseValueA }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transA.id)).toEqual(
-        [{ ymdDate: settingsA.ymdDate, quantityBaseValue: checkingQuantityBaseValueA }]);
+        [{ ymdDate: settingsA.ymdDate, 
+            transactionId: transA.id,
+            quantityBaseValue: checkingQuantityBaseValueA }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transA.id)).toEqual(
         [{ ymdDate: initialYMDDate, 
+            transactionId: sys.checkingOpeningBalanceTransId,
             quantityBaseValue: sys.checkingOBQuantityBaseValue 
         }]);
 
@@ -1603,9 +1662,11 @@ test('Transactions-accountStateUpdates', async () => {
             {
                 accountStateDataItem:
                     { ymdDate: settingsA.ymdDate, 
+                        transactionId: transA.id,
                         quantityBaseValue: checkingQuantityBaseValueA },
                 preAccountStateDataItem:
                     { ymdDate: sys.initialYMDDate, 
+                        transactionId: sys.checkingOpeningBalanceTransId,
                         quantityBaseValue: sys.checkingOBQuantityBaseValue },
                 transactionDataItem: transA,
                 splitIndex: 0,
@@ -1614,9 +1675,11 @@ test('Transactions-accountStateUpdates', async () => {
             {
                 accountStateDataItem:
                     { ymdDate: ymdDateCb, 
+                        transactionId: transC.id,
                         quantityBaseValue: checkingQuantityBaseValueCb },
                 preAccountStateDataItem:
                     { ymdDate: settingsA.ymdDate, 
+                        transactionId: transA.id,
                         quantityBaseValue: checkingQuantityBaseValueA },
                 transactionDataItem: transCb,
                 splitIndex: 0,
@@ -1625,9 +1688,11 @@ test('Transactions-accountStateUpdates', async () => {
             {
                 accountStateDataItem:
                     { ymdDate: settingsB.ymdDate, 
+                        transactionId: transB.id,
                         quantityBaseValue: checkingQuantityBaseValueBb },
                 preAccountStateDataItem:
                     { ymdDate: ymdDateCb, 
+                        transactionId: transC.id,
                         quantityBaseValue: checkingQuantityBaseValueCb },
                 transactionDataItem: transB,
                 splitIndex: 1,
@@ -1637,35 +1702,50 @@ test('Transactions-accountStateUpdates', async () => {
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transD.id)).toEqual(
-        [{ ymdDate: settingsD.ymdDate, quantityBaseValue: checkingQuantityBaseValueD }]);
+        [{ ymdDate: settingsD.ymdDate, 
+            transactionId: transD.id,
+            quantityBaseValue: checkingQuantityBaseValueD }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transD.id)).toEqual(
-        [{ ymdDate: settingsB.ymdDate, quantityBaseValue: checkingQuantityBaseValueBb }]);
+        [{ ymdDate: settingsB.ymdDate, 
+            transactionId: transB.id,
+            quantityBaseValue: checkingQuantityBaseValueBb }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transB.id)).toEqual(
-        [{ ymdDate: settingsB.ymdDate, quantityBaseValue: checkingQuantityBaseValueBb }]);
+        [{ ymdDate: settingsB.ymdDate, 
+            transactionId: transB.id,
+            quantityBaseValue: checkingQuantityBaseValueBb }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transB.id)).toEqual(
-        [{ ymdDate: ymdDateCb, quantityBaseValue: checkingQuantityBaseValueCb }]);
+        [{ ymdDate: ymdDateCb, 
+            transactionId: transC.id,
+            quantityBaseValue: checkingQuantityBaseValueCb }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transC.id)).toEqual(
-        [{ ymdDate: ymdDateCb, quantityBaseValue: checkingQuantityBaseValueCb }]);
+        [{ ymdDate: ymdDateCb, 
+            transactionId: transC.id,
+            quantityBaseValue: checkingQuantityBaseValueCb }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transC.id)).toEqual(
-        [{ ymdDate: settingsA.ymdDate, quantityBaseValue: checkingQuantityBaseValueA }]);
+        [{ ymdDate: settingsA.ymdDate, 
+            transactionId: transA.id,
+            quantityBaseValue: checkingQuantityBaseValueA }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transA.id)).toEqual(
-        [{ ymdDate: settingsA.ymdDate, quantityBaseValue: checkingQuantityBaseValueA }]);
+        [{ ymdDate: settingsA.ymdDate, 
+            transactionId: transA.id,
+            quantityBaseValue: checkingQuantityBaseValueA }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transA.id)).toEqual(
         [{ ymdDate: initialYMDDate, 
+            transactionId: sys.checkingOpeningBalanceTransId,
             quantityBaseValue: sys.checkingOBQuantityBaseValue 
         }]);
 
@@ -1727,31 +1807,43 @@ test('Transactions-accountStateUpdates', async () => {
     //  f[1]: '2010-01-20', 100
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transE.id)).toEqual(
-        [{ ymdDate: settingsE.ymdDate, quantityBaseValue: checkingQuantityBaseValueE0 },
-            { ymdDate: settingsE.ymdDate, 
-                quantityBaseValue: checkingQuantityBaseValueE1 
-            }]);
+        [{ ymdDate: settingsE.ymdDate, 
+            transactionId: transE.id,
+            quantityBaseValue: checkingQuantityBaseValueE0 },
+        { ymdDate: settingsE.ymdDate, 
+            transactionId: transE.id,
+            quantityBaseValue: checkingQuantityBaseValueE1 
+        }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transE.id)).toEqual(
-        [{ ymdDate: settingsD.ymdDate, quantityBaseValue: checkingQuantityBaseValueD },
-            { ymdDate: settingsE.ymdDate, 
-                quantityBaseValue: checkingQuantityBaseValueE0 
-            }]);
+        [{ ymdDate: settingsD.ymdDate, 
+            transactionId: transD.id,
+            quantityBaseValue: checkingQuantityBaseValueD },
+        { ymdDate: settingsE.ymdDate, 
+            transactionId: transE.id,
+            quantityBaseValue: checkingQuantityBaseValueE0 
+        }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsAfterTransaction(
         sys.checkingId, transF.id)).toEqual(
-        [{ ymdDate: settingsF.ymdDate, quantityBaseValue: checkingQuantityBaseValueF0 },
-            { ymdDate: settingsF.ymdDate, 
-                quantityBaseValue: checkingQuantityBaseValueF1 
-            }]);
+        [{ ymdDate: settingsF.ymdDate, 
+            transactionId: transF.id,
+            quantityBaseValue: checkingQuantityBaseValueF0 },
+        { ymdDate: settingsF.ymdDate, 
+            transactionId: transF.id,
+            quantityBaseValue: checkingQuantityBaseValueF1 
+        }]);
 
     expect(await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
         sys.checkingId, transF.id)).toEqual(
-        [{ ymdDate: settingsE.ymdDate, quantityBaseValue: checkingQuantityBaseValueE1 },
-            { ymdDate: settingsF.ymdDate, 
-                quantityBaseValue: checkingQuantityBaseValueF0 
-            }]);
+        [{ ymdDate: settingsE.ymdDate, 
+            transactionId: transE.id,
+            quantityBaseValue: checkingQuantityBaseValueE1 },
+        { ymdDate: settingsF.ymdDate, 
+            transactionId: transF.id,
+            quantityBaseValue: checkingQuantityBaseValueF0 
+        }]);
 
 
 });
@@ -1820,8 +1912,9 @@ test('Transactions-lotTransactions', async () => {
     settingsA.id = transA.id;
     expect(transA).toEqual(settingsA);
 
-    expect(ACSTH.cleanAccountState(transactionManager.getCurrentAccountStateDataItem(
-        aaplId))).toEqual(aaplStateA);
+    result = transactionManager.getCurrentAccountStateDataItem(aaplId);
+    expect(ACSTH.cleanAccountState(result)).toEqual(aaplStateA);
+    expect(result.transactionId).toEqual(transA.id);
     
     // Make sure the account state is a copy.
     result = transactionManager.getCurrentAccountStateDataItem(

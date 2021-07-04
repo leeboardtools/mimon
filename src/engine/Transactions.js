@@ -1068,11 +1068,14 @@ class AccountStatesUpdater {
             let accountState;
 
             let ymdDate;
+            let transactionId;
             if (updatedSortedTransctionEntries.length) {
                 const latestEntry = updatedSortedTransctionEntries.at(
                     updatedSortedTransctionEntries.length - 1);
                 if (latestEntry) {
-                    ymdDate = latestEntry[0].ymdDate;
+                    const transactionKey = latestEntry[0];
+                    ymdDate = transactionKey.ymdDate;
+                    transactionId = transactionKey.id;
                 }
             }
 
@@ -1173,6 +1176,10 @@ class AccountStatesUpdater {
                     accountState = AS.addSplitToAccountStateDataItem(
                         accountState, splitDataItem, ymdDate);
                 });
+            }
+
+            if (transactionId) {
+                accountState.transactionId = transactionId;
             }
 
             accountStatesByAccountId.set(accountId, accountState);
@@ -1608,6 +1615,8 @@ export class TransactionManager extends EventEmitter {
                                 '_asyncLoadAccountStateDataItemsForTransactionId()'
                                 + ' bug with lots!');
                         }
+
+                        workingAccountState.transactionId = sortedTransactionKeys[i].id;
                         let ymdDate = getYMDDateString(sortedTransactionKeys[i].ymdDate);
                         const transaction 
                             = await this.asyncGetTransactionDataItemsWithIds(id);
@@ -1639,9 +1648,12 @@ export class TransactionManager extends EventEmitter {
                         if (i > 0) {
                             newAccountStateDataItems[0].ymdDate 
                                 = getYMDDateString(sortedTransactionKeys[i - 1].ymdDate);
+                            newAccountStateDataItems[0].transactionId
+                                = sortedTransactionKeys[i - 1].id;
                         }
                         else {
                             delete newAccountStateDataItems[0].ymdDate;
+                            delete newAccountStateDataItems[0].transactionId;
                         }
 
                         accountStatesByOrder[i] = newAccountStateDataItems;
@@ -2868,6 +2880,15 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         });
 
         currentAccountStatesById.forEach(([accountId, accountStateDataItem]) => {
+            if (!accountStateDataItem.transactionId) {
+                // Add transactionId if needed, it wasn't stored in older versions.
+                const sortedEntries = this._sortedEntriesByAccountId.get(accountId);
+                if (sortedEntries && sortedEntries.length) {
+                    accountStateDataItem.transactionId 
+                        = sortedEntries.at(sortedEntries.length - 1).id;
+                }
+            }
+
             this._currentAccountStatesById.set(accountId, accountStateDataItem);
         });
 

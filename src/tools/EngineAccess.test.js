@@ -430,6 +430,7 @@ test('EngineAccessor-actions', async () => {
 
         result = await accessor.getCurrentAccountStateDataItem(checkingId);
         expect(result).toEqual({ ymdDate: '2019-02-03', 
+            transactionId: transG.id,
             quantityBaseValue: checkingBalance,
         });
 
@@ -447,27 +448,32 @@ test('EngineAccessor-actions', async () => {
 
         result = await accessor.asyncGetAccountStateForDate(checkingId, '2019-02-02');
         expect(result).toEqual({ ymdDate: '2018-01-23', 
+            transactionId: transF.id,
             quantityBaseValue: checkingOpeningBalance,
         });
         
         result = await accessor.asyncGetAccountStateForDate(checkingId, '2019-02-03');
         expect(result).toEqual({ ymdDate: '2019-02-03', 
+            transactionId: transG.id,
             quantityBaseValue: checkingBalance,
         });
         
         result = await accessor.asyncGetAccountStateForDate(checkingId, '2019-02-04');
         expect(result).toEqual({ ymdDate: '2019-02-03', 
+            transactionId: transG.id,
             quantityBaseValue: checkingBalance,
         });
         
         
         result = await accessor.asyncGetAccountStateForDate(brokerageId, '2019-02-04');
         expect(result).toEqual({ ymdDate: '2018-06-20', 
+            transactionId: transH.id,
             quantityBaseValue: brokerageOpeningBalance,
         });
         
         result = await accessor.asyncGetAccountStateForDate(brokerageId, '2019-10-14');
         expect(result).toEqual({ ymdDate: '2019-10-14', 
+            transactionId: transI.id,
             quantityBaseValue: brokerageBalance_I,
         });
 
@@ -477,9 +483,11 @@ test('EngineAccessor-actions', async () => {
             '2019-02-04');
         expect(result).toEqual([
             { ymdDate: '2019-02-03', 
+                transactionId: transG.id,
                 quantityBaseValue: checkingBalance,
             },
             { ymdDate: '2018-06-20', 
+                transactionId: transH.id,
                 quantityBaseValue: brokerageOpeningBalance,
             }
         ]);
@@ -489,9 +497,11 @@ test('EngineAccessor-actions', async () => {
             '2019-02-02');
         expect(result).toEqual([
             { ymdDate: '2018-01-23', 
+                transactionId: transF.id,
                 quantityBaseValue: checkingOpeningBalance,
             },
             { ymdDate: '2018-06-20', 
+                transactionId: transH.id,
                 quantityBaseValue: brokerageOpeningBalance,
             }
         ]);
@@ -501,9 +511,11 @@ test('EngineAccessor-actions', async () => {
             '2019-10-14');
         expect(result).toEqual([
             { ymdDate: '2019-02-03', 
+                transactionId: transG.id,
                 quantityBaseValue: checkingBalance,
             },
             { ymdDate: '2019-10-14', 
+                transactionId: transI.id,
                 quantityBaseValue: brokerageBalance_I,
             }
         ]);
@@ -514,14 +526,20 @@ test('EngineAccessor-actions', async () => {
         result = await accessor.asyncGetAccountStateDataItemsAfterTransaction(
             checkingId, transF.id);
         expect(result).toEqual([
-            { ymdDate: '2018-01-23', quantityBaseValue: checkingOpeningBalance, }
+            { ymdDate: '2018-01-23', 
+                transactionId: transF.id,
+                quantityBaseValue: checkingOpeningBalance, }
         ]);
 
         result = await accessor.asyncGetAccountStateDataItemsBeforeTransaction(
             checkingId, transG.id);
         expect(result).toEqual([
-            { ymdDate: '2018-01-23', quantityBaseValue: checkingOpeningBalance, },
-            { ymdDate: '2019-02-03', quantityBaseValue: checkingBalanceG1, }
+            { ymdDate: '2018-01-23', 
+                transactionId: transF.id,
+                quantityBaseValue: checkingOpeningBalance, },
+            { ymdDate: '2019-02-03', 
+                transactionId: transG.id,
+                quantityBaseValue: checkingBalanceG1, }
         ]);
 
 

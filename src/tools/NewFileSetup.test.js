@@ -7,6 +7,16 @@ import * as A from '../engine/Accounts';
 import * as path from 'path';
 
 
+async function asyncGetFirstTransactionId(accessor, accountId) {
+    const transactionKeys 
+        = await accessor.asyncGetSortedTransactionKeysForAccount(accountId);
+    if (!transactionKeys) {
+        return;
+    }
+
+    return transactionKeys[0].id;
+}
+
 test('NewFileSetup', async () => {
     const baseDir = await createDir('NewFileSetup');
 
@@ -138,8 +148,10 @@ test('NewFileSetup', async () => {
         const checkingBalanceA = accessor.getCurrentAccountStateDataItem(checkingA.id);
         expect(checkingBalanceA).toEqual({
             ymdDate: test1.openingBalancesDate,
+            transactionId: await asyncGetFirstTransactionId(accessor, checkingA.id),
             quantityBaseValue: 10000,
         });
+
 
         const brokerageAA = accessor.getAccountDataItemWithRefId('Brokerage A');
         expect(brokerageAA).toMatchObject({
@@ -151,6 +163,7 @@ test('NewFileSetup', async () => {
             = accessor.getCurrentAccountStateDataItem(brokerageAA.id);
         expect(brokerageABalanceA).toEqual({
             ymdDate: test1.openingBalancesDate,
+            transactionId: await asyncGetFirstTransactionId(accessor, brokerageAA.id),
             quantityBaseValue: 1000000,
         });
 
@@ -164,6 +177,7 @@ test('NewFileSetup', async () => {
             = accessor.getCurrentAccountStateDataItem(iraA.id);
         expect(iraBalanceA).toEqual({
             ymdDate: test1.openingBalancesDate,
+            transactionId: await asyncGetFirstTransactionId(accessor, iraA.id),
             quantityBaseValue: 500000,
         });
         
@@ -187,6 +201,7 @@ test('NewFileSetup', async () => {
             = accessor.getCurrentAccountStateDataItem(visaA.id);
         expect(visaBalanceA).toEqual({
             ymdDate: test1.openingBalancesDate,
+            transactionId: await asyncGetFirstTransactionId(accessor, visaA.id),
             quantityBaseValue: -123456,
         });
 
@@ -201,6 +216,7 @@ test('NewFileSetup', async () => {
             = accessor.getCurrentAccountStateDataItem(salaryA.id);
         expect(salaryBalanceA).toEqual({
             ymdDate: test1.openingBalancesDate,
+            transactionId: await asyncGetFirstTransactionId(accessor, salaryA.id),
             quantityBaseValue: 1234567,
         });
 
@@ -215,6 +231,7 @@ test('NewFileSetup', async () => {
             = accessor.getCurrentAccountStateDataItem(groceriesA.id);
         expect(groceriesBalanceA).toEqual({
             ymdDate: test1.openingBalancesDate,
+            transactionId: await asyncGetFirstTransactionId(accessor, groceriesA.id),
             quantityBaseValue: 12345,
         });    
     }

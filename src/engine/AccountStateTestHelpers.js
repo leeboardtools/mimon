@@ -11,6 +11,7 @@ export function cleanAccountState(accountState) {
     }
     delete accountState.storedLotChanges;
     delete accountState.previousBaseValues;
+    delete accountState.transactionId;
 
     return accountState;
 }
