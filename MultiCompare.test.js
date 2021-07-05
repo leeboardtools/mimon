@@ -141,6 +141,18 @@ test('compare', () => {
 
     expect(compare(objectA, objectD)).toBeLessThan(0);
     expect(compare(objectD, objectA)).toBeGreaterThan(0);
+
+
+    //
+    // boolean
+    expect(compare(true, true)).toEqual(0);
+    expect(compare(true, false)).toEqual(1);
+    expect(compare(false, true)).toEqual(-1);
+    expect(compare(false, false)).toEqual(0);
+    expect(compare(123, true)).toEqual(-1);
+    expect(compare(123, false)).toEqual(-1);
+    expect(compare(true, 123)).toEqual(1);
+    expect(compare(false, 123)).toEqual(1);
 });
 
 
