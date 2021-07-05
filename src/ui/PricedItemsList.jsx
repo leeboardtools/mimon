@@ -471,6 +471,10 @@ export class PricedItemsList extends React.Component {
 
         this.onPricesChange = this.onPricesChange.bind(this);
 
+        this.onTransactionsAdd = this.onTransactionsAdd.bind(this);
+        this.onTransactionsModify = this.onTransactionsModify.bind(this);
+        this.onTransactionsRemove = this.onTransactionsRemove.bind(this);
+
         this.onExpandCollapseRow = this.onExpandCollapseRow.bind(this);
         this.onRenderCell = this.onRenderCell.bind(this);
         this.onActivateRow = this.onActivateRow.bind(this);
@@ -490,7 +494,7 @@ export class PricedItemsList extends React.Component {
 
         this.state = {
             rowInfos: [],
-            rowInfosChangeId: 0,
+            accountStatesChangeId: 0,
 
             rowInfosByKey: new Map(),
 
@@ -500,11 +504,11 @@ export class PricedItemsList extends React.Component {
             accountStateInfosByPricedItemId: new Map(),
 
             accountStateInfoLoadingInfo: {
-                rowInfosChangeId: 0,
+                accountStatesChangeId: 0,
                 ymdDate: props.pricesYMDDate,
             },
             loadedAccountStateInfo: {
-                rowInfosChangeId: 0,
+                accountStatesChangeId: 0,
                 ymdDate: props.pricesYMDDate,
             },
 
@@ -590,6 +594,71 @@ export class PricedItemsList extends React.Component {
     }
 
 
+    accountIdsUpdated() {
+        this.setState({
+            accountIdsByPricedItemId: 
+                AH.getAccountIdsByPricedItemId(this.props.accessor),
+        });
+    }
+
+
+    onAccountsModify(result) {
+        this.accountIdsUpdated();
+        this.setState({
+            rowsNeedUpdating: true,
+        });
+    }
+
+
+    onTransactionsAdd(result) {
+        this._updateIfOurTransactions(result.newTransactionDataItems);
+    }
+
+    onTransactionsModify(result) {
+        if (!this._updateIfOurTransactions(result.newTransactionDataItems)) {
+            this._updateIfOurTransactions(result.oldTransactionDataItems);
+        }
+    }
+
+    onTransactionsRemove(result) {
+        this._updateIfOurTransactions(result.removedTransactionDataItems);
+    }
+
+
+    _updateIfOurTransactions(transactionDataItems) {
+        const { accountStateInfosByAccountId } = this.state;
+
+        for (let i = 0; i < transactionDataItems.length; ++i) {
+            const { splits } = transactionDataItems[i];
+            if (!splits) {
+                continue;
+            }
+
+            for (let s = 0; s < splits.length; ++s) {
+                if (accountStateInfosByAccountId.get(splits[s].accountId)) {
+                    this.markAccountStatesNeedUpdating();
+                    return true;
+                }
+            }
+        }
+    }
+
+
+    onPricesChange() {
+        this.markAccountStatesNeedUpdating();
+    }
+
+
+    markAccountStatesNeedUpdating() {
+        this.setState((state) => {
+            return {
+                accountStatesChangeId: 
+                    state.accountStateInfoLoadingInfo.accountStatesChangeId + 1,
+            };
+        });
+    }
+
+
     componentDidMount() {
         this.props.accessor.on('pricedItemAdd', this.onPricedItemAdd);
         this.props.accessor.on('pricedItemModify', this.onPricedItemModify);
@@ -598,6 +667,10 @@ export class PricedItemsList extends React.Component {
         this.props.accessor.on('accountAdd', this.onAccountAdd);
         this.props.accessor.on('accountsModify', this.onAccountsModify);
         this.props.accessor.on('accountRemove', this.onAccountRemove);
+
+        this.props.accessor.on('transactionsAdd', this.onTransactionsAdd);
+        this.props.accessor.on('transactionsModify', this.onTransactionsModify);
+        this.props.accessor.on('transactionsRemove', this.onTransactionsRemove);
 
         this.props.accessor.on('pricesAdd', this.onPricesChange);
         this.props.accessor.on('pricesRemove', this.onPricesChange);
@@ -610,6 +683,10 @@ export class PricedItemsList extends React.Component {
     componentWillUnmount() {
         this.props.accessor.off('pricesAdd', this.onPricesChange);
         this.props.accessor.off('pricesRemove', this.onPricesChange);
+
+        this.props.accessor.off('transactionsAdd', this.onTransactionsAdd);
+        this.props.accessor.off('transactionsModify', this.onTransactionsModify);
+        this.props.accessor.off('transactionsRemove', this.onTransactionsRemove);
 
         this.props.accessor.off('accountAdd', this.onAccountAdd);
         this.props.accessor.off('accountsModify', this.onAccountsModify);
@@ -705,8 +782,8 @@ export class PricedItemsList extends React.Component {
         }
 
         if ((props.pricesYMDDate !== prevProps.pricesYMDDate)
-         || (this.state.rowInfosChangeId 
-          !== this.state.accountStateInfoLoadingInfo.rowInfosChangeId)) {
+         || (this.state.accountStatesChangeId 
+          !== this.state.accountStateInfoLoadingInfo.accountStatesChangeId)) {
             sortingNeedsUpdating = false;
             this.reloadAccountStateInfos();
         }
@@ -719,14 +796,14 @@ export class PricedItemsList extends React.Component {
 
     reloadAccountStateInfos() {
         const { state, props } = this;
-        const { rowInfosChangeId, accountStateInfoLoadingInfo } = state;
+        const { accountStatesChangeId, accountStateInfoLoadingInfo } = state;
         const { pricesYMDDate, } = props;
 
-        if ((rowInfosChangeId !== accountStateInfoLoadingInfo.rowInfosChangeId)
+        if ((accountStatesChangeId !== accountStateInfoLoadingInfo.accountStatesChangeId)
          || (pricesYMDDate !== accountStateInfoLoadingInfo.ymdDate)) {
             this.setState({
                 accountStateInfoLoadingInfo: {
-                    rowInfosChangeId: rowInfosChangeId,
+                    accountStatesChangeId: accountStatesChangeId,
                     ymdDate: pricesYMDDate,
                 },
             },
@@ -748,6 +825,7 @@ export class PricedItemsList extends React.Component {
         let accountStateDataItems;
 
         let { ymdDate } = accountStateInfoLoadingInfo;
+        const isDateSpecified = ymdDate;
         if (ymdDate) {
             accountStateDataItems = await accessor.asyncGetAccountStateForDate(
                 allAccountIds,
@@ -770,8 +848,10 @@ export class PricedItemsList extends React.Component {
             const accountStateInfo = allAccountStateInfos[i];
             let accountStateDataItem = accountStateDataItems[i];
             if (!accountStateDataItem) {
-                accountStateDataItem 
-                    = accessor.getCurrentAccountStateDataItem(allAccountIds[i]);
+                if (!isDateSpecified) {
+                    accountStateDataItem 
+                        = accessor.getCurrentAccountStateDataItem(allAccountIds[i]);
+                }
             }
             accountStateInfo.accountState = accountStateDataItem;
 
@@ -864,30 +944,6 @@ export class PricedItemsList extends React.Component {
         });
     }
 
-
-    accountIdsUpdated() {
-        this.setState({
-            accountIdsByPricedItemId: 
-                AH.getAccountIdsByPricedItemId(this.props.accessor),
-        });
-    }
-
-
-    onAccountsModify(result) {
-        this.accountIdsUpdated();
-        this.setState({
-            rowsNeedUpdating: true,
-        });
-    }
-
-
-    onPricesChange() {
-        this.setState((state) => {
-            return {
-                rowInfosChangeId: state.accountStateInfoLoadingInfo.rowInfosChangeId + 1,
-            };
-        });
-    }
 
 
     buildRowInfos(state) {
@@ -1042,7 +1098,7 @@ export class PricedItemsList extends React.Component {
         return {
             rowInfos: rowInfos,
             summaryRowInfo: summaryRowInfo,
-            rowInfosChangeId: state.rowInfosChangeId + 1,
+            accountStatesChangeId: state.accountStatesChangeId + 1,
             accountStateInfosByAccountId: accountStateInfosByAccountId,
             rowInfosByKey: rowInfosByKey,
             activeRowKey: newActiveRowKey,

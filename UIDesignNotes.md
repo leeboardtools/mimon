@@ -491,11 +491,16 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
     - Reminders List
-
+        - Add sorting
+            - Description
+            - Next Due
+            - Last Due
+            - Account
 
     - Reminders Due
         - Clean up apply/skip options:
             - Make skip only for selected reminder
+            
         - Update status if applied transaction is updated with values.
 
 
@@ -534,8 +539,6 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Printing:
             - Display current date as Date Printed
 
-
-    - Accounts List
         - Subtotals:
             - What about currencies?
                 - Can't add different currencies.
@@ -570,6 +573,9 @@ Are the lists really two separate styles? Or can they be combined into one?
                     - 1 quarter
                     - 1 year
                     - 52 weeks
+        
+        - Date range not working
+
 
         - Export as CSV
             - Need to clean up FileSelector.
@@ -577,13 +583,10 @@ Are the lists really two separate styles? Or can they be combined into one?
         
     
     - Priced Items List
-        - Listen for transaction changes.
-
         - Show/Hide securities with no shares
             - Potential problem here is double reload of account states since won't know if a priced item has no shares until it is loaded.
             - Could filter it somehow at the sorting level.
-
-        - Collapse/Expand children
+        
 
     
     - DropdownSelector
@@ -600,3 +603,19 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Price Retrieval
         - Change PriceManager.asyncAddPrices() to support multiple priced items.
+
+
+    - Lot Transactions
+        - Cost basis adjustment transaction?
+            - Charge to income or expense account
+            - How to apply to lots?
+    
+    - Price/Lot editing:
+        - 1.503 shares
+        - 63.82 price
+        - 95.94 amount
+
+        Entering shares, price, got:
+            - 1.503 shares
+            - price 63.8190
+            - amount 95.92
