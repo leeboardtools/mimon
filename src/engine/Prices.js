@@ -530,6 +530,9 @@ export class PriceManager extends EventEmitter {
         for (let i = 0; i < pricedItemIds.length; ++i) {
             const originalPriceDataItems = itemIdPriceDataItems[i];
             result[i] = originalPriceDataItems;
+            if (!originalPriceDataItems) {
+                continue;
+            }
 
             let priceDataItems = originalPriceDataItems;
             if (!Array.isArray(priceDataItems)) {
