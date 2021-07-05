@@ -767,12 +767,18 @@ export class PricedItemsList extends React.Component {
         // We only need priceDataItems for account states that have lots.
         const accountIdIndicesByPriceDataItemId = new Map();
         for (let i = 0; i < allAccountIds.length; ++i) {
-            const accountStateDataItem = accountStateDataItems[i];
+            const accountStateInfo = allAccountStateInfos[i];
+            let accountStateDataItem = accountStateDataItems[i];
+            if (!accountStateDataItem) {
+                accountStateDataItem 
+                    = accessor.getCurrentAccountStateDataItem(allAccountIds[i]);
+            }
+            accountStateInfo.accountState = accountStateDataItem;
+
             if (!accountStateDataItem) {
                 continue;
             }
 
-            const accountStateInfo = allAccountStateInfos[i];
             const { accountDataItem } = accountStateInfo;
             let accountIdsIndices = accountIdIndicesByPriceDataItemId.get(
                 accountDataItem.pricedItemId
@@ -1455,7 +1461,7 @@ export class PricedItemsList extends React.Component {
 
                 let { accountGainsState } = accountStateInfo;
 
-                if (excludeGainTotals) {
+                if (excludeGainTotals && accountGainsState) {
                     const { overallTotals } = accountGainsState;
                     accountGainsState = Object.assign({}, 
                         accountGainsState, {
@@ -1482,7 +1488,7 @@ export class PricedItemsList extends React.Component {
 
                 let { accountGainsState } = accountStateInfo;
 
-                if (excludeGainTotals) {
+                if (excludeGainTotals && accountGainsState) {
                     const { overallTotals } = accountGainsState;
                     accountGainsState = Object.assign({}, 
                         accountGainsState, {
