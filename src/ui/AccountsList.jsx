@@ -16,6 +16,7 @@ import { columnInfosToColumns, getColumnWithKey,
     columnInfosToMultiComparators, } from '../util-ui/ColumnInfo';
 import { YMDDate } from '../util/YMDDate';
 import { compare, MultiCompare } from '../util/MultiCompare';
+import { buildFromList } from '../util/StringUtils';
 
 
 //
@@ -389,17 +390,17 @@ export class AccountsList extends React.Component {
         this.state = {
             topLevelAccountIds: topLevelAccountIds,
             rowInfos: [],
-            rowInfosChangeId: 0,
+            accountStatesChangeId: 0,
 
             accountStateInfosByAccountId: new Map(),
 
             accountStateInfoLoadingInfo: {
-                rowInfosChangeId: 0,
+                accountStatesChangeId: 0,
                 startYMDDate: props.startYMDDate,
                 endYMDDate: props.endYMDDate,
             },
             loadedAccountStateInfo: {
-                rowInfosChangeId: 0,
+                accountStatesChangeId: 0,
                 startYMDDate: props.startYMDDate,
                 endYMDDate: props.endYMDDate,
             },
@@ -499,7 +500,7 @@ export class AccountsList extends React.Component {
 
             for (let s = 0; s < splits.length; ++s) {
                 if (accountStateInfosByAccountId.get(splits[s].accountId)) {
-                    this.rebuildRowInfos();
+                    this.markAccountStatesNeedUpdating();
                     return true;
                 }
             }
@@ -508,9 +509,15 @@ export class AccountsList extends React.Component {
 
 
     onPricesChange() {
+        this.markAccountStatesNeedUpdating();
+    }
+
+
+    markAccountStatesNeedUpdating() {
         this.setState((state) => {
             return {
-                rowInfosChangeId: state.accountStateInfoLoadingInfo.rowInfosChangeId + 1,
+                accountStatesChangeId: 
+                    state.accountStateInfoLoadingInfo.accountStatesChangeId + 1,
             };
         });
     }
@@ -609,10 +616,12 @@ export class AccountsList extends React.Component {
             }
         }
 
+        // We don't do a full row update on date changes because the accounts listed
+        // are not dependent upon the dates.
         if ((props.startYMDDate !== prevProps.startYMDDate)
          || (props.endYMDDate !== prevProps.endYMDDate)
-         || (this.state.rowInfosChangeId 
-          !== this.state.accountStateInfoLoadingInfo.rowInfosChangeId)) {
+         || (this.state.accountStatesChangeId 
+          !== this.state.accountStateInfoLoadingInfo.accountStatesChangeId)) {
             sortingNeedsUpdating = false;
             this.reloadAccountStateInfos();
         }
@@ -620,20 +629,24 @@ export class AccountsList extends React.Component {
         if (sortingNeedsUpdating) {
             this.updateRowInfoSorting();
         }
+
+        if (props.endYMDDate) {
+            this._endDateString = props.accessor.formatDate(props.endYMDDate);
+        }
     }
 
 
     reloadAccountStateInfos() {
         const { state, props } = this;
-        const { rowInfosChangeId, accountStateInfoLoadingInfo } = state;
+        const { accountStatesChangeId, accountStateInfoLoadingInfo } = state;
         const { startYMDDate, endYMDDate } = props;
 
-        if ((rowInfosChangeId !== accountStateInfoLoadingInfo.rowInfosChangeId)
+        if ((accountStatesChangeId !== accountStateInfoLoadingInfo.accountStatesChangeId)
          || (startYMDDate !== accountStateInfoLoadingInfo.startYMDDate)
          || (endYMDDate !== accountStateInfoLoadingInfo.endYMDDate)) {
             this.setState({
                 accountStateInfoLoadingInfo: {
-                    rowInfosChangeId: rowInfosChangeId,
+                    accountStatesChangeId: accountStatesChangeId,
                     startYMDDate: startYMDDate,
                     endYMDDate: endYMDDate,
                 },
@@ -656,6 +669,7 @@ export class AccountsList extends React.Component {
         let startAccountStateDataItems;
 
         let { startYMDDate, endYMDDate } = accountStateInfoLoadingInfo;
+        const isDateSpecified = endYMDDate;
         if (endYMDDate) {
             accountStateDataItems = await accessor.asyncGetAccountStateForDate(
                 allAccountIds,
@@ -684,8 +698,10 @@ export class AccountsList extends React.Component {
             const accountStateInfo = allAccountStateInfos[i];
             let accountStateDataItem = accountStateDataItems[i];
             if (!accountStateDataItem) {
-                accountStateDataItem 
-                    = accessor.getCurrentAccountStateDataItem(allAccountIds[i]);
+                if (!isDateSpecified) {
+                    accountStateDataItem 
+                        = accessor.getCurrentAccountStateDataItem(allAccountIds[i]);
+                }
             }
             accountStateInfo.accountState = accountStateDataItem;
 
@@ -801,43 +817,6 @@ export class AccountsList extends React.Component {
     }
 
 
-    onExpandCollapseRow({rowInfo, expandCollapseState}) {
-        this.setState((state) => {
-            rowInfo = Object.assign({}, rowInfo, {
-                expandCollapseState: expandCollapseState,
-            });
-            switch (expandCollapseState) {
-            case ExpandCollapseState.EXPANDED :
-                this._collapsedRowIds.delete(rowInfo.key);
-                break;
-    
-            case ExpandCollapseState.COLLAPSED :
-                this._collapsedRowIds.add(rowInfo.key);
-                break;
-            
-            default :
-                return;
-            }
-
-            const { onUpdateCollapsedAccountIds } = this.props;
-            if (onUpdateCollapsedAccountIds) {
-                onUpdateCollapsedAccountIds({
-                    accountId: rowInfo.key,
-                    expandCollapseState: expandCollapseState,
-                    collapsedAccountIds: Array.from(this._collapsedRowIds.values()),
-                });
-            }
-
-            return {
-                rowInfos: updateRowInfo(state.rowInfos, rowInfo),
-                sortedRowInfos: undefined,
-            };
-        }, 
-        () => {
-        });
-    }
-
-
     buildRowInfos(state) {
         state = state || this.state;
 
@@ -948,7 +927,7 @@ export class AccountsList extends React.Component {
         return {
             rowInfos: rowInfos,
             sortedRowInfos: undefined,
-            rowInfosChangeId: state.rowInfosChangeId + 1,
+            accountStatesChangeId: state.accountStatesChangeId + 1,
             accountStateInfosByAccountId: accountStateInfosByAccountId,
             activeRowKey: newActiveRowKey,
             topLevelRowInfos: topLevelRowInfos,
@@ -1242,17 +1221,18 @@ export class AccountsList extends React.Component {
 
         const accountStateInfo = this.state.accountStateInfosByAccountId.get(accountId);
         const { accountGainsState, accountState } = accountStateInfo;
+        const { childAccountIds } = accountDataItem;
 
         // This prevents the display of balance, % of, 
-        // for accounts without any transactions.
+        // for parent accounts without any transactions.
         if (!accountState
-         || (accountState.transactionId || accountState.quantityBaseValue)) {
+         || (accountState.transactionId || accountState.quantityBaseValue)
+         || !childAccountIds || !childAccountIds.length) {
             rowInfo.accountGainsState = accountGainsState;
         }
 
         rowInfo.totalAccountGainsState = accountGainsState;
 
-        const { childAccountIds } = accountDataItem;
         if (childAccountIds && childAccountIds.length) {
             let { totalAccountGainsState } = rowInfo;
             totalAccountGainsState = GH.cloneAccountGainsState(totalAccountGainsState);
@@ -1474,6 +1454,43 @@ export class AccountsList extends React.Component {
     }
 
 
+    onExpandCollapseRow({rowInfo, expandCollapseState}) {
+        this.setState((state) => {
+            rowInfo = Object.assign({}, rowInfo, {
+                expandCollapseState: expandCollapseState,
+            });
+            switch (expandCollapseState) {
+            case ExpandCollapseState.EXPANDED :
+                this._collapsedRowIds.delete(rowInfo.key);
+                break;
+    
+            case ExpandCollapseState.COLLAPSED :
+                this._collapsedRowIds.add(rowInfo.key);
+                break;
+            
+            default :
+                return;
+            }
+
+            const { onUpdateCollapsedAccountIds } = this.props;
+            if (onUpdateCollapsedAccountIds) {
+                onUpdateCollapsedAccountIds({
+                    accountId: rowInfo.key,
+                    expandCollapseState: expandCollapseState,
+                    collapsedAccountIds: Array.from(this._collapsedRowIds.values()),
+                });
+            }
+
+            return {
+                rowInfos: updateRowInfo(state.rowInfos, rowInfo),
+                sortedRowInfos: undefined,
+            };
+        }, 
+        () => {
+        });
+    }
+
+
     onActivateRow({ rowInfo }) {
         const activeRowKey = (rowInfo) ? rowInfo.key : undefined;
         this.setState({
@@ -1517,12 +1534,15 @@ export class AccountsList extends React.Component {
             columnInfo = Object.assign({}, columnInfo, {
                 inputClassExtras: (columnInfo.inputClassExtras || '')
                     + ' AccountList-always-hidden-account',
+                isAlwaysHidden: true,
+                isHidden: true,
             });
         }
         else if (rowInfo.isHidden) {
             columnInfo = Object.assign({}, columnInfo, {
                 inputClassExtras: (columnInfo.inputClassExtras || '')
                     + ' AccountList-hidden-account',
+                isHidden: true,
             });
         }
 
@@ -1530,16 +1550,19 @@ export class AccountsList extends React.Component {
             columnInfo = Object.assign({}, columnInfo, {
                 inputClassExtras: (columnInfo.inputClassExtras || '')
                     + ' AccountList-inactive-account',
+                isInactive: true,
             });
         }
 
         if (accountDataItem 
          && (!accountDataItem.childAccountIds
           || !accountDataItem.childAccountIds.length)
-         && !rowInfo.accountGainsState) {
+         && !rowInfo.accountGainsState
+         && this.props.endYMDDate) {
             columnInfo = Object.assign({}, columnInfo, {
                 inputClassExtras: (columnInfo.inputClassExtras || '')
                     + ' AccountList-too-young-account',
+                isTooYoung: true,
             });
         }
 
@@ -1576,8 +1599,42 @@ export class AccountsList extends React.Component {
         if (accountDataItem) {
             value = {
                 name: accountDataItem.name,
-                description: accountDataItem.description,
+                description: accountDataItem.description || '',
             };
+
+            const descriptionPrefix = [];
+            if (columnInfo.isInactive) {
+                descriptionPrefix.push(userMsg('AccountsList-isInactive'));
+            }
+            if (columnInfo.isAlwaysHidden) {
+                descriptionPrefix.push(userMsg('AccountsList-isAlwaysHidden'));
+            }
+            else if (columnInfo.isHidden) {
+                descriptionPrefix.push(userMsg('AccountsList-isHidden'));
+            }
+            if (descriptionPrefix.length) {
+                const status = buildFromList(descriptionPrefix, {
+                    opening: userMsg('AccountsList-displayStatusOpening'),
+                    separator: userMsg('AccountsList-displayStatusSeparator'),
+                    closing: userMsg('AccountsList-displayStatusClosing'),
+                });
+                if (value.description) {
+                    value.description = [value.description, status];
+                }
+                else {
+                    value.description = status;
+                }
+            }
+
+            if (columnInfo.isTooYoung) {
+                if (!Array.isArray(value.description)) {
+                    value.description = (value.description)
+                        ? [value.description]
+                        : [];
+                }
+                value.description.push(userMsg('AccountsList-tooYoung-tooltip',
+                    this._endDateString));
+            }
         }
         else {
             const { subtotalName, rootNetName } = rowInfo;

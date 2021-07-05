@@ -157,6 +157,13 @@
     "AccountsList-subtotalName": ["Subtotal: ", ""],
     "AccountsList-netWorth_name": "Net Worth",
     "AccountsList-netIncome_name": "Net Income",
+    "AccountsList-tooYoung-tooltip": ["The account does not have any transactions on or before ", ""],
+    "AccountsList-isInactive": "Inactive",
+    "AccountsList-isAlwaysHidden": "Always hidden",
+    "AccountsList-isHidden": "Hidden",
+    "AccountsList-displayStatusOpening": "[",
+    "AccountsList-displayStatusSeparator": ",",
+    "AccountsList-displayStatusClosing": "]",
 
     "AccountsList-price_tooltip": ["", " on ", ""],
 
