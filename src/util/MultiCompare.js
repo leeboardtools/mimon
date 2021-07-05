@@ -57,6 +57,8 @@ function objectCompare(a, b) {
  * <li>arrays
  * <li>objects - only enumerable properties are compared, and these are compared
  * first by key then value with the keys first sorted.
+ * <li>boolean - test performed only if both args are boolean, <code>false</code>
+ * is before <code>true</code>.
  * <li>everything else. These are compared by converting a and b to strings
  * via toString() and then comparing the strings.
  * <p>
@@ -131,6 +133,10 @@ export function compare(a, b) {
     }
     else if (typeof b === 'object') {
         return 1;
+    }
+
+    if ((typeof a === 'boolean') && (typeof b === 'boolean')) {
+        return (a) ? 1 : -1;
     }
 
     a = a.toString();
