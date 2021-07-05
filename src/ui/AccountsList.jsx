@@ -681,12 +681,18 @@ export class AccountsList extends React.Component {
         // We only need priceDataItems for account states that have lots.
         const accountIdIndicesByPriceDataItemId = new Map();
         for (let i = 0; i < allAccountIds.length; ++i) {
-            const accountStateDataItem = accountStateDataItems[i];
+            const accountStateInfo = allAccountStateInfos[i];
+            let accountStateDataItem = accountStateDataItems[i];
+            if (!accountStateDataItem) {
+                accountStateDataItem 
+                    = accessor.getCurrentAccountStateDataItem(allAccountIds[i]);
+            }
+            accountStateInfo.accountState = accountStateDataItem;
+
             if (!accountStateDataItem) {
                 continue;
             }
 
-            const accountStateInfo = allAccountStateInfos[i];
             const { accountDataItem } = accountStateInfo;
             let accountIdsIndices = accountIdIndicesByPriceDataItemId.get(
                 accountDataItem.pricedItemId
@@ -742,7 +748,7 @@ export class AccountsList extends React.Component {
             const args = {
                 accessor: accessor,
                 accountId: allAccountIds[i],
-                accountState: accountStateDataItems[i],
+                accountState: accountStateInfo.accountState,
                 priceDataItem: accountStateInfo.priceDataItem,
                 isExcludeFromGain: accountDataItem.isExcludeFromGain,
                 isQuantityShares: A.getAccountType(accountDataItem.type).hasLots,
@@ -1237,8 +1243,10 @@ export class AccountsList extends React.Component {
         const accountStateInfo = this.state.accountStateInfosByAccountId.get(accountId);
         const { accountGainsState, accountState } = accountStateInfo;
 
-        // This prevents the display of balance, % of, for accounts without any transactions.
-        if (accountState.transactionId || accountState.quantityBaseValue) {
+        // This prevents the display of balance, % of, 
+        // for accounts without any transactions.
+        if (!accountState
+         || (accountState.transactionId || accountState.quantityBaseValue)) {
             rowInfo.accountGainsState = accountGainsState;
         }
 
@@ -1248,8 +1256,10 @@ export class AccountsList extends React.Component {
         if (childAccountIds && childAccountIds.length) {
             let { totalAccountGainsState } = rowInfo;
             totalAccountGainsState = GH.cloneAccountGainsState(totalAccountGainsState);
-            if (totalAccountGainsState.isExcludeFromGain) {
-                totalAccountGainsState.gainTotals = {};
+            if (totalAccountGainsState) {
+                if (totalAccountGainsState.isExcludeFromGain) {
+                    totalAccountGainsState.gainTotals = {};
+                }
             }
             
             rowInfo.totalAccountGainsState = totalAccountGainsState;
@@ -1261,7 +1271,9 @@ export class AccountsList extends React.Component {
                     if (type === 'SUBTOTAL') {
                         childRowInfo.accountGainsState = GH.cloneAccountGainsState(
                             totalAccountGainsState);
-                        childRowInfo.accountGainsState.isExcludeFromGain = false;
+                        if (childRowInfo.accountGainsState) {
+                            childRowInfo.accountGainsState.isExcludeFromGain = false;
+                        }
                         return;
                     }
 
