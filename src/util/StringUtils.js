@@ -87,3 +87,41 @@ export function cleanSpaces(string) {
 
     return string;
 }
+
+
+/**
+ * @typedef {object} buildFromListArgs
+ * @property {string} [opening=''] The string to start the string with.
+ * @property {string} [separator=','] The string to place between items.
+ * @property {string} [closing] The string to end the string with.
+ */
+
+/**
+ * Builds a string from strings in an iterable, with an optional starting, ending
+ * and separator specified.
+ * @param {Iterator} list 
+ * @param {buildFromListArgs} args
+ * @returns {string}
+ */
+export function buildFromList(list, args = {}) {
+    const { opening = '', separator = ',', closing, } = args;
+    let text = opening;
+    if (list) {
+        let isFirst = true;
+        list.forEach((item) => {
+            if (!isFirst) {
+                text += separator;
+            }
+            else {
+                isFirst = false;
+            }
+            text += item;
+        });
+    }
+
+    if (closing) {
+        text += closing;
+    }
+
+    return text;
+}
