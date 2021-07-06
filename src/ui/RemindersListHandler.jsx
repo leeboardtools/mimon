@@ -394,7 +394,7 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             if (dueEntry) {
                 const newDueEntriesById = new Map(state.dueEntriesById);
                 newDueEntriesById.set(id, dueEntry);
-            this.updateDueEntriesById(tabId, newDueEntriesById);
+                this.updateDueEntriesById(tabId, newDueEntriesById);
             }
 
         }
@@ -480,7 +480,6 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             onChooseItem: () => this.onToggleShowHiddenReminders(
                 tabId),
         };
-
 
         let anyDueItems;
         let anyAppliedItems;
@@ -632,20 +631,31 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         if (dueEntriesById) {
             menuItems.push(applyAllDueRemindersLatestItem);
             menuItems.push(applySelectedRemindersLatestItem);
+            menuItems.push(skipSelectedRemindersAllItem);
             menuItems.push(openAppliedTransactionItem);
             menuItems.push(modifyReminderItem);
             menuItems.push({});
-            menuItems.push(applyAllDueRemindersAllItem);
-            menuItems.push(applySelectedRemindersAllItem);
+
+            const specialActionsMenuItems = [];
+            menuItems.push({ id: 'specialActionsSubMenu',
+                label: userMsg('RemindersListHandler-specialActionsSubMenu'),
+                subMenuItems: specialActionsMenuItems,
+            });
+
+            specialActionsMenuItems.push(applyAllDueRemindersAllItem);
+            specialActionsMenuItems.push(applySelectedRemindersAllItem);
+            specialActionsMenuItems.push({});
+            specialActionsMenuItems.push(applyAllDueRemindersNextItem);
+            specialActionsMenuItems.push(applySelectedRemindersNextItem);
+            specialActionsMenuItems.push({});
+            specialActionsMenuItems.push(skipAllDueRemindersAllItem);
+            specialActionsMenuItems.push({});
+            specialActionsMenuItems.push(skipAllDueRemindersNextItem);
+            specialActionsMenuItems.push(skipSelectedRemindersNextItem);
+
             menuItems.push({});
-            menuItems.push(applyAllDueRemindersNextItem);
-            menuItems.push(applySelectedRemindersNextItem);
-            menuItems.push({});
-            menuItems.push(skipAllDueRemindersAllItem);
-            menuItems.push(skipSelectedRemindersAllItem);
-            menuItems.push({});
-            menuItems.push(skipAllDueRemindersNextItem);
-            menuItems.push(skipSelectedRemindersNextItem);
+            menuItems.push(
+                this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state));
         }
         else {
             menuItems.push(checkRemindersItem);
@@ -706,6 +716,11 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             menuItems.push({});
             menuItems.push(toggleReminderVisibleItem);
             menuItems.push(toggleShowHiddenRemindersItem);
+            menuItems.push({});
+            menuItems.push(this._rowTableHandler.createClearColumnSortingMenuItem(
+                tabId, state
+            ));
+
         }
         menuItems.push({});
         menuItems.push(
@@ -883,7 +898,9 @@ export class RemindersListHandler extends MainWindowHandlerBase {
     onRenderTabPage(tabEntry, isActive) {
         const { accessor } = this.props;
 
-        const state = this.getTabIdState(tabEntry.tabId);
+        const { tabId } = tabEntry;
+
+        const state = this.getTabIdState(tabId);
         const { dropdownInfo } = state;
         let contextMenuItems;
         if (dropdownInfo) {
@@ -893,19 +910,23 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         return <RemindersList
             accessor = {accessor}
             onSelectReminder = {(reminderId) => 
-                this.onSelectReminder(tabEntry.tabId, reminderId)}
+                this.onSelectReminder(tabId, reminderId)}
             onChooseReminder = {(reminderId) => 
-                this.onChooseReminder(tabEntry.tabId, reminderId)}
-            onClose = {() => this.closeTab(tabEntry.tabId)}
+                this.onChooseReminder(tabId, reminderId)}
+            onClose = {() => this.closeTab(tabId)}
             onToggleEnabled = {(reminderId) => 
-                this.onToggleEnabled(tabEntry.tabId, reminderId)}
+                this.onToggleEnabled(tabId, reminderId)}
             hiddenReminderIds = {tabEntry.hiddenReminderIds}
             showHiddenReminders = {tabEntry.showHiddenReminders}
             dueEntriesById = {tabEntry.dueEntriesById}
             contextMenuItems = {contextMenuItems}
             columns = {tabEntry.columns}
+            columnSorting = {tabEntry.columnSorting}
+            onColumnSortingChange = {(args) =>
+                this._rowTableHandler.onColumnSortingChange(tabId, args)}
+                
             onSetColumnWidth = {(args) =>
-                this._rowTableHandler.onSetColumnWidth(tabEntry.tabId, args)}
+                this._rowTableHandler.onSetColumnWidth(tabId, args)}
         />;
     }
 }

@@ -638,6 +638,8 @@
     "RemindersListHandler-showReminder": "Show Reminder",
     "RemindersListHandler-hideReminder": "Hide Reminder",
     "RemindersListHandler-showHiddenReminders": "Show Hidden Reminders",
+    
+    "RemindersListHandler-specialActionsSubMenu": "Special Actions",
     "RemindersListHandler-openSelectedAppliedReminderTransaction": "Open Transaction for Applied/Partial Reminder",
     "RemindersListHandler-applySelectedRemindersNext": "Apply Selected Reminder for Next Date Only",
     "RemindersListHandler-applyAllDueRemindersNext": "Apply All Due Reminders for Next Date Only",

@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import { RowTable } from '../util-ui/RowTable';
 import deepEqual from 'deep-equal';
-import { columnInfosToColumns } from '../util-ui/ColumnInfo';
+import { columnInfosToColumns,
+    columnInfosToMultiComparators, } from '../util-ui/ColumnInfo';
 import * as ACE from './AccountingCellEditors';
 import { getCurrencyForAccountId } 
     from '../tools/AccountHelpers';
@@ -11,9 +12,12 @@ import { getCurrency } from '../util/Currency';
 import { Checkbox } from '../util-ui/Checkbox';
 import { getReminderNextDateOccurrenceState } from '../engine/Reminders';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
-import { YMDDate } from '../util/YMDDate';
+import { YMDDate, getYMDDate } from '../util/YMDDate';
+import { compare, MultiCompare } from '../util/MultiCompare';
 
 
+//
+//
 function getReminderDataItem(args) {
     const { rowEntry } = args;
     if (rowEntry) {
@@ -21,6 +25,9 @@ function getReminderDataItem(args) {
     }
 }
 
+
+//
+//
 function getTransactionTemplate(args) {
     const reminderDataItem = getReminderDataItem(args);
     if (reminderDataItem) {
@@ -28,6 +35,9 @@ function getTransactionTemplate(args) {
     }
 }
 
+
+//
+//
 function getMainSplit(args) {
     const transactionTemplate = getTransactionTemplate(args);
     if (transactionTemplate && transactionTemplate.splits.length) {
@@ -36,6 +46,9 @@ function getMainSplit(args) {
     }
 }
 
+
+//
+//
 function getAccessor(args) {
     const { caller } = args;
     if (caller) {
@@ -47,6 +60,18 @@ function getAccessor(args) {
 //
 //---------------------------------------------------------
 // Enable State
+
+function compareEnabled(a, b) {
+    const reminderDataItemA = (a.rowEntry)
+        ? a.rowEntry.reminderDataItem
+        : undefined;
+    const reminderDataItemB = (b.rowEntry)
+        ? b.rowEntry.reminderDataItem
+        : undefined;
+    const aEnabled = (reminderDataItemA && reminderDataItemA.isEnabled);
+    const bEnabled = (reminderDataItemB && reminderDataItemB.isEnabled);
+    return compare(aEnabled, bEnabled);
+}
 
 function getEnabledCellValue(args) {
     const reminderDataItem = getReminderDataItem(args);
@@ -84,6 +109,12 @@ function getDueStatusCellValue(args) {
     }
 }
 
+function compareDueStatus(a, b) {
+    const statusA = getDueStatusCellValue(a);
+    const statusB = getDueStatusCellValue(b);
+    return compare(statusA, statusB);
+}
+
 function renderDueStatusCell(args) {
     const { value, } = args;
     const className = 'RemindersList-dueStatus RemindersList-dueStatus_' + value;
@@ -99,8 +130,12 @@ function renderDueStatusCell(args) {
 //---------------------------------------------------------
 // Description
 
-function getDescriptionCellValue(args) {
-    const reminderDataItem = getReminderDataItem(args);
+function getDescription(rowEntry) {
+    if (!rowEntry) {
+        return;
+    }
+
+    const { reminderDataItem } = rowEntry;
     if (reminderDataItem) {
         let { description } = reminderDataItem;
         if (!description) {
@@ -119,12 +154,22 @@ function getDescriptionCellValue(args) {
     }
 }
 
+function compareDescription(a, b) {
+    const descriptionA = getDescription(a.rowEntry);
+    const descriptionB = getDescription(b.rowEntry);
+    return compare(descriptionA, descriptionB);
+}
+
+function getDescriptionCellValue(args) {
+    return getDescription(args.rowEntry);
+}
+
 
 //
 //---------------------------------------------------------
 // Account name
 
-function getAccountNameCellValue(args) {
+function getAccountName(args) {
     const split = getMainSplit(args);
     const accessor = getAccessor(args);
     if (split && accessor) {
@@ -133,6 +178,19 @@ function getAccountNameCellValue(args) {
         if (accountDataItem) {
             return accountDataItem.name;
         }
+    }
+}
+
+function compareAccountName(a, b) {
+    const nameA = getAccountName(a);
+    const nameB = getAccountName(b);
+    return compare(nameA, nameB);
+}
+
+function getAccountNameCellValue(args) {
+    const accountName = getAccountName(args);
+    if (accountName) {
+        return accountName;
     }
 
     if (args.isSizeRender) {
@@ -144,6 +202,24 @@ function getAccountNameCellValue(args) {
 //
 //---------------------------------------------------------
 // Amount
+
+function getAmountNumber(args) {
+    const split = getMainSplit(args);
+    const accessor = getAccessor(args);
+    if (split && accessor) {
+        const currency = getCurrencyForAccountId(accessor, split.accountId);
+        const { quantityBaseValue } = split;
+        if (currency && (quantityBaseValue !== undefined)) {
+            return currency.getQuantityDefinition().baseValueToNumber(quantityBaseValue);
+        }
+    }
+}
+
+function compareAmount(a, b) {
+    const amountA = getAmountNumber(a);
+    const amountB = getAmountNumber(b);
+    return compare(amountA, amountB);
+}
 
 function getAmountCellValue(args) {
     const split = getMainSplit(args);
@@ -167,8 +243,11 @@ function getAmountCellValue(args) {
 //---------------------------------------------------------
 // Last applied date
 
-function getLastAppliedDateCellValue(args) {
-    const reminderDataItem = getReminderDataItem(args);
+function getLastAppliedYMDDate(rowEntry) {
+    if (!rowEntry) {
+        return;
+    }
+    const { reminderDataItem } = rowEntry;
     if (reminderDataItem) {
         let { lastAppliedYMDDate } = reminderDataItem;
         if (!lastAppliedYMDDate) {
@@ -177,12 +256,24 @@ function getLastAppliedDateCellValue(args) {
                 lastAppliedYMDDate = lastOccurrenceState.lastOccurrenceYMDDate;
             }
         }
-        if (lastAppliedYMDDate) {
-            return {
-                accessor: getAccessor(args),
-                ymdDate: lastAppliedYMDDate,
-            };
-        }
+        return lastAppliedYMDDate;
+    }
+}
+
+function compareLastAppliedYMDDate(a, b) {
+    const ymdDateA = getYMDDate(getLastAppliedYMDDate(a.rowEntry));
+    const ymdDateB = getYMDDate(getLastAppliedYMDDate(b.rowEntry));
+
+    return YMDDate.compare(ymdDateA, ymdDateB);
+}
+
+function getLastAppliedDateCellValue(args) {
+    const lastAppliedYMDDate = getLastAppliedYMDDate(args.rowEntry);
+    if (lastAppliedYMDDate) {
+        return {
+            accessor: getAccessor(args),
+            ymdDate: lastAppliedYMDDate,
+        };
     }
 }
 
@@ -191,8 +282,11 @@ function getLastAppliedDateCellValue(args) {
 //---------------------------------------------------------
 // Next due date
 
-function getNextDateCellValue(args) {
-    let reminderDataItem = getReminderDataItem(args);
+function getNextYMDDate(rowEntry) {
+    if (!rowEntry) {
+        return;
+    }
+    const { reminderDataItem } = rowEntry;
     if (reminderDataItem) {
         let occurrenceState;
         const { lastOccurrenceState, occurrenceDefinition } = reminderDataItem;
@@ -209,11 +303,24 @@ function getNextDateCellValue(args) {
             reminderDataItem,
             occurrenceState);
         if (nextOccurrenceState) {
-            return {
-                accessor: getAccessor(args),
-                ymdDate: nextOccurrenceState.lastOccurrenceYMDDate,
-            };
+            return nextOccurrenceState.lastOccurrenceYMDDate;
         }
+    }
+}
+
+function compareNextYMDDate(a, b) {
+    const ymdDateA = getYMDDate(getNextYMDDate(a.rowEntry));
+    const ymdDateB = getYMDDate(getNextYMDDate(b.rowEntry));
+    return YMDDate.compare(ymdDateA, ymdDateB);
+}
+
+function getNextDateCellValue(args) {
+    const nextYMDDate = getNextYMDDate(args.rowEntry);
+    if (nextYMDDate) {
+        return {
+            accessor: getAccessor(args),
+            ymdDate: nextYMDDate,
+        };
     }
 }
 
@@ -237,9 +344,11 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
                     + ' CheckboxCell RemindersList-checkbox-cell',
                 getCellValue: getEnabledCellValue,
                 renderDisplayCell: renderEnabledCell,
+                sortCompare: compareEnabled,
             },
             description: ACE.getDescriptionColumnInfo({
                 getCellValue: getDescriptionCellValue,
+                sortCompare: compareDescription,
             }),
             accountName: { key: 'accountName',
                 header: {
@@ -250,6 +359,7 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
                 cellClassName: cellClassName,
                 getCellValue: getAccountNameCellValue,
                 renderDisplayCell: ACE.renderTextDisplay,
+                sortCompare: compareAccountName,
             },
             amount: { key: 'amount',
                 header: {
@@ -261,6 +371,7 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
                 inputClassExtras: 'Text-right',
                 getCellValue: getAmountCellValue,
                 renderDisplayCell: ACE.renderTextDisplay,
+                sortCompare: compareAmount,
             },
             lastDate: { key: 'lastDate',
                 header: {
@@ -272,6 +383,7 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
                 inputClassExtras: inputClassExtras,
                 getCellValue: getLastAppliedDateCellValue,
                 renderDisplayCell: ACE.renderDateDisplay,
+                sortCompare: compareLastAppliedYMDDate,
             },
             nextDate: { key: 'nextDate',
                 header: {
@@ -283,6 +395,7 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
                 inputClassExtras: inputClassExtras,
                 getCellValue: getNextDateCellValue,
                 renderDisplayCell: ACE.renderDateDisplay,
+                sortCompare: compareNextYMDDate,
             },
         };
 
@@ -296,6 +409,7 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
                 cellClassName: cellClassName,
                 getCellValue: getDueStatusCellValue,
                 renderDisplayCell: renderDueStatusCell,
+                sortCompare: compareDueStatus,
             },
             description: columnInfoDefs.description,
             accountName: columnInfoDefs.accountName,
@@ -307,6 +421,37 @@ function getRemindersListColumnInfoDefs(dueEntriesById) {
 
     return (dueEntriesById) ? dueColumnInfoDefs : columnInfoDefs;
 }
+
+
+let dueColumnInfoComparators;
+let columnInfoComparators;
+
+function getRemindersListColumnComparators(dueEntriesById) {
+    const columnInfos = getRemindersListColumnInfoDefs(dueEntriesById);
+    if (dueEntriesById) {
+        if (!dueColumnInfoComparators) {
+            dueColumnInfoComparators = columnInfosToMultiComparators(
+                Object.values(columnInfos),
+            );
+            dueColumnInfoComparators.push({
+                compare: compareDescription,
+            });
+        }
+        return dueColumnInfoComparators;
+    }
+    else {
+        if (!columnInfoComparators) {
+            columnInfoComparators = columnInfosToMultiComparators(
+                Object.values(columnInfos),
+            );
+            columnInfoComparators.push({
+                compare: compareDescription,
+            });
+        }
+        return columnInfoComparators;
+    }
+}
+
 
 
 /**
@@ -339,6 +484,10 @@ export class RemindersList extends React.Component {
         this.onActivateRow = this.onActivateRow.bind(this);
         this.onOpenActiveRow = this.onOpenActiveRow.bind(this);
 
+        this._multiCompare = new MultiCompare(getRemindersListColumnComparators(
+            props.dueEntriesById,
+        ));
+        this._multiCompare.setCompareOrder(props.columnSorting);
 
         this._hiddenReminderIds = new Set();
 
@@ -360,6 +509,7 @@ export class RemindersList extends React.Component {
         }
 
         this.state.rowEntries = this.buildRowEntries().rowEntries;
+        this.state.sortedRowEntries = this.sortRowEntries().sortedRowEntries;
     }
 
 
@@ -408,8 +558,9 @@ export class RemindersList extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         let rowsNeedUpdating = false;
+        const { props } = this;
         const { hiddenReminderIds, 
-            showHiddenReminders } = this.props;
+            showHiddenReminders } = props;
 
         if (!deepEqual(prevProps.hiddenReminderIds, hiddenReminderIds)) {
             this._hiddenReminderIds = new Set(hiddenReminderIds);
@@ -421,8 +572,17 @@ export class RemindersList extends React.Component {
         }
 
         if (!rowsNeedUpdating) {
-            if (!deepEqual(this.props.dueEntriesById, prevProps.dueEntriesById)) {
+            if (!deepEqual(props.dueEntriesById, prevProps.dueEntriesById)) {
                 rowsNeedUpdating = true;
+            }
+        }
+
+        let sortingNeedsUpdating = !deepEqual(props.columnSorting,
+            prevProps.columnSorting);
+        if (sortingNeedsUpdating) {
+            this._multiCompare.setCompareOrder(props.columnSorting);
+            if (!rowsNeedUpdating) {
+                this.setState((state) => this.sortRowEntries(state));
             }
         }
 
@@ -434,9 +594,10 @@ export class RemindersList extends React.Component {
                 activeRowKey: result.activeRowKey,
                 activeRowIndex: result.activeRowIndex,
             });
+            this.setState((state) => this.sortRowEntries(state));
 
             if (prevActiveRowKey !== result.activeRowKey) {
-                const { onSelectReminder } = this.props;
+                const { onSelectReminder } = props;
                 if (onSelectReminder) {
                     const reminderDataItem = (result.activeRowEntry)
                         ? result.activeRowEntry.reminderDataItem
@@ -447,6 +608,29 @@ export class RemindersList extends React.Component {
                 }
             }
         }
+    }
+
+
+    sortRowEntries(state) {
+        state = state || this.state;
+        if (!this.props.columnSorting || !this.props.columnSorting.length) {
+            return {
+                sortedRowEntries: undefined,
+            };
+        }
+
+        const compare = (a, b) => this._multiCompare.compare(
+            { rowEntry: a, caller: this, },
+            { rowEntry: b, caller: this, });
+
+        const { rowEntries } = state;
+        const sortedRowEntries = Array.from(rowEntries);
+
+        sortedRowEntries.sort(compare);
+
+        return {
+            sortedRowEntries: sortedRowEntries,
+        };
     }
 
 
@@ -560,12 +744,18 @@ export class RemindersList extends React.Component {
                 activeRowIndex: result.activeRowIndex,
             };
         });
+        this.setState((state) => this.sortRowEntries(state));
     }
 
 
+    _getRowEntry(index) {
+        const rowEntries = this.state.sortedRowEntries || this.state.rowEntries;
+        return rowEntries[index];
+    }
+
 
     getRowKey(rowIndex) {
-        const rowEntry = this.state.rowEntries[rowIndex];
+        const rowEntry = this._getRowEntry(rowIndex);
         if (rowEntry) {
             return rowEntry.key;
         }
@@ -575,7 +765,7 @@ export class RemindersList extends React.Component {
 
     onActivateRow(activeRowIndex) {
         const rowEntry = (activeRowIndex !== undefined)
-            ? this.state.rowEntries[activeRowIndex]
+            ? this._getRowEntry(activeRowIndex)
             : undefined;
         const activeRowKey = (rowEntry) ? rowEntry.key : undefined;
         this.setState({
@@ -592,7 +782,7 @@ export class RemindersList extends React.Component {
 
 
     onOpenActiveRow({rowIndex}) {
-        const rowEntry = this.state.rowEntries[rowIndex];
+        const rowEntry = this._getRowEntry(rowIndex);
         const { reminderDataItem } = rowEntry;
         const { onChooseReminder } = this.props;
 
@@ -606,7 +796,7 @@ export class RemindersList extends React.Component {
     onRenderCell(args) {
         let rowEntry = (args.isSizeRender)
             ? this._sizeRowEntry
-            : this.state.rowEntries[args.rowIndex];
+            : this._getRowEntry(args.rowIndex);
         args = Object.assign({}, args, {
             caller: this,
             rowEntry: rowEntry,
@@ -663,15 +853,17 @@ export class RemindersList extends React.Component {
 
                 onRenderCell={this.onRenderCell}
 
-                onSetColumnWidth = { this.props.onSetColumnWidth }
+                columnSorting = {props.columnSorting}
+                onColumnSortingChange = {props.onColumnSortingChange}
+                onSetColumnWidth = { props.onSetColumnWidth }
 
                 activeRowIndex = {state.activeRowIndex}
                 onActivateRow = {this.onActivateRow}
 
                 onOpenActiveRow = {this.onOpenActiveRow}
 
-                contextMenuItems={this.props.contextMenuItems}
-                onChooseContextMenuItem={this.props.onChooseContextMenuItem}
+                contextMenuItems={props.contextMenuItems}
+                onChooseContextMenuItem={props.onChooseContextMenuItem}
             />
         </div>;
     }
@@ -685,8 +877,12 @@ RemindersList.propTypes = {
     contextMenuItems: PropTypes.array,
     onChooseContextMenuItem: PropTypes.func,
     onClose: PropTypes.func.isRequired,
+    
     columns: PropTypes.arrayOf(PropTypes.object),
+    columnSorting: PropTypes.arrayOf(PropTypes.object),
+    onColumnSortingChange: PropTypes.func,
     onSetColumnWidth: PropTypes.func,
+
     hiddenReminderIds: PropTypes.arrayOf(PropTypes.number),
     showHiddenReminders: PropTypes.bool,
     showReminderIds: PropTypes.bool,

@@ -314,6 +314,16 @@ Are the lists really two separate styles? Or can they be combined into one?
 
         - Lot transactions:
             - Add description of action.
+    
+        - Price/Lot editing:
+            - 1.503 shares
+            - 63.82 price
+            - 95.94 amount
+
+            Entering shares, price, got:
+                - 1.503 shares
+                - price 63.8190
+                - amount 95.92
 
 
     - Account Selector
@@ -491,16 +501,9 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
     - Reminders List
-        - Add sorting
-            - Description
-            - Next Due
-            - Last Due
-            - Account
+
 
     - Reminders Due
-        - Clean up apply/skip options:
-            - Make skip only for selected reminder
-            
         - Update status if applied transaction is updated with values.
 
 
@@ -609,13 +612,5 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Cost basis adjustment transaction?
             - Charge to income or expense account
             - How to apply to lots?
-    
-    - Price/Lot editing:
-        - 1.503 shares
-        - 63.82 price
-        - 95.94 amount
 
-        Entering shares, price, got:
-            - 1.503 shares
-            - price 63.8190
-            - amount 95.92
+
