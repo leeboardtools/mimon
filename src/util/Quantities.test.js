@@ -1,5 +1,5 @@
 import { getDecimalDefinition, Quantity, getQuantityDefinition,
-addQuantityBaseValues, } from './Quantities';
+    addQuantityBaseValues, } from './Quantities';
 
 
 function expectToValue(quantity, baseValue, number, valueText) {

@@ -1,4 +1,5 @@
-import { YMDDate, getYMDDate, getMonthNthDayOfWeek, getYMDDateWithDOM, getYearNthDayOfWeek } from './YMDDate';
+import { YMDDate, getYMDDate, getMonthNthDayOfWeek, 
+    getYMDDateWithDOM, getYearNthDayOfWeek } from './YMDDate';
 
 function expectYMDDate(oDate, year, month, dom) {
     expect(oDate.getFullYear()).toEqual(year);

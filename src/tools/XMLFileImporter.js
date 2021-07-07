@@ -109,7 +109,7 @@ function numberOrUndefined(value) {
         return value;
     }
 }
-
+/*
 function scalePriceProperty(item, name, numerator, denominator) {
     const value = item[name];
     if (typeof value !== 'number') {
@@ -119,6 +119,7 @@ function scalePriceProperty(item, name, numerator, denominator) {
     // We still scale if numerator === denominator so we clean up the number.
     item[name] = cleanNumber(value * numerator / denominator);
 }
+*/
 
 
 //

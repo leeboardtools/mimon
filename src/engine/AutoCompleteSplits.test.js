@@ -1,7 +1,6 @@
 import * as ASTH from './AccountingSystemTestHelpers';
 import { createDir, cleanupDir } from '../util/FileTestHelpers';
 import * as EATH from '../tools/EngineAccessTestHelpers';
-import { accessSync } from 'fs';
 import * as path from 'path';
 
 
@@ -200,15 +199,17 @@ test('AutoCompleteSplits-Handler', async () => {
         ]));
 
         const accountingActions = accessor.getAccountingActions();
-        const modifyTransMAction = await accountingActions.asyncCreateModifyTransactionAction({
-            id: sys.transMId,
-            description: 'Char1 donation',
-        });
+        const modifyTransMAction 
+            = await accountingActions.asyncCreateModifyTransactionAction({
+                id: sys.transMId,
+                description: 'Char1 donation',
+            });
         await accessor.asyncApplyAction(modifyTransMAction);
 
-        const removeTransLAction = await accountingActions.asyncCreateRemoveTransactionAction(
-            sys.transLId
-        );
+        const removeTransLAction 
+            = await accountingActions.asyncCreateRemoveTransactionAction(
+                sys.transLId
+            );
         await accessor.asyncApplyAction(removeTransLAction);
 
 

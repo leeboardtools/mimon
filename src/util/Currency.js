@@ -100,7 +100,7 @@ export class Currency {
     /**
      * @returns {number} The number of decimal places displayed.
      */
-    getDecimalPlaces() { return this._decimalPlaces;}
+    getDecimalPlaces() { return this._decimalPlaces; }
 
     /**
      * @returns {QuantityDefinition}    The quantity definition for representing cash.

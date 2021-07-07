@@ -1,5 +1,6 @@
 import { cleanupDir } from './FileTestHelpers';
-import { setUserSettingsPathName, asyncGetUserSetting, asyncSetUserSetting } from './UserSettings';
+import { setUserSettingsPathName, asyncGetUserSetting, 
+    asyncSetUserSetting } from './UserSettings';
 import * as path from 'path';
 import * as os from 'os';
 import { promises as fsPromises } from 'fs';
@@ -68,7 +69,8 @@ test('UserSettings', async () => {
             lmn: 'lmn',
         });
 
-        const settingsB = await asyncGetUserSetting(['one', 'two', 'three'], { xyz: 'XyZ' });
+        const settingsB = await asyncGetUserSetting(
+            ['one', 'two', 'three'], { xyz: 'XyZ' });
         expect(settingsB).toEqual({
             abc: 'ABC',
             def: 'def',
