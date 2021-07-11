@@ -546,6 +546,19 @@ export function getYMDDateString(date) {
 
 
 /**
+ * Determines if date is a valid date.
+ * @param {string|YMDDate} date 
+ * @returns {boolean} <code>true</code> if valid.
+ */
+export function isValidYMDDate(date) {
+    date = getYMDDate(date);
+    if (date instanceof YMDDate) {
+        return !Number.isNaN(date.valueOf());
+    }
+}
+
+
+/**
  * Returns the days of the week as text in a locale. Sunday is at index 0.
  * @param {string} [locale]
  * @param {string} [weekdayOption='long']
