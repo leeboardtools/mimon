@@ -3,6 +3,10 @@ import { getYMDDate, getYMDDateString, isValidYMDDate, YMDDate, } from './YMDDat
 
 /**
  * @typedef {object} YMDDateRange
+ * Defines a range of dates bounded by an earliest date and a latest date.
+ * <p>
+ * See {@link isYMDDateInRange} for details.
+ * <p>
  * If both earliestYMDDate and latestYMDDate are defined then earliestYMDDate must 
  * be on or before latestYMDDate.
  * @property {YMDDate} [earliestYMDDate]
@@ -11,6 +15,10 @@ import { getYMDDate, getYMDDateString, isValidYMDDate, YMDDate, } from './YMDDat
 
 /**
  * @typedef {object} YMDDateRangeDataItem
+ * Defines a range of dates bounded by an earliest date and a latest date.
+ * <p>
+ * See {@link isYMDDateInRange} for details.
+ * <p>
  * If both earliestYMDDate and latestYMDDate are defined then earliestYMDDate must 
  * be on or before latestYMDDate.
  * @property {string} [earliestYMDDate]
