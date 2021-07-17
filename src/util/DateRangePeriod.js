@@ -3,34 +3,69 @@ import { getYMDDateRangeDataItem } from './YMDDateRange';
 
 
 /**
- * @namespace DateRange
+ * @namespace DateRangePeriod
  */
 
 
 /**
- * @typedef {object} DateRange~PeriodTypeDef
+ * @typedef {object} DateRangePeriod~PeriodTypeDef
  * @property {string} name
  */
 
 /**
- * @typedef {object} DateRange~WEEKOptions
+ * @typedef {object} DateRangePeriod~WEEKOptions
  * @property {number} [weekStart=0] The day of the week of the start of the week, 
  * 0 = Sunday. This should be &ge; 0 and &le; 6.
+ */
+
+/**
+ * @typedef {object} DateRangePeriod~MONTHOptions
+ * @property {boolean} [keepDOM=false] If truthy then the day of the month is kept
+ * (if beyond the end of the month it is pinned to the end of the month), otherwise
+ * for earliest the DOM is set to 1 for latest the DOM is set to the last day of the
+ * month. Note that if this is truthy then {@link getPeriodEarliestYMDDate}
+ * and {@link getPeriodLatestYMDDate} will both return the same date.
+ */
+
+/**
+ * @typedef {object} DateRangePeriod~QUARTEROptions
+ * @property {boolean} [keepDOM=false] If truthy then this is treated similar
+ * to {@link DateRange#MONTH} with keepDOM also set, except the offset, if given,
+ * is multiplied by 3.
+ */
+
+/**
+ * @typedef {object} DateRangePeriod~HALFOptions
+ * @property {boolean} [keepDOM=false] If truthy then this is treated similar
+ * to {@link DateRange#MONTH} with keepDOM also set, except the offset, if given,
+ * is multiplied by 6.
+ */
+
+/**
+ * @typedef {object} DateRangePeriod~YEAROptions
+ * @property {boolean} [keepDOM=false] If truthy then this is treated similar
+ * to {@link DateRange#MONTH} with keepDOM also set, except the offset, if given,
+ * is multiplied by 12.
  */
 
 /**
  * The date range periods, with the exception of DAY they correspond
  * to typical accounting periods.
  * @readonly
- * @enum {DateRange~PeriodTypeDef} PeriodType
- * @property {DateRange~PeriodTypeDef} DAY
- * @property {DateRange~PeriodTypeDef} WEEK The date retrieval functions
- * support an optional {@link DateRange~WeekOptions} arg to support specifying
+ * @enum {DateRangePeriod~PeriodTypeDef}
+ * @property {DateRangePeriod~PeriodTypeDef} DAY
+ * @property {DateRangePeriod~PeriodTypeDef} WEEK The date retrieval functions
+ * support an optional {@link DateRangePeriod~WEEKOptions} arg to support specifying
  * which day of the week is the start of the week.
- * @property {DateRange~PeriodTypeDef} MONTH
- * @property {DateRange~PeriodTypeDef} QUARTER
- * @property {DateRange~PeriodTypeDef} HALF
- * @property {DateRange~PeriodTypeDef} YEAR
+ * @property {DateRangePeriod~PeriodTypeDef} MONTH The date retrieval functions
+ * support an optional {@link DateRangePeriod~MONTHOptions} arg.
+ * @property {DateRangePeriod~PeriodTypeDef} QUARTER The date retrieval functions
+ * support an optional {@link DateRangePeriod~QUARTEROptions} arg.
+ * @property {DateRangePeriod~PeriodTypeDef} HALF The date retrieval functions
+ * support an optional {@link DateRangePeriod~HALFOptions} arg.
+ * @property {DateRangePeriod~PeriodTypeDef} YEAR The date retrieval functions
+ * support an optional {@link DateRangePeriod~YEAROptions} arg.
+ * @name DateRangePeriod#PeriodType
 */
 export const PeriodType = {
     DAY: { name: 'DAY',
@@ -64,10 +99,20 @@ export const PeriodType = {
     },
 };
 
+/**
+ * Retrieves a {@link DateRangePeriod#PeriodType} from a string.
+ * @param {DateRangePeriod#PeriodType|string} periodType 
+ * @returns {DateRangePeriod#PeriodType}
+ */
 export function getPeriodType(periodType) {
     return (typeof periodType === 'string') ? PeriodType[periodType] : periodType;
 }
 
+/**
+ * Retrieves a string representation of a {@link DateRangePeriod#PeriodType} item.
+ * @param {DateRangePeriod#PeriodType|string} periodType 
+ * @returns {string}
+ */
 export function getPeriodTypeName(periodType) {
     return (typeof periodType === 'object') ? periodType.name : periodType;
 }
@@ -107,12 +152,14 @@ function getEarliestYMDDateWEEK(ymdDate, offset, options) {
     return ymdDate;
 }
 
-function getEarliestYMDDateMONTH(ymdDate, offset) {
-    const dom = ymdDate.getDOM();
-    if (dom > 1) {
-        ymdDate = new YMDDate(ymdDate.getFullYear(), 
-            ymdDate.getMonth(), 
-            1);
+function getEarliestYMDDateMONTH(ymdDate, offset, options) {
+    if (!options || !options.keepDOM) {
+        const dom = ymdDate.getDOM();
+        if (dom > 1) {
+            ymdDate = new YMDDate(ymdDate.getFullYear(), 
+                ymdDate.getMonth(), 
+                1);
+        }
     }
     if (offset) {
         return ymdDate.addMonths(offset);
@@ -120,8 +167,13 @@ function getEarliestYMDDateMONTH(ymdDate, offset) {
     return ymdDate;
 }
 
-function getEarliestYMDDateQUARTER(ymdDate, offset) {
+function getEarliestYMDDateQUARTER(ymdDate, offset, options) {
+    if (options && options.keepDOM) {
+        return getEarliestYMDDateMONTH(ymdDate, (offset || 0) * 3, options);
+    }
+
     const dom = ymdDate.getDOM();
+    
     let month = ymdDate.getMonth();
     if ((dom !== 1) || (month % 3)) {
         month = Math.floor(month / 3) * 3;
@@ -133,7 +185,11 @@ function getEarliestYMDDateQUARTER(ymdDate, offset) {
     return ymdDate;
 }
 
-function getEarliestYMDDateHALF(ymdDate, offset) {
+function getEarliestYMDDateHALF(ymdDate, offset, options) {
+    if (options && options.keepDOM) {
+        return getEarliestYMDDateMONTH(ymdDate, (offset || 0) * 6, options);
+    }
+
     const dom = ymdDate.getDOM();
     let month = ymdDate.getMonth();
     if ((dom !== 1) || (month % 6)) {
@@ -146,7 +202,11 @@ function getEarliestYMDDateHALF(ymdDate, offset) {
     return ymdDate;
 }
 
-function getEarliestYMDDateYEAR(ymdDate, offset) {
+function getEarliestYMDDateYEAR(ymdDate, offset, options) {
+    if (options && options.keepDOM) {
+        return getEarliestYMDDateMONTH(ymdDate, (offset || 0) * 12, options);
+    }
+
     const dom = ymdDate.getDOM();
     const month = ymdDate.getMonth();
     if ((dom !== 1) || (month !== 0) || offset) {
@@ -173,8 +233,8 @@ function resolveArgs(...args) {
 
 
 /**
- * @typedef {object} DateRange~PeriodArgs
- * @property {DateRange~PeriodType|string} periodType 
+ * @typedef {object} DateRangePeriod~PeriodArgs
+ * @property {DateRangePeriod~PeriodTypeDef|string} periodType 
  * @property {YMDDate|string} [ymdDate] The reference date, if undefined 
  * today will be used.
  * @property {*} [options] Options specific to the period type.
@@ -184,15 +244,16 @@ function resolveArgs(...args) {
 
 /**
  * Retrieves the earliest date of the period that contains a date.
- * <p>The arguments may either be a single {@link DateRange~PeriodArgs}
+ * <p>The arguments may either be a single {@link DateRangePeriod~PeriodArgs}
  * or the following:
- * @param {DateRange~PeriodType|string} periodType 
+ * @param {DateRangePeriod~PeriodTypeDef|string} periodType 
  * @param {YMDDate|string} [ymdDate] The reference date, if undefined 
  * today will be used.
  * @param {number} [offset=0] Number of periods to offset from the period
  * containing ymdDate.
  * @param {*} options Options specific to the period type.
  * @returns {YMDDate|string} This will be a string if ymdDate was a string.
+ * @function DateRangePeriod#getPeriodEarliestYMDDate
  */
 export function getPeriodEarliestYMDDate(...args) {
     let { periodType, ymdDate, options, offset } = resolveArgs(...args);
@@ -248,22 +309,28 @@ function getLatestYMDDateWEEK(ymdDate, offset, options) {
     return ymdDate;
 }
 
-function getLatestYMDDateMONTH(ymdDate, offset) {
+function getLatestYMDDateMONTH(ymdDate, offset, options) {
     if (offset) {
         ymdDate = ymdDate.addMonths(offset);
     }
 
-    const lastDOM = ymdDate.getLastDateOfMonth();
-    const dom = ymdDate.getDOM();
-    if (dom !== lastDOM) {
-        ymdDate = new YMDDate(ymdDate.getFullYear(), 
-            ymdDate.getMonth(), 
-            lastDOM);
+    if (!options || !options.keepDOM) {
+        const lastDOM = ymdDate.getLastDateOfMonth();
+        const dom = ymdDate.getDOM();
+        if (dom !== lastDOM) {
+            ymdDate = new YMDDate(ymdDate.getFullYear(), 
+                ymdDate.getMonth(), 
+                lastDOM);
+        }
     }
     return ymdDate;
 }
 
-function getLatestYMDDateQUARTER(ymdDate, offset) {
+function getLatestYMDDateQUARTER(ymdDate, offset, options) {
+    if (options && options.keepDOM) {
+        return getLatestYMDDateMONTH(ymdDate, (offset || 0) * 3, options);
+    }
+
     if (offset) {
         ymdDate = ymdDate.addMonths(offset * 3);
     }
@@ -285,7 +352,11 @@ function getLatestYMDDateQUARTER(ymdDate, offset) {
     return ymdDate;
 }
 
-function getLatestYMDDateHALF(ymdDate, offset) {
+function getLatestYMDDateHALF(ymdDate, offset, options) {
+    if (options && options.keepDOM) {
+        return getLatestYMDDateMONTH(ymdDate, (offset || 0) * 6, options);
+    }
+    
     if (offset) {
         ymdDate = ymdDate.addMonths(offset * 6);
     }
@@ -307,7 +378,11 @@ function getLatestYMDDateHALF(ymdDate, offset) {
     return ymdDate;
 }
 
-function getLatestYMDDateYEAR(ymdDate, offset) {
+function getLatestYMDDateYEAR(ymdDate, offset, options) {
+    if (options && options.keepDOM) {
+        return getLatestYMDDateMONTH(ymdDate, (offset || 0) * 12, options);
+    }
+    
     const dom = ymdDate.getDOM();
     const month = ymdDate.getMonth();
     if ((dom !== 31) || (month !== 11) || offset) {
@@ -319,15 +394,16 @@ function getLatestYMDDateYEAR(ymdDate, offset) {
 
 /**
  * Retrieves the latest date of the period that contains a date.
- * <p>The arguments may either be a single {@link DateRange~PeriodArgs}
+ * <p>The arguments may either be a single {@link DateRangePeriod~PeriodArgs}
  * or the following:
- * @param {DateRange~PeriodType|string} periodType 
+ * @param {DateRangePeriod~PeriodTypeDef|string} periodType 
  * @param {YMDDate|string} [ymdDate] The reference date, if undefined 
  * today will be used.
  * @param {number} [offset=0] Number of periods to offset from the period
  * containing ymdDate.
  * @param {*} options Options specific to the period type.
  * @returns {YMDDate|string} This will be a string if ymdDate was a string.
+ * @function DateRangePeriod#getPeriodLatestYMDDate
  */
 export function getPeriodLatestYMDDate(...args) {
     let { periodType, ymdDate, options, offset } = resolveArgs(...args);
@@ -350,9 +426,9 @@ export function getPeriodLatestYMDDate(...args) {
 
 /**
  * Retrieves a {@link YMDDateRange} representing the period that contains a date.
- * <p>The arguments may either be a single {@link DateRange~PeriodArgs}
+ * <p>The arguments may either be a single {@link DateRangePeriod~PeriodArgs}
  * or the following:
- * @param {DateRange~PeriodType|string} periodType 
+ * @param {DateRangePeriod~PeriodTypeDef|string} periodType 
  * @param {YMDDate|string} [ymdDate] The reference date, if undefined 
  * today will be used.
  * @param {number} [offset=0] Number of periods to offset from the period
@@ -360,6 +436,7 @@ export function getPeriodLatestYMDDate(...args) {
  * @param {*} options Options specific to the period type.
  * @returns {YMDDateRange|YMDDateRangeDataItem} This will be a 
  * {@link YMDDateRangeDataItem} if ymdDate is a string.
+ * @function DateRangePeriod#getPeriodYMDDateRange
  */
 export function getPeriodYMDDateRange(...args) {
     let { periodType, ymdDate, options, offset } = resolveArgs(...args);

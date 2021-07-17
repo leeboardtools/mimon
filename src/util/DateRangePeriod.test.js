@@ -70,6 +70,25 @@ test('getPeriodEarliestYMDDate', () => {
         '2020-06-01'
     );
 
+    //
+    // keepDOM option
+    expect(DR.getPeriodEarliestYMDDate({
+        periodType: DR.PeriodType.MONTH,
+        ymdDate: '2021-07-15',
+        offset: -3,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2021-04-15'
+    );
+    expect(DR.getPeriodEarliestYMDDate({
+        periodType: DR.PeriodType.MONTH,
+        ymdDate: '2021-07-31',
+        offset: -3,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2021-04-30'
+    );
+
 
     //
     // Quarter:
@@ -101,6 +120,25 @@ test('getPeriodEarliestYMDDate', () => {
         '2019-10-01'
     );
 
+    //
+    // keepDOM option
+    expect(DR.getPeriodEarliestYMDDate({
+        periodType: DR.PeriodType.QUARTER,
+        ymdDate: '2021-08-15',
+        offset: -3,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2020-11-15'
+    );
+    expect(DR.getPeriodEarliestYMDDate({
+        periodType: DR.PeriodType.QUARTER,
+        ymdDate: '2021-01-31',
+        offset: -3,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2020-04-30'
+    );
+
 
     //
     // Half:
@@ -120,6 +158,25 @@ test('getPeriodEarliestYMDDate', () => {
         '2020-01-01'
     );
 
+    //
+    // keepDOM option
+    expect(DR.getPeriodEarliestYMDDate({
+        periodType: DR.PeriodType.HALF,
+        ymdDate: '2021-08-15',
+        offset: -3,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2020-02-15'
+    );
+    expect(DR.getPeriodEarliestYMDDate({
+        periodType: DR.PeriodType.HALF,
+        ymdDate: '2020-02-29',
+        offset: -2,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2019-02-28'
+    );
+
 
     //
     // Year:
@@ -131,6 +188,33 @@ test('getPeriodEarliestYMDDate', () => {
     );
     expect(DR.getPeriodEarliestYMDDate(DR.PeriodType.YEAR, '2021-12-31', -3)).toEqual(
         '2018-01-01'
+    );
+
+    //
+    // keepDOM option
+    expect(DR.getPeriodEarliestYMDDate({
+        periodType: DR.PeriodType.YEAR,
+        ymdDate: '2021-08-15',
+        offset: -3,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2018-08-15'
+    );
+    expect(DR.getPeriodEarliestYMDDate({
+        periodType: DR.PeriodType.YEAR,
+        ymdDate: '2020-02-29',
+        offset: -5,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2015-02-28'
+    );
+    expect(DR.getPeriodEarliestYMDDate({
+        periodType: DR.PeriodType.YEAR,
+        ymdDate: '2020-02-29',
+        offset: -4,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2016-02-29'
     );
 });
 
@@ -230,6 +314,25 @@ test('getPeriodLatestYMDDate', () => {
         '2019-02-28'
     );
 
+    //
+    // keepDOM option
+    expect(DR.getPeriodLatestYMDDate({
+        periodType: DR.PeriodType.MONTH,
+        ymdDate: '2021-07-15',
+        offset: -3,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2021-04-15'
+    );
+    expect(DR.getPeriodLatestYMDDate({
+        periodType: DR.PeriodType.MONTH,
+        ymdDate: '2021-07-31',
+        offset: -3,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2021-04-30'
+    );
+
 
     //
     // Quarter:
@@ -262,6 +365,25 @@ test('getPeriodLatestYMDDate', () => {
         '2020-03-31'
     );
 
+    //
+    // keepDOM option
+    expect(DR.getPeriodLatestYMDDate({
+        periodType: DR.PeriodType.QUARTER,
+        ymdDate: '2021-08-15',
+        offset: -3,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2020-11-15'
+    );
+    expect(DR.getPeriodLatestYMDDate({
+        periodType: DR.PeriodType.QUARTER,
+        ymdDate: '2021-01-31',
+        offset: -3,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2020-04-30'
+    );
+
 
     //
     // Half:
@@ -285,6 +407,25 @@ test('getPeriodLatestYMDDate', () => {
         '2021-12-31'
     );
 
+    //
+    // keepDOM option
+    expect(DR.getPeriodLatestYMDDate({
+        periodType: DR.PeriodType.HALF,
+        ymdDate: '2021-08-15',
+        offset: -3,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2020-02-15'
+    );
+    expect(DR.getPeriodLatestYMDDate({
+        periodType: DR.PeriodType.HALF,
+        ymdDate: '2020-02-29',
+        offset: -2,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2019-02-28'
+    );
+
 
     //
     // Year:
@@ -301,6 +442,33 @@ test('getPeriodLatestYMDDate', () => {
         offset: -10,
     })).toEqual(
         '2011-12-31'
+    );
+
+    //
+    // keepDOM option
+    expect(DR.getPeriodLatestYMDDate({
+        periodType: DR.PeriodType.YEAR,
+        ymdDate: '2021-08-15',
+        offset: -3,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2018-08-15'
+    );
+    expect(DR.getPeriodLatestYMDDate({
+        periodType: DR.PeriodType.YEAR,
+        ymdDate: '2020-02-29',
+        offset: -5,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2015-02-28'
+    );
+    expect(DR.getPeriodLatestYMDDate({
+        periodType: DR.PeriodType.YEAR,
+        ymdDate: '2020-02-29',
+        offset: -4,
+        options: { keepDOM: true, },
+    })).toEqual(
+        '2016-02-29'
     );
 
 });
@@ -392,6 +560,11 @@ test('getPeriodYMDDateRange', () => {
     
     //
     // Quarter
+    expect(DR.getPeriodYMDDateRange(DR.PeriodType.QUARTER, '2020-01-01'))
+        .toEqual({
+            earliestYMDDate: '2020-01-01',
+            latestYMDDate: '2020-03-31',
+        });
     expect(DR.getPeriodYMDDateRange(DR.PeriodType.QUARTER, '2020-03-31'))
         .toEqual({
             earliestYMDDate: '2020-01-01',
