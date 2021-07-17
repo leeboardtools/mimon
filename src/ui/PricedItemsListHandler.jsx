@@ -839,8 +839,6 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                         pricesYMDDate: ymdDate,
                     },
                     'PricedItemsListHandler-action_as_of_date')}
-                clearButtonLabel 
-                    = {userMsg('PricedItemsListHandler-today_button_label')}
 
                 dateFormat = {accessor.getDateFormat()}
                 onClose = {() => this.onToggleDateSelector(tabId, {

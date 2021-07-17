@@ -576,6 +576,17 @@ Are the lists really two separate styles? Or can they be combined into one?
                     - 1 quarter
                     - 1 year
                     - 52 weeks
+                
+                - All
+                - Custom [from] [to]
+                - Current [Week/Month/Quarter/Half/Year]
+                - Previous [Week/Month/Quarter/Half/Year]
+                - Last [7/30/60/90/180] Days
+                - Last [3/6/12] Months
+                - Week Ending [date]
+                - Month Ending [date]
+                - [3/6/12] Months Ending [date]
+                - [30/90/180] Days Ending [date]
         
         - Date range not working
 
@@ -614,3 +625,14 @@ Are the lists really two separate styles? Or can they be combined into one?
             - How to apply to lots?
 
 
+Priorities:
+    - Date Selector Bar
+
+    - Update Partial Reminder status if transaction no longer empty.
+
+    - Cost basis adjustment transaction
+
+    - Auto complete
+
+    - Search
+    

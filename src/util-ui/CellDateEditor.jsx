@@ -5,6 +5,7 @@ import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 import 'react-datepicker/dist/react-datepicker.css';
 import { format } from 'date-fns';
 import { Tooltip } from './Tooltip';
+import { userMsg } from '../util/UserMessages';
 
 
 /**
@@ -92,7 +93,7 @@ function onKeyDown(e, ymdDate, onChange, state, setState) {
 
 
 /**
- * React component for editing text in a table cell.
+ * React component for editing a date in a table cell.
  * @class
  */
 
@@ -154,6 +155,7 @@ export const CellDateEditor = React.forwardRef(
             enableTabLoop = "false"
             dropdownMode = "select"
             showYearDropdown
+            todayButton = {userMsg('today')}
         />;
 
         if (errorMsg) {

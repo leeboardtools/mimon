@@ -271,7 +271,6 @@
     "AccountsListHandler-to_date_label": " Until:",
     "AccountsListHandler-earliest_button_label": "Use Earliest",
     "AccountsListHandler-latest_button_label": "Use Latest",
-    "AccountsListHandler-today_button_label": "Today",
     "AccountsListHandler-earliest_placeholder": "Earliest",
     "AccountsListHandler-latest_placeholder": "Latest",
 
@@ -525,7 +524,6 @@
 
     "PricedItemsListHandler-dateString": ["Date: ", ""],
     "PricedItemsListHandler-as_of_date_label": "As of: ",
-    "PricedItemsListHandler-today_button_label": "Today",
 
     "PricedItemSelector-baseCurrency_label": ["Default Currency (", ")" ],
     "PricedItemSelector-currency_label": ["", " - ", ""],

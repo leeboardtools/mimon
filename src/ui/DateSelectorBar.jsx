@@ -20,22 +20,11 @@ export function DateSelectorBar(props) {
         classExtras += ' ' + props.classExtras;
     }
 
-    let clearButton;
-    if (props.clearButtonLabel) {
-        clearButton = <Button
-            classExtras = "Btn-outline-secondary"
-            ariaLabel = "Latest Available Button"
-            onClick = {() => props.onYMDDateChange()}
-        >
-            {props.clearButtonLabel}
-        </Button>;
-    }
-
     return <Row classExtras = {classExtras}>
         <Col>
             <DateField 
                 prependComponent = {props.label}
-                appendComponent = {clearButton}
+                //appendComponent = {clearButton}
                 fieldClassExtras = {props.fieldClassExtras}
                 inputClassExtras = {props.editorClassExtras}
                 ariaLabel = "Date"
@@ -59,11 +48,11 @@ DateSelectorBar.propTypes = {
     label: PropTypes.string,
     ymdDate: PropTypes.string,
     onYMDDateChange: PropTypes.func.isRequired,
-    clearButtonLabel: PropTypes.string,
     clearPlaceholderText: PropTypes.string,
 
     onClose: PropTypes.func,
 };
+
 
 
 export function DateRangeSelectorBar(props) {

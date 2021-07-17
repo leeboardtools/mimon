@@ -1030,8 +1030,6 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                             endYMDDate: ymdDate,
                         },
                         'AccountsListHandler-action_as_of_date')}
-                    clearButtonLabel 
-                        = {userMsg('AccountsListHandler-today_button_label')}
 
                     dateFormat = {accessor.getDateFormat()}
                     onClose = {() => this.onToggleDateSelector(tabId, {
