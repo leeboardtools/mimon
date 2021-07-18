@@ -100,9 +100,22 @@ label {
     margin: auto;
 }
 
-.DateSelectorBar {
+.DateSelectorBar
+.DateRangeBar {
     margin-left: 0;
     margin-right: 0;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.DateRangeBar-dateCol {
+    min-width: 18rem;
+    padding-right: 0;
+}
+
+.DateRangeBar-editorCol {
+    padding-left: 0;
+    padding-right: 0;
 }
 
 
@@ -395,7 +408,8 @@ label {
 
 .AccountsList-DateSelectorBar {
     border-bottom: 1px solid #dee2e6!important;
-    margin-top: 4px;
+    padding-top: 4px;
+    padding-bottom: 8px;
 }
 
 .AccountsList-DateSelectorField {

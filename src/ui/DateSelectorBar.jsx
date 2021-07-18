@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { CloseButton } from '../util-ui/CloseButton';
 import { Row, Col } from '../util-ui/RowCols';
-import { Field, FieldText } from '../util-ui/Field';
 import { YMDDate, getYMDDate } from '../util/YMDDate';
 import { format } from 'date-fns';
 import { userMsg } from '../util/UserMessages';
@@ -10,6 +9,7 @@ import { resolveDateSelector } from '../util/DateSelectorDef';
 import { DateSelectorDefEditor } from '../util-ui/DateSelectorDefEditor';
 import { resolveDateRange } from '../util/DateRangeDef';
 import { DateRangeDefEditor } from '../util-ui/DateRangeDefEditor';
+import { CellTextDisplay } from '../util-ui/CellTextEditor';
 
 
 /**
@@ -19,8 +19,6 @@ import { DateRangeDefEditor } from '../util-ui/DateRangeDefEditor';
  */
 export function DateSelectorBar(props) {
     
-    let dateComponent;
-
     let dateString;
 
     const ymdDate = resolveDateSelector(props.dateSelectorDef) || new YMDDate();
@@ -36,12 +34,6 @@ export function DateSelectorBar(props) {
             dateString = userMsg('DateSelectorBar-date_label', dateString);
         }
     }
-    dateComponent = <Field
-        prependComponent = {props.label}
-        fieldClassExtras = "Field-postSpace"
-    >
-        <FieldText>{dateString}</FieldText>
-    </Field>;
 
 
     let editComponent;
@@ -64,17 +56,20 @@ export function DateSelectorBar(props) {
     }
 
 
-    let classExtras = 'No-gutters DateSelectorBar';
+    let classExtras = 'Row-align-items-center No-gutters DateSelectorBar';
     if (props.classExtras) {
         classExtras += ' ' + props.classExtras;
     }
 
     return <Row classExtras = {classExtras}>
-        <Col classExtras = "FieldContainer-inline">
-            {dateComponent}
-            <Field classExtras = "Field-indent">
-                {editComponent}
-            </Field>
+        <Col classExtras = "Col-auto DateSelectorBar-date">
+            <CellTextDisplay
+                ariaLabel = "Date"
+                value = {dateString}
+            />
+        </Col>
+        <Col classExtras = "Col-auto">
+            {editComponent}
         </Col>
         <Col>{closeButton}</Col>
     </Row>;
@@ -117,8 +112,6 @@ DateSelectorBar.propTypes = {
  */
 export function DateRangeBar(props) {
     
-    let dateComponent;
-
     let earliestDateString;
     let latestDateString;
 
@@ -160,12 +153,6 @@ export function DateRangeBar(props) {
         dateString = userMsg('DateRangeBar-allDays_label');
     }
 
-    dateComponent = <Field
-        fieldClassExtras = "Field-postSpace"
-    >
-        <FieldText>{dateString}</FieldText>
-    </Field>;
-
 
     let editComponent;
     if (props.onDateRangeDefChanged) {
@@ -188,17 +175,20 @@ export function DateRangeBar(props) {
     }
 
 
-    let classExtras = 'No-gutters DateRangeBar';
+    let classExtras = 'Row-align-items-center No-gutters DateRangeBar';
     if (props.classExtras) {
         classExtras += ' ' + props.classExtras;
     }
 
     return <Row classExtras = {classExtras}>
-        <Col classExtras = "FieldContainer-inline">
-            {dateComponent}
-            <Field classExtras = "Field-indent">
-                {editComponent}
-            </Field>
+        <Col classExtras = "Col-auto DateRangeBar-dateCol">
+            <CellTextDisplay
+                ariaLabel = "Date"
+                value = {dateString}
+            />
+        </Col>
+        <Col classExtras = "Col-auto DateRangeBar-editorCol">
+            {editComponent}
         </Col>
         <Col>{closeButton}</Col>
     </Row>;

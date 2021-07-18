@@ -141,19 +141,19 @@ export class DateRangeDefEditor extends React.Component {
         }
 
 
-        let className = 'No-gutters DateSelectorDefEditor';
+        let className = 'Row-align-items-center No-gutters DateRangeDefEditor';
         if (classExtras) {
             className += ' ' + classExtras;
         }
 
         return <Row classExtras = {className}>
-            <Col classExtras = "Col-auto">
+            <Col classExtras = "Col-auto Pl-1 Pr-1 DateRangeDefEditor-typeCol">
                 {typeComponent}
             </Col>
-            <Col>
+            <Col classExtras = "Pl-1 Pr-1 DateRangeDefEditor-dateCol">
                 {firstYMDDateEditor}
             </Col>
-            <Col>
+            <Col classExtras = "Pl-1 Pr-1 DateRangeDefEditor-dateCol">
                 {lastYMDDateEditor}
             </Col>
         </Row>;

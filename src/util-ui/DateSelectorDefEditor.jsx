@@ -103,16 +103,16 @@ export class DateSelectorDefEditor extends React.Component {
             />;
         }
 
-        let className = 'No-gutters DateSelectorDefEditor';
+        let className = 'Row-align-items-center No-gutters DateSelectorDefEditor';
         if (classExtras) {
             className += ' ' + classExtras;
         }
 
         return <Row classExtras = {className}>
-            <Col classExtras = "Col-auto">
+            <Col classExtras = "Col-auto DateSelectorDefEditor-typeCol">
                 {selectorComponent}
             </Col>
-            <Col>
+            <Col classExtras = "DateSelectorDefEditor-dateCol">
                 {ymdDateEditor}
             </Col>
         </Row>;

@@ -1023,7 +1023,6 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             if (tabEntry.allowAsset || tabEntry.allowLiability) {
                 dateSelector = <DateSelectorBar
                     classExtras = "AccountsList-DateSelectorBar"
-                    fieldClassExtras = "AccountsList-DateSelectorField"
                     label = {userMsg('AccountsListHandler-as_of_date_label')}
 
                     dateSelectorDef = {tabEntry.dateSelectorDef}
