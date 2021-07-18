@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
 import * as A from '../engine/Accounts';
+import * as AS from '../engine/AccountStates';
 import deepEqual from 'deep-equal';
 import { CollapsibleRowTable, ExpandCollapseState,
     findRowInfoWithKey, updateRowInfo,
@@ -696,11 +697,21 @@ export class AccountsList extends React.Component {
         const accountIdIndicesByPriceDataItemId = new Map();
         for (let i = 0; i < allAccountIds.length; ++i) {
             const accountStateInfo = allAccountStateInfos[i];
+            const { accountDataItem } = accountStateInfo;
+
             let accountStateDataItem = accountStateDataItems[i];
             if (!accountStateDataItem) {
                 if (!isDateSpecified) {
                     accountStateDataItem 
                         = accessor.getCurrentAccountStateDataItem(allAccountIds[i]);
+                }
+                else {
+                    const type = A.getAccountType(accountDataItem.type);
+                    accountStateDataItem
+                        = AS.getFullAccountStateDataItem(
+                            { quantityBaseValue: 0, },
+                            type.hasLots
+                        );
                 }
             }
             accountStateInfo.accountState = accountStateDataItem;
@@ -709,7 +720,6 @@ export class AccountsList extends React.Component {
                 continue;
             }
 
-            const { accountDataItem } = accountStateInfo;
             let accountIdsIndices = accountIdIndicesByPriceDataItemId.get(
                 accountDataItem.pricedItemId
             );

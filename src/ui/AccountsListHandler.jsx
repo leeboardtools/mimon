@@ -1080,6 +1080,9 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         let endYMDDate;
         if (tabEntry.allowAsset || tabEntry.allowLiability) {
             endYMDDate = resolveDateSelector(tabEntry.dateSelectorDef, todayString);
+            if (endYMDDate === todayString) {
+                endYMDDate = undefined;
+            }
         }
         else {
             const dateRange = resolveDateRange(tabEntry.dateRangeDef, todayString);

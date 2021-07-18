@@ -628,8 +628,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 Priorities:
     - Date Range not working properly in AccountList.
     
-    - Net balance not working when an end date is specified.
-
     - Update Partial Reminder status if transaction no longer empty.
 
     - Cost basis adjustment transaction
