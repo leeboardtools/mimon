@@ -18,7 +18,8 @@ import { getYMDDateRangeDataItem, makeValidYMDDateRange } from './YMDDateRange';
 /**
  * @typedef {object} DateRangeDef~RelationTypeDef
  * @property {string} name
- * @property {boolean} [hasRefDate=false]
+ * @property {boolean} [isFuture]
+ * @property {boolean} [isPast]
  */
 
 /**
@@ -55,18 +56,22 @@ export const RelationType = {
 
     PRECEDING: { name: 'PRECEDING', 
         getYMDDateRange: getYMDDateRangePRECEDING,
+        isPast: true,
     },
 
     FOLLOWING: { name: 'FOLLOWING', 
         getYMDDateRange: getYMDDateRangeFOLLOWING,
+        isFuture: true,
     },
 
     LAST: { name: 'LAST', 
         getYMDDateRange: getYMDDateRangeLAST,
+        isPast: true,
     },
 
     NEXT: { name: 'NEXT', 
         getYMDDateRange: getYMDDateRangeNEXT,
+        isFuture: true,
     },
 
     ALL: { name: 'ALL', 
@@ -104,6 +109,8 @@ export function getRelationTypeName(relationType) {
  * @property {DateRangeDef~RelationTypeDef} relationType
  * @property {DateRangeDef~ResultType} [resultType]
  * @property {number} [offset] Optional offset for the period type.
+ * @property {boolean} [hasFirstYMDDate]
+ * @property {boolean} [hasLastYMDDate]
  */
 
 /**
@@ -733,6 +740,18 @@ export const StandardRangeType = {
 
     CUSTOM: { name: 'CUSTOM',
         relationType: RelationType.SPECIFIED,
+        hasFirstYMDDate: true,
+        hasLastYMDDate: true,
+    },
+
+    BEFORE_DATE: { name: 'BEFORE_DATE',
+        relationType: RelationType.SPECIFIED,
+        hasLastYMDDate: true,
+    },
+
+    AFTER_DATE: { name: 'AFTER_DATE',
+        relationType: RelationType.SPECIFIED,
+        hasFirstYMDDate: true,
     },
 
 
