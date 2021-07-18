@@ -227,6 +227,8 @@ button.Close {
     -ms-flex-positive: 1;
     flex-grow: 1;
     max-width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
 }
 
 /* Originally from BS col-auto */

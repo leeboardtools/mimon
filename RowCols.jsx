@@ -80,7 +80,7 @@ Row.propTypes = {
 export function Col(props) {
     const { classExtras, children } = props;
 
-    let className = 'col';
+    let className = 'Col';
     if (classExtras) {
         className += ' ' + classExtras;
     }
