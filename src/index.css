@@ -100,7 +100,7 @@ label {
     margin: auto;
 }
 
-.DateSelectorBar
+.DateSelectorBar,
 .DateRangeBar {
     margin-left: 0;
     margin-right: 0;
@@ -406,7 +406,8 @@ label {
     text-align: right;
 }
 
-.AccountsList-DateSelectorBar {
+.AccountsList-DateSelectorBar,
+.PricedItemsList-DateSelectorBar {
     border-bottom: 1px solid #dee2e6!important;
     padding-top: 4px;
     padding-bottom: 8px;

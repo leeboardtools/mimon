@@ -37,10 +37,10 @@ export function DateSelectorBar(props) {
 
 
     let editComponent;
-    if (props.onDateSelectorDefChanged) {
+    if (props.onDateSelectorDefChange) {
         editComponent = <DateSelectorDefEditor
             dateSelectorDef = {props.dateSelectorDef}
-            onDateSelectorDefChanged = {props.onDateSelectorDefChanged}
+            onDateSelectorDefChange = {props.onDateSelectorDefChange}
             excludeFuture = {props.excludeFuture}
             excludePast = {props.excludePast}
             dateFormat = {props.dateFormat}
@@ -81,8 +81,8 @@ export function DateSelectorBar(props) {
  * @property {string} [classExtras]
  * @property {DateSelectorDef~SelectorDefDataItem|DateSelectorDef~SelectorDef} 
  *  [dateSelectorDef]
- * @property {DateSelectorDefEditor~onDateSelectorDefChangedCallback}
- *  onDateSelectorDefChanged Required callback for receiving changes.
+ * @property {DateSelectorDefEditor~onDateSelectorDefChangeCallback}
+ *  onDateSelectorDefChange Required callback for receiving changes.
  * @property {string} [dateFormat] Date format string compatible with 
  * {@link https://date-fns.org/v2.0.0-alpha.18/docs/I18n}
  * @property {boolean} [excludeFuture=false]
@@ -96,7 +96,7 @@ DateSelectorBar.propTypes = {
 
     label: PropTypes.string,
     dateSelectorDef: PropTypes.object,
-    onDateSelectorDefChanged: PropTypes.func.isRequired,
+    onDateSelectorDefChange: PropTypes.func.isRequired,
     excludeFuture: PropTypes.bool,
     excludePast: PropTypes.bool,
 
@@ -155,10 +155,10 @@ export function DateRangeBar(props) {
 
 
     let editComponent;
-    if (props.onDateRangeDefChanged) {
+    if (props.onDateRangeDefChange) {
         editComponent = <DateRangeDefEditor
             dateRangeDef = {props.dateRangeDef}
-            onDateRangeDefChanged = {props.onDateRangeDefChanged}
+            onDateRangeDefChange = {props.onDateRangeDefChange}
             excludeFuture = {props.excludeFuture}
             excludePast = {props.excludePast}
             dateFormat = {props.dateFormat}
@@ -200,8 +200,8 @@ export function DateRangeBar(props) {
  * @typedef {object} DateRangeBar~propTypes
  * @property {string} [classExtras]
  * @property {DateRangeDef~RangeDefDataItem|DateRangeDef~RangeDef} [dateRangeDef]
- * @property {DateRangeDefEditor~onDateRangeDefChangedCallback}
- *  onDateRangeDefChanged Required callback for receiving changes.
+ * @property {DateRangeDefEditor~onDateRangeDefChangeCallback}
+ *  onDateRangeDefChange Required callback for receiving changes.
  * @property {string} [dateFormat] Date format string compatible with 
  * {@link https://date-fns.org/v2.0.0-alpha.18/docs/I18n}
  * @property {boolean} [excludeFuture=false]
@@ -214,7 +214,7 @@ DateRangeBar.propTypes = {
     dateFormat: PropTypes.string,
 
     dateRangeDef: PropTypes.object.isRequired,
-    onDateRangeDefChanged: PropTypes.func,
+    onDateRangeDefChange: PropTypes.func,
     excludeFuture: PropTypes.bool,
     excludePast: PropTypes.bool,
 

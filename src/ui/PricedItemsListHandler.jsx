@@ -11,6 +11,7 @@ import { TabIdRowTableHandler, updateStateFromProjectSettings,
 import { getColumnWithKey } from '../util-ui/ColumnInfo';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
 import { DateSelectorBar, } from './DateSelectorBar';
+import { resolveDateSelector } from '../util/DateSelectorDef';
 
 
 const pricedItemsListTagPrefix = 'pricedItemsList_';
@@ -408,19 +409,10 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
             if (state.showDateSelector) {
                 const { accessor } = this.props;
-                let { startYMDDate, endYMDDate } = state;
-                endYMDDate = getYMDDate(endYMDDate) || new YMDDate();
+                const pricesYMDDate = resolveDateSelector(state.dateSelectorDef);
 
-                let dateLine;
-                if (startYMDDate) {
-                    dateLine = userMsg('AccountsListHandler-dateRangeString',
-                        accessor.formatDate(startYMDDate),
-                        accessor.formatDate(endYMDDate));
-                }
-                else {
-                    dateLine = userMsg('AccountsListHandler-dateString',
-                        accessor.formatDate(endYMDDate));
-                }
+                const dateLine = userMsg('PricedItemsListHandler-dateString',
+                    accessor.formatDate(pricesYMDDate));
                 
                 stringTable.splice(0, 0, dateLine);
             }
@@ -786,7 +778,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             showHiddenAccounts: settings.showHiddenAccounts,
             showInactiveAccounts: settings.showInactiveAccounts,
 
-            pricesYMDDate: settings.pricesYMDDate,
+            dateSelectorDef: settings.dateSelectorDef,
             showDateSelector: showDateSelector,
 
             collapsedRowKeys: collapsedRowKeys,
@@ -831,14 +823,17 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
         if (showDateSelector) {
             dateSelector = <DateSelectorBar
                 classExtras = "PricedItemsList-DateSelectorBar"
-                fieldClassExtras = "PricedItemsList-DateSelectorField"
                 label = {userMsg('PricedItemsListHandler-as_of_date_label')}
-                ymdDate = {tabEntry.pricesYMDDate}
-                onYMDDateChange = {(ymdDate) => this.onYMDDateChange(tabId, 
-                    {
-                        pricesYMDDate: ymdDate,
-                    },
-                    'PricedItemsListHandler-action_as_of_date')}
+
+                dateSelectorDef = {tabEntry.dateSelectorDef}
+                onDateSelectorDefChange = {
+                    (dateSelectorDefDataItem) => this.onYMDDateChange(
+                        tabId, 
+                        {
+                            dateSelectorDef: dateSelectorDefDataItem,
+                        },
+                        'PricedItemsListHandler-action_as_of_date')}
+                excludeFuture
 
                 dateFormat = {accessor.getDateFormat()}
                 onClose = {() => this.onToggleDateSelector(tabId, {
@@ -846,6 +841,9 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
                 })}
             />;
         }
+
+        const todayString = getYMDDate(new YMDDate());
+        const pricesYMDDate = resolveDateSelector(tabEntry.dateSelectorDef, todayString);
 
         return <PricedItemsList
             accessor = {accessor}
@@ -863,7 +861,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
             showHiddenAccounts = {tabEntry.showHiddenAccounts}
             showInactiveAccounts = {tabEntry.showInactiveAccounts}
 
-            pricesYMDDate = {tabEntry.pricesYMDDate}
+            pricesYMDDate = {pricesYMDDate}
 
             includeOptions = {tabEntry.includeOptions}
 

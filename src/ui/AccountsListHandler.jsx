@@ -171,8 +171,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
         updateStateFromProjectSettings(args, 'sortAlphabetically');
 
-        updateStateFromProjectSettings(args, 'startYMDDate');
-        updateStateFromProjectSettings(args, 'endYMDDate');
+        updateStateFromProjectSettings(args, 'dateSelectorDef');
+        updateStateFromProjectSettings(args, 'dateRangeDef');
 
         updateStateFromProjectSettings(args, 'collapsedAccountIds');
 
@@ -520,8 +520,19 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
             if (state.showDateSelector) {
                 const { accessor } = this.props;
-                let { startYMDDate, endYMDDate } = state;
-                endYMDDate = getYMDDate(endYMDDate) || new YMDDate();
+
+                let startYMDDate;
+                let endYMDDate;
+                if (state.allowAsset || state.allowLiability) {
+                    endYMDDate = resolveDateSelector(state.dateSelectorDef);
+                }
+                else {
+                    const dateRange = resolveDateRange(state.dateRangeDef);
+                    if (dateRange) {
+                        startYMDDate = dateRange.earliestYMDDate;
+                        endYMDDate = dateRange.latestYMDDate;
+                    }
+                }
 
                 let dateLine;
                 if (startYMDDate) {
@@ -972,8 +983,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             allowExpense: allowExpense,
             allowEquity: allowEquity,
 
-            startYMDDate: settings.startYMDDate,
-            endYMDDate: settings.endYMDDate,
+            dateSelectorDef: settings.dateSelectorDef,
+            dateRangeDef: settings.dateRangeDef,
             showDateSelector: showDateSelector,
 
             collapsedAccountIds: collapsedAccountIds,
@@ -1026,7 +1037,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                     label = {userMsg('AccountsListHandler-as_of_date_label')}
 
                     dateSelectorDef = {tabEntry.dateSelectorDef}
-                    onDateSelectorDefChanged = {
+                    onDateSelectorDefChange = {
                         (dateSelectorDefDataItem) => this.onYMDDateChange(
                             tabId, 
                             {
@@ -1047,7 +1058,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                     dateFormat = {accessor.getDateFormat()}
 
                     dateRangeDef = {tabEntry.dateRangeDef}
-                    onDateRangeDefChanged = {
+                    onDateRangeDefChange = {
                         (dateRangeDefDataItem) => this.onYMDDateChange(
                             tabId, 
                             {
