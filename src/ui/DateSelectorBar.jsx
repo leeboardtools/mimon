@@ -12,6 +12,11 @@ import { resolveDateRange } from '../util/DateRangeDef';
 import { DateRangeDefEditor } from '../util-ui/DateRangeDefEditor';
 
 
+/**
+ * React component that displays a resolved {@link DateSelectorDef~SelectorDef}
+ * date along with an editor for it in a bar with a close button.
+ * @class
+ */
 export function DateSelectorBar(props) {
     
     let dateComponent;
@@ -22,11 +27,13 @@ export function DateSelectorBar(props) {
     if (ymdDate) {
         const { dateFormat } = props;
         const localDate = ymdDate.toLocalDate();
-        if (dateFormat) {
-            dateString = format(localDate, dateFormat);
+        dateString = format(localDate, dateFormat);
+
+        if (props.label !== undefined) {
+            dateString = props.label + ' ' + dateString;
         }
         else {
-            dateString = new Intl.DateTimeFormat().format(localDate);
+            dateString = userMsg('DateSelectorBar-date_label', dateString);
         }
     }
     dateComponent = <Field
@@ -73,29 +80,41 @@ export function DateSelectorBar(props) {
     </Row>;
 }
 
+
+/**
+ * @typedef {object} DateSelectorBar~propTypes
+ * @property {string} [classExtras]
+ * @property {DateSelectorDef~SelectorDefDataItem|DateSelectorDef~SelectorDef} 
+ *  [dateSelectorDef]
+ * @property {DateSelectorDefEditor~onDateSelectorDefChangedCallback}
+ *  onDateSelectorDefChanged Required callback for receiving changes.
+ * @property {string} [dateFormat] Date format string compatible with 
+ * {@link https://date-fns.org/v2.0.0-alpha.18/docs/I18n}
+ * @property {boolean} [excludeFuture=false]
+ * @property {boolean} [excludePast=false]
+ * @property {function} [onClose] If defined a close button is displayed and this
+ * callback is called when the button is chosen.
+ */
 DateSelectorBar.propTypes = {
     classExtras: PropTypes.string,
-    fieldClassExtras: PropTypes.string,
-    editorClassExtras: PropTypes.string,
     dateFormat: PropTypes.string,
 
     label: PropTypes.string,
-    dateSelectorDef: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.object,
-    ]),
-    onDateSelectorDefChanged: PropTypes.func,
+    dateSelectorDef: PropTypes.object,
+    onDateSelectorDefChanged: PropTypes.func.isRequired,
     excludeFuture: PropTypes.bool,
     excludePast: PropTypes.bool,
-
-    changeButtonLabel: PropTypes.string,
-    applyButtonLabel: PropTypes.string,
 
     onClose: PropTypes.func,
 };
 
 
 
+/**
+ * React component that displays a resolved {@link DateRangeDef~RangeDef}
+ * date range along with an editor for it in a bar with a close button.
+ * @class
+ */
 export function DateRangeBar(props) {
     
     let dateComponent;
@@ -142,7 +161,6 @@ export function DateRangeBar(props) {
     }
 
     dateComponent = <Field
-        prependComponent = {props.label}
         fieldClassExtras = "Field-postSpace"
     >
         <FieldText>{dateString}</FieldText>
@@ -186,23 +204,29 @@ export function DateRangeBar(props) {
     </Row>;
 }
 
+
+
+/**
+ * @typedef {object} DateRangeBar~propTypes
+ * @property {string} [classExtras]
+ * @property {DateRangeDef~RangeDefDataItem|DateRangeDef~RangeDef} [dateRangeDef]
+ * @property {DateRangeDefEditor~onDateRangeDefChangedCallback}
+ *  onDateRangeDefChanged Required callback for receiving changes.
+ * @property {string} [dateFormat] Date format string compatible with 
+ * {@link https://date-fns.org/v2.0.0-alpha.18/docs/I18n}
+ * @property {boolean} [excludeFuture=false]
+ * @property {boolean} [excludePast=false]
+ * @property {function} [onClose] If defined a close button is displayed and this
+ * callback is called when the button is chosen.
+ */
 DateRangeBar.propTypes = {
     classExtras: PropTypes.string,
-    fieldClassExtras: PropTypes.string,
-    editorClassExtras: PropTypes.string,
     dateFormat: PropTypes.string,
 
-    label: PropTypes.string,
-    dateRangeDef: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.object,
-    ]),
+    dateRangeDef: PropTypes.object.isRequired,
     onDateRangeDefChanged: PropTypes.func,
     excludeFuture: PropTypes.bool,
     excludePast: PropTypes.bool,
-
-    changeButtonLabel: PropTypes.string,
-    applyButtonLabel: PropTypes.string,
 
     onClose: PropTypes.func,
 };

@@ -1,12 +1,17 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { userMsg } from '../util/UserMessages';
-import { getDateRangeDefDataItem, getRangeType, getStandardRangeType, StandardRangeType } from '../util/DateRangeDef';
+import { getDateRangeDefDataItem, getRangeType, getStandardRangeType, 
+    StandardRangeType } from '../util/DateRangeDef';
 import { DropdownSelector } from '../util-ui/DropdownSelector';
 import { CellDateEditor } from '../util-ui/CellDateEditor';
 import { Row, Col } from '../util-ui/RowCols';
 
 
+/**
+ * React component for editing a {@link DateRangeDef~RangeDefDataItem}
+ * This only supports the {@link DateRangeDef#StandardRangeType}s.
+ */
 export class DateRangeDefEditor extends React.Component {
     constructor(props) {
         super(props);
@@ -155,12 +160,25 @@ export class DateRangeDefEditor extends React.Component {
     }
 }
 
+/**
+ * @callback DateRangeDefEditor~onDateRangeDefChangedCallback
+ * @param {DateRangeDef~RangeDefDataItem} rangeDefDataItem
+ */
+
+/**
+ * @typedef {object} DateRangeDefEditor~propTypes
+ * @property {string} [classExtras]
+ * @property {DateRangeDef~RangeDefDataItem|DateRangeDef~RangeDef} [dateRangeDef]
+ * @property {DateRangeDefEditor~onDateRangeDefChangedCallback}
+ *  onDateRangeDefChanged Required callback for receiving changes.
+ * @property {string} [dateFormat] Date format string compatible with 
+ * {@link https://date-fns.org/v2.0.0-alpha.18/docs/I18n}
+ * @property {boolean} [excludeFuture=false]
+ * @property {boolean} [excludePast=false]
+ */
 DateRangeDefEditor.propTypes = {
     classExtras: PropTypes.string,
-    dateRangeDef: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.object,
-    ]),
+    dateRangeDef: PropTypes.object,
     onDateRangeDefChanged: PropTypes.func.isRequired,
     dateFormat: PropTypes.string,
     excludeFuture: PropTypes.bool,

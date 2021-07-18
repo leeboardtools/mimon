@@ -8,6 +8,9 @@ import { CellDateEditor } from '../util-ui/CellDateEditor';
 import { Row, Col } from '../util-ui/RowCols';
 
 
+/**
+ * React component for editing a {@link DateSelectorDef~SelectorDefDataItem}.
+ */
 export class DateSelectorDefEditor extends React.Component {
     constructor(props) {
         super(props);
@@ -116,12 +119,27 @@ export class DateSelectorDefEditor extends React.Component {
     }
 }
 
+
+/**
+ * @callback DateSelectorDefEditor~onDateSelectorDefChangedCallback
+ * @param {DateSelectorDef~SelectorDefDataItem} rangeDefDataItem
+ */
+
+/**
+ * @typedef {object} DateSelectorDefEditor~propTypes
+ * @property {string} [classExtras]
+ * @property {DateSelectorDef~SelectorDefDataItem|DateSelectorDef~SelectorDef} 
+ *  [dateSelectorDef]
+ * @property {DateSelectorDefEditor~onDateSelectorDefChangedCallback}
+ *  onDateSelectorDefChanged Required callback for receiving changes.
+ * @property {string} [dateFormat] Date format string compatible with 
+ * {@link https://date-fns.org/v2.0.0-alpha.18/docs/I18n}
+ * @property {boolean} [excludeFuture=false]
+ * @property {boolean} [excludePast=false]
+ */
 DateSelectorDefEditor.propTypes = {
     classExtras: PropTypes.string,
-    dateSelectorDef: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.object,
-    ]),
+    dateSelectorDef: PropTypes.object,
     onDateSelectorDefChanged: PropTypes.func.isRequired,
     dateFormat: PropTypes.string,
     excludeFuture: PropTypes.bool,

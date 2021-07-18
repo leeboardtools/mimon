@@ -340,6 +340,8 @@
     "DateRangeBar-daysBefore_label": ["On or before ", ""],
     "DateRangeBar-allDays_label": "All dates",
 
+    "DateSelectorBar-date_label": ["Date: ", ""],
+
 
     "LotCellEditors-actionType": "Action",
     "LotCellEditors-costBasis": "Cost Basis",
