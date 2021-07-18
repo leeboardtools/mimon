@@ -72,8 +72,6 @@ export const RelationType = {
     },
 
     SPECIFIED: { name: 'SPECIFIED',
-        hasRefDate: true,
-        hasRefDate2: true,
         getYMDDateRange: getYMDDateRangeSPECIFIED,
     },
 
@@ -94,6 +92,7 @@ export function getRelationTypeName(relationType) {
  * @typedef {object} DateRangeDef~RangeType
  * @property {DateRangePeriod#PeriodType} periodType
  * @property {DateRangeDef~RelationTypeDef} relationType
+ * @property {DateRangeDef~ResultType} [resultType]
  * @property {number} [offset] Optional offset for the period type.
  */
 
@@ -101,6 +100,7 @@ export function getRelationTypeName(relationType) {
  * @typedef {object} DateRangeDef~RangeTypeDataItem
  * @property {string} periodType
  * @property {string} relationType
+ * @property {string} [resultType]
  * @property {number} [offset] Optional offset for the period type.
  */
 
@@ -118,13 +118,22 @@ export function getRangeType(rangeTypeDataItem, alwaysCopy) {
     if (rangeTypeDataItem) {
         const periodType = getPeriodType(rangeTypeDataItem.periodType);
         const relationType = getRelationType(rangeTypeDataItem.relationType);
+        const resultType = getResultType(rangeTypeDataItem.resultType);
+
         if (alwaysCopy
          || (periodType !== rangeTypeDataItem.periodType)
-         || (relationType !== rangeTypeDataItem.relationType)) {
-            return Object.assign({}, rangeTypeDataItem, {
+         || (relationType !== rangeTypeDataItem.relationType)
+         || (resultType !== rangeTypeDataItem.resultType)) {
+            const rangeType = Object.assign({}, rangeTypeDataItem, {
                 periodType: periodType,
                 relationType: relationType,
             });
+
+            if (resultType) {
+                rangeType.resultType = resultType;
+            }
+
+            return rangeType;
         }
     }
 
@@ -146,16 +155,52 @@ export function getRangeTypeDataItem(rangeType, alwaysCopy) {
     if (rangeType) {
         const periodType = getPeriodTypeName(rangeType.periodType);
         const relationType = getRelationTypeName(rangeType.relationType);
+        const resultType = getResultTypeName(rangeType.resultType);
+
         if (alwaysCopy
          || (periodType !== rangeType.periodType)
-         || (relationType !== rangeType.relationType)) {
-            return Object.assign({}, rangeType, {
+         || (relationType !== rangeType.relationType)
+         || (resultType !== rangeType.resultType)) {
+            const rangeTypeDataItem = Object.assign({}, rangeType, {
                 periodType: periodType,
                 relationType: relationType,
             });
+
+            if (resultType) {
+                rangeTypeDataItem.resultType = resultType;
+            }
+
+            return rangeTypeDataItem;
         }
     }
     return rangeType;
+}
+
+
+/**
+ * @typedef DateRangeDef~ResultTypeDef
+ * @property {string} name
+ */
+
+/**
+ * Optional result type that can be assigned to the resultType
+ * property of {@link DateRangeDef~RangeDef}
+ * @readonly
+ * @enum {DateRangeDef~ResultTypeDef}
+ * 
+ */
+export const ResultType = {
+    RANGE: { name: 'RANGE', },
+    EARLIEST_ONLY: { name: 'EARLIEST_ONLY', },
+    LATEST_ONLY: { name: 'LATEST_ONLY', },
+};
+
+export function getResultType(name) {
+    return (typeof name === 'string') ? ResultType[name] : name;
+}
+
+export function getResultTypeName(type) {
+    return (typeof type === 'object') ? type.name : type;
 }
 
 
@@ -251,43 +296,64 @@ export function getRangeDefDataItem(rangeDef, alwaysCopy) {
 }
 
 
-function getYMDDateRangeCURRENT({ periodType, ymdDate, options, }) {
+function getYMDDateRangeCURRENT({ periodType, ymdDate, options, resultType, }) {
     if (periodType) {
-        return getPeriodYMDDateRange({
+        const args = {
             periodType: periodType, 
             ymdDate: ymdDate,
             options: options,
-        });
+        };
+        if (resultType === ResultType.EARLIEST_ONLY) {
+            return getPeriodEarliestYMDDate(args);
+        }
+        else if (resultType === ResultType.LATEST_ONLY) {
+            return getPeriodLatestYMDDate(args);
+        }
+        return getPeriodYMDDateRange(args);
     }
 }
 
 
-function getYMDDateRangePRECEDING({ periodType, ymdDate, options, }) {
+function getYMDDateRangePRECEDING({ periodType, ymdDate, options, resultType, }) {
     if (periodType) {
-        return getPeriodYMDDateRange({
+        const args = {
             periodType: periodType, 
             ymdDate: ymdDate,
             offset: -1,
             options: options,
-        });
+        };
+        if (resultType === ResultType.EARLIEST_ONLY) {
+            return getPeriodEarliestYMDDate(args);
+        }
+        else if (resultType === ResultType.LATEST_ONLY) {
+            return getPeriodLatestYMDDate(args);
+        }
+        return getPeriodYMDDateRange(args);
     }
 }
 
 
-function getYMDDateRangeFOLLOWING({ periodType, ymdDate, options, }) {
+function getYMDDateRangeFOLLOWING({ periodType, ymdDate, options, resultType, }) {
     if (periodType) {
-        return getPeriodYMDDateRange({
+        const args = {
             periodType: periodType, 
             ymdDate: ymdDate,
             offset: 1,
             options: options,
-        });
+        };
+        if (resultType === ResultType.EARLIEST_ONLY) {
+            return getPeriodEarliestYMDDate(args);
+        }
+        else if (resultType === ResultType.LATEST_ONLY) {
+            return getPeriodLatestYMDDate(args);
+        }
+        return getPeriodYMDDateRange(args);
     }
 }
 
 
 function getYMDDateRangeLAST(
-    { rangeType, periodType, ymdDate, options, }) {
+    { rangeType, periodType, ymdDate, options, resultType, }) {
         
     if (!periodType) {
         return;
@@ -300,7 +366,7 @@ function getYMDDateRangeLAST(
         Object.assign(myOptions, options);
     }
 
-    let latestYMDDate = getPeriodLatestYMDDate({
+    const latestYMDDate = getPeriodLatestYMDDate({
         periodType: periodType,
         ymdDate: ymdDate,
         options: myOptions,
@@ -316,6 +382,13 @@ function getYMDDateRangeLAST(
         offset: rangeType.offset,
     });
 
+    if (resultType === ResultType.EARLIEST_ONLY) {
+        return earliestYMDDate;
+    }
+    else if (resultType === ResultType.LATEST_ONLY) {
+        return latestYMDDate;
+    }
+
     return {
         latestYMDDate: latestYMDDate,
         earliestYMDDate: earliestYMDDate,
@@ -324,7 +397,7 @@ function getYMDDateRangeLAST(
 
 
 function getYMDDateRangeNEXT(
-    { rangeType, periodType, ymdDate, options, }) {
+    { rangeType, periodType, ymdDate, options, resultType, }) {
         
     if (!periodType) {
         return;
@@ -337,7 +410,7 @@ function getYMDDateRangeNEXT(
         Object.assign(myOptions, options);
     }
 
-    let earliestYMDDate = getPeriodEarliestYMDDate({
+    const earliestYMDDate = getPeriodEarliestYMDDate({
         periodType: periodType,
         ymdDate: ymdDate,
         options: myOptions,
@@ -353,6 +426,13 @@ function getYMDDateRangeNEXT(
         offset: rangeType.offset,
     });
 
+    if (resultType === ResultType.EARLIEST_ONLY) {
+        return earliestYMDDate;
+    }
+    else if (resultType === ResultType.LATEST_ONLY) {
+        return latestYMDDate;
+    }
+
     return {
         earliestYMDDate: earliestYMDDate,
         latestYMDDate: latestYMDDate,
@@ -361,7 +441,13 @@ function getYMDDateRangeNEXT(
 
 
 
-function getYMDDateRangeSPECIFIED({ rangeDef, }) {
+function getYMDDateRangeSPECIFIED({ rangeDef, resultType, }) {
+    if (resultType === ResultType.EARLIEST_ONLY) {
+        return rangeDef.firstYMDDate;
+    }
+    else if (resultType === ResultType.LATEST_ONLY) {
+        return rangeDef.latestYMDDate;
+    }
     return makeValidYMDDateRange(rangeDef.firstYMDDate, rangeDef.lastYMDDate);
 }
 
@@ -425,28 +511,39 @@ export function resolveRange(rangeDef, ymdDate, options) {
     const wantStringYMDDates = (typeof ymdDate === 'string');
     ymdDate = getYMDDate(ymdDate) || new YMDDate();
 
-    const ymdDateRange = getYMDDateRange({
+    const resultType = getResultType(rangeDef.rangeType.resultType)
+        || ResultType.RANGE;
+
+    const result = getYMDDateRange({
         rangeDef: rangeDef, 
         rangeType: rangeType,
         relationType: relationType,
         periodType: periodType,
         ymdDate: ymdDate, 
         options: options,
+        resultType: resultType,
     });
-    if (!ymdDateRange) {
+    
+    if (!result) {
         return {};
     }
 
     if (wantStringYMDDates) {
-        return getYMDDateRangeDataItem(ymdDateRange);
+        if (resultType === ResultType.RANGE) {
+            return getYMDDateRangeDataItem(result);
+        }
+        else {
+            return result.toString();
+        }
     }
-    return ymdDateRange;
+    return result;
 }
 
 
 /**
  * Standard range definitions that can be passed as the range type to
- * {@link resolveRange}.
+ * {@link resolveRange}. For these {@link resolveRange} will return a
+ * {@link YMDDateRange}
  * @readonly
  * @enum {DateRangeDef~RangeType}
  * @property {DateRangeDef~RangeType} ALL
@@ -921,3 +1018,4 @@ export function getStandardRangeType(rangeType) {
 export function getStandardRangeTypeName(rangeType) {
     return (typeof rangeType === 'object') ? rangeType.name : rangeType;
 }
+
