@@ -109,6 +109,9 @@ export const AccountType = {
         category: AccountCategory.ASSET, 
         pricedItemType: PricedItemType.CURRENCY, 
         hasChecks: true, 
+        allowedFlagAttributes: [
+            'isIncludeInSecuritiesCash',
+        ],
     },
     BROKERAGE: { name: 'BROKERAGE', 
         category: AccountCategory.ASSET, 

@@ -296,6 +296,7 @@
     "AccountEditor-default_split_account_label_FEES_EXPENSE_BROKERAGE_COMMISSIONS": "Account for commission/fee expenses",
     "AccountEditor-isInactive_label": "Inactive",
     "AccountEditor-isHidden_label": "Always hidden",
+    "AccountEditor-flagAttribute-isIncludeInSecuritiesCash": "Include in securities cash",
     "AccountEditor-flagAttribute-isRetirementAccount": "Retirement account",
     "AccountEditor-flagAttribute-isCashSecurity": "Treat as cash",
     "AccountEditor-flagAttribute-isExcludeFromGain": "Exclude from gains",

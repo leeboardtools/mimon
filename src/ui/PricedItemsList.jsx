@@ -1140,7 +1140,8 @@ export class PricedItemsList extends React.Component {
             (accountDataItem) => {
                 const type = A.getAccountType(accountDataItem.type);
                 if ((type !== A.AccountType.BROKERAGE)
-                 && (type !== A.AccountType.MUTUAL_FUND)) {
+                 && (type !== A.AccountType.MUTUAL_FUND)
+                 && !accountDataItem.isIncludeInSecuritiesCash) {
                     return;
                 }
                 if (accountDataItem.isRetirementAccount) {
