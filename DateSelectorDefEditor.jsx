@@ -53,7 +53,7 @@ export class DateSelectorDefEditor extends React.Component {
             const selectorDef = Object.assign({}, this.props.dateSelectorDef, {
                 dateSelectorType: selectedType,
             });
-            this.props.onDateSelectorDefChanged(
+            this.props.onDateSelectorDefChange(
                 getDateSelectorDefDataItem(selectorDef));
         }
     }
@@ -66,7 +66,7 @@ export class DateSelectorDefEditor extends React.Component {
         if (!selectorDef.dateSelectorType) {
             selectorDef.dateSelectorType = DateSelectorType.CUSTOM;
         }
-        this.props.onDateSelectorDefChanged(getDateSelectorDefDataItem(selectorDef));
+        this.props.onDateSelectorDefChange(getDateSelectorDefDataItem(selectorDef));
     }
 
 
@@ -121,7 +121,7 @@ export class DateSelectorDefEditor extends React.Component {
 
 
 /**
- * @callback DateSelectorDefEditor~onDateSelectorDefChangedCallback
+ * @callback DateSelectorDefEditor~onDateSelectorDefChangeCallback
  * @param {DateSelectorDef~SelectorDefDataItem} rangeDefDataItem
  */
 
@@ -130,8 +130,8 @@ export class DateSelectorDefEditor extends React.Component {
  * @property {string} [classExtras]
  * @property {DateSelectorDef~SelectorDefDataItem|DateSelectorDef~SelectorDef} 
  *  [dateSelectorDef]
- * @property {DateSelectorDefEditor~onDateSelectorDefChangedCallback}
- *  onDateSelectorDefChanged Required callback for receiving changes.
+ * @property {DateSelectorDefEditor~onDateSelectorDefChangeCallback}
+ *  onDateSelectorDefChange Required callback for receiving changes.
  * @property {string} [dateFormat] Date format string compatible with 
  * {@link https://date-fns.org/v2.0.0-alpha.18/docs/I18n}
  * @property {boolean} [excludeFuture=false]
@@ -140,7 +140,7 @@ export class DateSelectorDefEditor extends React.Component {
 DateSelectorDefEditor.propTypes = {
     classExtras: PropTypes.string,
     dateSelectorDef: PropTypes.object,
-    onDateSelectorDefChanged: PropTypes.func.isRequired,
+    onDateSelectorDefChange: PropTypes.func.isRequired,
     dateFormat: PropTypes.string,
     excludeFuture: PropTypes.bool,
     excludePast: PropTypes.bool,

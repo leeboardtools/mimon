@@ -56,7 +56,7 @@ export class DateRangeDefEditor extends React.Component {
 
     applyChange(change) {
         const dateRangeDef = Object.assign({}, this.props.dateRangeDef, change);
-        this.props.onDateRangeDefChanged(
+        this.props.onDateRangeDefChange(
             getDateRangeDefDataItem(dateRangeDef)
         );
     }
@@ -161,7 +161,7 @@ export class DateRangeDefEditor extends React.Component {
 }
 
 /**
- * @callback DateRangeDefEditor~onDateRangeDefChangedCallback
+ * @callback DateRangeDefEditor~onDateRangeDefChangeCallback
  * @param {DateRangeDef~RangeDefDataItem} rangeDefDataItem
  */
 
@@ -169,8 +169,8 @@ export class DateRangeDefEditor extends React.Component {
  * @typedef {object} DateRangeDefEditor~propTypes
  * @property {string} [classExtras]
  * @property {DateRangeDef~RangeDefDataItem|DateRangeDef~RangeDef} [dateRangeDef]
- * @property {DateRangeDefEditor~onDateRangeDefChangedCallback}
- *  onDateRangeDefChanged Required callback for receiving changes.
+ * @property {DateRangeDefEditor~onDateRangeDefChangeCallback}
+ *  onDateRangeDefChange Required callback for receiving changes.
  * @property {string} [dateFormat] Date format string compatible with 
  * {@link https://date-fns.org/v2.0.0-alpha.18/docs/I18n}
  * @property {boolean} [excludeFuture=false]
@@ -179,7 +179,7 @@ export class DateRangeDefEditor extends React.Component {
 DateRangeDefEditor.propTypes = {
     classExtras: PropTypes.string,
     dateRangeDef: PropTypes.object,
-    onDateRangeDefChanged: PropTypes.func.isRequired,
+    onDateRangeDefChange: PropTypes.func.isRequired,
     dateFormat: PropTypes.string,
     excludeFuture: PropTypes.bool,
     excludePast: PropTypes.bool,
