@@ -4,9 +4,53 @@ import { CloseButton } from '../util-ui/CloseButton';
 import { Row, Col } from '../util-ui/RowCols';
 import { DateField } from '../util-ui/DateField';
 import { Button } from '../util-ui/Button';
+import { Field, FieldText } from '../util-ui/Field';
 import { YMDDate } from '../util/YMDDate';
+import { format } from 'date-fns';
+//import { userMsg } from '../util/UserMessages';
+import { resolveDateSelector } from '../util/DateSelectorDef';
+import { DateSelectorDefEditor } from '../util-ui/DateSelectorDefEditor';
+
 
 export function DateSelectorBar(props) {
+
+    let dateComponent;
+
+    let dateString;
+
+    const ymdDate = resolveDateSelector(props.dateSelectorDef) || new YMDDate();
+    if (ymdDate) {
+        const { dateFormat } = props;
+        const localDate = ymdDate.toLocalDate();
+        if (dateFormat) {
+            dateString = format(localDate, dateFormat);
+        }
+        else {
+            dateString = new Intl.DateTimeFormat().format(localDate);
+        }
+    }
+    dateComponent = <Field
+        prependComponent = {props.label}
+        fieldClassExtras = "Field-postSpace"
+    >
+        <FieldText>{dateString}</FieldText>
+    </Field>;
+
+
+    let editComponent;
+    if (props.onDateSelectorDefChanged) {
+        editComponent = <DateSelectorDefEditor
+            dateSelectorDef = {props.dateSelectorDef}
+            onDateSelectorDefChanged = {(dateSelectorDef) => 
+                props.onDateSelectorDefChanged(dateSelectorDef)
+            }
+            excludeFuture = {props.excludeFuture}
+            excludePast = {props.excludePast}
+            dateFormat = {props.dateFormat}
+            tabIndex = {0}
+        />;
+    }
+
     let closeButton;
     if (props.onClose) {
         closeButton = <CloseButton
@@ -21,19 +65,11 @@ export function DateSelectorBar(props) {
     }
 
     return <Row classExtras = {classExtras}>
-        <Col>
-            <DateField 
-                prependComponent = {props.label}
-                //appendComponent = {clearButton}
-                fieldClassExtras = {props.fieldClassExtras}
-                inputClassExtras = {props.editorClassExtras}
-                ariaLabel = "Date"
-                value = {props.ymdDate}
-                placeholderText = {props.clearPlaceholderText}
-                onChange = {props.onYMDDateChange}
-                dateFormat = {props.dateFormat}
-                tabIndex = {0}
-            />
+        <Col classExtras = "FieldContainer-inline">
+            {dateComponent}
+            <Field classExtras = "Field-indent">
+                {editComponent}
+            </Field>
         </Col>
         <Col>{closeButton}</Col>
     </Row>;
@@ -46,9 +82,16 @@ DateSelectorBar.propTypes = {
     dateFormat: PropTypes.string,
 
     label: PropTypes.string,
-    ymdDate: PropTypes.string,
-    onYMDDateChange: PropTypes.func.isRequired,
-    clearPlaceholderText: PropTypes.string,
+    dateSelectorDef: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.object,
+    ]),
+    onDateSelectorDefChanged: PropTypes.func,
+    excludeFuture: PropTypes.bool,
+    excludePast: PropTypes.bool,
+
+    changeButtonLabel: PropTypes.string,
+    applyButtonLabel: PropTypes.string,
 
     onClose: PropTypes.func,
 };

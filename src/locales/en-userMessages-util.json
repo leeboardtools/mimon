@@ -9,6 +9,9 @@
     "abort": "Abort",
     
     "today": "Today",
+    "change": "Change",
+    "apply": "Apply",
+
 
     "CellQuantityEditor-invalid_value": ["Enter a numeric value of the form ", "."],
 
@@ -200,6 +203,26 @@
     "DateRange_MONTHS_STARTING_6": "6 Months Starting",
     "DateRange_MONTHS_STARTING_9": "9 Months Starting",
     "DateRange_MONTHS_STARTING_12": "12 Months Starting",
+
+
+    "DateSelectorDefEditor-type_TODAY": "Today",
+    "DateSelectorDefEditor-type_CUSTOM": "Custom date",
+    "DateSelectorDefEditor-type_WEEK_START": "First day of this week",
+    "DateSelectorDefEditor-type_WEEK_END": "Last day of this week",
+    "DateSelectorDefEditor-type_WORK_WEEK_START": "First day of this work week",
+    "DateSelectorDefEditor-type_WORK_WEEK_END": "Last day of this work week",
+    "DateSelectorDefEditor-type_MONTH_START": "First day of this month",
+    "DateSelectorDefEditor-type_MONTH_END": "Last day of this month",
+    "DateSelectorDefEditor-type_QUARTER_START": "First day of this quarter",
+    "DateSelectorDefEditor-type_QUARTER_END": "Last day of this quarter",
+    "DateSelectorDefEditor-type_HALF_START": "First day of this half",
+    "DateSelectorDefEditor-type_HALF_END": "Last day of this half",
+    "DateSelectorDefEditor-type_YEAR_START": "First day of this year",
+    "DateSelectorDefEditor-type_YEAR_END": "Last day of this year",
+    "DateSelectorDefEditor-type_PRECEDING_MONTH_END": "Last day of last month",
+    "DateSelectorDefEditor-type_PRECEDING_QUARTER_END": "Last day of last quarter",
+    "DateSelectorDefEditor-type_PRECEDING_HALF_END": "Last day of last half",
+    "DateSelectorDefEditor-type_PRECEDING_YEAR_END": "Last day of last year",
 
 
     "FileSelector-readdir_failed": ["Could not read the folder '", "'. ", ""],

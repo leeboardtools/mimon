@@ -395,6 +395,7 @@ label {
 
 .AccountsList-DateSelectorBar {
     border-bottom: 1px solid #dee2e6!important;
+    margin-top: 4px;
 }
 
 .AccountsList-DateSelectorField {

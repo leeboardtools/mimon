@@ -8,6 +8,8 @@ import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
 import { TabIdRowTableHandler, updateStateFromProjectSettings } from './RowTableHelpers';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
 import { DateSelectorBar, DateRangeSelectorBar } from './DateSelectorBar';
+import { resolveDateSelector } from '../util/DateSelectorDef';
+import { resolveDateRange } from '../util/DateRangeDef';
 
 
 /**
@@ -1023,13 +1025,17 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                     classExtras = "AccountsList-DateSelectorBar"
                     fieldClassExtras = "AccountsList-DateSelectorField"
                     label = {userMsg('AccountsListHandler-as_of_date_label')}
+
+                    dateSelectorDef = {tabEntry.dateSelectorDef}
                     ymdDate = {tabEntry.endYMDDate}
-                    onYMDDateChange = {(ymdDate) => this.onYMDDateChange(tabId, 
-                        {
-                            startYMDDate: undefined,
-                            endYMDDate: ymdDate,
-                        },
-                        'AccountsListHandler-action_as_of_date')}
+                    onDateSelectorDefChanged = {
+                        (dateSelectorDefDataItem) => this.onYMDDateChange(
+                            tabId, 
+                            {
+                                dateSelectorDef: dateSelectorDefDataItem,
+                            },
+                            'AccountsListHandler-action_as_of_date')}
+                    excludeFuture
 
                     dateFormat = {accessor.getDateFormat()}
                     onClose = {() => this.onToggleDateSelector(tabId, {
@@ -1073,6 +1079,20 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             }
         }
 
+        const todayString = getYMDDate(new YMDDate());
+        let startYMDDate;
+        let endYMDDate;
+        if (tabEntry.allowAsset || tabEntry.allowLiability) {
+            endYMDDate = resolveDateSelector(tabEntry.dateSelectorDef, todayString);
+        }
+        else {
+            const dateRange = resolveDateRange(tabEntry.dateRangeDef, todayString);
+            if (dateRange) {
+                startYMDDate = dateRange.earliestYMDDate;
+                endYMDDate = dateRange.latestYMDDate;
+            }
+        }
+
         return <AccountsList
             accessor = {accessor}
             onSelectAccount = {(accountId) => 
@@ -1087,8 +1107,8 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             sortAlphabetically = {tabEntry.sortAlphabetically}
 
             topLevelAccountIds = {tabEntry.topLevelAccountIds}
-            startYMDDate = {tabEntry.startYMDDate}
-            endYMDDate = {tabEntry.endYMDDate}
+            startYMDDate = {startYMDDate}
+            endYMDDate = {endYMDDate}
 
             collapsedAccountIds = {collapsedAccountIds}
             onUpdateCollapsedAccountIds = {(args) =>
