@@ -123,6 +123,9 @@ Field.propTypes = {
 };
 
 
+/**
+ * React component used by {@link Field} for the prependComponent if it is a string.
+ */
 export function FieldPrefix(props) {
     if (!props.children) {
         return null;
@@ -137,6 +140,27 @@ FieldPrefix.propTypes = {
 };
 
 
+/**
+ * React component that displays text so it can appear between {@link Field}'s
+ * prependComponent and appendComponent when they're strings.
+ */
+export function FieldText(props) {
+    if (!props.children) {
+        return null;
+    }
+    return <div className = "Field-inline-text">
+        {props.children}
+    </div>;
+}
+
+FieldText.propTypes = {
+    children: PropTypes.any,
+};
+
+
+/**
+ * React component used by {@link Field} for the appendComponent if it is a string.
+ */
 export function FieldSuffix(props) {
     if (!props.children) {
         return null;
@@ -149,3 +173,5 @@ export function FieldSuffix(props) {
 FieldSuffix.propTypes = {
     children: PropTypes.any,
 };
+
+

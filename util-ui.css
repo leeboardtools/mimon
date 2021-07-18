@@ -754,17 +754,17 @@ button.Close {
 /** For indenting a Field component from the previous component 
 that's on the same line */
 .Field-indent {
-    padding-left: 2rem;
+    margin-left: 2rem;
 }
 
 /** For putting wide space after a Field component */
 .Field-postIndent {
-    padding-right: 2rem;
+    margin-right: 2rem;
 }
 
 /** For putting a single space after a Field component */
 .Field-postSpace {
-    padding-right: 1rem;
+    margin-right: 1rem;
 }
 
 /** For a container of Field components on the same line */
@@ -2088,6 +2088,12 @@ from BS col-form-label */
     margin-bottom: 0.25rem;
 }
 
+
+.DateSelectorBar-apply_button,
+.DateSelectorBar-change_button {
+    -ms-flex-pack: start!important;
+    justify-content: flex-start!important;
+}
 
 
 .FileSelector-dir_button {
