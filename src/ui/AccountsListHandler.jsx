@@ -7,7 +7,7 @@ import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
 import { TabIdRowTableHandler, updateStateFromProjectSettings } from './RowTableHelpers';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
-import { DateSelectorBar, DateRangeSelectorBar } from './DateSelectorBar';
+import { DateSelectorBar, DateRangeBar } from './DateSelectorBar';
 import { resolveDateSelector } from '../util/DateSelectorDef';
 import { resolveDateRange } from '../util/DateRangeDef';
 
@@ -525,7 +525,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
 
                 let dateLine;
                 if (startYMDDate) {
-                    dateLine = userMsg('AccountsListHandler-dateRange',
+                    dateLine = userMsg('AccountsListHandler-dateRangeString',
                         accessor.formatDate(startYMDDate),
                         accessor.formatDate(endYMDDate));
                 }
@@ -1027,7 +1027,6 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                     label = {userMsg('AccountsListHandler-as_of_date_label')}
 
                     dateSelectorDef = {tabEntry.dateSelectorDef}
-                    ymdDate = {tabEntry.endYMDDate}
                     onDateSelectorDefChanged = {
                         (dateSelectorDefDataItem) => this.onYMDDateChange(
                             tabId, 
@@ -1044,33 +1043,19 @@ export class AccountsListHandler extends MainWindowHandlerBase {
                 />;
             }
             else {
-                dateSelector = <DateRangeSelectorBar
+                dateSelector = <DateRangeBar
                     classExtras = "AccountsList-DateSelectorBar"
                     dateFormat = {accessor.getDateFormat()}
 
-                    startLabel = {userMsg('AccountsListHandler-from_date_label')}
-                    startYMDDate = {tabEntry.startYMDDate}
-                    onStartYMDDateChange = {(ymdDate) => this.onYMDDateChange(tabId, 
-                        {
-                            startYMDDate: ymdDate,
-                        },
-                        'AccountsListHandler-action_from_date')}
-                    clearStartButtonLabel 
-                        = {userMsg('AccountsListHandler-earliest_button_label')}
-                    startClearPlaceholderText
-                        = {userMsg('AccountsListHandler-earliest_placeholder')}
-
-                    endLabel = {userMsg('AccountsListHandler-to_date_label')}
-                    endYMDDate = {tabEntry.endYMDDate}
-                    onEndYMDDateChange = {(ymdDate) => this.onYMDDateChange(tabId, 
-                        {
-                            endYMDDate: ymdDate,
-                        },
-                        'AccountsListHandler-action_to_date')}
-                    clearEndButtonLabel
-                        = {userMsg('AccountsListHandler-latest_button_label')}
-                    endClearPlaceholderText
-                        = {userMsg('AccountsListHandler-latest_placeholder')}
+                    dateRangeDef = {tabEntry.dateRangeDef}
+                    onDateRangeDefChanged = {
+                        (dateRangeDefDataItem) => this.onYMDDateChange(
+                            tabId, 
+                            {
+                                dateRangeDef: dateRangeDefDataItem,
+                            },
+                            'AccountsListHandler-action_dateRange')}
+                    excludeFuture
 
                     onClose = {() => this.onToggleDateSelector(tabId, {
                         showDateSelector: false,
@@ -1080,6 +1065,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
         }
 
         const todayString = getYMDDate(new YMDDate());
+
         let startYMDDate;
         let endYMDDate;
         if (tabEntry.allowAsset || tabEntry.allowLiability) {

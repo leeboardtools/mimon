@@ -2,18 +2,18 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { CloseButton } from '../util-ui/CloseButton';
 import { Row, Col } from '../util-ui/RowCols';
-import { DateField } from '../util-ui/DateField';
-import { Button } from '../util-ui/Button';
 import { Field, FieldText } from '../util-ui/Field';
-import { YMDDate } from '../util/YMDDate';
+import { YMDDate, getYMDDate } from '../util/YMDDate';
 import { format } from 'date-fns';
-//import { userMsg } from '../util/UserMessages';
+import { userMsg } from '../util/UserMessages';
 import { resolveDateSelector } from '../util/DateSelectorDef';
 import { DateSelectorDefEditor } from '../util-ui/DateSelectorDefEditor';
+import { resolveDateRange } from '../util/DateRangeDef';
+import { DateRangeDefEditor } from '../util-ui/DateRangeDefEditor';
 
 
 export function DateSelectorBar(props) {
-
+    
     let dateComponent;
 
     let dateString;
@@ -41,9 +41,7 @@ export function DateSelectorBar(props) {
     if (props.onDateSelectorDefChanged) {
         editComponent = <DateSelectorDefEditor
             dateSelectorDef = {props.dateSelectorDef}
-            onDateSelectorDefChanged = {(dateSelectorDef) => 
-                props.onDateSelectorDefChanged(dateSelectorDef)
-            }
+            onDateSelectorDefChanged = {props.onDateSelectorDefChanged}
             excludeFuture = {props.excludeFuture}
             excludePast = {props.excludePast}
             dateFormat = {props.dateFormat}
@@ -59,7 +57,7 @@ export function DateSelectorBar(props) {
     }
 
 
-    let classExtras = 'DateSelectorBar';
+    let classExtras = 'No-gutters DateSelectorBar';
     if (props.classExtras) {
         classExtras += ' ' + props.classExtras;
     }
@@ -98,7 +96,72 @@ DateSelectorBar.propTypes = {
 
 
 
-export function DateRangeSelectorBar(props) {
+export function DateRangeBar(props) {
+    
+    let dateComponent;
+
+    let earliestDateString;
+    let latestDateString;
+
+    const range = resolveDateRange(props.dateRangeDef);
+    if (range) {
+        const { dateFormat } = props;
+        if (range.earliestYMDDate) {
+            earliestDateString = format(
+                getYMDDate(range.earliestYMDDate).toLocalDate(),
+                dateFormat);
+        }
+        if (range.latestYMDDate) {
+            latestDateString = format(
+                getYMDDate(range.latestYMDDate).toLocalDate(),
+                dateFormat);
+        }
+    }
+
+    let dateString;
+    if (earliestDateString) {
+        if (latestDateString) {
+            dateString = userMsg('DateRangeBar-dateRange_label',
+                earliestDateString,
+                latestDateString,
+            );
+        }
+        else {
+            dateString = userMsg('DateRangeBar-daysAfter_label',
+                earliestDateString,
+            );
+        }
+    }
+    else if (latestDateString) {
+        dateString = userMsg('DateRangeBar-daysBefore_label',
+            latestDateString,
+        );
+    }
+    else {
+        dateString = userMsg('DateRangeBar-allDays_label');
+    }
+
+    dateComponent = <Field
+        prependComponent = {props.label}
+        fieldClassExtras = "Field-postSpace"
+    >
+        <FieldText>{dateString}</FieldText>
+    </Field>;
+
+
+    let editComponent;
+    if (props.onDateRangeDefChanged) {
+        editComponent = <DateRangeDefEditor
+            dateRangeDef = {props.dateRangeDef}
+            onDateRangeDefChanged = {props.onDateRangeDefChanged}
+            excludeFuture = {props.excludeFuture}
+            excludePast = {props.excludePast}
+            dateFormat = {props.dateFormat}
+            tabIndex = {0}
+        />;
+    }
+
+
     let closeButton;
     if (props.onClose) {
         closeButton = <CloseButton
@@ -106,95 +169,40 @@ export function DateRangeSelectorBar(props) {
         />;
     }
 
-    let classExtras = 'DateSelectorBar DateRangeSelectorBar';
+
+    let classExtras = 'No-gutters DateRangeBar';
     if (props.classExtras) {
         classExtras += ' ' + props.classExtras;
     }
 
-    let clearStartButton;
-    if (props.clearStartButtonLabel) {
-        clearStartButton = <Button
-            classExtras = "Btn-outline-secondary"
-            ariaLabel = "Earliest Button"
-            onClick = {() => props.onStartYMDDateChange()}
-        >
-            {props.clearStartButtonLabel}
-        </Button>;
-    }
-
-    let clearEndButton;
-    if (props.clearEndButtonLabel) {
-        clearEndButton = <Button
-            classExtras = "Btn-outline-secondary"
-            ariaLabel = "Latest Available Button"
-            onClick = {() => props.onEndYMDDateChange()}
-        >
-            {props.clearEndButtonLabel}
-        </Button>;
-    }
-
-    let startMaxDate;
-    if (props.endYMDDate) {
-        startMaxDate = props.endYMDDate;
-    }
-    else {
-        startMaxDate = new YMDDate().toString();
-    }
-
-    let endMinDate;
-    if (props.startYMDDate) {
-        endMinDate = props.startYMDDate;
-    }
-
     return <Row classExtras = {classExtras}>
         <Col classExtras = "FieldContainer-inline">
-            <DateField
-                prependComponent = {props.startLabel}
-                appendComponent = {clearStartButton}
-                inputClassExtras = {props.startEditorClassExtras}
-                value = {props.startYMDDate}
-                maxDate = {startMaxDate}
-                placeholderText = {props.startClearPlaceholderText}
-                ariaLabel = "Start Date"
-                onChange = {props.onStartYMDDateChange}
-                dateFormat = {props.dateFormat}
-                tabIndex = {0}
-            />
-            <DateField
-                prependComponent = {props.endLabel}
-                appendComponent = {clearEndButton}
-                fieldClassExtras = "Field-indent"
-                inputClassExtras = {props.endEditorClassExtras}
-                value = {props.endYMDDate}
-                minDate = {endMinDate}
-                placeholderText = {props.endClearPlaceholderText}
-                ariaLabel = "End Date"
-                onChange = {props.onEndYMDDateChange}
-                dateFormat = {props.dateFormat}
-                tabIndex = {0}
-            />
+            {dateComponent}
+            <Field classExtras = "Field-indent">
+                {editComponent}
+            </Field>
         </Col>
         <Col>{closeButton}</Col>
     </Row>;
 }
 
-DateRangeSelectorBar.propTypes = {
+DateRangeBar.propTypes = {
     classExtras: PropTypes.string,
-    startEditorClassExtras: PropTypes.string,
-    endEditorClassExtras: PropTypes.string,
+    fieldClassExtras: PropTypes.string,
+    editorClassExtras: PropTypes.string,
     dateFormat: PropTypes.string,
 
-    startLabel: PropTypes.string,
-    startYMDDate: PropTypes.string,
-    onStartYMDDateChange: PropTypes.func.isRequired,
-    clearStartButtonLabel: PropTypes.string,
-    startClearPlaceholderText: PropTypes.string,
+    label: PropTypes.string,
+    dateRangeDef: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.object,
+    ]),
+    onDateRangeDefChanged: PropTypes.func,
+    excludeFuture: PropTypes.bool,
+    excludePast: PropTypes.bool,
 
-    endLabel: PropTypes.string,
-    endYMDDate: PropTypes.string,
-    onEndYMDDateChange: PropTypes.func.isRequired,
-    clearEndButtonLabel: PropTypes.string,
-    endClearPlaceholderText: PropTypes.string,
+    changeButtonLabel: PropTypes.string,
+    applyButtonLabel: PropTypes.string,
 
     onClose: PropTypes.func,
 };

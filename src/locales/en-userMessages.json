@@ -261,18 +261,11 @@
     "AccountsListHandler-action_showAccountSubtotals": ["Show Subtotals for ", ""],
     "AccountsListHandler-action_hideAccountSubtotals": ["Hide Subtotals for ", ""],
     "AccountsListHandler-action_as_of_date": "As-Of Date Change",
-    "AccountsListHandler-action_from_date": "From Date Change",
-    "AccountsListHandler-action_to_date": "To Date Change",
+    "AccountsListHandler-action_dateRange": "Date Range Change",
 
     "AccountsListHandler-dateRangeString": ["From ", " to ", ""],
     "AccountsListHandler-dateString": ["Date: ", ""],
     "AccountsListHandler-as_of_date_label": "As of: ",
-    "AccountsListHandler-from_date_label": "From: ",
-    "AccountsListHandler-to_date_label": " Until:",
-    "AccountsListHandler-earliest_button_label": "Use Earliest",
-    "AccountsListHandler-latest_button_label": "Use Latest",
-    "AccountsListHandler-earliest_placeholder": "Earliest",
-    "AccountsListHandler-latest_placeholder": "Latest",
 
 
     "AccountEditorHandler-newAccount_title": "New Account",
@@ -340,6 +333,12 @@
     "AccountingCellEditors-reconcile_RECONCILED": "\u2713",
 
     "AccountingCellEditors-invalid_split_quantity": ["'", "' is not a valid number. ", ""],
+
+
+    "DateRangeBar-dateRange_label": ["From ", " to ", ""],
+    "DateRangeBar-daysAfter_label": ["On or after ", ""],
+    "DateRangeBar-daysBefore_label": ["On or before ", ""],
+    "DateRangeBar-allDays_label": "All dates",
 
 
     "LotCellEditors-actionType": "Action",

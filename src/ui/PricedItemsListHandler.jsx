@@ -413,7 +413,7 @@ export class PricedItemsListHandler extends MainWindowHandlerBase {
 
                 let dateLine;
                 if (startYMDDate) {
-                    dateLine = userMsg('AccountsListHandler-dateRange',
+                    dateLine = userMsg('AccountsListHandler-dateRangeString',
                         accessor.formatDate(startYMDDate),
                         accessor.formatDate(endYMDDate));
                 }

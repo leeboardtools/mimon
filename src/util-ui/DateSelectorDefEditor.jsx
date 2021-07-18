@@ -100,7 +100,7 @@ export class DateSelectorDefEditor extends React.Component {
             />;
         }
 
-        let className = 'DateSelectorDefEditor';
+        let className = 'No-gutters DateSelectorDefEditor';
         if (classExtras) {
             className += ' ' + classExtras;
         }
