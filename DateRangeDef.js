@@ -7,6 +7,8 @@ import { getYMDDateRangeDataItem, makeValidYMDDateRange } from './YMDDateRange';
 
 
 /**
+ * Date range definitions define how a date range {@link YMDDateRange} is to be 
+ * generated from a reference {@link YMDDate} (typically today).
  * @namespace DateRangeDef
  */
 
@@ -77,9 +79,17 @@ export const RelationType = {
 
 };
 
-export function getRelationType(relationType) {
-    return (typeof relationType === 'string') 
-        ? RelationType[relationType] : relationType;
+export function getRelationType(name) {
+    // Since we want to be able to compare against the actual
+    // objects, we need to return any copied objects as
+    // a RelationType object.
+    if (name) {
+        if (typeof name.name === 'string') {
+            return RelationType[name.name];
+        }
+    }
+    return (typeof name === 'string') 
+        ? RelationType[name] : name;
 }
 
 export function getRelationTypeName(relationType) {
@@ -196,6 +206,14 @@ export const ResultType = {
 };
 
 export function getResultType(name) {
+    // Since we want to be able to compare against the actual
+    // objects, we need to return any copied objects as
+    // a ResultType object.
+    if (name) {
+        if (typeof name.name === 'string') {
+            return ResultType[name.name];
+        }
+    }
     return (typeof name === 'string') ? ResultType[name] : name;
 }
 
@@ -233,9 +251,9 @@ export function getResultTypeName(type) {
  * @param {boolean} alwaysCopy If truthy a copy of rangeTypeDataItem is always
  * made.
  * @returns {DateRangeDef~RangeDef|undefined}
- * @function DateRangeDef#getRangeDef
+ * @function DateRangeDef#getDateRangeDef
  */
-export function getRangeDef(rangeDefDataItem, alwaysCopy) {
+export function getDateRangeDef(rangeDefDataItem, alwaysCopy) {
     if (rangeDefDataItem) {
         const rangeType = getRangeType(rangeDefDataItem.rangeType);
         const firstYMDDate = getYMDDate(rangeDefDataItem.firstYMDDate);
@@ -269,9 +287,9 @@ export function getRangeDef(rangeDefDataItem, alwaysCopy) {
  * @param {boolean} alwaysCopy If truthy a copy of rangeTypeDataItem is always
  * made.
  * @returns {DateRangeDef~RangeDefDataItem|undefined}
- * @function DateRangeDef#getRangeDefDataItem
+ * @function DateRangeDef#getDateRangeDefDataItem
  */
-export function getRangeDefDataItem(rangeDef, alwaysCopy) {
+export function getDateRangeDefDataItem(rangeDef, alwaysCopy) {
     if (rangeDef) {
         const rangeType = getRangeTypeDataItem(rangeDef.rangeType);
         const firstYMDDate = getYMDDateString(rangeDef.firstYMDDate);
@@ -477,7 +495,7 @@ function getYMDDateRangeSPECIFIED({ rangeDef, resultType, }) {
  * the reference date is a string.
  * @function DateRangeDef#resolveRange
  */
-export function resolveRange(rangeDef, ymdDate, options) {
+export function resolveDateRange(rangeDef, ymdDate, options) {
     if (!rangeDef) {
         return {};
     }
@@ -525,7 +543,8 @@ export function resolveRange(rangeDef, ymdDate, options) {
     });
     
     if (!result) {
-        return {};
+        return (resultType === ResultType.RANGE) 
+            ? {} : undefined;
     }
 
     if (wantStringYMDDates) {
@@ -542,7 +561,7 @@ export function resolveRange(rangeDef, ymdDate, options) {
 
 /**
  * Standard range definitions that can be passed as the range type to
- * {@link resolveRange}. For these {@link resolveRange} will return a
+ * {@link resolveDateRange}. For these {@link resolveDateRange} will return a
  * {@link YMDDateRange}
  * @readonly
  * @enum {DateRangeDef~RangeType}

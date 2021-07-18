@@ -3,6 +3,8 @@ import { getYMDDateRangeDataItem } from './YMDDateRange';
 
 
 /**
+ * Date range periods define standard date ranges such as weeks, months, and 
+ * quarters.
  * @namespace DateRangePeriod
  */
 
@@ -104,8 +106,16 @@ export const PeriodType = {
  * @param {DateRangePeriod#PeriodType|string} periodType 
  * @returns {DateRangePeriod#PeriodType}
  */
-export function getPeriodType(periodType) {
-    return (typeof periodType === 'string') ? PeriodType[periodType] : periodType;
+export function getPeriodType(name) {
+    // Since we want to be able to compare against the actual
+    // objects, we need to return any copied objects as
+    // a PeriodType object.
+    if (name) {
+        if (typeof name.name === 'string') {
+            return PeriodType[name.name];
+        }
+    }
+    return (typeof name === 'string') ? PeriodType[name] : name;
 }
 
 /**
