@@ -1,9 +1,11 @@
 import { PeriodType } from './DateRangePeriod';
-import { RelationType, ResultType, resolveRange } from './DateRangeDef';
+import { RelationType, ResultType, resolveDateRange } from './DateRangeDef';
 import { getYMDDate, getYMDDateString } from './YMDDate';
 
 
 /**
+ * Date selectors definitions define how a single {@link YMDDate} is to be 
+ * determined given a reference {@link YMDDate} (which would typically be today).
  * @namespace DateSelectorDef
  */
 
@@ -12,6 +14,9 @@ import { getYMDDate, getYMDDateString } from './YMDDate';
  * @typedef {object} DateSelectorDef~DateSelectorTypeDef
  * A {@link DateRangeDef~RangeType} with the following additional properties:
  * @property {boolean} [isWorkWeek=false]
+ * @property {boolean} [hasCustomYMDDate=false]
+ * @property {boolean} [isFuture]
+ * @property {boolean} [isPast]
  */
 
 
@@ -72,17 +77,20 @@ export const DateSelectorType = {
     CUSTOM: { name: 'CUSTOM', 
         relationType: RelationType.SPECIFIED,
         resultType: ResultType.EARLIEST_ONLY,
+        hasCustomYMDDate: true,
     },
 
     WEEK_START: { name: 'WEEK_START', 
         periodType: PeriodType.WEEK,
         relationType: RelationType.CURRENT,
         resultType: ResultType.EARLIEST_ONLY,
+        isPast: true,
     },
     WEEK_END: { name: 'WEEK_END', 
         periodType: PeriodType.WEEK,
         relationType: RelationType.CURRENT,
         resultType: ResultType.LATEST_ONLY,
+        isFuture: true,
     },
 
     WORK_WEEK_START: { name: 'WORK_WEEK_START', 
@@ -90,88 +98,122 @@ export const DateSelectorType = {
         relationType: RelationType.CURRENT,
         resultType: ResultType.EARLIEST_ONLY,
         isWorkWeek: true,
+        isPast: true,
     },
     WORK_WEEK_END: { name: 'WORK_WEEK_END', 
         periodType: PeriodType.WEEK,
         relationType: RelationType.CURRENT,
         resultType: ResultType.LATEST_ONLY,
         isWorkWeek: true,
+        isFuture: true,
     },
 
     MONTH_START: { name: 'MONTH_START', 
         periodType: PeriodType.MONTH,
         relationType: RelationType.CURRENT,
         resultType: ResultType.EARLIEST_ONLY,
+        isPast: true,
     },
     MONTH_END: { name: 'MONTH_END', 
         periodType: PeriodType.MONTH,
         relationType: RelationType.CURRENT,
         resultType: ResultType.LATEST_ONLY,
+        isFuture: true,
     },
 
     QUARTER_START: { name: 'QUARTER_START', 
         periodType: PeriodType.QUARTER,
         relationType: RelationType.CURRENT,
         resultType: ResultType.EARLIEST_ONLY,
+        isPast: true,
     },
     QUARTER_END: { name: 'QUARTER_END', 
         periodType: PeriodType.QUARTER,
         relationType: RelationType.CURRENT,
         resultType: ResultType.LATEST_ONLY,
+        isFuture: true,
     },
 
     HALF_START: { name: 'HALF_START', 
         periodType: PeriodType.HALF,
         relationType: RelationType.CURRENT,
         resultType: ResultType.EARLIEST_ONLY,
+        isPast: true,
     },
     HALF_END: { name: 'HALF_END', 
         periodType: PeriodType.HALF,
         relationType: RelationType.CURRENT,
         resultType: ResultType.LATEST_ONLY,
+        isFuture: true,
     },
 
     YEAR_START: { name: 'YEAR_START', 
         periodType: PeriodType.YEAR,
         relationType: RelationType.CURRENT,
         resultType: ResultType.EARLIEST_ONLY,
+        isPast: true,
     },
     YEAR_END: { name: 'YEAR_END', 
         periodType: PeriodType.YEAR,
         relationType: RelationType.CURRENT,
         resultType: ResultType.LATEST_ONLY,
+        isFuture: true,
     },
 
     PRECEDING_MONTH_END: { name: 'PRECEDING_MONTH_END', 
         periodType: PeriodType.MONTH,
         relationType: RelationType.PRECEDING,
         resultType: ResultType.LATEST_ONLY,
+        isPast: true,
     },
 
     PRECEDING_QUARTER_END: { name: 'PRECEDING_QUARTER_END', 
         periodType: PeriodType.QUARTER,
         relationType: RelationType.PRECEDING,
         resultType: ResultType.LATEST_ONLY,
+        isPast: true,
     },
 
     PRECEDING_HALF_END: { name: 'PRECEDING_HALF_END', 
         periodType: PeriodType.HALF,
         relationType: RelationType.PRECEDING,
         resultType: ResultType.LATEST_ONLY,
+        isPast: true,
     },
 
     PRECEDING_YEAR_END: { name: 'PRECEDING_YEAR_END', 
         periodType: PeriodType.YEAR,
         relationType: RelationType.PRECEDING,
         resultType: ResultType.LATEST_ONLY,
+        isPast: true,
     },
 
 };
 
+/**
+ * Retrieves one of the {@link DateSelectorDef#DateSelectorType} objects given a name or a
+ * {@link DateSelectorDef~DateSelectorTypeDef}.
+ * @param {string|DateSelectorDef#DateSelectorType} name 
+ * @returns {DateSelectorDef#DateSelectorType|undefined}
+ */
 export function getDateSelectorType(name) {
+    // Since we want to be able to compare against the actual
+    // objects, we need to return any copied objects as
+    // a DateSelectorType object.
+    if (name) {
+        if (typeof name.name === 'string') {
+            return DateSelectorType[name.name];
+        }
+    }
     return (typeof name === 'string') ? DateSelectorType[name] : name;
 }
 
+/**
+ * Retrieves the string representation of one of the 
+ * {@link DateSelectorDef#DateSelectorType} objects.
+ * @param {DateSelectorDef~DateSelectorTypeDef|string} selectorType 
+ * @returns {string|undefined}
+ */
 export function getDateSelectorTypeName(selectorType) {
     return (typeof selectorType === 'object') ? selectorType.name : selectorType;
 }
@@ -198,9 +240,9 @@ export function getDateSelectorTypeName(selectorType) {
  *  selectorDefDataItem 
  * @param {boolean} alwaysCopy 
  * @returns {DateSelectorDef~SelectorDef}
- * @name DateSelectorDef#getSelectorDef
+ * @name DateSelectorDef#getDateSelectorDef
  */
-export function getSelectorDef(selectorDefDataItem, alwaysCopy) {
+export function getDateSelectorDef(selectorDefDataItem, alwaysCopy) {
     if (selectorDefDataItem) {
         const dateSelectorType = getDateSelectorType(
             selectorDefDataItem.dateSelectorType);
@@ -231,9 +273,9 @@ export function getSelectorDef(selectorDefDataItem, alwaysCopy) {
  *  selectorDef
  * @param {boolean} alwaysCopy 
  * @returns {DateSelectorDef~SelectorDefDataItem}
- * @name DateSelectorDef#getSelectorDefDataItem
+ * @name DateSelectorDef#getDateSelectorDefDataItem
  */
-export function getSelectorDefDataItem(selectorDef, alwaysCopy) {
+export function getDateSelectorDefDataItem(selectorDef, alwaysCopy) {
     if (selectorDef) {
         const dateSelectorType = getDateSelectorTypeName(
             selectorDef.dateSelectorType);
@@ -286,8 +328,9 @@ export function resolveDateSelector(selectorDef, ymdDate, options) {
     }
 
     const args = Object.assign({}, selectorDef, {
-        rangeType: selectorDef.dateSelectorType,
-        firstYMDDate: selectorDef.customYMDDate,
+        rangeType: getDateSelectorType(selectorDef.dateSelectorType),
+        firstYMDDate: getYMDDate(selectorDef.customYMDDate),
+        lastYMDDate: getYMDDate(selectorDef.customYMDDate),
     });
     if (ymdDate) {
         args.ymdDate = ymdDate;
@@ -296,9 +339,9 @@ export function resolveDateSelector(selectorDef, ymdDate, options) {
         args.options = options;
     }
 
-    const result = resolveRange(args);
+    const result = resolveDateRange(args);
     if (result) {
-        const { dateSelectorType } = selectorDef;
+        const dateSelectorType = getDateSelectorType(selectorDef.dateSelectorType);
         if (dateSelectorType.isWorkWeek) {
             let resultYMDDate = getYMDDate(result);
             const dow = resultYMDDate.getDayOfWeek();
