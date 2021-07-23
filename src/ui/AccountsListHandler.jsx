@@ -1074,7 +1074,7 @@ export class AccountsListHandler extends MainWindowHandlerBase {
             }
         }
 
-        const todayString = getYMDDate(new YMDDate());
+        const todayString = (new YMDDate()).toString();
 
         let startYMDDate;
         let endYMDDate;

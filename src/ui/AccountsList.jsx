@@ -15,7 +15,7 @@ import * as LCE from './LotCellEditors';
 import * as GH from '../tools/GainHelpers';
 import { columnInfosToColumns, getColumnWithKey,
     columnInfosToMultiComparators, } from '../util-ui/ColumnInfo';
-import { YMDDate } from '../util/YMDDate';
+import { YMDDate, getYMDDate } from '../util/YMDDate';
 import { compare, MultiCompare } from '../util/MultiCompare';
 import { buildFromList } from '../util/StringUtils';
 
@@ -684,7 +684,7 @@ export class AccountsList extends React.Component {
         if (startYMDDate) {
             startAccountStateDataItems = await accessor.asyncGetAccountStateForDate(
                 allAccountIds,
-                startYMDDate,
+                getYMDDate(startYMDDate).addDays(-1),
             );
         }
 
@@ -779,14 +779,18 @@ export class AccountsList extends React.Component {
                 isExcludeFromGain: accountDataItem.isExcludeFromGain,
                 isQuantityShares: A.getAccountType(accountDataItem.type).hasLots,
             };
-            if (startAccountStateDataItems) {
-                args.startInfo = {
-                    accountState: startAccountStateDataItems[i],
-                    priceDataItem: accountStateInfo.startPriceDataItem,
-                };
-            }
 
             accountStateInfo.accountGainsState = GH.accountStateToAccountGainsState(args);
+
+            if (startAccountStateDataItems) {
+                args.accountState = startAccountStateDataItems[i];
+                args.priceDataItem = accountStateInfo.startPriceDataItem;
+
+                const startAccountGainsState = GH.accountStateToAccountGainsState(args);
+                accountStateInfo.accountGainsState = GH.subtractAccountGainsStates(
+                    accountStateInfo.accountGainsState,
+                    startAccountGainsState);
+            }
         }
 
         this.updateRootRowInfoAccountStates();
@@ -1239,6 +1243,9 @@ export class AccountsList extends React.Component {
          || (accountState.transactionId || accountState.quantityBaseValue)
          || !childAccountIds || !childAccountIds.length) {
             rowInfo.accountGainsState = accountGainsState;
+        }
+        else {
+            delete rowInfo.accountGainsState;
         }
 
         rowInfo.totalAccountGainsState = accountGainsState;

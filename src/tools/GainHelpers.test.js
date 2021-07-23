@@ -366,3 +366,53 @@ test('GainHelpers-calcLotStateMarketValueBaseValue', () => {
     result = GH.calcLotStateMarketValueBaseValue(accountStateInfoA, 1000000);
     expect(result).toEqual(2468000);
 });
+
+
+//
+//---------------------------------------------------------
+//
+test('GainHelpers-subtractTotals', () => {
+    expect(GH.subtractTotals()).toBeUndefined();
+
+    let result;
+
+    const A = {
+        marketValueBaseValue: 123456,
+        costBasisBaseValue: 2345,
+    };
+
+    result = GH.subtractTotals(A, );
+    expect(result).toEqual(A);
+    expect(result).not.toBe(A);
+
+    const negA = {
+        marketValueBaseValue: -A.marketValueBaseValue,
+        costBasisBaseValue: -A.costBasisBaseValue,
+    };
+
+    result = GH.subtractTotals(undefined, A);
+    expect(result).toEqual(negA);
+
+    const B = {
+        marketValueBaseValue: 1234,
+        cashInBaseValue: 23,
+    };
+    result = GH.subtractTotals(A, B);
+    expect(result).toEqual({
+        marketValueBaseValue: 
+            A.marketValueBaseValue - B.marketValueBaseValue,
+        costBasisBaseValue: A.costBasisBaseValue,
+        cashInBaseValue: -B.cashInBaseValue,
+    });
+
+
+    const C = {
+        marketValueBaseValue: 1234,
+        costBasisBaseValue: 2345,
+    };
+    result = GH.subtractTotals(A, C);
+    expect(result).toEqual({
+        marketValueBaseValue: A.marketValueBaseValue - C.marketValueBaseValue,
+        costBasisBaseValue: 0,
+    });
+});

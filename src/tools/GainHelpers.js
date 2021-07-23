@@ -88,6 +88,52 @@ export function compoundAnnualGrowthRate(
  * @property {number} cashInBaseValue
  */
 
+function subtractValues(total, subtract, propertyName, result) {
+    if (total) {
+        total = total[propertyName];
+    }
+    if (subtract) {
+        subtract = subtract[propertyName];
+    }
+    if (typeof total === 'number') {
+        if (typeof subtract === 'number') {
+            result[propertyName] = total - subtract;
+        }
+        else {
+            result[propertyName] = total;
+        }
+    }
+    else if (typeof subtract === 'number') {
+        result[propertyName] = -subtract;
+    }
+}
+
+/**
+ * Subtracts one set of gain totals from another. This presumes the base values
+ * have the same {@link QuantityDefinition}. Neither argument is modified.
+ * @param {GainHelpers~Totals} totalTotals 
+ * @param {GainHelpers~Totals} subtractTotals 
+ * @returns {GainHelpers~Totals} totalTotals - subtrahend. This is a new
+ * {@link GainHelpers~Totals}.
+ */
+export function subtractTotals(totalTotals, subtrahend) {
+    if (!subtrahend) {
+        if (!totalTotals) {
+            return;
+        }
+        return Object.assign({}, totalTotals);
+    }
+
+    const result = {};
+    subtractValues(totalTotals, subtrahend, 
+        'marketValueBaseValue', result);
+    subtractValues(totalTotals, subtrahend, 
+        'costBasisBaseValue', result);
+    subtractValues(totalTotals, subtrahend, 
+        'cashInBaseValue', result);
+    return result;
+}
+
 
 /**
  * @typedef {object} GainHelpers~AccountGainsStateDataItem
@@ -197,6 +243,31 @@ export function accountStateToAccountGainsState(args) {
     }
 
     return accountGainsState;
+}
+
+/**
+ * Subtracts one {@link GainHelpers~AccountGainsStateDataItem} from another.
+ * Neither argument is modified.
+ * @param {GainHelpers~AccountGainsStateDataItem} totalGainsState 
+ * @param {GainHelpers~AccountGainsStateDataItem} subGainsState 
+ * @returns {GainHelpers~AccountGainsStateDataItem} totalGainsState - subGainsState.
+ * This is a new {@link GainHelpers~AccountGainsStateDataItem}. Note that
+ * the lotStates are removed from this.
+ */
+export function subtractAccountGainsStates(totalGainsState, subGainsState) {
+    const resultGainsState = AS.getAccountStateDataItem(totalGainsState, true);
+    if (resultGainsState && subGainsState) {
+        resultGainsState.overallTotals = subtractTotals(totalGainsState.overallTotals,
+            subGainsState.overallTotals);
+        resultGainsState.gainTotals = subtractTotals(totalGainsState.gainTotals,
+            subGainsState.gainTotals);
+        delete subGainsState.lotStates;
+
+        subtractValues(totalGainsState, subGainsState, 
+            'quantityBaseValue', resultGainsState);
+    }
+
+    return resultGainsState;
 }
 
 

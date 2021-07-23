@@ -626,8 +626,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 Priorities:
-    - Date Range not working properly in AccountList.
-    
     - Update Partial Reminder status if transaction no longer empty.
 
     - Cost basis adjustment transaction
@@ -635,4 +633,6 @@ Priorities:
     - Auto complete
 
     - Search
+    
+    - Setting description of some splits in multi-split doesn't work.
     
