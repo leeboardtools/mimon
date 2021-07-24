@@ -626,8 +626,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 Priorities:
-    - Update Partial Reminder status if transaction no longer empty.
-
     - Cost basis adjustment transaction
 
     - Auto complete

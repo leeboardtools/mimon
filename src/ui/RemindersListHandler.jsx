@@ -35,6 +35,9 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         this.onReminderAdd = this.onReminderAdd.bind(this);
         this.onReminderModify = this.onReminderModify.bind(this);
         this.onReminderRemove = this.onReminderRemove.bind(this);
+        this.onTransactionsModify = this.onTransactionsModify.bind(this);
+        this.onTransactionsRemove = this.onTransactionsRemove.bind(this);
+
         this.onCloseTab = this.onCloseTab.bind(this);
 
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
@@ -290,9 +293,26 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         if (transactionAction) {
             // This is the transaction action for the latest application.
             const { postApplyCallback } = transactionAction;
+            
             transactionAction.postApplyCallback = (action, actionResult) => {
+                const state = this.getTabIdState(tabId);
+
                 result.dueEntry.transactionDataItem 
                     = actionResult.newTransactionDataItem;
+                    
+                const { dueEntriesById } = state;
+                if (dueEntriesById) {
+                    const dueEntry = dueEntriesById.get(reminderId);
+                    if (dueEntry) {
+                        const newDueEntry = Object.assign({}, dueEntry, {
+                            transactionDataItem: actionResult.newTransactionDataItem,
+                            dueStatus: result.dueEntry.dueStatus,
+                        });
+                        const newDueEntriesById = new Map(dueEntriesById);
+                        newDueEntriesById.set(reminderId, newDueEntry);
+                        this.updateDueEntriesById(tabId, newDueEntriesById);
+                    }
+                }
                 return (postApplyCallback)
                     ? postApplyCallback(action, actionResult)
                     : actionResult;
@@ -431,12 +451,121 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         }
     }
 
+
+    getDueEntriesByTransactionId(tabId) {
+        const state = this.getTabIdState(tabId);
+        const { dueEntriesById } = state;
+        if (!dueEntriesById || !dueEntriesById.size) {
+            return;
+        }
+
+        const dueEntriesByTransactionId = new Map();
+        dueEntriesById.forEach((dueEntry) => {
+            if (dueEntry.transactionDataItem) {
+                dueEntriesByTransactionId.set(
+                    dueEntry.transactionDataItem.id,
+                    dueEntry,
+                );
+            }
+        });
+
+        if (dueEntriesByTransactionId.size) {
+            return dueEntriesByTransactionId;
+        }
+    }
+
+
+    onTransactionsModify(tabId, result) {
+        const dueEntriesByTransactionId 
+            = this.getDueEntriesByTransactionId(tabId);
+        if (!dueEntriesByTransactionId) {
+            return;
+        }
+
+        const state = this.getTabIdState(tabId);
+
+        let newDueEntriesById;
+
+        result.newTransactionDataItems.forEach((transactionDataItem) => {
+            const transactionId = transactionDataItem.id;
+            const dueEntry = dueEntriesByTransactionId.get(transactionId);
+            if (dueEntry) {
+                const { splits } = transactionDataItem;
+                let isNonZeroSplit;
+                for (let i = 0; i < splits.length; ++i) {
+                    const split = splits[i];
+                    if (split.quantityBaseValue) {
+                        isNonZeroSplit = true;
+                        break;
+                    }
+                }
+
+                let newDueStatus = (isNonZeroSplit) ? 'APPLIED' : 'PARTIAL';
+                if (newDueStatus !== dueEntry.dueStatus) {
+                    if (!newDueEntriesById) {
+                        newDueEntriesById = new Map(state.dueEntriesById);
+                    }
+
+                    newDueEntriesById.set(dueEntry.reminderId, Object.assign({},
+                        dueEntry,
+                        {
+                            dueStatus: newDueStatus,
+                        }));
+                }
+            }
+        });
+
+        if (newDueEntriesById) {
+            this.updateDueEntriesById(tabId, newDueEntriesById);
+        }
+    }
+
+
+    onTransactionsRemove(tabId, result) {
+        const dueEntriesByTransactionId 
+            = this.getDueEntriesByTransactionId(tabId);
+        if (!dueEntriesByTransactionId) {
+            return;
+        }
+
+        const state = this.getTabIdState(tabId);
+
+        let newDueEntriesById;
+
+        result.removedTransactionDataItems.forEach((transactionDataItem) => {
+            const transactionId = transactionDataItem.id;
+            const dueEntry = dueEntriesByTransactionId.get(transactionId);
+            if (dueEntry) {
+                let newDueStatus = 'DUE';
+                if (newDueStatus !== dueEntry.dueStatus) {
+                    if (!newDueEntriesById) {
+                        newDueEntriesById = new Map(state.dueEntriesById);
+                    }
+
+                    newDueEntriesById.set(dueEntry.reminderId, Object.assign({},
+                        dueEntry,
+                        {
+                            dueStatus: newDueStatus,
+                        }));
+                }
+            }
+        });
+
+        if (newDueEntriesById) {
+            this.updateDueEntriesById(tabId, newDueEntriesById);
+        }
+    }
+
+
     onCloseTab(tabId, tabEntry) {
         if (tabEntry.dueEntriesById) {
             const { accessor } = this.props;
             accessor.off('reminderAdd', tabEntry.onReminderAdd);
             accessor.off('reminderModify', tabEntry.onReminderModify);
             accessor.off('reminderRemove', tabEntry.onReminderRemove);
+            accessor.off('transactionsAdd', tabEntry.onTransactionsModify);
+            accessor.off('transactionsModify', tabEntry.onTransactionsModify);
+            accessor.off('transactionsRemove', tabEntry.onTransactionsRemove);
         }
     }
 
@@ -652,10 +781,6 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             specialActionsMenuItems.push({});
             specialActionsMenuItems.push(skipAllDueRemindersNextItem);
             specialActionsMenuItems.push(skipSelectedRemindersNextItem);
-
-            menuItems.push({});
-            menuItems.push(
-                this._rowTableHandler.createResetColumnWidthsMenuItem(tabId, state));
         }
         else {
             menuItems.push(checkRemindersItem);
@@ -877,9 +1002,18 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             tabEntry.onReminderModify = (result) => this.onReminderModify(tabId, result);
             tabEntry.onReminderRemove = (result) => this.onReminderRemove(tabId, result);
 
+
             accessor.on('reminderAdd', tabEntry.onReminderAdd);
             accessor.on('reminderModify', tabEntry.onReminderModify);
             accessor.on('reminderRemove', tabEntry.onReminderRemove);
+
+            tabEntry.onTransactionsModify 
+                = (result) => this.onTransactionsModify(tabId, result);
+            tabEntry.onTransactionsRemove 
+                = (result) => this.onTransactionsRemove(tabId, result);
+            accessor.on('transactionsAdd', tabEntry.onTransactionsModify);
+            accessor.on('transactionsModify', tabEntry.onTransactionsModify);
+            accessor.on('transactionsRemove', tabEntry.onTransactionsRemove);
         }
 
         this._rowTableHandler.setupTabEntryFromSettings(tabEntry, settings);
