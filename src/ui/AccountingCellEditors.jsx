@@ -1320,10 +1320,11 @@ function onChangeSplitQuantity(e, args) {
 /**
  * Resolves the quantity value for a split being edited into an updated split.
  * @param {CellSplitQuantityEditorArgs} args 
+ * @param {SplitDataItem} [spiltDataItem]
  * @returns {SplitDataItem}
  * @throws {Exception}  An exception is thrown on any error.
  */
-export function resolveSplitQuantityEditValueToSplitDataItem(args) {
+export function resolveSplitQuantityEditValueToSplitDataItem(args, splitDataItem) {
     const { cellEditBuffer } = args;
     const { value } = cellEditBuffer;
     const quantityInfo = getSplitQuantityInfo(value);
@@ -1343,7 +1344,7 @@ export function resolveSplitQuantityEditValueToSplitDataItem(args) {
         value.accessor.evalExpression);
     
     return Object.assign({},
-        value.split,
+        splitDataItem || value.split,
         {
             quantityBaseValue: sign * quantityBaseValue,
         });

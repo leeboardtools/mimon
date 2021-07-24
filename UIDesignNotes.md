@@ -632,5 +632,3 @@ Priorities:
 
     - Search
     
-    - Setting description of some splits in multi-split doesn't work.
-    

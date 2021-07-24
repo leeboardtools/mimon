@@ -128,8 +128,9 @@ function saveSplitQuantityCellValue(args) {
         }
 
         const { accountId } = saveBuffer.newSplit;
-        Object.assign(saveBuffer.newSplit, 
-            ACE.resolveSplitQuantityEditValueToSplitDataItem(args));
+        saveBuffer.newSplit 
+            = ACE.resolveSplitQuantityEditValueToSplitDataItem(args, 
+                saveBuffer.newSplit);
         saveBuffer.newSplit.accountId = accountId;
     }
 }

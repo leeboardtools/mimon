@@ -595,9 +595,9 @@ function saveSplitQuantityCellValue(args) {
         const { splitIndex } = getTransactionInfo(args);
 
         const splitToUpdate = newTransactionDataItem.splits[splitIndex];
-        newTransactionDataItem.splits[splitIndex] = Object.assign({},
-            splitToUpdate,
-            ACE.resolveSplitQuantityEditValueToSplitDataItem(args));
+        newTransactionDataItem.splits[splitIndex] 
+            = ACE.resolveSplitQuantityEditValueToSplitDataItem(args,
+                splitToUpdate);
     }
 }
 
