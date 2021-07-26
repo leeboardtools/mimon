@@ -156,6 +156,7 @@ test('asyncCreateTransactionDataItemForRETURN_OF_CAPITAL', async () => {
                 noReverseSplits: true,
             });
         
+        const brokerageAccountId = sys['ASSET-Investments-Brokerage AccountAccountId'];
         const aaplAccountId = sys['ASSET-Investments-Brokerage Account-AAPLAccountId'];
         const longTermCGAccountId 
             = sys['INCOME-Capital Gains-Long Term Capital GainsAccountId'];
@@ -210,7 +211,11 @@ test('asyncCreateTransactionDataItemForRETURN_OF_CAPITAL', async () => {
                             costBasisBaseValue: -2096,
                         },
                     ]),
-                    quantityBaseValue: 0,
+                    quantityBaseValue: 500000,
+                },
+                {
+                    accountId: brokerageAccountId,
+                    quantityBaseValue: 500000,
                 }
             ]
         });
@@ -255,7 +260,7 @@ test('asyncCreateTransactionDataItemForRETURN_OF_CAPITAL', async () => {
                             costBasisBaseValue: -67991,
                         },
                     ]),
-                    quantityBaseValue: -15459254,
+                    quantityBaseValue: 17500000 - 15451681 - 7573,
                 },
                 {
                     accountId: longTermCGAccountId,
@@ -265,6 +270,10 @@ test('asyncCreateTransactionDataItemForRETURN_OF_CAPITAL', async () => {
                     accountId: shortTermCGAccountId,
                     quantityBaseValue: -7573,
                 },
+                {
+                    accountId: brokerageAccountId,
+                    quantityBaseValue: 17500000,
+                }
             ]),
         });
         
@@ -324,7 +333,7 @@ test('asyncCreateTransactionDataItemForRETURN_OF_CAPITAL', async () => {
             rocBaseValue: 1000000,
         });
 
-        expect(result.splits.length).toEqual(1);
+        expect(result.splits.length).toEqual(2);
         expect(result).toEqual({
             id: transA.id,
             ymdDate: '2014-08-15',
@@ -350,8 +359,12 @@ test('asyncCreateTransactionDataItemForRETURN_OF_CAPITAL', async () => {
                             costBasisBaseValue: -3885,
                         },
                     ]),
-                    quantityBaseValue: 0,
+                    quantityBaseValue: 1000000,
                 },
+                {
+                    accountId: brokerageAccountId,
+                    quantityBaseValue: 1000000,
+                }
             ]),
         });
 

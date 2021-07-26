@@ -960,8 +960,12 @@ export function createTestTransactions(newFileContents, options) {
                                     costBasisBaseValue: -2096,
                                 },
                             ],
-                            quantityBaseValue: 0,
+                            quantityBaseValue: 190375 + 307529 + 2096,
                         },
+                        {
+                            accountId: brokerageAccountId,
+                            quantityBaseValue: 190375 + 307529 + 2096,
+                        }
                     ],
                 });
             }

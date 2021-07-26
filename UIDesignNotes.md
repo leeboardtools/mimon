@@ -523,9 +523,6 @@ Are the lists really two separate styles? Or can they be combined into one?
             - Or automatic
         
         - Lot transactions:
-            - Return of Capital doesn't work quite right.
-                - Where is it going???
-                - It's changing the market value.
             
         - When transaction finishes editing, old values are displayed momentarily then the new ones appear.
 
@@ -547,49 +544,6 @@ Are the lists really two separate styles? Or can they be combined into one?
                 - Can't add different currencies.
         
         - Show/hide empty accounts (no value, no child accounts)
-
-        - Date Selector Bar:
-            - Standard options:
-                - Today
-                - Last Month
-                - Last Quarter
-                - Last Year
-            
-            - Improve selection:
-                - Display date
-                - Options for changing the date
-                    - Today
-                    - Calendar
-                    - Last calendar month
-                    - Last calendar quarter
-                    - Last calendar year 
-
-        - Date Range Selector Bar:
-            - Standard Options:
-                - End Date:
-                    - Same as Date Selector Bar.
-                - Start Date:
-                    - 1 day
-                    - 1 week
-                    - 1 month
-                    - 30 days
-                    - 1 quarter
-                    - 1 year
-                    - 52 weeks
-                
-                - All
-                - Custom [from] [to]
-                - Current [Week/Month/Quarter/Half/Year]
-                - Previous [Week/Month/Quarter/Half/Year]
-                - Last [7/30/60/90/180] Days
-                - Last [3/6/12] Months
-                - Week Ending [date]
-                - Month Ending [date]
-                - [3/6/12] Months Ending [date]
-                - [30/90/180] Days Ending [date]
-        
-        - Date range not working
-
 
         - Export as CSV
             - Need to clean up FileSelector.
@@ -626,7 +580,11 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 Priorities:
-    - Cost basis adjustment transaction
+    - AccountList
+        - If account does not have any transasctions, and then a new transaction is added for that account, it does not update.
+
+    - Cost basis adjustment transaction?
+        - A lot specific ROC?
 
     - Auto complete
 

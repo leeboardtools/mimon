@@ -168,7 +168,7 @@ function validateSplitsBUY_SELL({transactionManager, splits, splitIndex, account
 //---------------------------------------------------------
 //
 function validateSplitsRETURN_OF_CAPITAL({splits, }) {
-    if (splits.length > 3) {
+    if (splits.length > 4) {
         throw userError('TransactionManager-ROC_too_many_splits');
     }
 

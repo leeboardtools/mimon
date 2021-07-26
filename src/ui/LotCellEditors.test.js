@@ -3251,6 +3251,7 @@ test('LotCellEditors-RETURN_OF_CAPITAL', async () => {
         const accountingActions = accessor.getAccountingActions();
 
         //const equityAccountId = sys['EQUITYAccountId'];
+        const brokerageAccountId = sys['ASSET-Investments-Brokerage AccountAccountId'];
         const aaplAccountId = sys['ASSET-Investments-Brokerage Account-AAPLAccountId'];
         //const feesAccountId = sys['EXPENSE-Brokerage CommissionsAccountId'];
         const longTermCGAccountId 
@@ -3292,7 +3293,7 @@ test('LotCellEditors-RETURN_OF_CAPITAL', async () => {
         expect(splitInfo.editStates.shares.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.monetaryAmount.editorBaseValue)
-            .toBeUndefined();
+            .toEqual('');
         expect(splitInfo.editStates.fees.editorBaseValue)
             .toBeUndefined();
         expect(splitInfo.editStates.price.editorBaseValue)
@@ -3357,8 +3358,12 @@ test('LotCellEditors-RETURN_OF_CAPITAL', async () => {
                             costBasisBaseValue: -2096,
                         },
                     ]),
-                    quantityBaseValue: 0,
-                }
+                    quantityBaseValue: 500000,
+                },
+                {
+                    accountId: brokerageAccountId,
+                    quantityBaseValue: 500000,
+                },
             ]
         });
 
@@ -3410,12 +3415,16 @@ test('LotCellEditors-RETURN_OF_CAPITAL', async () => {
                             costBasisBaseValue: -4192,
                         },
                     ]),
-                    quantityBaseValue: -9887,
+                    quantityBaseValue: 1000000 - 9887,
                 },
                 expect.objectContaining({
                     accountId: longTermCGAccountId,
                     quantityBaseValue: -9887,
                 }),
+                {
+                    accountId: brokerageAccountId,
+                    quantityBaseValue: 1000000,
+                }
             ]),
         }));
 

@@ -217,7 +217,7 @@
 
     "TransactionManager-date_required": "Transactions must have a date.",
     "TransactionManager~need_at_least_2_splits": "Normal transactions must have at least two split entries.",
-    "TransactionManager-ROC_too_many_splits": "Return of Capital transactions can only have up to three split entries.",
+    "TransactionManager-ROC_too_many_splits": "Return of Capital transactions can only have up to four split entries.",
     "TransactionManager-ROC_only_one_lot_split": "Return of Capital transactions can only have the Return of Capital lot split and optional capital gains splits.",
     "TransactionManager~SPLIT_only_1_split": ["SPLIT/REVERSE SPLIT transactions can only have a single split entry."],
     "TransactionManager~split_account_not_found": ["An account with id '", "' was not found."],

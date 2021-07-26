@@ -290,7 +290,7 @@ export async function asyncCreateTransactionDataItemForRETURN_OF_CAPITAL(args) {
         accountId: accountId,
         lotTransactionType: T.LotTransactionType.RETURN_OF_CAPITAL.name,
         lotChanges: lotChanges,
-        quantityBaseValue: -workingArgs.longTermCapitalGainsBaseValue
+        quantityBaseValue: rocBaseValue - workingArgs.longTermCapitalGainsBaseValue
             - workingArgs.shortTermCapitalGainsBaseValue,
     };
     if (!splitDataItem.quantityBaseValue) {
@@ -318,6 +318,11 @@ export async function asyncCreateTransactionDataItemForRETURN_OF_CAPITAL(args) {
             workingArgs.ordinaryIncomeBaseValue,
         ));
     }
+
+    splits.push({
+        accountId: accountDataItem.parentAccountId,
+        quantityBaseValue: rocBaseValue,
+    });
 
     const transactionDataItem = {
         ymdDate: ymdDate,

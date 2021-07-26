@@ -47,7 +47,7 @@ import { LotsSelectionEditor } from './LotsSelectionEditor';
  * @property {boolean}  [hasLotChanges]
  * @property {boolean}  [hasModifyLotIds]
  * @property {AutoLotType}  [autoLotType]
- * @property {boolean}  [monetaryAmountIsCostBasisChanges]
+ * @property {boolean}  [monetaryAmountIsMaxSplitQuantityBaseValue]
  */
 
 
@@ -165,7 +165,7 @@ export const LotActionType = {
         noShares: true, 
         noCostBasis: true,
         noFees: true,
-        monetaryAmountIsCostBasisChanges: true,
+        monetaryAmountIsMaxSplitQuantityBaseValue: true,
     },
 };
 
@@ -558,19 +558,11 @@ function setupSplitInfoEditStates(splitInfo) {
 
     splitInfo.sharesTooltip = sharesTooltip;
 
-    if (actionType.monetaryAmountIsCostBasisChanges) {
-        if (typeof totalCostBasisBaseValue === 'number') {
-            // Also need to add the quantities of the other splits, which
-            // are capital gains that were distributed due to ROC being > the 
-            // lot cost basis.
-            for (let i = 0; i < splitIndex; ++i) {
-                totalCostBasisBaseValue += splits[i].quantityBaseValue;
-            }
-            for (let i = splitIndex + 1; i < splits.length; ++i) {
-                totalCostBasisBaseValue += splits[i].quantityBaseValue;
-            }
-            
-            monetaryAmountBaseValue = -totalCostBasisBaseValue;
+    if (actionType.monetaryAmountIsMaxSplitQuantityBaseValue) {
+        monetaryAmountBaseValue = splits[0].quantityBaseValue;
+        for (let i = 1; i < splits.length; ++i) {
+            monetaryAmountBaseValue = Math.max(monetaryAmountBaseValue,
+                splits[i].quantityBaseValue);
         }
     }
     else if (!actionType.noMonetaryAmount) {
@@ -1426,6 +1418,13 @@ async function asyncReturnOfCapitalFromSplitInfo(splitInfo, transactionDataItem)
 
     Object.assign(transactionDataItem, 
         await LTH.asyncCreateTransactionDataItemForRETURN_OF_CAPITAL(args));
+
+    const { pricedItemDataItem } = splitInfo;
+    transactionDataItem.description = formatReturnOfCapitalTransactionDescription({
+        actionType: LotActionType.RETURN_OF_CAPITAL,
+        ticker: pricedItemDataItem.ticker,
+        monetaryAmount: editStates.monetaryAmount,
+    });
 
     // split[0] is always the ROC split...
     return 0;
