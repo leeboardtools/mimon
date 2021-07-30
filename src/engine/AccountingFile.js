@@ -145,13 +145,24 @@ export class AccountingFileFactory {
 
 
     /**
+     * @typedef {object} AccountingFile~asyncOpenFileOptions
+     * @property {boolean} [breakLock=false]
+     */
+
+
+    /**
      * Opens an existing accounting file system.
      * @param {string} pathName The path name of the file system to open. If 
      * {@link AccountingFileFactor#isDirBased} returns <code>true</code> this should 
      * be a directory, otherwise it should be a file name.
+     * @param {AccountingFile~asyncOpenFileOptions} [options=undefined]
      * @returns {AccountingFile}    The accounting file that was opened.
+     * @throws {Error|UserError} For {@link UserError} the msgCode property may be
+     * 'LOCK_EXISTS', which indicates a lock file was detected and the file may be
+     * in use. This may be called again with options.breakLock = true to attempt to
+     * break the lock.
      */
-    async asyncOpenFile(pathName) {
+    async asyncOpenFile(pathName, options) {
         throw Error('AccountingFileFactory.asyncOpenFile() abstract method!');
     }
 
@@ -171,3 +182,5 @@ export class AccountingFileFactory {
         throw Error('AccountingFileFactory.asyncSaveAsFile() abstract method!');
     }
 }
+
+

@@ -517,6 +517,7 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * @typedef {object} EngineAccess~asyncOpenAccountFileOptions
+     * A {@link AccountingFile~asyncOpenFileOptions} with the additional properties:
      * @property {number} [fileFactoryIndex]   Optional file factory index, if specified
      * this particular file factory will be used, otherwise the first file factory
      * whose {@link AccountingFile#asyncOpenFile} succeeds will be used.
@@ -546,7 +547,8 @@ export class EngineAccessor extends EventEmitter {
             for (let i = 0; i < this._fileFactories.length; ++i) {
                 try {
                     accountingFile = await this._fileFactories[i].asyncOpenFile(
-                        pathName);
+                        pathName,
+                        options);
                     fileFactoryIndex = i;
                     break;
                 }

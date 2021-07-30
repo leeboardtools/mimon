@@ -273,6 +273,7 @@
     "JSONGzipAccountingFile-history_data_items_missing":  ["The file '", "' is not a valid MiMoN history groups file, the historyDataItems section is missing,"],
     "JSONGzipAccountingFile-history_summary_tag_missing":  ["The file '", "' is not a valid MiMoN history file, the tag is incorrect or missing,"],
     "JSONGzipAccountingFile-historiesHandler_tag_missing":  ["The file '", "' is not a valid MiMoN history file, the histories handler section is missing,"],
+    "JSONGzipAccountingFile-lockFile_detected": ["The lock file '", "' exists, which may indicate the accounting file is already in use."],
 
 
     "EngineAccess-create_file_not_found": ["The file '", "' could not be created, a supported file type was not found."],

@@ -566,23 +566,15 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Update of reinvest dividend transaction after changing dividends account doesn't update the old dividend account.
 
 
-    - Add Lock file
-
-
     - Price Retrieval
         - Change PriceManager.asyncAddPrices() to support multiple priced items.
 
 
     - Lot Transactions
-        - Cost basis adjustment transaction?
-            - Charge to income or expense account
-            - How to apply to lots?
+
 
 
 Priorities:
-    - AccountList
-        - If account does not have any transasctions, and then a new transaction is added for that account, it does not update.
-
     - Cost basis adjustment transaction?
         - A lot specific ROC?
 
@@ -590,3 +582,7 @@ Priorities:
 
     - Search
     
+
+16
+28
+15

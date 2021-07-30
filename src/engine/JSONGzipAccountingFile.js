@@ -1112,6 +1112,8 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._journalFiles = new JSONGzipJournalFiles(this);
         this._priceFiles = new JSONGzipPricesFile(this);
         this._historyFiles = new JSONGzipHistoryFiles(this);
+
+        this._lockFileName = path.join(this.getPathName(), 'lockFile.lock');
     }
 
 
@@ -1136,11 +1138,22 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._accountingSystem.getAccountManager().isDebug = this.isDebug;
 
         await this._accountingSystem.asyncSetupForUse();
+
+        this._lockFileHandle = await fsPromises.open(this._lockFileName, 'w');
     }
 
     async asyncSetupNewFile() {
         await this._asyncSetupAccountingSystem();
     }
+
+    async asyncIsLockFile() {
+        return asyncFileExists(this._lockFileName);
+    }
+
+    getLockFileName() {
+        return this._lockFileName;
+    }
+
 
     async asyncReadFile() {
         this._stateId = await this._ledgerFile.asyncRead();
@@ -1196,6 +1209,13 @@ class JSONGzipAccountingFile extends AccountingFile {
         await this._journalFiles.asyncClose();
         await this._priceFiles.asyncClose();
         await this._historyFiles.asyncClose();
+
+        if (this._lockFileHandle) {
+            await this._lockFileHandle.close();
+            await fsPromises.unlink(this._lockFileName);
+            this._lockFileHandle = undefined;
+            this._keepOpenfileName = undefined;
+        }
 
         this._ledgerFile = undefined;
         this._journalFiles = undefined;
@@ -1334,13 +1354,24 @@ export class JSONGzipAccountingFileFactory extends AccountingFileFactory {
      * should be a directory, otherwise it should be a file name.
      * @returns {AccountingFile}    The accounting file that was opened.
      */
-    async asyncOpenFile(pathName) {
+    async asyncOpenFile(pathName, options) {
+        options = options || {};
+
         pathName = this.cleanupPathName(pathName);
 
         const file = new JSONGzipAccountingFile({
             fileFactory: this,
             pathName: pathName,
         });
+
+        if (!options.breakLock) {
+            if (await file.asyncIsLockFile()) {
+                const error = userError('JSONGzipAccountingFile-lockFile_detected',
+                    file.getLockFileName());
+                error.msgCode = 'LOCK_EXISTS';
+                throw error;
+            }
+        }
 
         await file.asyncReadFile();
 

@@ -514,6 +514,55 @@ export default class App extends React.Component {
     }
 
 
+    async asyncOpenAccountingFile(pathName, options, errorId) {
+        try {
+            await this._accessor.asyncOpenAccountingFile(pathName, options);
+            
+            if (this.state.modalRenderer) {
+                this.setModalRenderer();
+            }
+            this.enterMainWindow();
+        }
+        catch (e) {
+            if (e.msgCode === 'LOCK_EXISTS') {
+                if (options && !options.breakLock) {
+                    const name = path.parse(pathName).base;
+                    this.setModalRenderer(() => {
+                        return <QuestionPrompter
+                            title={userMsg('App-break_lock_title', name)}
+                            message={userMsg('App-break_lock_msg', name)}
+                            buttons={StandardButton.YES_NO}
+                            onButton={(id) => {
+                                const newOptions = Object.assign({}, options, {
+                                    breakLock: true,
+                                });
+
+                                switch (id) {
+                                case 'yes' :
+                                    process.nextTick(async () => {
+                                        await this.asyncOpenAccountingFile(pathName, 
+                                            newOptions,
+                                            errorId);
+                                    });
+                                    break;
+
+                                default :
+                                    this.setModalRenderer();
+                                    break;
+                                }
+                            }}
+                        />;
+                    });
+                    return;
+                }
+            }
+            this.setState({
+                errorMsg: userMsg(errorId, pathName, e.toString()),
+            });
+        }
+    }
+
+
     revertFile() {
         process.nextTick(async () => {
             const pathName = this._accessor.getAccountingFilePathName();
@@ -528,19 +577,11 @@ export default class App extends React.Component {
                 return;
             }
 
-            try {
-                await this._accessor.asyncOpenAccountingFile(pathName, {
-                    fileFactoryIndex: fileFactoryIndex,
-                    clearActions: true,
-                });
-                this.enterMainWindow();
-                this.setModalRenderer();
-            }
-            catch (e) {
-                this.setState({
-                    errorMsg: userMsg('App-open_failed', pathName, e.toString()),
-                });
-            }
+            await this.asyncOpenAccountingFile(pathName, {
+                fileFactoryIndex: fileFactoryIndex,
+                clearActions: true,
+            },
+            'App-open_failed');
         });
     }
 
@@ -613,18 +654,11 @@ export default class App extends React.Component {
 
     onOpenFile(pathName) {
         process.nextTick(async () => {
-            try {
-                await this._accessor.asyncOpenAccountingFile(pathName, {
-                    fileFactoryIndex: this.state.fileFactoryIndex,
-                    clearActions: true,
-                });
-                this.enterMainWindow();
-            }
-            catch (e) {
-                this.setState({
-                    errorMsg: userMsg('App-open_failed', pathName, e.toString()),
-                });
-            }
+            await this.asyncOpenAccountingFile(pathName, {
+                fileFactoryIndex: this.state.fileFactoryIndex,
+                clearActions: true,
+            },
+            'App-open_failed');
         });
     }
 
@@ -759,17 +793,10 @@ export default class App extends React.Component {
 
     onRecentClick(pathName) {
         process.nextTick(async () => {
-            try {
-                await this._accessor.asyncOpenAccountingFile(pathName, {
-                    clearActions: true,
-                });
-                this.enterMainWindow();
-            }
-            catch (e) {
-                this.setState({
-                    errorMsg: userMsg('App-mru_open_failed', pathName, e.toString()),
-                });
-            }
+            await this.asyncOpenAccountingFile(pathName, {
+                clearActions: true,
+            },
+            'App-mru_open_failed');
         });
     }
 

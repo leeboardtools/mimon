@@ -81,6 +81,9 @@
     "App-confirm_revert_title": "Confirm Revert",
     "App-confirm_revert_msg": ["Are you sure you want to revert all changes made to '", "'?", "\nThe changes will be permanently lost."],
 
+    "App-break_lock_title": "Accounting File May Be In Use",
+    "App-break_lock_msg": ["A lock file for '", "' has been detected, which may indicate the accounting file is currently open.\nIf you are certain the accounting file is not currently open, you may try to break the lock.\nDo you want to try to break the lock?"],
+
     "App-importButton": "Import",
     "App-importingStatus_title": ["Importing '", "'"],
     "App-confirm_import_cancel": ["Are you sure you want to cancel importing '", "'?"],
