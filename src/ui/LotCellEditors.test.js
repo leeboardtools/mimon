@@ -3338,7 +3338,7 @@ test('LotCellEditors-RETURN_OF_CAPITAL', async () => {
         result = await LCE.asyncTransactionDataItemFromSplitInfo(splitInfo, 
             newTransactionDataItem);
         
-        expect(newTransactionDataItem).toEqual({
+        expect(newTransactionDataItem).toEqual(expect.objectContaining({
             ymdDate: '2020-09-01',
             splits: [
                 {
@@ -3365,7 +3365,7 @@ test('LotCellEditors-RETURN_OF_CAPITAL', async () => {
                     quantityBaseValue: 500000,
                 },
             ]
-        });
+        }));
 
 
         //
