@@ -516,13 +516,20 @@ export class EngineAccessor extends EventEmitter {
 
 
     /**
+     * @typedef {object} EngineAccess~asyncOpenAccountFileOptions
+     * @property {number} [fileFactoryIndex]   Optional file factory index, if specified
+     * this particular file factory will be used, otherwise the first file factory
+     * whose {@link AccountingFile#asyncOpenFile} succeeds will be used.
+     * @property {boolean} [clearActions=false]
+     */
+
+
+    /**
      * Opens an existing accounting file system.
      * @param {string} pathName The path name of the file system to open. If 
      * {@link AccountingFileFactor#isDirBased} returns <code>true</code> this should 
      * be a directory, otherwise it should be a file name.
-     * @param {number} [fileFactoryIndex]   Optional file factory index, if specified
-     * this particular file factory will be used, otherwise the first file factory
-     * whose {@link AccountingFile#asyncOpenFile} succeeds will be used.
+     * @param {EngineAccess~asyncOpenAccountFileOptions} [options]
      * @throws {Error}
      */
     async asyncOpenAccountingFile(pathName, options) {
