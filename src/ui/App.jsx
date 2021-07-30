@@ -349,10 +349,12 @@ export default class App extends React.Component {
 
 
     componentDidMount() {
+        ipcRenderer.on('app-close', this.onExit);
     }
 
 
     componentWillUnmount() {
+        ipcRenderer.off('app-close', this.onExit);
     }
 
 
@@ -424,7 +426,7 @@ export default class App extends React.Component {
     }
 
 
-    exitMainWindow() {
+    exitMainWindow(postExit) {
         process.nextTick(async () => {
             const pathName = this._accessor.getAccountingFilePathName();
             try {
@@ -432,6 +434,10 @@ export default class App extends React.Component {
                     await this._accessor.asyncCloseAccountingFile();
                 }
                 this.onCancel();
+
+                if (postExit) {
+                    postExit();
+                }
             }
             catch (e) {
                 this.setState({
@@ -450,8 +456,11 @@ export default class App extends React.Component {
                 try {
                     if (this._accessor.isAccountingFileModified()) {
                         await this._accessor.asyncWriteAccountingFile();
+                        console.info('Saved changes to ' 
+                            + this._accessor.getAccountingFilePathName());
                     }
-                    postClose();
+
+                    this.exitMainWindow(postClose);
                 }
                 catch (e) {
                     const name = path.parse(
@@ -495,7 +504,7 @@ export default class App extends React.Component {
 
 
     onCloseFile() {
-        this.closeFile(() => { this.exitMainWindow(); }, 
+        this.closeFile(() => {}, 
             userMsg('App-save_ignore_button'));
     }
 
@@ -525,6 +534,7 @@ export default class App extends React.Component {
                     clearActions: true,
                 });
                 this.enterMainWindow();
+                this.setModalRenderer();
             }
             catch (e) {
                 this.setState({

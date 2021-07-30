@@ -136,6 +136,14 @@ const createWindow = (windowState) => {
     }
 
     manageBrowserWindow(mainWindow, windowState);
+
+    // Handle the main window being closed.
+    mainWindow.on('close', (e) => {
+        if (mainWindow) {
+            e.preventDefault();
+            mainWindow.webContents.send('app-close');
+        }
+    });
     
     // Emitted when the window is closed.
     mainWindow.on('closed', () => {
