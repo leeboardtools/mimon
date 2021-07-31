@@ -283,6 +283,9 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Security list:
             - Sort, hide hidden/inactive securities
 
+        - Support generation of dividend/cap gains accounts.
+            - Would want to add tags for income account types, for example mark 'Income>Dividends' as a dividend parent
+
 
     - Accounts List
         - Listen on prices for market value updates.
@@ -572,17 +575,17 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Lot Transactions
 
+    - Securities dropdown selector in account editor is a mess
 
 
 Priorities:
+    - Account Editor
+        - Security list:
+            - Sort, hide hidden/inactive securities
+
     - Cost basis adjustment transaction?
         - A lot specific ROC?
 
     - Auto complete
 
     - Search
-    
-
-16
-28
-15
