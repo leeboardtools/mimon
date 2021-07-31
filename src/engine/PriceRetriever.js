@@ -1,6 +1,7 @@
 import { YMDDate, getYMDDate } from '../util/YMDDate';
 import { getPricedItem, PricedItemOnlineUpdateType } from './PricedItems';
 import { getDecimalDefinition } from '../util/Quantities';
+import { userError } from '../util/UserMessages';
 
 const request = require('request');
 
@@ -34,15 +35,21 @@ async function retrieveQuote(options) {
                     reject(err);
                 }
                 else {
-                    const prices = JSON.parse(
-                        body.split('HistoricalPriceStore":{"prices":')[1]
-                            .split(',"isPending')[0]);
-                    prices.forEach((price) => {
-                        if (price.date) {
-                            price.date = new Date(price.date * 1000);
-                        }
-                    });
-                    resolve(prices);
+                    const historicalPricesStart 
+                        = body.split('HistoricalPriceStore":{"prices":')[1];
+                    if (historicalPricesStart) {
+                        const prices = JSON.parse(
+                            historicalPricesStart.split(',"isPending')[0]);
+                        prices.forEach((price) => {
+                            if (price.date) {
+                                price.date = new Date(price.date * 1000);
+                            }
+                        });
+                        resolve(prices);
+                    }
+                    else {
+                        reject(userError('PriceRetriever-ticker_not_found', symbol));
+                    }
                 }
             }
         );

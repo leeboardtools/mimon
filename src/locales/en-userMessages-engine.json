@@ -199,6 +199,9 @@
     "PriceManager-invalid_price_close": "The price is invalid, it must have a valid closing price.",
 
 
+    "PriceRetriever-ticker_not_found": ["N/A"],
+
+
     "Reconciler-invalid_closing_date": "A closing date is required.",
     "Reconciler-closing_date_before_last": ["The closing date must be after the last closing date, which was ", "."],
     "Reconciler-account_not_balanced": ["The reconciled balance, ", ", does not match the closing balance, ", "."],
