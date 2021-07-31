@@ -279,10 +279,6 @@ Are the lists really two separate styles? Or can they be combined into one?
     
 
     - Account Editor
-        - Canceling makes arbitrary tab active, not previously selected tab.
-        - Security list:
-            - Sort, hide hidden/inactive securities
-
         - Support generation of dividend/cap gains accounts.
             - Would want to add tags for income account types, for example mark 'Income>Dividends' as a dividend parent
 
@@ -579,10 +575,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 Priorities:
-    - Account Editor
-        - Security list:
-            - Sort, hide hidden/inactive securities
-
     - Cost basis adjustment transaction?
         - A lot specific ROC?
 

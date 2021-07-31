@@ -18,18 +18,44 @@ export class PricedItemEditorHandler extends MainWindowHandlerBase {
     }
 
 
+    onCloseEditor(tabId, newPricedItemDataItem) {
+        if (newPricedItemDataItem) {
+            const state = this.getTabIdState(tabId);
+            const { endEditCallback } = state;
+            if (endEditCallback) {
+                endEditCallback(newPricedItemDataItem);
+            }
+        }
+
+        this.closeTab(tabId);
+    }
+
+
     getTabDropdownInfo(tabId) {
     }
 
 
     /**
+     * @callback PricedItemEditorHandler~endEditCallback
+     * @param {PricedItemDataItem} pricedItemDataItem
+     * @returns 
+     */
+
+    /**
+     * @typedef {object} PricedItemEditorHandler~createTabEntryArgs
+     * @property {number}  pricedItemId
+     * @property {string}  pricedItemTypeName
+     * @property {PricedItemEditorHandler~endEditCallback} [endEditCallback]
+     */
+
+    /**
      * Called by {@link MainWindow} to create the {@link TabbedPages~TabEntry}
      * object for a pricedItem register page.
      * @param {string} tabId 
-     * @param {number}  pricedItemId
+     * @param {PricedItemEditorHandler~createTabEntryArgs} args
      * @returns {TabbedPages~TabEntry}
      */
-    createTabEntry(tabId, pricedItemId, pricedItemTypeName) {
+    createTabEntry(tabId, { pricedItemId, pricedItemTypeName, endEditCallback, }) {
         const pricedItemType = PI.getPricedItemType(pricedItemTypeName);
         const pricedItemDataItem = this.props.accessor.getPricedItemDataItemWithId(
             pricedItemId);
@@ -45,6 +71,7 @@ export class PricedItemEditorHandler extends MainWindowHandlerBase {
             pricedItemId: pricedItemId,
             pricedItemTypeName: pricedItemTypeName,
             //dropdownInfo: this.getTabDropdownInfo(tabId),
+            endEditCallback: endEditCallback,
             onRenderTabPage: this.onRenderTabPage,
         };
     }
@@ -62,7 +89,9 @@ export class PricedItemEditorHandler extends MainWindowHandlerBase {
             accessor={accessor}
             pricedItemId={pricedItemId}
             pricedItemTypeName={pricedItemTypeName}
-            onClose={() => this.closeTab(tabEntry.tabId)}
+            onClose={(pricedItemDataItem) => this.onCloseEditor(
+                tabEntry.tabId,
+                pricedItemDataItem)}
         />;
     }
 }

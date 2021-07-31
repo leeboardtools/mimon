@@ -140,8 +140,8 @@ export class PricedItemEditor extends React.Component {
                 }
 
                 accessor.asyncApplyAction(action)
-                    .then(() => {
-                        this.props.onClose();
+                    .then((arg) => {
+                        this.props.onClose(arg.newPricedItemDataItem);
                     })
                     .catch((e) => {
                         this.setErrorMsg(e);
@@ -526,6 +526,17 @@ export class PricedItemEditor extends React.Component {
 }
 
 
+/**
+ * @callback PricedItemEditor~onCloseCallback
+ * @param {PricedItemDataItem} [pricedItemDataItem] Then edited priced item, 
+ * <code>undefined</code> if canceled.
+ */
+
+
+/**
+ * @typedef {object} PricedItemEditor~propTypes
+ * @property {PricedItemEditor~onCloseCallback} onClose
+ */
 PricedItemEditor.propTypes = {
     accessor: PropTypes.object.isRequired,
     pricedItemId: PropTypes.number,

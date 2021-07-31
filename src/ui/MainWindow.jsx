@@ -766,7 +766,8 @@ export class MainWindow extends React.Component {
     }
 
 
-    openPricedItemEditor({ pricedItemId, pricedItemTypeName, }) {
+    openPricedItemEditor(openArgs) {
+        const { pricedItemId, pricedItemTypeName, } = openArgs;
         const editorsByPricedItemId 
             = this._pricedItemEditorsByPricedItemId[pricedItemTypeName];
         let tabId = editorsByPricedItemId.get(pricedItemId);
@@ -775,7 +776,7 @@ export class MainWindow extends React.Component {
             tabId = tabType + '_' + (pricedItemId || (pricedItemTypeName + '_new'));
             editorsByPricedItemId.set(pricedItemId, tabId);
             const tabEntry = this._pricedItemEditorHandler.createTabEntry(
-                tabId, pricedItemId, pricedItemTypeName);
+                tabId, openArgs);
             this.addTabEntry(tabEntry, tabType);
         }
 

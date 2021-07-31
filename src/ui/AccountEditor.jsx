@@ -38,6 +38,7 @@ export class AccountEditor extends React.Component {
         this.onTypeChange = this.onTypeChange.bind(this);
         this.onPricedItemChange = this.onPricedItemChange.bind(this);
         this.onNewPricedItem = this.onNewPricedItem.bind(this);
+        this.onEndNewPricedItemEdit = this.onEndNewPricedItemEdit.bind(this);
 
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
@@ -428,9 +429,22 @@ export class AccountEditor extends React.Component {
             const { accountDataItem } = this.state;
             const accountType = A.getAccountType(accountDataItem.type);
             const pricedItemTypeName = accountType.pricedItemType.name;
-            onNewPricedItem(pricedItemTypeName);
+            onNewPricedItem(pricedItemTypeName, this.onEndNewPricedItemEdit);
         }
     }
+
+    onEndNewPricedItemEdit(pricedItemDataItem) {
+        if (pricedItemDataItem) {
+            this.setState((state) => {
+                return {
+                    accountDataItem: Object.assign({}, state.accountDataItem, {
+                        pricedItemId: pricedItemDataItem.id,
+                    }),
+                };
+            });
+        }
+    }
+
 
     renderPricedItemEditor() {
         const { accessor } = this.props;

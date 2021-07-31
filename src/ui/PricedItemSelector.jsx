@@ -49,7 +49,15 @@ export function PricedItemSelector(props) {
         items.push({
             value: pricedItemId,
             text: text,
+            isInactive: pricedItemDataItem.isInactive,
         });
+    });
+
+    items.sort((a, b) => {
+        if (a.isInactive !== b.isInactive) {
+            return (a.isInactive) ? 1 : -1;
+        }
+        return a.text.localeCompare(b.text);
     });
 
     return <DropdownField
