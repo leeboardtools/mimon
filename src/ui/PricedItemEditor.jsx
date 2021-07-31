@@ -226,7 +226,7 @@ export class PricedItemEditor extends React.Component {
                 isOKToSave = false;
                 nameErrorMsg = userMsg('PricedItemEditor-name_required');
             }
-            else {
+            else if (newPricedItemDataItem.name) {
                 // Check if name is already used.
                 if (!originalPricedItemDataItem
                  || (originalPricedItemDataItem.name !== newPricedItemDataItem.name)) {
