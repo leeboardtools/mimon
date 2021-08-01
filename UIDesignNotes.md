@@ -304,7 +304,8 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Account Register
         - Auto-complete for description
         
-        - Copy, Paste, Duplicate transaction actions
+        - Copy, Paste transaction actions
+
         - Actually add row to the clipboard when Copy Transaction is chosen.
             - Both HTML and text.
             - For HTML include the split drop down???
@@ -378,6 +379,16 @@ Are the lists really two separate styles? Or can they be combined into one?
     - Priced Item Editor
 
 
+    - Periodic Summary
+        - Pick metrics (balance, gain, etc.)
+        - Pick repetition period (week, month, quarter, annual)
+        - Pick date range
+        - Pick accounts?
+        - Or just an account list.
+        - Would need to add horizontal scrolling support.
+        - Ability to lock left-most columns
+
+
     - Securites/Mutual Fund List
 
         - Add % of total cost basis column
@@ -431,8 +442,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 - RowTable To Do:
-    - Sort by columns
-
     - Users of RowTable et al:
         - RowTable
             - ReconcilerWindow
@@ -575,9 +584,13 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 Priorities:
+    - Security Sell transactions don't generate capital gain/loss entry.
+
     - Cost basis adjustment transaction?
         - A lot specific ROC?
 
     - Auto complete
 
     - Search
+
+

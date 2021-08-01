@@ -151,7 +151,7 @@ class AppOpenScreen extends React.Component {
         return (
             <div className="FlexC W-100 H-100 P-1 Mx-auto FlexC-column">
                 <div className="Mb-4 Mt-4">
-                    <h2 className="Text-center">
+                    <h2 className="Text-center App-title">
                         {userMsg('AppOpeningScreen-title_main')}
                     </h2>
                     <h4 className="Text-center">
@@ -339,6 +339,8 @@ export default class App extends React.Component {
 
         this._fileImporter = new FileImporter(this._accessor);
 
+        ipcRenderer.invoke('async-setTitle', userMsg('App-empty_main_title'));
+
         this.setState({
             appState: 'openingScreen',
             mruPathNames: startupOptions.mruPathNames,
@@ -417,6 +419,9 @@ export default class App extends React.Component {
                 await asyncChangeStartupOptions({ currentDir: currentDir });
             }
 
+            ipcRenderer.invoke('async-setTitle', userMsg('App-project_main_title',
+                pathName));
+
             this.setState({
                 mruPathNames: mruPathNames,
                 appState: 'mainWindow',
@@ -438,6 +443,8 @@ export default class App extends React.Component {
                 if (postExit) {
                     postExit();
                 }
+
+                ipcRenderer.invoke('async-setTitle', userMsg('App-empty_main_title'));
             }
             catch (e) {
                 this.setState({

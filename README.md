@@ -1,4 +1,4 @@
-# Mimon
+# mimon
 A personal accounting application written in Javascript and [React](https://reactjs.org/), and running natively using [Electron](https://electronjs.org/).
 
 I had been using [jGnash](https://sourceforge.net/projects/jgnash/) for my personal accounting, which I did like, but there are enough annoying things with Java and different versions of Java that I started this project to escape from Java.

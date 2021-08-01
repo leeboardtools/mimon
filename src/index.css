@@ -71,6 +71,12 @@ label {
 
 
 
+.App-title {
+    font-family: 'Ubuntu', sans-serif;
+    font-size:42px;
+}
+
+
 
 .PageTitle {
     margin-top: 0.5rem;

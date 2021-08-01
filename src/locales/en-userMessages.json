@@ -67,6 +67,8 @@
     "MainWindow-action_modify_project_settings": "Modify Project Settings",
 
     
+    "App-empty_main_title": "mimon",
+    "App-project_main_title": ["mimon - ", ""],
 
     "App-mru_open_failed": ["Could not open '", "'. ", ""],
     "App-open_file_title": "Accounting File To Open",
@@ -103,7 +105,7 @@
     "App-openDevTools": "Open Developer's Tools",
 
 
-    "AppOpeningScreen-title_main": "MiMoN",
+    "AppOpeningScreen-title_main": "mimon",
     "AppOpeningScreen-title_secondary": "A personal finance app",
     "AppOpeningScreen-title_from": "from LeeboardTools",
     "AppOpeningScreen-mru_title": "Recently Opened:",
@@ -111,11 +113,11 @@
     "AppOpeningScreen-open_file": "Open an Existing Accounting Project...",
     "AppOpeningScreen-import_file": "Import a jGnash XML Accounting Project...",
     "AppOpeningScreen-force_reload": "Force Reload",
-    "AppOpeningScreen-exit":"Exit MiMoN",
+    "AppOpeningScreen-exit":"Exit mimon",
 
 
     "FileCreator-default_project_name": "Untitled",
-    "FileCreator-default_project_folder": "MiMoN",
+    "FileCreator-default_project_folder": "mimon",
     "FileCreator-project_name_required": "A project name is required.",
     "FileCreator-cannot_make_base_dir": ["Could not create the main folder. ", ""],
     "FileCreator-file_create_warnings": ["The file '", "' was created, but with the following issues:"],

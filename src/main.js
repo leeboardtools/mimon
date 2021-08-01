@@ -66,6 +66,9 @@ ipcMain.handle('async-setFullScreen', (event, arg) => {
     mainWindow.setFullScreen(arg);
 });
 
+ipcMain.handle('async-setTitle', (event, arg) => {
+    mainWindow.setTitle(arg);
+});
 
 
 
