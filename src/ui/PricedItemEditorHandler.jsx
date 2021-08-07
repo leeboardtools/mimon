@@ -38,7 +38,6 @@ export class PricedItemEditorHandler extends MainWindowHandlerBase {
     /**
      * @callback PricedItemEditorHandler~endEditCallback
      * @param {PricedItemDataItem} pricedItemDataItem
-     * @returns 
      */
 
     /**
