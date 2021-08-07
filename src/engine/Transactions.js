@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { userMsg, userError } from '../util/UserMessages';
-import { NumericIdGenerator } from '../util/NumericIds';
+import { BigIntIdGenerator } from '../util/BigIntIds';
 import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
 import { SortedArray } from '../util/SortedArray';
 import { doSetsHaveSameElements } from '../util/DoSetsHaveSameElements';
@@ -1103,7 +1103,7 @@ class AccountStatesUpdater {
                     }
                 }
                 else {
-                    accountState = { lotStates: [] };
+                    accountState = { lotStates: [], quantityBaseValue: 0, };
                 }
 
                 if (isDebug) {
@@ -1238,7 +1238,7 @@ export class TransactionManager extends EventEmitter {
         this._accountingSystem = accountingSystem;
         this._handler = options.handler;
         
-        this._idGenerator = new NumericIdGenerator(options.idGenerator 
+        this._idGenerator = new BigIntIdGenerator(options.idGenerator 
             || this._handler.getIdGeneratorOptions());
 
         const undoManager = accountingSystem.getUndoManager();
@@ -1503,7 +1503,7 @@ export class TransactionManager extends EventEmitter {
         const transactionDataItems 
             = await this.asyncGetTransactionDataItemsWithIds(transactionIds);
 
-        let accountState = { lotStates: [] };
+        let accountState = { lotStates: [], quantityBaseValue: 0, };
 
         accountStatesByOrder.length = 0;
         accountStatesByTransactionId.clear();
@@ -2597,7 +2597,7 @@ export class TransactionManager extends EventEmitter {
 export class TransactionsHandler {
 
     /**
-     * @returns {NumericIdGenerator~Options}    The id generator options for 
+     * @returns {BigIntIdGenerator~Options}    The id generator options for 
      * initializing the id generator.
      */
     getIdGeneratorOptions() {
@@ -2722,7 +2722,7 @@ export class TransactionsHandler {
      * @param {Iterator}    accountStateUpdates Iterator returning two element arrays 
      * whose first element is an account id and whose second element is the current 
      * {@link AccountStateDataItem} for the account.
-     * @param {NumericIdGenerator~Options|undefined}  idGeneratorOptions    The 
+     * @param {BigIntIdGenerator~Options|undefined}  idGeneratorOptions    The 
      * current state of the id generator, if <code>undefined</code> the generator state 
      * hasn't changed.
      * @returns {TransactionDataItem[]} Array containing the updated data items for 

@@ -1925,6 +1925,7 @@ test('Transactions-lotTransactions', async () => {
 
     // Make sure account state before first transaction is empty...
     result = await transactionManager.asyncGetAccountStateDataItemsBeforeTransaction(
+        aaplId,
         settingsA.id
     );
     expect(result).toEqual([initialAccountState]);
