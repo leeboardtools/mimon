@@ -124,14 +124,41 @@ export class SortedArray {
      * @returns {number}    The index, -1 if value is not in the array.
      */
     indexOf(value) {
+        const result = this.indexInfoOf(value);
+        return (result.isInArray) ? result.index : -1;
+    }
+
+
+    /**
+     * @typedef {object} SortedArray~IndexInfo
+     * @property {number} index The index of the element that is equal to or is the 
+     * closest but less than the value.
+     * @property {boolean} isInArray If <code>true</code> then the value is in the
+     * array at index, otherwise index is the index of the element that is closest
+     * but less than the value, -1 if there is no element less than. 
+     * @property {*} [value] If isInArray is <code>true</code> this is set to the
+     * value that would be returned by calling {@link SortedArray#at} with index.
+     */
+
+    /**
+     * Retrieves the index information for a value.
+     * @param {*} value 
+     * @returns {SortedArray~IndexInfo}
+     */
+    indexInfoOf(value) {
         const index = this.indexLE(value);
+        const result = {
+            index: index,
+        };
         if ((index >= 0) && (index < this._array.length)) {
             if (!this._compare(value, this._array[index])) {
-                return index;
+                result.isInArray = true;
+                result.value = this._array[index];
             }
         }
-        return -1;
+        return result;
     }
+
 
     /**
      * Adds a value to the array.
@@ -204,9 +231,10 @@ export class SortedArray {
      * Calls a callback function for each value in the array, similar to 
      * {@link Array.forEach}.
      * @param {Function} callback
+     * @param {*} [thisArg]
      */
-    forEach(callback) {
-        return this._array.forEach(callback);
+    forEach(callback, thisArg) {
+        return this._array.forEach(callback, thisArg);
     }
 
 }
