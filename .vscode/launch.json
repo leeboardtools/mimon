@@ -5,14 +5,32 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Jest Tests",
+            "name": "Debug All Jest Tests",
             "type": "node",
             "request": "launch",
             "disableOptimisticBPs": true,
             "runtimeArgs": [
-              "--inspect-brk",
-              "${workspaceRoot}/node_modules/.bin/jest",
-              "--runInBand"
+                "--inspect-brk",
+                "${workspaceRoot}/node_modules/.bin/jest",
+                "--runInBand"
+            ],
+            "cwd": "${workspaceRoot}/",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "port": 9229
+        },
+        {
+            "name": "Debug Current Jest Test",
+            "type": "node",
+            "request": "launch",
+            "disableOptimisticBPs": true,
+            "runtimeArgs": [
+                "${workspaceRoot}/node_modules/.bin/jest",
+                "--inspect-brk",
+                "--runInBand"
+            ],
+            "args": [
+                "${fileBasenameNoExtension}",
             ],
             "cwd": "${workspaceRoot}/",
             "console": "integratedTerminal",
