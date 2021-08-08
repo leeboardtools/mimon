@@ -1606,7 +1606,7 @@ export class EngineAccessor extends EventEmitter {
      * Retrieves the account state data item immediately after a transaction has 
      * been applied to the account.
      * @param {number} accountId 
-     * @param {number} transactionId 
+     * @param {number|string} transactionId 
      * @returns {AccountStateDataItem[]}    An array containing the account states 
      * immediately after a transaction has been applied. Multiple account states are 
      * returned if there are multiple splits referring to the account. The referring 
@@ -1624,7 +1624,7 @@ export class EngineAccessor extends EventEmitter {
      * Retrieves the account state data item immediately before a transaction has 
      * been applied to the account.
      * @param {number} accountId 
-     * @param {number} transactionId 
+     * @param {number|string} transactionId 
      * @returns {AccountStateDataItem[]}    An array containing the account states 
      * immediately before a transaction is applied. Multiple account states are 
      * returned if there are multiple splits referring to the account. The referring 
@@ -1640,8 +1640,8 @@ export class EngineAccessor extends EventEmitter {
      * for all the transactions between two transactions. The account states are after
      * the transactions have been applied.
      * @param {number} accountId 
-     * @param {number} transactionIdA 
-     * @param {number} transactionIdB 
+     * @param {number|string} transactionIdA 
+     * @param {number|string} transactionIdB 
      * @returns {AccountStateAndTransactionInfo[]}
      */
     async asyncGetAccountStateAndTransactionDataItems(accountId, 

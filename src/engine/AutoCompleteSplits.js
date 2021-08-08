@@ -5,7 +5,7 @@ import { cleanSpaces } from '../util/StringUtils';
  * What's returned by {@link AutoCompleteSplitsManager#getSplitInfos}
  * @typedef {object}    AutoCompleteSplitsInfo
  * @property {string}   description
- * @property {number}   transactionId
+ * @property {number|string}   transactionId
  * @property {number}   splitIndex
  */
 
@@ -13,7 +13,7 @@ import { cleanSpaces } from '../util/StringUtils';
  * @typedef {object}    AutoCompleteSplitsManagerEntry
  * @protected
  * @property {string}   description
- * @property {number}   transactionId
+ * @property {number|string}   transactionId
  * @property {number[]} accountIds
  */
 

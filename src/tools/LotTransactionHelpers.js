@@ -60,8 +60,8 @@ async function asyncGetAccountStates(args) {
  * @typedef {object} LotTransactionHelpers~asyncCreateSplitDataItemForSPLITArgs
  * @property {EngineAccessor}   accessor
  * @property {number}   accountId
- * @property {number}   [transactionId] Either transactionId or ymdDate is required,
- * only one can be specified.
+ * @property {number|string}   [transactionId] Either transactionId or ymdDate 
+ * is required, only one can be specified.
  * @property {YMDDate|string}   [ymdDate]
  * @property {number}   deltaSharesBaseValue    The change in the total number of 
  * shares, > 0 for a stock split, < 0 for a reverse stock split.
@@ -148,8 +148,8 @@ export async function asyncCreateSplitDataItemForSPLIT(args) {
  *  LotTransactionHelpers~asyncCreateTransactionDataItemForRETURN_OF_CAPITALArgs
  * @property {EngineAccessor}   accessor
  * @property {number}   accountId
- * @property {number}   [transactionId] Either transactionId or ymdDate is required,
- * only one can be specified.
+ * @property {number|string}   [transactionId] Either transactionId or ymdDate 
+ * is required, only one can be specified.
  * @property {YMDDate|string}   [ymdDate]
  * @property {number}   rocBaseValue    The amount of capital returned, must be &gt; 0.
  */

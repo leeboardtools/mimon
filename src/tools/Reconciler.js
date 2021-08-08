@@ -429,7 +429,7 @@ export class Reconciler extends EventEmitter {
 
     /**
      * @typedef {object} Reconciler~SplitInfo
-     * @property {number}   transactionId   The id of the transaction.
+     * @property {number|string}   transactionId   The id of the transaction.
      * @property {number}   splitIndex  The index of the split in the transaction.
      * @property {boolean}  markReconciled  If <code>true</code> the split has been
      * marked as reconciled (i.e. it's pending).

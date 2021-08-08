@@ -9,7 +9,7 @@ import { areSimilar } from '../util/AreSimilar';
  * @typedef {object} AccountStateDataItem
  * @property {string}   ymdDate The date this state represented as a 
  * {@link YMDDate} string.
- * @property {number}   [transactionId]   The id of the transaction that resulted
+ * @property {number|string}   [transactionId]   The id of the transaction that resulted
  * in this account state, <code>undefined</code> if this is an intial account state.
  * @property {number}   quantityBaseValue   The base value of the quantity of the 
  * state. The applicable quantity definition is found in the account's priced item's 
@@ -28,7 +28,7 @@ import { areSimilar } from '../util/AreSimilar';
 /**
  * @typedef {object} AccountState
  * @property {YMDDate}  ymdDate The date this state represents.
- * @property {number}   [transactionId]   The id of the transaction that resulted
+ * @property {number|string}   [transactionId]   The id of the transaction that resulted
  * in this account state, <code>undefined</code> if this is an intial account state.
  * @property {number}   quantityBaseValue   The base value of the quantity of the 
  * state. The applicable quantity definition is found in the account's priced 

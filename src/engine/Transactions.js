@@ -1719,7 +1719,7 @@ export class TransactionManager extends EventEmitter {
      * account ids, in which case the result is whose elements correspond to the 
      * result that would have been returned if the corresponding account id were 
      * passed directly. If this is an array then transactionId should also be an array.
-     * @param {number|number[]} transactionId 
+     * @param {number|number[]|string|string[]} transactionId 
      * @returns {AccountStateDataItem[]|AccountStateDataItem[][]}    
      * An array containing the account states immediately after a transaction has 
      * been applied. Multiple account states are returned if there are multiple 
@@ -1741,7 +1741,7 @@ export class TransactionManager extends EventEmitter {
     /**
      * For testing...
      * @param {number} accountId 
-     * @param {number} transactionId 
+     * @param {number|string} transactionId 
      * @param {number} byOrderLength
      */
     async asyncFlushAccountStateDataItems(accountId, transactionId, byOrderLength) {
@@ -1759,7 +1759,7 @@ export class TransactionManager extends EventEmitter {
      * account ids, in which case the result is whose elements correspond to the 
      * result that would have been returned if the corresponding account id were 
      * passed directly. If this is an array then transactionId should also be an array.
-     * @param {number|number[]} transactionId 
+     * @param {number|number[]|string|string[]} transactionId 
      * @returns {AccountStateDataItem[]|AccountStateDataItem[]}    An array 
      * containing the account states immediately before a transaction is applied. 
      * Multiple account states are returned if there are multiple splits referring 
