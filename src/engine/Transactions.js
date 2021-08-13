@@ -1291,6 +1291,14 @@ export class TransactionManager extends EventEmitter {
 
 
     /**
+     * @returns {number} The last change id, this is changed any time transactions
+     * are modified. The only guarantee on the values returned is that for a very large
+     * number of contiguous transaction modifications the values will be unique.
+     */
+    getLastChangeId() { return this._handler.getLastChangeId(); }
+
+
+    /**
      * Retrieves the dates of the earliest and latest transactions, optionally 
      * restricted to only the transactions that refer to a specified account.
      * @param {(number|undefined)} accountId If defined only transactions that 
@@ -1672,6 +1680,18 @@ export class TransactionManager extends EventEmitter {
 
         return (accountIds === accountId)
             ? result : result[0];
+    }
+
+
+    /**
+     * Retrieves a change id that's modified each time a transaction referring to the
+     * account is updated, added, or removed.
+     * @param {number} accountId 
+     * @returns {number|undefined} <code>undefined</code> is returned if the account
+     * has not had any transactions applied to it.
+     */
+    getAccountLastChangeId(accountId) {
+        return this._handler.getAccountLastChangeId(accountId);
     }
 
 
@@ -2595,6 +2615,29 @@ export class TransactionManager extends EventEmitter {
  * @interface
  */
 export class TransactionsHandler {
+    constructor() {
+        this._lastChangeId = 0;
+    }
+
+    /**
+     * @returns {number} The last change id, this is changed any time transactions
+     * are modified. The only guarantee on the values returned is that for a very large
+     * number of contiguous transaction modifications the values will be unique.
+     */
+    getLastChangeId() { return this._lastChangeId; }
+
+    /**
+     * Updates the last change id.
+     */
+    markChanged() { 
+        if (this._lastChangeId >= Number.MAX_SAFE_INTEGER) {
+            this._lastChangeId = 1;
+        }
+        else {
+            ++this._lastChangeId; 
+        }
+    }
+
 
     /**
      * @returns {BigIntIdGenerator~Options}    The id generator options for 
@@ -2602,6 +2645,18 @@ export class TransactionsHandler {
      */
     getIdGeneratorOptions() {
         throw Error('TransactionsHandler.getIdGeneratorOptions() abstract method!');
+    }
+
+
+    /**
+     * Retrieves a change id that's modified each time a transaction referring to the
+     * account is updated, added, or removed.
+     * @param {number} accountId 
+     * @returns {number|undefined} <code>undefined</code> is returned if the account
+     * has not had any transactions applied to it.
+     */
+    getAccountLastChangeId(accountId) {
+        throw Error('TransactionsHandler.getAccountLastChangeId() abstract method!');
     }
 
 
@@ -2950,16 +3005,32 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
         }
     }
 
+    getAccountLastChangeId(accountId) {
+        const accountStateDataItem = this._currentAccountStatesById.get(accountId);
+        if (accountStateDataItem) {
+            return accountStateDataItem.lastTransactionChangeId;
+        }
+    }
+
+    _getCurrentAccountStateDataItem(accountId) {
+        let accountStateDataItem = this._currentAccountStatesById.get(accountId);
+        if (accountStateDataItem) {
+            accountStateDataItem = AS.getAccountStateDataItem(accountStateDataItem, true);
+            delete accountStateDataItem.lastTransactionChangeId;
+            return accountStateDataItem;
+        }
+    }
+
 
     getCurrentAccountStateDataItem(accountId) {
         if (Array.isArray(accountId)) {
             const result = [];
             accountId.forEach((id) =>
-                result.push(this._currentAccountStatesById.get(id)));
+                result.push(this._getCurrentAccountStateDataItem(id)));
             return result;
         }
 
-        return this._currentAccountStatesById.get(accountId);
+        return this._getCurrentAccountStateDataItem(accountId);
     }
 
 
@@ -3101,6 +3172,8 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
     async asyncUpdateTransactionDataItems(transactionIdAndDataItemPairs, 
         accountStateUpdates, idGeneratorOptions) {
         
+        this.markChanged();
+
         // When to update nonReconciled transactions?
         // - Delete
         //      - oldEntry has list of accounts, just go through that list.
@@ -3371,9 +3444,14 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                     this._currentAccountStatesById.delete(accountId);
                 }
                 else {
+                    accountStateDataItem = AS.getAccountStateDataItem(
+                        accountStateDataItem, true);
+                    accountStateDataItem.lastTransactionChangeId = this._lastChangeId;
+                    
                     this._currentAccountStatesById.set(accountId, accountStateDataItem);
                 }
             }
+
         }
 
         return result;
@@ -3408,13 +3486,7 @@ export class InMemoryTransactionsHandler extends TransactionsHandlerImplBase {
 
         options = options || {};
         this._idGeneratorOptions = options.idGeneratorOptions;
-
-        this._lastChangeId = 0;
     }
-
-    getLastChangeId() { return this._lastChangeId; }
-
-    markChanged() { ++this._lastChangeId; }
 
 
     /**
@@ -3431,6 +3503,7 @@ export class InMemoryTransactionsHandler extends TransactionsHandlerImplBase {
 
         json.idGeneratorOptions = this._idGeneratorOptions;
         json.dataItems = dataItems;
+        json.lastChangeId = this._lastChangeId;
 
         return json;
     }
@@ -3453,7 +3526,12 @@ export class InMemoryTransactionsHandler extends TransactionsHandlerImplBase {
             this._dataItemEntryPairsById.set(id, [dataItem, entry]);
         });
 
-        this.markChanged();
+        if (json.lastChangeId !== undefined) {
+            this._lastChangeId = json.lastChangeId;
+        }
+        else {
+            this.markChanged();
+        }
     }
 
 

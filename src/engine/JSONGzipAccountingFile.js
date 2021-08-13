@@ -451,8 +451,6 @@ class JSONGzipTransactionsHandler extends TransactionsHandlerImplBase {
             asyncUpdateItemsInGroup: this._itemGroups.asyncUpdateItemsInGroup,
     
         });
-
-        this._lastChangeId = 0;
     }
 
     itemTagFromItem(item) {
@@ -471,6 +469,7 @@ class JSONGzipTransactionsHandler extends TransactionsHandlerImplBase {
             entries: this.entriesToJSON(),
             idGeneratorOptions: this._idGeneratorOptions,
             itemTags: this._itemManager.itemTagsToJSON(),
+            lastChangeId: this._lastChangeId,
         };
     }
 
@@ -479,15 +478,10 @@ class JSONGzipTransactionsHandler extends TransactionsHandlerImplBase {
         this._idGeneratorOptions = json.idGeneratorOptions;
         this._itemManager.itemTagsFromJSON(json.itemTags);
         this.entriesFromJSON(json.entries);
-    }
 
-
-    getLastChangeId() { 
-        return this._lastChangeId; 
-    }
-
-    markChanged() { 
-        ++this._lastChangeId; 
+        if (json.lastChangeId !== undefined) {
+            this._lastChangeId = json.lastChangeId;
+        }
     }
 
 
@@ -536,8 +530,6 @@ class JSONGzipTransactionsHandler extends TransactionsHandlerImplBase {
                 result[removedItems[i]] = removedItems[i];
             }
             await this._itemManager.asyncRemoveItems(idsToRemove);
-
-            this.markChanged();
         }
 
         return result;

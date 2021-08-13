@@ -873,6 +873,11 @@ test('TransactionManager-add_modify', async () => {
         ]
     };
 
+    let managerChangeIdE = manager.getLastChangeId();
+    let cashChangeIdE = manager.getAccountLastChangeId(sys.cashId);
+    let checkingChangeIdE = manager.getAccountLastChangeId(sys.checkingId);
+    let brokerageAChangeIdE = manager.getAccountLastChangeId(sys.brokerageAId);
+
     // Check validate only.
     const validateE = (await manager.asyncAddTransactions(settingsE, true))
         .newTransactionDataItem;
@@ -882,6 +887,11 @@ test('TransactionManager-add_modify', async () => {
 
     await expect(manager.asyncAddTransactions({ splits: []})).rejects.toThrow();
 
+    // No changes to change ids...
+    expect(manager.getLastChangeId()).toEqual(managerChangeIdE);
+    expect(manager.getAccountLastChangeId(sys.cashId)).toEqual(cashChangeIdE);
+    expect(manager.getAccountLastChangeId(sys.checkingId)).toEqual(checkingChangeIdE);
+    expect(manager.getAccountLastChangeId(sys.brokerageAId)).toEqual(brokerageAChangeIdE);
 
 
     const transactionE = (await manager.asyncAddTransactions(settingsE))
@@ -907,6 +917,13 @@ test('TransactionManager-add_modify', async () => {
         .sort((a, b) => a - b))
         .toEqual(checkingNonReconciledIds);        
 
+    // Expect changes to these change ids...
+    expect(manager.getLastChangeId()).not.toEqual(managerChangeIdE);
+    expect(manager.getAccountLastChangeId(sys.cashId)).not.toEqual(cashChangeIdE);
+    expect(manager.getAccountLastChangeId(sys.checkingId)).not.toEqual(checkingChangeIdE);
+    // No change to these...
+    expect(manager.getAccountLastChangeId(sys.brokerageAId)).toEqual(brokerageAChangeIdE);
+
 
     const settingsF = Object.assign({}, settingsE);
     const transactionF = (await manager.asyncAddTransactions(settingsF))
@@ -929,6 +946,11 @@ test('TransactionManager-add_modify', async () => {
         .toEqual(checkingNonReconciledIds);
     
     
+    const managerChangeIdF = manager.getLastChangeId();
+    const cashChangeIdF = manager.getAccountLastChangeId(sys.cashId);
+    const checkingChangeIdF = manager.getAccountLastChangeId(sys.checkingId);
+    const brokerageAChangeIdF = manager.getAccountLastChangeId(sys.brokerageAId);
+
     const changesF1 = { id: settingsF.id, 
         description: 'This is description F1', 
     };
@@ -944,6 +966,13 @@ test('TransactionManager-add_modify', async () => {
         .sort((a, b) => a - b))
         .toEqual(checkingNonReconciledIds);
     
+
+    // Expect changes to these change ids...
+    expect(manager.getLastChangeId()).not.toEqual(managerChangeIdF);
+    expect(manager.getAccountLastChangeId(sys.cashId)).not.toEqual(cashChangeIdF);
+    expect(manager.getAccountLastChangeId(sys.checkingId)).not.toEqual(checkingChangeIdF);
+    // No change to these...
+    expect(manager.getAccountLastChangeId(sys.brokerageAId)).toEqual(brokerageAChangeIdF);
 
 
     const changesD1 = {
@@ -1200,17 +1229,37 @@ test('TransactionManager~remove', async () => {
         .sort((a, b) => a - b))
         .toEqual(householdNonReconciledIds);
 
+    
+    
+    let managerChangeId = manager.getLastChangeId();
+    let cashChangeId = manager.getAccountLastChangeId(sys.cashId);
+    let checkingChangeId = manager.getAccountLastChangeId(sys.checkingId);
+    let brokerageAChangeId = manager.getAccountLastChangeId(sys.brokerageAId);
 
     
     await expect(manager.asyncRemoveTransactions(-123)).rejects.toThrow();
     expect(await manager.asyncGetTransactionDateRange(sys.householdId))
         .toEqual([new YMDDate(settingsD.ymdDate), new YMDDate(settingsD.ymdDate)]);
+    
+    // No change to change ids...
+    expect(manager.getLastChangeId()).toEqual(managerChangeId);
+    expect(manager.getAccountLastChangeId(sys.cashId)).toEqual(cashChangeId);
+    expect(manager.getAccountLastChangeId(sys.checkingId)).toEqual(checkingChangeId);
+    expect(manager.getAccountLastChangeId(sys.brokerageAId)).toEqual(brokerageAChangeId);
+
 
     result = await manager.asyncRemoveTransactions(settingsD.id);
     const removeD = result.removedTransactionDataItem;
     expect(removeD).toEqual(settingsD);
     expect(await manager.asyncGetTransactionDataItemsWithIds(settingsD.id))
         .toBeUndefined();
+    
+    // Expect these changes...
+    expect(manager.getLastChangeId()).not.toEqual(managerChangeId);
+    expect(manager.getAccountLastChangeId(sys.cashId)).not.toEqual(cashChangeId);
+    // But not these...
+    expect(manager.getAccountLastChangeId(sys.checkingId)).toEqual(checkingChangeId);
+    expect(manager.getAccountLastChangeId(sys.brokerageAId)).toEqual(brokerageAChangeId);
     
     // Make sure data item is a copy.
     removeD.splits[0].accountId = 'abc';

@@ -277,9 +277,12 @@ test('JSONGzipAccountingFile-transactions', async () => {
             sys.aaplPricedItemId, '2005-02-28', '2014-12-31');
         const msftPrices1 = await priceManager1.asyncGetPriceDataItemsInDateRange(
             sys.msftPricedItemId, '2014-12-31', '2014-01-01');
-        
+
         await file1.asyncWriteFile();
         expect(file1.isModified()).toBeFalsy();
+
+        const transactionChangeId1 = transactionManager1.getLastChangeId();
+        console.log('transactionChangeId: ' + transactionChangeId1);
 
         await file1.asyncCloseFile();
 
@@ -292,6 +295,8 @@ test('JSONGzipAccountingFile-transactions', async () => {
 
         const accountingSystem2 = file2.getAccountingSystem();
         const transactionManager2 = accountingSystem2.getTransactionManager();
+
+        expect(transactionManager2.getLastChangeId()).toEqual(transactionChangeId1);
 
         const [ checkingYMDDateFirst2, checkingYMDDateLast2 ] 
             = await transactionManager2.asyncGetTransactionDateRange(sys.checkingId);
