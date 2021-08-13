@@ -61,8 +61,11 @@ export class EngineAccessor extends EventEmitter {
         this._handleAccountsModify = this._handleAccountsModify.bind(this);
         this._handleAccountRemove = this._handleAccountRemove.bind(this);
         this._handleTransactionsAdd = this._handleTransactionsAdd.bind(this);
+        this._handleTransactionsPreAdd = this._handleTransactionsPreAdd.bind(this);
         this._handleTransactionsModify = this._handleTransactionsModify.bind(this);
+        this._handleTransactionsPreModify = this._handleTransactionsPreModify.bind(this);
         this._handleTransactionsRemove = this._handleTransactionsRemove.bind(this);
+        this._handleTransactionsPreRemove = this._handleTransactionsPreRemove.bind(this);
         this._handleReminderAdd = this._handleReminderAdd.bind(this);
         this._handleReminderModify = this._handleReminderModify.bind(this);
         this._handleReminderRemove = this._handleReminderRemove.bind(this);
@@ -170,10 +173,16 @@ export class EngineAccessor extends EventEmitter {
             this._transactionManager = _accountingSystem.getTransactionManager();
             this._transactionManager.on('transactionsAdd', 
                 this._handleTransactionsAdd);
+            this._transactionManager.on('transactionsPreAdd', 
+                this._handleTransactionsPreAdd);
             this._transactionManager.on('transactionsModify', 
                 this._handleTransactionsModify);
+            this._transactionManager.on('transactionsPreModify', 
+                this._handleTransactionsPreModify);
             this._transactionManager.on('transactionsRemove', 
                 this._handleTransactionsRemove);
+            this._transactionManager.on('transactionsPreRemove', 
+                this._handleTransactionsPreRemove);
 
             this._reminderManager = _accountingSystem.getReminderManager();
             this._reminderManager.on('reminderAdd', this._handleReminderAdd);
@@ -249,10 +258,16 @@ export class EngineAccessor extends EventEmitter {
             if (this._transactionManager) {
                 this._transactionManager.off('transactionsAdd', 
                     this._handleTransactionsAdd);
+                this._transactionManager.off('transactionsPreAdd', 
+                    this._handleTransactionsPreAdd);
                 this._transactionManager.off('transactionsModify', 
                     this._handleTransactionsModify);
+                this._transactionManager.off('transactionsPreModify', 
+                    this._handleTransactionsPreModify);
                 this._transactionManager.off('transactionsRemove', 
                     this._handleTransactionsRemove);
+                this._transactionManager.off('transactionsPreRemove', 
+                    this._handleTransactionsPreRemove);
                 this._transactionManager = undefined;
             }
 
@@ -2074,15 +2089,29 @@ export class EngineAccessor extends EventEmitter {
         // TODO: Apply filtering.
         this.emit('transactionsAdd', result);
     }
+    _handleTransactionsPreAdd(result) {
+        // TODO: Apply filtering.
+        this.emit('transactionsPreAdd', result);
+    }
 
     _handleTransactionsModify(result) {
         // TODO: Apply filtering.
         this.emit('transactionsModify', result);
     }
 
+    _handleTransactionsPreModify(result) {
+        // TODO: Apply filtering.
+        this.emit('transactionsPreModify', result);
+    }
+
     _handleTransactionsRemove(result) {
         // TODO: Apply filtering.
         this.emit('transactionsRemove', result);
+    }
+
+    _handleTransactionsPreRemove(result) {
+        // TODO: Apply filtering.
+        this.emit('transactionsPreRemove', result);
     }
 
 

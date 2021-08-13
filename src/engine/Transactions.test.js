@@ -774,8 +774,14 @@ test('TransactionManager-add_modify', async () => {
     let addEventArgs;
     manager.on('transactionsAdd', (arg) => addEventArgs = arg);
 
+    let preAddEventArgs;
+    manager.on('transactionsPreAdd', (arg) => preAddEventArgs = arg);
+
     let removeEventArg;
     manager.on('transactionsRemove', (arg) => removeEventArg = arg);
+
+    let preRemoveEventArg;
+    manager.on('transactionsPreRemove', (arg) => preRemoveEventArg = arg);
 
     let result;
     result = await manager.asyncAddTransactions([settingsB]);
@@ -799,6 +805,9 @@ test('TransactionManager-add_modify', async () => {
     // transactionsAdd event test
     expect(addEventArgs).toEqual({ newTransactionDataItems: newTransactionDataItemsB });
     expect(addEventArgs.newTransactionDataItems).toBe(newTransactionDataItemsB);
+    expect(preAddEventArgs).toEqual(
+        { newTransactionDataItems: newTransactionDataItemsB }
+    );
 
 
     // Make sure a copy was returned.
@@ -820,6 +829,9 @@ test('TransactionManager-add_modify', async () => {
     expect(removeEventArg).toEqual({
         removedTransactionDataItems: newTransactionDataItemsB
     });
+
+    // The pre-remove event should not have been fired.
+    expect(preRemoveEventArg).toBeUndefined();
 
     expect(await manager.asyncGetTransactionDataItemsInDateRange(0, '2019-10-05'))
         .toEqual([settingsA]);
@@ -994,6 +1006,9 @@ test('TransactionManager-add_modify', async () => {
     let modifyEventArg;
     manager.on('transactionsModify', (arg) => modifyEventArg = arg);
 
+    let preModifyEventArg;
+    manager.on('transactionsPreModify', (arg) => preModifyEventArg = arg);
+
     const changesE1 = {
         id: settingsE.id,
         splits: [
@@ -1021,6 +1036,11 @@ test('TransactionManager-add_modify', async () => {
         oldTransactionDataItems: [ settingsD, settingsE ]}
     );
     expect(modifyEventArg.newTransactionDataItems).toBe(resultDE1);
+
+    expect(preModifyEventArg).toEqual({ newTransactionDataItems: resultDE1, 
+        oldTransactionDataItems: [ settingsD, settingsE ]}
+    );
+
 
 
     // Make sure copies were returned.
@@ -1052,6 +1072,11 @@ test('TransactionManager-add_modify', async () => {
     await accountingSystem.getUndoManager().asyncUndoToId(result.undoId);
     expect(modifyEventArg).toEqual({ oldTransactionDataItems: resultDE1, 
         newTransactionDataItems: [ settingsD, settingsE ]}
+    );
+
+    // Pre-modify should not have changed...
+    expect(preModifyEventArg).toEqual({ newTransactionDataItems: resultDE1, 
+        oldTransactionDataItems: [ settingsD, settingsE ]}
     );
 
     expect(await manager.asyncGetTransactionDataItemWithId(settingsD1.id))
@@ -1280,6 +1305,9 @@ test('TransactionManager~remove', async () => {
     let removeEventArg;
     manager.on('transactionsRemove', (arg) => removeEventArg = arg);
 
+    let preRemoveEventArg;
+    manager.on('transactionsPreRemove', (arg) => preRemoveEventArg = arg);
+
     let addEventArgs;
     manager.on('transactionsAdd', (arg) => addEventArgs = arg);
 
@@ -1311,6 +1339,9 @@ test('TransactionManager~remove', async () => {
     // transactionsRemove event test
     expect(removeEventArg).toEqual({ removedTransactionDataItems: removedAE });
     expect(removeEventArg.removedTransactionDataItems).toBe(removedAE);
+
+    expect(preRemoveEventArg).toEqual({ removedTransactionDataItems: removedAE });
+    
 
     expect(await manager.asyncGetTransactionDateRange(sys.cashId))
         .toEqual([new YMDDate(settingsC.ymdDate), new YMDDate(settingsB.ymdDate)]);

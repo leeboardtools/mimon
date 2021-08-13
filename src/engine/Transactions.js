@@ -2273,9 +2273,26 @@ export class TransactionManager extends EventEmitter {
     }
 
 
+
+    /**
+     * Fired by {@link TransactionManager#asyncAddTransactions} before the
+     * transactions are added.
+     * <p>
+     * Unlike {@link TransactionManager~transactionsAdd} this is only fired by
+     * {@link TransactionManager#asyncAddTransactions}
+     * @event TransactionManager~transactionsPreAdd
+     * @type {object}
+     * @property {TransactionDataItem[]}    newTransactionDataItems The array of 
+     * newly added transaction data items being returned from the call to 
+     * {@link TransactionManager#asyncAddTransactions}.
+     */
+
     /**
      * Fired by {@link TransactionManager#asyncAddTransactions} after the
      * transactions have been added.
+     * <p>
+     * This is also fired if a call to {@link TransactionManager#asyncRemoveTransactions}
+     * is undone.
      * @event TransactionManager~transactionsAdd
      * @type {object}
      * @property {TransactionDataItem[]}    newTransactionDataItems The array of 
@@ -2377,6 +2394,11 @@ export class TransactionManager extends EventEmitter {
                     [transactionDataItem.id, transactionDataItem]);
             });
 
+            this.emit('transactionsPreAdd', 
+                { newTransactionDataItems: transactionDataItems.map(
+                    (dataItem) => getTransactionDataItem(dataItem, true)),
+                });
+
             await this._handler.asyncUpdateTransactionDataItems(
                 transactionIdAndDataItemPairs, currentAccountStateUpdates.entries(), 
                 this._idGenerator.toJSON());
@@ -2410,6 +2432,22 @@ export class TransactionManager extends EventEmitter {
     /**
      * Fired by {@link TransactionManager#asyncRemoveTransactions} after the 
      * transactions have been removed.
+     * <p>
+     * Unlike {@link TransactionManager~transactionsRemove} this is only fired by
+     * {@link TransactionManager#asyncRemoveTransactions}.
+     * @event TransactionManager~transactionsRemove
+     * @type {object}
+     * @property {TransactionDataItem[]}    removedTransactionDataItems The array of 
+     * removed transaction data items being returned by the call to 
+     * {@link TransactionManager#asyncRemoveTransactions}.
+     */
+
+    /**
+     * Fired by {@link TransactionManager#asyncRemoveTransactions} after the 
+     * transactions have been removed.
+     * <p>
+     * This is also fired when a call to {@link TransactionManager#asyncAddTransactions}
+     * is undone.
      * @event TransactionManager~transactionsRemove
      * @type {object}
      * @property {TransactionDataItem[]}    removedTransactionDataItems The array of 
@@ -2474,6 +2512,11 @@ export class TransactionManager extends EventEmitter {
             transactionIdAndDataItemPairs.push([dataItem.id]);
         }
 
+        this.emit('transactionsPreRemove', 
+            { removedTransactionDataItems: transactionDataItems.map(
+                (dataItem) => getTransactionDataItem(dataItem, true)),
+            });
+
         await this._handler.asyncUpdateTransactionDataItems(
             transactionIdAndDataItemPairs, currentAccountStateUpdates.entries());
 
@@ -2492,8 +2535,25 @@ export class TransactionManager extends EventEmitter {
 
 
     /**
+     * Fired by {@link TransactionManager#asyncModifyTransactions} just before all the 
+     * submitted transactions have been modified.
+     * <p>
+     * Unlike {@link TransactionManager~transactionsModify} this is only fired by
+     * {@link TransactionManager#asyncModifyTransactions}.
+     * @event TransactionManager~transactionsPreModify
+     * @type {object}
+     * @property {TransactionDataItem[]}    newTransactionDataItems Array of the 
+     * updated transaction data items.
+     * @property {TransactionDataItem[]}    oldTransactionDataItems Array fo the 
+     * old transaction data items.
+     */
+
+
+    /**
      * Fired by {@link TransactionManager#asyncModifyTransactions} after all the 
      * submitted transactions have been modified.
+     * <p>
+     * This is also fired when the transaction modifications are undone.
      * @event TransactionManager~transactionsModify
      * @type {object}
      * @property {TransactionDataItem[]}    newTransactionDataItems Array of the 
@@ -2581,6 +2641,14 @@ export class TransactionManager extends EventEmitter {
         for (let i = 0; i < transactionIds.length; ++i) {
             transactionIdAndDataItemPairs.push([transactionIds[i], newDataItems[i]]);
         }
+
+        this.emit('transactionsPreModify', 
+            {
+                newTransactionDataItems: newDataItems.map(
+                    (dataItem) => getTransactionDataItem(dataItem, true)),
+                oldTransactionDataItems: oldDataItems.map(
+                    (dataItem) => getTransactionDataItem(dataItem, true)),
+            });
 
         await this._handler.asyncUpdateTransactionDataItems(
             transactionIdAndDataItemPairs, currentAccountStateUpdates.entries());
