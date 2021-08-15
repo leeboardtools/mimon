@@ -360,6 +360,8 @@ export class PhraseMap {
 
     /**
      * @typedef {Array} PhraseMap~PhraseValue
+     * @property {Phrase} phrase
+     * @property {*} value
      */
 
 

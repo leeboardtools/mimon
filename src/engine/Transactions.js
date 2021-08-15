@@ -2840,8 +2840,8 @@ export class TransactionsHandler {
      * Main function for updating the transaction data items.
      * @param {*} transactionIdAndDataItemPairs Array of one or two element sub-arrays. 
      * The first element of each sub-array is the transaction id. For new or modified 
-     * transactions, the second element is the new data item. For accounts to be deleted, 
-     * this is <code>undefined</code>.
+     * transactions, the second element is the new data item. For transactions 
+     * to be deleted, this is <code>undefined</code>.
      * @param {Iterator}    accountStateUpdates Iterator returning two element arrays 
      * whose first element is an account id and whose second element is the current 
      * {@link AccountStateDataItem} for the account.
