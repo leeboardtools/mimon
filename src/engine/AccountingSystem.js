@@ -5,7 +5,6 @@ import { LotManager } from './Lots';
 import { TransactionManager } from './Transactions';
 import { PriceManager } from './Prices';
 import { ReminderManager } from './Reminders';
-import { AutoCompleteSplitsManager } from './AutoCompleteSplits';
 import { TransactionFilteringManager } from './TransactionFilters';
 import { UndoManager } from '../util/Undo';
 import { ActionManager } from '../util/Actions';
@@ -50,9 +49,6 @@ export class AccountingSystem extends EventEmitter {
         this._transactionFilteringManager
             = new TransactionFilteringManager(this, options.transactionFilteringManager);
 
-        this._autoCompleteSplitsManager 
-            = new AutoCompleteSplitsManager(this, options.autoCompleteSplitsManager);
-
         this._accountingActions = new AccountingActions(this);
 
 
@@ -75,7 +71,6 @@ export class AccountingSystem extends EventEmitter {
         await this._transactionManager.asyncSetupForUse();
         await this._reminderManager.asyncSetupForUse();
         await this._transactionFilteringManager.asyncSetupForUse();
-        await this._autoCompleteSplitsManager.asyncSetupForUse();
         await this._actionManager.asyncSetupForUse();
     }
 
@@ -88,11 +83,6 @@ export class AccountingSystem extends EventEmitter {
         if (this.undoManager) {
             this._undoManager.shutDownFromUse();
             this._undoManager = undefined;
-        }
-
-        if (this._autoCompleteSplitsManager) {
-            this._autoCompleteSplitsManager.shutdownFromUse();
-            this._autoCompleteSplitsManager = undefined;
         }
 
         if (this._transactionFilteringManager) {
@@ -171,11 +161,6 @@ export class AccountingSystem extends EventEmitter {
      * @returns {TransactionFilteringManager}
      */
     getTransactionFilteringManager() { return this._transactionFilteringManager; }
-
-    /**
-     * @returns {AutoCompleteSplitsManager}
-     */
-    getAutoCompleteSplitsManager() { return this._autoCompleteSplitsManager; }
 
     /**
      * @returns {UndoManager}

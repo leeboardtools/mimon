@@ -12,7 +12,6 @@ import { InMemoryPricesHandler } from './Prices';
 import { TransactionsHandlerImplBase } from './Transactions';
 import { InMemoryRemindersHandler } from './Reminders';
 import { InMemoryTransactionFilteringHandler } from './TransactionFilters';
-import { InMemoryAutoCompleteSplitsHandler } from './AutoCompleteSplits';
 import { UndoHandler } from '../util/Undo';
 import { ActionsHandler } from '../util/Actions';
 import { AccountingSystem, InMemoryAccountingSystemHandler } from './AccountingSystem';
@@ -128,16 +127,6 @@ class JSONGzipRemindersHandler extends InMemoryRemindersHandler {
  * The transaction filtering handler implementation.
  */
 class JSONGzipTransactionFilteringHandler extends InMemoryTransactionFilteringHandler {
-    constructor(accountingFile) {
-        super();
-        this._accountingFile = accountingFile;
-    }
-}
-
-/**
- * The auto-complete splits handler implementation.
- */
-class JSONGzipAutoCompleteSplitsHandler extends InMemoryAutoCompleteSplitsHandler {
     constructor(accountingFile) {
         super();
         this._accountingFile = accountingFile;
@@ -565,7 +554,6 @@ class JSONGzipLedgerFile {
         this._accountsHandler = accountingFile._accountsHandler;
         this._pricedItemsHandler = accountingFile._pricedItemsHandler;
         this._remindersHandler = accountingFile._remindersHandler;
-        this._autoCompleteSplitsHandler = accountingFile._autoCompleteSplitsHandler;
         this._lotsHandler = accountingFile._lotsHandler;
     }
 
@@ -579,8 +567,6 @@ class JSONGzipLedgerFile {
         this._accountsChangeId = this._accountsHandler.getLastChangeId();
         this._pricedItemsChangeId = this._pricedItemsHandler.getLastChangeId();
         this._remindersChangeId = this._remindersHandler.getLastChangeId();
-        this._autoCompleteSplitsChangeId 
-            = this._autoCompleteSplitsHandler.getLastChangeId();
         this._lotsChangeId = this._lotsHandler.getLastChangeId();
     }
 
@@ -590,8 +576,6 @@ class JSONGzipLedgerFile {
             || (this._accountsChangeId !== this._accountsHandler.getLastChangeId())
             || (this._pricedItemsChangeId !== this._pricedItemsHandler.getLastChangeId())
             || (this._remindersChangeId !== this._remindersHandler.getLastChangeId())
-            || (this._autoCompleteSplitsChangeId 
-                !== this._autoCompleteSplitsHandler.getLastChangeId())
             || (this._lotsChangeId !== this._lotsHandler.getLastChangeId());
     }
 
@@ -620,22 +604,12 @@ class JSONGzipLedgerFile {
             throw userError('JSONGzipAccountingFile-remindersHandler_tag_missing', 
                 pathName);
         }
-        /*
-        if (!json.autoCompleteSplitsHandlerHandler) {
-            throw userError(
-                'JSONGzipAccountingFile-autoCompleteSplitsHandler_tag_missing', 
-                pathName);
-        }
-        */
 
         this._accountingSystemHandler.fromJSON(json.accountingSystemHandler);
         this._accountsHandler.fromJSON(json.accountsHandler);
         this._pricedItemsHandler.fromJSON(json.pricedItemsHandler);
         this._remindersHandler.fromJSON(json.remindersHandler);
         this._lotsHandler.fromJSON(json.lotsHandler);
-
-        this._autoCompleteSplitsHandler.fromJSON(
-            json.autoCompleteSplitsHandler || {});
 
         this.cleanIsModified();
 
@@ -653,7 +627,6 @@ class JSONGzipLedgerFile {
             pricedItemsHandler: this._pricedItemsHandler.toJSON(),
             lotsHandler: this._lotsHandler.toJSON(),
             remindersHandler: this._remindersHandler.toJSON(),
-            autoCompleteSplitsHandler: this._autoCompleteSplitsHandler.toJSON(),
         };
 
         // Write out the file...
@@ -680,7 +653,6 @@ class JSONGzipLedgerFile {
         this._accountsHandler = undefined;
         this._pricedItemsHandler = undefined;
         this._remindersHandler = undefined;
-        this._autoCompleteSplitsHandler = undefined;
         this._lotsHandler = undefined;
         this._accountingFile = undefined;
     }
@@ -1098,7 +1070,6 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._lotsHandler = new JSONGzipLotsHandler(this);
         this._remindersHandler = new JSONGzipRemindersHandler(this);
         this._transactionFilteringHandler = new JSONGzipTransactionFilteringHandler(this);
-        this._autoCompleteSplitsHandler = new JSONGzipAutoCompleteSplitsHandler(this);
 
         this._historiesHandler = new JSONGzipHistoryHandlers(this,
             async (groupKey, groupItems) =>
@@ -1133,7 +1104,6 @@ class JSONGzipAccountingFile extends AccountingFile {
                 reminderManager: { handler: this._remindersHandler },
                 transactionFilteringManager: { 
                     handler: this._transactionFilteringHandler },
-                autoCompleteSplitsManager: { handler: this._autoCompleteSplitsHandler },
                 transactionManager: { handler: this._transactionsHandler },
                 undoManager: { handler: this._undoHandler },
                 actionManager: { handler: this._actionsHandler },
@@ -1233,7 +1203,6 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._accountsHandler = undefined;
         this._pricedItemsHandler = undefined;
         this._remindersHandler = undefined;
-        this._autoCompleteSplitsHandler = undefined;
         this._lotsHandler = undefined;
         this._pricesHandler = undefined;
         this._transactionsHandler = undefined;

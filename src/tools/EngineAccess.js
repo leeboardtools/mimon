@@ -192,9 +192,6 @@ export class EngineAccessor extends EventEmitter {
             this._transactionFilteringManager
                 = _accountingSystem.getTransactionFilteringManager();
 
-            this._autoCompleteSplitsManager 
-                = _accountingSystem.getAutoCompleteSplitsManager();
-            
             let pathName = accountingFile.getPathName();
             const stat = await fsPromises.stat(pathName);
             if (stat.isFile()) {
@@ -297,7 +294,6 @@ export class EngineAccessor extends EventEmitter {
             this._lotManager = undefined;
             this._reminderManager = undefined;
             this._transactionFilteringManager = undefined;
-            this._autoCompleteSplitsManager = undefined;
 
             this._projectSettingsPathName = undefined;
             this._projectSettings = undefined;
@@ -1813,19 +1809,6 @@ export class EngineAccessor extends EventEmitter {
      */
     getDueReminderDataItems(ymdDate) {
         return this._reminderManager.getDueReminderDataItems(ymdDate);
-    }
-
-    /**
-     * Retrieves an array containing {@link AutoCompleteSplitsInfo}s
-     * for transactions with splits with the given account id and a description
-     * containing the partial description. Descriptions are cleaned up.
-     * @param {number} accountId 
-     * @param {string} partialDescription 
-     * @returns {AutoCompleteSplitsInfo[]}
-     */
-    getAutoCompleteSplitInfos(accountId, partialDescription) {
-        return this._autoCompleteSplitsManager.getSplitInfos(
-            accountId, partialDescription);
     }
 
 

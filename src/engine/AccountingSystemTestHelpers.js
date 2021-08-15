@@ -13,7 +13,6 @@ import { InMemoryPricesHandler } from './Prices';
 import { InMemoryTransactionsHandler } from './Transactions';
 import { InMemoryRemindersHandler } from './Reminders';
 import { InMemoryTransactionFilteringHandler } from './TransactionFilters';
-import { InMemoryAutoCompleteSplitsHandler } from './AutoCompleteSplits';
 import { InMemoryUndoHandler } from '../util/Undo';
 import { InMemoryActionsHandler } from '../util/Actions';
 import { getYMDDate } from '../util/YMDDate';
@@ -54,10 +53,6 @@ export async function asyncCreateAccountingSystem(options) {
 
             transactionFilteringManager: {
                 handler: new InMemoryTransactionFilteringHandler(),
-            },
-
-            autoCompleteSplitsManager: {
-                handler: new InMemoryAutoCompleteSplitsHandler(),
             },
 
             actionManager: {
