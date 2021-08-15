@@ -731,12 +731,12 @@ export class InMemoryTransactionFilteringHandler extends TransactionFilteringHan
         const { transactionEntries, accountEntries } = json;
         if (transactionEntries) {
             transactionEntries.forEach((entry) => {
-                this._entriesByTransactionId.set(entry.transactionId, entry);
+                this._transactionEntriesById.set(entry.transactionId, entry);
             });
         }
         if (accountEntries) {
             accountEntries.forEach((entry) => {
-                this._entriesByTransactionId.set(entry.accountId, entry);
+                this._accountEntriesById.set(entry.accountId, entry);
             });
         }
 

@@ -271,6 +271,8 @@
     "JSONGzipAccountingFile-journal_transactions_missing": ["The file '", "' is not a valid mimon journal transactions file, the transactions section is missing,"],
     "JSONGzipAccountingFile-prices_tag_missing": ["The file '", "' is not a valid mimon prices file, the tag is incorrect or missing."],
     "JSONGzipAccountingFile-pricesHandler_tag_missing": ["The file '", "' is not a valid mimon prices file, the pricesHandler section is missing."],
+    "JSONGzipAccountingFile-transactionIndex_tag_missing": ["The file '", "' is not a valid mimon transaction index file, the tag is incorrect or missing."],
+    "JSONGzipAccountingFile-transactionIndexHandler_tag_missing": ["The file '", "' is not a valid mimon prices file, the transactionIndexHandler section is missing."],
     "JSONGzipAccountingFile-history_groups_tag_missing":  ["The file '", "' is not a valid mimon history groups file, the tag is incorrect or missing,"],
     "JSONGzipAccountingFile-history_data_items_missing":  ["The file '", "' is not a valid mimon history groups file, the historyDataItems section is missing,"],
     "JSONGzipAccountingFile-history_summary_tag_missing":  ["The file '", "' is not a valid mimon history file, the tag is incorrect or missing,"],

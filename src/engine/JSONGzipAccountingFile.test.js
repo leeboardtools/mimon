@@ -272,6 +272,24 @@ test('JSONGzipAccountingFile-transactions', async () => {
                     sys.aaplIRAId, aaplIRATransactionDataItems1[i]));
         }
 
+
+        let result;
+        const filteringManager1 = accountingSystem1.getTransactionFilteringManager();
+        result = await filteringManager1.asyncGetFilteredTransactionKeysForAccount(
+            sys.checkingId,
+            {
+                description: 'Bill',
+            }
+        );
+        expect(result).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                id: sys.transDId,
+            }),
+            expect.objectContaining({
+                id: sys.transEId,
+            }),
+        ]));
+
         const priceManager1 = accountingSystem1.getPriceManager();
         const aaplPrices1 = await priceManager1.asyncGetPriceDataItemsInDateRange(
             sys.aaplPricedItemId, '2005-02-28', '2014-12-31');
@@ -325,6 +343,23 @@ test('JSONGzipAccountingFile-transactions', async () => {
                     sys.aaplIRAId, aaplIRATransactionDataItems2[i]));
         }
         expect(aaplIRAAccountStates2).toEqual(aaplIRAAccountStates1);
+
+
+        const filteringManager2 = accountingSystem2.getTransactionFilteringManager();
+        result = await filteringManager2.asyncGetFilteredTransactionKeysForAccount(
+            sys.checkingId,
+            {
+                description: 'Bill',
+            }
+        );
+        expect(result).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                id: sys.transDId,
+            }),
+            expect.objectContaining({
+                id: sys.transEId,
+            }),
+        ]));
 
 
         const priceManager2 = accountingSystem2.getPriceManager();

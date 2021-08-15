@@ -1,6 +1,6 @@
 import { AccountingFile, AccountingFileFactory } from './AccountingFile';
 import { asyncAllFilesExist, asyncFileExists, 
-    asyncDirExists, asyncCanCreateDir } from '../util/Files';
+    asyncDirExists, asyncCanCreateDir, asyncFileOrDirExists } from '../util/Files';
 import { userMsg } from '../util/UserMessages';
 import * as JGZ from '../util/JSONGzipFiles';
 import * as FA from '../util/FileActions';
@@ -35,6 +35,10 @@ const JOURNAL_SUMMARY_FILE_NAME = JOURNAL_FILES_PREFIX + FILE_SUFFIX + FILE_EXT;
 const PRICES_FILE_PREFIX = 'Prices';
 const PRICES_FILE_NAME = PRICES_FILE_PREFIX + FILE_SUFFIX + FILE_EXT;
 
+const TRANSACTION_INDEX_FILE_PREFIX = 'TransactionIndex';
+const TRANSACTION_INDEX_FILE_NAME = TRANSACTION_INDEX_FILE_PREFIX 
+    + FILE_SUFFIX + FILE_EXT;
+
 const HISTORY_FILES_PREFIX = 'History';
 const HISTORY_SUMMARY_FILE_NAME = HISTORY_FILES_PREFIX + FILE_SUFFIX + FILE_EXT;
 
@@ -45,6 +49,7 @@ const LEDGER_TAG = 'mimon-ledger';
 const JOURNAL_SUMMARY_TAG = 'mimon-journalSummary';
 const JOURNAL_TRANSACTIONS_TAG = 'mimon-journalTransactions';
 const PRICES_TAG = 'prices-ledger';
+const TRANSACTION_INDEX_TAG = 'minon-transactionIndex';
 const HISTORY_SUMMARY_TAG = 'mimon-historySummary';
 const HISTORY_GROUPS_TAG = 'mimon-historyGroups';
 
@@ -542,6 +547,7 @@ class JSONGzipTransactionsHandler extends TransactionsHandlerImplBase {
  * <li>{@link AccountManager}
  * <li>{@link PricedItemManager}
  * <li>{@link LotManager}
+ * <li>{@link RemindersManager}
  */
 class JSONGzipLedgerFile {
     constructor(accountingFile) {
@@ -1053,6 +1059,114 @@ class JSONGzipHistoryFiles {
 
 
 /**
+ * Handles the transaction index file
+ */
+class JSONGzipTransactionIndexFile {
+    constructor(accountingFile) {
+        this._accountingFile = accountingFile;
+
+        this._pathName = JSONGzipTransactionIndexFile.buildTransactionIndexPathName(
+            accountingFile.getPathName());
+
+        this._transactionFilteringHandler = accountingFile._transactionFilteringHandler;
+    }
+
+    static buildTransactionIndexPathName(pathName) {
+        return path.join(pathName, TRANSACTION_INDEX_FILE_NAME);
+    }
+
+    cleanIsModified() {
+        this._transactionFilteringChangeId 
+            = this._transactionFilteringHandler.getLastChangeId();
+    }
+
+    isModified() {
+        return this._transactionFilteringChangeId 
+            !== this._transactionFilteringHandler.getLastChangeId();
+    }
+
+    async _asyncReadJSONTransactionFilterHandler(pathName) {
+        try {
+            const json = await JGZ.readFromFile(pathName);
+            if (json.tag !== TRANSACTION_INDEX_TAG) {
+                throw userError('JSONGzipAccountingFile-transactionIndex_tag_missing', 
+                    pathName);
+            }
+            if (!json.transactionFilteringHandler) {
+                throw userError(
+                    'JSONGzipAccountingFile-transactionIndexHandler_tag_missing', 
+                    pathName);
+            }
+
+            return json;
+        }
+        catch (e) {
+            console.warn('Error reading transaction index file "'
+                + pathName
+                + '": ' + e);
+        }
+
+        return {
+            transactionFilteringHandler: {},
+        };
+    }
+
+    async asyncRead() {
+        const pathName = this._pathName;
+        let stateId;
+
+        if (await asyncFileOrDirExists(pathName)) {
+            let json = await this._asyncReadJSONTransactionFilterHandler(pathName);
+
+            this._transactionFilteringHandler.fromJSON(json.transactionFilteringHandler);
+
+            stateId = json.stateId;
+        }
+        else {
+            console.warn('Transaction index file "' 
+                + this._pathName + '" does not exist.');
+        }
+
+        this.cleanIsModified();
+
+        return stateId;
+    }
+
+
+    async _asyncWriteTransactionIndexFile(stateId) {
+        const json = {
+            tag: TRANSACTION_INDEX_TAG,
+            fileVersion: '1.0',
+            stateId: stateId,
+            transactionFilteringHandler: this._transactionFilteringHandler.toJSON(),
+        };
+
+        // Write out the file...
+        await JGZ.writeToFile(json, this._pathName);
+    }
+
+    async asyncCreateWriteFileActions(stateId) {
+        return [
+            new FA.ReplaceFileAction(this._pathName,
+                {
+                    applyCallback: (pathName) => 
+                        this._asyncWriteTransactionIndexFile(stateId),
+                })
+        ];
+    }
+
+    writeCompleted() {
+        this.cleanIsModified();
+    }
+
+    async asyncClose() {
+        this._accountingFile = undefined;
+        this._transactionFilteringHandler = undefined;
+    }
+}
+
+
+/**
  * Gzipped JSON based accounting file system implementation.
  */
 class JSONGzipAccountingFile extends AccountingFile {
@@ -1086,6 +1200,7 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._ledgerFile = new JSONGzipLedgerFile(this);
         this._journalFiles = new JSONGzipJournalFiles(this);
         this._priceFiles = new JSONGzipPricesFile(this);
+        this._transactionIndexFiles = new JSONGzipTransactionIndexFile(this);
         this._historyFiles = new JSONGzipHistoryFiles(this);
 
         this._lockFileName = path.join(this.getPathName(), 'lockFile.lock');
@@ -1135,6 +1250,7 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._stateId = await this._ledgerFile.asyncRead();
         await this._journalFiles.asyncRead();
         await this._priceFiles.asyncRead();
+        await this._transactionIndexFiles.asyncRead();
         await this._historyFiles.asyncRead();
 
         await this._asyncSetupAccountingSystem();
@@ -1142,6 +1258,7 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._ledgerFile.cleanIsModified();
         this._journalFiles.cleanIsModified();
         this._priceFiles.cleanIsModified();
+        this._transactionIndexFiles.cleanIsModified();
         this._historyFiles.cleanIsModified();
     }
 
@@ -1150,6 +1267,7 @@ class JSONGzipAccountingFile extends AccountingFile {
         return this._ledgerFile.isModified()
             || this._journalFiles.isModified()
             || this._priceFiles.isModified()
+            || this._transactionIndexFiles.isModified()
             || this._historyFiles.isModified();
     }
 
@@ -1160,11 +1278,13 @@ class JSONGzipAccountingFile extends AccountingFile {
         const journalFilesActions 
             = await this._journalFiles.asyncCreateWriteFileActions();
         const priceFilesActions = await this._priceFiles.asyncCreateWriteFileActions();
+        const transactionIndexFilesActions 
+            = await this._transactionIndexFiles.asyncCreateWriteFileActions();
         const historyFilesActions 
             = await this._historyFiles.asyncCreateWriteFileActions();
 
         const fileActions = ledgerFileActions.concat(journalFilesActions, 
-            priceFilesActions, historyFilesActions);
+            priceFilesActions, transactionIndexFilesActions, historyFilesActions);
 
         // Apply the backup mechanism.
         if (!noBackup) {
@@ -1177,6 +1297,7 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._ledgerFile.writeCompleted();
         this._journalFiles.writeCompleted();
         this._priceFiles.writeCompleted();
+        this._transactionIndexFiles.writeCompleted();
         this._historyFiles.writeCompleted();
     }
     
@@ -1184,6 +1305,7 @@ class JSONGzipAccountingFile extends AccountingFile {
         await this._ledgerFile.asyncClose();
         await this._journalFiles.asyncClose();
         await this._priceFiles.asyncClose();
+        await this._transactionIndexFiles.asyncClose();
         await this._historyFiles.asyncClose();
 
         if (this._lockFileHandle) {
@@ -1196,12 +1318,14 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._ledgerFile = undefined;
         this._journalFiles = undefined;
         this._priceFiles = undefined;
+        this._transactionIndexFiles = undefined;
         this._historyFiles = undefined;
         
         this._accountingSystem = undefined;
         this._accountingSystemHandler = undefined;
         this._accountsHandler = undefined;
         this._pricedItemsHandler = undefined;
+        this._transactionFilteringHandler = undefined;
         this._remindersHandler = undefined;
         this._lotsHandler = undefined;
         this._pricesHandler = undefined;
