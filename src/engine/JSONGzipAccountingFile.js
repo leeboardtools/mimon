@@ -11,6 +11,7 @@ import { InMemoryPricedItemsHandler } from './PricedItems';
 import { InMemoryPricesHandler } from './Prices';
 import { TransactionsHandlerImplBase } from './Transactions';
 import { InMemoryRemindersHandler } from './Reminders';
+import { InMemoryTransactionFilteringHandler } from './TransactionFilters';
 import { InMemoryAutoCompleteSplitsHandler } from './AutoCompleteSplits';
 import { UndoHandler } from '../util/Undo';
 import { ActionsHandler } from '../util/Actions';
@@ -117,6 +118,16 @@ class JSONGzipPricedItemsHandler extends InMemoryPricedItemsHandler {
  * The reminders handler implementation.
  */
 class JSONGzipRemindersHandler extends InMemoryRemindersHandler {
+    constructor(accountingFile) {
+        super();
+        this._accountingFile = accountingFile;
+    }
+}
+
+/**
+ * The transaction filtering handler implementation.
+ */
+class JSONGzipTransactionFilteringHandler extends InMemoryTransactionFilteringHandler {
     constructor(accountingFile) {
         super();
         this._accountingFile = accountingFile;
@@ -1086,6 +1097,7 @@ class JSONGzipAccountingFile extends AccountingFile {
         this._pricedItemsHandler = new JSONGzipPricedItemsHandler(this);
         this._lotsHandler = new JSONGzipLotsHandler(this);
         this._remindersHandler = new JSONGzipRemindersHandler(this);
+        this._transactionFilteringHandler = new JSONGzipTransactionFilteringHandler(this);
         this._autoCompleteSplitsHandler = new JSONGzipAutoCompleteSplitsHandler(this);
 
         this._historiesHandler = new JSONGzipHistoryHandlers(this,
@@ -1119,6 +1131,8 @@ class JSONGzipAccountingFile extends AccountingFile {
                 lotManager: { handler: this._lotsHandler },
                 priceManager: { handler: this._pricesHandler },
                 reminderManager: { handler: this._remindersHandler },
+                transactionFilteringManager: { 
+                    handler: this._transactionFilteringHandler },
                 autoCompleteSplitsManager: { handler: this._autoCompleteSplitsHandler },
                 transactionManager: { handler: this._transactionsHandler },
                 undoManager: { handler: this._undoHandler },

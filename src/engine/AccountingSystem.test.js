@@ -6,6 +6,7 @@ import { InMemoryPricesHandler } from './Prices';
 import { InMemoryRemindersHandler } from './Reminders';
 import { InMemoryTransactionsHandler } from './Transactions';
 import { InMemoryLotsHandler } from './Lots';
+import { InMemoryTransactionFilteringHandler } from './TransactionFilters';
 import { InMemoryAutoCompleteSplitsHandler } from './AutoCompleteSplits';
 
 test('AccountingSystem', async () => {
@@ -31,6 +32,8 @@ test('AccountingSystem', async () => {
             reminderManager: { handler: new InMemoryRemindersHandler(), },
             lotManager: { handler: new InMemoryLotsHandler(), },
             transactionManager: { handler: new InMemoryTransactionsHandler(), },
+            transactionFilteringManager: { 
+                handler: new InMemoryTransactionFilteringHandler(), },
             autoCompleteSplitsManager: { 
                 handler: new InMemoryAutoCompleteSplitsHandler(), 
             },

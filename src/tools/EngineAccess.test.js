@@ -434,6 +434,22 @@ test('EngineAccessor-actions', async () => {
             quantityBaseValue: checkingBalance,
         });
 
+
+        //
+        // Simple transaction filtering...
+        result = await accessor.asyncGetFilteredTransactionKeysForAccount(
+            checkingId,
+            {
+                description: 'F',
+            }
+        );
+        expect(result).toEqual([
+            expect.objectContaining({
+                id: settingsF.id,
+                transactionDataItem: transF,
+            })
+        ]);
+
         
 
         //

@@ -6,6 +6,7 @@ import { TransactionManager } from './Transactions';
 import { PriceManager } from './Prices';
 import { ReminderManager } from './Reminders';
 import { AutoCompleteSplitsManager } from './AutoCompleteSplits';
+import { TransactionFilteringManager } from './TransactionFilters';
 import { UndoManager } from '../util/Undo';
 import { ActionManager } from '../util/Actions';
 import { AccountingActions } from './AccountingActions';
@@ -46,6 +47,9 @@ export class AccountingSystem extends EventEmitter {
         
         this._reminderManager = new ReminderManager(this, options.reminderManager);
 
+        this._transactionFilteringManager
+            = new TransactionFilteringManager(this, options.transactionFilteringManager);
+
         this._autoCompleteSplitsManager 
             = new AutoCompleteSplitsManager(this, options.autoCompleteSplitsManager);
 
@@ -70,6 +74,7 @@ export class AccountingSystem extends EventEmitter {
         await this._lotManager.asyncSetupForUse();
         await this._transactionManager.asyncSetupForUse();
         await this._reminderManager.asyncSetupForUse();
+        await this._transactionFilteringManager.asyncSetupForUse();
         await this._autoCompleteSplitsManager.asyncSetupForUse();
         await this._actionManager.asyncSetupForUse();
     }
@@ -88,6 +93,11 @@ export class AccountingSystem extends EventEmitter {
         if (this._autoCompleteSplitsManager) {
             this._autoCompleteSplitsManager.shutdownFromUse();
             this._autoCompleteSplitsManager = undefined;
+        }
+
+        if (this._transactionFilteringManager) {
+            this._transactionFilteringManager.shutdownFromUse();
+            this._transactionFilteringManager = undefined;
         }
 
         if (this._reminderManager) {
@@ -156,6 +166,11 @@ export class AccountingSystem extends EventEmitter {
      * @returns {ReminderManager}
      */
     getReminderManager() { return this._reminderManager; }
+
+    /**
+     * @returns {TransactionFilteringManager}
+     */
+    getTransactionFilteringManager() { return this._transactionFilteringManager; }
 
     /**
      * @returns {AutoCompleteSplitsManager}

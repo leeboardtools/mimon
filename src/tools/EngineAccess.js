@@ -189,6 +189,9 @@ export class EngineAccessor extends EventEmitter {
             this._reminderManager.on('reminderModify', this._handleReminderModify);
             this._reminderManager.on('reminderRemove', this._handleReminderRemove);
 
+            this._transactionFilteringManager
+                = _accountingSystem.getTransactionFilteringManager();
+
             this._autoCompleteSplitsManager 
                 = _accountingSystem.getAutoCompleteSplitsManager();
             
@@ -293,6 +296,7 @@ export class EngineAccessor extends EventEmitter {
             this._priceManager = undefined;
             this._lotManager = undefined;
             this._reminderManager = undefined;
+            this._transactionFilteringManager = undefined;
             this._autoCompleteSplitsManager = undefined;
 
             this._projectSettingsPathName = undefined;
@@ -1588,6 +1592,21 @@ export class EngineAccessor extends EventEmitter {
     async asyncGetSortedTransactionKeysForAccount(accountId, includeSplitCounts) {
         return this._transactionManager.asyncGetSortedTransactionKeysForAccount(
             accountId, includeSplitCounts);
+    }
+
+
+    /**
+     * Retrieves transactions for an account after applying a filter.
+     * If there is no filter to be applied then <code>undefined</code> is returned
+     * to indicate no filtering has been applied.
+     * @param {number} accountId
+     * @param {TransactionFilter|TransactionFilterDataItem} filter 
+     * @returns {TransactionFilteringManager~FilteredTransactionKey[]|undefined}
+     */
+    async asyncGetFilteredTransactionKeysForAccount(accountId, filter) {
+        return this._transactionFilteringManager
+            .asyncGetFilteredTransactionKeysForAccount(
+                accountId, filter);
     }
 
 
