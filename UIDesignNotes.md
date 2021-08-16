@@ -584,13 +584,13 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 Priorities:
+    - Search/Filter
+        - Account registers most important
+
     - Security Sell transactions don't generate capital gain/loss entry.
+        - Optional - primarily because these weren't added in imported transactions.
+        - Cost basis adjustment option
+            - Select lots to apply adjustment to?
 
-    - Cost basis adjustment transaction?
-        - A lot specific ROC?
-
-    - Auto complete
-
-    - Search
 
 

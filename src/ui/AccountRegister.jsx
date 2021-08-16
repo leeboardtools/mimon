@@ -192,6 +192,12 @@ function saveDescriptionCellValue(args) {
     }
 }
 
+function renderDescriptionCellEditor(args) {
+    const { rowEntry } = args;
+    const { caller } = rowEntry;
+    return caller.renderDescriptionCellEditor(args);
+}
+
 
 //
 //---------------------------------------------------------
@@ -683,6 +689,7 @@ function getAccountRegisterColumnInfoDefs(accountType) {
                 {
                     getCellValue: getDescriptionCellValue,
                     saveCellValue: saveDescriptionCellValue,
+                    renderEditCell: renderDescriptionCellEditor,
                 }
             );
 
@@ -793,6 +800,11 @@ export class AccountRegister extends React.Component {
         this.startRowEdit = this.startRowEdit.bind(this);
         this.getSaveBuffer = this.getSaveBuffer.bind(this);
         this.asyncSaveBuffer = this.asyncSaveBuffer.bind(this);
+        this.endRowEdit = this.endRowEdit.bind(this);
+
+        this.onChangeDescription = this.onChangeDescription.bind(this);
+        this.onAutoCompleteDescription = this.onAutoCompleteDescription.bind(this);
+
 
         this._cellEditorsManager = new CellEditorsManager({
             getRowEntry: this.getRowEntry,
@@ -803,6 +815,7 @@ export class AccountRegister extends React.Component {
             }),
             getManagerState: () => this.state.managerState,
             startRowEdit: this.startRowEdit,
+            endRowEdit: this.endRowEdit,
             getSaveBuffer: this.getSaveBuffer,
             asyncSaveBuffer: this.asyncSaveBuffer,
         });
@@ -1512,6 +1525,186 @@ export class AccountRegister extends React.Component {
     }
 
 
+    getActiveEditInfo() {
+        const { getActiveEditInfo } = this.state;
+        if (!getActiveEditInfo) {
+            return;
+        }
+
+        return getActiveEditInfo();
+    }
+
+
+    onChangeDescription(e) {
+        const activeEditInfo = this.getActiveEditInfo();
+        if (!activeEditInfo) {
+            return;
+        }
+
+        const { rowEditBuffer } = activeEditInfo;
+        if (!rowEditBuffer) {
+            return;
+        }
+
+        const { newTransactionDataItem, } = rowEditBuffer;
+        if (newTransactionDataItem.id) {
+            return;
+        }
+        
+        const { value } = e.target;
+        if (!value) {
+            return;
+        }
+
+        if (value === this.state.descriptionAutoCompleteValue) {
+            return;
+        }
+        
+
+        const { accessor } = this.props;
+        accessor.asyncGetFilteredTransactionKeysForAccount(
+            this.props.accountId,
+            {
+                description: value,
+            }
+        ).then((result) => {
+            if (result && result.length) {
+                const itemsByDescription = new Map();
+
+                // Items are ordered oldest to newest, we want to give priority to the
+                // newest items...
+                for (let i = result.length - 1; i >= 0; --i) {
+                    const item = result[i];
+                    const description 
+                        = item.description.trim().toUpperCase();
+                    if (!itemsByDescription.has(description)) {
+                        itemsByDescription.set(description, item);
+                    }
+                }
+
+                // We want the descriptions as they appear, so we can't use the keys since
+                // those are case insensitive...
+                const descriptionAutoCompleteList = [];
+                const descriptionAutoCompleteItems = [];
+                itemsByDescription.forEach((item) => {
+                    descriptionAutoCompleteList.push(
+                        item.description.trim());
+                    descriptionAutoCompleteItems.push(item);
+                });
+
+                this.setState({
+                    descriptionAutoCompleteValue: value,
+                    descriptionAutoCompleteList: descriptionAutoCompleteList,
+                    descriptionAutoCompleteItems: descriptionAutoCompleteItems,
+                });
+            }
+            else {
+                this.setState({
+                    descriptionAutoCompleteValue: value,
+                    descriptionAutoCompleteList: [],
+                    descriptionAutoCompleteItems: undefined,
+                });
+            }
+        }).catch((e) => {
+            console.warn(
+                'asyncGetFilteredTransactionKeysForAccount() failed: ' + e);
+            this.setState({
+                descriptionAutoCompleteValue: value,
+                descriptionAutoCompleteList: [],
+                descriptionAutoCompleteItems: undefined,
+            });
+        });
+    }
+
+
+    autoCompleteFromTransactionDataItem(transactionDataItem, splitIndex) {
+        const activeEditInfo = this.getActiveEditInfo();
+        if (!activeEditInfo) {
+            return;
+        }
+
+        const { rowEditBuffer, setRowEditBuffer } = activeEditInfo;
+        if (!setRowEditBuffer) {
+            return;
+        }
+
+        if (splitIndex >= 0) {
+            // Want to keep these...
+            delete transactionDataItem.id;
+            transactionDataItem.ymdDate = rowEditBuffer.newTransactionDataItem.ymdDate;
+
+            // We don't want any refNums set...
+            transactionDataItem.splits.forEach((split) => delete split.refNum);
+
+            setRowEditBuffer({
+                newTransactionDataItem: transactionDataItem,
+                splitIndex: splitIndex,
+            },
+            (rowEditBuffer) => {
+                const args = Object.assign({}, activeEditInfo, {
+                    rowEditBuffer: rowEditBuffer,
+                });
+                this._cellEditorsManager.reloadCellEditBuffers(args);
+            });
+        }
+    }
+
+
+    onAutoCompleteDescription(index, autoCompleteList) {
+        try {
+            // Make sure we're still good.
+            const { descriptionAutoCompleteList, descriptionAutoCompleteItems, 
+            } = this.state;
+            if (!deepEqual(descriptionAutoCompleteList, autoCompleteList)) {
+                return;
+            }
+
+            const item = descriptionAutoCompleteItems[index];
+            if (!item) {
+                return;
+            }
+
+            const splitIndex = item.splitAccountIds.indexOf(this.props.accountId);
+
+            const { transactionDataItem } = item;
+            if (transactionDataItem) {
+                this.autoCompleteFromTransactionDataItem(transactionDataItem, splitIndex);
+            }
+            else {
+                this.props.accessor.asyncGetTransactionDataItemWithId(item.id).then(
+                    (transactionDataItem) =>
+                        this.autoCompleteFromTransactionDataItem(
+                            transactionDataItem, splitIndex)
+                ).catch((e) => {
+                    console.warn('asyncGetTransactionDataItemWithId() failed for '
+                        + item.id + ' ' + e);
+                });
+            }
+        }
+        finally {
+            this.setState({
+                descriptionAutoCompleteValue: undefined,
+                descriptionAutoCompleteList: undefined,
+                descriptionAutoCompleteItems: undefined,
+            });
+        }
+    }
+
+    renderDescriptionCellEditor(args) {
+        const { rowEditBuffer } = args;
+        const { newTransactionDataItem, } = rowEditBuffer;
+        if (!newTransactionDataItem.id) {
+            // Only for the new transaction editor...
+            args = Object.assign({}, args);
+            args.autoCompleteList = this.state.descriptionAutoCompleteList;
+            args.onChange = this.onChangeDescription;
+            args.onAutoComplete = this.onAutoCompleteDescription;
+        }
+
+        return ACE.renderDescriptionEditor(args);
+    }
+
+
     startRowEdit(args) {
         const { rowIndex, rowEditBuffer } = args;
         const rowEntry = this.state.rowEntries[rowIndex];
@@ -1545,9 +1738,17 @@ export class AccountRegister extends React.Component {
 
         this.setState({
             openNewRow: false,
+            getActiveEditInfo: args.getActiveEditInfo,
         });
 
         return true;
+    }
+
+
+    endRowEdit(args) {
+        this.setState({
+            getActiveEditInfo: undefined,
+        });
     }
 
 

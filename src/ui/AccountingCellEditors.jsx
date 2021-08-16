@@ -91,6 +91,7 @@ export function renderTextEditor(args) {
     }
 
     return <CellTextEditor
+        id = {'CellTextEditor-' + columnInfo.key}
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
         value = {value.toString()}
@@ -130,6 +131,7 @@ function renderTextEditorWithTooltips(args, valueProperty) {
     }
 
     return <CellTextEditor
+        id = {'CellTextEditor-' + columnInfo.key}
         ariaLabel = {ariaLabel}
         ref = {refForFocus}
         value = {value.toString()}
@@ -156,7 +158,14 @@ function renderTextEditorWithTooltips(args, valueProperty) {
                         isEdited: true,
                     });
             }
+
+            const { onChange } = args;
+            if (onChange) {
+                onChange(e, args);
+            }
         }}
+        autoCompleteList = {args.autoCompleteList}
+        onAutoComplete = {args.onAutoComplete}
         errorMsg = {errorMsg}
     />;
 }
