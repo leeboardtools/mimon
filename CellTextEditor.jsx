@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { AutoCompleteTextEditor } from './AutoCompleteTextEditor';
 import { Tooltip } from './Tooltip';
+
 
 /**
  * React component for editing text in a table cell.
@@ -9,13 +11,30 @@ import { Tooltip } from './Tooltip';
 export const CellTextEditor = React.forwardRef(
     function CellTextEditorImpl(props, ref) {
         const { ariaLabel, value, inputClassExtras, errorMsg, size,
-            onChange, onFocus, onBlur, disabled, placeholder } = props;
+            onChange, onFocus, onBlur, disabled, placeholder,
+            autoCompleteList, onAutoComplete } = props;
 
         const divClassName = 'Input-group Mb-0 ';
         let className = 'Cell CellTextEditor-textInput ' 
             + (inputClassExtras || '');
 
         const inputType = props.inputType || 'text';
+
+        const inputComponent = <AutoCompleteTextEditor
+            type = {inputType}
+            inputClassExtras = {className}
+            ariaLabel = {ariaLabel}
+            placeholder = {placeholder}
+            value = {value || ''}
+            size = {size}
+            disabled = {disabled}
+            onChange = {onChange}
+            onFocus = {onFocus}
+            onBlur = {onBlur}
+            autoCompleteList = {autoCompleteList}
+            onAutoComplete = {onAutoComplete}
+            ref = {ref}
+        />;
 
         let errorMsgComponent;
         if (errorMsg) {
@@ -24,19 +43,9 @@ export const CellTextEditor = React.forwardRef(
                 {errorMsg}
             </div>;
         }
-        return <div className={divClassName}>
-            <input type={inputType}
-                className={className}
-                aria-label={ariaLabel}
-                placeholder={placeholder}
-                value={value || ''}
-                size={size}
-                disabled={disabled}
-                onChange={onChange}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                ref={ref}
-            />
+
+        return <div className = {divClassName}>
+            {inputComponent}
             {errorMsgComponent}
         </div>;
     }
@@ -59,10 +68,14 @@ export const CellTextEditor = React.forwardRef(
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onfocus}.
  * @property {function} [onBlur]    onBlur event handler
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onblur}.
+ * @property {string[]} [autoCompleteList] If present an array of auto-complete items.
+ * @property {AutoCompleteTextEditor~onAutoComplete} [onAutoComplete] Callback for 
+ * auto-complete selections. If not present and an item is selected from 
+ * autoCompleteList the selected item will be passed to onChange().
  * @property {boolean}  [disabled]  If <code>true</code> the editor is disabled.
- * @property {boolean} [disabled]
  */
 CellTextEditor.propTypes = {
+    id: PropTypes.string,
     ariaLabel: PropTypes.string,
     value: PropTypes.string,
     inputType: PropTypes.string,
@@ -73,6 +86,8 @@ CellTextEditor.propTypes = {
     onChange: PropTypes.func,
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
+    autoCompleteList: PropTypes.arrayOf(PropTypes.string),
+    onAutoComplete: PropTypes.func,
     disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
 };
 
@@ -97,16 +112,16 @@ export function CellTextDisplay(props) {
     const className = 'Cell CellTextEditor-textInput CellTextEditor-textDisplay ' 
         + (inputClassExtras || '');
 
-    const component = <div className={divClassName}>
-        <input type={inputType}
-            className={className}
-            aria-label={ariaLabel}
-            placeholder={placeholder}
-            style={{backgroundColor: 'inherit'}}
-            size={size}
+    const component = <div className = {divClassName}>
+        <input type = {inputType}
+            className = {className}
+            aria-label = {ariaLabel}
+            placeholder = {placeholder}
+            style = {{backgroundColor: 'inherit'}}
+            size = {size}
             disabled
-            value={value}
-            onChange={() => {}}
+            value = {value}
+            onChange = {() => {}}
         />
     </div>;
 
