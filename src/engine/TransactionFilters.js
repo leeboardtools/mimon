@@ -548,7 +548,10 @@ export class TransactionFilteringManager {
     /**
      * @typedef {object} TransactionFilteringManager~FilteredTransactionKey
      * A {@link TransactionKey} with the following added:
-     * @property {TransactionDataItem} transactionDataItem
+     * @property {string} description
+     * @property {number[]} splitAccountIds
+     * @property {TransactionDataItem} [transactionDataItem] Only specified if it
+     * is readily available.
      */
 
 
@@ -660,6 +663,8 @@ export class TransactionFilteringManager {
             return {
                 id: transactionEntry.transactionId,
                 ymdDate: getYMDDate(transactionEntry.ymdDate),
+                description: transactionEntry.description,
+                splitAccountIds: Array.from(transactionEntry.splitAccountIds),
                 transactionDataItem: transactionEntry.transactionDataItem,
             };
         });
