@@ -113,9 +113,11 @@ export class CellEditorsManager {
      *  | EditableRowTable~onStartRowEditArgs}   args
      */
     reloadCellEditBuffers(args) {
-        const { setCellEditBuffer, cellEditBuffers } = args;
+        const { setAllCellEditBuffers, cellEditBuffers } = args;
         const cellBufferArgs = this._makeCellBufferArgs(args);
-        if (setCellEditBuffer && cellBufferArgs) {
+        if (setAllCellEditBuffers && cellBufferArgs) {
+            let isChange;
+            const cellEditBufferChanges = [];
             for (let i = 0; i < cellEditBuffers.length; ++i) {
                 const columnInfo = this.props.getColumnInfo(i);
                 const { getCellValue } = columnInfo;
@@ -124,15 +126,16 @@ export class CellEditorsManager {
                     cellBufferArgs.columnInfo = columnInfo;
                     const newValue = getCellValue(cellBufferArgs);
                     if (!deepEqual(newValue, cellEditBuffers[i].value)) {
-                        // Need to specify the index because setCellEditBuffer
-                        // was set up to use the column index in the original args.
-                        setCellEditBuffer(
-                            i,
-                            {
-                                value: newValue,
-                            });
+                        cellEditBufferChanges[i] = {
+                            value: newValue,
+                        };
+                        isChange = true;
                     }
                 }
+            }
+
+            if (isChange) {
+                setAllCellEditBuffers(cellEditBufferChanges);
             }
         }
     }
@@ -272,19 +275,24 @@ export class CellEditorsManager {
             return;
         }
 
-        this._setManagerState({
-            editInfo: undefined,
-            errorMsgs: {}
-        });
+        this.endRowEdit(args);
         return true;
     }
 
 
-    onCancelRowEdit(args) {
+    endRowEdit(args) {
+        const { endRowEdit } = this.props;
+        if (endRowEdit) {
+            endRowEdit(args);
+        }
         this._setManagerState({
             editInfo: undefined,
             errorMsgs: {},
         });
+    }
+
+    onCancelRowEdit(args) {
+        this.endRowEdit(args);
     }
 
 
@@ -528,14 +536,22 @@ export class CellEditorsManager {
  */
 
 /**
+ * Called when row editing is done, either after asyncSaveBuffer has been called
+ * if saving, or when editing is being cancelled for the row. This should just be
+ * used to clean up after edit finishes.
+ * @callback CellEditorsManager~endRowEdit
+ */
+
+/**
  * @typedef {object}    CellEditorsManager~propTypes
  * @property {CellEditorsManager~getRowEntry}   getRowEntry
  * @property {CellEditorsManager~getColumnInfo} getColumnInfo
  * @property {CellEditorsManager~setManagerState}   setManagerState
  * @property {CellEditorsManager~getManagerState}   getManagerState
- * @property {CellEditorsMaanger~setupRowEditBuffer}    [startRowEdit]
+ * @property {CellEditorsMaanger~startRowEdit}    [startRowEdit]
  * @property {CellEditorsManager~getSaveBuffer} [getSaveBuffer]
  * @property {CellEditorsManager~asyncSaveBuffer}   asyncSaveBuffer
+ * @property {CellEditorsManager~endRowEdit}    [endRowEdit]
  */
 CellEditorsManager.propTypes = {
     getRowEntry: PropTypes.func.isRequired,
@@ -545,4 +561,5 @@ CellEditorsManager.propTypes = {
     startRowEdit: PropTypes.func,
     getSaveBuffer: PropTypes.func,
     asyncSaveBuffer: PropTypes.func,
+    endRowEdit: PropTypes.func,
 };

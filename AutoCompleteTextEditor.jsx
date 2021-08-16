@@ -130,8 +130,8 @@ AutoCompleteTextEditorImpl.propTypes = {
 
 
 /**
- * React complete for editing text that supports a dropdown list of auto-complete
- * items.
+ * React component for editing text that supports a dropdown list of 
+ * auto-complete items.
  * @class
  */
 export const AutoCompleteTextEditor = React.forwardRef((props, ref) =>
