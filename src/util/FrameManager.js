@@ -1,8 +1,7 @@
 import { MenuManager } from './MenuManagerRenderer';
 import { userMsg } from './UserMessages';
 
-const electron = require('electron');
-const { remote } = electron;
+const remote = require('@electron/remote');
 const { app, dialog } = remote;
 
 

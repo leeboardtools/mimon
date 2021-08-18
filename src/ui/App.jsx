@@ -23,7 +23,7 @@ import { RowColContainer, Row, Col } from '../util-ui/RowCols';
 import { CloseButton } from '../util-ui/CloseButton';
 import { Button } from '../util-ui/Button';
 
-const { app } = electron.remote;
+const { app } = require('@electron/remote');
 const { ipcRenderer } = electron;
 
 

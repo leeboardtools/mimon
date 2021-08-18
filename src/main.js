@@ -2,10 +2,12 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { getWindowState, manageBrowserWindow } from './util/electron-WindowState';
 // import 'regenerator-runtime/runtime';
 
-const { app, Menu, BrowserWindow, ipcMain } = require('electron');
+const { app, Menu, BrowserWindow, ipcMain, } = require('electron');
 app.allowRendererProcessReuse = true;
 
 const { session, } = require('electron');
+
+require('@electron/remote/main').initialize();
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
 if (isDevMode) {
@@ -122,7 +124,10 @@ const createWindow = (windowState) => {
             defaultFontSize: 14,
             enableRemoteModule: true,
             worldSafeExecuteJavaScript: true,
-            //contextIsolation: true,
+
+            // contextIsolation must be false to enable require() in the
+            // renderer process...
+            contextIsolation: false,
         }
     });
     if (windowState.isMaximized) {

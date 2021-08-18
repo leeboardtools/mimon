@@ -29,7 +29,7 @@ export function getEngineLocal() {
 export async function asyncInitializeEngine(settingsPathName, appPathName) {
     const noElectron = (settingsPathName === undefined);
 
-    locale = (noElectron) ? undefined : require('electron').remote.app.getLocale();
+    locale = (noElectron) ? undefined : require('@electron/remote').app.getLocale();
     appPathName = appPathName || `${__dirname}/..`;
     _appPathName = appPathName;
 
