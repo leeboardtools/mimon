@@ -97,7 +97,7 @@
     "jest": "^25.5.4",
     "jest-environment-jsdom-fourteen": "^1.0.1",
     "jest-watch-typeahead": "^0.4.2",
-    "jsdoc": "^3.6.6",
+    "jsdoc": "^3.6.7",
     "kind-of": ">=6.0.3",
     "minimist": ">=1.2.3",
     "node-loader": "^0.6.0",
