@@ -13,7 +13,7 @@ import { bSearch } from '../util/BinarySearch';
 import { getCurrency } from '../util/Currency';
 import { promises as fsPromises } from 'fs';
 import * as path from 'path';
-import * as math from 'mathjs-expression-parser';
+import * as math from 'mathjs';
 
 
 /**
@@ -76,7 +76,7 @@ export class EngineAccessor extends EventEmitter {
         this.asyncGetTransactionDataItemWithId = this.asyncGetTransactionDataItemsWithIds;
 
 
-        this.evalExpression = math.eval;
+        this.evalExpression = math.evaluate;
 
 
         this._asyncModifyProjectSettingsActionApplier 
@@ -2159,4 +2159,4 @@ export class EngineAccessor extends EventEmitter {
  * @returns {number}
  * @throws Error
  */
-export const evalExpression = math.eval;
+export const evalExpression = math.evaluate;
