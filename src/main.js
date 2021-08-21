@@ -117,8 +117,8 @@ const createWindow = (windowState) => {
     mainWindow = new BrowserWindow({
         width: windowState.width,
         height: windowState.height,
-        x: windowState.x,
-        y: windowState.y,
+        x: Math.round(windowState.x),
+        y: Math.round(windowState.y),
         webPreferences: {
             nodeIntegration: true,
             defaultFontSize: 14,

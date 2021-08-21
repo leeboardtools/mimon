@@ -594,3 +594,19 @@ Priorities:
 
 
 
+- Node management:
+    - Remove @electron/remote.
+        - App.jsx
+            - app.getPath('appData'), 'documents'
+            - app.name
+            - app.getAppPath()
+            - app.exit()
+            
+        - Engine.js
+            - app.getLocale()
+
+        - FrameManager.js
+            - app.name
+            - dialog.showOpenDialog()
+            - dialog.showSaveDialog()
+        
