@@ -1,8 +1,6 @@
 import { MenuManager } from './MenuManagerRenderer';
 import { userMsg } from './UserMessages';
-
-const remote = require('@electron/remote');
-const { app, dialog } = remote;
+import { ipcRenderer } from 'electron';
 
 
 /**
@@ -71,7 +69,7 @@ export class FrameManager {
      * @param {string} title 
      */
     setMainTitle(title) {
-        title = title || app.name;
+        title = title || ipcRenderer.sendSync('sync-appName');
         const mainWindow = remote.getCurrentWindow();
         mainWindow.setTitle(title);
     }
@@ -85,8 +83,7 @@ export class FrameManager {
      * result oas dialog.showOpenDialog().
      */
     async asyncFileOpenDialog(options) {
-        const mainWindow = remote.getCurrentWindow();
-        return dialog.showOpenDialog(mainWindow, options);
+        return ipcRenderer.invoke('async-showOpenDialog', options);
     }
 
 
@@ -99,7 +96,6 @@ export class FrameManager {
      * result as dialog.showSaveDialog().
      */
     async asyncFileSaveDialog(options) {
-        const mainWindow = remote.getCurrentWindow();
-        return dialog.showSaveDialog(mainWindow, options);
+        return ipcRenderer.invoke('async-showSaveDialog', options);
     }
 }
