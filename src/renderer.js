@@ -12,7 +12,9 @@ const render = () => {
     ReactDOM.render(<App />, document.getElementById('App'));
 };
 
+console.log('renderer');
 render();
 if (module.hot) {
     module.hot.accept(render);
 }
+console.log('end-renderer');

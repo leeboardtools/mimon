@@ -16,16 +16,12 @@ import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { FileImporter } from '../tools/FileImporter';
 import { ProgressReporter } from '../util-ui/ProgressReporter';
 import * as path from 'path';
-import * as electron from 'electron';
+import { ipcRenderer } from 'electron';
 import * as process from 'process';
 import { InfoReporter } from '../util-ui/InfoReporter';
 import { RowColContainer, Row, Col } from '../util-ui/RowCols';
 import { CloseButton } from '../util-ui/CloseButton';
 import { Button } from '../util-ui/Button';
-
-const { app } = require('@electron/remote');
-const { ipcRenderer } = electron;
-
 
 
 async function asyncGetStartupOptions() {
@@ -301,10 +297,13 @@ export default class App extends React.Component {
             });
         }
 
-        const settingsPathName = path.join(app.getPath('appData'), 
-            app.name, 'user.json');
+        const appData = ipcRenderer.sendSync('sync-getPath', 'appData');
+        const appPath = ipcRenderer.sendSync('sync-getAppPath');
+        const name = ipcRenderer.sendSync('sync-appName');
+        const settingsPathName = path.join(appData, 
+            name, 'user.json');
 
-        await Engine.asyncInitializeEngine(settingsPathName, app.getAppPath());
+        await Engine.asyncInitializeEngine(settingsPathName, appPath);
 
         await this.asyncPostEngineInitialized();
     }
@@ -334,7 +333,7 @@ export default class App extends React.Component {
 
         let currentDir = startupOptions.currentDir;
         if (!currentDir || !asyncDirExists(currentDir)) {
-            currentDir = app.getPath('documents');
+            currentDir = ipcRenderer.sendSync('sync-getPath', 'documents');
         }
 
         this._fileImporter = new FileImporter(this._accessor);
@@ -516,7 +515,7 @@ export default class App extends React.Component {
     }
 
     onExit() {
-        this.closeFile(() => { app.exit(); }, 
+        this.closeFile(() => { ipcRenderer.sendSync('sync-exit'); }, 
             userMsg('App-save_exit_button'));
     }
 

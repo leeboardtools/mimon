@@ -9,6 +9,8 @@ import defUserMessagesUtil from '../locales/en-userMessages-util.json';
 import defUserMessagesEngine from '../locales/en-userMessages-engine.json';
 import * as path from 'path';
 
+import { ipcRenderer } from 'electron';
+
 
 let locale;
 let _appPathName;
@@ -29,7 +31,7 @@ export function getEngineLocal() {
 export async function asyncInitializeEngine(settingsPathName, appPathName) {
     const noElectron = (settingsPathName === undefined);
 
-    locale = (noElectron) ? undefined : require('@electron/remote').app.getLocale();
+    locale = (noElectron) ? undefined : ipcRenderer.sendSync('sync-getLocale');
     appPathName = appPathName || `${__dirname}/..`;
     _appPathName = appPathName;
 

@@ -59,7 +59,6 @@
     }
   },
   "dependencies": {
-    "@electron/remote": "^1.2.1",
     "bootstrap": "^4.6.0",
     "core-js": "^3.16.2",
     "deep-equal": "^2.0.5",

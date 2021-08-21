@@ -1,13 +1,8 @@
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { getWindowState, manageBrowserWindow } from './util/electron-WindowState';
-// import 'regenerator-runtime/runtime';
+import { app, Menu, BrowserWindow, ipcMain, dialog, session } from 'electron';
 
-const { app, Menu, BrowserWindow, ipcMain, } = require('electron');
 app.allowRendererProcessReuse = true;
-
-const { session, } = require('electron');
-
-require('@electron/remote/main').initialize();
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
 if (isDevMode) {
@@ -43,6 +38,22 @@ ipcMain.handle('async-closeDevTools', (event, arg) => {
     mainWindow.webContents.closeDevTools();
 });
 
+ipcMain.on('sync-getPath', (event, arg) => {
+    event.returnValue = app.getPath(arg);
+});
+
+ipcMain.on('sync-appName', (event, arg) => {
+    event.returnValue = app.name;
+});
+
+ipcMain.on('sync-getAppPath', (event, arg) => {
+    event.returnValue = app.getAppPath();
+});
+
+ipcMain.on('sync-getLocale', (event, arg) => {
+    event.returnValue = app.getLocale();
+});
+
 
 ipcMain.on('sync-getZoomFactor', (event, arg) => {
     event.returnValue = mainWindow.webContents.getZoomFactor();
@@ -72,7 +83,17 @@ ipcMain.handle('async-setTitle', (event, arg) => {
     mainWindow.setTitle(arg);
 });
 
+ipcMain.handle('async-showOpenDialog', (event, arg) => {
+    return dialog.showOpenDialog(mainWindow, arg);
+});
 
+ipcMain.handle('asycn-showSaveDialog', (event, arg) => {
+    return dialog.showSaveDialog(mainWindow, arg);
+});
+
+ipcMain.on('sync-exit', (event, arg) => {
+    app.exit();
+});
 
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -159,6 +180,9 @@ const createWindow = (windowState) => {
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
         mainWindow = null;
+    });
+
+    mainWindow.on('ready-to-show', () => {
     });
 };
 
