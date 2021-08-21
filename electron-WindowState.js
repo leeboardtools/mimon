@@ -1,7 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-
-const { app, screen } = require('electron');
+import { app, screen } from 'electron';
 
 /**
  * @module electron-WindowState
