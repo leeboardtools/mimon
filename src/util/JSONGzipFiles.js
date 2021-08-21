@@ -1,7 +1,7 @@
+import * as zlib from 'zlib';
+import * as fs from 'fs';
+import {Readable } from 'stream';
 
-const zlib = require('zlib');
-const fs = require('fs');
-const { Readable } = require('stream');
 
 export class StringReadable extends Readable {
     constructor(string, options) {

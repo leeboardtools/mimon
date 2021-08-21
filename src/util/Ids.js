@@ -1,6 +1,5 @@
 import { toCleanJSON } from './JSONUtils';
-
-const uuidv1 = require('uuid/v1');
+import { uuidv1 } from 'uuid/v1';
 
 
 /**

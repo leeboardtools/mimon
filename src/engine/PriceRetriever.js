@@ -2,8 +2,7 @@ import { YMDDate, getYMDDate } from '../util/YMDDate';
 import { getPricedItem, PricedItemOnlineUpdateType } from './PricedItems';
 import { getDecimalDefinition } from '../util/Quantities';
 import { userError } from '../util/UserMessages';
-
-const request = require('request');
+import request from 'request';
 
 
 async function retrieveQuote(options) {
