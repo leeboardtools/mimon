@@ -70,8 +70,7 @@ export class FrameManager {
      */
     setMainTitle(title) {
         title = title || ipcRenderer.sendSync('sync-appName');
-        const mainWindow = remote.getCurrentWindow();
-        mainWindow.setTitle(title);
+        ipcRenderer.invoke('async-setTitle', title);
     }
 
 
