@@ -2,10 +2,10 @@ import { YMDDate, getYMDDate } from '../util/YMDDate';
 import { getPricedItem, PricedItemOnlineUpdateType } from './PricedItems';
 import { getDecimalDefinition } from '../util/Quantities';
 import { userError } from '../util/UserMessages';
-import request from 'request';
+import { asyncAxiosRequest } from './Engine';
 
 
-async function retrieveQuote(options) {
+async function asyncRetrieveQuote(options) {
     return new Promise((resolve, reject) => {
         const { symbol, from, to } = options;
         const fromSecs = Math.round(from.valueOf() / 1000);
@@ -24,16 +24,17 @@ async function retrieveQuote(options) {
             console.log('retrieveQuote url: ' + url);
         }
 
-        request(
-            {
-                url: url,
-                timeout: options.timeout || 5000,
-            },
-            (err, res, body) => {
-                if (err) {
-                    reject(err);
+        asyncAxiosRequest({
+            url: url,
+            timeout: options.timeout,
+            responseType: 'text',
+        })
+            .then(response => {
+                if (response.statusText !== 'OK') {
+                    reject(response.statusText);
                 }
                 else {
+                    const body = response.data;
                     const historicalPricesStart 
                         = body.split('HistoricalPriceStore":{"prices":')[1];
                     if (historicalPricesStart) {
@@ -50,8 +51,10 @@ async function retrieveQuote(options) {
                         reject(userError('PriceRetriever-ticker_not_found', symbol));
                     }
                 }
-            }
-        );
+            })
+            .catch(error => {
+                reject(error);
+            });
     });
 }
 
@@ -103,7 +106,7 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
         symbol: ticker,
     };
 
-    const results = await retrieveQuote(retrieveArgs);
+    const results = await asyncRetrieveQuote(retrieveArgs);
 
     const quantityDefinition = options.quantityDefinition || getDecimalDefinition(4);
 

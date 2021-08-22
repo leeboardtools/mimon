@@ -1,3 +1,10 @@
+/**
+ * We're setting this so any HTTP requests are run as server to server
+ * to avoid an CORS errors.
+ * 
+ * @jest-environment node
+ */
+
 // TEMP!!!
 /* eslint-disable no-unused-vars */
 

@@ -57,3 +57,4 @@ This project incorporates the following (I may have missed some projects, especi
 - [date-fns](https://date-fns.org/) for formatting dates.
 - [sax-js](https://www.npmjs.com/package/sax) for parsing XML.
 - [mathjs](https://mathjs.org/) for math expression evaluation.
+- [axios](https://github.com/axios/axios) For Promise based HTTP retrieval.

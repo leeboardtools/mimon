@@ -1,6 +1,7 @@
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { getWindowState, manageBrowserWindow } from './util/electron-WindowState';
 import { app, Menu, BrowserWindow, ipcMain, dialog, session } from 'electron';
+import * as axios from 'axios';
 
 app.allowRendererProcessReuse = true;
 
@@ -87,8 +88,25 @@ ipcMain.handle('async-showOpenDialog', (event, arg) => {
     return dialog.showOpenDialog(mainWindow, arg);
 });
 
-ipcMain.handle('asycn-showSaveDialog', (event, arg) => {
+ipcMain.handle('async-showSaveDialog', (event, arg) => {
     return dialog.showSaveDialog(mainWindow, arg);
+});
+
+ipcMain.handle('async-axiosRequest', (event, config) => {
+    return new Promise((resolve, reject) => {
+        axios(config)
+            .then((response) => {
+                resolve({
+                    data: response.data,
+                    status: response.status,
+                    statusText: response.statusText,
+                    //headers: response.headers,
+                    //config: response.config,
+                    //request: response.request,
+                });
+            })
+            .catch(error => reject(error));
+    });
 });
 
 ipcMain.on('sync-exit', (event, arg) => {
