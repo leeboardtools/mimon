@@ -226,7 +226,7 @@ function saveSplitsListCellValue(args) {
         const { newTransactionDataItem } = saveBuffer;
         const { value } = cellEditBuffer;
         const { splits } = value;
-        if (cellEditBuffer.isMultiSplit) {
+        if (splits.length !== 2) {
             newTransactionDataItem.splits = splits;
         }
         else {
@@ -1634,7 +1634,10 @@ export class AccountRegister extends React.Component {
             transactionDataItem.ymdDate = rowEditBuffer.newTransactionDataItem.ymdDate;
 
             // We don't want any refNums set...
-            transactionDataItem.splits.forEach((split) => delete split.refNum);
+            transactionDataItem.splits.forEach((split) => {
+                delete split.refNum;
+                split.reconcileState = T.ReconcileState.NOT_RECONCILED;
+            });
 
             setRowEditBuffer({
                 newTransactionDataItem: transactionDataItem,
