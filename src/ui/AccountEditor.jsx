@@ -5,7 +5,7 @@ import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { TextField } from '../util-ui/TextField';
 import deepEqual from 'deep-equal';
-import { AccountSelectorField } from './AccountSelector';
+import { addAccountIdsToAccountEntries, AccountSelectorField } from './AccountSelector';
 import * as A from '../engine/Accounts';
 import * as PI from '../engine/PricedItems';
 import { DropdownField } from '../util-ui/DropdownField';
@@ -312,8 +312,13 @@ export class AccountEditor extends React.Component {
         });
 
         if (accountDataItem.childAccountIds) {
-            accountDataItem.childAccountIds.forEach((accountId) =>
-                this.addAccountsToAccountEntries(accountId, accountEntries));
+            addAccountIdsToAccountEntries({
+                accessor: this.props.accessor,
+                accountEntries: accountEntries,
+                accountIds: accountDataItem.childAccountIds,
+                sortByName: true,
+                labelCallback: AH.getShortAccountAncestorNames,
+            });
         }
     }
 
