@@ -85,6 +85,7 @@ export const LotTransactionType = {
         validateLotSplits: validateSplitsRETURN_OF_CAPITAL,
     },
     SPLIT: { name: 'SPLIT', 
+        isQuantityBaseValueOptional: true,
         validateLotSplits: validateSplitsSPLIT,
     },
 };

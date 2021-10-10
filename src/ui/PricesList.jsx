@@ -736,6 +736,16 @@ export class PricesList extends React.Component {
                     break;
                 }
 
+                switch (newPriceItemType) {
+                case PriceItemType.PRICE :
+                    P.cleanPriceDataItem(newPriceDataItem);
+                    break;
+                
+                case PriceItemType.MULTIPLIER :
+                    P.cleanPriceMultiplierDataItem(newPriceDataItem);
+                    break;
+                }
+                
                 let newAction = accountingActions.createAddPricesAction(
                     pricedItemId,
                     newPriceDataItem

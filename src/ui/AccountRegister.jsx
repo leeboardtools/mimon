@@ -1902,7 +1902,14 @@ export class AccountRegister extends React.Component {
                 // Don't allow missing quantities.
                 let isMissingQuantity = false;
                 for (let i = 0; i < splits.length; ++i) {
-                    if (typeof splits[i].quantityBaseValue !== 'number') {
+                    const split = splits[i];
+                    const lotTransactionType = T.getLotTransactionType(
+                        split.lotTransactionType);
+                    if (lotTransactionType 
+                     && lotTransactionType.isQuantityBaseValueOptional) {
+                        continue;
+                    }
+                    if (typeof split.quantityBaseValue !== 'number') {
                         isMissingQuantity = true;
                         break;
                     }
