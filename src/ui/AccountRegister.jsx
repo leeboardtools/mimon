@@ -796,6 +796,8 @@ export class AccountRegister extends React.Component {
 
         this.onActiveRowChanged = this.onActiveRowChanged.bind(this);
 
+        this.onPreRenderRow = this.onPreRenderRow.bind(this);
+
         this.getRowEntry = this.getRowEntry.bind(this);
         this.startRowEdit = this.startRowEdit.bind(this);
         this.getSaveBuffer = this.getSaveBuffer.bind(this);
@@ -1042,9 +1044,11 @@ export class AccountRegister extends React.Component {
 
 
     componentDidUpdate(prevProps) {
+        const { props } = this;
+
         let rowsNeedUpdating = false;
         const { hiddenTransactionIds, 
-            showHiddenTransactions } = this.props;
+            showHiddenTransactions } = props;
 
         if (!deepEqual(prevProps.hiddenTransactionIds, hiddenTransactionIds)) {
             this._hiddenTransactionIds = new Set(hiddenTransactionIds);
@@ -1054,6 +1058,23 @@ export class AccountRegister extends React.Component {
         if (prevProps.showHiddenTransactions !== showHiddenTransactions) {
             rowsNeedUpdating = true;
         }
+
+
+        const isColumnFiltersChange = !deepEqual(
+            props.columnFilters, prevProps.columnFilters);
+        if (isColumnFiltersChange) {
+            this.updateColumnFilters(props.columnFilters);
+        }
+        if (!rowsNeedUpdating && props.showColumnFilters) {
+            if (isColumnFiltersChange) {
+                rowsNeedUpdating = true;
+            }
+            else if (!prevProps.showColumnFilters) {
+                // Only update if there are filters specified...
+                rowsNeedUpdating = !deepEqual(props.columnFilters, {});
+            }
+        }
+
 
         if (rowsNeedUpdating) {
             const prevActiveRowInfo = this.getActiveRowInfo();
@@ -1074,6 +1095,11 @@ export class AccountRegister extends React.Component {
         if (openArgs && !openArgsProcessed) {
             this.onEditTransactionSplit(this.props.accountId, openArgs);
         }
+    }
+
+
+    updateColumnFilters(newColumnFilters) {
+
     }
 
 
@@ -1514,6 +1540,15 @@ export class AccountRegister extends React.Component {
                 onSelectSplit(this.getActiveRowInfo());
             }
         });
+    }
+
+
+    onPreRenderRow(args) {
+        if (args.rowIndex < 0) {
+            return {
+                showColumnFilters: this.props.showColumnFilters,
+            };
+        }
     }
 
 
@@ -2189,6 +2224,8 @@ export class AccountRegister extends React.Component {
 
                 onLoadRows = {this.onLoadRows}
 
+                onPreRenderRow = {this.onPreRenderRow}
+
                 onSetColumnWidth = {this.props.onSetColumnWidth}
                 onMoveColumn = {this.props.onMoveColumn}
 
@@ -2201,6 +2238,9 @@ export class AccountRegister extends React.Component {
                 // EditableRowTable methods
                 onRenderDisplayCell = {this._cellEditorsManager.onRenderDisplayCell}
                 onRenderEditCell = {this._cellEditorsManager.onRenderEditCell}
+
+                onRenderHeaderCell = {this._cellEditorsManager.onRenderHeaderCell}
+                onRenderFooterCell = {this._cellEditorsManager.onRenderFooterCell}
 
                 requestedActiveRowIndex = {state.activeRowIndex}
                 onActiveRowChanged = {this.onActiveRowChanged}
@@ -2249,6 +2289,10 @@ AccountRegister.propTypes = {
     children: PropTypes.any,
     eventEmitter: PropTypes.object,
     openArgs: PropTypes.object,
+
+    showColumnFilters: PropTypes.bool,
+    columnFilters: PropTypes.object,
+    onColumnFiltersChange: PropTypes.func,
 
     id: PropTypes.string,
 };

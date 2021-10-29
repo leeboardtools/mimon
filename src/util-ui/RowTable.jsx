@@ -481,6 +481,7 @@ export class RowTable extends React.Component {
         this.onColumnMoveTrackingStopped 
             = this.onColumnMoveTrackingStopped.bind(this);
         
+        this.renderHeaderFooterCell = this.renderHeaderFooterCell.bind(this);
         this.renderRowCells = this.renderRowCells.bind(this);
 
         this._mainRef = React.createRef();
@@ -1331,6 +1332,21 @@ export class RowTable extends React.Component {
     }
 
 
+    renderHeaderFooterCell(args) {
+        const { headerFooter } = args;
+        const { label, ariaLabel } = headerFooter;
+        
+        if (label) {
+            return <span aria-label = {ariaLabel}>
+                {label}
+            </span>;
+        }
+        else {
+            return this.props.onRenderCell(args);
+        }
+    }
+
+
     renderHeaderFooter(args) {
         const { getHeaderFooter, } = args;
         const { columns, onColumnSortingChange, columnSorting } = this.props;
@@ -1371,12 +1387,12 @@ export class RowTable extends React.Component {
                 blockWidth,
                 blockHeight,
                 getCellRef, 
+                onRenderHeaderFooterCell,
             } = args;
 
             const {
                 onPreRenderRow,
                 onPostRenderRow,
-                onRenderCell,
             } = this.props;
 
 
@@ -1404,24 +1420,26 @@ export class RowTable extends React.Component {
 
                 let cell;
                 if (headerFooter) {
-                    const { classExtras, label, ariaLabel } = headerFooter;
+                    const { classExtras } = headerFooter;
                     if (classExtras) {
                         className += ' ' + classExtras;
                     }
 
-                    if (label) {
-                        cell = <span aria-label = {ariaLabel}>
-                            {label}
-                        </span>;
+                    const cellArgs = {
+                        rowIndex: rowIndex, 
+                        columnIndex: c, 
+                        column: column,
+                        isSizeRender: isSizeRender,
+                        rowRenderInfo: rowRenderInfo,
+                        headerFooter: headerFooter,
+                        onRenderHeaderFooterCell: this.renderHeaderFooterCell,
+                    };
+
+                    if (onRenderHeaderFooterCell) {
+                        cell = onRenderHeaderFooterCell(cellArgs);
                     }
                     else {
-                        cell = onRenderCell({
-                            rowIndex: rowIndex, 
-                            columnIndex: c, 
-                            column: column,
-                            isSizeRender: isSizeRender,
-                            rowRenderInfo: rowRenderInfo,
-                        });
+                        cell = this.renderHeaderFooterCell(cellArgs);
                     }
                 }
 
@@ -1560,6 +1578,7 @@ export class RowTable extends React.Component {
             height: this.props.headerHeight,
             blockWidth: this.state.headerBlockWidth,
             blockHeight: this.state.headerBlockHeight,
+            onRenderHeaderFooterCell: this.props.onRenderHeaderCell,
         });
     }
 
@@ -1577,6 +1596,7 @@ export class RowTable extends React.Component {
             height: this.props.footerHeight,
             blockWidth: this.state.footerBlockWidth,
             blockHeight: this.state.footerBlockHeight,
+            onRenderHeaderFooterCell: this.props.onRenderFooterCell,
         });
     }
 
@@ -2178,6 +2198,13 @@ export class RowTable extends React.Component {
  * @property {RowTable~onPreRenderRow} [onPreRenderRow]
  * @property {RowTable~onPostRenderRow} [onPostRenderRow]
  * 
+ * @property {RowTable~onRenderCell}    onRenderHeaderCell    Optional callback for
+ * rendering header cells, if not specified then if the column info has a label
+ * the label is rendered, otherwise onRenderCell is called.
+ * 
+ * @property {RowTable~onRenderCell}    onRenderFooterCell    Optional callback for
+ * rendering footer cells, if not specified then onRenderCell is called.
+ * 
  * @property {number}   [requestedVisibleRowIndex]   If specified the index of a row to 
  * try to keep visible.
  * 
@@ -2232,6 +2259,9 @@ RowTable.propTypes = {
     onPreRenderRow: PropTypes.func,
     onPostRenderRow: PropTypes.func,
     onRenderRow: PropTypes.func,
+
+    onRenderHeaderCell: PropTypes.func,
+    onRenderFooterCell: PropTypes.func,
 
     requestedVisibleRowIndex: PropTypes.number,
 

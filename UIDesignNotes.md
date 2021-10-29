@@ -580,16 +580,58 @@ Are the lists really two separate styles? Or can they be combined into one?
 
     - Lot Transactions
 
-    - Securities dropdown selector in account editor is a mess
+
+    - Due Reminders:
+        - If partial is updated to applied, amount is not shown.
+    
+    - Account Register
+        - If Reconcile Setup window is open, cannot save new transaction in account register.
+        - Date gets lost on auto-fill
 
 
 Priorities:
+    - Option to change where buy/sell transactions link to.
+    
+    - Auto-complete - don't set reconcile flag.
+
+    - Paste numbers round appropriately.
+    
+    - Improve appearance of AutoCompleteTextEditor
+        - Try react-autocomplete, react-datalist-input?
+
     - Search/Filter
         - Account registers most important
-
+            - Description
+            - RefNum
+            - Date
+            - Quantity
+            - Split accounts? - not yet supported by TransactionFiltersManager.
+    
     - Security Sell transactions don't generate capital gain/loss entry.
         - Optional - primarily because these weren't added in imported transactions.
         - Cost basis adjustment option
             - Select lots to apply adjustment to?
 
 
+Column Filter Notes:
+    - How to handle entering the column filter values?
+        - In column heading
+            - Presently, in RowTable if ColumnInfo.label is specified it is used in a span element, otherwise onRenderCell is called.
+
+            - Manage at the RowTable level?
+                - Why? Because a column filter can be applied to a RowTable as well as EditableRowTable
+            
+            - Changing the filter would need to end EditableRowTable editing.
+
+            - How to indicate column filtering?
+                - onRenderColumnFilterCell
+                
+
+    - RowTable:
+        - onRenderHeaderCell
+
+        - EditableRowTable
+    
+        - AccountRegister et al passes CellEditorsManager methods to EditableRowTable.
+
+    

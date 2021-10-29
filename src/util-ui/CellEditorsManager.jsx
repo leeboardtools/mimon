@@ -1,3 +1,4 @@
+import React from 'react';
 import PropTypes from 'prop-types';
 import deepEqual from 'deep-equal';
 
@@ -36,6 +37,9 @@ export class CellEditorsManager {
 
         this.onRenderDisplayCell = this.onRenderDisplayCell.bind(this);
         this.onRenderEditCell = this.onRenderEditCell.bind(this);
+
+        this.onRenderHeaderCell = this.onRenderHeaderCell.bind(this);
+        this.onRenderFooterCell = this.onRenderFooterCell.bind(this);
     }
 
 
@@ -400,6 +404,54 @@ export class CellEditorsManager {
             return renderDisplayCell(args);
         }
 
+    }
+
+
+    _onRenderHeaderFooterCell(args, callbacks) {
+        const { columnIndex, onRenderHeaderFooterCell, rowRenderInfo } = args;
+        const columnInfo = this.props.getColumnInfo(columnIndex);
+        const renderCell = columnInfo[callbacks.renderCellName];
+        if (renderCell) {
+            return renderCell(args);
+        }
+
+        let cellComponent = onRenderHeaderFooterCell(args);
+
+        let filterComponent;
+        if (rowRenderInfo) {
+            const { showColumnFilters } = rowRenderInfo;
+            if (showColumnFilters) {
+                const renderFilterComponent 
+                    = columnInfo[callbacks.renderFilterComponentName];
+                if (renderFilterComponent) {
+                    filterComponent = renderFilterComponent(args);
+                }
+            }
+        }
+
+        if (filterComponent) {
+            cellComponent = <div>
+                {cellComponent}
+                {filterComponent}
+            </div>;
+        }
+
+        return cellComponent;
+    }
+
+
+    onRenderHeaderCell(args) {
+        return this._onRenderHeaderFooterCell(args, {
+            renderCellName: 'renderHeaderCell',
+            renderFilterComponentName: 'renderHeaderFilterComponent',
+        });
+    }
+
+    onRenderFooterCell(args) {
+        return this._onRenderHeaderFooterCell(args, {
+            renderCellName: 'renderFooterCell',
+            renderFilterComponentName: 'renderHeaderFooterComponent',
+        });
     }
 }
 

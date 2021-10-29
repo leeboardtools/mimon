@@ -4,7 +4,7 @@ import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountRegister, createDefaultColumns } from './AccountRegister';
 import { EventEmitter } from 'events';
 import * as T from '../engine/Transactions';
-import { TabIdRowTableHandler } from './RowTableHelpers';
+import { TabIdRowTableHandler, updateStateFromProjectSettings } from './RowTableHelpers';
 
 
 function getUndoRedoInfo(tabEntry) {
@@ -26,6 +26,9 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     constructor(props) {
         super(props);
 
+        this.updateStateFromModifiedProjectSettings 
+            = this.updateStateFromModifiedProjectSettings.bind(this);
+            
         this.onRenderTabPage = this.onRenderTabPage.bind(this);
         this.getTabDropdownInfo = this.getTabDropdownInfo.bind(this);
 
@@ -43,7 +46,9 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         // This should be after all the bind() calls...
         this._rowTableHandler = new TabIdRowTableHandler({
             mainWindowHandler: this,
-            userIdBase: 'AccountsRegisterHandler',
+            userIdBase: 'AccountRegisterHandler',
+            updateStateFromModifiedProjectSettings: 
+                this.updateStateFromModifiedProjectSettings,
         });
 
         this._eventEmitter = new EventEmitter();
@@ -53,6 +58,10 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     shutdownHandler() {
         this._rowTableHandler.shutdownHandler();
         this._rowTableHandler = undefined;
+    }
+
+    updateStateFromModifiedProjectSettings(args) {
+        updateStateFromProjectSettings(args, 'showColumnFilters');
     }
 
 
@@ -92,6 +101,50 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
                 transactionDataItem: transactionDataItem,
             });
         }
+    }
+
+
+    onToggleColumnFilters(tabId) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, 
+            {
+                showColumnFilters: !state.showColumnFilters,
+            });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = (newState.showColumnFilters)
+            ? 'AccountRegisterHandler-action_showColumnFilters'
+            : 'AccountRegisterHandler-action_hideColumnFilters';
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(state.projectSettingsId,
+            {
+                showColumnFilters: newState.showColumnFilters,
+            },
+            userMsg(actionNameId));
+    }
+
+
+    onColumnFiltersChange(tabId, newColumnFilters) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, 
+            {
+                columnFilters: newColumnFilters,
+            });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = 'AccountRegisterHandler-action_columnFiltersChange';
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(state.projectSettingsId,
+            {
+                columnFilters: newState.columnFilters,
+            },
+            userMsg(actionNameId));
     }
 
 
@@ -245,7 +298,13 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
 
             // TODO:
             // 'clearNewTransaction - resets the new transaction...
-            
+            {},
+            { id: 'toggleColumnFilters',
+                label: userMsg('AccountRegisterHandler-showColumnFilters'),
+                checked: state.showColumnFilters,
+                onChooseItem: () => this.onToggleColumnFilters(tabId),
+
+            },
             { id: 'columnsSubMenu',
                 label: userMsg('AccountsListHandler-columns_subMenu'),
                 subMenuItems: toggleColumnsSubMenuItems,
@@ -294,6 +353,9 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
         const projectSettingsId = 'AccountRegisterHandler-' + accountDataItem.type;
         let settings = this.getTabIdProjectSettings(projectSettingsId) || {};
         const allColumns = createDefaultColumns(accountDataItem.type);
+        const showColumnFilters = (settings.showColumnFilters === undefined)
+            ? false
+            : settings.showColumnFilters;
 
         const tabEntry = {
             tabId: tabId,
@@ -303,6 +365,10 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             onRenderTabPage: this.onRenderTabPage,
             accountRegisterRef: React.createRef(),
             getUndoRedoInfo: getUndoRedoInfo,
+
+            showColumnFilters: showColumnFilters,
+            columnFilters: settings.columnFilters,
+
             openArgs: openArgs,
             projectSettingsId: projectSettingsId,
             allColumns: allColumns,
@@ -367,6 +433,11 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
             refreshUndoMenu = {this.refreshUndoMenu}
             eventEmitter = {this._eventEmitter}
             openArgs = {tabEntry.openArgs}
+
+            showColumnFilters = {tabEntry.showColumnFilters}
+            columnFilters = {tabEntry.columnFilters}
+            onColumnFiltersChange = {(args) =>
+                this.onColumnFiltersChange(tabEntry.tabId, args)}
 
             id = {tabEntry.tabId}
             

@@ -316,6 +316,12 @@
     "AccountRegisterHandler-duplicateTransaction": "Duplicate Transaction",
     "AccountRegisterHandler-copyTransaction": "Copy Transaction",
     "AccountRegisterHandler-pasteTransaction": "Paste Transaction",
+    "AccountRegisterHandler-showColumnFilters": "Show Filters",
+
+    "AccountRegisterHandler-action_showColumnFilters": "Show Filters",
+    "AccountRegisterHandler-action_hideColumnFilters": "Hide Filters",
+    "AccountRegisterHandler-action_columnFiltersChange": "Filters Change",
+
 
     "AccountRegister-split": "Split",
     "AccountRegister-multi_splits": "-Split-",
