@@ -107,6 +107,8 @@ export async function asyncCreateAccountingSystem(options) {
 //          -esppIBMId
 //              -ibmESPPId
 //
+//          -rsuIBMId
+//              -ibmRSUId
 //
 //  - Root Liabilities
 //      -creditCardsId
@@ -129,6 +131,8 @@ export async function asyncCreateAccountingSystem(options) {
 //      -otherIncomeId
 //      -salaryId
 //      -shortTermCapitalGainsId,
+//      -ordinaryIncomeId,
+//      -ibmRSUIncomeId,
 //
 //  -Root Expenses
 //      -autoId
@@ -313,6 +317,15 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
         { parentAccountId: sys.esppIBMId, type: A.AccountType.ESPP_SECURITY, pricedItemId: sys.ibmPricedItemId, name: 'IBM', },
     )).newAccountDataItem.id;
 
+
+    sys.rsuIBMId = (await accountManager.asyncAddAccount(
+        { parentAccountId: sys.investmentsId, type: A.AccountType.BROKERAGE, pricedItemId: currencyBasePricedItemId, name: 'IBM RSU', },
+    )).newAccountDataItem.id;
+
+    sys.ibmRSUId = (await accountManager.asyncAddAccount(
+        { parentAccountId: sys.esppIBMId, type: A.AccountType.STOCK_GRANT_SECURITY, pricedItemId: sys.ibmPricedItemId, name: 'IBM', },
+    )).newAccountDataItem.id;
+
     
     //
     // Liabilities
@@ -420,6 +433,15 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
             pricedItemId: currencyBasePricedItemId, 
             name: 'Ordinary Income', 
             tags: [StandardAccountTag.ORDINARY_INCOME.name, ]
+        },
+    )).newAccountDataItem.id;
+    
+    sys.ibmRSUIncomeId = (await accountManager.asyncAddAccount(
+        { parentAccountId: rootIncomeId, 
+            type: A.AccountType.INCOME, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'IBM RSU Income', 
+            tags: [StandardAccountTag.STOCK_GRANTS.name, ]
         },
     )).newAccountDataItem.id;
 
@@ -566,6 +588,13 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
         defaultSplitAccountIds: {
             dividendIncomeId: sys.dividendsAAPLId,
             feesExpenseId: sys.commissionsAAPLId,
+        }
+    });
+
+    await accountManager.asyncModifyAccount({
+        id: sys.ibmRSUId,
+        defaultSplitAccountIds: {
+            stockGrantsIncomeId: sys.i,
         }
     });
 

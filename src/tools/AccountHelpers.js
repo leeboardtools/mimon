@@ -222,6 +222,7 @@ export function crawlAccountTree(accessor, accountDataItem, callback) {
  * @property {DefaultSplitAccountTypeDef}   LONG_TERM_CAPITAL_GAINS_INCOME
  * @property {DefaultSplitAccountTypeDef}   SHORT_TERM_CAPITAL_GAINS_INCOME
  * @property {DefaultSplitAccountTypeDef}   ORDINARY_INCOME
+ * @property {DefaultSplitAccountTypeDef}   STOCK_GRANTS_INCOME
  * @property {DefaultSplitAccountTypeDef}   INTEREST_EXPENSE
  * @property {DefaultSplitAccountTypeDef}   FEES_EXPENSE
  * @property {DefaultSplitAccountTypeDef}   TAXES_EXPENSE
@@ -251,6 +252,11 @@ export const DefaultSplitAccountType = {
         property: 'ordinaryIncomeId',
         category: A.AccountCategory.INCOME,
         tags: [ StandardAccountTag.ORDINARY_INCOME],
+    },
+    STOCK_GRANTS_INCOME: { name: 'STOCK_GRANTS_INCOME',
+        property: 'stockGrantsIncomeId',
+        category: A.AccountCategory.INCOME,
+        tags: [ StandardAccountTag.STOCK_GRANTS],
     },
     INTEREST_EXPENSE: { name: 'INTEREST_EXPENSE',
         property: 'interestExpenseId',

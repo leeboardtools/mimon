@@ -398,6 +398,7 @@ export class AccountEditor extends React.Component {
                 typeItems.push({
                     value: type.name,
                     text: type.description,
+                    type: type,
                 }) );
         }
         else {
@@ -408,7 +409,16 @@ export class AccountEditor extends React.Component {
             disabled = true;
         }
 
-        disabled = disabled || (type.hasLots && accountId);
+        if (!disabled) {
+            if (type.hasLots && accountId) {
+                // Only allow types that also have lots.
+                for (let i = typeItems.length - 1; i >= 0; --i) {
+                    if (!typeItems[i].type.hasLots) {
+                        typeItems.splice(i, 1);
+                    }
+                }
+            }
+        }
 
         return <DropdownField
             id={this._idBase + '_type'}
@@ -605,6 +615,10 @@ export class AccountEditor extends React.Component {
             if (type.isESPP) {
                 ordinaryIncomeEditor = this.renderDefaultSplitAccountEditor(
                     AH.DefaultSplitAccountType.ORDINARY_INCOME);
+            }
+            else if (type.isStockGrant) {
+                ordinaryIncomeEditor = this.renderDefaultSplitAccountEditor(
+                    AH.DefaultSplitAccountType.STOCK_GRANTS_INCOME);
             }
             return <React.Fragment>
                 <Row>

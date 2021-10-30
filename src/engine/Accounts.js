@@ -60,6 +60,8 @@ export function accountCategory(ref) {
  * uses {@link Lot}s.
  * @property {boolean}  [isESPP=false] If <code>true</code> the account is an 
  * ESPP security account.
+ * @property {boolean}  [isStockGrant=false] If <code>true</code> the account is a
+ * stock grant security account.
  * @property {boolean}  [isSingleton=false] If <code>true</code> only one instance of 
  * this type should be created.
  * @property {string[]} [allowedFlagAttributes] Array containing the allowed optional 
@@ -82,6 +84,9 @@ export function accountCategory(ref) {
  * @property {AccountTypeDef}   ESPP_SECURITY   For a specific security that's purchased
  * as part of an Employee Stock Purchase Plan, this has a subscription date,
  * subscription date fair market value, and purchase date fair market value.
+ * @property {AccountTypeDef}   STOCK_GRANT_SECURITY For securities that are purchased 
+ * from an income account as opposed to the parent account. For RSUs/RSAs, and
+ * exercised options.
  * @property {AccountTypeDef}   MUTUAL_FUND For a mutual fund account.
  * @property {AccountTypeDef}   REAL_ESTATE For a specific piece of real estate.
  * @property {AccountTypeDef}   PROPERTY    For specific piece of property.
@@ -139,6 +144,12 @@ export const AccountType = {
         pricedItemType: PricedItemType.SECURITY, 
         hasLots: true, 
         isESPP: true,
+    },
+    STOCK_GRANT_SECURITY: { name: 'STOCK_GRANT_SECURITY', 
+        category: AccountCategory.ASSET, 
+        pricedItemType: PricedItemType.SECURITY, 
+        hasLots: true, 
+        isStockGrant: true,
     },
     MUTUAL_FUND: { name: 'MUTUAL_FUND', 
         category: AccountCategory.ASSET, 
@@ -222,6 +233,7 @@ AccountType.ASSET.allowedChildTypes = [
     AccountType.PROPERTY,
     AccountType.SECURITY,
     AccountType.ESPP_SECURITY,
+    AccountType.STOCK_GRANT_SECURITY,
 ];
 
 AccountType.BANK.allowedChildTypes = [];
@@ -229,6 +241,7 @@ AccountType.BANK.allowedChildTypes = [];
 AccountType.BROKERAGE.allowedChildTypes = [
     AccountType.SECURITY,
     AccountType.ESPP_SECURITY,
+    AccountType.STOCK_GRANT_SECURITY,
     AccountType.MUTUAL_FUND,
     AccountType.PROPERTY,
 ];
@@ -246,6 +259,8 @@ AccountType.PROPERTY.allowedChildTypes = [];
 AccountType.SECURITY.allowedChildTypes = [];
 
 AccountType.ESPP_SECURITY.allowedChildTypes = [];
+
+AccountType.STOCK_GRANT_SECURITY.allowedChildTypes = [];
 
 AccountType.LIABILITY.allowedChildTypes = [
     AccountType.LIABILITY,

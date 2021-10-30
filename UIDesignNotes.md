@@ -282,6 +282,8 @@ Are the lists really two separate styles? Or can they be combined into one?
         - Support generation of dividend/cap gains accounts.
             - Would want to add tags for income account types, for example mark 'Income>Dividends' as a dividend parent
 
+        - Need way to specify standard tags for accounts.
+
 
     - Accounts List
         - Listen on prices for market value updates.
@@ -590,10 +592,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 Priorities:
-    - Option to change where buy/sell transactions link to.
-    
-    - Auto-complete - don't set reconcile flag.
-
     - Paste numbers round appropriately.
     
     - Improve appearance of AutoCompleteTextEditor

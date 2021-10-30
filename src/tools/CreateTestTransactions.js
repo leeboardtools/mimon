@@ -1194,6 +1194,50 @@ export function createTestTransactions(newFileContents, options) {
 
 
     }
+
+
+    // RSU account
+    const intcRSUAccount = {
+        type: 'STOCK_GRANT_SECURITY',
+        name: 'INTC',
+        pricedItemId: 'INTC',
+        defaultSplitAccountIds: {
+            stockGrantsIncomeId: 'INCOME-Stock Grants'
+        }
+    };
+    const rsuAccount = {
+        type: 'BROKERAGE',
+        name: 'Intel RSU',
+        childAccounts: [
+            intcRSUAccount,
+        ],
+    };
+    const rsuId = 'ASSET-Investments-Intel RSU';
+
+    investmentsAccount.childAccounts.push(rsuAccount);
+    const intcRSUId = rsuId + '-INTC';
+    if (intcRSUId) {
+        /*
+        const baseArgs = {
+            accountId: intcRSUId,
+            lots: lots,
+            transactions: transactions,
+            pricedItemId: 'INTC',
+            otherAccountId: 'INCOME-Stock Grants',
+        };
+
+        const lotA = 'Lot A';
+        let intcQuantityBaseValueA = 1000000;
+        addLotTransaction(baseArgs,
+            {
+                ymdDate: '2020-10-01',
+                lotTransactionType: T.LotTransactionType.BUY_SELL,
+                lotId: lotA,
+                lotBaseValue: intcQuantityBaseValueA,
+                priceBaseValue: 12345,
+            });
+        */
+    }
 }
 
 

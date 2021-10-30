@@ -196,6 +196,11 @@
                 },
                 {
                     "type": "INCOME",
+                    "name": "Stock Grants",
+                    "tags": ["STOCK_GRANT"]
+                },
+                {
+                    "type": "INCOME",
                     "name": "Gifts"
                 },
                 {

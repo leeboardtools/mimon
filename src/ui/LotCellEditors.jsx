@@ -1253,12 +1253,23 @@ function buyFromSplitInfo(splitInfo, transactionDataItem) {
         return esppBuyInfo;
     }
 
+    let sourceAccountId = accountDataItem.parentAccountId;
+    const accountType = A.getAccountType(accountDataItem.type);
+    if (accountType.isStockGrant) {
+        sourceAccountId = AH.getDefaultSplitAccountId(accessor, accountDataItem,
+            AH.DefaultSplitAccountType.STOCK_GRANTS_INCOME);
+        
+        if (!accessor.getAccountDataItemWithId(sourceAccountId)) {
+            sourceAccountId = accountDataItem.parentAccountId;
+        }
+    }
+
     return updateTransactionDataItem(splitInfo, transactionDataItem,
         {
             lotType: T.LotTransactionType.BUY_SELL,
             shares: editStates.shares,
             monetaryAmount: editStates.monetaryAmount,
-            monetaryAmountAccountId: accountDataItem.parentAccountId,
+            monetaryAmountAccountId: sourceAccountId,
             fees: editStates.fees,
             price: editStates.price,
             esppBuyInfo: esppBuyInfo,

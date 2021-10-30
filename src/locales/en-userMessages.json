@@ -295,6 +295,7 @@
     "AccountEditor-default_split_account_label_LONG_TERM_CAPITAL_GAINS_INCOME": "Account for long term capital gains income",
     "AccountEditor-default_split_account_label_SHORT_TERM_CAPITAL_GAINS_INCOME": "Account for short term capital gains income",
     "AccountEditor-default_split_account_label_ORDINARY_INCOME": "Account for ordinary income from sales",
+    "AccountEditor-default_split_account_label_STOCK_GRANTS_INCOME": "Income account for stock grants",
     "AccountEditor-default_split_account_label_INTEREST_EXPENSE_INTEREST": "Account for interest expenses",
     "AccountEditor-default_split_account_label_FEES_EXPENSE_FEES": "Account for fee expenses",
     "AccountEditor-default_split_account_label_FEES_EXPENSE_BANK_FEES": "Account for bank fee expenses",

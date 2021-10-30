@@ -975,6 +975,10 @@ test('LotCellEditors-BUY', async () => {
         // Test updateSplitInfoValues()
 
 
+        //
+        // Test stock grants income account.
+
+
         await accessor.asyncCloseAccountingFile();
     }
     finally {

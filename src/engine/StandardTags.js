@@ -17,6 +17,7 @@ import { cleanSpaces } from '../util/StringUtils';
  * @property {TagDef}   SHORT_TERM_CAPITAL_GAINS
  * @property {TagDef}   LONG_TERM_CAPITAL_GAINS
  * @property {TagDef}   ORDINARY_INCOME
+ * @property {TagDef}   STOCK_GRANTS
  * @property {TagDef}   FEES
  * @property {TagDef}   BANK_FEES
  * @property {TagDef}   BROKERAGE_COMMISSIONS
@@ -29,6 +30,7 @@ export const StandardAccountTag = {
     SHORT_TERM_CAPITAL_GAINS: { name: 'SHORT_TERM_CAPITAL_GAINS'},
     LONG_TERM_CAPITAL_GAINS: { name: 'LONG_TERM_CAPITAL_GAINS'},
     ORDINARY_INCOME: { name: 'ORDINARY_INCOME'},
+    STOCK_GRANTS: { name: 'STOCK_GRANTS'},
     FEES: { name: 'FEES' },
     BANK_FEES: { name: 'BANK_FEES' },
     BROKERAGE_COMMISSIONS: { name: 'BROKERAGE_COMMISSIONS' },
