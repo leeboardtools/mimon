@@ -11,7 +11,7 @@ import { Tooltip } from './Tooltip';
 export const CellTextEditor = React.forwardRef(
     function CellTextEditorImpl(props, ref) {
         const { ariaLabel, value, inputClassExtras, errorMsg, size,
-            onChange, onFocus, onBlur, disabled, placeholder,
+            onChange, onFocus, onBlur, onPaste, disabled, placeholder,
             autoCompleteList, onAutoComplete } = props;
 
         const divClassName = 'Input-group Mb-0 ';
@@ -31,6 +31,7 @@ export const CellTextEditor = React.forwardRef(
             onChange = {onChange}
             onFocus = {onFocus}
             onBlur = {onBlur}
+            onPaste = {onPaste}
             autoCompleteList = {autoCompleteList}
             onAutoComplete = {onAutoComplete}
             ref = {ref}
@@ -68,6 +69,8 @@ export const CellTextEditor = React.forwardRef(
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onfocus}.
  * @property {function} [onBlur]    onBlur event handler
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onblur}.
+ * @property {function} [onPaste]    onPaste event handler
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/onpaste}.
  * @property {string[]} [autoCompleteList] If present an array of auto-complete items.
  * @property {AutoCompleteTextEditor~onAutoComplete} [onAutoComplete] Callback for 
  * auto-complete selections. If not present and an item is selected from 
@@ -86,6 +89,7 @@ CellTextEditor.propTypes = {
     onChange: PropTypes.func,
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
+    onPaste: PropTypes.func,
     autoCompleteList: PropTypes.arrayOf(PropTypes.string),
     onAutoComplete: PropTypes.func,
     disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),

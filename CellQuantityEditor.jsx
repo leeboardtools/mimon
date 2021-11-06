@@ -80,6 +80,42 @@ export function renderCellQuantityDisplayAsText({
 }
 
 
+function onPasteQuantity(event, quantityDefinition, onChange) {
+    const { target } = event;
+    if (!target || !quantityDefinition || !onChange) {
+        return;
+    }
+
+    let { value } = target;
+    if (typeof value !== 'string') {
+        return;
+    }
+
+    value = value.trim();
+    if (value) {
+        return;
+    }
+
+    // Only round if the current value is empty.
+    let newValue = (event.clipboardData || window.clipboardData).getData('text');
+    if ((typeof newValue !== 'string') || !newValue) {
+        return;
+    }
+
+    const parseResult = quantityDefinition.fromValueText(newValue);
+    if (!parseResult || parseResult.remainingText) {
+        return;
+    }
+
+    newValue = parseResult.quantity.toValueText();
+    target.value = newValue;
+    
+    event.preventDefault();
+    
+    onChange(event);
+}
+
+
 /**
  * React component for editing a quantity in a table cell.
  * Want this to be an editor that attempts to format the value like
@@ -134,6 +170,7 @@ export const CellQuantityEditor = React.forwardRef(
             onChange = {onChange}
             onFocus = {onFocus}
             onBlur = {onBlur}
+            onPaste = {(event) => onPasteQuantity(event, quantityDefinition, onChange)}
             disabled = {disabled}
             ref = {ref}
         />;
