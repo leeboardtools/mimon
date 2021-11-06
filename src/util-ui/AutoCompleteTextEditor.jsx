@@ -94,6 +94,7 @@ class AutoCompleteTextEditorImpl extends React.Component {
             onChange = {this.onChange}
             onFocus = {props.onFocus}
             onBlur = {props.onBlur}
+            onPaste = {props.onPaste}
             onKeyDown = {this.onKeyDown}
             onInput = {this.onInput}
             ref = {props.innerRef}
@@ -122,6 +123,7 @@ AutoCompleteTextEditorImpl.propTypes = {
     onChange: PropTypes.func,
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
+    onPaste: PropTypes.func,
     autoCompleteList: PropTypes.arrayOf(PropTypes.string),
     onAutoComplete: PropTypes.func,
     disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),

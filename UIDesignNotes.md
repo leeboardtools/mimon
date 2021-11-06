@@ -592,8 +592,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 Priorities:
-    - Paste numbers round appropriately.
-    
     - Improve appearance of AutoCompleteTextEditor
         - Try react-autocomplete, react-datalist-input?
 
