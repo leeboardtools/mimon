@@ -133,24 +133,23 @@ const onReady = () => {
 
 const createWindow = (windowState) => {
 
-    // TODO isDevMode test is a hack to get the devTools to show up, as it's
-    // currently broken
-    if (!isDevMode) {
-        session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-            callback({
-                responseHeaders: {
-                    ...details.responseHeaders,
-                    'Content-Security-Policy': ['default-src child-src \'self\''
-                     + ' object-src \'none\''
-                     + ' script-src \'self\';'
-                     + ' frame-src \'self\';'
-                     + ' style-src \'unsafe-inline\';'
-                     + ' worker-src \'self\''
-                    ]
-                }
-            });
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+        callback({
+            responseHeaders: {
+                ...details.responseHeaders,
+                'Content-Security-Policy': [
+                    'default-src \'self\' devtools: data: ;'
+                        + ' object-src \'none\' ;'
+                        + ' font-src \'self\' https://fonts.googleapis.com'
+                            + ' https://fonts.gstatic.com ;'
+                        + ' script-src \'self\' \'unsafe-eval\' devtools: data: ;'
+                        + ' style-src \'self\' \'unsafe-inline\' devtools: ;'
+                        + ' style-src-elem \'self\' \'unsafe-inline\''
+                            + ' https://fonts.googleapis.com ;'
+                ]
+            }
         });
-    }
+    });
 
     // Create the browser window.
     mainWindow = new BrowserWindow({

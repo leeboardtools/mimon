@@ -7,14 +7,17 @@ rules.push({
 });
 */
 rules.push({
-  test: /\.css$/,
-  use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
+    test: /\.css$/,
+    use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
 });
 
 module.exports = {
-  // Put your normal webpack config below here
-  resolve: { extensions: [".js", ".jsx", ".json"] },
-  module: {
-    rules,
-  },
+    // Put your normal webpack config below here
+    target: 'electron-renderer',
+    resolve: { 
+        extensions: ['.js', '.jsx', '.json']
+    },
+    module: {
+        rules,
+    },
 };
