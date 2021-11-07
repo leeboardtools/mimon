@@ -262,6 +262,7 @@ export default class App extends React.Component {
         this.onRevertFile = this.onRevertFile.bind(this);
         this.onCloseFile = this.onCloseFile.bind(this);
         this.onExit = this.onExit.bind(this);
+        this.onRequestExit = this.onRequestExit.bind(this);
 
         this._accessor = new EngineAccessor();
         this._frameManager = new FM.FrameManager();
@@ -517,6 +518,10 @@ export default class App extends React.Component {
     onExit() {
         this.closeFile(() => { ipcRenderer.sendSync('sync-exit'); }, 
             userMsg('App-save_exit_button'));
+    }
+
+    onRequestExit() {
+        ipcRenderer.sendSync('sync-quit');
     }
 
 
@@ -944,7 +949,7 @@ export default class App extends React.Component {
                 onRecentClick = {this.onRecentClick}
                 onRemoveRecentClick = {this.onRemoveRecentClick}
                 onForceReload = {onForceReload}
-                onExitClick = {this.onExit}
+                onExitClick = {this.onRequestExit}
             />;
         
         case 'newFile': 
@@ -1027,7 +1032,7 @@ export default class App extends React.Component {
                 onClose = {this.onCancel}
                 onRevertFile = {this.onRevertFile}
                 onCloseFile = {this.onCloseFile}
-                onExit = {this.onExit}
+                onExit = {this.onRequestExit}
                 getZoomMenuItems = {this.getZoomMenuItems}
                 getDevMenuItems = {this.getDevMenuItems}
             />;

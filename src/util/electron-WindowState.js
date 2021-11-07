@@ -109,6 +109,8 @@ function saveWindowState(windowState) {
     try {
         const settings = mainReadSettingsCallback() || {};
 
+        const originalWindowState = windowState;
+
         const displayConfiguration = getDisplayConfiguration();
         windowState = Object.assign({}, windowState);
         const { windowName } = windowState;
@@ -142,7 +144,7 @@ function saveWindowState(windowState) {
         }
 
         windowSettings[windowName] = windowState;
-        
+
         mainWriteSettingsCallback(settings);
     }
     catch (e) {
@@ -202,8 +204,8 @@ export function getWindowState({
     // Default to center in the primary display.
     const primaryDisplay = screen.getPrimaryDisplay();
     const { bounds } = primaryDisplay;
-    windowState.x = bounds.x + (bounds.width - windowState.width) / 2;
-    windowState.y = bounds.y + (bounds.height - windowState.height) / 2;
+    windowState.x = Math.round(bounds.x + (bounds.width - windowState.width) / 2);
+    windowState.y = Math.round(bounds.y + (bounds.height - windowState.height) / 2);
 
     try {
         const settings = mainReadSettingsCallback();

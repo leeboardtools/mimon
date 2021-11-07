@@ -109,6 +109,11 @@ ipcMain.handle('async-axiosRequest', (event, config) => {
     });
 });
 
+
+ipcMain.on('sync-quit', (event, arg) => {
+    event.returnValue = app.quit();
+});
+
 ipcMain.on('sync-exit', (event, arg) => {
     app.exit();
 });
