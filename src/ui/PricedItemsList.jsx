@@ -166,7 +166,7 @@ function getPercentOfTotal(rowInfo, topLevelRowInfo) {
         totalAccountGainsState.overallTotals.marketValueBaseValue);
     const thisValue = quantityDefinition.baseValueToNumber(
         accountGainsState.overallTotals.marketValueBaseValue);
-    const percent = 100. * thisValue / totalValue;
+    const percent = 100 * thisValue / totalValue;
     return percent;
 }
 

@@ -109,8 +109,6 @@ function saveWindowState(windowState) {
     try {
         const settings = mainReadSettingsCallback() || {};
 
-        const originalWindowState = windowState;
-
         const displayConfiguration = getDisplayConfiguration();
         windowState = Object.assign({}, windowState);
         const { windowName } = windowState;
