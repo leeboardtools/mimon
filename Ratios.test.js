@@ -44,9 +44,9 @@ test('Ratio', () => {
 
 
     // Demonstrate that this is actually useful...
-    const ten_three = 1000000000. / 3.;
-    const three_ten = 3. / 10.;
-    expect(ten_three * three_ten).not.toBe(100000000.); // Result is 99999999.99999999
+    const ten_three = 1000000000 / 3;
+    const three_ten = 3 / 10;
+    expect(ten_three * three_ten).not.toBe(100000000); // Result is 99999999.99999999
 
     const m1 = new Ratio(-1000000000, 3);
     const m2 = new Ratio(3, -10);
