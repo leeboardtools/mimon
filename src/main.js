@@ -137,6 +137,9 @@ const onReady = () => {
 };
 
 const createWindow = (windowState) => {
+    const scriptSrc = (isDevMode)
+        ? ' script-src \'self\' \'unsafe-eval\' devtools: data: ;'
+        : ' script-src \'self\' devtools: data: ;';
 
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
         callback({
@@ -147,7 +150,7 @@ const createWindow = (windowState) => {
                         + ' object-src \'none\' ;'
                         + ' font-src \'self\' https://fonts.googleapis.com'
                             + ' https://fonts.gstatic.com ;'
-                        + ' script-src \'self\' \'unsafe-eval\' devtools: data: ;'
+                        + scriptSrc
                         + ' style-src \'self\' \'unsafe-inline\' devtools: ;'
                         + ' style-src-elem \'self\' \'unsafe-inline\''
                             + ' https://fonts.googleapis.com ;'
