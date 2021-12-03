@@ -300,6 +300,7 @@
     "AccountEditor-default_split_account_label_FEES_EXPENSE_FEES": "Account for fee expenses",
     "AccountEditor-default_split_account_label_FEES_EXPENSE_BANK_FEES": "Account for bank fee expenses",
     "AccountEditor-default_split_account_label_FEES_EXPENSE_BROKERAGE_COMMISSIONS": "Account for commission/fee expenses",
+    "AccountEditor-default_split_account_use_parent": "Use parent account setting",
     "AccountEditor-isInactive_label": "Inactive",
     "AccountEditor-isHidden_label": "Always hidden",
     "AccountEditor-flagAttribute-isIncludeInSecuritiesCash": "Include in securities cash",

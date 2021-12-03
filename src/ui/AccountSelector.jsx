@@ -168,7 +168,7 @@ export function accountEntriesToItems({ accessor, accountEntries, noIndent, }) {
 export const AccountSelector = React.forwardRef(
     function _AccountSelector(props, ref) {
         const { accessor, accountEntries, accountEntriesAreItems,
-            selectedAccountId, disabledRoot,
+            selectedAccountId, disabledRoot, defaultEntryText,
             ...passThroughProps } = props;
         let items = [];
         if (disabledRoot) {
@@ -177,14 +177,24 @@ export const AccountSelector = React.forwardRef(
                 text: userMsg('AccountSelector-disabled_root'),
             });
         }
-        else if (accountEntriesAreItems) {
-            items = accountEntries;
-        }
         else {
-            items = accountEntriesToItems({
-                accessor: accessor, 
-                accountEntries: accountEntries,
-            });
+            if (accountEntriesAreItems) {
+                items = Array.from(accountEntries);
+            }
+            else {
+                items = accountEntriesToItems({
+                    accessor: accessor, 
+                    accountEntries: accountEntries,
+                });
+            }
+
+            if (defaultEntryText) {
+                items.splice(0, 0, {
+                    value: props.defaultEntryValue,
+                    text: defaultEntryText,
+                    indent: 0,
+                });
+            }
         }
 
         return <DropdownSelector
@@ -207,11 +217,15 @@ export const AccountSelector = React.forwardRef(
  * @property {AccountSelector~AccountEntry} accountEntries
  * @property {boolean} [accountEntriesAreItems=false] Set to true if
  * accountEntries has been converted to items via {@link accountEntriesToItems}.
+ * @property {string} [defaultEntryText] If specified, the text for a 'default'
+ * item, which appears as the first item and has selection id 0.
  */
 AccountSelector.propTypes = {
     accessor: PropTypes.object.isRequired,
     accountEntries: PropTypes.array.isRequired,
     accountEntriesAreItems: PropTypes.bool,
+    defaultEntryText: PropTypes.string,
+    defaultEntryValue: PropTypes.any,
     ariaLabel: PropTypes.string,
     selectedAccountId: PropTypes.number,
     inputClassExtras: PropTypes.string,
@@ -231,7 +245,7 @@ AccountSelector.propTypes = {
 export const AccountSelectorField = React.forwardRef(
     function _AccountSelectorField(props, ref) {
         const { accessor, accountEntries, accountEntriesAreItems,
-            selectedAccountId, disabledRoot,
+            selectedAccountId, disabledRoot, defaultEntryText,
             ...passThroughProps } = props;
         let items = [];
         if (disabledRoot) {
@@ -240,14 +254,24 @@ export const AccountSelectorField = React.forwardRef(
                 text: userMsg('AccountSelector-disabled_root'),
             });
         }
-        else if (accountEntriesAreItems) {
-            items = accountEntries;
-        }
         else {
-            items = accountEntriesToItems({
-                accessor: accessor, 
-                accountEntries: accountEntries,
-            });
+            if (accountEntriesAreItems) {
+                items = Array.from(accountEntries);
+            }
+            else {
+                items = accountEntriesToItems({
+                    accessor: accessor, 
+                    accountEntries: accountEntries,
+                });
+            }
+
+            if (defaultEntryText) {
+                items.splice(0, 0, {
+                    value: props.defaultEntryValue,
+                    text: defaultEntryText,
+                    indent: 0,
+                });
+            }        
         }
 
         return <DropdownField
@@ -269,12 +293,16 @@ export const AccountSelectorField = React.forwardRef(
  * @property {AccountSelector~AccountEntry} accountEntries
  * @property {boolean} [accountEntriesAreItems=false] Set to true if
  * accountEntries has been converted to items via {@link accountEntriesToItems}.
+ * @property {string} [defaultEntryText] If specified, the text for a 'default'
+ * item, which appears as the first item and has selection id 0.
  */
 AccountSelectorField.propTypes = {
     accessor: PropTypes.object.isRequired,
     id: PropTypes.string,
     accountEntries: PropTypes.array.isRequired,
     accountEntriesAreItems: PropTypes.bool,
+    defaultEntryText: PropTypes.string,
+    defaultEntryValue: PropTypes.any,
     ariaLabel: PropTypes.string,
     label: PropTypes.string,
     selectedAccountId: PropTypes.number,

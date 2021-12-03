@@ -562,7 +562,7 @@ export class AccountEditor extends React.Component {
     }
 
 
-    renderDefaultSplitAccountEditor(defaultSplitAccountType) {
+    renderDefaultSplitAccountEditor(defaultSplitAccountType, hasUseParent) {
         const { accessor } = this.props;
         const { accountDataItem } = this.state;
 
@@ -583,18 +583,32 @@ export class AccountEditor extends React.Component {
         const accountEntries = [];
         this.addAccountsToAccountEntries(rootAccountId, accountEntries);
 
-        let selectedAccountId = AH.getDefaultSplitAccountId(accessor, accountDataItem,
-            defaultSplitAccountType);
+        let selectedAccountId = AH.getDefaultSplitAccountId({
+            accessor: accessor, 
+            accountDataItem: accountDataItem,
+            defaultSplitAccountType: defaultSplitAccountType,
+            keepUseParentAccountId: hasUseParent,
+            defaultToUseParentAccountId: hasUseParent,
+        });
+        
+        let defaultEntryText;
+        let defaultEntryValue;
+        if (hasUseParent) {
+            defaultEntryText = userMsg('AccountEditor-default_split_account_use_parent');
+            defaultEntryValue = AH.USE_PARENT_ACCOUNT_ID;
+        }
 
         return <AccountSelectorField
-            accessor={accessor}
-            id={this._idBase + property}
-            accountEntries={accountEntries}
-            ariaLabel={label}
-            label={label}
-            selectedAccountId={selectedAccountId}
-            errorMsg={this.state.parentErrorMsg}
-            onChange={(e) => this.onDefaultAccountChange(e, property)}
+            accessor = {accessor}
+            id = {this._idBase + property}
+            accountEntries = {accountEntries}
+            defaultEntryText = {defaultEntryText}
+            defaultEntryValue = {defaultEntryValue}
+            ariaLabel = {label}
+            label = {label}
+            selectedAccountId = {selectedAccountId}
+            errorMsg = {this.state.parentErrorMsg}
+            onChange = {(e) => this.onDefaultAccountChange(e, property)}
         />;
 
     }
@@ -610,62 +624,94 @@ export class AccountEditor extends React.Component {
             return;
         }
 
+        let hasChildLots;
+        const { allowedChildTypes } = type;
+        if (!type.hasLots && (category === A.AccountCategory.ASSET) 
+         && allowedChildTypes) {
+            for (let i = allowedChildTypes.length - 1; i >= 0; --i) {
+                if (allowedChildTypes[i].hasLots) {
+                    hasChildLots = true;
+                    break;
+                }
+            }
+        }
+
+        // ESPP
+        // Fees         Dividends       LT Cap Gain
+        //  -           Ordinary Inc    ST Cap Gain
+        //
+        // Grant
+        // Fees         Dividends       LT Cap Gain
+        //  -           Grant Inc       ST Cap Gain
+        //
+        // Security
+        // Fees         Dividends       LT Cap Gain
+        //  -           -               ST Cap Gain
+        //
+        // Other
+        // Fees     
+        // Interest
+        //
+        // Brokerage
+        // Fees         Dividends       Default LT Cap Gain
+        // Interest                     Default ST Cap Gain
+
+        let feesEditor = this.renderDefaultSplitAccountEditor(
+            AH.DefaultSplitAccountType.FEES_EXPENSE);
+        let interestEditor;
+        let dividendsEditor;
+        let auxIncomeEditor;
+        let longTermCapGainsEditor;
+        let shortTermCapGainsEditor;
+
         if (type.hasLots) {
-            let ordinaryIncomeEditor;
             if (type.isESPP) {
-                ordinaryIncomeEditor = this.renderDefaultSplitAccountEditor(
+                auxIncomeEditor = this.renderDefaultSplitAccountEditor(
                     AH.DefaultSplitAccountType.ORDINARY_INCOME);
             }
             else if (type.isStockGrant) {
-                ordinaryIncomeEditor = this.renderDefaultSplitAccountEditor(
+                auxIncomeEditor = this.renderDefaultSplitAccountEditor(
                     AH.DefaultSplitAccountType.STOCK_GRANTS_INCOME);
             }
-            return <React.Fragment>
-                <Row>
-                    <Col>
-                        {this.renderDefaultSplitAccountEditor(
-                            AH.DefaultSplitAccountType.FEES_EXPENSE)}
-                    </Col>
-                    <Col>
-                        {this.renderDefaultSplitAccountEditor(
-                            AH.DefaultSplitAccountType.DIVIDENDS_INCOME)}
-                    </Col>
-                    <Col>
-                        {this.renderDefaultSplitAccountEditor(
-                            AH.DefaultSplitAccountType
-                                .LONG_TERM_CAPITAL_GAINS_INCOME)}
-                    </Col>
-                    <Col>
-                        {ordinaryIncomeEditor}
-                    </Col>
-                </Row>
-                <Row>
-                    <Col>
-                    </Col>
-                    <Col>
-                    </Col>
-                    <Col>
-                        {this.renderDefaultSplitAccountEditor(
-                            AH.DefaultSplitAccountType
-                                .SHORT_TERM_CAPITAL_GAINS_INCOME)}
-                    </Col>
-                    <Col>
-                    </Col>
-                </Row>
-            </React.Fragment>;
+
+            dividendsEditor = this.renderDefaultSplitAccountEditor(
+                AH.DefaultSplitAccountType.DIVIDENDS_INCOME,
+                true);
+            
+            longTermCapGainsEditor = this.renderDefaultSplitAccountEditor(
+                AH.DefaultSplitAccountType.LONG_TERM_CAPITAL_GAINS_INCOME,
+                true);
+            
+            shortTermCapGainsEditor = this.renderDefaultSplitAccountEditor(
+                AH.DefaultSplitAccountType.SHORT_TERM_CAPITAL_GAINS_INCOME,
+                true);
+        }
+        else {
+            interestEditor = this.renderDefaultSplitAccountEditor(
+                AH.DefaultSplitAccountType.INTEREST_INCOME);
+
+            if (hasChildLots) {
+                dividendsEditor = this.renderDefaultSplitAccountEditor(
+                    AH.DefaultSplitAccountType.DIVIDENDS_INCOME);
+                
+                longTermCapGainsEditor = this.renderDefaultSplitAccountEditor(
+                    AH.DefaultSplitAccountType.LONG_TERM_CAPITAL_GAINS_INCOME);
+                
+                shortTermCapGainsEditor = this.renderDefaultSplitAccountEditor(
+                    AH.DefaultSplitAccountType.SHORT_TERM_CAPITAL_GAINS_INCOME);
+            }
         }
 
         return <React.Fragment>
             <Row>
-                <Col>
-                    {this.renderDefaultSplitAccountEditor(
-                        AH.DefaultSplitAccountType.FEES_EXPENSE)}
-                </Col>
-                <Col>{this.renderDefaultSplitAccountEditor(
-                    AH.DefaultSplitAccountType.INTEREST_INCOME)}
-                </Col>
-                <Col></Col>
-                <Col></Col>
+                <Col>{feesEditor}</Col>
+                <Col>{dividendsEditor}</Col>
+                <Col>{longTermCapGainsEditor}</Col>
+            </Row>
+            <Row>
+                <Col>{interestEditor}</Col>
+                <Col>{auxIncomeEditor}</Col>
+                <Col>{shortTermCapGainsEditor}</Col>
             </Row>
         </React.Fragment>;
     }

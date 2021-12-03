@@ -294,6 +294,13 @@ export function getDefaultSplitAccountType(defaultSplitAccountType) {
 
 
 /**
+ * Special account id used to indicate that the id from the parent's
+ * default split accounts should be used.
+ */
+export const USE_PARENT_ACCOUNT_ID = -1;
+
+
+/**
  * Retrieves the tags array for a {@link DefaultSplitAccountTypeDef},
  * handling the special cases for a specific account data item.
  * @param {AccountDataItem} accountDataItem 
@@ -314,17 +321,39 @@ export function getDefaultSplitAccountTags(accountDataItem,
     return tags;
 }
 
+/**
+ * @typedef {object} getDefaultSplitAccountIdOptions
+ * @property {EngineAccessor} accessor 
+ * @property {AccountDataItem|number} accountDataItem 
+ * @property {DefaultSplitAccountType} defaultSplitAccountType 
+ * @property {boolean} [keepUseParentAccountId=false]  If <code>true</code> and the
+ * default split account id is USE_PARENT_ACCOUNT_ID then that is returned instead
+ * of being resolved.
+ * @property {boolean} [defaultToUseParentAccountId=false] If <code>true</code>
+ * and no account id is assigned then USE_PARENT_ACCOUNT_ID is returned.
+ */
+
 
 /**
  * Retrieves the account id to use for a default split account associated with an 
  * accountDataItem.
- * @param {EngineAccessor} accessor 
+ * @param {EngineAccessor|getDefaultSplitAccountIdOptions} accessor 
  * @param {AccountDataItem|number} accountDataItem 
  * @param {DefaultSplitAccountType} defaultSplitAccountType 
  * @returns {number}
  */
 export function getDefaultSplitAccountId(accessor, accountDataItem, 
     defaultSplitAccountType) {
+    let keepUseParentAccountId;
+    let defaultToUseParentAccountId;
+    if (accessor.defaultSplitAccountType) {
+        accountDataItem = accessor.accountDataItem;
+        defaultSplitAccountType = accessor.defaultSplitAccountType;
+        keepUseParentAccountId = accessor.keepUseParentAccountId;
+        defaultToUseParentAccountId = accessor.defaultToUseParentAccountId;
+
+        accessor = accessor.accessor;
+    }
     
     defaultSplitAccountType = getDefaultSplitAccountType(defaultSplitAccountType);
 
@@ -339,10 +368,28 @@ export function getDefaultSplitAccountId(accessor, accountDataItem,
         accountId = defaultSplitAccountIds[defaultSplitAccountType.property];
     }
 
+    if (accountId === USE_PARENT_ACCOUNT_ID) {
+        if (keepUseParentAccountId) {
+            return accountId;
+        }
+        const parentAccountDataItem = accessor.getAccountDataItemWithId(
+            accountDataItem.parentAccountId);
+        if (parentAccountDataItem) {
+            const { defaultSplitAccountIds } = parentAccountDataItem;
+            if (defaultSplitAccountIds) {
+                accountId = defaultSplitAccountIds[defaultSplitAccountType.property];
+            }
+        }
+    }
+
     if (accessor.getAccountDataItemWithId(accountId)) {
         return accountId;
     }
     accountId = undefined;
+
+    if (defaultToUseParentAccountId) {
+        return USE_PARENT_ACCOUNT_ID;
+    }
 
     let { category } = defaultSplitAccountType;
     const tags = getDefaultSplitAccountTags(accountDataItem, defaultSplitAccountType);
