@@ -373,27 +373,6 @@ export function renderDescriptionDisplay(args) {
     return renderTextDisplay(args);
 }
 
-/**
- * Header cell renderer for description properties.
- * @param {*} args 
- */
-export function renderDescriptonHeaderCell(args) {
-    const { onRenderHeaderFooterCell } = args;
-    let component = onRenderHeaderFooterCell(args);
-
-    const { rowRenderInfo } = args;
-    if (rowRenderInfo && rowRenderInfo.showColumnFilters) {
-        component = <div>
-            {component}
-            <div>
-                Hello there
-            </div>
-        </div>;
-    }
-
-    return component;
-}
-
 
 /**
  * Retrieves a column info for description cells.
@@ -412,7 +391,6 @@ export function getDescriptionColumnInfo(args) {
 
         renderDisplayCell: renderDescriptionDisplay,
         renderEditCell: renderDescriptionEditor,
-        renderHeaderCell: renderDescriptonHeaderCell,
     },
     args);
 }

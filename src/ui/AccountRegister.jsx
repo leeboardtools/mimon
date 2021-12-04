@@ -19,6 +19,7 @@ import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { Row, Col } from '../util-ui/RowCols';
 import { addAccountIdsToAccountEntries, AccountSelector, 
     accountEntriesToItems } from './AccountSelector';
+import { CellTextEditor } from '../util-ui/CellTextEditor';
 
 
 const allColumnInfoDefs = {};
@@ -196,6 +197,33 @@ function renderDescriptionCellEditor(args) {
     const { rowEntry } = args;
     const { caller } = rowEntry;
     return caller.renderDescriptionCellEditor(args);
+}
+
+function onChangeDescriptionFilter(e, caller) {
+    const { props } = caller;
+    const { onColumnFiltersChange } = props;
+    if (onColumnFiltersChange) {
+        onColumnFiltersChange({
+            description: e.target.value,
+        });
+    }
+}
+
+function renderDescriptionFilterEditor(args) {
+    const { rowRenderInfo } = args;
+    const { caller } = rowRenderInfo;
+    if (caller) {
+        let value;
+        const { columnFilters } = caller.props;
+        if (columnFilters) {
+            value = columnFilters.description;
+        }
+        return <CellTextEditor
+            arialLabel = "Description Filter"
+            value = {value}
+            onChange = {(e) => onChangeDescriptionFilter(e, caller)}
+        />;
+    }
 }
 
 
@@ -690,6 +718,7 @@ function getAccountRegisterColumnInfoDefs(accountType) {
                     getCellValue: getDescriptionCellValue,
                     saveCellValue: saveDescriptionCellValue,
                     renderEditCell: renderDescriptionCellEditor,
+                    renderHeaderFilterComponent: renderDescriptionFilterEditor,
                 }
             );
 
@@ -850,6 +879,7 @@ export class AccountRegister extends React.Component {
             rowEntriesByTransactionId: new Map(),
             currency: pricedItemDataItem.currency,
             quantityDefinition: pricedItemDataItem.quantityDefinition,
+            forceLayoutUpdateId: 0,
         };
 
 
@@ -1075,6 +1105,12 @@ export class AccountRegister extends React.Component {
             }
         }
 
+        if (props.showColumnFilters !== prevProps.showColumnFilters) {
+            this.setState({
+                forceLayoutUpdateId: this.state.forceLayoutUpdateId + 1,
+            });
+        }
+
 
         if (rowsNeedUpdating) {
             const prevActiveRowInfo = this.getActiveRowInfo();
@@ -1176,10 +1212,19 @@ export class AccountRegister extends React.Component {
 
             modifiedTransactionIds = modifiedTransactionIds || new Set();
 
-            const { accessor, accountId } = this.props;
-            const transactionKeys 
-                = await accessor.asyncGetSortedTransactionKeysForAccount(
+            const { accessor, accountId, showColumnFilters, columnFilters } = this.props;
+
+            let transactionKeys;
+            if (showColumnFilters && columnFilters) {
+                transactionKeys 
+                    = await accessor.asyncGetFilteredTransactionKeysForAccount(
+                        accountId, columnFilters);
+            }
+
+            if (!transactionKeys) {
+                transactionKeys = await accessor.asyncGetSortedTransactionKeysForAccount(
                     accountId, true);
+            }
             
             
             let { activeRowIndex, rowEntries } = this.state;
@@ -1201,7 +1246,7 @@ export class AccountRegister extends React.Component {
                     return;
                 }
 
-                const { splitCount } = key;
+                let { splitCount } = key;
 
                 let existingTransactionRowEntries = rowEntriesByTransactionId.get(key.id);
                 let isModified = modifiedTransactionIds.has(key.id);
@@ -1547,6 +1592,7 @@ export class AccountRegister extends React.Component {
         if (args.rowIndex < 0) {
             return {
                 showColumnFilters: this.props.showColumnFilters,
+                caller: this,
             };
         }
     }
@@ -2279,7 +2325,7 @@ export class AccountRegister extends React.Component {
                 requestedActiveRowIndex = {state.activeRowIndex}
                 onActiveRowChanged = {this.onActiveRowChanged}
 
-                requestOpenActiveRow = {state.openNewRow}
+                requestOpenActiveRow = {state.openNewRow && !props.showColumnFilters}
 
                 onStartRowEdit = {this._cellEditorsManager.onStartRowEdit}
                 asyncOnSaveRowEdit = {this._cellEditorsManager.asyncOnSaveRowEdit}
@@ -2287,6 +2333,8 @@ export class AccountRegister extends React.Component {
 
                 onEnterCellEdit = {this._cellEditorsManager.onEnterCellEdit}
                 onExitCellEdit = {this._cellEditorsManager.onExitCellEdit}
+
+                forceLayoutUpdateId = { state.forceLayoutUpdateId }
 
                 id = {this.props.id}
                 ref = {this._rowTableRef}

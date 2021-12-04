@@ -127,12 +127,33 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
     }
 
 
+    onClearColumnFilters(tabId) {
+        const state = this.getTabIdState(tabId);
+
+        const newState = Object.assign({}, state, 
+            {
+                columnFilters: undefined,
+            });
+        newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
+        
+        const actionNameId = 'AccountRegisterHandler-action_clearColumnFilters';
+
+        this.setTabIdState(tabId, newState);
+
+        this.setTabIdProjectSettings(state.projectSettingsId,
+            {
+                columnFilters: newState.columnFilters,
+            },
+            userMsg(actionNameId));
+    }
+
+
     onColumnFiltersChange(tabId, newColumnFilters) {
         const state = this.getTabIdState(tabId);
 
         const newState = Object.assign({}, state, 
             {
-                columnFilters: newColumnFilters,
+                columnFilters: Object.assign({}, state.columnFilters, newColumnFilters),
             });
         newState.dropdownInfo = this.getTabDropdownInfo(tabId, newState);
         
@@ -304,6 +325,10 @@ export class AccountRegisterHandler extends MainWindowHandlerBase {
                 checked: state.showColumnFilters,
                 onChooseItem: () => this.onToggleColumnFilters(tabId),
 
+            },
+            { id: 'clearColumnFilters',
+                label: userMsg('AccountRegisterHandler-clearColumnFilters'),
+                onChooseItem: () => this.onClearColumnFilters(tabId),                
             },
             { id: 'columnsSubMenu',
                 label: userMsg('AccountsListHandler-columns_subMenu'),

@@ -586,6 +586,12 @@ export class RowTable extends React.Component {
         else if (props.preHeaderComponent !== prevProps.preHeaderComponent) {
             this.updateLayout(true);
         }
+        else {
+            const { forceLayoutUpdateId } = props;
+            if (forceLayoutUpdateId !== state.lastForceLayoutUpdateId) {
+                this.updateLayout(true);
+            }
+        }
 
         if ((props.rowCount !== prevProps.rowCount)
          && !state.nextLayoutState) {
@@ -672,6 +678,11 @@ export class RowTable extends React.Component {
         if ((clientWidth <= 0) || (clientHeight <= 0)) {
             return;
         }
+
+        // Clear this now as we've started the layout update...
+        this.setState({
+            lastForceLayoutUpdateId: this.props.forceLayoutUpdateId,
+        });
 
         const { state } = this;
         const { isAutoSize } = state;
@@ -2296,6 +2307,7 @@ RowTable.propTypes = {
     rowClassExtras: PropTypes.string,
     footerClassExtras: PropTypes.string,
 
+    forceLayoutUpdateId: PropTypes.number,
     id: PropTypes.string,
 };
 

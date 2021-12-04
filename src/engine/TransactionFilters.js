@@ -550,6 +550,8 @@ export class TransactionFilteringManager {
      * A {@link TransactionKey} with the following added:
      * @property {string} description
      * @property {number[]} splitAccountIds
+     * @property {number} splitCount The number of split entries with the requested
+     * account id.
      * @property {TransactionDataItem} [transactionDataItem] Only specified if it
      * is readily available.
      */
@@ -660,11 +662,18 @@ export class TransactionFilteringManager {
 
         // Now construct the return values, which are transaction entries.
         const filteredTransactionKeys = transactionEntries.map((transactionEntry) => {
+            let splitCount = 0;
+            transactionEntry.splitAccountIds.forEach((splitAccountId) => {
+                if (splitAccountId === accountId) {
+                    ++splitCount;
+                }
+            });
             return {
                 id: transactionEntry.transactionId,
                 ymdDate: getYMDDate(transactionEntry.ymdDate),
                 description: transactionEntry.description,
                 splitAccountIds: Array.from(transactionEntry.splitAccountIds),
+                splitCount: splitCount,
                 transactionDataItem: transactionEntry.transactionDataItem,
             };
         });

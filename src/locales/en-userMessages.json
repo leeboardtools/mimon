@@ -319,10 +319,12 @@
     "AccountRegisterHandler-copyTransaction": "Copy Transaction",
     "AccountRegisterHandler-pasteTransaction": "Paste Transaction",
     "AccountRegisterHandler-showColumnFilters": "Show Filters",
+    "AccountRegisterHandler-clearColumnFilters": "Clear Filters",
 
     "AccountRegisterHandler-action_showColumnFilters": "Show Filters",
     "AccountRegisterHandler-action_hideColumnFilters": "Hide Filters",
     "AccountRegisterHandler-action_columnFiltersChange": "Filters Change",
+    "AccountRegisterHandler-action_clearColumnFilters": "Clear Filters",
 
 
     "AccountRegister-split": "Split",
