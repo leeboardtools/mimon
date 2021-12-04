@@ -193,19 +193,40 @@ export function accountStateToAccountGainsState(args) {
     if (lotStates) {
         const accountStateInfo = createAccountStateInfo(args);
 
+        let totalSharesBaseValue = 0;
         let totalMarketValueBaseValue = 0;
         let totalCostBasisBaseValue = 0;
         for (let i = 0; i < lotStates.length; ++i) {
             const lotState = LS.getLotStateDataItem(lotStates[i], true);
+
+            // We add the shares instead of summing the market values to avoid
+            // roundoff error accumulation.
+            if (lotState.quantityBaseValue) {
+                totalSharesBaseValue += lotState.quantityBaseValue;
+            }
+
             lotState.marketValueBaseValue = calcMarketValueBaseValueFromLotState(
                 accountStateInfo, lotState);
-            if (lotState.marketValueBaseValue) {
-                totalMarketValueBaseValue += lotState.marketValueBaseValue;
-            }
+
             if (lotState.costBasisBaseValue) {
                 totalCostBasisBaseValue += lotState.costBasisBaseValue;
             }
             lotStates[i] = lotState;
+        }
+
+        if (totalSharesBaseValue) {
+            const { sharesQuantityDefinition, currencyQuantityDefinition,
+                priceDataItem } = accountStateInfo;
+            if (priceDataItem) {
+                const sharesValue = sharesQuantityDefinition.baseValueToNumber(
+                    totalSharesBaseValue);
+                const marketValue = sharesValue * priceDataItem.close;
+                totalMarketValueBaseValue = currencyQuantityDefinition.numberToBaseValue(
+                    marketValue);
+            }
+            else {
+                totalMarketValueBaseValue = totalCostBasisBaseValue;
+            }
         }
 
         accountGainsState.lotStates = lotStates;
