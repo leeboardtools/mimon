@@ -36,8 +36,11 @@ class AutoCompleteTextEditorImpl extends React.Component {
     onInput(e) {
         const { autoCompleteList, onAutoComplete } = this.props;
         if (onAutoComplete && (this._lastKey === 'Unidentified')) {
+            console.log('autoComplete checking');
+
             let { value } = e.target;
             if (value) {
+                console.log('autoComplete looking for: ' + value);
                 value = value.toUpperCase();
                 for (let i = 0; i < autoCompleteList.length; ++i) {
                     if (autoCompleteList[i].toUpperCase() === value) {

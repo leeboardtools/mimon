@@ -10,7 +10,7 @@ import { Tooltip } from './Tooltip';
  */
 export const CellTextEditor = React.forwardRef(
     function CellTextEditorImpl(props, ref) {
-        const { ariaLabel, value, inputClassExtras, errorMsg, size,
+        const { id, ariaLabel, value, inputClassExtras, errorMsg, size,
             onChange, onFocus, onBlur, onPaste, disabled, placeholder,
             autoCompleteList, onAutoComplete } = props;
 
@@ -21,6 +21,7 @@ export const CellTextEditor = React.forwardRef(
         const inputType = props.inputType || 'text';
 
         const inputComponent = <AutoCompleteTextEditor
+            id = {id}
             type = {inputType}
             inputClassExtras = {className}
             ariaLabel = {ariaLabel}
