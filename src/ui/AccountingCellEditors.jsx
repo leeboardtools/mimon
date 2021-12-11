@@ -189,13 +189,20 @@ function renderTextEditorWithTooltips(args, valueProperty) {
  */
 export function renderTextDisplay(args) {
     const { columnInfo } = args;
-    const { ariaLabel, inputClassExtras, inputSize } = columnInfo;
+    const { ariaLabel, inputSize } = columnInfo;
+    let { inputClassExtras } = columnInfo;
     let value = args.value;
     let placeholder;
     let tooltip;
     if (typeof value === 'object') {
         placeholder = value.placeholder;
         tooltip = value.tooltip;
+
+        if (value.inputClassExtras) {
+            inputClassExtras = (inputClassExtras || '')
+                + ' ' + value.inputClassExtras;
+        }
+
         value = value.value;
     }
     if ((value === undefined) || (value === null)) {
@@ -295,6 +302,7 @@ export function renderNameDisplay(args) {
                 value: value.name,
                 tooltip: value.description,
                 placeholder: value.placeholder,
+                inputClassExtras: value.inputClassExtras,
             },
         });
 
@@ -366,6 +374,7 @@ export function renderDescriptionDisplay(args) {
                 value: value.description, 
                 tooltip: value.memo,
                 placeholder: value.placeholder,
+                inputClassExtras: value.inputClassExtras,
             },
         });
     }

@@ -333,6 +333,7 @@
     "AccountRegister-dummy_accountName": "Sample Account Name",
     "AccountRegister-new_description": "New transaction",
     "AccountRegister-confirm_reconcile_change": "One or more of the transaction splits was marked 'Reconciled' but has been changed such that it may affect the reconciled amounts.\nDo you want to continue with the change?",
+    "AccountRegister-loading": "Loading...",
 
 
     "AccountingCellEditors-date": "Date",

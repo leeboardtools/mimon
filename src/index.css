@@ -338,6 +338,11 @@ label {
 .AccountRegister {
 }
 */
+.AccountRegister-loading {
+    font-style: italic;
+    font-weight:lighter;
+    color: #495057a6;
+}
 
 .AccountRegister-tooltip-row {
     margin-left: -10px;

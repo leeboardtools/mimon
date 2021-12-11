@@ -178,6 +178,11 @@ function getDescriptionCellValue(args) {
         }
         return description;
     }
+
+    return {
+        description: userMsg('AccountRegister-loading'),
+        inputClassExtras: 'AccountRegister-loading',
+    };
 }
 
 function saveDescriptionCellValue(args) {
@@ -1214,11 +1219,13 @@ export class AccountRegister extends React.Component {
 
             const { accessor, accountId, showColumnFilters, columnFilters } = this.props;
 
+            let alwaysReloadRows;
             let transactionKeys;
             if (showColumnFilters && columnFilters) {
                 transactionKeys 
                     = await accessor.asyncGetFilteredTransactionKeysForAccount(
                         accountId, columnFilters);
+                alwaysReloadRows = transactionKeys && (transactionKeys.length);
             }
 
             if (!transactionKeys) {
@@ -1405,7 +1412,13 @@ export class AccountRegister extends React.Component {
                 maxLoadedRowIndex: -1,
             });
 
-            if (newTopVisibleRow !== undefined) {
+            if ((newTopVisibleRow !== undefined) || alwaysReloadRows) {
+                if (newTopVisibleRow === undefined) {
+                    newTopVisibleRow = (visibleRowRange) 
+                        ? visibleRowRange.topVisibleRow
+                        : 0;
+                }
+
                 if (activeRowIndex !== undefined) {
 
                     // Keep the active row visible...
@@ -1525,7 +1538,7 @@ export class AccountRegister extends React.Component {
 
             newRowEntries[rowIndex] = newRowEntry;
             let transactionIdRowEntries 
-                = Array.from(newRowEntriesByTransactionIds.get(id));
+                = Array.from(newRowEntriesByTransactionIds.get(id) || []);
             transactionIdRowEntries[newRowEntry.splitOccurrance]
                 = newRowEntry;
             newRowEntriesByTransactionIds.set(id, transactionIdRowEntries);
