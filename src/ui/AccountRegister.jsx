@@ -1412,13 +1412,14 @@ export class AccountRegister extends React.Component {
                 maxLoadedRowIndex: -1,
             });
 
-            if ((newTopVisibleRow !== undefined) || alwaysReloadRows) {
-                if (newTopVisibleRow === undefined) {
-                    newTopVisibleRow = (visibleRowRange) 
-                        ? visibleRowRange.topVisibleRow
-                        : 0;
+            if (alwaysReloadRows && (newTopVisibleRow === undefined)) {
+                if (visibleRowRange) {
+                    newTopVisibleRow = visibleRowRange.topVisibleRow;
+                    newBottomFullyVisibleRow = visibleRowRange.bottomFullyVisibleRow;
                 }
+            }
 
+            if (newTopVisibleRow !== undefined) {
                 if (activeRowIndex !== undefined) {
 
                     // Keep the active row visible...
@@ -1491,6 +1492,7 @@ export class AccountRegister extends React.Component {
 
             // We need to look out for skipped transactions and also the possibility
             // that we're now out of sync...
+            const startResultIndex = resultIndex;
             let resultEntry;
             for (; resultIndex < results.length; ++resultIndex) {
                 resultEntry = results[resultIndex];
@@ -1500,9 +1502,20 @@ export class AccountRegister extends React.Component {
                 }
             }
             if (resultIndex >= results.length) {
-                // Uh-oh, must be out of sync...
-                console.log('Out of sync...');
-                return;
+                resultIndex = 0;
+                for (; resultIndex < startResultIndex; ++resultIndex) {
+                    resultEntry = results[resultIndex];
+                    if ((splitOccurrance === resultEntry.splitOccurrance)
+                    && (id === resultEntry.transactionDataItem.id)) {
+                        break;
+                    }
+                }
+
+                if (resultIndex >= startResultIndex) {
+                    // Uh-oh, must be out of sync...
+                    console.log('Out of sync...');
+                    return;
+                }
             }
             
             const { transactionDataItem } = resultEntry;
