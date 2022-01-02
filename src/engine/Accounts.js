@@ -244,6 +244,7 @@ AccountType.BROKERAGE.allowedChildTypes = [
     AccountType.STOCK_GRANT_SECURITY,
     AccountType.MUTUAL_FUND,
     AccountType.PROPERTY,
+    AccountType.BROKERAGE,  // To allow for grouping...
 ];
 
 AccountType.CASH.allowedChildTypes = [];
