@@ -344,6 +344,8 @@ export function getDefaultSplitAccountTags(accountDataItem,
  */
 export function getDefaultSplitAccountId(accessor, accountDataItem, 
     defaultSplitAccountType) {
+    let originalAccessor = accessor;
+
     let keepUseParentAccountId;
     let defaultToUseParentAccountId;
     if (accessor.defaultSplitAccountType) {
@@ -361,6 +363,25 @@ export function getDefaultSplitAccountId(accessor, accountDataItem,
         accountDataItem = accessor.getAccountDataItemWithId(accountDataItem);
     }
     accountDataItem = A.getAccountDataItem(accountDataItem);
+
+    const type = A.getAccountType(accountDataItem.type);
+    if (type.isGroup) {
+        // Groups use the parent's defaults.
+        const parentAccountDataItem = accessor.getAccountDataItemWithId(
+            accountDataItem.parentAccountId
+        );
+        if (parentAccountDataItem) {
+            const arg = (originalAccessor === accessor)
+                ? {
+                    accessor: accessor,
+                    defaultSplitAccountType: defaultSplitAccountType,
+                }
+                : Object.assign({}, originalAccessor);
+            arg.accountDataItem = parentAccountDataItem;
+            return getDefaultSplitAccountId(arg);
+        }
+    }
+
     const { defaultSplitAccountIds } = accountDataItem;
 
     let accountId;

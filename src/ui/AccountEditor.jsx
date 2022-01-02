@@ -632,6 +632,9 @@ export class AccountEditor extends React.Component {
          && (category !== A.AccountCategory.LIABILITY)) {
             return;
         }
+        if (type.isGroup) {
+            return;
+        }
 
         let hasChildLots;
         const { allowedChildTypes } = type;

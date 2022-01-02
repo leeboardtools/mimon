@@ -64,6 +64,10 @@ export function accountCategory(ref) {
  * stock grant security account.
  * @property {boolean}  [isSingleton=false] If <code>true</code> only one instance of 
  * this type should be created.
+ * @property {boolean}  [hasSecurities=false] If <code>true</code> the account
+ * can hold securities.
+ * @property {boolean}  [isGroup=false] If <code>true</code> the account is a grouping
+ * account.
  * @property {string[]} [allowedFlagAttributes] Array containing the allowed optional 
  * flag (boolean) attributes
  * @property {AccountTypeDef[]} allowedChildTypes   Array containing the account types 
@@ -79,6 +83,8 @@ export function accountCategory(ref) {
  * @property {AccountTypeDef}   BANK    For accounts that hold money, such as checking 
  * and savings accounts.
  * @property {AccountTypeDef}   BROKERAGE   Accounts that typically contain securities.
+ * @property {AccountTypeDef}   BROKERAGE_GROUP   Use for grouping child accounts within
+ * a BROKERAGE account.
  * @property {AccountTypeDef}   CASH    For straight cash.
  * @property {AccountTypeDef}   SECURITY    For a specific security.
  * @property {AccountTypeDef}   ESPP_SECURITY   For a specific security that's purchased
@@ -122,6 +128,16 @@ export const AccountType = {
         category: AccountCategory.ASSET, 
         pricedItemType: PricedItemType.CURRENCY, 
         hasChecks: true, 
+        hasSecurities: true,
+        allowedFlagAttributes: [
+            'isRetirementAccount',
+        ],
+    },
+    BROKERAGE_GROUPING: { name: 'BROKERAGE_GROUPING', 
+        category: AccountCategory.ASSET, 
+        pricedItemType: PricedItemType.CURRENCY, 
+        hasSecurities: true,
+        isGroup: true,
         allowedFlagAttributes: [
             'isRetirementAccount',
         ],
@@ -155,6 +171,7 @@ export const AccountType = {
         category: AccountCategory.ASSET, 
         pricedItemType: PricedItemType.MUTUAL_FUND, 
         hasLots: true, 
+        hasSecurities: true,
         hasChecks: true, 
     },
     REAL_ESTATE: { name: 'REAL_ESTATE', 
@@ -244,7 +261,15 @@ AccountType.BROKERAGE.allowedChildTypes = [
     AccountType.STOCK_GRANT_SECURITY,
     AccountType.MUTUAL_FUND,
     AccountType.PROPERTY,
-    AccountType.BROKERAGE,  // To allow for grouping...
+    AccountType.BROKERAGE_GROUPING,
+];
+
+AccountType.BROKERAGE_GROUPING.allowedChildTypes = [
+    AccountType.SECURITY,
+    AccountType.ESPP_SECURITY,
+    AccountType.STOCK_GRANT_SECURITY,
+    AccountType.MUTUAL_FUND,
+    AccountType.PROPERTY,
 ];
 
 AccountType.CASH.allowedChildTypes = [];

@@ -1139,8 +1139,7 @@ export class PricedItemsList extends React.Component {
         AH.crawlAccountTree(accessor, accessor.getRootAssetAccountId(), 
             (accountDataItem) => {
                 const type = A.getAccountType(accountDataItem.type);
-                if ((type !== A.AccountType.BROKERAGE)
-                 && (type !== A.AccountType.MUTUAL_FUND)
+                if (!type.hasSecurities
                  && !accountDataItem.isIncludeInSecuritiesCash) {
                     return;
                 }
