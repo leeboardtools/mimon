@@ -296,7 +296,7 @@ function cleanPricesResult(prices) {
 
 
 let isTestEnabled;
-isTestEnabled = true;
+//isTestEnabled = true;
 
 
 //
@@ -306,17 +306,20 @@ test('asyncGetPricesForTicker', async () => {
     if (!isTestEnabled) {
         let result;
         result = await asyncGetPricesForTicker('AAPL', '2014-06-06', '2014-06-09');
-        expect(result).toEqual([
+        expect(result).toContainEqual(
             expect.objectContaining(
                 { ymdDate: new YMDDate('2014-06-06'),
                     close: 23.0561,
                 }),
-            {
-                ymdDate: new YMDDate('2014-06-09'),
-                newCount: 7,
-                oldCount: 1,
-            },
-        ]);
+        );
+        expect(result).toContainEqual(
+            expect.objectContaining(
+                {
+                    ymdDate: new YMDDate('2014-06-09'),
+                    newCount: 7,
+                    oldCount: 1,
+                }),
+        );
 
         return;
     }
