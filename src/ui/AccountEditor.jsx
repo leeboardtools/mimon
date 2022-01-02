@@ -318,6 +318,15 @@ export class AccountEditor extends React.Component {
                 accountIds: accountDataItem.childAccountIds,
                 sortByName: true,
                 labelCallback: AH.getShortAccountAncestorNames,
+                filter: (accountId) => {
+                    const accountDataItem = this.props.accessor.getAccountDataItemWithId(
+                        accountId);
+                    const type = A.getAccountType(accountDataItem.type);
+                    if (!type.allowedChildTypes.length) {
+                        return false;
+                    }
+                    return true;
+                }
             });
         }
     }

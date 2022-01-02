@@ -607,27 +607,17 @@ Priorities:
         - Optional - primarily because these weren't added in imported transactions.
         - Cost basis adjustment option
             - Select lots to apply adjustment to?
+    
+    - AccountList
+        - Display gains when account collapsed.
 
 
 Column Filter Notes:
-    - How to handle entering the column filter values?
-        - In column heading
-            - Presently, in RowTable if ColumnInfo.label is specified it is used in a span element, otherwise onRenderCell is called.
+    - Numerical ranges
+        - LT, LE, GT, GE, EQ
+        - Between inclusive
+        - Between exclusive
+        - Button?
 
-            - Manage at the RowTable level?
-                - Why? Because a column filter can be applied to a RowTable as well as EditableRowTable
-            
-            - Changing the filter would need to end EditableRowTable editing.
-
-            - How to indicate column filtering?
-                - onRenderColumnFilterCell
-                
-
-    - RowTable:
-        - onRenderHeaderCell
-
-        - EditableRowTable
-    
-        - AccountRegister et al passes CellEditorsManager methods to EditableRowTable.
-
-    
+    - Date ranges
+        
