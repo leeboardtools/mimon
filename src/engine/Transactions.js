@@ -573,7 +573,7 @@ export function getSplits(splitDataItems, alwaysCopy) {
 
 /**
  * @typedef {object}    TransactionDataItem
- * @property {number}   id
+ * @property {string}   id
  * @property {string}   ymdDate The transaction's date.
  * @property {number}   [sameDayOrder]    Optional, used to order transactions that 
  * fall on the same day, the lower the value the earlier in the day the transaction 
@@ -586,7 +586,7 @@ export function getSplits(splitDataItems, alwaysCopy) {
 
 /**
  * @typedef {object}    Transaction
- * @property {number}   id
+ * @property {string}   id
  * @property {YMDDate}  ymdDate The transaction's date.
  * @property {number}   [sameDayOrder]    Optional, used to order transactions that 
  * fall on the same day, the lower the value the earlier in the day the transaction 
@@ -690,7 +690,7 @@ function copyTransactionDataItems(transactionDataItems) {
 /**
  * @typedef {object} TransactionKey
  * Primarily used for sorting transactions.
- * @property {number}   id  The transaction id.
+ * @property {string}   id  The transaction id.
  * @property {YMDDate}  ymdDate The transaction date.
  * @property {number}   [sameDayOrder]    Optional, used to order transactions that 
  * fall on the same day, the lower the value the earlier in the day the transaction 
@@ -1334,7 +1334,7 @@ export class TransactionManager extends EventEmitter {
 
     /**
      * Retrieves transaction data items by id number.
-     * @param {(number|number[])} ids Either a single id or an array of ids of interest.
+     * @param {(string|string[])} ids Either a single id or an array of ids of interest.
      * @returns {(TransactionDataItem|undefined|TransactionDataItem[])}   If ids 
      * is a single number a single transaction data item is returned, or 
      * <code>undefined</code> if there was no transaction with that id. If ids is 
@@ -1403,13 +1403,13 @@ export class TransactionManager extends EventEmitter {
      * been computed.
      * @private
      * @property {boolean}  hasLots
-     * @property {Map<number, AccountStateDataItem>} accountStatesByTransactionId
+     * @property {Map<string, AccountStateDataItem>} accountStatesByTransactionId
      * @property {AccountStateDataItem[]}   accountStatesByOrder    The ordering 
      * here matches the ordering of the arrays returned by 
      * {@link TransactionHandler#asyncGetSortedTransactionKeysForAccount}.
      * @property {TransactionKey[]} sortedTransactionKeys   The result from 
      * {@link TransactionHandler#asyncGetSortedTransactionKeysForAccount}.
-     * @property {number[]} nonReconciledTransactionIds The result from
+     * @property {string[]} nonReconciledTransactionIds The result from
      * {@link TransactionHandler#asyncGetNonReconciledIdsForAccountId}.
      */
     
@@ -1740,7 +1740,7 @@ export class TransactionManager extends EventEmitter {
      * account ids, in which case the result is whose elements correspond to the 
      * result that would have been returned if the corresponding account id were 
      * passed directly. If this is an array then transactionId should also be an array.
-     * @param {number|number[]|string|string[]} transactionId 
+     * @param {string|string[]} transactionId 
      * @returns {AccountStateDataItem[]|AccountStateDataItem[][]}    
      * An array containing the account states immediately after a transaction has 
      * been applied. Multiple account states are returned if there are multiple 
@@ -1762,7 +1762,7 @@ export class TransactionManager extends EventEmitter {
     /**
      * For testing...
      * @param {number} accountId 
-     * @param {number|string} transactionId 
+     * @param {string} transactionId 
      * @param {number} byOrderLength
      */
     async asyncFlushAccountStateDataItems(accountId, transactionId, byOrderLength) {
@@ -1780,7 +1780,7 @@ export class TransactionManager extends EventEmitter {
      * account ids, in which case the result is whose elements correspond to the 
      * result that would have been returned if the corresponding account id were 
      * passed directly. If this is an array then transactionId should also be an array.
-     * @param {number|number[]|string|string[]} transactionId 
+     * @param {string|string[]} transactionId 
      * @returns {AccountStateDataItem[]|AccountStateDataItem[]}    An array 
      * containing the account states immediately before a transaction is applied. 
      * Multiple account states are returned if there are multiple splits referring 
@@ -1817,8 +1817,8 @@ export class TransactionManager extends EventEmitter {
      * for all the transactions between two transactions. The account states are after
      * the transactions have been applied.
      * @param {number} accountId 
-     * @param {number} transactionIdA 
-     * @param {number} transactionIdB 
+     * @param {string} transactionIdA 
+     * @param {string} transactionIdB 
      * @returns {AccountStateAndTransactionInfo[]}
      */
     async asyncGetAccountStateAndTransactionDataItems(accountId, 
@@ -1906,7 +1906,7 @@ export class TransactionManager extends EventEmitter {
      * Retrieves an array of the ids of transactions that have splits that refer
      * to a given account whose reconcileState is not {@link ReconcileState.RECONCILED}.
      * @param {number} accountId 
-     * @returns {number[]}
+     * @returns {string[]}
      */
     async asyncGetNonReconciledIdsForAccountId(accountId) {
         const accountEntry = await this._asyncLoadAccountEntry(accountId);
@@ -2468,7 +2468,7 @@ export class TransactionManager extends EventEmitter {
 
     /**
      * Removes one or more transactions.
-     * @param {number|number[]} transactionIds 
+     * @param {string|string[]} transactionIds 
      * @param {boolean} validateOnly 
      * @returns {TransactionManager~RemoveTransactionResult}
      * @throws Error
@@ -2778,7 +2778,7 @@ export class TransactionsHandler {
 
     /**
      * Retrieves one or more transactions by id.
-     * @param {number[]|number[][]} ids The array of ids. This may also be an array 
+     * @param {string[]|string[][]} ids The array of ids. This may also be an array 
      * of arrays of ids, in which case the result is an array whose elements correspond
      * to the results that would have been returned for each array of ids.
      * @returns {TransactionDataItem[]|TransactionDataItem[][]}
@@ -2814,7 +2814,7 @@ export class TransactionsHandler {
      * account ids, in which case the result is whose elements correspond to the 
      * result that would have been returned if the corresponding account id were 
      * passed directly.
-     * @return {number[]|number[][]}
+     * @return {string[]|string[][]}
      */
     async asyncGetNonReconciledIdsForAccountId(accountId) {
         // eslint-disable-next-line max-len
@@ -2922,7 +2922,7 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
     /**
      * @typedef {object}    TransactionsHandlerImplBase~Entry
      * @property {YMDDate}  ymdDate The transaction date.
-     * @property {number}   id  The transaction id.
+     * @property {string}   id  The transaction id.
      * @property {number}   [sameDayOrder]    Optional, used to order transactions 
      * that fall on the same day, the lower the value the earlier in the day the 
      * transaction is ordered. If not given then it is treated as
