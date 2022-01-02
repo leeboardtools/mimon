@@ -260,7 +260,14 @@ function saveSplitsListCellValue(args) {
         const { value } = cellEditBuffer;
         const { splits } = value;
         if (splits.length !== 2) {
+            const { refNum } = newTransactionDataItem.splits[splitIndex];
             newTransactionDataItem.splits = splits;
+            if (refNum !== undefined) {
+                newTransactionDataItem.splits[splitIndex].refNum = refNum;
+            }
+            else {
+                delete newTransactionDataItem.splits[splitIndex].refNum;
+            }
         }
         else {
             newTransactionDataItem.splits[1 - splitIndex].accountId 
