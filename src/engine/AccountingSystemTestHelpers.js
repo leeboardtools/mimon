@@ -95,6 +95,9 @@ export async function asyncCreateAccountingSystem(options) {
 //              -aaplBrokerageAId
 //              -msftBrokerageAId
 //              -mmmBrokerageAId
+//              -etfsBrokerageAId
+//                  -qqqmBrokerageAId
+//                  -spyBrokerageAId
 //
 //          -brokerageBId
 //              -ibmBrokerageBId
@@ -122,6 +125,7 @@ export async function asyncCreateAccountingSystem(options) {
 //  -Root Income
 //      -bonusId
 //      -dividendsId
+//          -dividendsBrokerageA,
 //          -dividendsAAPLId,
 //          -dividendsMMMId,
 //
@@ -255,6 +259,13 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
         { type: PI.PricedItemType.SECURITY, currency: 'USD', quantityDefinition: getDecimalDefinition(4), name: 'IBM Corporation', ticker: 'IBM', market: 'NYSE', }
     )).newPricedItemDataItem.id;
 
+    sys.qqqmPricedItemId = (await pricedItemManager.asyncAddPricedItem(
+        { type: PI.PricedItemType.SECURITY, currency: 'USD', quantityDefinition: getDecimalDefinition(4), name: 'Invesco NASDAQ 100 ETF', ticker: 'QQQM', market: 'NASDAQ', }
+    )).newPricedItemDataItem.id;
+    sys.spyPricedItemId = (await pricedItemManager.asyncAddPricedItem(
+        { type: PI.PricedItemType.SECURITY, currency: 'USD', quantityDefinition: getDecimalDefinition(4), name: 'SPDR® S&P 500 ETF Trust', ticker: 'SPY', market: 'NYSE', }
+    )).newPricedItemDataItem.id;
+
     sys.tibexPricedItemId = (await pricedItemManager.asyncAddPricedItem(
         { type: PI.PricedItemType.MUTUAL_FUND, currency: 'USD', quantityDefinition: getDecimalDefinition(4), name: 'TIAA TIBEX', ticker: 'TIBEX', }
     )).newPricedItemDataItem.id;
@@ -280,6 +291,19 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
 
     sys.mmmBrokerageAId = (await accountManager.asyncAddAccount(
         { parentAccountId: sys.brokerageAId, type: A.AccountType.SECURITY, pricedItemId: sys.mmmPricedItemId, name: 'MMM', },
+    )).newAccountDataItem.id;
+
+
+    sys.etfsBrokerageAId = (await accountManager.asyncAddAccount(
+        { parentAccountId: sys.brokerageAId, type: A.AccountType.BROKERAGE_GROUPING, pricedItemId: currencyBasePricedItemId, name: 'ETFs', },
+    )).newAccountDataItem.id;
+
+    sys.qqqmBrokerageAId = (await accountManager.asyncAddAccount(
+        { parentAccountId: sys.etfsBrokerageAId, type: A.AccountType.SECURITY, pricedItemId: sys.qqqmPricedItemId, name: 'QQQM', },
+    )).newAccountDataItem.id;
+
+    sys.spyBrokerageAId = (await accountManager.asyncAddAccount(
+        { parentAccountId: sys.etfsBrokerageAId, type: A.AccountType.SECURITY, pricedItemId: sys.spyPricedItemId, name: 'SPY', },
     )).newAccountDataItem.id;
 
 
@@ -369,6 +393,14 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
             pricedItemId: currencyBasePricedItemId, 
             name: 'Dividend Income', 
             tags: [StandardAccountTag.DIVIDENDS.name, ],
+        },
+    )).newAccountDataItem.id;
+
+    sys.dividendsBrokerageAId = (await accountManager.asyncAddAccount(
+        { parentAccountId: sys.dividendsId, 
+            type: A.AccountType.INCOME, 
+            pricedItemId: currencyBasePricedItemId, 
+            name: 'BrokerageA', 
         },
     )).newAccountDataItem.id;
 
@@ -584,9 +616,16 @@ export async function asyncSetupBasicAccounts(accountingSystem) {
 
 
     await accountManager.asyncModifyAccount({
+        id: sys.brokerageAId,
+        defaultSplitAccountIds: {
+            dividendsIncomeId: sys.dividendsBrokerageAId,
+        }
+    });
+
+    await accountManager.asyncModifyAccount({
         id: sys.aaplBrokerageAId,
         defaultSplitAccountIds: {
-            dividendIncomeId: sys.dividendsAAPLId,
+            dividendsIncomeId: sys.dividendsAAPLId,
             feesExpenseId: sys.commissionsAAPLId,
         }
     });

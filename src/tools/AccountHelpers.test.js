@@ -134,6 +134,12 @@ test('AccountHelpers', async () => {
         expect(result).toEqual(sys.commissionsAAPLId);
 
 
+        // Brokerage grouping parent is parent
+        result = AH.getDefaultSplitAccountId(accessor, sys.etfsBrokerageAId,
+            AH.DefaultSplitAccountType.DIVIDENDS_INCOME);
+        expect(result).toEqual(sys.dividendsBrokerageAId);
+
+
         // Remaining DefaultSplitAccountTypes
         result = AH.getDefaultSplitAccountId(accessor, sys.checkingId,
             AH.DefaultSplitAccountType.TAXES_EXPENSE);
