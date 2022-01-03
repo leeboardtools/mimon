@@ -383,6 +383,7 @@ export class FileSelector extends React.Component {
         return <select className = {className}
             key = {dir}
             value = {name}
+            onClick = {(availableDrives.length === 1) ? this.onDriveChange : undefined}
             onChange = {this.onDriveChange}
         >
             {driveComponents}
