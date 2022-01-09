@@ -1732,26 +1732,17 @@ export class AccountRegister extends React.Component {
 
 
     autoCompleteFromTransactionDataItem(args, transactionDataItem, splitIndex) {
-        console.log('autoCompleteFromTransactionDataItem start');
-
         const activeEditInfo = this.getActiveEditInfo();
         if (!activeEditInfo) {
-            console.log('autoCompleteFromTransactionDataItem no activeEditInfo');
             return;
         }
 
         const { rowEditBuffer, setRowEditBuffer } = activeEditInfo;
         if (!setRowEditBuffer) {
-            console.log('autoCompleteFromTransactionDataItem no setRowEditBuffer');
             return;
         }
 
         if (splitIndex >= 0) {
-            console.log('autoCompleteFromTransactionDataItem splitIndex: ' + splitIndex);
-            console.log('_lastYMDDate: ' + this._lastYMDDate);
-            console.log('newTransactionDataItem.ymdDate: ' 
-                + rowEditBuffer.newTransactionDataItem.ymdDate);
-
             // Want to keep these...
             delete transactionDataItem.id;
             
@@ -1772,7 +1763,6 @@ export class AccountRegister extends React.Component {
                 split.reconcileState = T.ReconcileState.NOT_RECONCILED;
             });
 
-            console.log('autoCompleteFromTransactionDataItem setRowEditBuffer');
             setRowEditBuffer({
                 newTransactionDataItem: transactionDataItem,
                 splitIndex: splitIndex,
@@ -1781,10 +1771,7 @@ export class AccountRegister extends React.Component {
                 const args = Object.assign({}, activeEditInfo, {
                     rowEditBuffer: rowEditBuffer,
                 });
-                console.log('autoCompleteFromTransactionDataItem reloadCellEditBuffers');
                 this._cellEditorsManager.reloadCellEditBuffers(args);
-                console.log(
-                    'autoCompleteFromTransactionDataItem reloadCellEditBuffers done');
             });
         }
     }
@@ -1793,8 +1780,6 @@ export class AccountRegister extends React.Component {
     onAutoCompleteDescription(args, index, autoCompleteList) {
         try {
             // Make sure we're still good.
-            console.log('onAutoCompleteDescription start');
-
             const { descriptionAutoCompleteList, descriptionAutoCompleteItems, 
             } = this.state;
             if (!deepEqual(descriptionAutoCompleteList, autoCompleteList)) {
@@ -1810,14 +1795,10 @@ export class AccountRegister extends React.Component {
 
             const { transactionDataItem } = item;
             if (transactionDataItem) {
-                console.log('onAutoCompleteDescription transactionDataItem');
-
                 this.autoCompleteFromTransactionDataItem(args, 
                     transactionDataItem, splitIndex);
             }
             else {
-                console.log('onAutoCompleteDescription loading transaction: ' + item.id);
-
                 this.props.accessor.asyncGetTransactionDataItemWithId(item.id).then(
                     (transactionDataItem) =>
                         this.autoCompleteFromTransactionDataItem(
@@ -1829,14 +1810,11 @@ export class AccountRegister extends React.Component {
             }
         }
         finally {
-            console.log('onAutoCompleteDescription - finally');
-
             this.setState({
                 descriptionAutoCompleteValue: undefined,
                 descriptionAutoCompleteList: undefined,
                 descriptionAutoCompleteItems: undefined,
             });
-            console.log('onAutoCompleteDescription exit');
         }
     }
 
