@@ -124,7 +124,9 @@ ipcMain.on('sync-exit', (event, arg) => {
 let mainWindow;
 
 
-Menu.setApplicationMenu(null);
+if (!isDevMode) {
+    Menu.setApplicationMenu(null);
+}
 
 
 const onReady = () => {
