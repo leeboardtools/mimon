@@ -1318,50 +1318,8 @@ export class AccountRegister extends React.Component {
 
             //
             // The 'new transaction' row...
-            const newTransactionDataItem = {
-                ymdDate: this._lastYMDDate,
-            };
-
-            const accountType = this.getAccountType();
-            if (accountType.hasLots) {
-                const { accessor, accountId } = this.props;
-                const accountDataItem = accessor.getAccountDataItemWithId(accountId);
-                newTransactionDataItem.splits = [
-                    {
-                        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
-                        accountId: this.props.accountId,
-                        quantityBaseValue: '',
-                        lotTransactionType: this._lastLotTransactionType 
-                            || T.LotTransactionType.BUY_SELL.name,
-                        lotChanges: [],
-                    },
-                    {
-                        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
-                        accountId: accountDataItem.parentAccountId,
-                        quantityBaseValue: '',
-                    },
-                ];
-
-                if (accountType.isESPP) {
-                    newTransactionDataItem.splits[0].esppBuyInfo = {
-                        grantYMDDate: this._lastYMDDate,
-                    };
-                }
-            }
-            else {
-                newTransactionDataItem.splits = [
-                    {
-                        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
-                        accountId: this.props.accountId,
-                        quantityBaseValue: '',
-                    },
-                    {
-                        reconcileState: T.ReconcileState.NOT_RECONCILED.name,
-                        accountId: this._lastOtherSplitAccountId,
-                        quantityBaseValue: '',
-                    },
-                ];
-            }
+            const newTransactionDataItem 
+                = this.createTransactionDataItemForNewTransaction();
 
             const newTransactionRowEntry = {
                 key: '',
@@ -1456,6 +1414,56 @@ export class AccountRegister extends React.Component {
                 });
             }
         });
+    }
+
+
+    createTransactionDataItemForNewTransaction() {
+        const newTransactionDataItem = {
+            ymdDate: this._lastYMDDate,
+        };
+
+        const accountType = this.getAccountType();
+        if (accountType.hasLots) {
+            const { accessor, accountId } = this.props;
+            const accountDataItem = accessor.getAccountDataItemWithId(accountId);
+            newTransactionDataItem.splits = [
+                {
+                    reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+                    accountId: this.props.accountId,
+                    quantityBaseValue: '',
+                    lotTransactionType: this._lastLotTransactionType 
+                        || T.LotTransactionType.BUY_SELL.name,
+                    lotChanges: [],
+                },
+                {
+                    reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+                    accountId: accountDataItem.parentAccountId,
+                    quantityBaseValue: '',
+                },
+            ];
+
+            if (accountType.isESPP) {
+                newTransactionDataItem.splits[0].esppBuyInfo = {
+                    grantYMDDate: this._lastYMDDate,
+                };
+            }
+        }
+        else {
+            newTransactionDataItem.splits = [
+                {
+                    reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+                    accountId: this.props.accountId,
+                    quantityBaseValue: '',
+                },
+                {
+                    reconcileState: T.ReconcileState.NOT_RECONCILED.name,
+                    accountId: this._lastOtherSplitAccountId,
+                    quantityBaseValue: '',
+                },
+            ];
+        }
+
+        return newTransactionDataItem;
     }
 
 
@@ -1980,6 +1988,16 @@ export class AccountRegister extends React.Component {
             if ((reason === 'activateRow') 
              && (rowIndex === this.state.rowEntries.length - 1)) {
                 // Don't save the new row if we're activating a different row.
+                const newRowEntries = Array.from(this.state.rowEntries);
+                const newRowEntry = Object.assign({}, newRowEntries[rowIndex], {
+                    transactionDataItem: 
+                        this.createTransactionDataItemForNewTransaction(),
+                    splitIndex: 0,
+                });
+                newRowEntries[rowIndex] = newRowEntry;
+                this.setState({
+                    rowEntries: newRowEntries,
+                });
                 return true;
             }
 
