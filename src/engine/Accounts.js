@@ -131,6 +131,7 @@ export const AccountType = {
         hasSecurities: true,
         allowedFlagAttributes: [
             'isRetirementAccount',
+            'isExcludeFromGain',
         ],
     },
     BROKERAGE_GROUPING: { name: 'BROKERAGE_GROUPING', 
@@ -139,7 +140,8 @@ export const AccountType = {
         hasSecurities: true,
         isGroup: true,
         allowedFlagAttributes: [
-            'isRetirementAccount',
+            'isCashSecurity',
+            'isExcludeFromGain',
         ],
     },
     CASH: { name: 'CASH', 
@@ -159,18 +161,30 @@ export const AccountType = {
         category: AccountCategory.ASSET, 
         pricedItemType: PricedItemType.SECURITY, 
         hasLots: true, 
+        allowedFlagAttributes: [
+            'isCashSecurity',
+            'isExcludeFromGain',
+        ],
         isESPP: true,
     },
     STOCK_GRANT_SECURITY: { name: 'STOCK_GRANT_SECURITY', 
         category: AccountCategory.ASSET, 
         pricedItemType: PricedItemType.SECURITY, 
         hasLots: true, 
+        allowedFlagAttributes: [
+            'isCashSecurity',
+            'isExcludeFromGain',
+        ],
         isStockGrant: true,
     },
     MUTUAL_FUND: { name: 'MUTUAL_FUND', 
         category: AccountCategory.ASSET, 
         pricedItemType: PricedItemType.MUTUAL_FUND, 
         hasLots: true, 
+        allowedFlagAttributes: [
+            'isCashSecurity',
+            'isExcludeFromGain',
+        ],
         hasSecurities: true,
         hasChecks: true, 
     },
@@ -513,6 +527,32 @@ export function areAccountsSimilar(a, b, ignoreIds) {
  */
 export function getAccountId(ref) {
     return (ref !== undefined) ? ((typeof ref === 'number') ? ref : ref.id) : undefined;
+}
+
+
+/**
+ * Retrieves a flag attribute's value from an account, if the attribute is not
+ * an allowed attribute for the account type <code>undefined</code> is returned.
+ * @param {Account|AccountDataItem} account 
+ * @param {string} attribute 
+ * @returns {boolean|undefined}
+ */
+export function getAccountFlagAttribute(account, attribute) {
+    account = getAccount(account);
+    if (!account) {
+        return;
+    }
+
+    const { type } = account;
+    const { allowedFlagAttributes } = type;
+    if (!Array.isArray(allowedFlagAttributes)) {
+        return;
+    }
+    if (allowedFlagAttributes.indexOf(attribute) < 0) {
+        return;
+    }
+
+    return account[attribute];
 }
 
 

@@ -605,8 +605,6 @@ Priorities:
         - Cost basis adjustment option
             - Select lots to apply adjustment to?
     
-    - AccountList
-        - Display gains when account collapsed.
 
 
 Column Filter Notes:

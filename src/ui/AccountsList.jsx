@@ -776,7 +776,8 @@ export class AccountsList extends React.Component {
                 accountId: allAccountIds[i],
                 accountState: accountStateInfo.accountState,
                 priceDataItem: accountStateInfo.priceDataItem,
-                isExcludeFromGain: accountDataItem.isExcludeFromGain,
+                isExcludeFromGain: 
+                    A.getAccountFlagAttribute(accountDataItem, 'isExcludeFromGain'),
                 isQuantityShares: A.getAccountType(accountDataItem.type).hasLots,
             };
 

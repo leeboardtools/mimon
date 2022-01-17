@@ -123,6 +123,37 @@ test('Account-areSimilar', () => {
 //
 //---------------------------------------------------------
 //
+test('Account-flagAttributes', () => {
+    const a = A.getAccount({
+        id: 123,
+        type: A.AccountType.ASSET,
+        description: 'A',
+        pricedItemId: 12,
+    });
+    expect(A.getAccountFlagAttribute(a, 'isExcludeFromGain')).toBeFalsy();
+
+    a.isExcludeFromGain = true;
+    expect(A.getAccountFlagAttribute(a, 'isExcludeFromGain')).toBeFalsy();
+
+    const b = A.getAccount({
+        id: 123,
+        type: A.AccountType.SECURITY,
+        description: 'A',
+        pricedItemId: 12,
+    });
+    expect(A.getAccountFlagAttribute(b, 'isExcludeFromGain')).toBeFalsy();
+
+    b.isExcludeFromGain = false;
+    expect(A.getAccountFlagAttribute(b, 'isExcludeFromGain')).toBeFalsy();
+
+    b.isExcludeFromGain = true;
+    expect(A.getAccountFlagAttribute(b, 'isExcludeFromGain')).toBeTruthy();
+
+});
+
+//
+//---------------------------------------------------------
+//
 test('AccountManager-rootAccounts', async () => {
     const accountingSystem = await ASTH.asyncCreateAccountingSystem();
     const accountManager = accountingSystem.getAccountManager();

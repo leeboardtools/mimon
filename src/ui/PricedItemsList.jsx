@@ -897,7 +897,8 @@ export class PricedItemsList extends React.Component {
                 accountId: allAccountIds[i],
                 accountState: accountStateDataItems[i],
                 priceDataItem: accountStateInfo.priceDataItem,
-                isExcludeFromGain: accountDataItem.isExcludeFromGain,
+                isExcludeFromGain: 
+                    A.getAccountFlagAttribute(accountDataItem, 'isExcludeFromGain'),
                 isQuantityShares: true,
             };
 
@@ -1140,10 +1141,12 @@ export class PricedItemsList extends React.Component {
             (accountDataItem) => {
                 const type = A.getAccountType(accountDataItem.type);
                 if (!type.hasSecurities
-                 && !accountDataItem.isIncludeInSecuritiesCash) {
+                 && !A.getAccountFlagAttribute(accountDataItem,
+                     'isIncludeInSecuritiesCash')) {
                     return;
                 }
-                if (accountDataItem.isRetirementAccount) {
+                if (A.getAccountFlagAttribute(accountDataItem,
+                    'isRetirementAccount')) {
                     if (!includeOptions.includeRetirementAccounts) {
                         return;
                     }
@@ -1255,7 +1258,8 @@ export class PricedItemsList extends React.Component {
                 const parentAccountDataItem = accessor.getAccountDataItemWithId(
                     accountDataItem.parentAccountId
                 );
-                if (parentAccountDataItem.isRetirementAccount) {
+                if (A.getAccountFlagAttribute(parentAccountDataItem,
+                    'isRetirementAccount')) {
                     if (!includeOptions.includeRetirementAccounts) {
                         return;
                     }
