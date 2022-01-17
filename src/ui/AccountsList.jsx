@@ -1360,11 +1360,16 @@ export class AccountsList extends React.Component {
     calcGainValue(rowInfo, calcGainValueCallback) {
         const { accountGainsState } = rowInfo;
         if (accountGainsState) {
-            const value = calcGainValueCallback({
+            const args = {
                 accessor: this.props.accessor,
                 accountId: rowInfo.accountId,
                 accountGainsState: accountGainsState,
-            });
+            };
+            if (!rowInfo.accountDataItem || rowInfo.accountDataItem.childAccountIds) {
+                args.weightType = 'costBasis';
+            }
+
+            const value = calcGainValueCallback(args);
             if (value && (value.quantityBaseValue !== undefined)) {
                 return value;
             }

@@ -812,6 +812,7 @@ export function calcLotStateGain(args, lotStates) {
  * may be specified, if lotStates is not then accountStateDataItem should be or
  * passed as the second arg to {@link calcLotStatePercentAnnualGainArgs}.
  * @property {AccountStateDataItem} [accountStateDataItem]
+ * @property {string} [weightType='shares'] Supported types: 'costBasis', 'shares'.
  */
 
 /**
@@ -856,8 +857,12 @@ export function calcAccountGainsStatePercentAnnualGain(args) {
     }
     const ymdDateYearOld = ymdDateRef.addYears(-1);
 
-    let totalSharesBaseValue = 0;
-    lotStates.forEach((lotState) => totalSharesBaseValue += lotState.quantityBaseValue);
+    const weightProperty = (args.weightType === 'costBasis')
+        ? 'costBasisBaseValue'
+        : 'quantityBaseValue';
+
+    let totalBaseValue = 0;
+    lotStates.forEach((lotState) => totalBaseValue += lotState[weightProperty]);
 
     const lotPercentAnnualGains = [];
     let percentAnnualGain = 0;
@@ -901,8 +906,8 @@ export function calcAccountGainsStatePercentAnnualGain(args) {
         });
 
         if (percentAnnualGain !== undefined) {
-            percentAnnualGain += percentGainValue * lotState.quantityBaseValue
-                / totalSharesBaseValue;
+            percentAnnualGain += percentGainValue * lotState[weightProperty]
+                / totalBaseValue;
         }
     }
 
