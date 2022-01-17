@@ -19,18 +19,6 @@ label {
 }
 
 
-/* Make this a little darker than Bootstrap's */
-.dropdown-item:hover {
-    background-color: rgba(0,0,0,0.075);
-}
-.Dropdown-item:hover {
-    background-color: rgba(0,0,0,0.075);
-}
-.Dropdown-item.active:hover {
-    background-color: #007bffe7;
-}
-
-
 .Undo-tooltip {
     position: relative;
     display: inline-block;

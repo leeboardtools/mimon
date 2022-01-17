@@ -693,7 +693,8 @@ button.Close {
     position: relative;
 }
 
-.Dropdown-item {
+.Dropdown-item,
+.AutoComplete-item {
     display: block;
     width: 100%;
     padding: .25rem 1.5rem;
@@ -707,10 +708,21 @@ button.Close {
 }
 
 .Dropdown-item.active, 
-.Dropdown-item:active {
+.Dropdown-item:active,
+.AutoComplete-item.active,
+.AutoComplete-item:active {
     color: #fff;
     text-decoration: none;
     background-color: #007bff;
+}
+
+.Dropdown-item:hover,
+.AutoComplete-item:hover {
+    background-color: rgba(0,0,0,0.15);
+}
+.Dropdown-item.active:hover,
+.AutoComplete-item.active:hover {
+    background-color: #007bffe7;
 }
 
 
@@ -729,7 +741,8 @@ button.Close {
     border-left: .3em solid transparent;
 }
 
-.DropdownSelector-dropdownList {
+.DropdownSelector-dropdownList,
+.AutoComplete-popupList {
     left: 0;
     z-index: 1000;
     float: left;

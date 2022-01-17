@@ -592,13 +592,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
 Priorities:
-    - Fix Auto-complete
-        - Every so often when list is displayed, pressing Tab key generates a Tab key event
-        instead of an 'unidentified' key event, and this ends up messing things up.
-    
-    - Improve appearance of AutoCompleteTextEditor
-        - Try react-autocomplete, react-datalist-input?
-
     - Search/Filter
         - Account registers most important
             - Description

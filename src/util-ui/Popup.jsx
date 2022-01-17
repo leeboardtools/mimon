@@ -216,6 +216,14 @@ export class Popup extends React.Component {
                 maxBottom = boundsRect.bottom - 2;
             }
 
+            let prevWidth;
+            let prevHeight;
+            if (pixelsEqual(containerWidth, state.containerWidth)
+             && pixelsEqual(containerHeight, state.containerHeight)) {
+                prevWidth = state.prevWidth;
+                prevHeight = state.prevHeight;
+            }
+
             let left = props.x;
             let top = props.y;
 
@@ -381,9 +389,8 @@ export class Popup extends React.Component {
             if (!isDocSizeChange
              && (pixelsEqual(state.left, left) || pixelsEqual(state.prevLeft, left))
              && (pixelsEqual(state.top, top) || pixelsEqual(state.prevTop, top))
-             && (pixelsEqual(state.width, width) || pixelsEqual(state.prevWidth, width))
-             && (pixelsEqual(state.height, height)
-              || pixelsEqual(state.prevHeight, height))) {
+             && (pixelsEqual(state.width, width) || pixelsEqual(prevWidth, width))
+             && (pixelsEqual(state.height, height) || pixelsEqual(prevHeight, height))) {
                 left = state.left;
                 top = state.top;
                 width = state.width;
@@ -417,6 +424,8 @@ export class Popup extends React.Component {
                     pointerLocation: pointerLocation,
                     docWidth: docWidth,
                     docHeight: docHeight,
+                    containerWidth: containerWidth,
+                    containerHeight: containerHeight,
                 });
             }
         }
