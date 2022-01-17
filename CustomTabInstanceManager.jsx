@@ -136,10 +136,14 @@ export class CustomTabInstanceManager {
         let isCustomItems;
         allTabIds.forEach((tabId) => {
             if (tabId.startsWith(tabIdBase)) {
+                const title = onGetTabIdTitle(tabId);
+                if (!title) {
+                    return;
+                }
                 subMenuItems.push({
                     id: 'openCustom' + actionIdBase + '_' + tabId,
                     label: userMsg('CustomTabInstanceManager-openCustomItem_menuLabel',
-                        onGetTabIdTitle(tabId)),
+                        title),
                     checked: tabId === activeTabId,
                     onChooseItem: () => onOpenTabId(tabId),
                 });
