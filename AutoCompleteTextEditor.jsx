@@ -1,105 +1,309 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Popup } from './Popup';
+
+
+function arrayElementsSame(a, b) {
+    if (a === b) {
+        return true;
+    }
+    if (!a || !b) {
+        return false;
+    }
+    if (a.length !== b.length) {
+        return false;
+    }
+
+    for (let i = a.length - 1; i >= 0; --i) {
+        if (a[i] !== b[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 
 class AutoCompleteTextEditorImpl extends React.Component {
     constructor(props) {
         super(props);
 
-        this.onChange = this.onChange.bind(this);
+        this.onFocus = this.onFocus.bind(this);
+        this.onBlur = this.onBlur.bind(this);
         this.onKeyDown = this.onKeyDown.bind(this);
-        this.onInput = this.onInput.bind(this);
+        this.onClick = this.onClick.bind(this);
+        this.onClosePopup = this.onClosePopup.bind(this);
+
+        this._popupRef = React.createRef();
 
         this.state = {};
     }
 
 
-    onKeyDown(e) {
-        if (e.key) {
-            this._lastKey = e.key;
+    componentDidMount() {
+        this._buildPopupItemsList();
+    }
+
+
+    componentDidUpdate(prevProps, prevState) {
+        const { props } = this;
+
+        let rebuildPopupItems;
+        if (!arrayElementsSame(prevProps.autoCompleteList, props.autoCompleteList)) {
+            rebuildPopupItems = true;
+        }
+
+        const currentValue = props.value || '';
+        const prevValue = prevProps.value || '';
+        if (currentValue.toUpperCase() !== prevValue.toUpperCase()) {
+            rebuildPopupItems = true;
+
+            this.setState({
+                activeEntryIndex: undefined,
+                isPopupListShown: true,
+            });
+        }
+
+        if (rebuildPopupItems) {
+            this._buildPopupItemsList();
         }
         else {
-            this._lastKey = undefined;
-        }
-    }
-
-
-    onChange(e) {
-        const { onChange } = this.props;
-
-        if (onChange) {
-            onChange(e);
-        }
-    }
-
-
-    onInput(e) {
-        const { autoCompleteList, onAutoComplete } = this.props;
-        if (onAutoComplete && (this._lastKey === 'Unidentified')) {
-            console.log('autoComplete checking');
-
-            let { value } = e.target;
-            if (value) {
-                console.log('autoComplete looking for: ' + value);
-                value = value.toUpperCase();
-                for (let i = 0; i < autoCompleteList.length; ++i) {
-                    if (autoCompleteList[i].toUpperCase() === value) {
-                        onAutoComplete(i, autoCompleteList);
-                        return;
-                    }
+            if (!arrayElementsSame(prevState.popupEntries, this.state.popupEntries)) {
+                if (this._popupRef.current) {
+                    this._popupRef.current.updateLayout();
                 }
             }
         }
     }
 
 
+    _buildPopupItemsList() {
+        const { props } = this;
+        const { autoCompleteList, onAutoComplete } = props;
+
+        let popupEntries = [];
+        if (autoCompleteList && onAutoComplete && props.value) {
+            const value = (props.value || '').toUpperCase();
+            for (let i = 0; i < autoCompleteList.length; ++i) {
+                const item = autoCompleteList[i];
+                const uItem = item.toUpperCase();
+
+                if (uItem.includes(value)) {
+                    popupEntries.push({
+                        value: i,
+                        item: item,
+                        uItem: uItem,
+                    });
+                }
+            }
+        }
+
+        this.setState({
+            popupEntries: (popupEntries.length) ? popupEntries : undefined,
+        });
+    }
+
+
+    performAutoComplete(entryIndex) {
+        if (entryIndex === undefined) {
+            return;
+        }
+
+        const { onAutoComplete, autoCompleteList } = this.props;
+        const { popupEntries } = this.state;
+
+        this.onClosePopup();
+
+        if (onAutoComplete && popupEntries && popupEntries[entryIndex]) {
+            onAutoComplete(popupEntries[entryIndex].value, autoCompleteList);
+            return true;
+        }
+    }
+
+
+
+    onKeyDown(e) {
+        const { popupEntries } = this.state;
+        if (popupEntries) {
+            let { activeEntryIndex } = this.state;
+            switch (e.key) {
+            case 'Tab':
+            case 'Enter':
+                if (this.performAutoComplete(activeEntryIndex)) {
+                    e.preventDefault();
+                    e.stopPropagation();        
+                }
+                break;
+            
+            case 'Escape':
+                if (activeEntryIndex !== undefined) {
+                    this.onClosePopup();
+                    e.preventDefault();
+                    e.stopPropagation();        
+                }
+                break;
+            
+            case 'ArrowUp':
+                activeEntryIndex = (activeEntryIndex || 0) - 1;
+                if (activeEntryIndex < 0) {
+                    activeEntryIndex = popupEntries.length - 1;
+                }
+                this.setState({
+                    activeEntryIndex: activeEntryIndex,
+                });
+                e.preventDefault();
+                e.stopPropagation();        
+                break;
+        
+            case 'ArrowDown':
+                if (activeEntryIndex === undefined) {
+                    activeEntryIndex = 0;
+                }
+                else {
+                    ++activeEntryIndex;
+                    if (activeEntryIndex >= popupEntries.length) {
+                        activeEntryIndex = 0;
+                    }
+                }
+                this.setState({
+                    activeEntryIndex: activeEntryIndex,
+                });
+                e.preventDefault();
+                e.stopPropagation();        
+                break;
+            
+            case 'End':
+                if (activeEntryIndex !== undefined) {
+                    this.setState({
+                        activeEntryIndex: popupEntries.length - 1,
+                    });
+                    e.preventDefault();
+                    e.stopPropagation();        
+                }
+                break;
+            }
+        }
+    }
+
+
+    onFocus(e) {
+        const { onFocus } = this.props;
+
+        if (onFocus) {
+            onFocus(e);
+        }
+    }
+
+    onBlur(e) {
+        this.onClosePopup();
+
+        const { onBlur } = this.props;
+
+        if (onBlur) {
+            onBlur(e);
+        }
+    }
+
+
+    onClick(e) {
+        if (this.state.popupEntries) {
+            this.setState({
+                isPopupListShown: !this.state.isPopupListShown,
+            });
+        }
+    }
+
+
+    onClosePopup() {
+        this.setState({
+            activeEntryIndex: undefined,
+            isPopupListShown: false,
+        });
+    }
+
+
+    renderListComponent() {
+        const { popupEntries, activeEntryIndex } = this.state;
+        const { onAutoComplete } = this.props;
+
+        if (popupEntries && popupEntries.length && onAutoComplete) {
+            const items = [];
+            for (let i = 0; i < popupEntries.length; ++i) {
+                const entry = popupEntries[i];
+
+                let className = 'AutoComplete-item';
+                if (activeEntryIndex === i) {
+                    className += ' active';
+                }
+                items.push(
+                    <li 
+                        className = {className}
+                        key = {entry.value}
+                        value = {entry.value}
+                        onClick = {(e) => this.performAutoComplete(i)}
+                        // For some reason onClick doesn't get received.
+                        onMouseDown = {(e) => this.performAutoComplete(i)}
+                    >
+                        {entry.item}
+                    </li>
+                );
+            }
+
+            const popupList = <div 
+                className = "Scrollable-menu AutoComplete-popupList"
+            >
+                {items}
+            </div>;
+
+            return <Popup
+                show = {this.state.isPopupListShown}
+                onClose = {this.onClosePopup}
+                ref = {this._popupRef}
+                isDebug = {true}
+            >
+                {popupList}
+            </Popup>;
+
+        }
+    }
+
+
     render() {
         const { props } = this;
-        const { inputClassExtras, autoCompleteList } = props;
+        const { inputClassExtras } = props;
         
         let className = 'AutoCompleteTextEditor';
         if (inputClassExtras) {
             className += ' ' + inputClassExtras;
         }
 
-        let listComponent;
-        let listComponentId;
-        if (autoCompleteList && autoCompleteList.length) {
-            const options = [];
-            for (let i = 0; i < autoCompleteList.length; ++i) {
-                options.push(
-                    <option 
-                        key = {i} 
-                        value = {autoCompleteList[i]}
-                    >
-                        {autoCompleteList[i]}
-                    </option>);
-            }
+        let listComponent = this.renderListComponent();
 
-            listComponentId = (props.id || 'AutoCompleteTextEditorImpl') + '-datalist';
-            listComponent = <datalist 
-                id = {listComponentId} 
-            >
-                {options}
-            </datalist>;
+        let onKeyDown;
+        let onClick;
+        let { onFocus, onBlur, } = props;
+        if (listComponent) {
+            onFocus = this.onFocus;
+            onBlur = this.onBlur;
+            onKeyDown = this.onKeyDown;
+            onClick = this.onClick;
         }
 
         const inputType = props.inputType || 'text';
         const inputComponent = <input type = {inputType}
             id = {props.id}
-            list = {listComponentId}
             className = {className}
             aria-label = {props.ariaLabel}
             placeholder = {props.placeholder}
             value = {props.value || ''}
             size = {props.size}
             disabled = {props.disabled}
-            onChange = {this.onChange}
-            onFocus = {props.onFocus}
-            onBlur = {props.onBlur}
+            onChange = {props.onChange}
+            onFocus = {onFocus}
+            onBlur = {onBlur}
             onPaste = {props.onPaste}
-            onKeyDown = {this.onKeyDown}
-            onInput = {this.onInput}
+            onKeyDown = {onKeyDown}
+            onClick = {onClick}
             ref = {props.innerRef}
         />;
 
@@ -141,6 +345,7 @@ AutoCompleteTextEditorImpl.propTypes = {
  */
 export const AutoCompleteTextEditor = React.forwardRef((props, ref) =>
     <AutoCompleteTextEditorImpl
+    //<AutoCompleteTextEditorImplDataList
         innerRef = {ref}
         {...props}
     />);
