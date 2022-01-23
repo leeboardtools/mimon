@@ -46,15 +46,21 @@ export class AccountingFile {
 
 
     /**
-     * Writes any changes that have been made to the accounting system.
-     * @param {boolean} [noBackup]  If <code>true</code> no backup should be made
+     * @typedef {object} AccountingFile~asyncWriteFileOptions
+     * @property {boolean} [noBackup=false]  If <code>true</code> no backup should be made
      * if possible.
+     */
+
+
+    /**
+     * Writes any changes that have been made to the accounting system.
+     * @param {AccountingFile~asyncWriteFileOptions} [options]
      * @throws {Error}
      */
-    async asyncWriteFile(noBackup) {
+    async asyncWriteFile(options) {
 
         const stateId = this._stateId + 1;
-        await this._asyncWriteFileImpl(stateId, noBackup);
+        await this._asyncWriteFileImpl(stateId, options || {});
 
         this._stateId = stateId;
     }
@@ -70,7 +76,7 @@ export class AccountingFile {
 
 
     
-    async _asyncWriteFileImpl(stateId, noBackup) {
+    async _asyncWriteFileImpl(stateId, options) {
         throw Error('AccountingFile._asyncWriteFileImpl() abstract method!');
     }
     

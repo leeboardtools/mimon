@@ -510,7 +510,7 @@ export class EngineAccessor extends EventEmitter {
         if (initialContents) {
             warnings = await asyncSetupNewFile(this, 
                 accountingFile, initialContents, options);
-            await accountingFile.asyncWriteFile(true);
+            await accountingFile.asyncWriteFile({ noBackup: true, });
         }
 
         if (options.priorWarnings) {
