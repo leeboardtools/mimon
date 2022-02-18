@@ -383,7 +383,7 @@ export class EngineAccessor extends EventEmitter {
 
     /**
      * Returns the file factory index corresponding to a file name filter returned
-     * by {@link EngineAccess#getFileNameFilters}. This index can be used to identify
+     * by {@link EngineAccessor#getFileNameFilters}. This index can be used to identify
      * specific file types in the various file access methods.
      * @param {AccountingFileFactory~FileFilter} fileNameFilter A file name filter from
      * {@link EngineAccess#getFileNameFilters}.
