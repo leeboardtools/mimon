@@ -268,8 +268,21 @@ export class RemindersListHandler extends MainWindowHandlerBase {
                 transactionDataItem = T.getTransactionDataItem(
                     baseTransactionDataItem, true);
 
-                transactionDataItem.ymdDate 
-                    = nextOccurrenceState.lastOccurrenceYMDDate;
+                const { splits } = transactionDataItem;
+                let isNonZeroSplit;
+                for (let i = 0; i < splits.length; ++i) {
+                    const split = splits[i];
+                    if (split.quantityBaseValue) {
+                        isNonZeroSplit = true;
+                        break;
+                    }
+                }
+    
+                // Use the reminder's next date only if the reminder is not a 
+                // partial reminder.
+                transactionDataItem.ymdDate = (isNonZeroSplit)
+                    ? nextOccurrenceState.lastOccurrenceYMDDate
+                    : today;
                 transactionAction = accountingActions.createAddTransactionAction(
                     transactionDataItem);
                 actions.push(transactionAction);

@@ -514,7 +514,6 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
     - Reminders Due
-        - Update status if applied transaction is updated with values.
 
 
     - Reconciler
@@ -524,7 +523,9 @@ Are the lists really two separate styles? Or can they be combined into one?
 
 
     - Account Register Tasks
-        - Auto complete
+        - Changing from Split to non-split in split combo does not clear split and
+        enable the debit/credit editors.
+        
         - Filter transactions
 
         - Add memo column
