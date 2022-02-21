@@ -1,3 +1,61 @@
+html,
+body {
+    height: 100%;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: auto;
+    /*max-width: 38rem;*/
+    /*padding: 1rem;*/
+    display: -ms-flexbox;
+    display: flex;
+}
+
+label {
+    display: inline-block;
+    margin-bottom: 0.25rem;
+}
+
+
+*, ::after, ::before {
+    box-sizing: border-box;
+}
+
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+    margin-bottom: .5rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    margin-bottom: .5rem;
+}
+
+.h1, h1 {
+    font-size: 2.25rem;
+}
+.h2, h2 {
+    font-size: 2rem;
+}
+.h3, h3 {
+    font-size: 1.75rem;
+}
+.h4, h4 {
+    font-size: 1.5rem;
+}
+.h5, h5 {
+    font-size: 1.25rem;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+    background-color: transparent;
+}
+
+
 /* Used by FileSelector */
 .Modal-full-height {
     height: calc(100vh - 3.5em);
@@ -1381,6 +1439,14 @@ from BS col-form-label */
 }
 
 
+.RowTableContainer {
+    height: 100%;
+    width: 100%;
+    border-collapse: collapse;
+    overflow: hidden;
+}
+
+
 .RowTable {
     width: 100%;
     height: 100%;
@@ -1403,6 +1469,7 @@ from BS col-form-label */
 .RowTableHeaderRow {
     display: flex;
     flex-wrap: nowrap;
+    border-bottom: 1px solid #dee2e6!important;
 }
 
 
@@ -1536,6 +1603,18 @@ from BS col-form-label */
 }
 */
 
+
+.RowTable-header-base  {
+    /* TEST!!! */
+    /*border: 1px solid #666666;*/
+    flex-grow: 0;
+}
+
+.RowTable-cell-base {
+    /* TEST!!! */
+    /*border: 1px solid #333333;*/
+    flex-grow: 0;
+}
 
 
 .SortArrows {
@@ -2099,6 +2178,15 @@ from BS col-form-label */
 }
 
 
+.H-inherit {
+    height: inherit;
+}
+
+.W-inherit {
+    width: inherit;
+}
+
+
 .CheckboxField {
     margin-bottom: 0.25rem;
 }
@@ -2137,3 +2225,50 @@ from BS col-form-label */
 .FileSelector-dialog {
     max-width: 800px;
 }
+
+
+.PageTitle {
+    margin-top: 0.5rem;
+}
+
+
+.Undo-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.Undo-tooltip .Undo-tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.3s;
+    top: 100%;
+    right: 0%;
+    margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
+}
+
+.Undo-tooltip .Undo-tooltip-text::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    right: 10%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #555 transparent;
+}
+
+.Undo-tooltip:hover .Undo-tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+
+
