@@ -100,7 +100,7 @@ export class EngineAccessor extends EventEmitter {
             const filters = this._fileFactories[i].getFileNameFilters();
             filters.forEach((filter) => {
                 this._fileNameFilterToFactoryIndices.push(i);
-                this._fileNameFilters.push(i);
+                this._fileNameFilters.push(filter);
             });
         }
 
