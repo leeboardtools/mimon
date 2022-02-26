@@ -264,7 +264,6 @@ export default class App extends React.Component {
         this.onExit = this.onExit.bind(this);
         this.onRequestExit = this.onRequestExit.bind(this);
 
-        this._accessor = new EngineAccessor();
         this._frameManager = new FM.FrameManager();
 
         this._zoomFactors = [ 0.5, 0.625, 0.75, 0.875, 1., 
@@ -305,6 +304,9 @@ export default class App extends React.Component {
             name, 'user.json');
 
         await Engine.asyncInitializeEngine(settingsPathName, appPath);
+
+        // This must come after the engine is initialized so user messages are loaded.
+        this._accessor = new EngineAccessor();
 
         await this.asyncPostEngineInitialized();
     }
