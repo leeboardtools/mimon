@@ -16,7 +16,7 @@ import { getQuantityDefinition } from '../util/Quantities';
 import { getCurrency } from '../util/Currency';
 import { bSearch } from '../util/BinarySearch';
 import * as T from '../engine/Transactions';
-import { AccessorRowTableHandler } from './RowTableHelpers';
+import { AccessorRowTableHandler } from '../util-ui/RowTableHelpers';
 
 
 const projectSettingsPath = ['LotsSelectionEditor', ];

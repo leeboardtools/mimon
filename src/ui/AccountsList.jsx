@@ -8,7 +8,7 @@ import { CollapsibleRowTable, ExpandCollapseState,
     findRowInfoWithKey, updateRowInfo,
     renderCollapsibleRowTableAsText, } from '../util-ui/CollapsibleRowTable';
 import { SimpleRowTableTextRecorder } from '../util-ui/RowTable';
-import { sortRowInfos } from './RowTableHelpers';
+import { sortRowInfos } from '../util-ui/RowTableHelpers';
 import { getDecimalDefinition, getQuantityDefinitionName, } from '../util/Quantities';
 import * as ACE from './AccountingCellEditors';
 import * as LCE from './LotCellEditors';

@@ -7,7 +7,7 @@ import { createCompositeAction } from '../util/Actions';
 import * as T from '../engine/Transactions';
 import { YMDDate, getYMDDateString } from '../util/YMDDate';
 import deepEqual from 'deep-equal';
-import { TabIdRowTableHandler } from './RowTableHelpers';
+import { TabIdRowTableHandler } from '../util-ui/RowTableHelpers';
 
 
 /**

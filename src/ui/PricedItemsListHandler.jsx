@@ -7,7 +7,7 @@ import * as PI from '../engine/PricedItems';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
 import { TabIdRowTableHandler, updateStateFromProjectSettings, 
-} from './RowTableHelpers';
+} from '../util-ui/RowTableHelpers';
 import { getColumnWithKey } from '../util-ui/ColumnInfo';
 import { getYMDDate, YMDDate } from '../util/YMDDate';
 import { DateSelectorBar, } from './DateSelectorBar';

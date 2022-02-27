@@ -1,5 +1,5 @@
 import { isUserMsg, userMsg } from '../util/UserMessages';
-import * as CI from '../util-ui/ColumnInfo';
+import * as CI from './ColumnInfo';
 import { dataDeepCopy } from '../util/DataDeepCopy';
 import deepEqual from 'deep-equal';
 

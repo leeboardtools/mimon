@@ -5,7 +5,7 @@ import { AccountsList, createDefaultColumns } from './AccountsList';
 import * as A from '../engine/Accounts';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { ExpandCollapseState } from '../util-ui/CollapsibleRowTable';
-import { TabIdRowTableHandler, updateStateFromProjectSettings } from './RowTableHelpers';
+import { TabIdRowTableHandler, updateStateFromProjectSettings } from '../util-ui/RowTableHelpers';
 import { YMDDate } from '../util/YMDDate';
 import { DateSelectorBar, DateRangeBar } from './DateSelectorBar';
 import { resolveDateSelector } from '../util/DateSelectorDef';

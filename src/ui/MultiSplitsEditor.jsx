@@ -10,7 +10,7 @@ import * as AH from '../tools/AccountHelpers';
 import * as A from '../engine/Accounts';
 import * as T from '../engine/Transactions';
 import deepEqual from 'deep-equal';
-import { AccessorRowTableHandler } from './RowTableHelpers';
+import { AccessorRowTableHandler } from '../util-ui/RowTableHelpers';
 
 
 const projectSettingsPath = ['MultiSplitsEditor', ];

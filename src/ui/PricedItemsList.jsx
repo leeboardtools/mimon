@@ -16,7 +16,7 @@ import { CollapsibleRowTable, ExpandCollapseState,
     findRowInfoWithKey, updateRowInfo,
     renderCollapsibleRowTableAsText, } from '../util-ui/CollapsibleRowTable';
 import { SimpleRowTableTextRecorder } from '../util-ui/RowTable';
-import { sortRowInfos } from './RowTableHelpers';
+import { sortRowInfos } from '../util-ui/RowTableHelpers';
 import { compare, MultiCompare } from '../util/MultiCompare';
 
 

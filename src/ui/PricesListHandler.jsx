@@ -3,7 +3,7 @@ import { userMsg } from '../util/UserMessages';
 import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { PricesList, createDefaultColumns } from './PricesList';
 import * as P from '../engine/Prices';
-import { TabIdRowTableHandler } from './RowTableHelpers';
+import { TabIdRowTableHandler } from '../util-ui/RowTableHelpers';
 
 
 function getUndoRedoInfo(tabEntry) {
