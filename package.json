@@ -99,7 +99,7 @@
     "jest-watch-typeahead": "^0.6.5",
     "jsdoc": "^3.6.7",
     "kind-of": ">=6.0.3",
-    "minimist": ">=1.2.3",
+    "minimist": ">=1.2.6",
     "node-loader": "^0.6.0",
     "react-app-polyfill": "^1.0.6",
     "style-loader": "^0.23.1"
