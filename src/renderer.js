@@ -1,7 +1,5 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import 'bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import './util-ui/util-ui.css';
 import './index.css';
 import React from 'react';

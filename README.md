@@ -39,17 +39,14 @@ You'll need to have [nodejs](https://nodejs.org/) and [git](https://git-scm.com/
 
 
 ## Attributions
-The project was created from my boilerplate [new_electron_react_bootstrap](<https://github.com/leeboardtools/new_electron_react_bootstrap).>
-
 This project incorporates the following (I may have missed some projects, especially build related dependencies):
 
 - [Electron](https://electronjs.org/), the main framework that makes desktop apps from Javascript.
-- [Electron Forge 5.x](https://github.com/electron-userland/electron-forge/tree/5.x)
+- [Electron Forge 6.x](https://github.com/electron-userland/electron-forge)
 - [webpack](https://webpack.js.org/), the module bundler we use.
 - [React](https://reactjs.org/), the declarative UI library for managing UI components.
 - [Jest](https://jestjs.io/) for unit testing.
 - [ESLint](https://eslint.org/) for linting.
-- [Bootstrap](https://getbootstrap.com/), responsive CSS and more for styling the UI.
 - [deep-equal](https://www.npmjs.com/package/deep-equal) for performing deep object comparisons.
 - [uuid](https://github.com/kelektiv/node-uuid#readme) for generating UUIDs.
 - [Material Design Icons](https://material.io/resources/icons/?style=baseline), Google's Material icons
@@ -58,3 +55,5 @@ This project incorporates the following (I may have missed some projects, especi
 - [sax-js](https://www.npmjs.com/package/sax) for parsing XML.
 - [mathjs](https://mathjs.org/) for math expression evaluation.
 - [axios](https://github.com/axios/axios) For Promise based HTTP retrieval.
+
+Some of the project's CSS was derived from [Bootstrap](https://getbootstrap.com/).
