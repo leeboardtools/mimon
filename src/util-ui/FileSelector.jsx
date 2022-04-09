@@ -112,12 +112,29 @@ export class FileSelector extends React.Component {
             if (availableDrives && !availableDrives.length) {
                 availableDrives = undefined;
             }
+            if (availableDrives) {
+                // Try to support WSL drives
+                try {
+                    const drive = '\\\\wsl.localhost\\Ubuntu';
+                    const stat = await fsPromises.stat(drive + '\\');
+                    if (stat.isDirectory()) {
+                        availableDrives.push(drive);
+                    }
+                }
+                catch (e) {
+
+                }
+            }
 
             const currentDirParts = splitDirs(currentDirPath);
 
             if (currentDirParts && currentDirParts.length) {
                 if (availableDrives) {
                     // currentDirParts[0] should be the drive letter such as 'C:'
+                    if (!currentDirParts[0] && (currentDirParts[1] === 'wsl.localhost')) {
+                        currentDirParts[0] = '\\\\' + currentDirParts[1] + '\\' + currentDirParts[2];
+                        currentDirParts.splice(1, 2);
+                    }
                 }
                 else {
                     // Need to add the root path...
