@@ -122,7 +122,7 @@ export class FileSelector extends React.Component {
                     }
                 }
                 catch (e) {
-
+                    //
                 }
             }
 
@@ -132,7 +132,8 @@ export class FileSelector extends React.Component {
                 if (availableDrives) {
                     // currentDirParts[0] should be the drive letter such as 'C:'
                     if (!currentDirParts[0] && (currentDirParts[1] === 'wsl.localhost')) {
-                        currentDirParts[0] = '\\\\' + currentDirParts[1] + '\\' + currentDirParts[2];
+                        currentDirParts[0] = '\\\\' + currentDirParts[1] 
+                            + '\\' + currentDirParts[2];
                         currentDirParts.splice(1, 2);
                     }
                 }
