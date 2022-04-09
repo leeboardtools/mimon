@@ -3012,6 +3012,13 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
                         = sortedEntries.at(sortedEntries.length - 1).id;
                 }
             }
+            else {
+                // Don't save account states if no transactions.
+                const sortedEntries = this._sortedEntriesByAccountId.get(accountId);
+                if (!sortedEntries || !sortedEntries.length) {
+                    return;
+                }
+            }
 
             this._currentAccountStatesById.set(accountId, accountStateDataItem);
         });
@@ -3509,6 +3516,12 @@ export class TransactionsHandlerImplBase extends TransactionsHandler {
 
         if (accountStateUpdates) {
             for (let [accountId, accountStateDataItem] of accountStateUpdates) {
+                const sortedEntries = this._sortedEntriesByAccountId.get(accountId);
+                if (!sortedEntries || !sortedEntries.length) {
+                    // Don't save account states for accounts without transactions.
+                    accountStateDataItem = undefined;
+                }
+
                 if (!accountStateDataItem) {
                     this._currentAccountStatesById.delete(accountId);
                 }
