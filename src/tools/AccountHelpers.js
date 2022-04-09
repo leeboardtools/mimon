@@ -441,6 +441,37 @@ export function getDefaultSplitAccountId(accessor, accountDataItem,
 
 
 /**
+ * Retrieves the account id of the first ancestor account that is not a grouping account.
+ * @param {EngineAccessor} accessor 
+ * @param {AccountDataItem|number} accountDataItem 
+ * @returns {number|undefined}
+ */
+export function getNonGroupParentAccountId(accessor, accountDataItem) {
+    if (typeof accountDataItem === 'number') {
+        accountDataItem = accessor.getAccountDataItemWithId(accountDataItem);
+    }
+    accountDataItem = A.getAccountDataItem(accountDataItem);
+
+    let parentAccountId = accountDataItem.parentAccountId;
+    while (parentAccountId) {
+        const parentDataItem = accessor.getAccountDataItemWithId(parentAccountId);
+        if (!parentDataItem) {
+            return;
+        }
+        const type = A.getAccountType(parentDataItem.type);
+        if (!type) {
+            return;
+        }
+        if (!type.isGroup) {
+            return parentAccountId;
+        }
+
+        parentAccountId = parentDataItem.parentAccountId;
+    }
+}
+
+
+/**
  * Retrieves the {@link PricedItemDataItem} of an account given the account id.
  * @param {EngineAccessor} accessor 
  * @param {number} accountId 

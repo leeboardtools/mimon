@@ -1253,15 +1253,15 @@ function buyFromSplitInfo(splitInfo, transactionDataItem) {
         return esppBuyInfo;
     }
 
-    let sourceAccountId = accountDataItem.parentAccountId;
+    let sourceAccountId;
     const accountType = A.getAccountType(accountDataItem.type);
     if (accountType.isStockGrant) {
         sourceAccountId = AH.getDefaultSplitAccountId(accessor, accountDataItem,
             AH.DefaultSplitAccountType.STOCK_GRANTS_INCOME);
-        
-        if (!accessor.getAccountDataItemWithId(sourceAccountId)) {
-            sourceAccountId = accountDataItem.parentAccountId;
-        }
+    }
+
+    if (!sourceAccountId || !accessor.getAccountDataItemWithId(sourceAccountId)) {
+        sourceAccountId = AH.getNonGroupParentAccountId(accessor, accountDataItem);
     }
 
     return updateTransactionDataItem(splitInfo, transactionDataItem,
@@ -1283,14 +1283,15 @@ function buyFromSplitInfo(splitInfo, transactionDataItem) {
 function sellFromSplitInfo(splitInfo, transactionDataItem) {
     const { accessor, splitIndex, editStates } = splitInfo;
     const splitDataItem = splitInfo.transactionDataItem.splits[splitIndex];
-    const accountDataItem = accessor.getAccountDataItemWithId(splitDataItem.accountId);
+    const monetaryAccountId = AH.getNonGroupParentAccountId(
+        accessor, splitDataItem.accountId);
 
     return updateTransactionDataItem(splitInfo, transactionDataItem,
         {
             lotType: T.LotTransactionType.BUY_SELL,
             lots: editStates.shares,
             monetaryAmount: editStates.monetaryAmount,
-            monetaryAmountAccountId: accountDataItem.parentAccountId,
+            monetaryAmountAccountId: monetaryAccountId,
             fees: editStates.fees,
             price: editStates.price,
         });
