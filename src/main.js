@@ -210,6 +210,15 @@ const createWindow = (windowState) => {
     });
 
     mainWindow.on('ready-to-show', () => {
+        // This is a hack for Windows with multiple screens - if the x or y position
+        // is < 0 then the size passed to the BrowserWindow constructor
+        // might not have been applied properly.
+        mainWindow.setBounds({
+            width: windowState.width,
+            height: windowState.height,
+            x: Math.round(windowState.x),
+            y: Math.round(windowState.y),
+        });
     });
 };
 
