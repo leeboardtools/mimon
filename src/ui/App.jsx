@@ -10,7 +10,7 @@ import { MainWindow } from './MainWindow';
 import { ErrorReporter } from '../util-ui/ErrorReporter';
 import { asyncFileOrDirExists, asyncDirExists, } 
     from '../util/Files';
-import { FileSelector } from '../util-ui/FileSelector';
+import { FileSelector, setNetworkPaths } from '../util-ui/FileSelector';
 import deepEqual from 'deep-equal';
 import { QuestionPrompter, StandardButton } from '../util-ui/QuestionPrompter';
 import { FileImporter } from '../tools/FileImporter';
@@ -302,6 +302,7 @@ export default class App extends React.Component {
         const name = ipcRenderer.sendSync('sync-appName');
         const settingsPathName = path.join(appData, 
             name, 'user.json');
+        
 
         await Engine.asyncInitializeEngine(settingsPathName, appPath);
 
@@ -313,6 +314,9 @@ export default class App extends React.Component {
 
 
     async asyncPostEngineInitialized() {
+        const networkPaths = await asyncGetUserSetting('networkPaths', []);
+        setNetworkPaths(networkPaths);
+
         const startupOptions = await asyncGetStartupOptions();
 
         if (startupOptions.autoOpen) {
