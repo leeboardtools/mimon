@@ -12,6 +12,19 @@ import { QuestionPrompter, StandardButton } from './QuestionPrompter';
 import { DropdownField } from './DropdownField';
 
 
+
+let networkPaths = [];
+
+export function setNetworkPaths(paths) {
+    if (!Array.isArray(paths)) {
+        networkPaths = [ paths ];
+    }
+    else {
+        networkPaths = Array.from(paths);
+    }
+}
+
+
 /**
  * A component for selecting files or folders.
  * <p>
@@ -108,21 +121,36 @@ export class FileSelector extends React.Component {
             const currentDirPath = await fsPromises.realpath(currentDir);
             const entries = await fsPromises.readdir(currentDir, { withFileTypes: true });
 
+            const hostnames = new Set();
+
             let availableDrives = await asyncGetAvailableDrives();
             if (availableDrives && !availableDrives.length) {
                 availableDrives = undefined;
             }
             if (availableDrives) {
-                // Try to support WSL drives
-                try {
-                    const drive = '\\\\wsl.localhost\\Ubuntu';
-                    const stat = await fsPromises.stat(drive + '\\');
-                    if (stat.isDirectory()) {
-                        availableDrives.push(drive);
+                if (networkPaths && networkPaths.length) {
+                    for await (let networkPath of networkPaths) {
+                        try {
+                            networkPath = path.normalize(networkPath);
+                            if (networkPath.lastIndexOf(path.sep) 
+                                === (networkPath.length - 1)) {
+                                networkPath = networkPath.slice(0, 
+                                    networkPath.length - 1);
+                            }
+                            
+                            const stat = await fsPromises.stat(networkPath + '\\');
+                            if (stat.isDirectory()) {
+                                availableDrives.push(networkPath);
+                                const dirParts = splitDirs(networkPath);
+                                if (!dirParts[0] && dirParts[1]) {
+                                    hostnames.add(dirParts[1]);
+                                }
+                            }
+                        }
+                        catch (e) {
+                            //
+                        }
                     }
-                }
-                catch (e) {
-                    //
                 }
             }
 
@@ -131,7 +159,7 @@ export class FileSelector extends React.Component {
             if (currentDirParts && currentDirParts.length) {
                 if (availableDrives) {
                     // currentDirParts[0] should be the drive letter such as 'C:'
-                    if (!currentDirParts[0] && (currentDirParts[1] === 'wsl.localhost')) {
+                    if (!currentDirParts[0] && hostnames.has(currentDirParts[1])) {
                         currentDirParts[0] = '\\\\' + currentDirParts[1] 
                             + '\\' + currentDirParts[2];
                         currentDirParts.splice(1, 2);
