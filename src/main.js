@@ -126,12 +126,6 @@ if (!isDevMode) {
 
 const onReady = () => {
 
-    if (isDevMode) {
-        installExtension(REACT_DEVELOPER_TOOLS)
-            .then((name) => {})
-            .catch((err) => {});
-    }
-
     const windowState = getWindowState({
         windowName: 'mainWindow',
     });
@@ -220,6 +214,14 @@ const createWindow = (windowState) => {
             x: Math.round(windowState.x),
             y: Math.round(windowState.y),
         });
+    });
+
+    mainWindow.on('did-frame-finish-load', () => {
+        if (isDevMode) {
+            installExtension(REACT_DEVELOPER_TOOLS)
+                .then((name) => {})
+                .catch((err) => {});
+        }    
     });
 };
 
