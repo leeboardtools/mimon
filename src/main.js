@@ -6,11 +6,6 @@ import * as axios from 'axios';
 app.allowRendererProcessReuse = true;
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
-if (isDevMode) {
-    installExtension(REACT_DEVELOPER_TOOLS)
-        .then((name) => {})
-        .catch((err) => {});
-}
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -130,6 +125,12 @@ if (!isDevMode) {
 
 
 const onReady = () => {
+
+    if (isDevMode) {
+        installExtension(REACT_DEVELOPER_TOOLS)
+            .then((name) => {})
+            .catch((err) => {});
+    }
 
     const windowState = getWindowState({
         windowName: 'mainWindow',
