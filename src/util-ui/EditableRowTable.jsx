@@ -579,8 +579,17 @@ export function editableRowTable(WrappedTable) {
             if (activeEditInfo && currentFocus) {
                 const { refsForFocus } = activeEditInfo;
                 for (let i = 0; i < refsForFocus.length; ++i) {
-                    if (currentFocus === refsForFocus[i].current) {
+                    const { current } = refsForFocus[i];
+                    if (!current) {
+                        continue;
+                    }
+                    if (currentFocus === current) {
                         return i;
+                    }
+                    if (typeof current.contains === 'function') {
+                        if (current.contains(currentFocus)) {
+                            return i;
+                        }
                     }
                 }
             }
@@ -614,8 +623,11 @@ export function editableRowTable(WrappedTable) {
             }
         }
 
-        focusToRef(ref) {
+        focusToRef(ref, dir) {
             if (ref && ref.current) {
+                if (typeof ref.current.focusCell === 'function') {
+                    ref.current.focusCell(dir);
+                }
                 if (typeof ref.current.focus === 'function') {
                     ref.current.focus();
                 }
@@ -646,7 +658,7 @@ export function editableRowTable(WrappedTable) {
                         if (!newFocus) {
                             newFocus = this.getLastCellFocus();
                         }
-                        this.focusToRef(newFocus);
+                        this.focusToRef(newFocus, -1);
                     }
                     else {
                         let newFocus;
@@ -665,7 +677,7 @@ export function editableRowTable(WrappedTable) {
                             });
                         }
                         else {
-                            this.focusToRef(newFocus);
+                            this.focusToRef(newFocus, 1);
                         }
                     }
                     e.preventDefault();
