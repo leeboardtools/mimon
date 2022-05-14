@@ -19,7 +19,7 @@ export function Tooltip(props) {
                 // Want to format this as a list.
                 for (let i = 0; i < tooltip.length; ++i) {
                     tooltip[i] = <div className = "Row No-gutters" key = {i}>
-                        <div className="col">{tooltip[i]}</div>
+                        <div className="Col">{tooltip[i]}</div>
                     </div>;
                 }
             }
