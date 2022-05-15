@@ -5,7 +5,7 @@ import { loadPricedItemUserMessages } from './PricedItems';
 import { loadTransactionsUserMessages } from './Transactions';
 import { loadStandardTags } from './StandardTags';
 import defUserMessages from '../locales/en-userMessages.json';
-import defUserMessagesUtil from '../locales/en-userMessages-util.json';
+import defUserMessagesUtil from '../util/locales/en-userMessages-util.json';
 import defUserMessagesEngine from '../locales/en-userMessages-engine.json';
 import * as path from 'path';
 import * as axios from 'axios';
@@ -47,9 +47,10 @@ export async function asyncInitializeEngine(settingsPathName, appPathName) {
     appPathName = appPathName || `${__dirname}/..`;
     _appPathName = appPathName;
 
+    const utilBasePathName = path.normalize(appPathName + '/util/locales');
     const basePathName = path.normalize(appPathName + '/locales');
     const userMsgsPathNames = [
-        [ path.join(basePathName, 'en-userMessages-util.json'),
+        [ path.join(utilBasePathName, 'en-userMessages-util.json'),
             defUserMessagesUtil
         ],
         [ path.join(basePathName, 'en-userMessages-engine.json'),
