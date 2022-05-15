@@ -38,6 +38,31 @@ You'll need to have [nodejs](https://nodejs.org/) and [git](https://git-scm.com/
     - The application should launch after a little bit. It does take a little while (over 30 seconds for me) to fully launch.
 
 
+## Development Notes
+Two sub-repos, https://github.com/leeboardtools/mi-util and https://github.com/leeboardtools/mi-util-ui, are used in this project.
+The src/util folder contains the mi-util repo, while the src/util-ui folder contains the mi-util-ui repo.
+
+If you want to pull from those repos, set up remotes to them:
+
+   `git remote add -f util https://github.com/leeboardtools/mi-util.git`
+   
+   `git remote add -f util-ui https://github.com/leeboardtools/mi-util-ui.git`
+
+You can then pull from the repo by:
+
+1. Fetching
+
+   `git fetch util`
+  
+2. Merging
+
+   `git merge -s subtree --squash util/main`
+  
+3. Committing
+
+   `git commit -m "Updated from util/main`
+   
+
 ## Attributions
 This project incorporates the following (I may have missed some projects, especially build related dependencies):
 
