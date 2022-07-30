@@ -163,6 +163,10 @@ class ReconcileSplitInfosSelector extends React.Component {
             newRowEntries.push(rowEntry);
         });
 
+        newRowEntries.sort((a, b) => { 
+            return a.ymdDate.localeCompare(b.ymdDate); 
+        });
+
         this.setState({
             rowEntries: newRowEntries,
         });
