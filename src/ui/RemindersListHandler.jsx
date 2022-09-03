@@ -7,7 +7,11 @@ import { createCompositeAction } from '../util/Actions';
 import * as T from '../engine/Transactions';
 import { YMDDate, getYMDDateString } from '../util/YMDDate';
 import deepEqual from 'deep-equal';
-import { TabIdRowTableHandler } from '../util-ui/RowTableHelpers';
+import { TabIdRowTableHandler, updateStateFromProjectSettings } 
+    from '../util-ui/RowTableHelpers';
+
+
+const MAX_REMIND_DAYS_BEFORE = 14;
 
 
 /**
@@ -17,6 +21,9 @@ import { TabIdRowTableHandler } from '../util-ui/RowTableHelpers';
 export class RemindersListHandler extends MainWindowHandlerBase {
     constructor(props) {
         super(props);
+
+        this.updateStateFromModifiedProjectSettings 
+            = this.updateStateFromModifiedProjectSettings.bind(this);
 
         this.onNewReminder = this.onNewReminder.bind(this);
         this.onModifyReminder = this.onModifyReminder.bind(this);
@@ -49,7 +56,31 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         this._rowTableHandler = new TabIdRowTableHandler({
             mainWindowHandler: this,
             userIdBase: 'RemindersListHandler',
+            updateStateFromModifiedProjectSettings:
+                this.updateStateFromModifiedProjectSettings,
         });
+    }
+
+
+    updateStateFromModifiedProjectSettings(args) {
+        const { newState, currentState } = args;
+        if (newState.remindDaysBefore !== currentState.remindDaysBefore) {
+            updateStateFromProjectSettings(args, 'remindDaysBefore');
+
+            const { accessor } = this.props;
+            const newDueEntriesById = new Map();
+            const reminderIds = accessor.getReminderIds();
+            reminderIds.forEach((id) => {
+                const reminderDataItem = accessor.getReminderDataItemWithId(id);
+                const dueEntry = this.createDueEntry(newState, reminderDataItem);
+                if (dueEntry) {
+                    newDueEntriesById.set(id, dueEntry);
+                }
+            });
+            if (!deepEqual(newDueEntriesById, currentState.dueEntriesById)) {
+                newState.dueEntriesById = newDueEntriesById;
+            }    
+        }
     }
 
 
@@ -120,6 +151,23 @@ export class RemindersListHandler extends MainWindowHandlerBase {
     }
 
 
+    getRefYMDDateForIsReminderDue(tabId) {
+        const state = (typeof tabId === 'object') ? tabId : this.getTabIdState(tabId);
+        if (state) {
+            const { remindDaysBefore } = state;
+            if ((typeof remindDaysBefore === 'number') && (remindDaysBefore > 0)) {
+                return new YMDDate().addDays(remindDaysBefore);
+            }
+        }
+    }
+
+
+    isReminderDataItemDue(tabId, reminderDataItem) {
+        const refYMDDate = this.getRefYMDDateForIsReminderDue(tabId);
+        return isReminderDue(reminderDataItem, refYMDDate);
+    }
+
+
     getAllDueReminders(tabId) {
         const { accessor } = this.props;
 
@@ -127,7 +175,7 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         const allReminderIds = accessor.getReminderIds();
         allReminderIds.forEach((id) => {
             const reminderDataItem = accessor.getReminderDataItemWithId(id);
-            if (isReminderDue(reminderDataItem)) {
+            if (this.isReminderDataItemDue(tabId, reminderDataItem)) {
                 reminderIds.push(id);
             }
         });
@@ -239,15 +287,16 @@ export class RemindersListHandler extends MainWindowHandlerBase {
 
         const today = new YMDDate();
         do {
-            let nextOccurrenceState = isReminderDue(reminderDataItem);
+            let nextOccurrenceState = this.isReminderDataItemDue(tabId, reminderDataItem);
             if (onlyLatest) {
                 // We want the latest due date.
                 if (nextOccurrenceState) {
+                    const refYMDDate = this.getRefYMDDateForIsReminderDue(tabId);
                     let latestOccurrenceState = nextOccurrenceState;
                     while (latestOccurrenceState) {
                         nextOccurrenceState = latestOccurrenceState;
                         latestOccurrenceState = isReminderDue(
-                            reminderDataItem, today, latestOccurrenceState);
+                            reminderDataItem, refYMDDate, latestOccurrenceState);
                     }
                 }
             }
@@ -395,8 +444,8 @@ export class RemindersListHandler extends MainWindowHandlerBase {
     }
 
 
-    createDueEntry(reminderDataItem, previousDueEntry) {
-        const nextOccurrenceState = isReminderDue(reminderDataItem);
+    createDueEntry(tabId, reminderDataItem, previousDueEntry) {
+        const nextOccurrenceState = this.isReminderDataItemDue(tabId, reminderDataItem);
         if (nextOccurrenceState) {
             return {
                 reminderId: reminderDataItem.id,
@@ -423,7 +472,7 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         if (state.dueEntriesById) {
             const reminderDataItem = result.newReminderDataItem;
             const { id } = reminderDataItem;
-            const dueEntry = this.createDueEntry(reminderDataItem);
+            const dueEntry = this.createDueEntry(tabId, reminderDataItem);
             if (dueEntry) {
                 const newDueEntriesById = new Map(state.dueEntriesById);
                 newDueEntriesById.set(id, dueEntry);
@@ -440,7 +489,7 @@ export class RemindersListHandler extends MainWindowHandlerBase {
 
             const reminderDataItem = result.newReminderDataItem;
             const { id } = reminderDataItem;
-            const dueEntry = this.createDueEntry(reminderDataItem,
+            const dueEntry = this.createDueEntry(tabId, reminderDataItem,
                 state.dueEntriesById.get(id));
             if (dueEntry) {
                 newDueEntriesById.set(id, dueEntry);
@@ -580,6 +629,38 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             accessor.off('transactionsModify', tabEntry.onTransactionsModify);
             accessor.off('transactionsRemove', tabEntry.onTransactionsRemove);
         }
+    }
+
+
+    onDaysBeforeReminder(tabId, daysBefore) {
+        const state = this.getTabIdState(tabId);
+        if (state.remindDaysBefore === daysBefore) {
+            return;
+        }
+
+        this.setTabIdProjectSettings(state.projectSettingsId,
+            {
+                remindDaysBefore: daysBefore,
+            },
+            userMsg('RemindersListHandler-action_daysBeforeDue'));
+    }
+
+    buildDaysBeforeMenuItem(tabId, state) {
+        const subMenuItems = [];
+
+        for (let i = 0; i <= MAX_REMIND_DAYS_BEFORE; ++i) {
+            //
+            subMenuItems.push({
+                id: 'daysBefore_' + i.toString(),
+                label: i.toString(),
+                checked: i === state.remindDaysBefore,
+                onChooseItem: () => this.onDaysBeforeReminder(tabId, i),
+            });
+        }
+        return { id: 'daysBeforeDueSubMenu',
+            label: userMsg('RemindersListHandler-daysBeforeDueSubMenu'),
+            subMenuItems: subMenuItems,
+        };
     }
 
 
@@ -776,6 +857,9 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             menuItems.push(skipSelectedRemindersAllItem);
             menuItems.push(openAppliedTransactionItem);
             menuItems.push(modifyReminderItem);
+            menuItems.push({});
+
+            menuItems.push(this.buildDaysBeforeMenuItem(tabId, state));
             menuItems.push({});
 
             const specialActionsMenuItems = [];
@@ -975,15 +1059,24 @@ export class RemindersListHandler extends MainWindowHandlerBase {
     createTabEntry(tabId) {
         let settings = this.getTabIdProjectSettings(tabId) || {};
 
+        const projectSettingsId = tabId;
+
         const isRemindersDue = (tabId === 'remindersDueList');
         const titleId = (isRemindersDue)
             ? 'RemindersListHandler-remindersDueList_title'
             : 'RemindersListHandler-masterReminderList_title';
 
         const allColumns = createDefaultColumns(isRemindersDue);
+        let { remindDaysBefore } = settings;
+        if ((typeof remindDaysBefore !== 'number')
+         || (remindDaysBefore < 0)
+         || (remindDaysBefore > MAX_REMIND_DAYS_BEFORE)) {
+            remindDaysBefore = 0;
+        }
 
         const tabEntry = {
             tabId: tabId,
+            projectSettingsId: projectSettingsId,
             isRemindersDue: isRemindersDue,
             title: userMsg(titleId),
             hasClose: true,
@@ -992,6 +1085,7 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             hiddenReminderIds: [],
             showHiddenReminders: false,
             allColumns: allColumns,
+            remindDaysBefore: remindDaysBefore,
         };
 
         if (isRemindersDue) {
@@ -1001,11 +1095,9 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             const reminderIds = accessor.getReminderIds();
             reminderIds.forEach((id) => {
                 const reminderDataItem = accessor.getReminderDataItemWithId(id);
-                if (isReminderDue(reminderDataItem)) {
-                    dueEntriesById.set(id, {
-                        reminderId: id,
-                        dueStatus: 'DUE'
-                    });
+                const dueEntry = this.createDueEntry(tabEntry, reminderDataItem);
+                if (dueEntry) {
+                    dueEntriesById.set(id, dueEntry);
                 }
             });
 

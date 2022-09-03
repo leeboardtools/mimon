@@ -211,6 +211,7 @@ export class RowTableHandler {
      * @typedef {object} RowTableHandler~updateStateFromModifiedProjectSettingsArgs
      * @property {string} stateId
      * @property {object} newState
+     * @property {object} currentState
      * @property {*} projectSettings
      * @property {*} originalChanges
      */
@@ -493,6 +494,7 @@ export class RowTableHandler {
             updateStateFromModifiedProjectSettings({
                 stateId: stateId, 
                 newState: newState, 
+                currentState: state,
                 projectSettings: projectSettings,
                 originalChanges: originalChanges,
             });

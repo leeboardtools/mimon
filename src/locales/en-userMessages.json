@@ -678,6 +678,9 @@
     "RemindersListHandler-applyNowKeepNextDue": "Apply Now, Keep Next Due Date",
     "RemindersListHandler-skipNextDue": "Skip Next Due Date",
 
+    "RemindersListHandler-daysBeforeDueSubMenu": "Remind Days Before Due",
+    "RemindersListHandler-action_daysBeforeDue": "Remind Days Before Due",
+
 
     "RowTableHandler-action_showColumn": ["Show '", "' Column"],
     "RowTableHandler-action_hideColumn": ["Hide '", "' Column"],
