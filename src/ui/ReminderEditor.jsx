@@ -463,6 +463,8 @@ export class ReminderEditor extends React.Component {
         this.onMultiSplitsEditorCancel = this.onMultiSplitsEditorCancel.bind(this);
         this.onOpenMultiSplitsEditor = this.onOpenMultiSplitsEditor.bind(this);
 
+        this.onNoRemindEarlyChange = this.onNoRemindEarlyChange.bind(this);
+
         this.setErrorMsg = this.setErrorMsg.bind(this);
 
         let reminderDataItem = {};
@@ -821,12 +823,31 @@ export class ReminderEditor extends React.Component {
     }
 
 
+
+    onNoRemindEarlyChange(isNoRemindEarly) {
+        this.updateReminderDataItem({
+            noRemindEarly: isNoRemindEarly,
+        });
+    }
+
+
+    renderOptionsEditor() {
+        const { reminderDataItem } = this.state;
+        return <Checkbox 
+            value = {reminderDataItem.noRemindEarly}
+            label = {userMsg('ReminderEditor-noRemindEarly_label')}
+            onChange = {this.onNoRemindEarlyChange}
+        />;
+    }
+
+
     renderPage() {
         const descriptionEditor = this.renderDescriptionEditor();
         const enabledEditor = this.renderEnabledEditor();
         const transactionTemplateEditor = this.renderTransactionTemplateEditor();
         const dateOccurrenceEditor = this.renderDateOccurrenceEditor();
         const lastStateEditor = this.renderLastOccurrenceStateEditor();
+        const optionsEditor = this.renderOptionsEditor();
 
         return <PageBody classExtras = "Editor-body ReminderEditor-body">
             <Row classExtras = "Row-align-items-center Mt-2">
@@ -858,6 +879,11 @@ export class ReminderEditor extends React.Component {
             <Row>
                 <Col>
                     {lastStateEditor}
+                </Col>
+            </Row>
+            <Row>
+                <Col>
+                    {optionsEditor}
                 </Col>
             </Row>
         </PageBody>;

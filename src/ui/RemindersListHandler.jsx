@@ -68,11 +68,16 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             updateStateFromProjectSettings(args, 'remindDaysBefore');
 
             const { accessor } = this.props;
+            const refYMDDates = this.getRefYMDDatesForIsReminderDue(newState.tabId);
             const newDueEntriesById = new Map();
             const reminderIds = accessor.getReminderIds();
             reminderIds.forEach((id) => {
                 const reminderDataItem = accessor.getReminderDataItemWithId(id);
-                const dueEntry = this.createDueEntry(newState, reminderDataItem);
+                const dueEntry = this.createDueEntry({
+                    tabId: newState,
+                    reminderDataItem: reminderDataItem,
+                    refYMDDates: refYMDDates, 
+                });
                 if (dueEntry) {
                     newDueEntriesById.set(id, dueEntry);
                 }
@@ -151,19 +156,26 @@ export class RemindersListHandler extends MainWindowHandlerBase {
     }
 
 
-    getRefYMDDateForIsReminderDue(tabId) {
+    getRefYMDDatesForIsReminderDue(tabId) {
+        const result = {
+            today: new YMDDate(),
+        };
         const state = (typeof tabId === 'object') ? tabId : this.getTabIdState(tabId);
         if (state) {
             const { remindDaysBefore } = state;
             if ((typeof remindDaysBefore === 'number') && (remindDaysBefore > 0)) {
-                return new YMDDate().addDays(remindDaysBefore);
+                result.earlyYMDDate = new YMDDate().addDays(remindDaysBefore);
             }
         }
+
+        return result;
     }
 
 
-    isReminderDataItemDue(tabId, reminderDataItem) {
-        const refYMDDate = this.getRefYMDDateForIsReminderDue(tabId);
+    isReminderDataItemDue(tabId, reminderDataItem, refYMDDates) {
+        refYMDDates = refYMDDates || this.getRefYMDDatesForIsReminderDue(tabId);
+        const refYMDDate = (reminderDataItem.noRemindEarly) 
+            ? refYMDDates.today : refYMDDates.earlyYMDDate;
         return isReminderDue(reminderDataItem, refYMDDate);
     }
 
@@ -171,11 +183,13 @@ export class RemindersListHandler extends MainWindowHandlerBase {
     getAllDueReminders(tabId) {
         const { accessor } = this.props;
 
+        const refYMDDates = this.getRefYMDDatesForIsReminderDue(tabId);
+
         const reminderIds = [];
         const allReminderIds = accessor.getReminderIds();
         allReminderIds.forEach((id) => {
             const reminderDataItem = accessor.getReminderDataItemWithId(id);
-            if (this.isReminderDataItemDue(tabId, reminderDataItem)) {
+            if (this.isReminderDataItemDue(tabId, reminderDataItem, refYMDDates)) {
                 reminderIds.push(id);
             }
         });
@@ -285,13 +299,16 @@ export class RemindersListHandler extends MainWindowHandlerBase {
             break;
         }
 
-        const today = new YMDDate();
+        const refYMDDates = this.getRefYMDDatesForIsReminderDue(tabId);
+        const { today } = refYMDDates;
         do {
-            let nextOccurrenceState = this.isReminderDataItemDue(tabId, reminderDataItem);
+            let nextOccurrenceState = this.isReminderDataItemDue(
+                tabId, reminderDataItem, refYMDDates);
             if (onlyLatest) {
                 // We want the latest due date.
                 if (nextOccurrenceState) {
-                    const refYMDDate = this.getRefYMDDateForIsReminderDue(tabId);
+                    const refYMDDate = (reminderDataItem.noRemindEarly) 
+                        ? refYMDDates.today : refYMDDates.earlyYMDDate;
                     let latestOccurrenceState = nextOccurrenceState;
                     while (latestOccurrenceState) {
                         nextOccurrenceState = latestOccurrenceState;
@@ -444,8 +461,9 @@ export class RemindersListHandler extends MainWindowHandlerBase {
     }
 
 
-    createDueEntry(tabId, reminderDataItem, previousDueEntry) {
-        const nextOccurrenceState = this.isReminderDataItemDue(tabId, reminderDataItem);
+    createDueEntry({ tabId, reminderDataItem, previousDueEntry, refYMDDates }) {
+        const nextOccurrenceState = this.isReminderDataItemDue(
+            tabId, reminderDataItem, refYMDDates);
         if (nextOccurrenceState) {
             return {
                 reminderId: reminderDataItem.id,
@@ -472,7 +490,10 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         if (state.dueEntriesById) {
             const reminderDataItem = result.newReminderDataItem;
             const { id } = reminderDataItem;
-            const dueEntry = this.createDueEntry(tabId, reminderDataItem);
+            const dueEntry = this.createDueEntry({
+                tabId: tabId,
+                reminderDataItem: reminderDataItem,
+            });
             if (dueEntry) {
                 const newDueEntriesById = new Map(state.dueEntriesById);
                 newDueEntriesById.set(id, dueEntry);
@@ -489,8 +510,10 @@ export class RemindersListHandler extends MainWindowHandlerBase {
 
             const reminderDataItem = result.newReminderDataItem;
             const { id } = reminderDataItem;
-            const dueEntry = this.createDueEntry(tabId, reminderDataItem,
-                state.dueEntriesById.get(id));
+            const dueEntry = this.createDueEntry({
+                tabId: tabId, 
+                reminderDataItem: reminderDataItem,
+            });
             if (dueEntry) {
                 newDueEntriesById.set(id, dueEntry);
             }
@@ -1091,11 +1114,16 @@ export class RemindersListHandler extends MainWindowHandlerBase {
         if (isRemindersDue) {
             const { accessor } = this.props;
 
+            const refYMDDates = this.getRefYMDDatesForIsReminderDue(tabEntry);
             const dueEntriesById = new Map();
             const reminderIds = accessor.getReminderIds();
             reminderIds.forEach((id) => {
                 const reminderDataItem = accessor.getReminderDataItemWithId(id);
-                const dueEntry = this.createDueEntry(tabEntry, reminderDataItem);
+                const dueEntry = this.createDueEntry({
+                    tabId: tabEntry,
+                    reminderDataItem: reminderDataItem,
+                    refYMDDates: refYMDDates,
+                });
                 if (dueEntry) {
                     dueEntriesById.set(id, dueEntry);
                 }

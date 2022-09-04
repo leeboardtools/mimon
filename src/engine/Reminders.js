@@ -26,6 +26,9 @@ import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
  * @property {Transaction} transactionTemplate  The template for
  * the transaction being reminded of.
  * @property {boolean}  isEnabled
+ * @property {boolean}  [noRemindEarly=false] If truthy then the reminder should
+ * only appear if the current date is on or after the next occurrence, otherwise if
+ * there is a global 'remind days before' setting it should make use of that.
  */
 
 /**
@@ -47,6 +50,9 @@ import { getYMDDate, getYMDDateString, YMDDate } from '../util/YMDDate';
  * @property {TransactionDataItem} transactionTemplate  The template for
  * the transaction being reminded of.
  * @property {boolean}  isEnabled
+ * @property {boolean}  [noRemindEarly=false] If truthy then the reminder should
+ * only appear if the current date is on or after the next occurrence, otherwise if
+ * there is a global 'remind days before' setting it should make use of that.
  */
 
 /**

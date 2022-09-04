@@ -622,6 +622,8 @@
 
     "ReminderEditor-lastOccurrenceDate": ["Last occurrence was on ", ", which was the ", " occurrence."],
 
+    "ReminderEditor-noRemindEarly_label": "Do not remind early, ignores Remind Days Before Due setting",
+
     "ReminderEditorHandler-newReminder_title": ["New Reminder"],
     "ReminderEditorHandler-modifyReminder_title": ["Edit Reminder"],
 
