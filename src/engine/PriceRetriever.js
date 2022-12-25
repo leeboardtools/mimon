@@ -274,8 +274,6 @@ async function asyncRetrieveQuote(options) {
                     reject(response.statusText);
                 }
                 else {
-                    const test = url;
-                    if (test) {}
                     const body = response.data;
                     const historicalPricesStart 
                         = body.split('HistoricalPriceStore":{"prices":')[1];
@@ -405,6 +403,8 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
          && (typeof result.denominator === 'number')) {
             priceDataItem.newCount = result.numerator;
             priceDataItem.oldCount = result.denominator;
+
+            // TODO: We need to adjust prices before the split.
         }
         else {
             continue;
