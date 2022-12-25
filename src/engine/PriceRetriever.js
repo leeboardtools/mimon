@@ -5,6 +5,246 @@ import { userError } from '../util/UserMessages';
 import { asyncAxiosRequest } from './Engine';
 
 
+
+function getSpanValue(span) {
+    if (!span) {
+        return;
+    }
+    const end = span.indexOf('</span>');
+    if (end >= 0) {
+        return span.slice(0, end);
+    }
+}
+
+function getSpanNumber(span) {
+    const value = getSpanValue(span);
+    if (value) {
+        return parseFloat(value);
+    }
+}
+
+function parseSplit_2022_12(row, price) {
+    /*
+    <tr
+        class="BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)">
+        <td class="Py(10px) Ta(start) Pend(5px)"><span>Aug
+                31, 2020</span></td>
+        <td class="Ta(start) Py(10px)" colSpan="6">
+            <strong>4:1</strong> <span>Stock Split</span>
+        </td>
+    </tr>
+    */
+    const strong = '<strong>';
+    const start = row.indexOf(strong);
+    if (start < 0) {
+        return;
+    }
+    const end = row.indexOf('</strong>');
+    if (end < 0) {
+        return;
+    }
+    const value = row.slice(start + strong.length, end);
+    if (!value) {
+        return;
+    }
+
+    const sep = value.indexOf(':');
+    if (sep < 0) {
+        return;
+    }
+
+    const numerator = parseFloat(value.slice(0, sep));
+    const denominator = parseFloat(value.slice(sep + 1));
+    if (isNaN(numerator) || isNaN(denominator)) {
+        return;
+    }
+    price.numerator = numerator;
+    price.denominator = denominator;
+    return price;
+}
+
+function parseRow_2022_12(row) {
+    const start = row.indexOf('<span>');
+    if (start < 0) {
+        return;
+    }
+
+    const spans = row.slice(start).split('<span>');
+    if (spans.length <= 1) {
+        return;
+    }
+
+    const price = {};
+
+    var i = 0;
+    if (!getSpanValue(spans[i])) {
+        ++i;
+    }
+    
+    // ymdDate 
+    price.date = getSpanValue(spans[i]);
+    ++i;
+
+    // Need to handle splits and merges:
+    if (parseSplit_2022_12(row, price)) {
+        return price;
+    }
+
+
+    // open
+    if (i < spans.length) {
+        price.open = getSpanNumber(spans[i]);
+    }
+    ++i;
+
+    // high
+    if (i < spans.length) {
+        price.high = getSpanNumber(spans[i]);
+    }
+    ++i;
+    
+    // low
+    if (i < spans.length) {
+        price.low = getSpanNumber(spans[i]);
+    }
+    ++i;
+    
+    // close
+    if (i < spans.length) {
+        price.close = getSpanNumber(spans[i]);
+    }
+    ++i;
+    
+    // adjClose
+    if (i < spans.length) {
+        price.adjClose = getSpanNumber(spans[i]);
+    }
+    ++i;
+    
+    // volume
+    if (i < spans.length) {
+        price.volume = getSpanNumber(spans[i]);
+    }
+    ++i;
+    
+    return price;
+}
+
+
+function parseBody_2022_12(body) {
+    if (!body) {
+        return;
+    }
+/*
+symbol  "AAPL"
+from    "2022-12-20T00:00:00.000Z"
+to  "2022-12-24T20:00:00.000Z"
+
+url https://finance.yahoo.com/quote/AAPL/history?period1=1671494400&period2=1671912000&interval=1d&filter=history&frequency=1d
+
+Date    Open   High  Low    Close   Adj Close   Volume
+ymdDate open    high    low close   adjClose    volume
+
+    <tbody>
+        <tr
+            class="BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)">
+            <td class="Py(10px) Ta(start) Pend(10px)"><span>Dec 23, 2022</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>130.92</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>132.42</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>129.64</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>131.86</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>131.86</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>63,771,000</span></td>
+        </tr>
+        <tr
+            class="BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)">
+            <td class="Py(10px) Ta(start) Pend(10px)"><span>Dec 22, 2022</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>134.35</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>134.56</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>130.30</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>132.23</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>132.23</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>77,852,100</span></td>
+        </tr>
+        <tr
+            class="BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)">
+            <td class="Py(10px) Ta(start) Pend(10px)"><span>Dec 21, 2022</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>132.98</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>136.81</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>132.75</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>135.45</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>135.45</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>85,928,000</span></td>
+        </tr>
+        <tr
+            class="BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)">
+            <td class="Py(10px) Ta(start) Pend(10px)"><span>Dec 20, 2022</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>131.39</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>133.25</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>129.89</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>132.30</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>132.30</span></td>
+            <td class="Py(10px) Pstart(10px)">
+                <span>77,432,800</span></td>
+        </tr>
+    </tbody>
+*/
+    let start = body.indexOf('<tbody');
+    if (start < 0) {
+        return;
+    }
+    const end = body.indexOf('</tbody>');
+    if (end < 0) {
+        return;
+    }
+
+    start = body.indexOf('<tr', start);
+    if (start < 0) {
+        return;
+    }
+
+    const rows = body.slice(start, end).split('<tr');
+    if (!rows || !rows.length) {
+        return;
+    }
+
+    const prices = [];
+    for (const row of rows) {
+        const price = parseRow_2022_12(row);
+        if (price) {
+            prices.push(price);
+        }
+    }
+
+    if (prices.length) {
+        return prices;
+    }
+}
+
+
 async function asyncRetrieveQuote(options) {
     return new Promise((resolve, reject) => {
         const { symbol, from, to } = options;
@@ -34,6 +274,8 @@ async function asyncRetrieveQuote(options) {
                     reject(response.statusText);
                 }
                 else {
+                    const test = url;
+                    if (test) {}
                     const body = response.data;
                     const historicalPricesStart 
                         = body.split('HistoricalPriceStore":{"prices":')[1];
@@ -48,6 +290,11 @@ async function asyncRetrieveQuote(options) {
                         resolve(prices);
                     }
                     else {
+                        const prices = parseBody_2022_12(body);
+                        if (prices) {
+                            resolve(prices);
+                        }
+
                         reject(userError('PriceRetriever-ticker_not_found', symbol));
                     }
                 }
