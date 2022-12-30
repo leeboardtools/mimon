@@ -4,7 +4,8 @@ import { MainWindowHandlerBase } from './MainWindowHandlerBase';
 import { AccountRegister, createDefaultColumns } from './AccountRegister';
 import { EventEmitter } from 'events';
 import * as T from '../engine/Transactions';
-import { TabIdRowTableHandler, updateStateFromProjectSettings } from '../util-ui/RowTableHelpers';
+import { TabIdRowTableHandler, updateStateFromProjectSettings } 
+    from '../util-ui/RowTableHelpers';
 
 
 function getUndoRedoInfo(tabEntry) {

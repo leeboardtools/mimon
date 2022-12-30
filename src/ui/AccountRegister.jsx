@@ -1753,23 +1753,30 @@ export class AccountRegister extends React.Component {
         if (splitIndex >= 0) {
             // Want to keep these...
             delete transactionDataItem.id;
+
+            // We don't want any old refNums set...
+            transactionDataItem.splits.forEach((split) => {
+                delete split.refNum;
+                split.reconcileState = T.ReconcileState.NOT_RECONCILED;
+            });
             
             transactionDataItem.ymdDate = rowEditBuffer.newTransactionDataItem.ymdDate;
             const saveBuffer = this._cellEditorsManager.grabSaveBuffer(args, true);
             if (saveBuffer) {
                 const { newTransactionDataItem } = saveBuffer;
-                if (newTransactionDataItem && newTransactionDataItem.ymdDate) {
-                    transactionDataItem.ymdDate = newTransactionDataItem.ymdDate;
+                if (newTransactionDataItem) {
+                    if (newTransactionDataItem.ymdDate) {
+                        transactionDataItem.ymdDate = newTransactionDataItem.ymdDate;
+                    }
+                    const newSplit = newTransactionDataItem.splits[splitIndex];
+                    const split = transactionDataItem.splits[splitIndex];
+                    if (newSplit && split) {
+                        split.refNum = newSplit.refNum;
+                    }
                 }
             }
 
             this._lastYMDDate = transactionDataItem.ymdDate;
-
-            // We don't want any refNums set...
-            transactionDataItem.splits.forEach((split) => {
-                delete split.refNum;
-                split.reconcileState = T.ReconcileState.NOT_RECONCILED;
-            });
 
             setRowEditBuffer({
                 newTransactionDataItem: transactionDataItem,
