@@ -1770,7 +1770,7 @@ export class AccountRegister extends React.Component {
                     }
                     const newSplit = newTransactionDataItem.splits[splitIndex];
                     const split = transactionDataItem.splits[splitIndex];
-                    if (newSplit && split) {
+                    if (newSplit && split && (newSplit.refNum !== undefined)) {
                         split.refNum = newSplit.refNum;
                     }
                 }

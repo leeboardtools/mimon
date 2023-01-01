@@ -1516,6 +1516,11 @@ export class EngineAccessor extends EventEmitter {
         let transactionDataItems 
             = await this._transactionManager.asyncGetTransactionDataItemsWithIds(ids);
         if (Array.isArray(transactionDataItems)) {
+            for (let i = transactionDataItems.length - 1; i >= 0; --i) {
+                if (!transactionDataItems[i]) {
+                    transactionDataItems.splice(i, 1);
+                }
+            }
             this._applyGetTransactionDataItemCallbacks(transactionDataItems);
         }
         else if (transactionDataItems) {
