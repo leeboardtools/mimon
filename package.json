@@ -63,6 +63,7 @@
     "axios": "^0.26.1",
     "core-js": "^3.16.2",
     "deep-equal": "^2.0.5",
+    "electron-fetch": "^1.9.1",
     "electron-squirrel-startup": "^1.0.0",
     "jquery": "^3.6.0",
     "mathjs": "^10.4.3",
