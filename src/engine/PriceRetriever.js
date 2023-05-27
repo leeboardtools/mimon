@@ -2,250 +2,63 @@ import { YMDDate, getYMDDate } from '../util/YMDDate';
 import { getPricedItem, PricedItemOnlineUpdateType } from './PricedItems';
 import { getDecimalDefinition } from '../util/Quantities';
 import { userError } from '../util/UserMessages';
-import { asyncAxiosRequest } from './Engine';
+import { asyncFetchJSON } from './Engine';
 
 
-
-function getSpanValue(span) {
-    if (!span) {
-        return;
-    }
-    const end = span.indexOf('</span>');
-    if (end >= 0) {
-        return span.slice(0, end);
-    }
-}
-
-function getSpanNumber(span) {
-    const value = getSpanValue(span);
-    if (value) {
-        return parseFloat(value);
-    }
-}
-
-function parseSplit_2022_12(row, price) {
-    /*
-    <tr
-        class="BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)">
-        <td class="Py(10px) Ta(start) Pend(5px)"><span>Aug
-                31, 2020</span></td>
-        <td class="Ta(start) Py(10px)" colSpan="6">
-            <strong>4:1</strong> <span>Stock Split</span>
-        </td>
-    </tr>
-    */
-    const strong = '<strong>';
-    const start = row.indexOf(strong);
-    if (start < 0) {
-        return;
-    }
-    const end = row.indexOf('</strong>');
-    if (end < 0) {
-        return;
-    }
-    const value = row.slice(start + strong.length, end);
-    if (!value) {
-        return;
-    }
-
-    const sep = value.indexOf(':');
-    if (sep < 0) {
-        return;
-    }
-
-    const numerator = parseFloat(value.slice(0, sep));
-    const denominator = parseFloat(value.slice(sep + 1));
-    if (isNaN(numerator) || isNaN(denominator)) {
-        return;
-    }
-    price.numerator = numerator;
-    price.denominator = denominator;
-    return price;
-}
-
-function parseRow_2022_12(row) {
-    const start = row.indexOf('<span>');
-    if (start < 0) {
-        return;
-    }
-
-    const spans = row.slice(start).split('<span>');
-    if (spans.length <= 1) {
-        return;
-    }
-
-    const price = {};
-
-    var i = 0;
-    if (!getSpanValue(spans[i])) {
-        ++i;
-    }
-    
-    // ymdDate 
-    price.date = getSpanValue(spans[i]);
-    ++i;
-
-    // Need to handle splits and merges:
-    if (parseSplit_2022_12(row, price)) {
-        return price;
-    }
-
-
-    // open
-    if (i < spans.length) {
-        price.open = getSpanNumber(spans[i]);
-    }
-    ++i;
-
-    // high
-    if (i < spans.length) {
-        price.high = getSpanNumber(spans[i]);
-    }
-    ++i;
-    
-    // low
-    if (i < spans.length) {
-        price.low = getSpanNumber(spans[i]);
-    }
-    ++i;
-    
-    // close
-    if (i < spans.length) {
-        price.close = getSpanNumber(spans[i]);
-    }
-    ++i;
-    
-    // adjClose
-    if (i < spans.length) {
-        price.adjClose = getSpanNumber(spans[i]);
-    }
-    ++i;
-    
-    // volume
-    if (i < spans.length) {
-        price.volume = getSpanNumber(spans[i]);
-    }
-    ++i;
-    
-    return price;
-}
-
-
-function parseBody_2022_12(body) {
-    if (!body) {
-        return;
-    }
-/*
-symbol  "AAPL"
-from    "2022-12-20T00:00:00.000Z"
-to  "2022-12-24T20:00:00.000Z"
-
-url https://finance.yahoo.com/quote/AAPL/history?period1=1671494400&period2=1671912000&interval=1d&filter=history&frequency=1d
-
-Date    Open   High  Low    Close   Adj Close   Volume
-ymdDate open    high    low close   adjClose    volume
-
-    <tbody>
-        <tr
-            class="BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)">
-            <td class="Py(10px) Ta(start) Pend(10px)"><span>Dec 23, 2022</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>130.92</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>132.42</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>129.64</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>131.86</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>131.86</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>63,771,000</span></td>
-        </tr>
-        <tr
-            class="BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)">
-            <td class="Py(10px) Ta(start) Pend(10px)"><span>Dec 22, 2022</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>134.35</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>134.56</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>130.30</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>132.23</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>132.23</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>77,852,100</span></td>
-        </tr>
-        <tr
-            class="BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)">
-            <td class="Py(10px) Ta(start) Pend(10px)"><span>Dec 21, 2022</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>132.98</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>136.81</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>132.75</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>135.45</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>135.45</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>85,928,000</span></td>
-        </tr>
-        <tr
-            class="BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)">
-            <td class="Py(10px) Ta(start) Pend(10px)"><span>Dec 20, 2022</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>131.39</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>133.25</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>129.89</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>132.30</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>132.30</span></td>
-            <td class="Py(10px) Pstart(10px)">
-                <span>77,432,800</span></td>
-        </tr>
-    </tbody>
-*/
-    let start = body.indexOf('<tbody');
-    if (start < 0) {
-        return;
-    }
-    const end = body.indexOf('</tbody>');
-    if (end < 0) {
-        return;
-    }
-
-    start = body.indexOf('<tr', start);
-    if (start < 0) {
-        return;
-    }
-
-    const rows = body.slice(start, end).split('<tr');
-    if (!rows || !rows.length) {
-        return;
-    }
-
+function parsePrices({ timestamps, events, quotes, adjclose }) {
     const prices = [];
-    for (const row of rows) {
-        const price = parseRow_2022_12(row);
-        if (price) {
-            prices.push(price);
-        }
-    }
+    const { open, high, low, close, volume } = quotes;
+    let splits = (events) ? Object.assign({}, events.splits) : undefined;
 
-    if (prices.length) {
-        return prices;
+    for (let index = 0; index < timestamps.length; ++index) {
+        const price = {
+            date: new Date(timestamps[index] * 1000),
+        };
+
+        if (splits) {
+            for (const splitTimestamp in splits) {
+                const split = splits[splitTimestamp];
+                if (split.date === timestamps[index]) {
+                    const splitPrice = {
+                        date: price.date,
+                        numerator: split.numerator,
+                        denominator: split.denominator,
+                    };
+                    prices.push(splitPrice);
+                    delete splits[splitTimestamp];
+                    break;
+                }
+            }
+            if (!Object.getOwnPropertyNames(splits).length) {
+                splits = undefined;
+            }
+        }
+
+        if (open && (index < open.length)) {
+            price.open = open[index];
+        }
+        if (close && (index < close.length)) {
+            price.close = close[index];
+        }
+        if (high && (index < high.length)) {
+            price.high = high[index];
+        }
+        if (low && (index < low.length)) {
+            price.low = low[index];
+        }
+        if (volume && (index < volume.length)) {
+            price.volume = volume[index];
+        }
+        if (adjclose && (index < adjclose.length)) {
+            price.adjClose = adjclose[index];
+        }
+    
+        prices.push(price);
     }
+    return prices;
 }
 
-
-async function asyncRetrieveQuote(options) {
+async function asyncRetrieveQuoteAPI(options) {
     return new Promise((resolve, reject) => {
         const { symbol, from, to } = options;
         const fromSecs = Math.round(from.valueOf() / 1000);
@@ -253,49 +66,66 @@ async function asyncRetrieveQuote(options) {
         const frequency = '1d';
 
         //
+        // For asyncGetPricesForTicker('AAPL', '2014-06-06', '2014-06-09');
         // eslint-disable-next-line max-len
-        // Adapted from https://github.com/darthbatman/yahoo-stock-prices/blob/master/yahoo-stock-prices.js
-        //
-        const url = 'https://finance.yahoo.com/quote/' + symbol
-            + '/history?period1=' + fromSecs + '&period2=' + toSecs
-            + '&interval=' + frequency + '&filter=history&frequency=' + frequency;
+        // https://query1.finance.yahoo.com/v8/finance/chart/AAPL?period1=1598486400&period2=1598990400&interval=1d&events=split
+        const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + symbol
+            + '?period1=' + fromSecs + '&period2=' + toSecs
+            + '&interval=' + frequency
+            + '&events=split'
+            ;
         
         if (options.logOutput) {
             console.log('retrieveQuote url: ' + url);
         }
 
-        asyncAxiosRequest({
-            url: url,
-            timeout: options.timeout,
-            responseType: 'text',
-        })
-            .then(response => {
-                if (response.statusText !== 'OK') {
-                    reject(response.statusText);
+        asyncFetchJSON(url,
+        )
+            .then(json => {
+                const { chart } = json;
+                if (!chart) {
+                    reject(userError('PriceRetriever-unknown_error', 'chart undefined'));
                 }
-                else {
-                    const body = response.data;
-                    const historicalPricesStart 
-                        = body.split('HistoricalPriceStore":{"prices":')[1];
-                    if (historicalPricesStart) {
-                        const prices = JSON.parse(
-                            historicalPricesStart.split(',"isPending')[0]);
-                        prices.forEach((price) => {
-                            if (price.date) {
-                                price.date = new Date(price.date * 1000);
-                            }
-                        });
-                        resolve(prices);
-                    }
-                    else {
-                        const prices = parseBody_2022_12(body);
-                        if (prices) {
-                            resolve(prices);
-                        }
-
+                if (chart.error) {
+                    const { code, description } = chart.error;
+                    if (code === 'Not Found') {
                         reject(userError('PriceRetriever-ticker_not_found', symbol));
                     }
+                    else {
+                        reject(userError('PriceRetriever-yahoo_error', 
+                            code, description));
+                    }
                 }
+                if (!chart.result || !chart.result.length) {
+                    reject(userError('PriceRetriever-unknown_error', 'No chart.result'));
+                }
+
+                const result0 = chart.result[0];
+                const { timestamp, events, indicators } = result0;
+                if (!timestamp || !timestamp.length) {
+                    reject(userError('PriceRetriever-unknown_error', 'No timestamps'));
+                }
+                if (!indicators) {
+                    reject(userError('PriceRetriever-unknown_error', 'No indicators'));
+                }
+
+                const { quote } = indicators;
+                if (!quote || !quote.length) {
+                    reject(userError('PriceRetriever-unknown_error', 'No quotes'));
+                }
+
+                const quote0 = quote[0];
+                const { close } = quote0;
+                if (!close || (close.length !== timestamp.length)) {
+                    reject(userError('PriceRetriever-unknown_error', 'No close'));
+                }
+
+                const prices = parsePrices({ 
+                    timestamps: timestamp, 
+                    events: events, 
+                    quotes: quote[0],
+                });
+                resolve(prices);
             })
             .catch(error => {
                 reject(error);
@@ -351,17 +181,21 @@ export async function asyncGetPricesForTicker(ticker, ymdDateA, ymdDateB, option
         symbol: ticker,
     };
 
-    const results = await asyncRetrieveQuote(retrieveArgs);
+    const results = await asyncRetrieveQuoteAPI(retrieveArgs);
 
     const quantityDefinition = options.quantityDefinition || getDecimalDefinition(4);
 
+    // OLD:
     // The results from historical() are from newest to oldest, but our default
     // price handler works best if the prices are from oldest to newest, so we reverse
     // their insertion.
+    // NEW: asyncRetrieveQuoteAPI() returns results sorted from oldest to newest,
+    // but since we've already coded things below to work the other way around
+    // we'll just start at the opposite end of results.
     let index = results.length - 1;
     const priceDataItems = [];
     for (let i = 0; i < results.length; ++i) {
-        const result = results[i];
+        const result = results[results.length - i - 1];
     
         const ymdDate = new YMDDate(result.date);
         if ((i > 0) && (YMDDate.compare(ymdDate, ymdDateA) < 0)) {

@@ -9,6 +9,7 @@ import defUserMessagesUtil from '../util/locales/en-userMessages-util.json';
 import defUserMessagesEngine from '../locales/en-userMessages-engine.json';
 import * as path from 'path';
 import * as axios from 'axios';
+import fetch from 'electron-fetch';
 import { ipcRenderer } from 'electron';
 
 
@@ -97,4 +98,29 @@ export async function asyncAxiosRequest(config) {
         return ipcRenderer.invoke('async-axiosRequest', config);
     }
     return axios.request(config);
+}
+
+
+/**
+ * Performs an electron-fetch fetch, returning the result as JSON. 
+ * If the engine is running within Electron this performs an IPC to the main 
+ * process so the fetch can be performed by the main process, which is a server. 
+ * This way the request ends up server-to-server and CORS is not in effect.
+ * <p>
+ * The promise resolves with the JSON data.
+ * @param {string} url The URL desired. See 
+ *      {@link https://www.npmjs.com/package/electron-fetch}
+ * @param {*} [options]
+ * @returns {Promise}
+ */
+export async function asyncFetchJSON(url, options) {
+    if (_isElectron) {
+        return ipcRenderer.invoke('async-fetch-JSON', url, options);
+    }
+    return new Promise((resolve, reject) => {
+        fetch(url, options)
+            .then((response) => response.json())
+            .then(json => resolve(json))
+            .catch(error => reject(error));
+    });
 }

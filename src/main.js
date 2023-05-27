@@ -2,6 +2,7 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { getWindowState, manageBrowserWindow } from './util/electron-WindowState';
 import { app, Menu, BrowserWindow, ipcMain, dialog, session } from 'electron';
 import * as axios from 'axios';
+import fetch from 'electron-fetch';
 
 app.allowRendererProcessReuse = true;
 
@@ -100,6 +101,15 @@ ipcMain.handle('async-axiosRequest', (event, config) => {
                     //request: response.request,
                 });
             })
+            .catch(error => reject(error));
+    });
+});
+
+ipcMain.handle('async-fetch-JSON', (event, url, options) => {
+    return new Promise((resolve, reject) => {
+        fetch(url, options)
+            .then((response) => response.json())
+            .then(json => resolve(json))
             .catch(error => reject(error));
     });
 });

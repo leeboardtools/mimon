@@ -207,6 +207,8 @@
 
 
     "PriceRetriever-ticker_not_found": ["N/A"],
+    "PriceRetriever-yahoo_error": ["finance.yahoo error: ", " ", ""],
+    "PriceRetriever-unknown_error": ["finance.yahoo error: ", ""],
 
 
     "Reconciler-invalid_closing_date": "A closing date is required.",
